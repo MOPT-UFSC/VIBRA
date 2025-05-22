@@ -15,7 +15,7 @@ from vibra.interface.loading_window import LoadingWindow
 
 from copy import deepcopy
 
-import os, warnings
+import logging, os, warnings
 import numpy as np
 
 # fmt: off
@@ -40,6 +40,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self._config_window()
         self._create_connections()
         self._config_widgets()
+        self._create_connections()
 
         self.load_model_info()
 
@@ -55,7 +56,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def _initialize(self):
         self.selected_fluid = None
         self.imported_values = None
-        self.setup_complete = False
+        self.assignment_complete = False
         self.keep_window_open = True
         self.pp_data = dict()
 
@@ -74,7 +75,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         self.pushButton_clean_inputs.clicked.connect(self.clear_all_inputs)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_perforated_plate_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -216,11 +217,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.pushButton_load_path.setEnabled(True)
 
     def _config_widgets(self):
+        #
+        self.current_line_edit = self.lineEdit_selection_id_A
+        #
         for i, w in enumerate([120, 130, 200]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 1:
@@ -234,6 +238,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.lineEdit_selection_id_A.setText("")
                 self.lineEdit_selection_id_B.setText("")
                 app().main_window.set_geometry_selection()
+
+            else:
+                self.geometry_selection_callback()
 
             self.lineEdit_selection_id_A.setDisabled(False)
 
@@ -318,8 +325,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.tabWidget_main.setTabVisible(1, True)
                 return
 
-        self.tabWidget_main.setTabVisible(1, False)
         self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(1, False)
 
     def load_perforated_plate_inputs(self, data: dict):
 
@@ -560,47 +567,52 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         surface_ids = list()
         if self.comboBox_selection_type.currentText() == "Inside surfaces":
-        
+
             input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A = self.mesh.check_selected_ids(
-                                                        input_ids_A, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
-            if surface_ids_A is None:
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids_A,
+                                                                    selection = "surfaces",
+                                                                    single_id = False,
+                                                                    )
+
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
-            self.check_selection_type(surface_ids_A)
+            self.check_selection_type(surface_ids)
             if not self.pp_data:
                 return list()
-            
-            surface_ids_A.sort()
-            self.pp_data["surfaces_A"] = surface_ids_A
-            surface_ids.extend(surface_ids_A)
+
+            surface_ids.sort()
 
         else:
 
             input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A = self.mesh.check_selected_ids(
-                                                        input_ids_A, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids_A, error_data = self.mesh.check_selected_ids(
+                                                                     input_ids_A, 
+                                                                     selection = "surfaces", 
+                                                                     single_id = False,
+                                                                     )
 
-            if surface_ids_A is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             input_ids_B = self.lineEdit_selection_id_B.text()
-            surface_ids_B = self.mesh.check_selected_ids(
-                                                        input_ids_B, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids_B, error_data = self.mesh.check_selected_ids(
+                                                                     input_ids_B, 
+                                                                     selection = "surfaces", 
+                                                                     single_id = False,
+                                                                     )
 
-            if surface_ids_B is None:
-                self.lineEdit_selection_id_A.setFocus()
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id_B.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             self.check_selection_type(surface_ids_A)
@@ -646,7 +658,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     if not self.pp_data:
                         return
 
-                self.properties._set_property("perforated_plate_model", self.pp_data, surface=surface_id)
+                pp_data = deepcopy(self.pp_data)
+                self.properties._set_property("perforated_plate_model", pp_data, surface=surface_id)
                 self.decouple_degrees_of_freedom(surface_id)
 
         else:
@@ -656,9 +669,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 if not self.pp_data:
                     return
 
+            pp_data = deepcopy(self.pp_data)
             self.properties._set_property("perforated_plate_model", self.pp_data, surface=tuple(surface_ids))
 
-        self.setup_complete = True
+        self.assignment_complete = True
+        self.lineEdit_selection_id_A.setText("")
+        self.lineEdit_selection_id_B.setText("")
+
+        self.hide()
         self.actions_to_finalize()
 
     def include_user_defined_transfer_impedance(self, surface_id: int | list[int]):
@@ -765,15 +783,17 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         input_ids = self.lineEdit_selection_id_A.text()
 
         if input_ids != "":
-
             input_ids = input_ids.replace("(", "").replace(")", "")
-            surface_ids = self.mesh.check_selected_ids(
-                                                        input_ids, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
-            
-            if not surface_ids:
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "surfaces", 
+                                                                   single_id = False,
+                                                                   )
+
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return
 
             if len(surface_ids) == 1:
@@ -784,8 +804,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("perforated_plate_model", surface_ids)
 
-            app().project.reset_solutions()
-
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
@@ -795,11 +813,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_ids)
 
-                app().file.remove_mesh_data_from_project_file()
-                app().file.remove_results_data_from_project_file()
-                self.restore_mesh_data_modified_by_decoupling()
-
+            self.hide()
             self.actions_to_finalize()
+            self.restore_mesh_data_modified_by_decoupling()
             self.pushButton_remove.setDisabled(True)
 
     def reset_callback(self):
@@ -835,47 +851,94 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 new_surface_id = data.get("new_surface_id")
                 if isinstance(new_surface_id, int):
                     new_surface_ids.append(new_surface_id)
-                    self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
+    
+                self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
 
+        self.remove_all_surface_properties_from_surface(new_surface_ids)
+        self.remove_all_line_properties_boundind_surface(new_surface_ids)
         self.properties._reset_property("perforated_plate_model")
-        app().project.reset_solutions()
-
-        if new_surface_ids:
-            self.remove_all_surface_properties_from_surface(new_surface_ids)
-            self.remove_all_line_properties_boundind_surface(new_surface_ids)
-            app().file.remove_mesh_data_from_project_file()
-            app().file.remove_results_data_from_project_file()
-            self.restore_mesh_data_modified_by_decoupling()
 
         self.actions_to_finalize()
+        self.restore_mesh_data_modified_by_decoupling()
+
+    def actions_to_finalize(self):
+
+        def callback():
+
+            logging.info("Processing the post-assignment actions... [10/100]")
+            self.load_model_info()
+
+            logging.info("Processing the post-assignment actions... [20/100]")
+            app().project.reset_solutions()
+
+            logging.info("Processing the post-assignment actions... [30/100]")
+            app().file.remove_mesh_data_from_project_file()
+
+            logging.info("Processing the post-assignment actions... [40/100]")
+            app().file.remove_results_data_from_project_file()
+
+            logging.info("Processing the post-assignment actions... [50/100]")
+            app().file.write_model_properties_in_file()
+
+            logging.info("Processing the post-assignment actions... [60/100]")
+            app().file.write_imported_table_data_in_file()
+
+            logging.info("Processing the post-assignment actions... [70/100]")
+            app().main_window.recompute_hidden_volumes()
+
+            logging.info("Processing the post-assignment actions... [80/100]")
+            app().main_window.update_info_text()
+
+            logging.info("Processing the post-assignment actions... [90/100]")
+            app().main_window.mesh_widget.update_symbols()
+
+            logging.info("Processing the post-assignment actions... [95/100]")
+            app().main_window.set_geometry_selection()
+
+            logging.info("Processing the post-assignment actions... [100/100]")
+            app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+
+        LoadingWindow(callback).run()
+
+    def process_decoupling_actions(self):
+
+        def callback():
+            logging.info("Processing degress of freedom decoupling... [10/100]")
+            self.model.process_degrees_of_freedom_decoupling()
+
+            logging.info("Processing degress of freedom decoupling... [70/100]")
+            app().file.write_mesh_data_in_file()
+            
+            logging.info("Processing degress of freedom decoupling... [75/100]")
+            app().file.write_geometry_data_in_file()
+
+            # the degrees of freedom modifies the surfaces properties
+            logging.info("Processing degress of freedom decoupling... [80/100]")
+            app().file.write_model_properties_in_file()
+
+            logging.info("Processing degress of freedom decoupling... [85/100]")
+            app().main_window.update_mesh_information()
+
+            logging.info("Processing degress of freedom decoupling... [90/100]")
+            app().main_window.update_geometry_information()
+        
+            logging.info("Processing degress of freedom decoupling... [95/100]")
+            app().main_window.update_plots()
+
+        LoadingWindow(callback).run()
 
     def restore_mesh_data_modified_by_decoupling(self):
 
-        app().project.model.generated_mesh = False
-        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            return
-        
         if self.mesh.cache_nodal_coordinates is None:
             return
 
         self.mesh.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
-        app().project.model.generated_mesh = True
 
-        app().file.write_mesh_data_in_file()
-        app().file.write_geometry_data_in_file()
-        app().main_window.update_mesh_information()
-        app().main_window.update_geometry_information()
-        app().main_window.update_plots()
-        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            self.mesh.cache_mesh_information()
 
-    def actions_to_finalize(self):
-        self.load_model_info()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
-        app().main_window.update_info_text()
-        app().main_window.mesh_widget.update_symbols()
-        app().main_window.set_geometry_selection()
+        self.process_decoupling_actions()
 
     def check_inputs(self, lineEdit: QLineEdit, label, _float=True):
 
@@ -912,8 +975,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             return None
         else:
             return out
-
-    # Plot viscous_thermal effective properties
 
     def get_fluid_callback(self):
         self.hide()
@@ -1036,7 +1097,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     
     def process_degress_of_freedom_decoupling(self):
 
-        if not self.setup_complete:
+        if not self.assignment_complete:
             return False
         
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
@@ -1048,24 +1109,15 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().main_window.set_input_widget(self)
             return False
 
-            # if not app().project.model.generated_mesh:
-            #     return True
-            # else:
-            #     return False
-
         if self.mesh.cache_nodal_coordinates is None:
             self.mesh.cache_mesh_information()
+        else:
+            self.mesh.restore_data_from_cache()
+            self.mesh.process_upwards_adjacencies_from_entities()
+            self.mesh.cache_mesh_information()
 
-        def process_decoupling():
-            self.model.process_degrees_of_freedom_decoupling()
-            app().file.write_model_properties_in_file()
-            app().file.write_mesh_data_in_file()
-            app().file.write_geometry_data_in_file()
-            app().main_window.update_mesh_information()
-            app().main_window.update_geometry_information()
-            app().main_window.update_plots()
+        self.process_decoupling_actions()
 
-        LoadingWindow(process_decoupling).run()
         return False
 
     def keyPressEvent(self, event):

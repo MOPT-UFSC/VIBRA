@@ -68,10 +68,21 @@ class Project:
 
         self.create_solver()
 
+    def load_project_without_process_mesh(self, path: str, geometry_file: bool):
+        self.model.set_geometry_path(path)
+        self.model.initialize_mesh()
+        self.generated_mesh = True
+        self.model.mesh.geometry_imported = geometry_file
+
     def import_geometry(self, path : str):
         self.model.set_geometry_path(path)
         logging.info("Importing geometry file...")
         return self.model.process_visual_geometry_mesh(path)
+
+    def import_mesh(self, path : str):
+        self.model.set_geometry_path(path)
+        logging.info("Importing mesh file...")
+        return self.model.process_mesh_data(path)
 
     def get_fluid_list_path(self):
         return self.fluid_list_path
@@ -293,21 +304,33 @@ class Project:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
+            if self.structural_harmonic_solver is None:
+                return
+
             solution  = self.structural_harmonic_solver.solution
             if solution is not None:
                 return True
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+            if self.structural_modal_solver is None:
+                return
+
             solution  = self.structural_modal_solver.solution
             if solution is not None:
                 return True
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+            if self.acoustic_modal_solver is None:
+                return
+
             solution  = self.acoustic_modal_solver.solution
             if solution is not None:
                 return True
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            if self.acoustic_harmonic_solver is None:
+                return
+
             solution  = self.acoustic_harmonic_solver.solution
             if solution is not None:
                 return True

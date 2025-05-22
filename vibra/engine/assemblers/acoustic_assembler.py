@@ -175,6 +175,8 @@ class AcousticAssembler:
             if prop != property_label:
                 continue
 
+            data: dict
+
             pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
             tv_active, rho_eff_tv, C_eff_tv = self.model.is_viscous_thermal_model_active(surface_id)
 
@@ -193,6 +195,13 @@ class AcousticAssembler:
 
             if "anechoic_termination" in data.keys():
                 _complex_values = density * speed_of_sound
+
+            elif property_label ==  "absorption_surface":
+                print(data.get("values"))
+                alpha = np.array(data.get("values")[0], dtype=float)
+                Z_0 = density * speed_of_sound
+                Z_s = Z_0 * ((1 + (1-alpha)**(1/2))/(1 - (1-alpha)**(1/2)))
+                _complex_values = Z_s
 
             else:
                 if "values" in data.keys():
@@ -502,33 +511,68 @@ class AcousticAssembler:
         self.process_indexes()
 
     def process_specific_impedance_data_to_assemble_damping_matrix(self):
-        """
+        """ 
+        This method processes the specific impedance data 
+        to assemble the global damping matrix.
+
         """
 
-        self.data_Zout = dict()
-        self.ind_rows_Zout = np.array([])
-        self.ind_cols_Zout = np.array([])
+        self.data_Zsi = dict()
+        self.ind_rows_Zsi = np.array([], dtype=int)
+        self.ind_cols_Zsi = np.array([], dtype=int)
 
         _, element_2D = self.get_element()
         dofs = element_2D.DOFS_PER_ELEMENT
         self.total_dofs_2d = element_2D.DOFS_PER_NODE * len(element_2D.nodal_coordinates)
 
-        self.integration_data_Zout = self.get_surface_data_for_element_integration_by_property("specific_impedance")
-        if not self.integration_data_Zout:
+        self.integration_data_Zsi = self.get_surface_data_for_element_integration_by_property("specific_impedance")
+        if not self.integration_data_Zsi:
             return
 
-        connectivities = self.integration_data_Zout.get("connectivities")       
-        surface_data = self.integration_data_Zout.get("surface_data")
+        connectivities = self.integration_data_Zsi.get("connectivities")       
+        surface_data = self.integration_data_Zsi.get("surface_data")
 
         nel = connectivities.shape[0]
         for j in range(self.number_frequencies):
-            self.data_Zout[j] = np.zeros((nel, dofs, dofs), dtype=complex)
+            self.data_Zsi[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        self.ind_rows_Zout, self.ind_cols_Zout = element_2D.generate_ind_rows_cols(connectivities)
+        self.ind_rows_Zsi, self.ind_cols_Zsi = element_2D.generate_ind_rows_cols(connectivities)
         for i, complex_values in enumerate(surface_data.values()):
             normalized_matrix_Z = element_2D.matrices_Z(i)
             for j in range(self.number_frequencies):
-                self.data_Zout[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
+                self.data_Zsi[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
+
+    def process_surface_impedance_data_to_assemble_damping_matrix(self):
+        """ 
+        This method processes the surface impedance data resulting from
+        absorption surface to assemble the global damping matrix.
+
+        """
+
+        self.data_Zas = dict()
+        self.ind_rows_Zas = np.array([])
+        self.ind_cols_Zas = np.array([])
+
+        _, element_2D = self.get_element()
+        dofs = element_2D.DOFS_PER_ELEMENT
+        self.total_dofs_2d = element_2D.DOFS_PER_NODE * len(element_2D.nodal_coordinates)
+
+        self.integration_data_Zas = self.get_surface_data_for_element_integration_by_property("absorption_surface")
+        if not self.integration_data_Zas:
+            return
+
+        connectivities = self.integration_data_Zas.get("connectivities")       
+        surface_data = self.integration_data_Zas.get("surface_data")
+
+        nel = connectivities.shape[0]
+        for j in range(self.number_frequencies):
+            self.data_Zas[j] = np.zeros((nel, dofs, dofs), dtype=complex)
+
+        self.ind_rows_Zas, self.ind_cols_Zas = element_2D.generate_ind_rows_cols(connectivities)
+        for i, complex_values in enumerate(surface_data.values()):
+            normalized_matrix_Z = element_2D.matrices_Z(i)
+            for j in range(self.number_frequencies):
+                self.data_Zas[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
 
     def process_transfer_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):
         """
@@ -620,6 +664,7 @@ class AcousticAssembler:
 
     def gather_data_to_assemble_damping_matrix(self):
         self.process_specific_impedance_data_to_assemble_damping_matrix()
+        self.process_surface_impedance_data_to_assemble_damping_matrix()
         self.process_transfer_impedance_data_to_assemble_damping_matrix()
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
@@ -652,17 +697,34 @@ class AcousticAssembler:
         self.Qvisc_damping_matrix = _Qvisc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qvisc_damping_matrix_r = _Qvisc_damping_matrix_full[:, self.prescribed_indexes]
 
-    def assemble_global_damping_matrix_2d_elements(self, index=0):
+    def assemble_global_damping_matrix_2d_elements(self, index: int = 0):
         """
+        This method computes the global damping matrix asseble.
+
+        Parameters
+        ----------
+
+        index: int, optional.
+            it corresponds to the frequency step index.
         """
+
         N_dofs = self.total_dofs_2d
+        rows_Zout = np.array([], dtype=int)
+        cols_Zout = np.array([], dtype=int)
+        data_Zout = np.array([], dtype=complex)
 
-        if self.integration_data_Zout:
-            rows_Zout = self.ind_rows_Zout
-            cols_Zout = self.ind_cols_Zout
-            values_Zout = self.data_Zout[index].flatten()
+        if self.integration_data_Zsi:
+            rows_Zout = self.ind_rows_Zsi
+            cols_Zout = self.ind_cols_Zsi
+            data_Zout = self.data_Zsi[index].flatten()
 
-            _matrix_full_A = csr_matrix((values_Zout, (rows_Zout, cols_Zout)), shape=(N_dofs, N_dofs))
+        if self.integration_data_Zas:
+            rows_Zout = np.append(rows_Zout, self.ind_rows_Zas) 
+            cols_Zout = np.append(cols_Zout, self.ind_cols_Zas)
+            data_Zout = np.append(data_Zout, self.data_Zas[index].flatten())
+
+        if self.integration_data_Zsi or self.integration_data_Zas:
+            _matrix_full_A = csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=(N_dofs, N_dofs))
 
         else:
             _matrix_full_A = csr_matrix((N_dofs, N_dofs))

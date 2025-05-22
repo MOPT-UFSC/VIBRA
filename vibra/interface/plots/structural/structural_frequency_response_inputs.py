@@ -108,13 +108,14 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         selection = entities[self.comboBox_selector_filter.currentIndex()]
 
         input_ids = self.lineEdit_selection_id.text()
-        self.typed_ids = self.mesh.check_selected_ids(  
-                                                      input_ids, 
-                                                      selection = selection
-                                                      )
+        self.selected_ids, error_data = self.mesh.check_selected_ids(  
+                                                                     input_ids, 
+                                                                     selection = selection
+                                                                     )
 
-        if self.typed_ids is None:
+        if error_data is not None:
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return True
 
         self.local_dof = self.comboBox_dof_selector.currentIndex()
@@ -213,7 +214,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.model_results = dict()
         self.title = f"Structural frequency response - {self.analysis_method}"
 
-        for i, selected_id in enumerate(self.typed_ids):
+        for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
             legend_label = f"Structural response {self.local_dof_label} at {selection_type} [{selected_id}]"

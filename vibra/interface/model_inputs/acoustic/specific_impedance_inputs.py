@@ -33,6 +33,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
+        self._config_widgets()
         self._create_connections()
 
         self.load_info()
@@ -53,7 +54,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
     def _configure_qt_variables(self):
         self.pushButton_change_frequency_setup.setDisabled(True)
-
         self.treeWidget_specific_impedance.setColumnWidth(1, 20)
         self.treeWidget_specific_impedance.setColumnWidth(2, 80)
 
@@ -65,14 +65,23 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_specific_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def tabEvent_callback(self):
+    def _config_widgets(self):
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_specific_impedance.setColumnWidth(i, w)
+            self.treeWidget_specific_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def tab_event_callback(self):
+        self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -83,6 +92,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
     def on_click_item(self, item):
         if item.text(0) != "":
+            self.pushButton_remove.setEnabled(True)
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
             app().main_window.set_geometry_selection(surfaces=[surface_id])
@@ -163,10 +173,17 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
     def check_constant_values(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces",
+                                                               single_id = False,
+                                                               )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -190,8 +207,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 self.properties._set_property("specific_impedance", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set specific impedance] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
@@ -293,10 +308,17 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
     def check_table_values(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                               input_ids, 
+                                                               selection = "surfaces",
+                                                               single_id = False,
+                                                               )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -324,23 +346,18 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 if self.imported_values is None:
                     return
 
-                real_values = list(self.imported_values[:, 1])
-                imag_values = list(self.imported_values[:, 2])
+                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "nodal_attribution": False,
-                        "averaged": False,
-                        "table_names": os.path.basename(table_path),
+                        "table_names" : [table_name],
+                        "table_paths" : [table_path],
+                        "values" : [complex_values],
                         }
-                    
+
                 self.properties._set_property("specific_impedance", data, surface=surface_id)
 
             self.actions_to_finalize()
-
-            print(f"[Set specific impedance] - defined at surface(s) {surface_ids}")
 
         else:
             title = "Additional inputs required"
@@ -447,19 +464,17 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.lineEdit_table_path.setText("")
 
     def update_tabs_visibility(self):
-        surface_ids = list()
+
         for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+            property, *args = key
             if property == "specific_impedance":
                 if "anechoic_termination" in data.keys():
                     continue
-                else:
-                    surface_ids.append(surface_id)
+                self.tabWidget_main.setTabVisible(2, True)
+                return
 
-        if len(surface_ids) == 0:
-            self.tabWidget_main.setTabVisible(2, False)
-        else:
-            self.tabWidget_main.setTabVisible(2, True)
+        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(2, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
