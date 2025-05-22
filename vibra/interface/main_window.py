@@ -551,6 +551,10 @@ class MainWindow(MainWindow_UI):
         self.open_project_dialog()
     
     def action_home_exit_callback(self):
+        self.close_dialogs()
+        self.action_section_plane_callback(False)
+        self.action_section_plane.setChecked(False)
+        
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
@@ -565,11 +569,7 @@ class MainWindow(MainWindow_UI):
         self.geometry_widget.remove_all_actors()
         app().project.reset_variables()
         app().project.reset_solutions()
-
-        self.section_plane.cutting = False
-        self.section_plane.keep_section_plane = False
-        self.section_plane.closeEvent(None)
-
+        
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
