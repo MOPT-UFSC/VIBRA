@@ -312,7 +312,9 @@ class Mesh:
                 if intersect_nodes.size <= 1:
                     continue
                 
-                line_repeated = False
+                check_overlap_1 = False
+                check_overlap_2 = False
+
                 line_nodes = list(set(intersect_nodes))
                 for _line_nodes in self.separate_nodes_from_disconnected_lines(line_nodes).values():
 
@@ -320,13 +322,31 @@ class Mesh:
                     if _line_nodes in self.nodes_from_lines.values():
                         continue
 
-                    for nodes_from_line in self.nodes_from_lines.values():
-                        if np.isin(_line_nodes, nodes_from_line).all():
-                            line_repeated = True
+                    for _line_id, nodes_from_line in self.nodes_from_lines.items():
+
+                        check_overlap_1 = np.isin(nodes_from_line, _line_nodes).all()
+                        if check_overlap_1:
                             break
 
-                    if line_repeated:
-                        line_repeated = False
+                        check_overlap_2 = np.isin(_line_nodes, nodes_from_line).all()
+                        if check_overlap_2:
+                            break
+
+                    if check_overlap_1:
+                        continue
+
+                    if check_overlap_2:
+                        self.nodes_from_lines[_line_id] = _line_nodes
+                        for _tag, _lines in deepcopy(lines_from_surface).items():
+                            if _line_id in _lines:
+                                lines_from_surface[_tag] -= set({_line_id})
+
+                        for tag in [fixed_tag, sweep_tag]:
+                            if lines_from_surface.get(tag) is None:
+                                lines_from_surface[tag] = set({_line_id})
+                            else:
+                                lines_from_surface[tag] |= set({_line_id})
+
                         continue
 
                     line_id += 1
@@ -342,6 +362,10 @@ class Mesh:
 
         self.lines_from_surface.clear()
         self.lines_from_surface = {surf_id : list(lines_set) for surf_id, lines_set in lines_from_surface.items()}
+
+        # for line_id in [37, 38, 39]:
+        #     nodes = self.nodes_from_lines.get(line_id)
+        #     print(f"{line_id} -> nodes: {nodes} -> size: {len(nodes)}")
 
     def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
         """
@@ -1238,6 +1262,7 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
+
     # def map_face_elements_to_solid_elements(self):
     #     self.face_to_solid_element = dict()
     #     self.solid_to_face_elements = defaultdict(list)
@@ -1251,8 +1276,13 @@ class Mesh:
     #     mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
     #     filtered_data = self.solids_connectivity[mask_0, :]
 
-    #     for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
+    #     for elf_id, surf_id, _, _, *face_nodes in self.faces_connectivity:
+
     #         mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+    #         if np.sum(mask_1) == 0:
+    #             print(surf_id, elf_id, face_nodes)
+    #             continue
+
     #         els_id = filtered_data[mask_1, 0][0]
     #         self.face_to_solid_element[elf_id] = els_id
     #         self.solid_to_face_elements[els_id].append(elf_id)
@@ -1261,6 +1291,7 @@ class Mesh:
     def map_face_elements_to_solid_elements(self):
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
+        # return
 
         if len(self.solids_connectivity) == 0:
             return
@@ -1304,6 +1335,28 @@ class Mesh:
 
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
+
+
+    def loooking_for_colapsed_elements(self):
+        """
+        This method loops through all the elements' connectivities, searching for collapsed elements.
+        A message will be printed whether some problematic connectivity has been detected.
+        """
+
+        # solid elements
+        for els_id, vol_id, _, ns_nodes, *s_connect in self.solids_connectivity:
+            if np.unique(s_connect) < ns_nodes:
+                print(f"The solid element {els_id} from volume {vol_id} is collapsed -> connectivity: {s_connect}")
+
+        # face elements
+        for elf_id, surf_id, _, nf_nodes, *f_connect in self.faces_connectivity:
+            if np.unique(f_connect) < nf_nodes:
+                print(f"The face element {elf_id} from surface {surf_id} is collapsed -> connectivity: {f_connect}")
+
+        # line elements
+        for ell_id, line_id, _, nl_nodes, *l_connect in self.lines_connectivity:
+            if np.unique(l_connect) < nl_nodes:
+                print(f"The line element {ell_id} from line {line_id} is collapsed -> connectivity: {l_connect}")
 
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
