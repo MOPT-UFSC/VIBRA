@@ -15,6 +15,7 @@ from vibra.interface.viewer_3d.sources import (
     create_spring_source,
     create_perforated_plate_source,
     create_impedance_source,
+    create_mass_flow_rate_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -37,6 +38,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_prescribed_dofs()
         self._build_nodal_loads()
         self._build_perforated_plate()
+        self._build_mass_flow_rate()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -122,6 +124,16 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_perforated_plate_symbol(coords, normal)
+
+    def _build_mass_flow_rate(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "mass_flow_rate":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_mass_flow_rate_symbol(coords, normal)
+        
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
@@ -214,6 +226,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             color=color_names.RED,
             scale=1,
         )
+    
+    def add_mass_flow_rate_symbol(self, position, orientation):
+        self.add_symbol(
+            "mass_flow_rate",
+            position,
+            orientation,
+            color=color_names.PINK_4,
+            scale=1,
+        )
 
 
     # Preload the symbol shapes (they are likelly used in many symbols)
@@ -229,3 +250,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("mass", create_mass_source())
         self.register_shape("perforated_plate", create_perforated_plate_source())
         self.register_shape("impedance", create_impedance_source())
+        self.register_shape("mass_flow_rate", create_mass_flow_rate_source())

@@ -40,3 +40,11 @@ def create_impedance_source():
         rotation=(0, 90, 0),
         scale=(2, 2, 2),
     )
+
+def create_mass_flow_rate_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/mass_flow_rate_symbol.STL")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 90, 0),
+        scale=(2, 2, 2),
+    )
