@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QDoubleSpinBox, QFrame, QGridLayout, QHeaderView,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
-    QWidget)
+    QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -51,35 +51,16 @@ class Ui_Dialog(object):
         self.frame_8.setFrameShadow(QFrame.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_8)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.comboBox_shape_function = QComboBox(self.frame_8)
-        self.comboBox_shape_function.addItem("")
-        self.comboBox_shape_function.addItem("")
-        self.comboBox_shape_function.setObjectName(u"comboBox_shape_function")
-        self.comboBox_shape_function.setMinimumSize(QSize(0, 28))
-        self.comboBox_shape_function.setMaximumSize(QSize(120, 16777215))
+        self.label_16 = QLabel(self.frame_8)
+        self.label_16.setObjectName(u"label_16")
+        self.label_16.setMinimumSize(QSize(0, 20))
+        self.label_16.setMaximumSize(QSize(240, 16777215))
         font1 = QFont()
         font1.setPointSize(10)
-        self.comboBox_shape_function.setFont(font1)
+        self.label_16.setFont(font1)
+        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_5.addWidget(self.comboBox_shape_function, 1, 2, 1, 1)
-
-        self.comboBox_element_type = QComboBox(self.frame_8)
-        self.comboBox_element_type.addItem("")
-        self.comboBox_element_type.addItem("")
-        self.comboBox_element_type.setObjectName(u"comboBox_element_type")
-        self.comboBox_element_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_element_type.setMaximumSize(QSize(120, 16777215))
-        self.comboBox_element_type.setFont(font1)
-
-        self.gridLayout_5.addWidget(self.comboBox_element_type, 0, 2, 1, 1)
-
-        self.checkBox_mesh_connection = QCheckBox(self.frame_8)
-        self.checkBox_mesh_connection.setObjectName(u"checkBox_mesh_connection")
-        self.checkBox_mesh_connection.setMinimumSize(QSize(0, 28))
-        self.checkBox_mesh_connection.setFont(font1)
-        self.checkBox_mesh_connection.setChecked(True)
-
-        self.gridLayout_5.addWidget(self.checkBox_mesh_connection, 2, 1, 1, 2)
+        self.gridLayout_5.addWidget(self.label_16, 0, 1, 1, 1)
 
         self.label_10 = QLabel(self.frame_8)
         self.label_10.setObjectName(u"label_10")
@@ -89,15 +70,6 @@ class Ui_Dialog(object):
         self.label_10.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_5.addWidget(self.label_10, 1, 1, 1, 1)
-
-        self.label_16 = QLabel(self.frame_8)
-        self.label_16.setObjectName(u"label_16")
-        self.label_16.setMinimumSize(QSize(0, 20))
-        self.label_16.setMaximumSize(QSize(240, 16777215))
-        self.label_16.setFont(font1)
-        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_16, 0, 1, 1, 1)
 
         self.frame_13 = QFrame(self.frame_8)
         self.frame_13.setObjectName(u"frame_13")
@@ -113,6 +85,34 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.frame_14, 0, 0, 1, 1)
 
+        self.checkBox_mesh_connection = QCheckBox(self.frame_8)
+        self.checkBox_mesh_connection.setObjectName(u"checkBox_mesh_connection")
+        self.checkBox_mesh_connection.setMinimumSize(QSize(0, 28))
+        self.checkBox_mesh_connection.setFont(font1)
+        self.checkBox_mesh_connection.setChecked(True)
+
+        self.gridLayout_5.addWidget(self.checkBox_mesh_connection, 2, 1, 1, 2)
+
+        self.comboBox_element_type = QComboBox(self.frame_8)
+        self.comboBox_element_type.addItem("")
+        self.comboBox_element_type.addItem("")
+        self.comboBox_element_type.setObjectName(u"comboBox_element_type")
+        self.comboBox_element_type.setMinimumSize(QSize(0, 28))
+        self.comboBox_element_type.setMaximumSize(QSize(120, 16777215))
+        self.comboBox_element_type.setFont(font1)
+
+        self.gridLayout_5.addWidget(self.comboBox_element_type, 0, 2, 1, 1)
+
+        self.comboBox_shape_function = QComboBox(self.frame_8)
+        self.comboBox_shape_function.addItem("")
+        self.comboBox_shape_function.addItem("")
+        self.comboBox_shape_function.setObjectName(u"comboBox_shape_function")
+        self.comboBox_shape_function.setMinimumSize(QSize(0, 28))
+        self.comboBox_shape_function.setMaximumSize(QSize(120, 16777215))
+        self.comboBox_shape_function.setFont(font1)
+
+        self.gridLayout_5.addWidget(self.comboBox_shape_function, 1, 2, 1, 1)
+
 
         self.gridLayout_6.addWidget(self.frame_8, 0, 1, 1, 1)
 
@@ -121,6 +121,7 @@ class Ui_Dialog(object):
         font2 = QFont()
         font2.setPointSize(9)
         self.tabWidget_main.setFont(font2)
+        self.tabWidget_main.setTabShape(QTabWidget.Rounded)
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
         self.gridLayout_9 = QGridLayout(self.tab)
@@ -414,6 +415,7 @@ class Ui_Dialog(object):
         __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_refining_mesh_data.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         self.tableWidget_refining_mesh_data.setObjectName(u"tableWidget_refining_mesh_data")
+        self.tableWidget_refining_mesh_data.setShowGrid(False)
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_refining_mesh_data.verticalHeader().setVisible(False)
         self.tableWidget_refining_mesh_data.verticalHeader().setStretchLastSection(False)
@@ -514,6 +516,40 @@ class Ui_Dialog(object):
         self.gridLayout.addWidget(self.frame_3, 0, 1, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_2, "")
+        self.tab_5 = QWidget()
+        self.tab_5.setObjectName(u"tab_5")
+        self.verticalLayout = QVBoxLayout(self.tab_5)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.tableWidget_mesh_quality = QTableWidget(self.tab_5)
+        if (self.tableWidget_mesh_quality.columnCount() < 3):
+            self.tableWidget_mesh_quality.setColumnCount(3)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(0, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(1, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(2, __qtablewidgetitem5)
+        self.tableWidget_mesh_quality.setObjectName(u"tableWidget_mesh_quality")
+        self.tableWidget_mesh_quality.setMaximumSize(QSize(654654, 16777215))
+        self.tableWidget_mesh_quality.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_mesh_quality.verticalHeader().setVisible(False)
+        self.tableWidget_mesh_quality.verticalHeader().setStretchLastSection(False)
+
+        self.verticalLayout.addWidget(self.tableWidget_mesh_quality)
+
+        self.pushButton = QPushButton(self.tab_5)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setEnabled(False)
+        self.pushButton.setMinimumSize(QSize(140, 30))
+        self.pushButton.setMaximumSize(QSize(140, 16777215))
+        self.pushButton.setAutoDefault(False)
+
+        self.verticalLayout.addWidget(self.pushButton, 0, Qt.AlignHCenter)
+
+        self.tabWidget_main.addTab(self.tab_5, "")
 
         self.gridLayout_6.addWidget(self.tabWidget_main, 1, 1, 1, 1)
 
@@ -559,7 +595,7 @@ class Ui_Dialog(object):
         self.pushButton_generate_mesh.setMinimumSize(QSize(140, 30))
         self.pushButton_generate_mesh.setMaximumSize(QSize(140, 30))
         self.pushButton_generate_mesh.setFont(font1)
-        self.pushButton_generate_mesh.setAutoDefault(False)
+        self.pushButton_generate_mesh.setAutoDefault(True)
 
         self.gridLayout_4.addWidget(self.pushButton_generate_mesh, 0, 1, 1, 1)
 
@@ -590,15 +626,15 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.comboBox_shape_function.setItemText(0, QCoreApplication.translate("Dialog", u"Linear", None))
-        self.comboBox_shape_function.setItemText(1, QCoreApplication.translate("Dialog", u"Quadratic", None))
-
+        self.label_16.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
+        self.label_10.setText(QCoreApplication.translate("Dialog", u"Shape function:", None))
+        self.checkBox_mesh_connection.setText(QCoreApplication.translate("Dialog", u"Merge nodes from connected volumes", None))
         self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Tetrahedral", None))
         self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Hexahedral", None))
 
-        self.checkBox_mesh_connection.setText(QCoreApplication.translate("Dialog", u"Merge nodes from connected volumes", None))
-        self.label_10.setText(QCoreApplication.translate("Dialog", u"Shape function:", None))
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
+        self.comboBox_shape_function.setItemText(0, QCoreApplication.translate("Dialog", u"Linear", None))
+        self.comboBox_shape_function.setItemText(1, QCoreApplication.translate("Dialog", u"Quadratic", None))
+
         self.lineEdit_geometry_tolerance.setText(QCoreApplication.translate("Dialog", u"1e-6", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Geometry tolerance:", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Min. element size factor:", None))
@@ -653,6 +689,14 @@ class Ui_Dialog(object):
         self.label_7.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.lineEdit_selected_ids.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_2), QCoreApplication.translate("Dialog", u"Local refining", None))
+        ___qtablewidgetitem3 = self.tableWidget_mesh_quality.horizontalHeaderItem(0)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Parameter", None));
+        ___qtablewidgetitem4 = self.tableWidget_mesh_quality.horizontalHeaderItem(1)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Minimum value", None));
+        ___qtablewidgetitem5 = self.tableWidget_mesh_quality.horizontalHeaderItem(2)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Maximum value", None));
+        self.pushButton.setText(QCoreApplication.translate("Dialog", u"Plot parameter", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_5), QCoreApplication.translate("Dialog", u"Mesh quality", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Mesh configuration", None))
         self.pushButton_generate_mesh.setText(QCoreApplication.translate("Dialog", u"Generate mesh", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
@@ -669,13 +713,13 @@ class MesherSetup_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame_8: QFrame
                                 - (Layout): QGridLayout
-                                        - comboBox_shape_function: QComboBox
-                                        - comboBox_element_type: QComboBox
-                                        - checkBox_mesh_connection: QCheckBox
-                                        - label_10: QLabel
                                         - label_16: QLabel
+                                        - label_10: QLabel
                                         - frame_13: QFrame
                                         - frame_14: QFrame
+                                        - checkBox_mesh_connection: QCheckBox
+                                        - comboBox_element_type: QComboBox
+                                        - comboBox_shape_function: QComboBox
                             - tabWidget_main: QTabWidget
                                 - tab: QWidget
                                     - (Layout): QGridLayout
@@ -726,6 +770,10 @@ class MesherSetup_UI(QDialog, Ui_Dialog):
                                                         - label_selected_ids: QLabel
                                                         - label_7: QLabel
                                                         - lineEdit_selected_ids: QLineEdit
+                                - tab_5: QWidget
+                                    - (Layout): QVBoxLayout
+                                            - tableWidget_mesh_quality: QTableWidget
+                                            - pushButton: QPushButton
                 - frame_6: QFrame
                     - (Layout): QGridLayout
                             - label_8: QLabel

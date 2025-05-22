@@ -85,6 +85,8 @@ class MeshSetupInputs(MesherSetup_UI):
         self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
+        self.config_control_quality_table()
+
     def _create_connections(self):
         #
         self.comboBox_shape_function.currentIndexChanged.connect(self.update_gmsh_controls)
@@ -418,6 +420,25 @@ class MeshSetupInputs(MesherSetup_UI):
         else:
             return None
             # raise NotImplementedError(f"Element type not defined!")
+
+    def config_control_quality_table(self):
+        parameters = [
+            "Gamma",
+            "Volume",
+            "minSJ",
+            "minSIGE",
+            "minSICN",
+        ]
+        mesh_quality_parameters = app().project.model.mesh.mesh_quality_parameters
+        parameters_min = []
+        parameters_max = []
+
+        self.tableWidget_mesh_quality.setRowCount(len(parameters))
+        for i, parameter in enumerate(parameters):
+            self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(parameter))
+        
+        self.tableWidget_mesh_quality.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
 
     def update_gmsh_controls(self):
 
