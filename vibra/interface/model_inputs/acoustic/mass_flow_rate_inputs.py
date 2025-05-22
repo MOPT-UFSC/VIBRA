@@ -32,10 +32,10 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
+        self._config_widgets()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -44,21 +44,29 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
 
-    def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        
+    def _config_widgets(self):
+        self.pushButton_change_frequency_setup.setDisabled(True)        
         self.radioButton_element_integration_constant.setDisabled(True)
         self.radioButton_element_integration_table.setDisabled(True)
 
         self.treeWidget_mass_flow_rate.setColumnWidth(1, 20)
         self.treeWidget_mass_flow_rate.setColumnWidth(2, 80)
+        #
+        self.radioButton_element_integration_constant.setChecked(True)
+        self.radioButton_element_integration_table.setChecked(True)
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_mass_flow_rate.setColumnWidth(i, w)
+            self.treeWidget_mass_flow_rate.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -73,13 +81,16 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
         self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.update_controls_for_constant_value()
+        self.update_controls_for_table_of_values()
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -102,7 +113,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         self.lineEdit_selection_id.setText(item.text(0))
         self.remove_callback()
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_mass_flow_rate.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
@@ -125,7 +136,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        faces = app().main_window.selected_geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -163,10 +174,16 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
     def check_constant_values(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -288,13 +305,15 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
     def check_table_values(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
 
-        if surface_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_conflicting_excitations(surface_ids)
@@ -322,19 +341,18 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                 if self.imported_values is None:
                     return
 
-                real_values = list(self.imported_values[:, 1])
-                imag_values = list(self.imported_values[:, 2])
-
                 nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
                 key_avg = self.checkBox_averaged_constant_values.isChecked()
+
+                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
+                        "table_paths" : [table_path],
+                        "table_names" : [table_name],
+                        "values" : [complex_values],
                         "nodal_attribution": nodal_attribution,
                         "averaged": key_avg,
-                        "table_names": os.path.basename(table_path),
                         }
 
                 self.properties._set_property("mass_flow_rate", data, surface=surface_id)
@@ -413,11 +431,11 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
-        self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
+        app().main_window.update_info_text()
         app().main_window.mesh_widget.update_symbols()
 
     def change_frequency_setup(self):
@@ -457,16 +475,14 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
     def update_tabs_visibility(self):
 
-        surface_ids = list()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+        for key in self.properties.surface_properties.keys():
+            property, *args = key
             if property == "mass_flow_rate":
-                surface_ids.append(surface_id)
+                self.tabWidget_main.setTabVisible(2, True)
+                return
 
-        if len(surface_ids) == 0:
+            self.tabWidget_main.setCurrentIndex(0)
             self.tabWidget_main.setTabVisible(2, False)
-        else:
-            self.tabWidget_main.setTabVisible(2, True)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

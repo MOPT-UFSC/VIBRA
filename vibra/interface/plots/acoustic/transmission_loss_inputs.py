@@ -168,25 +168,27 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def check_inputs(self):
 
         input_surface_id = self.lineEdit_input_surface_id.text()
-        self.input_surface_id = self.mesh.check_selected_ids(   
-                                                             input_surface_id, 
-                                                             selection = "surfaces", 
-                                                             single_id = True
-                                                             )
+        self.input_surface_id, error_data = self.mesh.check_selected_ids(   
+                                                                        input_surface_id, 
+                                                                        selection = "surfaces", 
+                                                                        single_id = True
+                                                                        )
 
-        if self.input_surface_id is None:
-            self.lineEdit_output_surface_id.setFocus()
+        if error_data is not None:
+            self.lineEdit_input_surface_id.setFocus()
+            PrintMessageInput(error_data)
             return True
 
         output_surface_id = self.lineEdit_output_surface_id.text()
-        self.output_surface_id = self.mesh.check_selected_ids(  
-                                                              output_surface_id, 
-                                                              selection = "surfaces", 
-                                                              single_id = True
-                                                              )
+        self.output_surface_id, error_data = self.mesh.check_selected_ids(   
+                                                                        output_surface_id, 
+                                                                        selection = "surfaces", 
+                                                                        single_id = True
+                                                                        )
 
-        if self.output_surface_id is None:
+        if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()
+            PrintMessageInput(error_data)
             return True
 
     def join_model_data(self):

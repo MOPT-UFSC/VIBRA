@@ -43,7 +43,7 @@ class LoadProject:
 
     def load_geometry(self):
         geometry_path = self.file.read_geometry_from_file()
-        app().main_window.import_geometry(geometry_path, update_render=False)
+        app().main_window.import_geometry_or_mesh(geometry_path, update_render=False)
 
     def load_project_libraries(self):
         self.load_fluid_library()
@@ -296,9 +296,10 @@ class LoadProject:
 
         self.model.mesh.process_upwards_adjacencies_from_entities()
 
-        logging.info("Loading mesh... [80/100]")
-
+        logging.info("Loading mesh... [65/100]")
         self.model.mesh.process_mesh_related_mappings()
+
+        logging.info("Loading mesh... [90/100]")
         self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
         self.model.generated_mesh = True
 

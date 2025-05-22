@@ -395,15 +395,18 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             elif attribute_type == 1:
-                input_ids = self.lineEdit_selection_id.text()
-                volume_ids = self.mesh.check_selected_ids(
-                                                          input_ids, 
-                                                          selection = "volumes", 
-                                                          single_id = False
-                                                          )
 
-                if volume_ids is None:
+                input_ids = self.lineEdit_selection_id.text()
+                volume_ids, error_data = self.mesh.check_selected_ids(
+                                                                      input_ids, 
+                                                                      selection = "volumes", 
+                                                                      single_id = False,
+                                                                      )
+
+                if error_data is not None:
+                    self.hide()
                     self.lineEdit_selection_id.setFocus()
+                    PrintMessageInput(error_data)
                     return True
 
             for volume_id in volume_ids:
