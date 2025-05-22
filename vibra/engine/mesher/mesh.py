@@ -35,8 +35,11 @@ class Mesh:
 
         ## geometry-related attributes
 
+        self.nodes_to_highlight = list()
+        self.efaces_to_highlight = list()
+
         self.surfaces_from_volume = dict()
-        self.lines_from_surface = dict()
+        self.lines_from_surface = defaultdict(list)
         self.points_from_line = dict()
 
         self.volumes_from_surface = defaultdict(list)
@@ -299,7 +302,8 @@ class Mesh:
 
         index = 0
         line_id = 0
-        lines_from_surface = defaultdict(list)
+
+        self.nodes_from_lines.clear()
         surface_ids = self.geometry_information.get("surfaces")
 
         while index < len(surface_ids):
@@ -338,35 +342,23 @@ class Mesh:
 
                     if check_overlap_2:
                         self.nodes_from_lines[_line_id] = _line_nodes
-                        for _tag, _lines in deepcopy(lines_from_surface).items():
-                            if _line_id in _lines:
-                                lines_from_surface[_tag] -= set({_line_id})
-
-                        for tag in [fixed_tag, sweep_tag]:
-                            if lines_from_surface.get(tag) is None:
-                                lines_from_surface[tag] = set({_line_id})
-                            else:
-                                lines_from_surface[tag] |= set({_line_id})
-
                         continue
 
                     line_id += 1
                     self.nodes_from_lines[line_id] = _line_nodes
 
-                    for tag in [fixed_tag, sweep_tag]:    
-                        if lines_from_surface.get(tag) is None:
-                            lines_from_surface[tag] = set({line_id})
-                        else:
-                            lines_from_surface[tag] |= set({line_id})
-
             index += 1
 
         self.lines_from_surface.clear()
-        self.lines_from_surface = {surf_id : list(lines_set) for surf_id, lines_set in lines_from_surface.items()}
+        for line_id, line_nodes in self.nodes_from_lines.items():
+            for surf_id, surface_nodes in self.nodes_from_surfaces.items():
+                if np.isin(line_nodes, surface_nodes).all():
+                    self.lines_from_surface[surf_id].append(line_id)
 
-        # for line_id in [37, 38, 39]:
-        #     nodes = self.nodes_from_lines.get(line_id)
-        #     print(f"{line_id} -> nodes: {nodes} -> size: {len(nodes)}")
+        # for _id in [17, 18, 19, 20, 22, 23, 24, 25]:
+        #     lines = self.lines_from_surface.get(_id)
+        #     print(f"Surface: {_id} -> {lines}")
+
 
     def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
         """
@@ -1279,11 +1271,25 @@ class Mesh:
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
         filtered_data = self.solids_connectivity[mask_0, :]
 
-        for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
+        self.nodes_to_highlight.clear()
+        self.efaces_to_highlight.clear()
+
+        for e2d_id, surf_id, _, _, *face_nodes in self.faces_connectivity:
             mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-            els_id = filtered_data[mask_1, 0][0]
-            self.face_to_solid_element[elf_id] = els_id
-            self.solid_to_face_elements[els_id].append(elf_id)
+
+            if np.sum(mask_1) == 0:
+                # TODO: remove these attributes when we are sure that no more errors
+                # occur after processing the degrees of freedom decoupling.
+                # The problematic nodes and face elements are highlighted after closing the section plane UI.
+                self.nodes_to_highlight.append(face_nodes)
+                self.efaces_to_highlight.append(e2d_id)
+                print(surf_id, e2d_id, face_nodes)
+                continue
+
+            e3d_id = filtered_data[mask_1, 0][0]
+            self.face_to_solid_element[e2d_id] = e3d_id
+            self.solid_to_face_elements[e3d_id].append(e2d_id)
+
 
     def map_face_elements_to_solid_elements(self):
         '''

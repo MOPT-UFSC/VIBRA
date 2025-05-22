@@ -153,7 +153,16 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.editing = False
         self.value_changed.emit()
         self.closed.emit()
-    
+
+        nodes_to_highlight = list(np.unique(app().project.model.mesh.nodes_to_highlight))
+        faces_to_highlight = app().project.model.mesh.efaces_to_highlight
+        if nodes_to_highlight or faces_to_highlight:
+            import numpy as np
+            app().main_window.set_mesh_selection(
+                                                nodes = nodes_to_highlight,
+                                                faces = faces_to_highlight
+                                                )
+
     def block_signals(self, widgets: QWidget, option: bool):
         for widget in widgets:
             if hasattr(widget, "blockSignals"):
