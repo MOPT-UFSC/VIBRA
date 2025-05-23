@@ -413,8 +413,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 self.properties._set_property("porous_material_model", model_data, volume=volume_id)
 
             app().file.write_model_properties_in_file()
-
-            print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
             self.load_info()
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
