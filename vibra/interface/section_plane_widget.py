@@ -4,6 +4,7 @@ from PySide6.QtGui import QFont
 
 from vibra import app, UI_DIR
 from molde import load_ui
+import numpy as  np
 
 class SectionPlaneWidget(QDialog):
     value_changed = Signal()
@@ -184,8 +185,8 @@ class SectionPlaneWidget(QDialog):
 
         nodes_to_highlight = list(np.unique(app().project.model.mesh.nodes_to_highlight))
         faces_to_highlight = app().project.model.mesh.efaces_to_highlight
+
         if nodes_to_highlight or faces_to_highlight:
-            import numpy as np
             app().main_window.set_mesh_selection(
                                                 nodes = nodes_to_highlight,
                                                 faces = faces_to_highlight
