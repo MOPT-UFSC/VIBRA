@@ -5,6 +5,7 @@ from PySide6.QtGui import QFont
 from vibra import app
 from vibra.interface.ui_generated.render.section_plane_inputs_ui import SectionPlaneInputs_UI
 
+import numpy as np
 
 class SectionPlaneWidget(SectionPlaneInputs_UI):
     value_changed = Signal()
@@ -156,8 +157,8 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
 
         nodes_to_highlight = list(np.unique(app().project.model.mesh.nodes_to_highlight))
         faces_to_highlight = app().project.model.mesh.efaces_to_highlight
+
         if nodes_to_highlight or faces_to_highlight:
-            import numpy as np
             app().main_window.set_mesh_selection(
                                                 nodes = nodes_to_highlight,
                                                 faces = faces_to_highlight
