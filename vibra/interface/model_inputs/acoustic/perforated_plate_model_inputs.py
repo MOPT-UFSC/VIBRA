@@ -38,7 +38,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self._initialize()
         self._config_window()
-        self._create_connections()
         self._config_widgets()
         self._create_connections()
 
