@@ -425,17 +425,20 @@ class MeshSetupInputs(MesherSetup_UI):
         parameters = [
             "Gamma",
             "Volume",
-            "minSJ",
-            "minSIGE",
-            "minSICN",
+            "Minumum Scaled Jacobian",
+            "Minimum Scaled Interpolation Error Gradient",
+            "Minimum Scaled Inverse Condition Number",
         ]
-        mesh_quality_parameters = app().project.model.mesh.mesh_quality_parameters
-        parameters_min = []
-        parameters_max = []
+
+        # worst_value = app().project.model.mesh.mesh_quality_worst_value
+        # print(worst_value)
 
         self.tableWidget_mesh_quality.setRowCount(len(parameters))
-        for i, parameter in enumerate(parameters):
+        for i, parameter in enumerate(["Gamma", "Volume", "minSJ", "minSIGE", "minSICN"]):
             self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(parameter))
+            # self.tableWidget_mesh_quality.setItem(i, 1, QTableWidgetItem(worst_value[parameter]))
+
+
         
         self.tableWidget_mesh_quality.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
