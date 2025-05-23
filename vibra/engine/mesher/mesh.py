@@ -350,6 +350,7 @@ class Mesh:
 
         self.lines_from_surface.clear()
         for line_id, line_nodes in self.nodes_from_lines.items():
+            self.length_from_lines[line_id] = 0.
             for surf_id, surface_nodes in self.nodes_from_surfaces.items():
                 if np.isin(line_nodes, surface_nodes).all():
                     self.lines_from_surface[surf_id].append(line_id)
