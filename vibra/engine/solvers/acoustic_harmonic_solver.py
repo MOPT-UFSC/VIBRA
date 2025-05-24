@@ -181,7 +181,7 @@ class AcousticHarmonicSolver:
                     K = self.assembler.stiffness_matrix
 
                 # update the prescribed dofs-related load vector for each frequency step
-                F_eq = self.get_prescribed_pressure_model_excitation(index=i, matrices_updated=frequency_dependent)
+                F_eq = self.get_prescribed_pressure_model_excitation(index=i)
 
             A = K - (omega**2) * M + 1j * omega * C
             F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
