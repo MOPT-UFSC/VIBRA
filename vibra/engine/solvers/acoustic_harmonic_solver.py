@@ -140,7 +140,7 @@ class AcousticHarmonicSolver:
 
         for i, freq in enumerate(frequencies):
 
-            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(frequencies)}]")
+            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i+1}/{len(frequencies)}]")
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
@@ -258,16 +258,18 @@ class AcousticHarmonicSolver:
         if len(self.prescribed_values) == 0:
             return 0.
 
-        if index == 0 or matrices_updated:
-            self.Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
-            self.Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
+        self.Kr = self.assembler.stiffness_matrix_r
+        self.Mr = self.assembler.mass_matrix_r
+        self.Cr = self.assembler.damping_matrix_r
+        self.Cr_visc = self.assembler.visc_damping_matrix_r
 
-        self.Cr = (self.assembler.damping_matrix_r.toarray())[self.unprescribed_indexes, :]
-        self.Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
+        values = self.array_prescribed_values[:, index]
 
-        Kr_add = np.sum((self.Kr * self.array_prescribed_values[:, index]), axis=1)
-        Mr_add = np.sum((self.Mr * self.array_prescribed_values[:, index]), axis=1)
-        Cr_add = np.sum(((self.Cr + self.Cr_visc) * self.array_prescribed_values[:, index]), axis=1)
+        # Note: multiply a sparse matrix A by an array vector v using the * operator
+        # is similar to the @ operator when computing the product of arrays
+        Kr_add = self.Kr * values
+        Mr_add = self.Mr * values
+        Cr_add = (self.Cr + self.Cr_visc) * values
 
         frequencies = self.assembler.model.frequencies
         omega = 2 * np.pi * frequencies[index]
@@ -277,7 +279,7 @@ class AcousticHarmonicSolver:
         F_Cadd = 1j * omega * Cr_add
         F_eq = F_Kadd + F_Madd + F_Cadd
 
-        return F_eq
+        return F_eq[self.unprescribed_indexes]
 
 
     def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray, TL=False):
