@@ -264,6 +264,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.hide_sphere()
 
         elif attribution_type in [2, 3]:
+            if self.main_window.selected_geometry_volumes:
+                self.lineEdit_selection_id.setText("")
+                app().main_window.set_geometry_selection()
+
             surfaces = self.main_window.selected_geometry_surfaces
             if not surfaces or self.lineEdit_selection_id.text() == "All bodies":
                 self.lineEdit_selection_id.setText("")
@@ -271,6 +275,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.comboBox_filter_type.setEnabled(True)
             self.doubleSpinBox_selection_radius.setEnabled(True)
             self.pushButton_selection_info.setEnabled(True)
+
             self.call_sphere_plotter()
 
     def load_info(self):
@@ -347,8 +352,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         mesh_widget.select_multiple_volumes(elements)
 
     def geometry_selection_callback(self):
-        if not self.isVisible():
-            return
 
         faces = self.main_window.selected_geometry_surfaces
         volumes = self.main_window.selected_geometry_volumes
@@ -378,15 +381,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+                                                               input_ids, 
+                                                               selection = "surfaces"
+                                                               )
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return list()
         
         selection_index = self.comboBox_attribution_type.currentIndex()
 
@@ -424,10 +427,16 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def call_sphere_plotter(self):
 
+        if self.lineEdit_selection_id.text() == "":
+            return
+
         if self.comboBox_attribution_type.currentIndex() >= 2:
 
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
             center_coords = self.get_center_coordinates()
+
+            if not center_coords:
+                return
 
             if len(center_coords):
                 all_radius = [self.selection_radius for _ in center_coords]
@@ -550,60 +559,64 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         if self.tabWidget_main.currentIndex() == 0:
             model_data = self.get_rectangular_duct_inputs()
+
         elif self.tabWidget_main.currentIndex() == 1:
             model_data = self.get_circular_duct_inputs()
+
         else:
             return
 
-        if model_data:
+        if not model_data:
+            return
 
-            attribute_type = self.comboBox_attribution_type.currentIndex()
-            if attribute_type in [0, 1]:
-                
-                volume_ids = list()
-                if attribute_type == 0:
-                    if "volumes" in self.mesh.geometry_information.keys():
-                        volume_ids = self.mesh.geometry_information["volumes"]
+        assignment_type = self.comboBox_attribution_type.currentIndex()
 
-                elif attribute_type == 1:
-                    input_ids = self.lineEdit_selection_id.text()
-                    surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                           input_ids, 
-                                                                           selection = "volumes", 
-                                                                           single_id = False,
-                                                                           )
+        if assignment_type in [0, 1]:
 
-                    if error_data is not None:
-                        self.hide()
-                        self.lineEdit_selection_id.setFocus()
-                        PrintMessageInput(error_data)
-                        return
+            volume_ids = list()
+            if assignment_type == 0:
+                if "volumes" in self.mesh.geometry_information.keys():
+                    volume_ids = self.mesh.geometry_information["volumes"]
 
-                for volume_id in volume_ids:
-                    self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
+            elif assignment_type == 1:
+                input_ids = self.lineEdit_selection_id.text()
+                volume_ids, error_data = self.mesh.check_selected_ids(
+                                                                      input_ids, 
+                                                                      selection = "volumes", 
+                                                                      single_id = False,
+                                                                      )
 
-            elif attribute_type in [2, 3]:
+                if error_data is not None:
+                    self.hide()
+                    self.lineEdit_selection_id.setFocus()
+                    PrintMessageInput(error_data)
+                    return
 
-                if attribute_type == 2:
-                    averaged_selection = False
-                else:
-                    averaged_selection = True
+            for volume_id in volume_ids:
+                self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
-                group_id = self.get_lrf_group_index()
-                filter_type = self.comboBox_filter_type.currentIndex()
+        elif assignment_type in [2, 3]:
 
-                surface_ids = self.main_window.selected_geometry_surfaces
-                self.selection_radius = self.doubleSpinBox_selection_radius.value()
+            if assignment_type == 2:
+                averaged_selection = False
+            else:
+                averaged_selection = True
 
-                model_data["surface_ids"] = list(surface_ids)
-                model_data["selection_radius"] = self.selection_radius
-                model_data["averaged"] = averaged_selection
-                model_data["filter_type"] = filter_type
+            group_id = self.get_lrf_group_index()
+            filter_type = self.comboBox_filter_type.currentIndex()
 
-                self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
+            surface_ids = self.main_window.selected_geometry_surfaces
+            self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
-            app().file.write_model_properties_in_file()
-            self.load_info()
+            model_data["surface_ids"] = list(surface_ids)
+            model_data["selection_radius"] = self.selection_radius
+            model_data["averaged"] = averaged_selection
+            model_data["filter_type"] = filter_type
+
+            self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
+
+        app().file.write_model_properties_in_file()
+        self.load_info()
 
     def check_inputs(self, lineEdit, label, _float=True):
 
@@ -713,7 +726,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
 
     def get_effective_properties(self, fluid: Fluid):
-
+        
+        print("get_effective_properties")
         warnings.filterwarnings('ignore')
 
         frequencies = None

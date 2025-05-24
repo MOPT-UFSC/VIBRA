@@ -1249,7 +1249,7 @@ class Mesh:
         #     areas_data = json.load(file)
 
 
-    def _process_solid_elements_connected_to_nodes(self):
+    def process_solid_elements_connected_to_nodes(self):
         # t0 = time()
 
         self.nodes_from_solid_element.clear()
@@ -1669,8 +1669,21 @@ class Mesh:
         return np.array([keys, values], dtype=int).T
 
 
-    def _process_element_average_coordinates(self, element_ids):
-        """ This method evaluates the element average center coordinates. """
+    def process_element_average_coordinates(self, element_ids: list[int]) -> dict:
+        """ 
+        This method computes the element average center coordinates of the selected element ID.
+
+        Parameters
+        ----------
+        element_ids: list
+            A list of selected solid element IDs.
+
+        Returns
+        -------
+        solid_elements_center: dict
+            A dictionary that maps each element ID to the respective element center coordinates.
+
+        """
 
         solid_elements_center = dict()
 
@@ -1766,7 +1779,7 @@ class Mesh:
                 _, filtered_elements = self.get_nodes_inside_sphere_and_its_elements_connected(center_coords, filter_radius)
 
                 if filtered_elements:
-                    filtered_solid_elements = self._process_element_average_coordinates(filtered_elements)
+                    filtered_solid_elements = self.process_element_average_coordinates(filtered_elements)
                     element_indexes = np.array(list(filtered_solid_elements.keys()), dtype=int)
                     elements_center_coordinates = np.array(list(filtered_solid_elements.values()), dtype=float)
                 else:

@@ -126,9 +126,14 @@ class Model:
 
         try:
 
+            logging.info("Processing mesh... [15/100]")
+
             self.mesh.geometry_imported = False
             self.mesh.load_mesh(path)
             self.generated_mesh = True
+
+            logging.info("Processing mesh... [90/100]")
+            self.mesh.process_solid_elements_connected_to_nodes()
 
         except Exception as error_log:
             from traceback import print_exception
@@ -159,7 +164,7 @@ class Model:
         self.generated_mesh = True
 
         logging.info("Processing mesh... [90/100]")
-        self.mesh._process_solid_elements_connected_to_nodes()
+        self.mesh.process_solid_elements_connected_to_nodes()
 
     def set_mesh(self, mesh):
         self.mesh = mesh

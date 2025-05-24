@@ -301,10 +301,7 @@ class LoadProject:
         self.model.generated_mesh = True
 
         logging.info("Loading mesh... [95/100]")
-        self.model.mesh._process_solid_elements_connected_to_nodes()
-
-        # logging.info("Loading mesh... [95/100]")
-        # self.model.mesh._process_element_average_coordinates()
+        self.model.mesh.process_solid_elements_connected_to_nodes()
 
     def load_mesh_setup(self):
 
