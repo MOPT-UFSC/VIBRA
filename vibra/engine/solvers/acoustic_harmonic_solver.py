@@ -261,8 +261,9 @@ class AcousticHarmonicSolver:
         if index == 0 or matrices_updated:
             self.Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
             self.Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
-            self.Cr = (self.assembler.damping_matrix_r.toarray())[self.unprescribed_indexes, :]
-            self.Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
+
+        self.Cr = (self.assembler.damping_matrix_r.toarray())[self.unprescribed_indexes, :]
+        self.Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
 
         Kr_add = np.sum((self.Kr * self.array_prescribed_values[:, index]), axis=1)
         Mr_add = np.sum((self.Mr * self.array_prescribed_values[:, index]), axis=1)
