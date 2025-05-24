@@ -2,6 +2,7 @@
 
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QColor
 
 from vibra import app
 from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
@@ -44,6 +45,7 @@ class MeshSetupInputs(MesherSetup_UI):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
+        self.worst_value = dict()
 
         self._config_window()
         self._initialize()
@@ -85,7 +87,6 @@ class MeshSetupInputs(MesherSetup_UI):
         self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
-        self.config_control_quality_table()
 
     def _create_connections(self):
         #
@@ -326,6 +327,10 @@ class MeshSetupInputs(MesherSetup_UI):
         app().file.write_geometry_data_in_file()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
+        self.worst_value = app().project.model.mesh.mesh_quality_worst_value
+        self.config_control_quality_table()
+
+
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
@@ -354,6 +359,9 @@ class MeshSetupInputs(MesherSetup_UI):
         app().file.remove_results_data_from_project_file()
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
+        self.worst_value = app().project.model.mesh.mesh_quality_worst_value
+
+
 
     def get_mesh_refinement_data(self):
 
@@ -422,25 +430,31 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        parameters = [
-            "Gamma",
-            "Volume",
-            "Minumum Scaled Jacobian",
-            "Minimum Scaled Interpolation Error Gradient",
-            "Minimum Scaled Inverse Condition Number",
-        ]
+        if not self.worst_value:
+            return
 
-        # worst_value = app().project.model.mesh.mesh_quality_worst_value
-        # print(worst_value)
+        param_map = {
+            "gamma": ("Gamma", lambda v: "green" if v < 2 else "yellow" if v < 5 else "red"),
+            "volume": ("Volume", lambda v: "green" if v > 1e-3 else "yellow" if v > 0 else "red"),
+            "minSJ": ("Minimum Scaled Jacobian", lambda v: "green" if v > 0.3 else "yellow" if v > 0.1 else "red"),
+            "minSIGE": ("Minimum Scaled Interpolation Error Gradient", lambda v: "green" if v > 0.7 else "yellow" if v > 0.5 else "red"),
+            "minSICN": ("Minimum Scaled Inverse Condition Number", lambda v: "green" if v > 0.7 else "yellow" if v > 0.3 else "red"),
+        }
 
-        self.tableWidget_mesh_quality.setRowCount(len(parameters))
-        for i, parameter in enumerate(["Gamma", "Volume", "minSJ", "minSIGE", "minSICN"]):
-            self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(parameter))
-            # self.tableWidget_mesh_quality.setItem(i, 1, QTableWidgetItem(worst_value[parameter]))
+        self.tableWidget_mesh_quality.setRowCount(len(param_map))
+        self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 300)
 
 
-        
-        self.tableWidget_mesh_quality.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        for i, (key, (label, color_fn)) in enumerate(param_map.items()):
+            self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(label))
+
+            value = self.worst_value.get(key)
+            color = color_fn(value)
+            value_item = QTableWidgetItem(str(round(value, 3)))
+            value_item.setForeground(QBrush(QColor(color)))
+            self.tableWidget_mesh_quality.setItem(i, 1, value_item)
+                
+            # self.tableWidget_mesh_quality.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
 
     def update_gmsh_controls(self):

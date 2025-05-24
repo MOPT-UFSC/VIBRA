@@ -159,7 +159,6 @@ class Mesh:
         self.mesh_connection = mesh_connection
 
         gmsh.initialize("", False, interruptible=False)
-        print("inicializou o gms")
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
@@ -190,24 +189,18 @@ class Mesh:
             logging.info("Generating mesh... [45/100]")
             # gmsh.model.mesh.generate(dim=element_type.dimensions)
             gmsh.model.mesh.generate(dim=dimension)
-            print("malha gerada")
 
             logging.info("Generating mesh... [60/100]")
             self.process_geometry_information()
             self.process_downwards_adjacencies_from_entities()
             self.process_upwards_adjacencies_from_entities()
-            print("antes mesg quality parameters")
             self.get_mesh_quality_parameters()
-            print("depois mesg quality parameters")
-            # print(f"{self.mesh_quality}")
-            # print(f"{self.mesh_quality}")
 
             gmsh.model.mesh.removeDuplicateNodes()
 
         except Exception as error_log:
             print_exception(error_log)
             gmsh.finalize()
-            print("finalizou o gmsh")
 
         logging.info("Post-processing mesh... [70/100]")
         self.post_process_mesh_data()
@@ -1091,6 +1084,9 @@ class Mesh:
     
     
     def get_mesh_quality_parameters(self):
+        if not gmsh.model.mesh.getElements(3, -1)[1]:
+            return
+        
         parameters = [
             "gamma",
             "volume",
@@ -1098,33 +1094,20 @@ class Mesh:
             "minSIGE",
             "minSICN",
         ]
-        # print(gmsh.model.mesh.getElements(2, -1))
-        if not gmsh.model.mesh.getElements(3, -1)[1]:
-            return
         
         for parameter in parameters:
             qualities = dict()
-            current_worst_value = 1
-            # print(100*"**")
-            # print(np.array(gmsh.model.mesh.getElements(3, -1)[1]).shape)
-            # print(100*"**")
-            for element in gmsh.model.mesh.getElements(3, -1)[1][0]:
-                print(100*"**")
-                print(element)
-                print(100*"**")
-                element_quality = min(gmsh.model.mesh.getElementQualities(element, parameter))
+            elements = gmsh.model.mesh.getElements(3, -1)[1][0]
+            
+            element_qualities = gmsh.model.mesh.getElementQualities(elements, parameter)
+            for i, element in enumerate(elements):
+                qualities[element] = element_qualities[i]
 
-                if element_quality < current_worst_value:
-                    current_worst_value = element_quality
-                
-                qualities[element] = element_quality
-            
             self.mesh_quality[parameter] = qualities
-            self.mesh_quality_worst_value[parameter] = current_worst_value
-            
-            print(100*"=")
-            print(f"{self.mesh_quality_worst_value=}")
-        
+            self.mesh_quality_worst_value[parameter] = min(element_qualities)
+        # print(self.mesh_quality_worst_value)
+
+        return self.mesh_quality_worst_value   
 
 
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
