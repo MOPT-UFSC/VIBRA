@@ -148,16 +148,16 @@ class AcousticHarmonicSolver:
             # create the frequency vector
             omega = 2 * np.pi * freq
 
-            # define the damping matrix [C]
-            C = C_imp + C_visc
-
             if i == 0:
 
-                # define the prescribed dofs-related load vector
+                # compute the prescribed dofs-related load vector
                 F_eq = self.get_prescribed_pressure_model_excitation()
 
-                # computes the load vector F for omega = 1
+                # compute the load vector F for omega = 1
                 F = Q_visc @ Q[:, i] - 1j * Q[:, i] - F_eq
+
+                # compose the damping matrix [C]
+                C = C_imp + C_visc
 
                 # computes the A matrix for omega = 1
                 A = K - M + 1j * C
@@ -171,8 +171,11 @@ class AcousticHarmonicSolver:
                 del A, F
 
             else:
+
+                # update the damping matrix [C]
                 self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
                 C_imp = self.assembler.damping_matrix
+                C = C_imp + C_visc
 
                 if frequency_dependent:
                     self.assembler.assemble_global_mass_matrix(index=i)
