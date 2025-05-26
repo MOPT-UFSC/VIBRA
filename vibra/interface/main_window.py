@@ -564,6 +564,7 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
         
         self.clear_selection()
+        self.action_unhide_all_callback()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
