@@ -754,8 +754,8 @@ class MainWindow(MainWindow_UI):
         self.open_project(project_path)
 
     def import_geometry_or_mesh_dialog(self, caption: str | None = None, ext_filter: str | None = None):
-
         self.close_dialogs()
+
         last_path = app().config.get_last_folder_for("geometry_mesh_folder")
         if last_path is None:
             path = os.path.expanduser("~")
@@ -789,10 +789,10 @@ class MainWindow(MainWindow_UI):
             return False
 
         app().file.write_geometry_in_file(
-                                          load_path, 
-                                          app().project.model.length_unit, 
-                                          app().project.model.geometry_qf
-                                          )
+            load_path,
+            app().project.model.length_unit,
+            app().project.model.geometry_qf,
+        )
 
         def remove_callback():
             logging.info("Removing the model properties from project file... [10/100]")
@@ -900,7 +900,10 @@ class MainWindow(MainWindow_UI):
             if update_render:
                 LoadingWindow(self.update_plots).run()
 
-            self.action_model_workspace_callback()
+            if geometry_file:
+                self.action_model_workspace_callback()
+            else:
+                self.action_mesh_workspace_callback()
 
         except Exception as error_log:
             from traceback import print_exception
