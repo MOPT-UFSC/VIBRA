@@ -105,17 +105,17 @@ class LinesActor(vtkActor):
     def set_color(self, color: Color):
         data = self.GetMapper().GetInput()
         cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
-
         r, g, b, a = color.to_rgba()
 
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)
         cell_colors.FillComponent(3, a)
+        cell_colors.Modified()
 
         self.GetMapper().SetScalarModeToUseCellData()
-        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+        self.GetMapper().Update()
 
     def paint_lines(self, color: tuple[3], lines: tuple[int]):
         number_of_lines = self.mesh.lines_connectivity.shape[0]
@@ -144,9 +144,11 @@ class LinesActor(vtkActor):
         for i in cells:
             cell_colors.SetTuple(i, color)
 
+        cell_colors.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
-        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+        self.GetMapper().Update()
+
 
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()
