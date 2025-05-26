@@ -151,7 +151,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _needs_property(self, property_name, analysis_type=None, physical_domain=None):
         if property_name == "mesh_setup":
-            return True
+            return not self.item_child_mesh_setup.isDisabled()
         
         if property_name == "material":
             return physical_domain == "structural"

@@ -905,7 +905,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().main_window.update_info_text()
 
             logging.info("Processing the post-assignment actions... [90/100]")
-            app().main_window.mesh_widget.update_symbols()
+            app().main_window.update_symbols()
 
             logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.set_geometry_selection()
