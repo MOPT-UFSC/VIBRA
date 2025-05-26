@@ -190,7 +190,6 @@ class ModelSetupItems(CommonMenuItems):
                     continue
                 
                 item_child.set_warning(False)
-                print(item_child.property_name)
                 
                 if self._contains_property(item_child.property_name):
                     item_child.set_icon()
