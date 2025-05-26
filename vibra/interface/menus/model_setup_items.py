@@ -118,12 +118,15 @@ class ModelSetupItems(CommonMenuItems):
             property.line_properties,
             property.point_properties,
             property.element_properties,
-            property.nodal_properties
+            property.nodal_properties,
             ]
            
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
             return app().project.model.mesh_setup is not None
+        
+        if property_name == "dofs_decoupling":
+            return app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling")
 
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
@@ -187,6 +190,7 @@ class ModelSetupItems(CommonMenuItems):
                     continue
                 
                 item_child.set_warning(False)
+                print(item_child.property_name)
                 
                 if self._contains_property(item_child.property_name):
                     item_child.set_icon()
