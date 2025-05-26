@@ -229,7 +229,7 @@ class ViscousThermalLossModels:
         rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))
 
         # Effective complex bulk modulus (viscous-thermal losses in duct)
-        K_eff = K_s / (gamma - (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
+        K_eff = K_s / (gamma + (gamma - 1) * jv(2, G_bulk) / jv(0, G_bulk))
 
         # Effective complex speed of sound
         C_eff = np.sqrt(K_eff / rho_eff)
