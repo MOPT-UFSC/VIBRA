@@ -813,7 +813,8 @@ class MainWindow(MainWindow_UI):
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
-
+        self.model_setup_widget.model_setup_items.update_items_appearance()            
+        
         return True
 
     def update_window_title(self, project_path: str | Path):

@@ -154,7 +154,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _needs_property(self, property_name, analysis_type=None, physical_domain=None):
         if property_name == "mesh_setup":
-            return not self.item_child_mesh_setup.isDisabled()
+            return True
         
         if property_name == "material":
             return physical_domain == "structural"
@@ -190,10 +190,13 @@ class ModelSetupItems(CommonMenuItems):
                     continue
                 
                 item_child.set_warning(False)
+                item_child.set_tool_tip()
+                
+                if item_child.isDisabled():
+                    continue
                 
                 if self._contains_property(item_child.property_name):
                     item_child.set_icon()
-                    item_child.set_tool_tip()
                     
                 elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
                     item_child.set_warning(True)
@@ -201,7 +204,6 @@ class ModelSetupItems(CommonMenuItems):
 
                 else:
                     item_child.set_icon(visible=False)
-                    item_child.set_tool_tip()
 
     def reset_items_appearance(self):
         for top_level_items in self.top_level_items:
