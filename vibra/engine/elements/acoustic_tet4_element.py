@@ -44,6 +44,37 @@ def get_detJAC_and_invJAC(JAC):
 
     return detJAC, (1 / detJAC) * AUJJ
 
+def get_stacked_detJAC_and_invJAC(JAC: np.ndarray):
+    """
+    This function... 
+    """
+
+    nel = JAC.shape[0]
+
+    det_jacs = (  JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
+                + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
+                + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
+                ) - (
+                JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
+                + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
+                + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
+                )
+    det_jacs = det_jacs.reshape(-1, 1, 1)
+
+    # adj(JAC)
+    AUJJ = np.zeros((nel, 3, 3), dtype=float)
+    AUJJ[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
+    AUJJ[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
+    AUJJ[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
+    AUJJ[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
+    AUJJ[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+
+    return det_jacs, (1 / det_jacs) * AUJJ
+
 
 class ACT_TETRAHEDRON_4C(Element3D):
 
@@ -96,6 +127,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         #
         self.phi, self.dphi = shapeT4C(ssx, ttx, rrx)
 
+
     def elementary_matrices(self, el_index: int):
         """
         Stiffness and mass matrices.
@@ -117,6 +149,36 @@ class ACT_TETRAHEDRON_4C(Element3D):
         Me = (1 / 6) * N.T @ N * (detJAC * self.wps)
 
         return Ke, Me
+
+
+    def stacked_elementary_matrices(self):
+        
+        nel = self.connectivity.shape[0]
+        aux_ones = np.ones((nel, 1, 1), dtype=float)
+
+        stacked_coords = np.zeros((nel, self.DOFS_PER_ELEMENT, 3), dtype=float)
+        stacked_coords[:, 0, :] = self.nodal_coordinates[self.connectivity[:, 1], 1:4]
+        stacked_coords[:, 1, :] = self.nodal_coordinates[self.connectivity[:, 2], 1:4]
+        stacked_coords[:, 2, :] = self.nodal_coordinates[self.connectivity[:, 3], 1:4]
+        stacked_coords[:, 3, :] = self.nodal_coordinates[self.connectivity[:, 4], 1:4]
+
+        JAC = (self.dphi * aux_ones) @ stacked_coords
+
+        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC)
+        dphi_t = inv_jacs @ (aux_ones * self.dphi)
+
+        # shape functions
+        N = self.phi
+
+        # derivative of shape functions
+        B = dphi_t
+        B_t = np.transpose(B, axes=(0, 2, 1))
+
+        Ke = self.nint * (1 / 6) * B_t @ B * (det_jacs * self.wps)
+        Me = (1 / 6) * N.T @ N * (det_jacs * self.wps)
+
+        return Ke, Me
+
     
     def process_particle_velocity(  self, 
                                     element_id : int, 

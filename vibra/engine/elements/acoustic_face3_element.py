@@ -53,6 +53,25 @@ def get_jacobian_determinant(JAC: np.ndarray) -> float:
 
     return det_jac
 
+def get_stacked_jacobian_determinant(JAC: np.ndarray) -> float:
+    """
+    This function computes the determinant of the Jacobian
+    matrix.
+
+    Parameter
+    ---------
+    JAC: np.ndarray
+        The Jacobian matrix.
+    
+    Return
+    ------
+    det_jac: float
+        The determinant of the Jacobian matrix.
+    """
+    det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]  
+
+    return det_jac.reshape(-1, 1, 1)
+
 def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     """
     This funtion computes the local coordinates from global coordinates.
@@ -93,6 +112,7 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
                           [x2, y2],
                           [x3, y3]], dtype=float)
     return coord_loc
+
 
 class ACT_FACE_3(Element2D):
     #
@@ -140,6 +160,65 @@ class ACT_FACE_3(Element2D):
         #
         self.phi, self.dphi = get_shape_functions_and_derivatives(ssx, ttx)
 
+    def get_stacked_local_coordinates(self) -> np.ndarray:
+        """
+        This funtion computes the local coordinates from global coordinates.
+
+        Parameter
+        ---------
+        coords: np.ndarray
+            An array containing the global coordinates to be converted.
+
+        Returns
+        -------
+        coord_loc: np.ndarray
+            The array of the stacked coordinates in the local coordinate system.
+        """
+
+        X1 = self.nodal_coordinates[self.connect_face[:, 0], 1]
+        Y1 = self.nodal_coordinates[self.connect_face[:, 0], 2]
+        Z1 = self.nodal_coordinates[self.connect_face[:, 0], 3]
+
+        X2 = self.nodal_coordinates[self.connect_face[:, 1], 1]
+        Y2 = self.nodal_coordinates[self.connect_face[:, 1], 2]
+        Z2 = self.nodal_coordinates[self.connect_face[:, 1], 3]
+        
+        X3 = self.nodal_coordinates[self.connect_face[:, 2], 1]
+        Y3 = self.nodal_coordinates[self.connect_face[:, 2], 2]
+        Z3 = self.nodal_coordinates[self.connect_face[:, 2], 3]
+
+        vec_21 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+        vec_31 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
+
+        loc_x_axis = vec_21.copy()
+        loc_z_axis = np.cross(loc_x_axis, vec_31, axis=1)
+        loc_y_axis = np.cross(loc_z_axis, loc_x_axis, axis=1)
+
+        nx = np.linalg.norm(loc_x_axis, axis=1).reshape(-1, 1, 1)
+        ny = np.linalg.norm(loc_y_axis, axis=1).reshape(-1, 1, 1)
+
+        unit_x_axis = loc_x_axis.reshape(-1, 1, 3) / nx
+        unit_y_axis = loc_y_axis.reshape(-1, 1, 3) / ny
+
+        unit_x_axis = unit_x_axis.reshape(-1, 3)
+        unit_y_axis = unit_y_axis.reshape(-1, 3)
+
+        x2 = np.sum(vec_21 * unit_x_axis, axis=1)
+        x3 = np.sum(vec_31 * unit_x_axis, axis=1)
+
+        y2 = np.sum(vec_21 * unit_y_axis, axis=1)
+        y3 = np.sum(vec_31 * unit_y_axis, axis=1)
+
+        nel = self.connect_face.shape[0]
+        coord_loc = np.zeros((nel, 3, 2), dtype=float)
+
+        coord_loc[:, 1, 0] = x2
+        coord_loc[:, 1, 1] = y2
+        coord_loc[:, 2, 0] = x3
+        coord_loc[:, 2, 1] = y3
+
+        return coord_loc
+
     def matrices_Z(self, el_index: int, rho: float = 1.0, impedance: float = 1.0) -> np.ndarray:
         """ 
         This method computes the elementary impedance matrix.
@@ -180,6 +259,37 @@ class ACT_FACE_3(Element2D):
         Ze = -(1/2) * (rho / impedance) * N.T @ N * (detJAC * self.wps)
 
         return Ze
+
+    def stacked_matrices_Ze(self, rho: float = 1, impedance: float = 1) -> np.ndarray:
+        """
+        This method processes all impedance-related elementary matrices and returns them
+        in the stacked array form.
+
+        Parameters
+        ----------
+        rho: float, optional
+            The fluid density in kg/m³.
+        
+        impedance: float, optional
+            The specific impedance in kg/m²s.
+
+        Returns
+        -------
+        Ze_stacked: np.ndarray
+            The array containing the stacked elementary matrices.
+        """
+
+        nel = self.connect_face.shape[0]
+        aux_ones = np.ones((nel, 1, 1), dtype=float)
+
+        local_coords = self.get_stacked_local_coordinates()
+        JAC_3d = (self.dphi * aux_ones) @ local_coords
+        det_jacs = get_stacked_jacobian_determinant(JAC_3d)
+
+        N = self.phi
+        Ze_stacked = -(1/2) * (rho/impedance) * N.T @ N * (det_jacs * self.wps)
+
+        return Ze_stacked
 
     def excitation_F(self, el_index: int, Vn: float = 1.0) -> np.ndarray:
         """ 
