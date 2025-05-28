@@ -1,4 +1,4 @@
-from typing import override, Hashable
+from typing import Hashable
 
 
 class bidict(dict):
@@ -49,7 +49,6 @@ class bidict(dict):
         for key, value in self.items():
             self.inverse.setdefault(value, []).append(key)
 
-    @override
     def clear(self):
         """
         This method clears both dicts, the commom and the inverse.
@@ -70,7 +69,6 @@ class bidict(dict):
         super().clear()
         self.inverse.clear()
     
-    @override
     def update(self, iterable: dict):
         """
         This method makes the "union" of dicts.
@@ -93,7 +91,6 @@ class bidict(dict):
             for key, value in iterable.items():
                 self.__setitem__(key, value)
 
-    @override
     def setdefault(self, key, default=None):
         """
         This method provides the setdefault functionality. If the key isn't in
@@ -117,7 +114,6 @@ class bidict(dict):
         
         self.__setitem__(key, default)
     
-    @override
     def pop(self, key):
         """
         This method removes the specified key and the values associated with it
@@ -134,11 +130,17 @@ class bidict(dict):
         >>> my_dict.inverse
         {2: ["b"]}
         """
+        if key not in self:
+            return
+        
+        inverse_key = self[key]
+        self.inverse[inverse_key].remove(key)
 
-        self.inverse.pop(self[key])
+        if len(self.inverse[inverse_key]) == 0:
+            self.inverse.pop(inverse_key)
+
         return super().pop(key)
     
-    @override
     def popitem(self):
         """
         This method removes the last items (key, values) of both dicts, and
@@ -155,11 +157,14 @@ class bidict(dict):
         >>> my_dict.inverse
         {1: ["a"]}
         """
-        
-        self.inverse.popitem()
-        return super().popitem()
+        commom_key, commom_value = super().popitem()
+        self.inverse[commom_value].remove(commom_key)
 
-    @override
+        if len(self.inverse[commom_value]) == 0:
+            self.inverse.pop(commom_value)
+        
+        return (commom_key, commom_value)
+
     def __setitem__(self, key, value):
         if not isinstance(value, Hashable):
             raise ValueError("The value type is not hashable")
@@ -171,7 +176,6 @@ class bidict(dict):
 
         self.inverse.setdefault(value, []).append(key)
 
-    @override
     def __delitem__(self, key):
         self.inverse.setdefault(self[key], []).remove(key)
 
