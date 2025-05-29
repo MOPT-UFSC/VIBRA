@@ -177,7 +177,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     def _build_absorption_surface(self):
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id), _ in surface_properties.items():
-            if property_name != "absorption_surface" and 0:
+            if property_name != "absorption_surface":
                 continue
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
