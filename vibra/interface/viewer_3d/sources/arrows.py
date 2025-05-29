@@ -1,5 +1,7 @@
-from vtkmodules.vtkFiltersSources import vtkArrowSource
+from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
+from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
 from vibra.utils.polydata_utils import transform_polydata
 
 
@@ -19,7 +21,7 @@ def create_triple_arrow_source():
     arrow.SetTipLength(0.25)
     arrow.Update()
     
-    pos, on_x = .15, 0
+    pos, on_x = .2, 0
     source0 = transform_polydata(
         arrow.GetOutput(),
         position=(on_x, pos, pos),
@@ -101,7 +103,7 @@ def create_outwards_triple_arrow_source():
     arrow.SetTipLength(0.25)
     arrow.Update()
     
-    pos, on_x = .15, 0
+    pos, on_x = .2, 0
     source0 = transform_polydata(
         arrow.GetOutput(),
         position=(on_x, pos, pos),
@@ -132,5 +134,34 @@ def create_outwards_triple_arrow_source():
     return transform_polydata(
         source.GetOutput(),
         position=(-1.5, 0, 0),
+        scale=(1.5, 1.5, 1.5),
+    )
+
+def create_normal_pressure_load():
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    
+    cylinder = vtkCylinderSource()
+    cylinder.SetRadius(.3)
+    cylinder.SetHeight(0.1)
+    cylinder.SetResolution(50)
+    cylinder.Update()
+    
+    transform = vtkTransform()
+    transform.RotateZ(90)
+    transformFilter = vtkTransformPolyDataFilter()
+    transformFilter.SetInputConnection(cylinder.GetOutputPort())
+    transformFilter.SetTransform(transform)
+    transformFilter.Update()
+    
+    source = vtkAppendPolyData()
+    source.AddInputData(arrow.GetOutput())
+    source.AddInputData(transformFilter.GetOutput())
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        position=(0, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )

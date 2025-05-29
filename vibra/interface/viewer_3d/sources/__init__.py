@@ -5,6 +5,7 @@ from .arrows import (
     create_outwards_arrow_source,
     create_triple_arrow_source,
     create_outwards_triple_arrow_source,
+    create_normal_pressure_load,
 ) 
 
 from .simple_shapes import (

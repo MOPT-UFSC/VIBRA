@@ -18,6 +18,7 @@ from vibra.interface.viewer_3d.sources import (
     create_mass_flow_rate_source,
     create_triple_arrow_source,
     create_outwards_triple_arrow_source,
+    create_normal_pressure_load,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -40,6 +41,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_prescribed_dofs()
         self._build_nodal_loads()
         self._build_distributed_loads()
+        self._build_normal_pressure_load()
         self._build_perforated_plate()
         self._build_mass_flow_rate()
         super().build()
@@ -122,6 +124,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             is_pointing = np.dot(normal, orientation) < 0
             self.add_distributed_loads_symbol(coords, orientation, is_pointing)
     
+    def _build_normal_pressure_load(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "normal_pressure_load":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_normal_pressure_load_symbol(coords, normal)
+    
     def _build_specific_impedance(self):
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id), property in surface_properties.items():
@@ -165,6 +176,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         shape_name = "distributed_loads_outwards" if pointing else "distributed_loads"
         self.add_symbol(
             shape_name,
+            position,
+            orientation,
+            color=color_names.RED_2,
+            scale=1,
+        )
+    
+    def add_normal_pressure_load_symbol(self, position, orientation):
+        self.add_symbol(
+            "normal_pressure_load",
             position,
             orientation,
             color=color_names.RED_2,
@@ -277,3 +297,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("mass_flow_rate", create_mass_flow_rate_source())
         self.register_shape("distributed_loads", create_triple_arrow_source())
         self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
+        self.register_shape("normal_pressure_load", create_normal_pressure_load())
