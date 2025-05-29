@@ -3,6 +3,8 @@ from .arrows import (
     create_long_arrow_source,
     create_double_arrow_source,
     create_outwards_arrow_source,
+    create_triple_arrow_source,
+    create_outwards_triple_arrow_source,
 ) 
 
 from .simple_shapes import (

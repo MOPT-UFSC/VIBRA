@@ -14,6 +14,45 @@ def create_arrow_source():
         scale=(1.5, 1.5, 1.5),
     )
 
+def create_triple_arrow_source():
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    
+    pos, on_x = .15, 0
+    source0 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, pos, pos),
+    )
+    
+    source1 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, pos, -pos),
+    )
+    
+    source2 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, -pos, pos),
+    )
+    
+    source3 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, -pos, -pos),
+    )
+
+    source = vtkAppendPolyData()
+    source.AddInputData(source0)
+    source.AddInputData(source1)
+    source.AddInputData(source2)
+    source.AddInputData(source3)
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        position=(0, 0, 0),
+        scale=(1.5, 1.5, 1.5),
+    )
+
 
 def create_long_arrow_source():
     source = vtkArrowSource()
@@ -54,5 +93,44 @@ def create_outwards_arrow_source():
     source.Update()
     return transform_polydata(
         source.GetOutput(),
+        scale=(1.5, 1.5, 1.5),
+    )
+
+def create_outwards_triple_arrow_source():
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    
+    pos, on_x = .15, 0
+    source0 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, pos, pos),
+    )
+    
+    source1 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, pos, -pos),
+    )
+    
+    source2 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, -pos, pos),
+    )
+    
+    source3 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, -pos, -pos),
+    )
+
+    source = vtkAppendPolyData()
+    source.AddInputData(source0)
+    source.AddInputData(source1)
+    source.AddInputData(source2)
+    source.AddInputData(source3)
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        position=(-1.5, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )

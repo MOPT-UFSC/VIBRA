@@ -16,6 +16,8 @@ from vibra.interface.viewer_3d.sources import (
     create_perforated_plate_source,
     create_impedance_source,
     create_mass_flow_rate_source,
+    create_triple_arrow_source,
+    create_outwards_triple_arrow_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -37,6 +39,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_specific_impedance()
         self._build_prescribed_dofs()
         self._build_nodal_loads()
+        self._build_distributed_loads()
         self._build_perforated_plate()
         self._build_mass_flow_rate()
         super().build()
@@ -106,6 +109,18 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             orientation = np.real((x, y, z))
             is_pointing = np.dot(normal, orientation) < 0
             self.add_force_symbol(coords, orientation, is_pointing)
+            
+    def _build_distributed_loads(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "distributed_loads":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+            orientation = np.real((x, y, z))
+            is_pointing = np.dot(normal, orientation) < 0
+            self.add_distributed_loads_symbol(coords, orientation, is_pointing)
     
     def _build_specific_impedance(self):
         surface_properties = app().project.model.properties.surface_properties
@@ -138,6 +153,16 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
         shape_name = "arrow" if pointing else "outwards_arrow"
+        self.add_symbol(
+            shape_name,
+            position,
+            orientation,
+            color=color_names.RED_2,
+            scale=1,
+        )
+    
+    def add_distributed_loads_symbol(self, position, orientation, pointing=False):
+        shape_name = "distributed_loads_outwards" if pointing else "distributed_loads"
         self.add_symbol(
             shape_name,
             position,
@@ -236,7 +261,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             scale=1,
         )
 
-
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
         self.register_shape("arrow", create_arrow_source())
@@ -251,3 +275,5 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("perforated_plate", create_perforated_plate_source())
         self.register_shape("impedance", create_impedance_source())
         self.register_shape("mass_flow_rate", create_mass_flow_rate_source())
+        self.register_shape("distributed_loads", create_triple_arrow_source())
+        self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
