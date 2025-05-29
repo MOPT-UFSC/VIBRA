@@ -171,7 +171,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 571, 568))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, -236, 571, 568))
         self.gridLayout_12 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.frame_fluid_info = QFrame(self.scrollAreaWidgetContents)
@@ -184,9 +184,10 @@ class Ui_Dialog(object):
         self.gridLayout_18.setContentsMargins(6, 6, 6, 6)
         self.pushButton_get_fluid = QPushButton(self.frame_fluid_info)
         self.pushButton_get_fluid.setObjectName(u"pushButton_get_fluid")
-        self.pushButton_get_fluid.setMinimumSize(QSize(72, 28))
-        self.pushButton_get_fluid.setMaximumSize(QSize(72, 28))
+        self.pushButton_get_fluid.setMinimumSize(QSize(80, 28))
+        self.pushButton_get_fluid.setMaximumSize(QSize(80, 28))
         self.pushButton_get_fluid.setFont(font2)
+        self.pushButton_get_fluid.setAutoDefault(False)
 
         self.gridLayout_18.addWidget(self.pushButton_get_fluid, 0, 3, 1, 1)
 
@@ -343,9 +344,10 @@ class Ui_Dialog(object):
         self.pushButton_load_path.setMinimumSize(QSize(32, 28))
         self.pushButton_load_path.setMaximumSize(QSize(32, 28))
         icon = QIcon()
-        icon.addFile(u"../../../../icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_load_path.setIcon(icon)
         self.pushButton_load_path.setIconSize(QSize(20, 20))
+        self.pushButton_load_path.setAutoDefault(False)
 
         self.gridLayout_7.addWidget(self.pushButton_load_path, 4, 3, 1, 1)
 
@@ -461,8 +463,8 @@ class Ui_Dialog(object):
 
         self.label_20 = QLabel(self.frame_7)
         self.label_20.setObjectName(u"label_20")
-        self.label_20.setMinimumSize(QSize(32, 0))
-        self.label_20.setMaximumSize(QSize(32, 16777215))
+        self.label_20.setMinimumSize(QSize(40, 0))
+        self.label_20.setMaximumSize(QSize(40, 16777215))
         self.label_20.setFont(font2)
 
         self.gridLayout_9.addWidget(self.label_20, 5, 4, 1, 1)
@@ -480,16 +482,16 @@ class Ui_Dialog(object):
 
         self.label_21 = QLabel(self.frame_7)
         self.label_21.setObjectName(u"label_21")
-        self.label_21.setMinimumSize(QSize(32, 0))
-        self.label_21.setMaximumSize(QSize(32, 16777215))
+        self.label_21.setMinimumSize(QSize(40, 0))
+        self.label_21.setMaximumSize(QSize(40, 16777215))
         self.label_21.setFont(font2)
 
         self.gridLayout_9.addWidget(self.label_21, 0, 4, 1, 1)
 
         self.label_19 = QLabel(self.frame_7)
         self.label_19.setObjectName(u"label_19")
-        self.label_19.setMinimumSize(QSize(32, 0))
-        self.label_19.setMaximumSize(QSize(32, 16777215))
+        self.label_19.setMinimumSize(QSize(40, 0))
+        self.label_19.setMaximumSize(QSize(40, 16777215))
         self.label_19.setFont(font2)
 
         self.gridLayout_9.addWidget(self.label_19, 4, 4, 1, 1)
@@ -548,8 +550,8 @@ class Ui_Dialog(object):
 
         self.label_22 = QLabel(self.frame_7)
         self.label_22.setObjectName(u"label_22")
-        self.label_22.setMinimumSize(QSize(32, 0))
-        self.label_22.setMaximumSize(QSize(32, 16777215))
+        self.label_22.setMinimumSize(QSize(40, 0))
+        self.label_22.setMaximumSize(QSize(40, 16777215))
         self.label_22.setFont(font2)
 
         self.gridLayout_9.addWidget(self.label_22, 2, 4, 1, 1)
@@ -571,12 +573,13 @@ class Ui_Dialog(object):
 
         self.pushButton_clean_inputs = QPushButton(self.frame_7)
         self.pushButton_clean_inputs.setObjectName(u"pushButton_clean_inputs")
-        self.pushButton_clean_inputs.setMinimumSize(QSize(32, 28))
-        self.pushButton_clean_inputs.setMaximumSize(QSize(32, 28))
+        self.pushButton_clean_inputs.setMinimumSize(QSize(36, 28))
+        self.pushButton_clean_inputs.setMaximumSize(QSize(36, 28))
         icon1 = QIcon()
-        icon1.addFile(u"../../../../icons/broom.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1.addFile(u":/icons/broom.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_clean_inputs.setIcon(icon1)
         self.pushButton_clean_inputs.setIconSize(QSize(18, 18))
+        self.pushButton_clean_inputs.setAutoDefault(False)
 
         self.gridLayout_9.addWidget(self.pushButton_clean_inputs, 0, 5, 1, 1)
 
@@ -608,6 +611,7 @@ class Ui_Dialog(object):
         self.pushButton_plot_data.setMinimumSize(QSize(80, 28))
         self.pushButton_plot_data.setMaximumSize(QSize(220, 28))
         self.pushButton_plot_data.setFont(font2)
+        self.pushButton_plot_data.setAutoDefault(False)
 
         self.gridLayout_19.addWidget(self.pushButton_plot_data, 0, 3, 1, 1)
 
@@ -719,6 +723,7 @@ class Ui_Dialog(object):
         self.pushButton_confirm.setMinimumSize(QSize(100, 28))
         self.pushButton_confirm.setMaximumSize(QSize(100, 28))
         self.pushButton_confirm.setFont(font2)
+        self.pushButton_confirm.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
 
@@ -727,6 +732,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMinimumSize(QSize(100, 28))
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font2)
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 

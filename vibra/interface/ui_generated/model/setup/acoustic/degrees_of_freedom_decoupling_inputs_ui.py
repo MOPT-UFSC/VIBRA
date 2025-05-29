@@ -15,17 +15,17 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
-    QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
-    QTreeWidget, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+    QHeaderView, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QTabWidget, QTreeWidget,
+    QTreeWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModal)
-        Dialog.resize(400, 359)
+        Dialog.resize(400, 400)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -89,48 +89,30 @@ class Ui_Dialog(object):
         self.tab_setup = QWidget()
         self.tab_setup.setObjectName(u"tab_setup")
         self.gridLayout_12 = QGridLayout(self.tab_setup)
-        self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.gridLayout_12.setContentsMargins(2, 6, 2, 6)
-        self.frame_4 = QFrame(self.tab_setup)
-        self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setFrameShape(QFrame.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Raised)
-        self.gridLayout_2 = QGridLayout(self.frame_4)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.label_3 = QLabel(self.frame_4)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(132, 28))
-        self.label_3.setMaximumSize(QSize(140, 28))
-        self.label_3.setFont(font2)
-        self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout_12.setHorizontalSpacing(2)
+        self.gridLayout_12.setVerticalSpacing(8)
+        self.gridLayout_12.setContentsMargins(12, 12, 12, 12)
+        self.label_2 = QLabel(self.tab_setup)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(0, 32))
+        self.label_2.setMaximumSize(QSize(16777215, 32))
+        self.label_2.setFrameShape(QFrame.Box)
+        self.label_2.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.label_3, 0, 1, 1, 1)
+        self.gridLayout_12.addWidget(self.label_2, 0, 0, 1, 1)
 
-        self.comboBox_volume_id = QComboBox(self.frame_4)
-        self.comboBox_volume_id.setObjectName(u"comboBox_volume_id")
-        self.comboBox_volume_id.setMinimumSize(QSize(80, 28))
-        self.comboBox_volume_id.setMaximumSize(QSize(80, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.comboBox_volume_id.setFont(font3)
-        self.comboBox_volume_id.setStyleSheet(u"")
+        self.treeWidget_selection_info = QTreeWidget(self.tab_setup)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
+        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
+        self.treeWidget_selection_info.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_selection_info.setObjectName(u"treeWidget_selection_info")
+        self.treeWidget_selection_info.setMinimumSize(QSize(0, 0))
+        self.treeWidget_selection_info.setMaximumSize(QSize(340, 16777215))
+        self.treeWidget_selection_info.setIndentation(0)
 
-        self.gridLayout_2.addWidget(self.comboBox_volume_id, 0, 2, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer, 0, 0, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
-
-
-        self.gridLayout_12.addWidget(self.frame_4, 0, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.treeWidget_selection_info, 1, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_setup, "")
         self.tab_list = QWidget()
@@ -153,6 +135,11 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
         self.pushButton_reset.setFont(font3)
         self.pushButton_reset.setStyleSheet(u"")
 
@@ -171,10 +158,10 @@ class Ui_Dialog(object):
         self.gridLayout_9.addWidget(self.frame_3, 1, 0, 1, 1)
 
         self.treeWidget_dofs_decoupling = QTreeWidget(self.tab_list)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_dofs_decoupling.setHeaderItem(__qtreewidgetitem)
+        __qtreewidgetitem1 = QTreeWidgetItem()
+        __qtreewidgetitem1.setTextAlignment(1, Qt.AlignCenter);
+        __qtreewidgetitem1.setTextAlignment(0, Qt.AlignCenter);
+        self.treeWidget_dofs_decoupling.setHeaderItem(__qtreewidgetitem1)
         self.treeWidget_dofs_decoupling.setObjectName(u"treeWidget_dofs_decoupling")
         self.treeWidget_dofs_decoupling.setMinimumSize(QSize(320, 0))
         self.treeWidget_dofs_decoupling.setMaximumSize(QSize(320, 200))
@@ -278,7 +265,6 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.comboBox_volume_id.setCurrentIndex(-1)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -290,18 +276,18 @@ class Ui_Dialog(object):
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
         self.label.setText(QCoreApplication.translate("Dialog", u"Acoustic Degrees of Freedom Decoupling", None))
-        self.label_3.setText(QCoreApplication.translate("Dialog", u"Volume to decouple:", None))
-#if QT_CONFIG(tooltip)
-        self.comboBox_volume_id.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Select the volume in which the connectivity matrix is going to be modified.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Entity selection information", None))
+        ___qtreewidgetitem = self.treeWidget_selection_info.headerItem()
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Volumes from surface", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surface", None));
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
-        ___qtreewidgetitem = self.treeWidget_dofs_decoupling.headerItem()
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Volume to decouple", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surface", None));
+        ___qtreewidgetitem1 = self.treeWidget_dofs_decoupling.headerItem()
+        ___qtreewidgetitem1.setText(1, QCoreApplication.translate("Dialog", u"Volume to decouple", None));
+        ___qtreewidgetitem1.setText(0, QCoreApplication.translate("Dialog", u"Surface", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_dofs_decoupling.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+        self.treeWidget_dofs_decoupling.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.lineEdit_selection_id.setText("")
@@ -325,10 +311,8 @@ class DegreesOfFreedomDecouplingInputs_UI(QDialog, Ui_Dialog):
                             - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget
                                     - (Layout): QGridLayout
-                                            - frame_4: QFrame
-                                                - (Layout): QGridLayout
-                                                        - label_3: QLabel
-                                                        - comboBox_volume_id: QComboBox
+                                            - label_2: QLabel
+                                            - treeWidget_selection_info: QTreeWidget
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame
