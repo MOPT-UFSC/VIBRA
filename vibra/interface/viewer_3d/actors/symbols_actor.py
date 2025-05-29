@@ -20,6 +20,7 @@ from vibra.interface.viewer_3d.sources import (
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
     create_dofs_decpupling_source,
+    create_absorption_surface_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -46,6 +47,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_perforated_plate()
         self._build_mass_flow_rate()
         self._build_dofs_decoupling()
+        self._build_absorption_surface()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -171,6 +173,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_dofs_decoupling_symbol(coords, normal)
+    
+    def _build_absorption_surface(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), _ in surface_properties.items():
+            if property_name != "absorption_surface" and 0:
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_absorption_surface_symbol(coords, normal)
         
 
     # Specifications on how each symbol should look like
@@ -301,6 +312,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             color=color_names.GREEN,
             scale=1,
         )
+    
+    def add_absorption_surface_symbol(self, position, orientation):
+        self.add_symbol(
+            "absorption_surface",
+            position,
+            orientation,
+            color=color_names.GREEN,
+            scale=1,
+        )
 
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
@@ -320,3 +340,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
         self.register_shape("normal_pressure_load", create_normal_pressure_load())
         self.register_shape("dofs_decoupling", create_dofs_decpupling_source())
+        self.register_shape("absorption_surface", create_absorption_surface_source())
