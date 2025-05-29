@@ -63,3 +63,10 @@ def create_absorption_surface_source():
         polydata,
         scale=(.5, .5, .5),
     )
+
+def create_acoustic_pressure_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol.STL")
+    return transform_polydata(
+        polydata,
+        scale=(.3, .3, .3),
+    )

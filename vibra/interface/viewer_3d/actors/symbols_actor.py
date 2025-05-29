@@ -21,6 +21,7 @@ from vibra.interface.viewer_3d.sources import (
     create_normal_pressure_load,
     create_dofs_decpupling_source,
     create_absorption_surface_source,
+    create_acoustic_pressure_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -48,6 +49,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_mass_flow_rate()
         self._build_dofs_decoupling()
         self._build_absorption_surface()
+        self._build_acoustic_pressure()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -182,7 +184,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_absorption_surface_symbol(coords, normal)
-        
+    
+    def _build_acoustic_pressure(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), _ in surface_properties.items():
+            if property_name != "acoustic_pressure":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_acoustic_pressure_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
@@ -259,12 +269,21 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             scale=2,
         )
 
+    # def add_acoustic_pressure_symbol(self, position, orientation):
+    #     self.add_symbol(
+    #         "double_arrow",
+    #         position,
+    #         orientation,
+    #         color=color_names.PURPLE,
+    #         scale=1,
+    #     )
+    
     def add_acoustic_pressure_symbol(self, position, orientation):
         self.add_symbol(
-            "double_arrow",
+            "acoustic_pressure",
             position,
             orientation,
-            color=color_names.PURPLE,
+            color=color_names.RED_2,
             scale=1,
         )
 
@@ -341,3 +360,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("normal_pressure_load", create_normal_pressure_load())
         self.register_shape("dofs_decoupling", create_dofs_decpupling_source())
         self.register_shape("absorption_surface", create_absorption_surface_source())
+        self.register_shape("acoustic_pressure", create_acoustic_pressure_source())
