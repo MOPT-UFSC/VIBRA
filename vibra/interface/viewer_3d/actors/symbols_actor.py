@@ -19,6 +19,7 @@ from vibra.interface.viewer_3d.sources import (
     create_triple_arrow_source,
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
+    create_dofs_decpupling_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -44,6 +45,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_normal_pressure_load()
         self._build_perforated_plate()
         self._build_mass_flow_rate()
+        self._build_dofs_decoupling()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -159,6 +161,16 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_mass_flow_rate_symbol(coords, normal)
+    
+    def _build_dofs_decoupling(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), _ in surface_properties.items():
+            print(property_name)
+            if property_name != "degrees_of_freedom_decoupling":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_dofs_decoupling_symbol(coords, normal)
         
 
     # Specifications on how each symbol should look like
@@ -280,6 +292,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             color=color_names.PINK_4,
             scale=1,
         )
+    
+    def add_dofs_decoupling_symbol(self, position, orientation):
+        self.add_symbol(
+            "dofs_decoupling",
+            position,
+            orientation,
+            color=color_names.GREEN,
+            scale=1,
+        )
 
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
@@ -298,3 +319,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("distributed_loads", create_triple_arrow_source())
         self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
         self.register_shape("normal_pressure_load", create_normal_pressure_load())
+        self.register_shape("dofs_decoupling", create_dofs_decpupling_source())

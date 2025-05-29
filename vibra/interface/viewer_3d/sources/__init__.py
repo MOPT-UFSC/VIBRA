@@ -20,4 +20,5 @@ from .complex_shapes import (
     create_perforated_plate_source,
     create_impedance_source,
     create_mass_flow_rate_source,
+    create_dofs_decpupling_source,
 )
