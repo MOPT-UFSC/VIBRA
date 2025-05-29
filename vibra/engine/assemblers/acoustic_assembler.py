@@ -9,6 +9,7 @@ from vibra.engine.elements.acoustic_tet10_element import ACT_TETRAHEDRON_10C
 # 2D elements
 from vibra.engine.elements.acoustic_face3_element import ACT_FACE_3
 from vibra.engine.elements.acoustic_face4_element import ACT_FACE_4
+from vibra.engine.properties.fluid import Fluid
 #
 from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
@@ -197,10 +198,9 @@ class AcousticAssembler:
                 _complex_values = density * speed_of_sound
 
             elif property_label ==  "absorption_surface":
-                print(data.get("values"))
                 alpha = np.array(data.get("values")[0], dtype=float)
                 Z_0 = density * speed_of_sound
-                Z_s = Z_0 * ((1 + (1-alpha)**(1/2))/(1 - (1-alpha)**(1/2)))
+                Z_s = Z_0 * ((1 + (1-alpha)**(1/2)) / (1 - (1-alpha)**(1/2)))
                 _complex_values = Z_s
 
             else:
@@ -340,6 +340,8 @@ class AcousticAssembler:
                 z_ud = pp_model.get("z_ud", 0)
                 Z_0 = pp_model.get("Z_0", 0)
 
+                non_linear = z_nl_urms != 0
+
                 if pp_data.get("coupling_type") == "inside_surfaces":
 
                     decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
@@ -399,12 +401,124 @@ class AcousticAssembler:
                                 "connectivities_B" : np.array(list(connectivity_surface_B.values()), dtype=int),
                                 "surface_data_A" : surface_data_A,
                                 "surface_data_B" : surface_data_B,
+                                "non_linear" : non_linear,
                                 }
 
         return integration_data
 
-    def gather_data_to_assemble_global_matrices(self, reorder=True):
-        """ This method processes the data required to assemble the global matrices. """
+    def gather_data_to_assemble_global_matrices(self, reorder: bool = True):
+        """ 
+        This method processes the data required to assemble the global matrices
+        based on the stacked elementary matrices.
+
+        Parameter
+        ---------
+        reorder: bool, optional
+            Control when the connectivity matrix will be reordered.
+        """
+
+        element_3D, _ = self.get_element()
+        self.ind_rows, self.ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
+
+        dofs = element_3D.DOFS_PER_ELEMENT
+        nel = len(element_3D.connectivity)
+        self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
+
+        self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_K, self.data_M = element_3D.stacked_elementary_matrices()
+
+        pm_model_active = self.model.porous_material_properties
+        vt_model_active = self.model.viscous_thermal_model_properties
+
+        if pm_model_active or vt_model_active:
+
+            nf = self.number_frequencies
+            self.den_M = np.zeros((nel, nf), dtype=complex)
+            self.den_K = np.zeros((nel, nf), dtype=complex)
+
+            for (property, vol_id), p_data in self.properties.volume_properties.items():
+
+                if property == "fluid":
+                    p_data: Fluid
+                    fluid = p_data
+                    mu_0 = fluid.dynamic_viscosity
+                    proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
+                    rho_f = self.properties.get_fluid_density(fluid, proportional_damping)
+                    C_f = self.properties.get_speed_of_sound(fluid, proportional_damping)
+
+                elif property == "porous_material_model":
+                    pm_data = self.model.porous_material_properties[vol_id]
+                    rho_f = pm_data["rho_eff"]
+                    C_f = pm_data["C_eff"]
+                    p_data = None
+
+                elif property == "viscous_thermal_model":
+                    vt_data = self.model.viscous_thermal_model_properties[vol_id]
+                    rho_f = vt_data["rho_eff"]
+                    C_f = vt_data["C_eff"]
+                    p_data = None
+
+                else:
+                    continue
+
+                elements_from_volume = self.model.mesh.elements_from_volume.get(vol_id)
+                if elements_from_volume is None:
+                    continue
+
+                aux_ones = np.ones((elements_from_volume.size, nf), dtype=float)
+
+                self.den_K[elements_from_volume, :] = aux_ones / (rho_f)
+                self.den_M[elements_from_volume, :] = aux_ones / (rho_f * C_f**2)
+
+                # self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
+                # self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
+
+        else:
+
+            nf = 1
+            self.den_M = np.zeros((nel, nf), dtype=complex)
+            self.den_K = np.zeros((nel, nf), dtype=complex)
+
+            for (property, vol_id), p_data in self.properties.volume_properties.items():
+
+                if property == "fluid":
+                    p_data: Fluid
+                else:
+                    continue
+
+                fluid = p_data
+                mu_0 = fluid.dynamic_viscosity
+                proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
+
+                rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
+                C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
+
+                elements_from_volume = self.model.mesh.elements_from_volume.get(vol_id)
+                if elements_from_volume is None:
+                    continue
+
+                aux_ones = np.ones((elements_from_volume.size, nf), dtype=float)
+
+                self.den_K[elements_from_volume, :] = aux_ones / (rho_0)
+                self.den_M[elements_from_volume, :] = aux_ones / (rho_0 * C_0**2)
+
+                Ke = self.data_K[elements_from_volume, :, :]
+                self.data_Cvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * Ke
+                self.data_Qvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
+
+        self.process_indexes()
+
+    def gather_data_to_assemble_global_matrices_reference(self, reorder: bool = True):
+        """ 
+        This method processes the data required to assemble the global matrices
+        sweeping all solid elements.
+
+        Parameter
+        ---------
+        reorder: bool, optional
+            Control when the connectivity matrix will be reordered.
+        """
 
         element_3D, _ = self.get_element()
         self.ind_rows, self.ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
@@ -510,6 +624,7 @@ class AcousticAssembler:
 
         self.process_indexes()
 
+
     def process_specific_impedance_data_to_assemble_damping_matrix(self):
         """ 
         This method processes the specific impedance data 
@@ -529,6 +644,7 @@ class AcousticAssembler:
         if not self.integration_data_Zsi:
             return
 
+        logging.info(f"Processing the impedance data to assemble damping matrix... [1/10]")
         connectivities = self.integration_data_Zsi.get("connectivities")       
         surface_data = self.integration_data_Zsi.get("surface_data")
 
@@ -536,11 +652,21 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zsi[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
+        logging.info(f"Processing the impedance data to assemble damping matrix... [2/10]")
         self.ind_rows_Zsi, self.ind_cols_Zsi = element_2D.generate_ind_rows_cols(connectivities)
-        for i, complex_values in enumerate(surface_data.values()):
-            normalized_matrix_Z = element_2D.matrices_Z(i)
-            for j in range(self.number_frequencies):
-                self.data_Zsi[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
+        normalized_matrix_Ze = element_2D.stacked_matrices_Ze()
+
+        elem_id = list(surface_data.keys())[0]
+        Z_si = surface_data.get(elem_id)
+
+        for j in range(self.number_frequencies):
+            self.data_Zsi[j] = normalized_matrix_Ze / Z_si[0, j]
+
+        # TODO: remove after confirming that everything is working properly
+        # for i, complex_values in enumerate(surface_data.values()):
+        #     normalized_matrix_Z = element_2D.matrices_Z(i)
+        #     for j in range(self.number_frequencies):
+        #         self.data_Zsi[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
 
     def process_surface_impedance_data_to_assemble_damping_matrix(self):
         """ 
@@ -560,7 +686,8 @@ class AcousticAssembler:
         self.integration_data_Zas = self.get_surface_data_for_element_integration_by_property("absorption_surface")
         if not self.integration_data_Zas:
             return
-
+        
+        logging.info(f"Processing the impedance data to assemble damping matrix... [3/10]")
         connectivities = self.integration_data_Zas.get("connectivities")       
         surface_data = self.integration_data_Zas.get("surface_data")
 
@@ -568,11 +695,21 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zas[j] = np.zeros((nel, dofs, dofs), dtype=complex)
 
+        logging.info(f"Processing the impedance data to assemble damping matrix... [4/10]")
         self.ind_rows_Zas, self.ind_cols_Zas = element_2D.generate_ind_rows_cols(connectivities)
-        for i, complex_values in enumerate(surface_data.values()):
-            normalized_matrix_Z = element_2D.matrices_Z(i)
-            for j in range(self.number_frequencies):
-                self.data_Zas[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
+        normalized_matrix_Ze = element_2D.stacked_matrices_Ze()
+
+        elem_id = list(surface_data.keys())[0]
+        Z_as = surface_data.get(elem_id)
+
+        for j in range(self.number_frequencies):
+            self.data_Zas[j] = normalized_matrix_Ze / Z_as[0, j]
+
+        # TODO: remove after confirming that everything is working properly
+        # for i, complex_values in enumerate(surface_data.values()):
+        #     normalized_matrix_Z = element_2D.matrices_Z(i)
+        #     for j in range(self.number_frequencies):
+        #         self.data_Zas[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
 
     def process_transfer_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):
         """
@@ -594,6 +731,7 @@ class AcousticAssembler:
         if not self.integration_data_Zti:
             return
         
+        logging.info(f"Processing the impedance data to assemble damping matrix... [5/10]")
         connectivities_A = self.integration_data_Zti.get("connectivities_A")
         connectivities_B = self.integration_data_Zti.get("connectivities_B")
         surface_data_A = self.integration_data_Zti.get("surface_data_A")
@@ -606,20 +744,46 @@ class AcousticAssembler:
             self.data_Zti_A[j] = np.zeros((nel_A, dofs, dofs), dtype=complex)
             self.data_Zti_B[j] = np.zeros((nel_B, dofs, dofs), dtype=complex)
 
+        logging.info(f"Processing the impedance data to assemble damping matrix... [6/10]")
         self.ind_rows_Zti_A, self.ind_cols_Zti_A = element_2D.generate_ind_rows_cols(connectivities_A)
-        for i, Z_tr in enumerate(surface_data_A.values()):
-            normalized_matrix_Z = element_2D.matrices_Z(i)
-            for j in range(self.number_frequencies):
-                self.data_Zti_A[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+        normalized_matrix_Ze_A = element_2D.stacked_matrices_Ze()
 
+        elem_idA = list(surface_data_A.keys())[0]
+        Z_tr_A = surface_data_A.get(elem_idA)
+
+        for j in range(self.number_frequencies):
+            self.data_Zti_A[j] = normalized_matrix_Ze_A / Z_tr_A[j]
+
+        # TODO: remove after confirming that everything is working properly
+        # for i, Z_tr in enumerate(surface_data_A.values()):
+        #     normalized_matrix_Z = element_2D.matrices_Z(i)
+        #     for j in range(self.number_frequencies):
+        #         self.data_Zti_A[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+
+        logging.info(f"Processing the impedance data to assemble damping matrix... [7/10]")
         self.ind_rows_Zti_B, self.ind_cols_Zti_B = element_2D.generate_ind_rows_cols(connectivities_B)
-        for i, Z_tr in enumerate(surface_data_B.values()):
-            normalized_matrix_Z = element_2D.matrices_Z(i)
-            for j in range(self.number_frequencies):
-                self.data_Zti_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+        normalized_matrix_Ze_B = element_2D.stacked_matrices_Ze()
+
+        elem_idB = list(surface_data_B.keys())[0]
+        Z_tr_B = surface_data_B.get(elem_idB)
+
+        for j in range(self.number_frequencies):
+            self.data_Zti_B[j] = normalized_matrix_Ze_B / Z_tr_B[j]
+
+        # TODO: remove after confirming that everything is working properly
+        # for i, Z_tr in enumerate(surface_data_B.values()):
+        #     normalized_matrix_Z = element_2D.matrices_Z(i)
+        #     for j in range(self.number_frequencies):
+        #         self.data_Zti_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
 
     def process_perforated_plate_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):
         """
+        This method processes the perforated plate impedance data 
+        used in the global damping matrix assembly.
+
+        Parameter
+        ---------
+        solution: np.ndarray, optional
         """
 
         self.data_Zpp_A = dict()
@@ -637,11 +801,14 @@ class AcousticAssembler:
         self.integration_data_Zpp = self.get_perforated_plate_data_for_element_integration(solution)
         if not self.integration_data_Zpp:
             return
+        
+        logging.info(f"Processing the impedance data to assemble damping matrix... [8/10]")
 
         connectivities_A = self.integration_data_Zpp.get("connectivities_A")
         connectivities_B = self.integration_data_Zpp.get("connectivities_B")
         surface_data_A = self.integration_data_Zpp.get("surface_data_A")
         surface_data_B = self.integration_data_Zpp.get("surface_data_B")
+        non_linear = self.integration_data_Zpp.get("non_linear")
 
         nel_A = connectivities_A.shape[0]
         nel_B = connectivities_B.shape[0]
@@ -650,17 +817,49 @@ class AcousticAssembler:
             self.data_Zpp_A[j] = np.zeros((nel_A, dofs, dofs), dtype=complex)
             self.data_Zpp_B[j] = np.zeros((nel_B, dofs, dofs), dtype=complex)
 
+        logging.info(f"Processing the impedance data to assemble damping matrix... [9/10]")
         self.ind_rows_Zpp_A, self.ind_cols_Zpp_A = element_2D.generate_ind_rows_cols(connectivities_A)
-        for i, Z_tr in enumerate(surface_data_A.values()):
-            normalized_matrix_Z = element_2D.matrices_Z(i)
-            for j in range(self.number_frequencies):
-                self.data_Zpp_A[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+        normalized_matrix_Ze_A = element_2D.stacked_matrices_Ze()
 
-        self.ind_rows_Zpp_B, self.ind_cols_Zpp_B = element_2D.generate_ind_rows_cols(connectivities_B)
-        for i, Z_tr in enumerate(surface_data_B.values()):
-            normalized_matrix_Z = element_2D.matrices_Z(i)
+        if non_linear:
+            for i, Z_tr in enumerate(surface_data_A.values()):
+                # normalized_matrix_Z = element_2D.matrices_Z(i)
+                for j in range(self.number_frequencies):
+                    self.data_Zpp_A[j][i, :, :] = normalized_matrix_Ze_A[i, :, :] / Z_tr[j]
+
+        else:
+            elem_idA = list(surface_data_A.keys())[0]
+            Z_tr = surface_data_A.get(elem_idA)
             for j in range(self.number_frequencies):
-                self.data_Zpp_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+                self.data_Zpp_A[j] = normalized_matrix_Ze_A / Z_tr[j]
+
+        # TODO: remove after confirming that everything is working properly
+        # for i, Z_tr in enumerate(surface_data_A.values()):
+        #     normalized_matrix_Z = element_2D.matrices_Z(i)
+        #     for j in range(self.number_frequencies):
+        #         self.data_Zpp_A[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+
+        logging.info(f"Processing the impedance data to assemble damping matrix... [10/10]")
+        self.ind_rows_Zpp_B, self.ind_cols_Zpp_B = element_2D.generate_ind_rows_cols(connectivities_B)
+        normalized_matrix_Ze_B = element_2D.stacked_matrices_Ze()
+
+        if non_linear:
+            for i, Z_tr in enumerate(surface_data_B.values()):
+                # normalized_matrix_Z = element_2D.matrices_Z(i)
+                for j in range(self.number_frequencies):
+                    self.data_Zpp_B[j][i, :, :] = normalized_matrix_Ze_B[i, :, :] / Z_tr[j]
+
+        else:
+            elem_idA = list(surface_data_B.keys())[0]
+            Z_tr = surface_data_B.get(elem_idA)
+            for j in range(self.number_frequencies):
+                self.data_Zpp_B[j] = normalized_matrix_Ze_B / Z_tr[j]
+
+        # TODO: remove after confirming that everything is working properly
+        # for i, Z_tr in enumerate(surface_data_B.values()):
+        #     normalized_matrix_Z = element_2D.matrices_Z(i)
+        #     for j in range(self.number_frequencies):
+        #         self.data_Zpp_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
 
     def gather_data_to_assemble_damping_matrix(self):
         self.process_specific_impedance_data_to_assemble_damping_matrix()
@@ -926,7 +1125,7 @@ class AcousticAssembler:
         t0 = time()
         self.gather_data_to_assemble_damping_matrix()
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble global matrices: {round(dt, 4)} [s]")
+        print(f"Elapsed time to gather data to assemble damping matrices: {round(dt, 4)} [s]")
 
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()

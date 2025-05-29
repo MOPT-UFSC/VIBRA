@@ -13,7 +13,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import logging
 import numpy as np
 
-from pathlib import Path
+from copy import deepcopy
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -342,11 +342,12 @@ class Model:
 
         pm_model = PorousMaterialModels(self)
         pm_model.process_effective_properties(frequencies)
+        self.porous_material_properties = deepcopy(pm_model.effective_properties)
 
-        self.porous_material_properties = dict()
-        for volume_id, data in pm_model.effective_properties.items():
-            for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.porous_material_properties[element_id] = data
+        # self.porous_material_properties = dict()
+        # for volume_id, data in pm_model.effective_properties.items():
+        #     for element_id in self.mesh.elements_from_volume[volume_id]:
+        #         self.porous_material_properties[element_id] = data
 
     def is_porous_material_model_active(self, surface_id):
 
@@ -367,13 +368,14 @@ class Model:
 
     def process_viscous_thermal_model_properties(self, frequencies: np.ndarray):
 
-        model = ViscousThermalLossModels(self)
-        model.process_effective_properties(frequencies)
+        vt_model = ViscousThermalLossModels(self)
+        vt_model.process_effective_properties(frequencies)
+        self.viscous_thermal_model_properties = deepcopy(vt_model.effective_properties)
 
-        self.viscous_thermal_model_properties = dict()
-        for volume_id, data in model.effective_properties.items():
-            for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.viscous_thermal_model_properties[element_id] = data
+        # self.viscous_thermal_model_properties = dict()
+        # for volume_id, data in model.effective_properties.items():
+        #     for element_id in self.mesh.elements_from_volume[volume_id]:
+        #         self.viscous_thermal_model_properties[element_id] = data
 
     def is_viscous_thermal_model_active(self, surface_id):
 

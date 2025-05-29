@@ -214,7 +214,7 @@ class AcousticHarmonicSolver:
 
     def reinsert_the_prescribed_degrees_of_freedoom(self, solution: np.ndarray):
         """
-        This method reinsert the value of the prescribed degree of freedom in the solution array.
+        This method reinserts the value of the prescribed degree of freedom in the solution array.
 
         Parameters
         ----------
@@ -238,7 +238,7 @@ class AcousticHarmonicSolver:
         return full_solution
 
 
-    def get_prescribed_pressure_model_excitation(self, index: int = 0, matrices_updated: bool = False):
+    def get_prescribed_pressure_model_excitation(self, index: int = 0):
         """
         This method computes the equivalent loads resulting from the degrees of freedom 
         prescription to compound the acoustic model excitation vector.
@@ -247,9 +247,6 @@ class AcousticHarmonicSolver:
         ----------
         index: int, optional
             An integer values that represents the frequency index.
-        
-        matrices_updated: bool, optional
-            Controls when the sliced matrices will be updated.
 
         Returns
         -------
@@ -261,21 +258,19 @@ class AcousticHarmonicSolver:
         if len(self.prescribed_values) == 0:
             return 0.
 
+        frequencies = self.assembler.model.frequencies
+        omega = 2 * np.pi * frequencies[index]
+
+        values = self.array_prescribed_values[:, index]
+
         self.Kr = self.assembler.stiffness_matrix_r
         self.Mr = self.assembler.mass_matrix_r
         self.Cr = self.assembler.damping_matrix_r
         self.Cr_visc = self.assembler.visc_damping_matrix_r
 
-        values = self.array_prescribed_values[:, index]
-
-        # Note: multiply a sparse matrix A by an array vector v using the * operator
-        # is similar to the @ operator when computing the product of arrays
-        Kr_add = self.Kr * values
-        Mr_add = self.Mr * values
-        Cr_add = (self.Cr + self.Cr_visc) * values
-
-        frequencies = self.assembler.model.frequencies
-        omega = 2 * np.pi * frequencies[index]
+        Kr_add = self.Kr @ values
+        Mr_add = self.Mr @ values
+        Cr_add = (self.Cr + self.Cr_visc) @ values
 
         F_Kadd = Kr_add
         F_Madd = -(omega**2) * Mr_add 
