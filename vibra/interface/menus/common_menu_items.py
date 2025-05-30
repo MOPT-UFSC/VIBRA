@@ -48,7 +48,6 @@ class CommonMenuItems(QTreeWidget):
             self.add_top_item("")
 
         item = ChildTreeWidgetItem(name)
-        item.set_property_name(name)
         self._last_top_level.addChild(item)
         item.setFont(0, self.font_item)
 
@@ -147,10 +146,8 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
     
     def set_property_name(self, name: str):
         name = name.lower()
-        # just to erase set/add prefixe in name
-        name = re.match(r"(?:set|add)*(.+)", name).group(1)
+        name = re.match(r"item_child_(?:set_|add_)*(.+)", name).group(1)
         name = name.strip()
-        name = name.replace(" ", "_")
         self.property_name = name
 
     def set_warning(self, cond):

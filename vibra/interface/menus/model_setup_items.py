@@ -189,6 +189,9 @@ class ModelSetupItems(CommonMenuItems):
                 if item_child_name is None:
                     continue
 
+                # just to make sure the name is correct (there was a bug in the previous versions)
+                item_child.set_property_name(item_child_name)
+
                 item_child.set_warning(False)
                 item_child.set_tool_tip()
                 
