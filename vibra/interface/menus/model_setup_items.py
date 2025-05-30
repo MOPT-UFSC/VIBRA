@@ -47,12 +47,13 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
         self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
+        self.item_child_incident_plane_wave = self.add_item("Incident Plane Wave")
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
         self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
         self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
-        self.item_child_dissipation_model = self.add_item("Dissipation Model")
+        self.item_child_proportional_damping = self.add_item("Proportional Damping")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
@@ -143,6 +144,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_surface_velocity_callback(self):
         app().main_window.input_ui.set_surface_velocity()
+
+    def item_child_incident_plane_wave_callback(self):
+        app().main_window.input_ui.set_incident_plane_wave()
     
     def item_child_anechoic_termination_callback(self):
         app().main_window.input_ui.set_anechoic_termination()
@@ -156,8 +160,8 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_absorption_surface_callback(self):
         app().main_window.input_ui.set_absorption_surface()
 
-    def item_child_dissipation_model_callback(self):
-        app().main_window.input_ui.set_dissipation_model()
+    def item_child_proportional_damping_callback(self):
+        app().main_window.input_ui.set_proportional_damping_for_acoustic_model()
     
     def item_child_porous_material_model_callback(self):
         app().main_window.input_ui.set_porous_material_model()
@@ -197,11 +201,12 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_pressure.setDisabled(key)
         self.item_child_mass_flow_rate.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
+        self.item_child_incident_plane_wave.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)
-        self.item_child_transfer_impedance.setDisabled(key)
         self.item_child_anechoic_termination.setDisabled(key)
         self.item_child_absorption_surface.setDisabled(key)
-        self.item_child_dissipation_model.setDisabled(key)
+        self.item_child_transfer_impedance.setDisabled(key)
+        self.item_child_proportional_damping.setDisabled(key)
         self.item_child_porous_material_model.setDisabled(key)
         self.item_child_viscous_thermal_model.setDisabled(key)
         self.item_child_perforated_plate_model.setDisabled(key)

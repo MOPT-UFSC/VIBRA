@@ -58,7 +58,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set the dissipation model</string>
+         <string>Set the proportional damping</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -113,7 +113,7 @@
         </property>
         <widget class="QWidget" name="tab_proportional_damping">
          <attribute name="title">
-          <string>Proportional damping</string>
+          <string>Setup</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_12">
           <property name="leftMargin">
@@ -336,7 +336,7 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_6">
           <item row="0" column="0">
-           <widget class="QTreeWidget" name="treeWidget_dissipation_model">
+           <widget class="QTreeWidget" name="treeWidget_proportional_damping">
             <property name="minimumSize">
              <size>
               <width>320</width>
@@ -384,7 +384,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Model</string>
+              <string>Speed of sound factor</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -392,7 +392,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Inputs</string>
+              <string>Fluid density factor</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -776,6 +776,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -6,6 +6,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.dissipation_model_inputs_ui import DissipationModelInputs_UI
+# from vibra.interface.ui_generated.model.setup.acoustic.propotional_damping_inputs_ui import ProportionalDampingInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -14,8 +15,9 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
+#TODO: compile the *.py file for a new UI file named proportional_damping_inputs.ui
 
-class DissipationModelInput(DissipationModelInputs_UI):
+class ProportionalDampingInput(DissipationModelInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -56,10 +58,10 @@ class DissipationModelInput(DissipationModelInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_dissipation_model.currentChanged.connect(self.tabEvent_dissipation_model)
+        self.tabWidget_main.currentChanged.connect(self.tabEvent_dissipation_model)
         #
-        self.treeWidget_dissipation_model.itemClicked.connect(self.on_click_item)
-        self.treeWidget_dissipation_model.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_proportional_damping.itemClicked.connect(self.on_click_item)
+        self.treeWidget_proportional_damping.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -88,7 +90,7 @@ class DissipationModelInput(DissipationModelInputs_UI):
             self.lineEdit_selection_id.setText(text)
 
             if len(volume_ids) == 1:
-                p_data = self.properties._get_property("dissipation_model", volume=volume_ids[0])
+                p_data = self.properties._get_property("proportional_damping", volume=volume_ids[0])
                 if p_data is None:
                     return
                 
@@ -181,13 +183,12 @@ class DissipationModelInput(DissipationModelInputs_UI):
             return True
 
         data = {
-                "model" : "proportional_damping",
                 "speed_of_sound_factor" : speed_of_sound_factor,
                 "fluid_density_factor" : fluid_density_factor,
                 }
 
         for volume_id in volume_ids:
-            self.properties._set_property("dissipation_model", data, volume=volume_id)
+            self.properties._set_property("proportional_damping", data, volume=volume_id)
 
         self.actions_to_finalize()
 
@@ -197,14 +198,14 @@ class DissipationModelInput(DissipationModelInputs_UI):
             return
 
         volume_id = int(self.lineEdit_selection_id.text())
-        self.properties._remove_volume_property("dissipation_model", volume_id)
+        self.properties._remove_volume_property("proportional_damping", volume_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
 
         volume_ids = list()
         for (property, volume_id) in self.properties.volume_properties.keys():
-            if property != "dissipation_model":
+            if property != "proportional_damping":
                 continue
             volume_ids.append(volume_id)
 
@@ -212,8 +213,8 @@ class DissipationModelInput(DissipationModelInputs_UI):
 
             self.hide()
 
-            title = "Dissipation model reset"
-            message = "Would you like to remove the dissipation model effects?"
+            title = "Proportional damping reset"
+            message = "Would you like to remove the proportional damping effects?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
             read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -223,12 +224,12 @@ class DissipationModelInput(DissipationModelInputs_UI):
 
             if read._continue:
                 for volume_id in volume_ids:
-                    self.properties._remove_volume_property("dissipation_model", volume_id)
+                    self.properties._remove_volume_property("proportional_damping", volume_id)
 
                 self.actions_to_finalize()
 
     def tabEvent_dissipation_model(self):
-        tab_index = self.tabWidget_dissipation_model.currentIndex()
+        tab_index = self.tabWidget_main.currentIndex()
         self.comboBox_attribution_type.setDisabled(bool(tab_index))
         if tab_index == 1:
             self.lineEdit_selection_id.setText("")
@@ -248,38 +249,35 @@ class DissipationModelInput(DissipationModelInputs_UI):
         volume_with_dissipation_model = list()
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
-            if property == "dissipation_model":
+            if property == "proportional_damping":
                 volume_with_dissipation_model.append(volume_id)
 
         if volume_with_dissipation_model:
-            self.tabWidget_dissipation_model.setTabVisible(1, True)
+            self.tabWidget_main.setTabVisible(1, True)
         else:
-            self.tabWidget_dissipation_model.setTabVisible(1, False)
+            self.tabWidget_main.setTabVisible(1, False)
 
     def load_info(self):
 
-        self.treeWidget_dissipation_model.clear()
-        self.treeWidget_dissipation_model.setColumnWidth(0, 80)
-        self.treeWidget_dissipation_model.setColumnWidth(1, 160)
+        self.treeWidget_proportional_damping.clear()
+        self.treeWidget_proportional_damping.setColumnWidth(0, 80)
+        self.treeWidget_proportional_damping.setColumnWidth(1, 160)
 
         for key, data in self.properties.volume_properties.items():
 
             property, volume_id = key
-            if property != "dissipation_model":
+            if property != "proportional_damping":
                 continue
 
             data: dict
-            model = data.get("model", "--").replace("_", " ")
+            speed_factor = data.get("speed_of_sound_factor")
+            density_factor = data.get("fluid_density_factor")
 
-            factors = list()
-            factors.append(data.get("speed_of_sound_factor"))
-            factors.append(data.get("fluid_density_factor"))
-
-            new = QTreeWidgetItem([str(volume_id), model, str(factors)])
+            item = QTreeWidgetItem([str(volume_id), f"{speed_factor}", f"{density_factor}"])
             for i in range(3):
-                new.setTextAlignment(i, Qt.AlignCenter)
+                item.setTextAlignment(i, Qt.AlignCenter)
 
-            self.treeWidget_dissipation_model.addTopLevelItem(new)
+            self.treeWidget_proportional_damping.addTopLevelItem(item)
 
         self.update_tabs_visibility()
 
