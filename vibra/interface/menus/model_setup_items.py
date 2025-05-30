@@ -188,7 +188,7 @@ class ModelSetupItems(CommonMenuItems):
 
                 if item_child_name is None:
                     continue
-                
+
                 item_child.set_warning(False)
                 item_child.set_tool_tip()
                 

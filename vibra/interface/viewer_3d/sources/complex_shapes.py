@@ -77,3 +77,10 @@ def create_reciprocating_compressor_source():
         polydata,
         scale=(.2, .2, .2),
     )
+
+def create_dissipation_model_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.STL")
+    return transform_polydata(
+        polydata,
+        scale=(.5, .5, .5),
+    )

@@ -24,4 +24,5 @@ from .complex_shapes import (
     create_absorption_surface_source,
     create_acoustic_pressure_source,
     create_reciprocating_compressor_source,
+    create_dissipation_model_source,
 )
