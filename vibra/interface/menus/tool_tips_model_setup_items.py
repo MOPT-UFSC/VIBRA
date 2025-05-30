@@ -38,6 +38,18 @@ tool_tips["mesh_setup"] = (
     "- hexahedron quadratic"
 )
 
+tool_tips["degrees_of_freedom_decoupling"] = (
+    "A technique used to reduce computational complexity by separating or simplifying the interactions "
+    "between different degrees of freedom (DOFs) in a system.\n\n"
+    "In acoustics and multiphysics models, DOFs decoupling allows the treatment of coupled variables—"
+    "such as pressure, velocity, or structural displacements—as independent or weakly coupled, depending "
+    "on assumptions or physical constraints.\n\n"
+    "This approach can significantly improve solver efficiency, stability, and convergence, especially "
+    "in large-scale or frequency-domain problems.\n\n"
+    "Common applications include modal analysis, simplified impedance models, and weak coupling between "
+    "fluid and structural domains."
+)
+
 tool_tips["surface_thickness"] = (
     # "### Set surface thickness\n\n"
     "Defines the thickness of a region.\n\n"
@@ -74,6 +86,15 @@ tool_tips["acoustic_pressure"] = (
     "This load simulates the effects of sound waves or other acoustic phenomena acting on the structure."
     )
 
+tool_tips["mass_flow_rate"] = (
+    # "### Mass Flow Rate (Acoustics)\n\n"
+    "The rate of mass flow associated with the oscillatory motion of particles in the medium.\n\n"
+    "It represents the amount of mass passing through a surface per unit time due to acoustic "
+    "fluctuations. Mass flow rate is directly related to particle velocity and the medium's density.\n\n"
+    "It is a fundamental quantity in acoustic network elements such as ducts, tubes, and dissipative "
+    "components, and is typically expressed in kg/s."
+    )
+
 tool_tips["surface_velocity"] = (
     # "### Set Surface Velocity\n\n"
     "Define the velocity of a surface in the model.\n\n"
@@ -86,11 +107,32 @@ tool_tips["anechoic_termination"] = (
     "This condition is used to simulate the behavior of a surface or boundary that absorbs sound waves without reflecting them."
 )
 
+tool_tips["absorption_surface"] = (
+    # "### Absorption Surface\n\n"
+    "A surface that dissipates acoustic energy by converting sound energy into heat through friction, "
+    "viscous effects, or material properties.\n\n"
+    "It is characterized by its sound absorption coefficient, which defines how much incident sound energy "
+    "is absorbed versus reflected. Absorption surfaces are essential in controlling reverberation, echoes, "
+    "and overall acoustic comfort in spaces.\n\n"
+    "Common examples include porous materials, foam panels, fabric walls, and acoustic diffusers."
+    )
+
 tool_tips["specific_impedance"] = (
     # "### Set Specific Impedance\n\n"
     "Define the specific impedance at a surface or boundary.\n\n"
     "Specific impedance characterizes the relationship between pressure and particle velocity at a surface, important for acoustic simulations."
     )
+
+tool_tips["transfer_impedance"] = (
+    "A complex acoustic property that relates the pressure difference across an element to the resulting "
+    "acoustic volume velocity or mass flow rate.\n\n"
+    "It characterizes how an acoustic component impedes the transmission of sound between two points, "
+    "accounting for both resistive (energy dissipation) and reactive (inertial and compliance) effects.\n\n"
+    "Commonly used to model elements like perforated plates, meshes, membranes, or porous materials, "
+    "where the relationship between pressure drop and particle motion is significant.\n\n"
+    "Typical units are Pa·s/m³ or equivalent, depending on whether it is referenced to volume velocity "
+    "or mass flow rate."
+)
 
 tool_tips["dissipation_model"] = (
     # "### Set Dissipation Model\n\n"
@@ -120,6 +162,16 @@ tool_tips["acoustic_properties_gradient"] = (
     # "### Set Acoustic Properties Gradient\n\n"
     "Define the gradient of acoustic properties in the model.\n\n"
     "This option allows you to vary the acoustic properties such as density, speed of sound, or impedance across the domain, enabling more realistic simulations in heterogeneous media."
+    )
+
+tool_tips["viscous_thermal_model"] = (
+    "A model that accounts for energy losses due to viscous friction and thermal conduction "
+    "in narrow channels, porous materials, or boundary layers of acoustic systems.\n\n"
+    "These losses occur when oscillating particles interact with surfaces, causing shear stress (viscous loss) "
+    "and heat exchange between the fluid and boundaries (thermal loss).\n\n"
+    "Including viscous and thermal losses is essential for accurately modeling high-frequency behavior, "
+    "small geometries, and components like perforated plates, capillaries, and porous absorbers.\n\n"
+    "This model improves the realism of acoustic simulations, especially in systems where dissipation is significant."
     )
 
 tool_tips["reciprocating_compressor_excitation"] = (
