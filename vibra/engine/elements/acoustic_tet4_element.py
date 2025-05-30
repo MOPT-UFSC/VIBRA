@@ -190,7 +190,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.phi, self.dphi = get_shape_functions_and_derivatives(ssx, ttx, rrx)
 
 
-    def elementary_matrices(self, el_index: int):
+    def elementary_matrices(self, el_index: int) -> tuple[np.ndarray, np.ndarray]:
         """
         This method computes the elementary mass and stiffness matrices.
 
