@@ -22,6 +22,7 @@ from vibra.interface.viewer_3d.sources import (
     create_dofs_decpupling_source,
     create_absorption_surface_source,
     create_acoustic_pressure_source,
+    create_reciprocating_compressor_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -50,6 +51,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_dofs_decoupling()
         self._build_absorption_surface()
         self._build_acoustic_pressure()
+        self._build_reciprocating_compressor()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -193,6 +195,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_acoustic_pressure_symbol(coords, normal)
+    
+    def _build_reciprocating_compressor(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), _ in surface_properties.items():
+            if property_name != "reciprocating_compressor":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_reciprocating_compressor_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
@@ -340,6 +351,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             color=color_names.GREEN,
             scale=1,
         )
+    
+    def add_reciprocating_compressor_symbol(self, position, orientation):
+        self.add_symbol(
+            "reciprocating_compressor",
+            position,
+            orientation,
+            color=color_names.RED_2,
+            scale=1,
+        )
 
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
@@ -361,3 +381,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("dofs_decoupling", create_dofs_decpupling_source())
         self.register_shape("absorption_surface", create_absorption_surface_source())
         self.register_shape("acoustic_pressure", create_acoustic_pressure_source())
+        self.register_shape("reciprocating_compressor", create_reciprocating_compressor_source())
