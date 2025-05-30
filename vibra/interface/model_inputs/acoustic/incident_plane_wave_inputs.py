@@ -5,11 +5,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.interface.ui_generated.model.setup.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import os
 import numpy as np
@@ -17,12 +16,10 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class IncidentPlaneWaveInputs(QDialog):
+
+class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/incident_plane_wave_inputs.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -35,7 +32,6 @@ class IncidentPlaneWaveInputs(QDialog):
         
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -54,27 +50,6 @@ class IncidentPlaneWaveInputs(QDialog):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
-
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
-        self.lineEdit_real_value : QLineEdit
-        self.lineEdit_table_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_change_frequency_setup : QPushButton
-        self.pushButton_load_table : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
-
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_incident_plane_wave : QTreeWidget
 
     def _create_connections(self):
         #

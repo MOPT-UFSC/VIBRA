@@ -494,7 +494,6 @@ class AcousticAssembler:
                 fluid = p_data
                 mu_0 = fluid.dynamic_viscosity
                 proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
-                print(proportional_damping)
 
                 rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
                 C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)

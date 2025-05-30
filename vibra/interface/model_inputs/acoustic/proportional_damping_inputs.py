@@ -1,12 +1,11 @@
 # fmt: off
 
-from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.dissipation_model_inputs_ui import DissipationModelInputs_UI
-# from vibra.interface.ui_generated.model.setup.acoustic.propotional_damping_inputs_ui import ProportionalDampingInputs_UI
+from vibra.interface.ui_generated.model.setup.acoustic.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -15,9 +14,8 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-#TODO: compile the *.py file for a new UI file named proportional_damping_inputs.ui
 
-class ProportionalDampingInput(DissipationModelInputs_UI):
+class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
