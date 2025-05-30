@@ -19,9 +19,8 @@ class DissipationModelInput(DissipationModelInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -34,6 +33,7 @@ class DissipationModelInput(DissipationModelInputs_UI):
         self.load_info()
 
         self.geometry_selection_callback()
+        self.attribution_type_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -49,7 +49,7 @@ class DissipationModelInput(DissipationModelInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
@@ -61,60 +61,9 @@ class DissipationModelInput(DissipationModelInputs_UI):
         self.treeWidget_dissipation_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_dissipation_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
-        #
-        self.update_attribution_type()
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def remove_callback(self):
-        if self.lineEdit_selection_id.text() != "":
-            volume_id = int(self.lineEdit_selection_id.text())
-            self.properties._remove_volume_property("dissipation_model", volume_id)
-            self.actions_to_finalize()
-
-    def reset_callback(self):
-
-        volume_ids = list()
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "dissipation_model":
-                volume_ids.append(volume_id)
-
-        if volume_ids:
-
-            self.hide()
-
-            title = "Dissipation model resetting"
-            message = "Would you like to remove the dissipation model effects?"
-
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._cancel:
-                return
-
-            if read._continue:
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("dissipation_model", volume_id)
-
-                self.actions_to_finalize()
-
-    def tabEvent_dissipation_model(self):
-        tab_index = self.tabWidget_dissipation_model.currentIndex()
-        self.comboBox_attribution_type.setDisabled(bool(tab_index))
-        if tab_index == 1:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-
-    def on_click_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-
-    def on_doubleclick_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-        # self.remove_bc_from_selection()
-
-    def update_attribution_type(self):
+    def attribution_type_callback(self):
 
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
@@ -123,115 +72,47 @@ class DissipationModelInput(DissipationModelInputs_UI):
             self.lineEdit_selection_id.setText("")
 
         self.lineEdit_selection_id.setEnabled(bool(index))
-        # self.comboBox_attribution_type.setCurrentIndex(index)
-
-    def update_tabs_visibility(self):
-
-        volume_with_dissipation_model = list()
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "dissipation_model":
-                volume_with_dissipation_model.append(volume_id)
-
-        if volume_with_dissipation_model:
-            self.tabWidget_dissipation_model.setTabVisible(1, True)
-        else:
-            self.tabWidget_dissipation_model.setTabVisible(1, False)
-
-    def load_info(self):
-
-        self.treeWidget_dissipation_model.clear()
-        self.treeWidget_dissipation_model.setColumnWidth(0, 80)
-        self.treeWidget_dissipation_model.setColumnWidth(1, 160)
-
-        for key, data in self.properties.volume_properties.items():
-
-            property, volume_id = key
-
-            if property == "dissipation_model":
-
-                model = data["model"]
-
-                factors = list()
-                factors.append(data["speed of sound factor"])
-                factors.append(data["fluid density factor"])
-
-                new = QTreeWidgetItem([str(volume_id), model, str(factors)])
-                for i in range(3):
-                    new.setTextAlignment(i, Qt.AlignCenter)
-
-                self.treeWidget_dissipation_model.addTopLevelItem(new)
-
-        self.update_tabs_visibility()
 
     def geometry_selection_callback(self):
 
-        volumes = self.main_window.selected_geometry_volumes
-    
+        volumes = app().main_window.selected_geometry_volumes
+
         if volumes:
+
+            volume_ids = [int(vol_id) for vol_id in volumes]
 
             if self.comboBox_attribution_type.currentIndex() == 0:
                 self.comboBox_attribution_type.setCurrentIndex(1)
 
-            text = ", ".join([str(i) for i in volumes])
+            text = ", ".join([str(i) for i in volume_ids])
             self.lineEdit_selection_id.setText(text)
 
-    def attribute_callback(self):
+            if len(volume_ids) == 1:
+                p_data = self.properties._get_property("dissipation_model", volume=volume_ids[0])
+                if p_data is None:
+                    return
+                
+                self.load_dissipation_model_data(p_data)
 
-        attribute_type = self.comboBox_attribution_type.currentIndex()
-            
-        volume_ids = list()
-        if attribute_type == 0:
-            if "volumes" in self.mesh.geometry_information.keys():
-                volume_ids = self.mesh.geometry_information["volumes"]
+    def load_dissipation_model_data(self, data: dict):
 
-        elif attribute_type == 1:
-            input_ids = self.lineEdit_selection_id.text()
-            volume_ids = self.mesh.check_selected_ids(
-                                                      input_ids, 
-                                                      selection = "volumes", 
-                                                      single_id = False
-                                                      )
+        self.lineEdit_speed_of_sound_complex_factor.setText("")
+        self.lineEdit_fluid_density_complex_factor.setText("")
 
-            if volume_ids is None:
-                self.lineEdit_selection_id.setFocus()
-                return True
+        if not isinstance(data, dict):
+            return
 
-        lineEdit = self.lineEdit_speed_of_sound_complex_factor
-        speed_of_sound_factor = self.check_inputs(lineEdit, "Speed of sound complex factor", only_positive=True)
-        if speed_of_sound_factor:
-            lineEdit.setFocus()
-            return True
+        speed_factor = data.get("speed_of_sound_factor", 0.)
+        self.lineEdit_speed_of_sound_complex_factor.setText(f"{speed_factor : .4f}")
 
-        lineEdit = self.lineEdit_fluid_density_complex_factor
-        fluid_density_factor = self.check_inputs(lineEdit, "Fluid density complex factor", only_positive=True)
-        if fluid_density_factor:
-            lineEdit.setFocus()
-            return True
-
-        data = {
-                "speed_of_sound_factor" : speed_of_sound_factor,
-                "fluid_density_factor" : fluid_density_factor,
-                }
-
-        for volume_id in volume_ids:
-            self.properties._set_property("dissipation_model", data, volume=volume_id)
-
-        self.actions_to_finalize()
-
-        print(f"The dissipation model has been attributed to volumes: {volume_ids}")
-
-    def actions_to_finalize(self):
-        self.load_info()
-        self.main_window.update_info_text()
-        app().file.write_model_properties_in_file()
+        density_factor = data.get("density_factor", 0.)
+        self.lineEdit_fluid_density_complex_factor.setText(f"{density_factor : .4f}")
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 
-        self.stop = False
         message = ""
-
         title = "Invalid input at dissipation model"
+
         if lineEdit.text() != "":
             try:
                 if _float:
@@ -262,9 +143,150 @@ class DissipationModelInput(DissipationModelInputs_UI):
 
         if message != "":
             PrintMessageInput([window_title_1, title, message])
-            self.stop = True
             return None
+
         return out
+
+    def attribute_callback(self):
+
+        attribute_type = self.comboBox_attribution_type.currentIndex()
+            
+        volume_ids = list()
+        if attribute_type == 0:
+            if "volumes" in self.mesh.geometry_information.keys():
+                volume_ids = self.mesh.geometry_information["volumes"]
+
+        elif attribute_type == 1:
+            input_ids = self.lineEdit_selection_id.text()
+            volume_ids = self.mesh.check_selected_ids(
+                                                      input_ids, 
+                                                      selection = "volumes", 
+                                                      single_id = False
+                                                      )
+
+            if volume_ids is None:
+                self.lineEdit_selection_id.setFocus()
+                return True
+
+        lineEdit = self.lineEdit_speed_of_sound_complex_factor
+        speed_of_sound_factor = self.check_inputs(lineEdit, "Speed of sound complex factor", only_positive=True)
+        if speed_of_sound_factor is None:
+            lineEdit.setFocus()
+            return True
+
+        lineEdit = self.lineEdit_fluid_density_complex_factor
+        fluid_density_factor = self.check_inputs(lineEdit, "Fluid density complex factor", only_positive=True)
+        if fluid_density_factor is None:
+            lineEdit.setFocus()
+            return True
+
+        data = {
+                "model" : "proportional_damping",
+                "speed_of_sound_factor" : speed_of_sound_factor,
+                "fluid_density_factor" : fluid_density_factor,
+                }
+
+        for volume_id in volume_ids:
+            self.properties._set_property("dissipation_model", data, volume=volume_id)
+
+        self.actions_to_finalize()
+
+    def remove_callback(self):
+
+        if self.lineEdit_selection_id.text() == "":
+            return
+
+        volume_id = int(self.lineEdit_selection_id.text())
+        self.properties._remove_volume_property("dissipation_model", volume_id)
+        self.actions_to_finalize()
+
+    def reset_callback(self):
+
+        volume_ids = list()
+        for (property, volume_id) in self.properties.volume_properties.keys():
+            if property != "dissipation_model":
+                continue
+            volume_ids.append(volume_id)
+
+        if volume_ids:
+
+            self.hide()
+
+            title = "Dissipation model reset"
+            message = "Would you like to remove the dissipation model effects?"
+
+            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+            if read._cancel:
+                return
+
+            if read._continue:
+                for volume_id in volume_ids:
+                    self.properties._remove_volume_property("dissipation_model", volume_id)
+
+                self.actions_to_finalize()
+
+    def tabEvent_dissipation_model(self):
+        tab_index = self.tabWidget_dissipation_model.currentIndex()
+        self.comboBox_attribution_type.setDisabled(bool(tab_index))
+        if tab_index == 1:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+        else:
+            self.lineEdit_selection_id.setDisabled(False)
+
+    def on_click_item(self, item):
+        self.lineEdit_selection_id.setText(item.text(0))
+
+    def on_doubleclick_item(self, item):
+        self.lineEdit_selection_id.setText(item.text(0))
+        # self.remove_bc_from_selection()
+
+    def update_tabs_visibility(self):
+
+        volume_with_dissipation_model = list()
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property == "dissipation_model":
+                volume_with_dissipation_model.append(volume_id)
+
+        if volume_with_dissipation_model:
+            self.tabWidget_dissipation_model.setTabVisible(1, True)
+        else:
+            self.tabWidget_dissipation_model.setTabVisible(1, False)
+
+    def load_info(self):
+
+        self.treeWidget_dissipation_model.clear()
+        self.treeWidget_dissipation_model.setColumnWidth(0, 80)
+        self.treeWidget_dissipation_model.setColumnWidth(1, 160)
+
+        for key, data in self.properties.volume_properties.items():
+
+            property, volume_id = key
+            if property != "dissipation_model":
+                continue
+
+            data: dict
+            model = data.get("model", "--").replace("_", " ")
+
+            factors = list()
+            factors.append(data.get("speed_of_sound_factor"))
+            factors.append(data.get("fluid_density_factor"))
+
+            new = QTreeWidgetItem([str(volume_id), model, str(factors)])
+            for i in range(3):
+                new.setTextAlignment(i, Qt.AlignCenter)
+
+            self.treeWidget_dissipation_model.addTopLevelItem(new)
+
+        self.update_tabs_visibility()
+
+    def actions_to_finalize(self):
+        self.load_info()
+        app().main_window.update_info_text()
+        app().file.write_model_properties_in_file()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
