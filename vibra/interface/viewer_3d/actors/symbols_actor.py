@@ -55,6 +55,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_reciprocating_compressor()
         self._build_dissipation_model()
         self._build_viscous_thermal_loss_model()
+        self._build_transfer_impedance()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -174,8 +175,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     def _build_dofs_decoupling(self):
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id), _ in surface_properties.items():
-            print(property_name)
             if property_name != "degrees_of_freedom_decoupling":
+                continue
+            if ("perforated_plate_model", surface_id) in surface_properties.keys():
                 continue
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
@@ -225,6 +227,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_viscous_thermal_loss_model_symbol(coords, normal)
+    
+    def _build_transfer_impedance(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), _ in surface_properties.items():
+            if property_name != "transfer_impedance":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_transfer_impedance_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
@@ -397,6 +408,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             position,
             orientation,
             color=color_names.ORANGE,
+            scale=1,
+        )
+    
+    def add_transfer_impedance_symbol(self, position, orientation):
+        self.add_symbol(
+            "impedance",
+            position,
+            orientation,
+            color=color_names.PURPLE_2,
             scale=1,
         )
 

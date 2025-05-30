@@ -125,7 +125,7 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "mesh_setup":
             return app().project.model.mesh_setup is not None
         
-        if property_name == "dofs_decoupling":
+        if property_name == "degrees_of_freedom_decoupling":
             return app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling")
 
         # As anechoic_termination is a subproperty of specific_impedance, 

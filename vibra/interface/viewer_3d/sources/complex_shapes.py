@@ -54,14 +54,14 @@ def create_dofs_decpupling_source():
     return transform_polydata(
         polydata,
         rotation=(0, 90, 0),
-        scale=(.7, .7, .7),
+        scale=(.5, .5, .5),
     )
 
 def create_absorption_surface_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/absorption_surface_symbol.STL")
     return transform_polydata(
         polydata,
-        scale=(.5, .5, .5),
+        scale=(.3, .3, .3),
     )
 
 def create_acoustic_pressure_source():
