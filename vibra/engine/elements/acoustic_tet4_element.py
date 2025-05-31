@@ -1,8 +1,14 @@
-import numpy as np
+
+# fmt: off
 
 from vibra.engine.elements.solid_elements import Element3D
 
-# fmt: off
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
+import numpy as np
+
 
 def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray, rrx: np.ndarray) -> np.ndarray:
 
@@ -38,6 +44,7 @@ def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray, rrx: n
                      [-1, 0, 1, 0]], dtype=float)
 
     return phi, dphi
+
 
 def get_detJAC_and_invJAC(JAC: np.ndarray):
     """
@@ -84,6 +91,7 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
     inv_jac = (1 / det_jac) * AUJJ
 
     return det_jac, inv_jac
+
 
 def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
     """
@@ -142,11 +150,13 @@ class ACT_TETRAHEDRON_4C(Element3D):
     NODES_PER_ELEMENT = 4
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-    def __init__(self, model):
+
+    def __init__(self, model: "Model"):
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
+
 
     def initialize_variables(self):
         self.element_label = "acoustic_tetrahedron_4"
@@ -157,11 +167,14 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
 
+
     def update_nodal_coordinates(self, nodal_coordinates: np.ndarray):
         self.nodal_coordinates = nodal_coordinates
 
+
     def update_solids_connectivity(self, connectivity: np.ndarray):
         self.connectivity = connectivity
+
 
     def define_integration_points(self):
         """ 
@@ -177,6 +190,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
                               [con1, con1, con2], 
                               [con1, con2, con1], 
                               [con2, con1, con1]], dtype=float)
+
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -452,10 +466,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
     #     return VK
 
+
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         if self.connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
             self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
+
 
     def generate_ind_rows_cols(self, reorder=True):
         """ This method processess the dofs indices (rows and columns) for assembly"""

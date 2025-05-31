@@ -1,6 +1,6 @@
 # fmt: off
 
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -33,9 +33,10 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self._config_window()
         self._initialize()
         self._create_connections()
-        self._config_widgets()
+        self._configure_qt_variables()
 
         self.load_model_info()
+        self.wave_direction_callback()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -53,10 +54,14 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def _create_connections(self):
         #
+        self.comboBox_wave_direction.currentIndexChanged.connect(self.wave_direction_callback)
+        #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_load_table.clicked.connect(self.load_specific_impedance_table)
+        self.pushButton_load_table_x.clicked.connect(self.load_specific_impedance_table)
+        self.pushButton_load_table_y.clicked.connect(self.load_specific_impedance_table)
+        self.pushButton_load_table_z.clicked.connect(self.load_specific_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -66,9 +71,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def _config_widgets(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
+    def _configure_qt_variables(self):
         #
         for i, w in enumerate([120]):
             self.treeWidget_incident_plane_wave.setColumnWidth(i, w)
@@ -116,18 +119,50 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        surfaces = self.main_window.selected_geometry_surfaces
 
-        if faces:
-            text = ", ".join([str(i) for i in faces])
+        if surfaces:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
+            surface_ids = [int(surf_id) for surf_id in surfaces]
+
+            if len(surface_ids) != 1:
+                return
+            
+            data = self.properties._get_property("incident_plane_wave", surface=surface_ids[0])
+            if data is None:
+                return
+            
+            self.load_property_data(data)
+
+    def load_property_data(self, data: dict):
+
+        values = data.get("values")
+
+        if len(values) == 1:
+            self.comboBox_wave_direction.setCurrentIndex(0)
+            self.lineEdit_real_value_x.setText(f"{np.real(values[0])}")
+            self.lineEdit_imag_value_x.setText(f"{np.imag(values[0])}")
+            self.lineEdit_real_value_y.setText("")
+            self.lineEdit_imag_value_y.setText("")
+            self.lineEdit_real_value_z.setText("")
+            self.lineEdit_imag_value_z.setText("")
+
+        else:
+            self.comboBox_wave_direction.setCurrentIndex(1)
+            self.lineEdit_real_value_x.setText(f"{np.real(values[0])}")
+            self.lineEdit_imag_value_x.setText(f"{np.imag(values[0])}")
+            self.lineEdit_real_value_y.setText(f"{np.real(values[1])}")
+            self.lineEdit_imag_value_y.setText(f"{np.imag(values[1])}")
+            self.lineEdit_real_value_z.setText(f"{np.real(values[2])}")
+            self.lineEdit_imag_value_z.setText(f"{np.imag(values[2])}")
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == 0:
-            self.check_constant_values()
+            self.constant_data_assignment()
         elif tab_index == 1:
-            self.check_table_values()
+            self.tabulated_data_assignment()
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
 
@@ -167,7 +202,91 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         else:
             return value
 
-    def check_constant_values(self):
+    def check_complex_entries(self, real_input: str, imag_input: str, label: str):
+
+        _real = None
+        if real_input != "":
+            try:
+                real_input = real_input.replace(",", ".")
+                _real = float(real_input)
+
+            except Exception:
+                self.hide()
+                title = f"Invalid entry to the {label}"
+                message = f"Wrong input for real part of {label}."
+                PrintMessageInput([window_title_1, title, message])
+                return True, None
+
+        _imag = None
+        if imag_input != "":
+            try:
+                imag_input = imag_input.replace(",", ".")
+                _imag = float(imag_input)
+
+            except Exception:
+                self.hide()
+                title = f"Invalid entry to the {label}"
+                message = f"Wrong input for imaginary part of {label}."
+                PrintMessageInput([window_title_1, title, message])
+                return True, None
+
+        if _real is None and _imag is None:
+            values = None
+        elif _real is None:
+            values = 1j * _imag
+        elif _imag is None:
+            values = complex(_real)
+        else:
+            values = _real + 1j * _imag
+
+        return values
+
+    def wave_direction_callback(self):
+
+        index = self.comboBox_wave_direction.currentIndex()
+        if index:
+            self.label_component_x.setText("Pressure (x-axis)")
+        else:
+            self.label_component_x.setText("Normal pressure")
+
+        self.lineEdit_real_value_y.setEnabled(bool(index))
+        self.lineEdit_imag_value_y.setEnabled(bool(index))
+        self.lineEdit_real_value_z.setEnabled(bool(index))
+        self.lineEdit_imag_value_z.setEnabled(bool(index))
+        self.label_component_y.setEnabled(bool(index))
+        self.label_component_z.setEnabled(bool(index))
+
+    def get_incident_wave_inputs(self):
+        
+        Px = self.check_complex_entries(self.lineEdit_real_value_x.text(), self.lineEdit_imag_value_x.text(), "Px")
+
+        if self.comboBox_wave_direction.currentIndex():
+            wave_direction = "components"
+            Py = self.check_complex_entries(self.lineEdit_real_value_y.text(), self.lineEdit_imag_value_y.text(), "Py")
+            Pz = self.check_complex_entries(self.lineEdit_real_value_z.text(), self.lineEdit_imag_value_z.text(), "Pz")
+            values = [Px, Py, Pz]
+        else:
+            values = [Px]
+            wave_direction = "normal"
+
+        if values.count(None) == len(values):
+            return dict()
+
+        output = {
+                  "wave_direction" : wave_direction,
+                  "values" : values,
+                  }
+
+        return output
+    
+    def check_for_inside_surfaces(self, surface_ids: list[int]):
+        for surface_id in surface_ids:
+            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            if len(volumes_from_surface) != 1:
+                return True
+        return False
+
+    def constant_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
@@ -182,21 +301,29 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(surface_ids)
-
-        incident_pressure = self.check_inputs(
-                                              self.lineEdit_real_value, 
-                                              "Incident plane wave", 
-                                              zero_included = False,
-                                              )
-
-        if incident_pressure is None:
+        if self.check_for_inside_surfaces(surface_ids):
+            self.hide()
+            title = "Invalid surface selected"
+            message = "An invalid surface has been detected in the current "
+            message += "selection. The incident plane wave excitation can"
+            message += "only applied on the outside surfaces."
+            PrintMessageInput([window_title_1, title, message])
             return
 
-        real_values = [incident_pressure]
-        imag_values = [None]
+        incident_wave_inputs = self.get_incident_wave_inputs()
+        if not incident_wave_inputs:
+            return
+
+        self.remove_conflicting_excitations(surface_ids)
+
+        values = incident_wave_inputs.get("values")
+        wave_direction = incident_wave_inputs.get("wave_direction")
+
+        real_values = [value if value is None else np.real(value) for value in values]
+        imag_values = [value if value is None else np.imag(value) for value in values]
 
         data = {
+                "wave_direction" : wave_direction,
                 "real_values" : real_values,
                 "imag_values" : imag_values,
                 }
@@ -298,7 +425,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def load_specific_impedance_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def check_table_values(self):
+    def tabulated_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
@@ -370,6 +497,16 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             surface_ids = [surface_ids]
 
         labels = ["incident_plane_wave"]
+        labels = [
+                  "acoustic_pressure",
+                  "surface_velocity",
+                  "incident_plane_wave",
+                  "mass_flow_rate",
+                  "reciprocating_compressor_excitation",
+                  "reciprocating_pump_excitation",
+                  "specific_impedance",
+                  "absorption_surface",
+                  ]
 
         for surface_id in surface_ids:
             for label in labels:

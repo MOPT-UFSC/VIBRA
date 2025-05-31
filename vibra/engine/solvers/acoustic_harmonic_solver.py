@@ -320,11 +320,9 @@ class AcousticHarmonicSolver:
 
             n = 0.
             for face_connect in face_elem_connect:
-                n += element_2d.get_element_face_normal(face_connect)
-                # print(node_id, face_connect, element_2d.get_element_face_normal(face_connect))
+                n += self.assembler.model.mesh.get_element_face_normal(face_connect)
 
             data_normals[node_id] = n / len(face_elem_connect)
-            # print(node_id, len(face_elem_connect),  data_normals[node_id])
 
             Vk = 0.
             for solid_element_id in solid_element_ids:
