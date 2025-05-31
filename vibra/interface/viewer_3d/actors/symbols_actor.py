@@ -15,6 +15,8 @@ from vibra.interface.viewer_3d.sources import (
     create_spring_source,
     create_perforated_plate_source,
     create_impedance_source,
+    create_anechoic_termination_source,
+    create_transfer_impedance_source,
     create_mass_flow_rate_source,
     create_triple_arrow_source,
     create_outwards_triple_arrow_source,
@@ -24,6 +26,7 @@ from vibra.interface.viewer_3d.sources import (
     create_acoustic_pressure_source,
     create_reciprocating_compressor_source,
     create_dissipation_model_source,
+    create_acoustic_transfer_element_data_source,
 )
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
@@ -43,6 +46,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_nodal_normals()
         self._build_surface_velocity()
         self._build_specific_impedance()
+        self._build_transfer_impedance()
         self._build_prescribed_dofs()
         self._build_nodal_loads()
         self._build_distributed_loads()
@@ -55,7 +59,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self._build_reciprocating_compressor()
         self._build_dissipation_model()
         self._build_viscous_thermal_loss_model()
-        self._build_transfer_impedance()
+        self._build_acoustic_transfer_element_data()
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> float:
@@ -151,9 +155,22 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             if property_name != "specific_impedance":
                 continue
             
-            coords, normal = self._get_center_coords_and_normals(surface_id)
-            self.add_impedance_symbol(coords, normal)
+            if "anechoic_termination" in property.keys():
+                coords, normal = self._get_center_coords_and_normals(surface_id)
+                self.add_anechoic_termination_symbol(coords, normal)
+            else:
+                coords, normal = self._get_center_coords_and_normals(surface_id)
+                self.add_impedance_symbol(coords, normal)
 
+    def _build_transfer_impedance(self):
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id), property in surface_properties.items():
+            if property_name != "transfer_impedance":
+                continue
+
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            self.add_transfer_impedance_symbol(coords, normal)
+    
     def _build_perforated_plate(self):
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id), property in surface_properties.items():
@@ -178,6 +195,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             if property_name != "degrees_of_freedom_decoupling":
                 continue
             if ("perforated_plate_model", surface_id) in surface_properties.keys():
+                continue
+            if ("transfer_impedance", surface_id) in surface_properties.keys():
                 continue
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
@@ -228,14 +247,14 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             coords, normal = self._get_center_coords_and_normals(surface_id)
             self.add_viscous_thermal_loss_model_symbol(coords, normal)
     
-    def _build_transfer_impedance(self):
+    def _build_acoustic_transfer_element_data(self):
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id), _ in surface_properties.items():
-            if property_name != "transfer_impedance":
+            if property_name != "acoustic_transfer_element_data":
                 continue
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
-            self.add_transfer_impedance_symbol(coords, normal)
+            self.add_acoustic_transfer_element_data_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_force_symbol(self, position, orientation, pointing=True):
@@ -419,6 +438,33 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             color=color_names.PURPLE_2,
             scale=1,
         )
+    
+    def add_anechoic_termination_symbol(self, position, orientation):
+        self.add_symbol(
+            "anechoic_termination",
+            position,
+            orientation,
+            color=color_names.PURPLE_2,
+            scale=1,
+        )
+    
+    def add_transfer_impedance_symbol(self, position, orientation):
+        self.add_symbol(
+            "transfer_impedance",
+            position,
+            orientation,
+            color=color_names.PURPLE_2,
+            scale=1,
+        )
+    
+    def add_acoustic_transfer_element_data_symbol(self, position, orientation):
+        self.add_symbol(
+            "acoustic_transfer_element_data",
+            position,
+            orientation,
+            color=color_names.TURQUOISE,
+            scale=1,
+        )
 
     # Preload the symbol shapes (they are likelly used in many symbols)
     def _register_shapes(self):
@@ -433,6 +479,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("mass", create_mass_source())
         self.register_shape("perforated_plate", create_perforated_plate_source())
         self.register_shape("impedance", create_impedance_source())
+        self.register_shape("transfer_impedance", create_transfer_impedance_source())
+        self.register_shape("anechoic_termination", create_anechoic_termination_source())
         self.register_shape("mass_flow_rate", create_mass_flow_rate_source())
         self.register_shape("distributed_loads", create_triple_arrow_source())
         self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
@@ -442,3 +490,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("acoustic_pressure", create_acoustic_pressure_source())
         self.register_shape("reciprocating_compressor", create_reciprocating_compressor_source())
         self.register_shape("dissipation_model", create_dissipation_model_source())
+        self.register_shape("acoustic_transfer_element_data", create_acoustic_transfer_element_data_source())
