@@ -3,6 +3,10 @@
 from vibra.engine.elements.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
 import numpy as np
 np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
@@ -213,7 +217,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
     DOFS_PER_NODE = 6
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         self.model = model
         self.initialize_variables()
         self.define_integration_points_for_bending()

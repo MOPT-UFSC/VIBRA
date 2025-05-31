@@ -380,8 +380,9 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         labels = [
                   "acoustic_pressure",
                   "surface_velocity",
+                  "incident_plane_wave",
                   "reciprocating_compressor_excitation",
-                  "reciprocating_pump_excitation"
+                  "reciprocating_pump_excitation",
                   ]
 
         for surface_id in surface_ids:
