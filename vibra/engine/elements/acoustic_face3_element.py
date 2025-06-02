@@ -339,6 +339,7 @@ class ACT_FACE_3(Element2D):
 
         return Ze_stacked
 
+
     def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
@@ -373,6 +374,44 @@ class ACT_FACE_3(Element2D):
 
         N = self.phi
         Fe = - (1/2) * load * (N @ ones_31) * (det_jac * self.wps)
+
+        return Fe
+
+
+    def surface_integrator(self, e_connect: np.ndarray, sound_intensity: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        load: float, optional
+            The load vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary load vector.
+        """
+
+        # e_connect = self.connect_face[el_index, :]
+        coords = self.nodal_coordinates[e_connect, :]
+        coord_loc = get_local_coordinates(coords)
+
+        JAC = self.dphi @ coord_loc
+        det_jac = get_jacobian_determinant(JAC)
+
+        # N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        # N[:, 0, :] = self.phi
+
+        # Fe = 0.
+        # for i in range(self.nint):            
+        #     Fe += -(1/2) * load * N[i, :, :].T * (det_jac * self.wps)
+
+        N = self.phi
+        Fe = - (1/2) * (N @ sound_intensity) * (det_jac * self.wps)
 
         return Fe
 

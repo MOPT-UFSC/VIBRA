@@ -1,6 +1,7 @@
 
-from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 from vibra.engine import AnalysisID
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+from vibra.engine.properties.fluid import Fluid
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -301,34 +302,21 @@ class AcousticHarmonicSolver:
         """
 
         frequencies = self.assembler.model.frequencies
-        element_3d, element_2d = self.assembler.get_element()
+        element_3d, _ = self.assembler.get_element()
         element_3d.reorder_connect()
 
-        node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
-        solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(node_ids)
-        face_elements_connected_to_nodes = self.assembler.model.mesh.get_face_elements_connected_to_nodes(node_ids, surface_id)
+        # node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
+        data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id, TL=TL)
+        solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id)
 
-        data_vp = dict()
-        data_normals = dict()
-
+        pv_data = dict()
         for node_id, solid_element_ids in solid_elements_connected_to_nodes.items():
-
-            if TL:
-                face_elem_connect = self.assembler.model.mesh.face_elements_connected_to_nodes[node_id]
-            else:
-                face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
-
-            n = 0.
-            for face_connect in face_elem_connect:
-                n += self.assembler.model.mesh.get_element_face_normal(face_connect)
-
-            data_normals[node_id] = n / len(face_elem_connect)
 
             Vk = 0.
             for solid_element_id in solid_element_ids:
                 Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, frequencies, self.solution)
 
-            data_vp[node_id] = Vk / len(solid_element_ids)
+            pv_data[node_id] = Vk / len(solid_element_ids)
 
         Vx = dict()
         Vy = dict()
@@ -336,13 +324,11 @@ class AcousticHarmonicSolver:
         Vn = dict()
         particle_velocities = dict()
 
-        ordered_nodes = np.sort(list(data_vp.keys()))
-
-        for i, _node_id in enumerate(ordered_nodes):
-            Vx[_node_id] = data_vp[_node_id][0, :]
-            Vy[_node_id] = data_vp[_node_id][1, :]
-            Vz[_node_id] = data_vp[_node_id][2, :]
-            Vn[_node_id] = data_vp[_node_id].T @ data_normals[_node_id]
+        for i, _node_id in enumerate(np.sort(list(pv_data.keys()))):
+            Vx[_node_id] = pv_data[_node_id][0, :]
+            Vy[_node_id] = pv_data[_node_id][1, :]
+            Vz[_node_id] = pv_data[_node_id][2, :]
+            Vn[_node_id] = pv_data[_node_id].T @ data_normals[_node_id]
 
         particle_velocities["Vx"] = Vx
         particle_velocities["Vy"] = Vy
@@ -395,8 +381,8 @@ class AcousticHarmonicSolver:
         model = self.assembler.model
         frequencies = self.assembler.model.frequencies
 
-        nodes_input = model.mesh.nodes_from_surfaces[input_surface_id]
-        nodes_output = model.mesh.nodes_from_surfaces[output_surface_id]
+        nodes_input = model.mesh.nodes_from_surfaces.get(input_surface_id)
+        nodes_output = model.mesh.nodes_from_surfaces.get(output_surface_id)
 
         nodes_input = np.sort(nodes_input)
         nodes_output = np.sort(nodes_output)
@@ -404,25 +390,13 @@ class AcousticHarmonicSolver:
         P_in = self.solution[nodes_input, :]
         P_out = self.solution[nodes_output, :]
 
-        # volume_out = model.mesh.volumes_from_surface[output_surface_id][0]
-        # volume_in = model.mesh.volumes_from_surface[input_surface_id][0]
+        logging.info("Processing the transmission loss... [40/100]")
 
-        # fluid_out, _ = model.properties._get_property("fluid", volume=volume_out)
-        # fluid_in, _ = model.properties._get_property("fluid", volume=volume_in)
-
-        # rho_out = fluid_out.fluid_density
-        # c0_out = fluid_out.speed_of_sound
-
-        # rho_in = fluid_in.fluid_density
-        # c0_in = fluid_in.speed_of_sound
-
-        A_in = model.mesh.surface_area_from_element_integration[input_surface_id]
-        A_out = model.mesh.surface_area_from_element_integration[output_surface_id]
+        A_in = model.mesh.surface_area_from_element_integration.get(input_surface_id)
+        A_out = model.mesh.surface_area_from_element_integration.get(output_surface_id)
 
         # print(f"A_in: {A_in} [m²]")
         # print(f"A_out: {A_out} [m²]")
-
-        logging.info("Processing the transmission loss... [40/100]")
 
         nodal_areas_in = np.zeros(len(nodes_input), dtype=float)
         for i, node in enumerate(nodes_input):
@@ -443,45 +417,165 @@ class AcousticHarmonicSolver:
         Aeff_in = nodal_areas_in.reshape(-1, 1) * (A_in / np.sum(nodal_areas_in))
         Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
 
-        rho_in = model.get_fluid_density_for_particle_velocity_calculation(input_surface_id, frequencies)
+        rho_in, _ = model.get_fluid_properties_from_surface(input_surface_id, frequencies)
         if rho_in is None:
             return None, None
 
-        rho_out = model.get_fluid_density_for_particle_velocity_calculation(output_surface_id, frequencies)
+        rho_out, _ = model.get_fluid_properties_from_surface(output_surface_id, frequencies)
         if rho_out is None:
             return None, None
 
         logging.info("Processing the transmission loss... [50/100]")
         input_pv_data = self.get_particle_velocity_from_surface(input_surface_id, rho_in)
 
-        logging.info("Processing the transmission loss... [90/100]")
+        logging.info("Processing the transmission loss... [60/100]")
         output_pv_data = self.get_particle_velocity_from_surface(output_surface_id, rho_out)
 
         # Transmission loss
-        surf_velocity = model.properties._get_property("surface_velocity", surface=input_surface_id)
-        if isinstance(surf_velocity, dict):
-            if "real_values" in surf_velocity.keys():
-                real_values = np.array(surf_velocity["real_values"])
-                imag_values = np.array(surf_velocity["imag_values"])
-                V_in = real_values + 1j * imag_values
-
-            elif "values" in surf_velocity.keys():
-                V_in = surf_velocity["values"]
-
-        else:
+        Zo_in = self.get_surface_impedance(input_surface_id)
+        if Zo_in is None:
             return None, None
 
-        specific_impedance = model.properties._get_property("specific_impedance", surface=input_surface_id)
-        if isinstance(specific_impedance, dict):
-            if "real_values" in specific_impedance.keys():
-                real_values = np.array(specific_impedance["real_values"])
-                imag_values = np.array(specific_impedance["imag_values"])
-                Zo_in = real_values + 1j * imag_values
+        logging.info("Processing the transmission loss... [70/100]")
 
-            elif "anechoic_termination" in specific_impedance.keys():
+        pw_data = model.properties._get_property("incident_plane_wave", surface=input_surface_id)
+        sv_data = model.properties._get_property("surface_velocity", surface=input_surface_id)
 
-                pm_active, rho_eff_pm, C_eff_pm = model.is_porous_material_model_active(input_surface_id)
-                tv_active, rho_eff_tv, C_eff_tv = model.is_viscous_thermal_model_active(input_surface_id)
+        if not (pw_data or sv_data):
+            return None, None
+
+        if isinstance(pw_data, dict):
+            values = pw_data.get("values")
+            P_inc = np.zeros((frequencies.size, 3), dtype=complex)
+
+            if len(values) == 1:
+                if isinstance(values, complex | float):
+                    P_inc[:, 0] = values[0] * np.ones_like(frequencies, dtype=complex)
+                else:
+                    P_inc[:, 0] = values[0]
+
+            else:
+                P_inc[:, 0] = values[0]
+                P_inc[:, 1] = values[1]
+                P_inc[:, 2] = values[2]
+
+            node_normals = model.mesh.get_average_normals_for_surface_nodes(input_surface_id)
+            avg_normal = np.average(list(node_normals.values()), axis=0)
+
+            P_downstream = P_inc @ avg_normal
+            V_downstream = -P_downstream / Zo_in
+
+        if isinstance(sv_data, dict):
+            if "real_values" in sv_data.keys():
+                real_values = np.array(sv_data["real_values"])
+                imag_values = np.array(sv_data["imag_values"])
+                V_in = real_values + 1j * imag_values
+
+            elif "values" in sv_data.keys():
+                V_in = sv_data["values"]
+
+            P_downstream = V_in * Zo_in / 2
+            V_downstream = P_downstream / Zo_in
+        
+        logging.info("Processing the transmission loss... [80/100]")
+
+        # input sound intensity calculation
+        I_in = np.abs(np.real(P_downstream * np.conjugate(V_downstream)) / 2)
+
+        # # TODO: define the correct method
+        # # the way the input sound intensity should be calculated
+        # V_in = -np.array(list(input_pv_data["Vn"].values()), dtype=complex)
+        # P_downstream = (P_in + Zo_in * V_in) / 2
+        # V_downstream = P_downstream / Zo_in
+        # I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
+
+        # output sound intensity calculation
+        V_out = np.array(list(output_pv_data["Vn"].values()), dtype=complex)
+        I_out = np.real(P_out * np.conjugate(V_out)) / 2
+
+        # Aeff_in = A_in * np.ones((len(nodes_input), 1), dtype=float) / len(nodes_input)
+        # Aeff_out = A_out * np.ones((len(nodes_output), 1), dtype=float) / len(nodes_output)
+
+        # W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
+        # W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
+
+        logging.info("Processing the transmission loss... [90/100]")
+
+        W_in = self.integrate_surface_sound_power(input_surface_id, I_in)
+        W_out = self.integrate_surface_sound_power(output_surface_id, I_out)
+
+        transmission_loss = W_in - W_out
+
+        if frequencies[0] == 0:
+            frequencies = frequencies[1:]
+            transmission_loss = transmission_loss[1:]
+
+        return frequencies, transmission_loss
+
+
+    def integrate_surface_sound_power(self, surface_id: int, sound_intensities: np.ndarray, dB_scale: bool = True) -> np.ndarray:
+        """
+        This method integrates the sound power intensity over the selected surface.
+
+        Parameters
+        ----------
+            surface_id: int
+                The identifier of selected surface.
+
+            sound_intensities:
+                The sound intensity matrix evaluated in the surface nodes.
+
+        Returns
+        -------
+        sound_power: np.ndarray
+            The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
+        """
+
+        frequencies = self.assembler.model.frequencies
+        node_ids = self.assembler.model.mesh.nodes_from_surfaces.get(surface_id)
+        connectivities = self.assembler.model.mesh.connectivity_from_surfaces.get(surface_id)
+        
+        node_ids = np.sort(node_ids)
+        number_nodes = len(node_ids)
+
+        map_nodes = dict(zip(node_ids, np.arange(number_nodes)))
+        si_A = np.zeros((number_nodes, len(frequencies)), dtype=float)
+
+        if len(sound_intensities.shape) == 1:
+            sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
+
+        _, element_2D = self.assembler.get_element()
+
+        for i, e_connect in enumerate(connectivities):
+            node_indexes = [int(map_nodes.get(node)) for node in e_connect]
+            sound_intensity = sound_intensities[node_indexes, :]
+            si_A[node_indexes, :] += element_2D.surface_integrator(e_connect, sound_intensity)
+
+        sound_power = np.sum(si_A, axis=0)
+
+        if dB_scale:
+            return 10 * np.log10(sound_power)
+
+        return sound_power
+
+
+    def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
+
+        impedance = None
+        model = self.assembler.model
+
+        si_data = model.properties._get_property("specific_impedance", surface=surface_id)
+        pw_data = model.properties._get_property("incident_plane_wave", surface=surface_id)
+
+        if isinstance(si_data, dict):
+            if "real_values" in si_data.keys():
+                real_values = np.array(si_data["real_values"])
+                imag_values = np.array(si_data["imag_values"])
+                impedance = real_values + 1j * imag_values
+
+            elif "anechoic_termination" in si_data.keys():
+                pm_active, rho_eff_pm, C_eff_pm = model.is_porous_material_model_active(surface_id)
+                tv_active, rho_eff_tv, C_eff_tv = model.is_viscous_thermal_model_active(surface_id)
 
                 if pm_active:
                     density = rho_eff_pm
@@ -492,47 +586,42 @@ class AcousticHarmonicSolver:
                     speed_of_sound = C_eff_tv
 
                 else:
-                    fluid = model.properties._get_property("fluid", surface=input_surface_id)
+
+                    fluid = model.properties._get_property("fluid", surface=surface_id)
+                    if not isinstance(fluid, Fluid):
+                        return None
+
                     density = fluid.fluid_density
                     speed_of_sound = fluid.speed_of_sound
 
-                Zo_in = density * speed_of_sound
+                impedance = density * speed_of_sound
 
-            elif "values" in surf_velocity.keys():
-                Zo_in = specific_impedance["values"]
+            elif "values" in si_data.keys():
+                impedance = si_data["values"][0]
 
-        else:
-            return None, None
+        elif isinstance(pw_data, dict):
+            pm_active, rho_eff_pm, C_eff_pm = model.is_porous_material_model_active(surface_id)
+            tv_active, rho_eff_tv, C_eff_tv = model.is_viscous_thermal_model_active(surface_id)
 
-        ## INPUT SOUND INTENSITY CALCULATION
+            if pm_active:
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
 
-        P_downstream = V_in * Zo_in / 2
-        V_downstream = P_downstream / Zo_in
-        I_in = np.abs(np.real(P_downstream * np.conjugate(V_downstream)) / 2)
+            elif tv_active:
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
 
-        # V_in = -np.array(list(input_pv_data["Vn"].values()), dtype=complex)
-        # P_downstream = (P_in + Zo_in * V_in) / 2
-        # V_downstream = P_downstream / Zo_in
-        # I_in = np.real(P_downstream * np.conjugate(V_downstream)) / 2
+            else:
+                fluid = model.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    return None
 
-        ## OUTPUT SOUND INTENSITY CALCULATION
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
 
-        V_out = np.array(list(output_pv_data["Vn"].values()), dtype=complex)
-        I_out = np.real(P_out * np.conjugate(V_out)) / 2
+            impedance = density * speed_of_sound
 
-        # Aeff_in = A_in * np.ones((len(nodes_input), 1), dtype=float) / len(nodes_input)
-        # Aeff_out = A_out * np.ones((len(nodes_output), 1), dtype=float) / len(nodes_output)
-
-        W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
-        W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
-
-        transmission_loss = W_in - W_out
-
-        if frequencies[0] == 0:
-            frequencies = frequencies[1:]
-            transmission_loss = transmission_loss[1:]
-
-        return frequencies, transmission_loss
+        return impedance
 
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):

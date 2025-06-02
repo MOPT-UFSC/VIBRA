@@ -326,6 +326,7 @@ class ModelProperties:
                            "acoustic_pressure",
                            "surface_velocity",
                            "mass_flow_rate",
+                           "incident_plane_wave",
                            "specific_impedance",
                            "transfer_impedance",
                            "absorption_surface",

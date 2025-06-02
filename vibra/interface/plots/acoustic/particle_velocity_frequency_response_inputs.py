@@ -179,7 +179,7 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
                 if tag == surface_id:
                     list_nodes.extend(surface_nodes)
 
-            rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+            rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
             if rho is None:
                 return np.zeros_like(self.frequencies, dtype=complex)
 
@@ -207,7 +207,7 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
                     list_nodes.extend(surface_nodes)
                     surface_id = tag
 
-        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:
             return np.zeros_like(self.frequencies, dtype=complex)
         

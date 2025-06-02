@@ -355,7 +355,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
 
-        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:
             return None
         

@@ -114,24 +114,44 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def load_input_surface_id(self):
 
-        surface_ids = list()
-        for (property, id) in self.properties.surface_properties.keys():
-            if property == "surface_velocity":
-                if id not in surface_ids:
-                    surface_ids.append(id)
+        input_surface_candidate = list()
+        output_surface_candidate = list()
 
-        if len(surface_ids) == 1:
-            self.lineEdit_input_surface_id.setText(str(surface_ids[0]))
+        for (property, surf_id) in self.properties.surface_properties.keys():
+            if property in ["surface_velocity", "incident_plane_wave"]:
+                if id not in input_surface_candidate:
+                    input_surface_candidate.append(surf_id)
+
+            if property in ["specific_impedance"]:
+                if surf_id in input_surface_candidate:
+                    continue
+                if id not in output_surface_candidate:
+                    output_surface_candidate.append(surf_id)
+
+        if len(input_surface_candidate) == 1:
+            self.lineEdit_input_surface_id.setText(str(input_surface_candidate[0]))
+    
+        if len(output_surface_candidate) == 1:
+            self.lineEdit_output_surface_id.setText(str(output_surface_candidate[0]))
+
+        if input_surface_candidate:
             self.lineEdit_output_surface_id.setFocus()
-        else:
-            self.close()
-            title = "Invalid inputs detected"
-            message = "The transmission loss calculation requires only one active excitation source "
-            message += "at the input face, commonly in the form of a surface velocity, combined with  "
-            message += "the anechoic terminations in the both input and output faces. Any mismatch "
-            message += "in these requirements will interrupt the transmission loss calculation."
-            PrintMessageInput([window_title_1, title, message])
-            return True
+        elif output_surface_candidate:
+            self.lineEdit_input_surface_id.setFocus()
+
+        if input_surface_candidate and output_surface_candidate:
+            return False
+
+        self.close()
+        title = "Invalid inputs detected"
+        message = "The transmission loss calculation requires only one active excitation source "
+        message += "at the input surface, commonly in the form of a incident plane wave with and a "
+        message += "specific impedance at the output surface. Analogous results are obtained whether "
+        message += "a surface velocity, combined with specific impedances in both input and output "
+        message += "surfaces, is adopted. Any mismatch in these requirements will make the transmission "
+        message += "loss calculation unfeasible."
+        PrintMessageInput([window_title_1, title, message])
+        return True
 
     def invert_selection(self):
         temp_text_input = self.lineEdit_input_surface_id.text()
@@ -206,7 +226,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
                 logging.info("Processing the transmission loss... [20/100]")
-                self.mesh._process_nodal_areas()
+                self.mesh.compute_nodal_areas()
 
                 x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(
                                                                                             self.input_surface_id, 
