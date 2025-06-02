@@ -65,8 +65,8 @@ def create_mass_flow_rate_source():
         scale=(2, 2, 2),
     )
 
-def create_dofs_decpupling_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dofs_decoupling_symbol.STL")
+def create_degrees_of_freedom_decoupling_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/degrees_of_freedom_decoupling_symbol.STL")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 0),

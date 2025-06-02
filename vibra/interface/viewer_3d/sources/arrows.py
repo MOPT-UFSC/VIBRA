@@ -51,7 +51,7 @@ def create_triple_arrow_source():
     
     return transform_polydata(
         source.GetOutput(),
-        position=(0, 0, 0),
+        position=(-1.5, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )
 
@@ -133,7 +133,6 @@ def create_outwards_triple_arrow_source():
     
     return transform_polydata(
         source.GetOutput(),
-        position=(-1.5, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )
 
@@ -167,6 +166,5 @@ def create_normal_pressure_load():
     
     return transform_polydata(
         source.GetOutput(),
-        position=(0, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )
