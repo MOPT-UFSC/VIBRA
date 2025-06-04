@@ -696,7 +696,7 @@ class MainWindow(MainWindow_UI):
                 filter="Vibra File (*.vibra)", 
                 options=QFileDialog.DontUseNativeDialog,
             )
-
+            
             if not check:
                 return
 
@@ -706,6 +706,9 @@ class MainWindow(MainWindow_UI):
             if obj.ignore_mesh_data:
                 app().file.remove_mesh_data_from_project_file()
 
+            if not file_path.endswith(".vibra"):
+                file_path += ".vibra"
+            
             self.save_project_as(file_path)
 
         return obj.complete
