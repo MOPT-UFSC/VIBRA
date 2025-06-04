@@ -238,7 +238,7 @@ def load_external_mesh_and_solve():
     mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
-    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
+    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2, surface_integration=False)
 
     # mask = TL_model <= 0
     # TL_model[mask] = np.zeros(sum(mask), dtype=float)

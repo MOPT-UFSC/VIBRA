@@ -416,6 +416,70 @@ class ACT_FACE_3(Element2D):
         return Fe
 
 
+    def elementary_sound_power_from_sound_intensity(self, e_connect: np.ndarray, sound_intensity: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        sound_intensity: np.ndarray, optional
+            The sound intensity vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary sound power.
+        """
+
+        coords = self.nodal_coordinates[e_connect, :]
+        coord_loc = get_local_coordinates(coords)
+
+        JAC = self.dphi @ coord_loc
+        det_jac = get_jacobian_determinant(JAC)
+
+        N = self.phi
+
+        Fe = - (1/2) * (N @ sound_intensity) * (det_jac * self.wps)
+
+        return Fe
+
+
+    def elementary_sound_power(self, e_connect: np.ndarray, L_sv: np.ndarray, R_sv: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        L_sv: np.ndarray
+            The left stacked vector (complex-conjugate of particle velocities).
+
+        R_sv: np.ndarray
+            The righ stacked vector (complex-conjugate of pressures).
+
+        Returns
+        -------
+        Ce: np.ndarray
+            The elementary sound power vector.
+        """
+
+        coords = self.nodal_coordinates[e_connect, :]
+        coord_loc = get_local_coordinates(coords)
+
+        JAC = self.dphi @ coord_loc
+        det_jac = get_jacobian_determinant(JAC)
+
+        N = self.phi
+        Ce = - (1/2) * L_sv @ (N.T @ N) @ R_sv * (det_jac * self.wps)
+
+        return Ce.flatten()
+
+
     def reorder_connect(self, connect_face):
         """
         Reordering connectivity matrix to adequate 

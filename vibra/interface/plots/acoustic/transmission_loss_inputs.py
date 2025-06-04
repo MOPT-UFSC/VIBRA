@@ -62,6 +62,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def _create_connections(self):
         #
+        self.comboBox_processing_selector.currentIndexChanged.connect(self.processing_selector_callback)
+        #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
@@ -159,6 +161,11 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.lineEdit_input_surface_id.setText(temp_text_output)
         self.lineEdit_output_surface_id.setText(temp_text_input)
 
+    def processing_selector_callback(self):
+        index = self.comboBox_processing_selector.currentIndex()
+        self.label_integration_method.setDisabled(bool(index))
+        self.comboBox_integration_method.setDisabled(bool(index))
+
     def plot_data_callback(self):
 
         self.mesh.nodal_normals_data.clear()
@@ -189,10 +196,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         input_surface_id = self.lineEdit_input_surface_id.text()
         self.input_surface_id, error_data = self.mesh.check_selected_ids(   
-                                                                        input_surface_id, 
-                                                                        selection = "surfaces", 
-                                                                        single_id = True
-                                                                        )
+                                                                         input_surface_id, 
+                                                                         selection = "surfaces", 
+                                                                         single_id = True
+                                                                         )
 
         if error_data is not None:
             self.lineEdit_input_surface_id.setFocus()
@@ -201,14 +208,22 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         output_surface_id = self.lineEdit_output_surface_id.text()
         self.output_surface_id, error_data = self.mesh.check_selected_ids(   
-                                                                        output_surface_id, 
-                                                                        selection = "surfaces", 
-                                                                        single_id = True
-                                                                        )
+                                                                          output_surface_id, 
+                                                                          selection = "surfaces", 
+                                                                          single_id = True
+                                                                          )
 
         if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()
             PrintMessageInput(error_data)
+            return True
+
+        if self.input_surface_id == self.output_surface_id:
+            title = "Invalid surfaces selected"
+            message = "The same surface has been selected in both input and output "
+            message += "selection fields. You must selecting different sufaces to "
+            message += "proceed with the transmission loss or noise reduction calculation."
+            PrintMessageInput([window_title_1, title, message])
             return True
 
     def join_model_data(self):
@@ -221,17 +236,21 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             def transmission_loss_callback():
 
                 surface_ids = [self.input_surface_id, self.output_surface_id]
+                integration_method = self.comboBox_integration_method.currentIndex()
 
-                logging.info("Processing the transmission loss... [10/100]")
-                self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+                if not integration_method:
 
-                logging.info("Processing the transmission loss... [20/100]")
-                self.mesh.compute_nodal_areas()
+                    logging.info("Processing the transmission loss... [10/100]")
+                    self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+
+                    logging.info("Processing the transmission loss... [20/100]")
+                    self.mesh.compute_nodal_areas()
 
                 x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(
-                                                                                            self.input_surface_id, 
-                                                                                            self.output_surface_id
-                                                                                            )
+                                                                                             self.input_surface_id,
+                                                                                             self.output_surface_id,
+                                                                                             surface_integration = bool(integration_method),
+                                                                                             )
 
                 return x_data, y_data
 
@@ -239,8 +258,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         else:
             plot_type = "Noise reduction"
-            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction( self.input_surface_id, 
-                                                                                        self.output_surface_id )
+            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction(
+                                                                                       self.input_surface_id, 
+                                                                                       self.output_surface_id,
+                                                                                       )
 
         if y_data is None:
             title = "Invalid input surface id"
