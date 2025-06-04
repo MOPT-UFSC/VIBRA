@@ -143,6 +143,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         super().__init__([name])
         self.clicked = CustomBoundSignal()
         self.property_name = ""
+        self.should_paint = False
     
     def set_property_name(self, name: str):
         name = name.lower()
@@ -166,15 +167,15 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             
     def set_icon(self, visible: bool = True):
         if visible:
-            path_image = str(Path(ICON_DIR / "model_setup_items" / str(self.property_name + ".png")))
+            icon_name = str(self.property_name + ".png")
+            path_image = str(Path((ICON_DIR / "model_setup_items" / icon_name)))
             self.setIcon(0, QIcon(path_image))
         else:
             self.setIcon(0, QIcon())
-
-        self.should_paint = False
     
     def set_tool_tip(self, requirement: bool = False, message_requirement: str = ""):
         if requirement and message_requirement == "":
             message_requirement = "<b style='color:red'>Required for the selected configuration.</b>"
-            
-        self.setToolTip(0, message_requirement + QTextEdit(markdown=(tool_tips.get(self.property_name))).toHtml())
+        
+        tool_tip_html = QTextEdit(markdown=(tool_tips.get(self.property_name))).toHtml()
+        self.setToolTip(0, message_requirement + tool_tip_html)
