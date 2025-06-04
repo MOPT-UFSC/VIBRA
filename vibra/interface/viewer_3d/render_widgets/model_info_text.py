@@ -68,7 +68,14 @@ def lines_info_text():
         tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
 
+        # nodes_from_line = app().project.model.mesh.nodes_from_lines.get(line_ids[0])
+        # if nodes_from_line is not None:
+        #     print()
+        #     print(f"There are {len(nodes_from_line)} nodes in line {line_ids[0]}")
+        #     print(f"Nodes: {[int(node) for node in nodes_from_line]}")
+
     else:
+
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
             sequence = sequence[:20 - 4] + " ..."

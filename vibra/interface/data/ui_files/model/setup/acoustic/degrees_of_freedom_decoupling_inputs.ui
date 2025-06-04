@@ -413,7 +413,7 @@
              </font>
             </property>
             <property name="toolTip">
-             <string>Select a face to remove the previously attributed boundary condition.</string>
+             <string/>
             </property>
             <property name="indentation">
              <number>1</number>

@@ -13,9 +13,7 @@ import numpy as np
 
 from copy import deepcopy
 from collections import defaultdict
-from itertools import combinations
 from pathlib import Path
-
 from traceback import print_exception
 
 
@@ -37,8 +35,11 @@ class Mesh:
 
         ## geometry-related attributes
 
+        self.nodes_to_highlight = list()
+        self.efaces_to_highlight = list()
+
         self.surfaces_from_volume = dict()
-        self.lines_from_surface = dict()
+        self.lines_from_surface = defaultdict(list)
         self.points_from_line = dict()
 
         self.volumes_from_surface = defaultdict(list)
@@ -77,6 +78,9 @@ class Mesh:
         self.line_from_element = dict()
         self.surface_from_element = dict()
         self.volume_from_element = dict()
+
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
 
         self.face_element_thickness = dict()
         self.surface_from_solid_element = defaultdict(list)
@@ -131,7 +135,7 @@ class Mesh:
         maximum_element_size: float = 30.0,
         element_type: ElementType = DEFAULT_ELEMENT_TYPE,
         geometry_tolerance: float = 1e-8,
-        size_factor: float = 0.50,
+        size_factor: float = 1,
         dimension: int = 3,
         threads: int = 0,
         gmsh_gui: bool = False,
@@ -139,7 +143,6 @@ class Mesh:
         mesh_connection=True,
         **kwargs
     ):
-
         self.mesh_setup = dict(
             minimum_element_size=minimum_element_size,
             maximum_element_size=maximum_element_size,
@@ -154,14 +157,14 @@ class Mesh:
 
         self.mesh_connection = mesh_connection
 
-        gmsh.initialize("", False)
+        gmsh.initialize("", False, interruptible=False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
         logging.info("Loading geometry... [10/100]")
-        gmsh.open(path)
+        gmsh.open(str(path))
 
         logging.info("Configuring mesh... [20/100]")
         self._configure_mesh(
@@ -198,8 +201,7 @@ class Mesh:
         self.post_process_mesh_data()
 
         if gmsh_gui:
-            if "-nopopup" not in sys.argv:
-                gmsh.fltk.run()
+            gmsh.fltk.run()
 
         gmsh.finalize()
 
@@ -207,6 +209,8 @@ class Mesh:
                         f", {len(self.lines_connectivity)} dim 1"
                         f", {len(self.faces_connectivity)} dim 2"
                         f"and {len(self.solids_connectivity)} dim 3 elements"   )
+
+        return self
 
     def _merge_nodes_from_adjacent_volumes(self):
         """ This method merges all nodes from adjacent volumes.
@@ -268,7 +272,7 @@ class Mesh:
         """
 
         self.process_geometry_information()
-        
+
         e_nodes_2d = self.faces_connectivity[0, 4:].size
         for vol_id in self.geometry_information.get("volumes"):
             nodes_from_volume = self.nodes_from_volumes[vol_id]
@@ -298,7 +302,8 @@ class Mesh:
 
         index = 0
         line_id = 0
-        lines_from_surface = defaultdict(list)
+
+        self.nodes_from_lines.clear()
         surface_ids = self.geometry_information.get("surfaces")
 
         while index < len(surface_ids):
@@ -306,28 +311,125 @@ class Mesh:
             nodes_fixed = self.nodes_from_surfaces[fixed_tag]
 
             for sweep_tag in surface_ids[index+1:]:
+
                 nodes_sweep = self.nodes_from_surfaces[sweep_tag]
                 intersect_nodes = np.intersect1d(nodes_fixed, nodes_sweep)
                 if intersect_nodes.size <= 1:
                     continue
+                
+                check_overlap_1 = False
+                check_overlap_2 = False
 
                 line_nodes = list(set(intersect_nodes))
-                if line_nodes in self.nodes_from_lines.values():
-                    continue
+                for _line_nodes in self.separate_nodes_from_disconnected_lines(line_nodes).values():
 
-                line_id += 1
-                self.nodes_from_lines[line_id] = line_nodes
+                    _line_nodes.sort()
+                    if _line_nodes in self.nodes_from_lines.values():
+                        continue
 
-                for tag in [fixed_tag, sweep_tag]:    
-                    if lines_from_surface.get(tag) is None:
-                        lines_from_surface[tag] = set({line_id})
-                    else:
-                        lines_from_surface[tag] |= set({line_id})
+                    for _line_id, nodes_from_line in self.nodes_from_lines.items():
+
+                        check_overlap_1 = np.isin(nodes_from_line, _line_nodes).all()
+                        if check_overlap_1:
+                            break
+
+                        check_overlap_2 = np.isin(_line_nodes, nodes_from_line).all()
+                        if check_overlap_2:
+                            break
+
+                    if check_overlap_1:
+                        continue
+
+                    if check_overlap_2:
+                        self.nodes_from_lines[_line_id] = _line_nodes
+                        continue
+
+                    line_id += 1
+                    self.nodes_from_lines[line_id] = _line_nodes
 
             index += 1
 
         self.lines_from_surface.clear()
-        self.lines_from_surface = {surf_id : list(lines_set) for surf_id, lines_set in lines_from_surface.items()}
+        for line_id, line_nodes in self.nodes_from_lines.items():
+            self.length_from_lines[line_id] = 0.
+            for surf_id, surface_nodes in self.nodes_from_surfaces.items():
+                if np.isin(line_nodes, surface_nodes).all():
+                    self.lines_from_surface[surf_id].append(line_id)
+
+        # for _id in [17, 18, 19, 20, 22, 23, 24, 25]:
+        #     lines = self.lines_from_surface.get(_id)
+        #     print(f"Surface: {_id} -> {lines}")
+
+
+    def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
+        """
+        This method group nodes from each line using a  
+        a recursive structure.
+
+        Parameters
+        ----------
+
+        node_ids: list
+            a list containing the intersection nodes from two neighboor surfaces.
+    
+        Returns
+        -------
+        group_of_connected_nodes: dict
+            a dictionary whose the keys are the group of nodes indexes and the
+            values are the node IDs.
+
+        """
+        # get the 2D element connectivities that contains two node_ids inside
+        filt_rows = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) == 2
+        filt_connectivities = deepcopy([list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]])
+
+        if not filt_connectivities:
+            return dict()
+
+        connectivities = list()
+        for connect in filt_connectivities:
+
+            # filter the 1D element connectivities from 2D connectivities
+            line_connect = [int(node) for node in connect if node in node_ids]
+            line_connect.sort()
+
+            # ignore the duplicate edge connectivities 
+            if line_connect in connectivities:
+                continue
+
+            connectivities.append(line_connect)
+
+        index = 0
+        iter_count = 0
+        group_of_connected_nodes = defaultdict(list)
+
+        do_not_update = False
+        while len(connectivities) > 0 and iter_count <= 1000:
+
+            non_mapped = list()
+
+            if not do_not_update:
+                index += 1
+                start_connect = connectivities[0]
+                connectivities.remove(start_connect)
+                group_of_connected_nodes[index] = [node for node in start_connect]
+
+            for connect in connectivities:
+                if not np.isin(group_of_connected_nodes[index], connect).any():
+                    non_mapped.append(connect)
+                    continue
+
+                for node_id in connect:
+                    if node_id in group_of_connected_nodes[index]:
+                        continue
+
+                    group_of_connected_nodes[index].append(node_id)
+
+            iter_count += 1
+            connectivities = non_mapped
+            do_not_update = np.isin(group_of_connected_nodes[index], non_mapped).any()
+
+        return group_of_connected_nodes
 
 
     def process_lines_connectivitiy_from_mesh_data(self):
@@ -580,6 +682,10 @@ class Mesh:
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
         np.savetxt(filename, self.nodal_coordinates, delimiter=",", header=header, fmt=fmt)
 
+    def export_line_elements_connectivity(self, filename):
+        header = "Index || Element ID || Line ID || Element type ID || Connected Node IDs"
+        np.savetxt(filename, self.lines_connectivity, delimiter=",", header=header, fmt="%i")
+
     def export_face_elements_connectivity(self, filename):
         header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
         np.savetxt(filename, self.faces_connectivity, delimiter=",", header=header, fmt="%i")
@@ -658,24 +764,23 @@ class Mesh:
 
 
     def _configure_mesh(
-                        self,
-                        element_type : ElementType,
-                        minimum_element_size: float,
-                        maximum_element_size: float,
-                        size_factor: float,
-                        refinement_parameters = list()
-                        ):
+        self,
+        element_type: ElementType,
+        minimum_element_size: float,
+        maximum_element_size: float,
+        size_factor: float,
+        refinement_parameters=list(),
+    ):
 
-        if size_factor != 0:
-            gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-
-        elif refinement_parameters:
+        if refinement_parameters:
             self.local_mesh_refine(maximum_element_size, refinement_parameters)
 
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
+        gmsh.option.setNumber("Mesh.RandomSeed", 1234)
+        gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
         gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
@@ -1144,7 +1249,7 @@ class Mesh:
         #     areas_data = json.load(file)
 
 
-    def _process_solid_elements_connected_to_nodes(self):
+    def process_solid_elements_connected_to_nodes(self):
         # t0 = time()
 
         self.nodes_from_solid_element.clear()
@@ -1154,27 +1259,7 @@ class Mesh:
         # dt = time() - t0
         # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
 
-    # def map_face_elements_to_solid_elements(self):
-    #     self.face_to_solid_element = dict()
-    #     self.solid_to_face_elements = defaultdict(list)
-
-    #     if len(self.solids_connectivity) == 0:
-    #         return
-
-    #     nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-    #     node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
-
-    #     mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
-    #     filtered_data = self.solids_connectivity[mask_0, :]
-
-    #     for elf_id, _, _, _, *face_nodes in self.faces_connectivity:
-    #         mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-    #         els_id = filtered_data[mask_1, 0][0]
-    #         self.face_to_solid_element[elf_id] = els_id
-    #         self.solid_to_face_elements[els_id].append(elf_id)
-
-
-    def map_face_elements_to_solid_elements(self):
+    def map_face_elements_to_solid_elements_reference(self):
         self.face_to_solid_element = dict()
         self.solid_to_face_elements = defaultdict(list)
 
@@ -1182,44 +1267,102 @@ class Mesh:
             return
 
         nodes_per_face_element = len(self.faces_connectivity[0, 4:])
+        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
+
+        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
+        filtered_data = self.solids_connectivity[mask_0, :]
+
+        self.nodes_to_highlight.clear()
+        self.efaces_to_highlight.clear()
+
+        for e2d_id, surf_id, _, _, *face_nodes in self.faces_connectivity:
+            mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
+
+            if np.sum(mask_1) == 0:
+                # TODO: remove these attributes when we are sure that no more errors
+                # occur after processing the degrees of freedom decoupling.
+                # The problematic nodes and face elements are highlighted after closing the section plane UI.
+                self.nodes_to_highlight.append(face_nodes)
+                self.efaces_to_highlight.append(e2d_id)
+                print(surf_id, e2d_id, face_nodes)
+                continue
+
+            e3d_id = filtered_data[mask_1, 0][0]
+            self.face_to_solid_element[e2d_id] = e3d_id
+            self.solid_to_face_elements[e3d_id].append(e2d_id)
+
+
+    def map_face_elements_to_solid_elements(self):
+        '''
+        This method implements a faster algorithm when compared with
+        the one implemented in map_face_elements_to_solid_elements_reference.
+
+        If something goes wrong with this mapping compare the output of this
+        with the reference version.
+        '''
+        
+        # Get the set of nodes that are part of a face
         all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
 
-        mask_solid_nodes_touching_face = np.isin(self.solids_connectivity[:, 4:], all_face_nodes)
-        face_nodes_per_solid = np.sum(mask_solid_nodes_touching_face, axis=1)
+        # Counts how many nodes of a solid are touching a face
+        face_nodes_per_solid = np.sum(
+            np.isin(
+                self.solids_connectivity[:, 4:],
+                all_face_nodes,
+            ),
+            axis=1,
+        )
 
-        # Be carefull with this number
-        # it makes the cache grow factorially
-        cache_range = 2
-        cache = dict()
+        # Filters all solids that contains a complete external face
+        nodes_per_face = self.faces_connectivity[:, 4:].shape[1]
+        external_solids = self.solids_connectivity[face_nodes_per_solid >= nodes_per_face]
 
-        mask_bruteforce = face_nodes_per_solid >= (nodes_per_face_element + cache_range)
-        mask_cache = (face_nodes_per_solid >= nodes_per_face_element) & ~mask_bruteforce
+        # Maps the nodes connected to each solid
+        node_to_solid_ids = defaultdict(set)
+        for solid_id, _, _, _, *solid_nodes in external_solids:
+            for node in solid_nodes:
+                node_to_solid_ids[node].add(solid_id)
 
-        submasks = mask_solid_nodes_touching_face[mask_cache]
-        masked_connectivity = self.solids_connectivity[mask_cache]
+        self.face_to_solid_element = dict()
+        self.solid_to_face_elements = defaultdict(list)
 
-        # Populate the cache with all valid combinations of nodes_per_face_element
-        for submask, row in zip(submasks, masked_connectivity):
-            filtered_nodes = row[4:][submask]
-            for nodes in combinations(filtered_nodes, nodes_per_face_element):
-                key = tuple(sorted(nodes))
-                solid_id = row[0]
-                cache.setdefault(key, solid_id)
+        for face_id, _, _, _, *face_nodes in self.faces_connectivity:
+            candidate_solids = list()
+            for node in face_nodes:
+                candidate = node_to_solid_ids[node]
+                candidate_solids.append(candidate)
 
-        # Populates the dictionaries using the cache or bruteforce
-        for row in self.faces_connectivity:
-            key = tuple(sorted(row[4:]))
-            face_id = row[0]
-            face_nodes = row[4:]
+            # The correspondent element is the one that contains all nodes from this face. 
+            correspondent_solids = set.intersection(*candidate_solids)
+            if not correspondent_solids:
+                continue
 
-            if key in cache:
-                solid_id = cache[key]
-            else:
-                mask_1 = np.sum(np.isin(masked_connectivity[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-                solid_id = masked_connectivity[mask_1, 0][0]
-
+            # Populate the dicts using the first solid found.
+            solid_id, *_ = correspondent_solids
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
+
+
+    def loooking_for_colapsed_elements(self):
+        """
+        This method loops through all the elements' connectivities, searching for collapsed elements.
+        A message will be printed whether some problematic connectivity has been detected.
+        """
+
+        # solid elements
+        for els_id, vol_id, _, ns_nodes, *s_connect in self.solids_connectivity:
+            if np.unique(s_connect) < ns_nodes:
+                print(f"The solid element {els_id} from volume {vol_id} is collapsed -> connectivity: {s_connect}")
+
+        # face elements
+        for elf_id, surf_id, _, nf_nodes, *f_connect in self.faces_connectivity:
+            if np.unique(f_connect) < nf_nodes:
+                print(f"The face element {elf_id} from surface {surf_id} is collapsed -> connectivity: {f_connect}")
+
+        # line elements
+        for ell_id, line_id, _, nl_nodes, *l_connect in self.lines_connectivity:
+            if np.unique(l_connect) < nl_nodes:
+                print(f"The line element {ell_id} from line {line_id} is collapsed -> connectivity: {l_connect}")
 
 
     def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
@@ -1315,7 +1458,7 @@ class Mesh:
 
 
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
-        gmsh.initialize("", False)
+        gmsh.initialize("", False, interruptible=False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", threads)
@@ -1526,8 +1669,21 @@ class Mesh:
         return np.array([keys, values], dtype=int).T
 
 
-    def _process_element_average_coordinates(self, element_ids):
-        """ This method evaluates the element average center coordinates. """
+    def process_element_average_coordinates(self, element_ids: list[int]) -> dict:
+        """ 
+        This method computes the element average center coordinates of the selected element ID.
+
+        Parameters
+        ----------
+        element_ids: list
+            A list of selected solid element IDs.
+
+        Returns
+        -------
+        solid_elements_center: dict
+            A dictionary that maps each element ID to the respective element center coordinates.
+
+        """
 
         solid_elements_center = dict()
 
@@ -1623,7 +1779,7 @@ class Mesh:
                 _, filtered_elements = self.get_nodes_inside_sphere_and_its_elements_connected(center_coords, filter_radius)
 
                 if filtered_elements:
-                    filtered_solid_elements = self._process_element_average_coordinates(filtered_elements)
+                    filtered_solid_elements = self.process_element_average_coordinates(filtered_elements)
                     element_indexes = np.array(list(filtered_solid_elements.keys()), dtype=int)
                     elements_center_coordinates = np.array(list(filtered_solid_elements.values()), dtype=float)
                 else:

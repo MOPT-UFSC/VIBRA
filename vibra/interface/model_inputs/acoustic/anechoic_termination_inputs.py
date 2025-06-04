@@ -28,6 +28,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         self._reset()
         self._config_window()
+        self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -46,6 +47,12 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def _reset(self):
         self.keep_window_open = True
         self.anechoic_termination = None
+
+    def _configure_qt_variables(self):
+        self.comboBox_volume_id.setDisabled(True)
+        self.lineEdit_selection_id.setDisabled(True)
+        self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
+        self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #

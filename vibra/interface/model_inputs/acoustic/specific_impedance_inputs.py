@@ -32,6 +32,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         
         self._config_window()
         self._initialize()
+        self._configure_qt_variables()
         self._config_widgets()
         self._create_connections()
 
@@ -50,6 +51,11 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
+
+    def _configure_qt_variables(self):
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        self.treeWidget_specific_impedance.setColumnWidth(1, 20)
+        self.treeWidget_specific_impedance.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #

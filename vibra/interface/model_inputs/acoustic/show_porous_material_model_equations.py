@@ -11,6 +11,8 @@ class ShowPorousMaterialModelEquations(EquationsForDbmPorousMaterialModels_UI):
         self._config_window()
         self._create_connections()
 
+        self.exec()
+
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

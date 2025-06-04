@@ -192,14 +192,12 @@ class LoadProject:
         for key, data in geometry_data.items():
               
             if "length_from" in key:
-                data = geometry_data.get(key)
                 self.model.mesh.length_from_lines = {int(key) : value for key, value in data}
 
             elif "area_from" in key:
-                data = geometry_data.get(key)
                 self.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
 
-            elif "volume_from" in key and data.size > 0:
+            elif "volume_from" in key:
                 self.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}
 
             elif "surfaces_from_volume" in key:
@@ -303,10 +301,7 @@ class LoadProject:
         self.model.generated_mesh = True
 
         logging.info("Loading mesh... [95/100]")
-        self.model.mesh._process_solid_elements_connected_to_nodes()
-
-        # logging.info("Loading mesh... [95/100]")
-        # self.model.mesh._process_element_average_coordinates()
+        self.model.mesh.process_solid_elements_connected_to_nodes()
 
     def load_mesh_setup(self):
 

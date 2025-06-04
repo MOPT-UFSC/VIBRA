@@ -226,7 +226,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     
     def _build_perforated_plate_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.PERFORATED_PLATE, coords, normal, color=color_names.RED, scale=1)
+        self.add_symbol_render(Shape.PERFORATED_PLATE_MODEL, coords, normal, color=color_names.RED, scale=1)
         # self.add_perforated_plate_symbol(coords, normal)
 
     def _build_mass_flow_rate(self, surface_id: int):

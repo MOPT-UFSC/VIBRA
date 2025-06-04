@@ -55,8 +55,6 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
     def _config_widgets(self):
         #
-        self.lineEdit_selection_id.setDisabled(True)
-        #
         for i, width in enumerate([140]):
             self.treeWidget_selection_info.setColumnWidth(i, width)
             self.treeWidget_dofs_decoupling.setColumnWidth(i, width)

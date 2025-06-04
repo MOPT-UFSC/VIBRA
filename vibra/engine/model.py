@@ -92,28 +92,22 @@ class Model:
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
-                                   path,
-                                   dimension = 2,
-                                   size_factor = 0.0,
-                                   minimum_element_size = element_size*0.4,
-                                   maximum_element_size = element_size
-                                   )
+                    path,
+                    dimension=2,
+                    minimum_element_size=element_size * 0.4,
+                    maximum_element_size=element_size,
+                )
 
             except:
-
-                self.mesh = Mesh(
-                                 length_unit = self.length_unit, 
-                                 geometry_qf = self.geometry_qf
-                                 )
+                self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
                 element_size = 10
                 self.mesh.load_cad(
-                                   path,
-                                   dimension = 2,
-                                   size_factor = 0.0,
-                                   minimum_element_size = element_size*0.5, 
-                                   maximum_element_size = element_size
-                                   )
+                    path,
+                    dimension=2,
+                    minimum_element_size=element_size * 0.5,
+                    maximum_element_size=element_size,
+                )
 
             self.generated_mesh = False
             self.initial_element_size = element_size
@@ -132,9 +126,14 @@ class Model:
 
         try:
 
+            logging.info("Processing mesh... [15/100]")
+
             self.mesh.geometry_imported = False
             self.mesh.load_mesh(path)
             self.generated_mesh = True
+
+            logging.info("Processing mesh... [90/100]")
+            self.mesh.process_solid_elements_connected_to_nodes()
 
         except Exception as error_log:
             from traceback import print_exception
@@ -165,7 +164,7 @@ class Model:
         self.generated_mesh = True
 
         logging.info("Processing mesh... [90/100]")
-        self.mesh._process_solid_elements_connected_to_nodes()
+        self.mesh.process_solid_elements_connected_to_nodes()
 
     def set_mesh(self, mesh):
         self.mesh = mesh

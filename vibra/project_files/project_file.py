@@ -639,8 +639,8 @@ def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float
             the output array of two columns
 
     """
-    if not input_data:
-        return np.array([])
+    if len(input_data) == 0:
+        return np.array([[]])
 
     keys = list(input_data.keys())
     values = list(input_data.values())

@@ -11,12 +11,13 @@ import numpy as np
 
 from functools import cache
 from scipy.sparse import triu
-
+from time import time
 
 class AcousticHarmonicSolver:
     def __init__(self, assembler: "AcousticAssembler", **kwargs):
         self.assembler = assembler
         self.reset_variables()
+
 
     def reset_variables(self):
         self.loads = None
@@ -24,21 +25,24 @@ class AcousticHarmonicSolver:
         self.dissipation_model = None
         self.analysis_type = "acoustic"
 
+
     def load_dissipation_model(self, data):
         self.dissipation_model = data
 
+
     @cache
     def get_min_max_values_of_pressures(self, column: int, plot_type: str):
-        """ This method returns the minimum and maximum pressure values
-            of selected frequency for animation purposes.
+        """ 
+        This method returns the minimum and maximum pressure values
+        of selected frequency used in the animation processing.
 
-            Parameters:
-            -----------
-            column: int value relative to frequency column index.
+        Parameters
+        ----------
+        column: int value relative to frequency column index.
 
-            Returns:
-            -----------
-            p_min, p_max: float values for minimum and maximum pressures,
+        Returns
+        -------
+        p_min, p_max: float values for minimum and maximum pressures,
 
         """
     
@@ -86,111 +90,141 @@ class AcousticHarmonicSolver:
 
         return p_min, p_max
 
-    def solve(self, print_log=False):
-        """ This method solves the acoustic harmonic analysis for both damped and undamped problems.
+
+    def solve(self, print_log: bool = False):
+        """ 
+        This method solves the acoustic harmonic analysis using the
+        direct method for both damped and undamped problems.
+
+        Parameter
+        ---------
+        print_log: bool, optional
+            This argument controls the printing of the solution steps to the terminal.
         """
+
+        logging.info(f"Solving harmonic analysis (direct method)... [10/100]")
+
         self.get_min_max_values_of_pressures.cache_clear()
 
-        frequencies = self.assembler.model.frequencies
-        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-
+        # mass and stiffness matrices
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
 
+        # damping matrices
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
+        
+        # mass flow load vector
         Q = self.assembler.mass_flow_vectors
 
         # the viscous-related source term is temporary disabled
-        Q_visc = self.assembler.Qvisc_damping_matrix * 0 
+        Q_visc = self.assembler.Qvisc_damping_matrix * 0
         
         is_pm_active = self.assembler.model.porous_material_properties
         is_vt_active = self.assembler.model.viscous_thermal_model_properties
 
-        if is_pm_active or is_vt_active:
-            freq_dependent = True
-        else:
-            freq_dependent = False
-            F_eq = self.get_prescribed_pressure_model_excitation()
+        # frequencies vector [in hertz]
+        frequencies = self.assembler.model.frequencies
+
+        # process the prescribed and unprescribed indexes
+        self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
+
+        # process the prescribed values
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
 
         rows = K.shape[0]
         cols = len(frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
-        #
-        logging.info(f"Solving harmonic analysis... [0/{len(frequencies)}]")
+
+        frequency_dependent = is_pm_active or is_vt_active
 
         for i, freq in enumerate(frequencies):
 
-            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(frequencies)}]")
+            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i+1}/{len(frequencies)}]")
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
 
+            # create the frequency vector
             omega = 2 * np.pi * freq
-
-            if i > 0:
-                self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
-                C_imp = self.assembler.damping_matrix
-
-            if freq_dependent:
-                if i > 0:
-
-                    self.assembler.assemble_global_mass_matrix(index=i)
-                    self.assembler.assemble_global_stiffness_matrix(index=i)
-
-                    M = self.assembler.mass_matrix
-                    K = self.assembler.stiffness_matrix
-
-                F_eq = self.get_prescribed_pressure_model_excitation(freq_dependent=True, index=i)
-
-                F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
-
-            else:
-
-                F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq[:, i]
-
-            C = C_imp + C_visc
 
             if i == 0:
 
-                # evaluates A matrix for omega = 1
+                # compute the prescribed dofs-related load vector
+                F_eq = self.get_prescribed_pressure_model_excitation()
+
+                # compute the load vector F for omega = 1
+                F = Q_visc @ Q[:, i] - 1j * Q[:, i] - F_eq
+
+                # compose the damping matrix [C]
+                C = C_imp + C_visc
+
+                # computes the A matrix for omega = 1
                 A = K - M + 1j * C
 
                 is_A_complex = np.any(np.imag(A.data))
                 is_F_complex = np.any(np.imag(F)) or np.any(np.imag(F_eq))
                 is_complex = is_A_complex or is_F_complex
 
+                # initialize the solver based on data types
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
-                del A
+                del A, F
+
+            else:
+
+                # update the damping matrix [C]
+                self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
+                C_imp = self.assembler.damping_matrix
+                C = C_imp + C_visc
+
+                if frequency_dependent:
+                    self.assembler.assemble_global_mass_matrix(index=i)
+                    self.assembler.assemble_global_stiffness_matrix(index=i)
+                    M = self.assembler.mass_matrix
+                    K = self.assembler.stiffness_matrix
+
+                # update the prescribed dofs-related load vector for each frequency step
+                F_eq = self.get_prescribed_pressure_model_excitation(index=i)
 
             A = K - (omega**2) * M + 1j * omega * C
+            F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
+
             if not is_complex:
                 A.data = np.real(A.data)
                 F = np.real(F)
 
+            # convert the symmetric matrix [A] into an upper triangular matrix to enhance the solver's
+            # performance and reduce the amount of memory required to compute the solution
             A = triu(A, format="csr")
 
+            # compute the solution for each frequency step
             solution[:, i] = linear_solver.solve(A, F)
+
+            # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
             del A, F
 
-        self.solution = self._reinsert_prescribed_dofs(solution)
+        logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
+
+        # reinsert the prescribed degrees of freedom into the solution vector
+        self.solution = self.reinsert_the_prescribed_degrees_of_freedoom(solution)
 
         return self.solution
 
-    def _reinsert_prescribed_dofs(self, solution):
+
+    def reinsert_the_prescribed_degrees_of_freedoom(self, solution: np.ndarray):
         """
-        This method reinsert the value of the prescribed degree of freedom in the solution.
+        This method reinsert the value of the prescribed degree of freedom in the solution array.
 
         Parameters
         ----------
-        solution : array
-            Solution data from the direct method, modal superposition or modal shapes from modal analysis.
+        solution : np.ndarray
+            Solution data obtained from harmonic analysis using the direct method.
 
         Returns
-        ----------
-        array
-            Solution of all the degrees of freedom.
+        -------
+        full_solution: np.ndarray
+            An array that contains the solution of all the degrees of freedom.
         """
         rows = solution.shape[0] + len(self.prescribed_indexes)
         cols = solution.shape[1]
@@ -198,73 +232,77 @@ class AcousticHarmonicSolver:
         full_solution = np.zeros((rows, cols), dtype=complex)
         full_solution[self.unprescribed_indexes, :] = solution
 
-        if len(self.prescribed_indexes) > 0:
+        if len(self.prescribed_indexes):
             full_solution[self.prescribed_indexes, :] = self.array_prescribed_values[:, 0:cols]
 
         return full_solution
-    
-    def get_prescribed_pressure_model_excitation(self, freq_dependent=False, index=0):
+
+
+    def get_prescribed_pressure_model_excitation(self, index: int = 0, matrices_updated: bool = False):
         """
-        This method adds the effects of prescribed acoustic pressure into mass flow global vector.
+        This method computes the equivalent loads resulting from the degrees of freedom 
+        prescription to compound the acoustic model excitation vector.
+
+        Parameters
+        ----------
+        index: int, optional
+            An integer values that represents the frequency index.
+        
+        matrices_updated: bool, optional
+            Controls when the sliced matrices will be updated.
 
         Returns
-        ----------
-        array
-            F_eq. Each column corresponds to a frequency of analysis.
+        -------
+        F_eq: np.ndarray
+            The equivalent acoustic load vector of complex numbers in which
+            each column corresponds to a frequency step of analysis.
         """
 
+        if len(self.prescribed_values) == 0:
+            return 0.
+
+        self.Kr = self.assembler.stiffness_matrix_r
+        self.Mr = self.assembler.mass_matrix_r
+        self.Cr = self.assembler.damping_matrix_r
+        self.Cr_visc = self.assembler.visc_damping_matrix_r
+
+        values = self.array_prescribed_values[:, index]
+
+        # Note: multiply a sparse matrix A by an array vector v using the * operator
+        # is similar to the @ operator when computing the product of arrays
+        Kr_add = self.Kr * values
+        Mr_add = self.Mr * values
+        Cr_add = (self.Cr + self.Cr_visc) * values
+
         frequencies = self.assembler.model.frequencies
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
-        #
-        Kr = (self.assembler.stiffness_matrix_r.toarray())[self.unprescribed_indexes, :]
-        Mr = (self.assembler.mass_matrix_r.toarray())[self.unprescribed_indexes, :]
-        Cr = (self.assembler.damping_matrix_r.toarray())[self.unprescribed_indexes, :]
-        Cr_visc = (self.assembler.visc_damping_matrix_r.toarray())[self.unprescribed_indexes, :]
+        omega = 2 * np.pi * frequencies[index]
 
-        rows = Kr.shape[0]
-        if freq_dependent:
-            cols = 1
-            F_eq = np.zeros(rows, dtype=complex)
-        else:
-            cols = len(frequencies)
-            F_eq = np.zeros((rows,cols), dtype=complex)
+        F_Kadd = Kr_add
+        F_Madd = -(omega**2) * Mr_add 
+        F_Cadd = 1j * omega * Cr_add
+        F_eq = F_Kadd + F_Madd + F_Cadd
 
-        if len(self.prescribed_values) != 0:
-
-            if freq_dependent:
-                Kr_add = np.sum((Kr * self.array_prescribed_values[:, index]), axis=1)
-                Mr_add = np.sum((Mr * self.array_prescribed_values[:, index]), axis=1)
-                Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, index]), axis=1)
-                #
-                omega = 2 * np.pi * frequencies[index]
-                F_Kadd = Kr_add
-                F_Madd = -(omega**2) * Mr_add 
-                F_Cadd = 1j * omega * Cr_add
-                F_eq = F_Kadd + F_Madd + F_Cadd
-
-            else:
-
-                for i, freq in enumerate(frequencies):
-                    logging.info(f"Processing prescribed pressure model excitation... [{i}/{len(frequencies)}]")
-                    #
-                    Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
-                    Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
-                    Cr_add = np.sum(((Cr + Cr_visc) * self.array_prescribed_values[:, i]), axis=1)
-                    #
-                    omega = 2 * np.pi * freq
-                    F_Kadd = Kr_add
-                    F_Madd = -(omega**2) * Mr_add 
-                    F_Cadd = 1j * omega * Cr_add
-                    F_eq[:, i] = F_Kadd + F_Madd + F_Cadd
-
-                logging.info("Processing prescribed pressure model excitation... [100/100]")
-
-        return F_eq
+        return F_eq[self.unprescribed_indexes]
 
 
     def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray, TL=False):
-        """ Process the nodal average particle velocity to selected surface.
-            Returns the partcicle velocity in components x, y, z and normal
+        """ 
+        This method computes the nodal average particle velocity in the selected surface.
+
+        Parameters
+        ----------
+        surface_id: int
+            The selected surface ID.
+
+        rho: float
+            The fluid density related to the selected surface.
+        
+        Returns
+        -------
+
+        particle_velocities: dict
+            A dictionary with the normal particle velocity and its components in
+            the x, y, and z directions, computed in the selected surface.
         """
 
         frequencies = self.assembler.model.frequencies
@@ -337,8 +375,28 @@ class AcousticHarmonicSolver:
 
 
     def get_transmission_loss(self, input_surface_id: int, output_surface_id: int):
-        """ Returns the transmission loss.
-        
+        """ 
+        This method compute the acoustic transmission loss between two selected surfaces.
+
+        Parameters
+        ----------
+
+        input_surface_id: int
+            The input surface ID.
+
+
+        output_surface_id: int
+            The output surface ID.
+
+        Returns
+        -------
+
+        frequencies: np.ndarray
+            The vector of valid frequencies.
+
+        transmission_loss: np.ndarray
+            The vector of computed transmission loss values in dB.
+
         """
 
         model = self.assembler.model
@@ -475,15 +533,36 @@ class AcousticHarmonicSolver:
         W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
 
-        TL = W_in - W_out
+        transmission_loss = W_in - W_out
 
         if frequencies[0] == 0:
-            return frequencies[1:], TL[1:]
-        else:
-            return frequencies, TL#, Aeff_in, Aeff_out
+            frequencies = frequencies[1:]
+            transmission_loss = transmission_loss[1:]
+
+        return frequencies, transmission_loss
+
 
     def get_noise_reduction(self, input_surface_id, output_surface_id):
-        """ Returns the transmission loss.
+        """ 
+        This method compute the acoustic noise reduction between two selected surfaces.
+
+        Parameters
+        ----------
+
+        input_surface_id: int
+            The input surface ID.
+
+        output_surface_id: int
+            The output surface ID.
+
+        Returns
+        -------
+
+        frequencies: np.ndarray
+            The vector of valid frequencies.
+
+        noise_reduction: np.ndarray
+            The vector of computed noise reduction values in dB.
 
         """
         frequencies = self.assembler.model.frequencies
@@ -499,12 +578,13 @@ class AcousticHarmonicSolver:
         Prms_out2 = np.real(P_out*np.conjugate(P_out)) / 2 + zero_shift
         Prms_in2 = np.real(P_in*np.conjugate(P_in)) / 2 + zero_shift
 
-        NR = 10*np.log10(Prms_in2/Prms_out2)
+        noise_reduction = 10*np.log10(Prms_in2/Prms_out2)
 
-        if 0 in frequencies:
-            return frequencies[1:], NR[1:]
+        if frequencies[0] == 0:
+            frequencies = frequencies[1:]
+            noise_reduction = noise_reduction[1:]
 
-        return frequencies, NR
+        return frequencies, noise_reduction
 
 
     def plot_graph(self, matrix):

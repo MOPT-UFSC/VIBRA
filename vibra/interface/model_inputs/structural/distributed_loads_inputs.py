@@ -69,18 +69,17 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.Fz_table_name = None
 
     def _create_list_lineEdits(self):
-
-        self.list_lineEdit_constant_values = [  
-                                              [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-                                              [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-                                              [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-                                              ]
+        self.list_lineEdit_constant_values = [
+            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
+            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
+            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+        ]
 
         self.table_lineEdits = {
-                                "Fx" : self.lineEdit_path_table_Fx,
-                                "Fy" : self.lineEdit_path_table_Fy,
-                                "Fz" : self.lineEdit_path_table_Fz,
-                                }
+            "Fx": self.lineEdit_path_table_Fx,
+            "Fy": self.lineEdit_path_table_Fy,
+            "Fz": self.lineEdit_path_table_Fz,
+        }
 
     def _config_widgets(self):
         #
@@ -438,7 +437,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup"
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"

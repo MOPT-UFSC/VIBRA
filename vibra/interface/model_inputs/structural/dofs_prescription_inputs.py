@@ -245,19 +245,22 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                         return
 
         if isinstance(point_id, int):
-            for node_id in self.mesh.nodes_from_points[line_id]:
-                for surface_id in self.mesh.surfaces_from_node[node_id]:
-                    data = self.properties._get_property("surface_thickness", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.comboBox_element_type.setCurrentIndex(0)
-                        return
+            node_id = self.mesh.nodes_from_points.get(point_id)
+            if node_id is None:
+                return
+
+            for surface_id in self.mesh.surfaces_from_node[node_id]:
+                data = self.properties._get_property("surface_thickness", surface=surface_id)
+                if isinstance(data, dict):
+                    self.comboBox_element_type.setCurrentIndex(0)
+                    return
 
         if isinstance(node_id, int):
             for surface_id in self.mesh.surfaces_from_node[node_id]:
-                    data = self.properties._get_property("surface_thickness", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.comboBox_element_type.setCurrentIndex(0)
-                        return
+                data = self.properties._get_property("surface_thickness", surface=surface_id)
+                if isinstance(data, dict):
+                    self.comboBox_element_type.setCurrentIndex(0)
+                    return
 
     def attribution_type_callback(self):
         if self.comboBox_attribution_type.currentIndex() == 3:
