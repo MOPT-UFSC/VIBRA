@@ -287,7 +287,7 @@ class Ui_Dialog(object):
         ___qtreewidgetitem1.setText(1, QCoreApplication.translate("Dialog", u"Volume to decouple", None));
         ___qtreewidgetitem1.setText(0, QCoreApplication.translate("Dialog", u"Surface", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_dofs_decoupling.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+        self.treeWidget_dofs_decoupling.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.lineEdit_selection_id.setText("")

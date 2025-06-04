@@ -14,6 +14,7 @@ import numpy as np
 from copy import deepcopy
 from collections import defaultdict
 from pathlib import Path
+from time import time
 from traceback import print_exception
 
 
@@ -1365,17 +1366,34 @@ class Mesh:
                 print(f"The line element {ell_id} from line {line_id} is collapsed -> connectivity: {l_connect}")
 
 
-    def get_face_elements_connected_to_nodes(self, node_ids, surface_id=None):
+    def get_face_elements_connected_to_nodes(self, node_ids: list[int] | np.ndarray, surface_id: int | None = None) -> dict:
+        """
+        This method computes the face elements connected to the nodes.
 
+        Parameters
+        ----------
+        node_ids: list or np.ndarray
+            The selected node ID list in which the element faces should be mapped.
+
+        surface_id: int or None, optional
+            It corresponds to the surface tag in which the element faces should be
+            mapped.
+        
+        Returns
+        -------
+        face_elements_connected_to_nodes: dict
+            A dictionary mapping the element face ID to the neighboor node IDs.
+        """
         # t0 = time()
-
-        face_elements_connected_to_nodes = dict()
 
         if surface_id is None:
             mask_0 = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) >= 1
             filtered_data = self.faces_connectivity[mask_0, :]
 
-        Nel = len(node_ids)
+        progress = 0
+        nodes_number = len(node_ids)
+        face_elements_connected_to_nodes = dict()
+
         for i, node_id in enumerate(node_ids):
 
             if surface_id is None:
@@ -1387,9 +1405,10 @@ class Mesh:
                 mask = np.sum(connect_from_surface == node_id, axis=1) == 1
                 face_elements_connected_to_nodes[node_id, surface_id] = connect_from_surface[mask, :]                
 
-            percentage = int(100 * i / Nel)
-            text = f"Obtaining face elements connected to nodes... [{percentage}/100]\nSurface [{surface_id}]"
-            logging.info(text)
+            current_progress = int(100 * i / nodes_number)
+            if current_progress % 5 and progress != current_progress:
+                progress = current_progress
+                logging.info(f"Obtaining face elements connected to nodes... [{progress}/100]\nSurface [{surface_id}]")
 
         # dt = time() - t0
         # print(f"Loop time: {dt} s")
@@ -1397,23 +1416,37 @@ class Mesh:
         return face_elements_connected_to_nodes
 
 
-    def get_solid_elements_connected_to_nodes(self, node_ids):
+    def get_solid_elements_connected_to_nodes(self, **kwargs) -> dict:
+        """
+        This method processes the solid elements connected to the nodes.
+        It returns a dictionary mapping the node IDs to the solid element IDs.
+        """
 
         # t0 = time()
 
-        solid_elements_connected_to_nodes = dict()
+        surface_id = kwargs.get("surface_id")
+        if isinstance(surface_id, int):
+            node_ids = self.nodes_from_surfaces.get(surface_id)
+        else:
+            node_ids = kwargs.get("node_ids")
 
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         filtered_data = self.solids_connectivity[mask_0, :]
 
-        Nel = len(node_ids)
+        progress = 0
+        number_nodes = len(node_ids)
+        solid_elements_connected_to_nodes = dict()
+
         for i, node_id in enumerate(node_ids):
             # mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
             # solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
             mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
             solid_elements_connected_to_nodes[node_id] = filtered_data[:, 0][mask]
 
-            logging.info(f"Obtaining solid elements connected to nodes... [{int(100 * i / Nel)}/100]")
+            current_progress = int(100 * i / number_nodes)
+            if current_progress % 5 and progress != current_progress:
+                progress = current_progress
+                logging.info(f"Obtaining solid elements connected to nodes... [{int(100 * i / number_nodes)}/100]")
 
         # dt = time() - t0
         # print(f"Loop time: {dt} s")
@@ -1421,7 +1454,49 @@ class Mesh:
         return solid_elements_connected_to_nodes
 
 
-    def _process_nodal_areas(self):
+    def get_average_normals_for_surface_nodes(self, surface_id: int, TL: bool=False) -> dict:
+        """
+        This methdo process the average normals in the surface nodes considering the element faces
+        normals connected to same node ID.
+
+        Parameters
+        ----------
+        surface_id: int
+            The tag of surface in which the normals average will be computed.
+
+        TL: bool, optional
+            An auxiliar argument to control the source data of the face elements 
+            connected to nodes.
+
+        Returns
+        -------
+        data_normals: dict
+            A dictionary mapping the node IDs to the average normal vector.
+        """
+        nodes_from_surface = self.nodes_from_surfaces.get(surface_id)
+        if nodes_from_surface is None:
+            return dict()
+
+        face_elements_connected_to_nodes = self.get_face_elements_connected_to_nodes(nodes_from_surface, surface_id)
+
+        data_normals = dict()
+        for node_id in nodes_from_surface:
+
+            if TL:
+                face_elem_connect = self.face_elements_connected_to_nodes[node_id]
+            else:
+                face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
+
+            n = 0.
+            for face_connect in face_elem_connect:
+                n += self.get_element_face_normal(face_connect)
+
+            data_normals[node_id] = n / len(face_elem_connect)
+
+        return data_normals
+
+
+    def compute_nodal_areas(self):
         self.nodal_area.clear()
         for node, connectivities in self.face_elements_connected_to_nodes.items():
             for connect in connectivities:
@@ -1430,17 +1505,19 @@ class Mesh:
                     self.nodal_area[node].append(area)
 
 
-    def process_triangular_area_by_nodal_coordinates(self, nodes):
-        area = None
-        if len(nodes) == 3:
+    def process_triangular_area_by_nodal_coordinates(self, node_ids: list[int] | np.ndarray) -> np.ndarray | None:
+        """
+        """
+        if len(node_ids) != 3:
+            return None
 
-            coord_A = self.nodal_coordinates[nodes[0], 1:]
-            coord_B = self.nodal_coordinates[nodes[1], 1:]
-            coord_C = self.nodal_coordinates[nodes[2], 1:]
+        coord_A = self.nodal_coordinates[node_ids[0], 1:]
+        coord_B = self.nodal_coordinates[node_ids[1], 1:]
+        coord_C = self.nodal_coordinates[node_ids[2], 1:]
 
-            AB = coord_B - coord_A
-            BC = coord_C - coord_B
-            area = np.linalg.norm(np.cross(AB, BC)) / 2
+        AB = coord_B - coord_A
+        BC = coord_C - coord_B
+        area = np.linalg.norm(np.cross(AB, BC)) / 2
 
         return area
 
@@ -1809,7 +1886,7 @@ class Mesh:
                 if sum(mask_nodes):
 
                     nodes_inside_sphere = node_indexes[mask_nodes]
-                    selection_data = self.get_solid_elements_connected_to_nodes(nodes_inside_sphere)
+                    selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
                     for _node, element_ids in selection_data.items():
                         for element_id in element_ids:
                             if element_id not in selected_elements:
@@ -1848,7 +1925,7 @@ class Mesh:
         mask_nodes = diff_nodes <= selection_radius
         nodes_inside_sphere = node_indexes[mask_nodes]
 
-        selection_data = self.get_solid_elements_connected_to_nodes(nodes_inside_sphere)
+        selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
 
         _selected_elements = list()
         for _node, element_ids in selection_data.items():

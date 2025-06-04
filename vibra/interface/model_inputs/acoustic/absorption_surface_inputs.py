@@ -372,7 +372,10 @@ class AbsorptionSurfaceInputs(QDialog):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["absorption_surface"]
+        labels = [
+                  "absorption_surface",
+                  "incident_plane_wave",
+                  ]
 
         for surface_id in surface_ids:
             for label in labels:

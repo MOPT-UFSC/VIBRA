@@ -171,7 +171,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, -230, 571, 568))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, -236, 571, 568))
         self.gridLayout_12 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.frame_fluid_info = QFrame(self.scrollAreaWidgetContents)

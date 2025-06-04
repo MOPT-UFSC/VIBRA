@@ -320,7 +320,11 @@ def acoustic_boundary_conditions_info_text():
     surface_velocity = app().project.model.properties._get_property(
         "surface_velocity",
         surface=selected_faces[0],
-    )   
+    )
+    incident_plane_wave = app().project.model.properties._get_property(
+    "incident_plane_wave",
+    surface=selected_faces[0],
+    )
     mass_flow_rate = app().project.model.properties._get_property(
         "mass_flow_rate",
         surface=selected_faces[0],
@@ -337,6 +341,7 @@ def acoustic_boundary_conditions_info_text():
     boundary_conditions_list = [
                                 acoustic_pressure,
                                 surface_velocity,
+                                incident_plane_wave,
                                 mass_flow_rate,
                                 absorption_surface,
                                 specific_impedance,
@@ -352,6 +357,11 @@ def acoustic_boundary_conditions_info_text():
     if surface_velocity is not None:
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
+
+    if incident_plane_wave is not None:
+        values = incident_plane_wave["values"]
+        loaded_table = "table_names" in incident_plane_wave.keys()
+        text += structural_format("Incident plane wave", values, ["P"], ["Pa"], loaded_table)
 
     if mass_flow_rate is not None:
         values = mass_flow_rate["values"][0]

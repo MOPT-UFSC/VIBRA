@@ -247,7 +247,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 else:
                     legend_label = self.imported_results[id]["filename"]
 
-                y_label = self.plotter.y_label.split(" - ")[0]
+                y_label = self.plotter.y_label.replace(" [dB]", "").split(" - ")[0]
 
                 aux = { 
                        "type" : "imported_data",

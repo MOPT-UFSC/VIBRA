@@ -16,14 +16,13 @@ from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
 from ..selection.mesh_selection import MeshSelection
 from .model_info_text import (
+    nodes_info_text,
     mesh_faces_info_text,
     mesh_solids_info_text,
-    mesh_structural_boundary_conditions_info_text,
-    nodes_info_text,
+    mesh_structural_boundary_conditions_info_text, 
 )
 
 import logging
-import numpy as np
 
 
 class MeshRenderWidget(CommonRenderWidget):
