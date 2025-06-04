@@ -307,18 +307,6 @@ class MeshRenderWidget(CommonRenderWidget):
             show_plane = not section_plane.keep_section_plane
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
-    def _disable_section_plane(self):
-        visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
-        self.plane_actor.VisibilityOff()
-
-        self.faces_actor.disable_cut()
-        self.solids_actor.disable_cut()
-        self.edges_actor.disable_cut()
-        self.update()
-
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         if isinstance(self.solids_actor, HollowSolidsActor):
             mesh = app().project.model.mesh
@@ -347,6 +335,19 @@ class MeshRenderWidget(CommonRenderWidget):
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.update()
+
+    def _disable_section_plane(self):
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.plane_actor.VisibilityOff()
+
+        self.nodes_actor.disable_cut()
+        self.faces_actor.disable_cut()
+        self.solids_actor.disable_cut()
+        self.edges_actor.disable_cut()
         self.update()
 
     def update_info_text(self):
