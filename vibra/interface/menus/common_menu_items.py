@@ -6,7 +6,7 @@ from pathlib import Path
 from vibra.interface.formatters.icons import *
 from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 from vibra import ICON_DIR
-from vibra.interface.menus.tool_tips_model_setup_items import tool_tips
+from vibra.interface.menus.tool_tip import ToolTip
 
 from molde.colors import color_names
 
@@ -142,6 +142,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
     def __init__(self, name):
         super().__init__([name])
         self.clicked = CustomBoundSignal()
+        self.tool_tips = ToolTip()
         self.property_name = ""
         self.should_paint = False
     
@@ -177,5 +178,6 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         if requirement and message_requirement == "":
             message_requirement = "<b style='color:red'>Required for the selected configuration.</b>"
         
-        tool_tip_html = QTextEdit(markdown=(tool_tips.get(self.property_name))).toHtml()
-        self.setToolTip(0, message_requirement + tool_tip_html)
+        tool_tip = self.tool_tips.get_tooltip_QTextEdit(self.property_name)
+        if tool_tip is not None:
+            self.setToolTip(0, message_requirement + tool_tip.toHtml())

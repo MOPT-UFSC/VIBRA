@@ -7,6 +7,7 @@ from .arrows import (
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
     create_incident_plane_wave_source,
+    create_surface_velocity_source,
 ) 
 
 from .simple_shapes import (

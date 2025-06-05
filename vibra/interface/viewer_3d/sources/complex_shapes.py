@@ -86,7 +86,7 @@ def create_acoustic_pressure_source():
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
-        scale=(.045, .045, .045),
+        scale=(.025, .025, .025),
     )
 
 def create_reciprocating_compressor_source():

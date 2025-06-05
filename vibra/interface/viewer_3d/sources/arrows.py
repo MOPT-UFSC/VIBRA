@@ -194,3 +194,37 @@ def create_incident_plane_wave_source():
         source.GetOutput(),
         scale=(1.5, 1.5, 1.5),
     )
+
+def create_surface_velocity_source():
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    # transform = vtkTransform()
+    # transform.RotateY(180)
+    # transform.Translate(-1.2, 0, 0)
+    # transform_arrow = vtkTransformPolyDataFilter()
+    # transform_arrow.SetInputConnection(arrow.GetOutputPort())
+    # transform_arrow.SetTransform(transform)
+    # transform_arrow.Update()
+    
+    cylinder = vtkCylinderSource()
+    cylinder.SetRadius(.3)
+    cylinder.SetHeight(0.5)
+    cylinder.SetResolution(50)
+    cylinder.Update()
+    transform = vtkTransform()
+    transform.RotateZ(90)
+    transform_cylinder = vtkTransformPolyDataFilter()
+    transform_cylinder.SetInputConnection(cylinder.GetOutputPort())
+    transform_cylinder.SetTransform(transform)
+    transform_cylinder.Update()
+    
+    source = vtkAppendPolyData()
+    source.AddInputData(arrow.GetOutput())
+    source.AddInputData(transform_cylinder.GetOutput())
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        scale=(1.5, 1.5, 1.5),
+    )

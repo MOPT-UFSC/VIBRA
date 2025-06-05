@@ -30,6 +30,7 @@ from vibra.interface.viewer_3d.sources import (
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
     create_incident_plane_wave_source,
+    create_surface_velocity_source,
 )
 
 Triple = tuple[float, float, float]
@@ -49,6 +50,7 @@ class Shape(Enum):
     TRANSFER_IMPEDANCE = "transfer_impedance"
     INCIDENT_PLANE_WAVE = "incident_plane_wave"
     ANECHOIC_TERMINATION = "anechoic_termination"
+    SURFACE_VELOCITY = "surface_velocity"
     MASS_FLOW_RATE = "mass_flow_rate"
     DISTRIBUTED_LOADS = "distributed_loads"
     DISTRIBUTED_LOADS_OUTWARDS = "distributed_loads_outwards"
@@ -85,53 +87,49 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             if property_name == "surface_velocity":
                 self._build_surface_velocity(surface_id)
             
-            if property_name == "prescribed_dofs":
+            elif property_name == "prescribed_dofs":
                 self._build_prescribed_dofs(property_name, surface_id)
             
-            if property_name == "nodal_loads":
+            elif property_name == "nodal_loads":
                 self._build_nodal_loads(property_name, surface_id)
             
-            if property_name == "distributed_loads":
+            elif property_name == "distributed_loads":
                 self._build_distributed_loads(property_name, surface_id)
             
-            if property_name == "normal_pressure_load":
+            elif property_name == "normal_pressure_load":
                 self._build_normal_pressure_load(surface_id)
             
-            if property_name == "specific_impedance":
+            elif property_name == "specific_impedance":
                 self._build_specific_impedance(property_name, surface_id)
                 
-            if property_name == "transfer_impedance":
+            elif property_name == "transfer_impedance":
                 self._build_transfer_impedance(surface_id)
             
-            if property_name == "perforated_plate_model":
+            elif property_name == "perforated_plate_model":
                 self._build_perforated_plate_model(surface_id)
             
-            if property_name == "mass_flow_rate":
+            elif property_name == "mass_flow_rate":
                 self._build_mass_flow_rate(surface_id)
             
-            if property_name == "degrees_of_freedom_decoupling":
+            elif property_name == "degrees_of_freedom_decoupling":
                 self._build_dofs_decoupling(surface_id)
             
-            if property_name == "absorption_surface":    
+            elif property_name == "absorption_surface":    
                 self._build_absorption_surface(surface_id)
             
-            if property_name == "acoustic_pressure":
+            elif property_name == "acoustic_pressure":
                 self._build_acoustic_pressure(surface_id)
             
-            if property_name == "reciprocating_compressor":
+            elif property_name == "reciprocating_compressor":
                 self._build_reciprocating_compressor(surface_id)
             
-            if property_name == "dissipation_model":
+            elif property_name == "dissipation_model":
                 self._build_dissipation_model(surface_id)
             
-            # Does not work
-            # if property_name == "viscous_thermal_model":
-            #     self._build_viscous_thermal_loss_model(surface_id)
-            
-            if property_name == "acoustic_transfer_element_data":
+            elif property_name == "acoustic_transfer_element_data":
                 self._build_acoustic_transfer_element_data(surface_id)
             
-            if property_name == "incident_plane_wave":
+            elif property_name == "incident_plane_wave":
                 self._build_incident_plane_wave(surface_id)
 
         super().build()
@@ -344,7 +342,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
     def add_normal_surface_velocity_symbol(self, position, orientation):
         self.add_symbol(
-            "outwards_arrow",
+            "surface_velocity",
             position,
             orientation,
             color=color_names.RED_6,
@@ -512,3 +510,4 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("reciprocating_compressor", create_reciprocating_compressor_source())
         self.register_shape("dissipation_model", create_dissipation_model_source())
         self.register_shape("acoustic_transfer_element_data", create_acoustic_transfer_element_data_source())
+        self.register_shape("surface_velocity", create_surface_velocity_source())
