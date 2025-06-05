@@ -29,6 +29,7 @@ from vibra.interface.viewer_3d.sources import (
     create_reciprocating_compressor_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
+    create_incident_plane_wave_source,
 )
 
 Triple = tuple[float, float, float]
@@ -46,6 +47,7 @@ class Shape(Enum):
     PERFORATED_PLATE_MODEL = "perforated_plate_model"
     IMPEDANCE = "impedance"
     TRANSFER_IMPEDANCE = "transfer_impedance"
+    INCIDENT_PLANE_WAVE = "incident_plane_wave"
     ANECHOIC_TERMINATION = "anechoic_termination"
     MASS_FLOW_RATE = "mass_flow_rate"
     DISTRIBUTED_LOADS = "distributed_loads"
@@ -128,6 +130,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             
             if property_name == "acoustic_transfer_element_data":
                 self._build_acoustic_transfer_element_data(surface_id)
+            
+            if property_name == "incident_plane_wave":
+                self._build_incident_plane_wave(surface_id)
 
         super().build()
 
@@ -274,6 +279,11 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.ACOUSTIC_TRANSFER_ELEMENT_DATA, coords, normal, color=color_names.TURQUOISE, scale=1)
         # self.add_acoustic_transfer_element_data_symbol(coords, normal)
+    
+    def _build_incident_plane_wave(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, normal, color=color_names.BLUE, scale=1)
+        # self.add_incident_plane_wave_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_symbol_render(self, shape: Shape, position: Triple, orientation: Triple, color: Color, scale: float = 1):
@@ -489,6 +499,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("mass", create_mass_source())
         self.register_shape("perforated_plate_model", create_perforated_plate_source())
         self.register_shape("impedance", create_impedance_source())
+        self.register_shape("incident_plane_wave", create_incident_plane_wave_source())
         self.register_shape("transfer_impedance", create_transfer_impedance_source())
         self.register_shape("anechoic_termination", create_anechoic_termination_source())
         self.register_shape("mass_flow_rate", create_mass_flow_rate_source())

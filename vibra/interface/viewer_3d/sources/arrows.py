@@ -1,4 +1,4 @@
-from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource
+from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkPlaneSource, vtkCubeSource
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
@@ -141,7 +141,7 @@ def create_normal_pressure_load():
     arrow.SetTipLength(0.25)
     arrow.Update()
     transform = vtkTransform()
-    transform.Translate(0.2, 0, 0)
+    transform.Translate(0.1, 0, 0)
     transform_arrow = vtkTransformPolyDataFilter()
     transform_arrow.SetInputConnection(arrow.GetOutputPort())
     transform_arrow.SetTransform(transform)
@@ -162,6 +162,32 @@ def create_normal_pressure_load():
     source = vtkAppendPolyData()
     source.AddInputData(transform_arrow.GetOutput())
     source.AddInputData(transform_cylinder.GetOutput())
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        scale=(1.5, 1.5, 1.5),
+    )
+
+def create_incident_plane_wave_source():
+    source = vtkAppendPolyData()
+
+    x_y_length = .5
+    padding = .17
+    for i in range(3):
+        plane = vtkCubeSource()
+        plane.SetXLength(.05)
+        plane.SetYLength(x_y_length)
+        plane.SetZLength(x_y_length)
+        plane.SetCenter(i * padding, 0, 0)
+        plane.Update()
+        source.AddInputData(plane.GetOutput())
+    
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    
+    source.AddInputData(arrow.GetOutput())
     source.Update()
     
     return transform_polydata(

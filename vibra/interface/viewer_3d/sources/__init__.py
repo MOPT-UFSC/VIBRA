@@ -6,6 +6,7 @@ from .arrows import (
     create_triple_arrow_source,
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
+    create_incident_plane_wave_source,
 ) 
 
 from .simple_shapes import (
@@ -27,5 +28,5 @@ from .complex_shapes import (
     create_acoustic_pressure_source,
     create_reciprocating_compressor_source,
     create_dissipation_model_source,
-    create_acoustic_transfer_element_data_source
+    create_acoustic_transfer_element_data_source,
 )
