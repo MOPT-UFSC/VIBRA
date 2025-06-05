@@ -85,7 +85,8 @@ def create_acoustic_pressure_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol.STL")
     return transform_polydata(
         polydata,
-        scale=(.3, .3, .3),
+        rotation=(0, 90, 180),
+        scale=(.045, .045, .045),
     )
 
 def create_reciprocating_compressor_source():

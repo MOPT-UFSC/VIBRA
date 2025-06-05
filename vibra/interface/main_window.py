@@ -1044,8 +1044,6 @@ class MainWindow(MainWindow_UI):
             widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
-        # TODO: test this function.
-        #  OBS: I do not know if it is working because I do not have any symbols to check
         self.visualization_filter.acoustic_symbols = clicked
         self.visualization_filter.structural_symbols = clicked
         self.visualization_changed.emit()

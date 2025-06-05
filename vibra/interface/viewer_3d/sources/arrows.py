@@ -173,13 +173,13 @@ def create_incident_plane_wave_source():
     source = vtkAppendPolyData()
 
     x_y_length = .5
-    padding = .17
+    step = .17
     for i in range(3):
         plane = vtkCubeSource()
         plane.SetXLength(.05)
         plane.SetYLength(x_y_length)
         plane.SetZLength(x_y_length)
-        plane.SetCenter(i * padding, 0, 0)
+        plane.SetCenter(i * step + 0.05, 0, 0)
         plane.Update()
         source.AddInputData(plane.GetOutput())
     
