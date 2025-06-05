@@ -192,6 +192,7 @@ def create_incident_plane_wave_source():
     
     return transform_polydata(
         source.GetOutput(),
+        position=(-1.5, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )
 

@@ -130,7 +130,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
                 self._build_acoustic_transfer_element_data(surface_id)
             
             elif property_name == "incident_plane_wave":
-                self._build_incident_plane_wave(surface_id)
+                self._build_incident_plane_wave(property_name, surface_id)
 
         super().build()
 
@@ -278,9 +278,13 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.add_symbol_render(Shape.ACOUSTIC_TRANSFER_ELEMENT_DATA, coords, normal, color=color_names.TURQUOISE, scale=1)
         # self.add_acoustic_transfer_element_data_symbol(coords, normal)
     
-    def _build_incident_plane_wave(self, surface_id: int):
-        coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, normal, color=color_names.BLUE, scale=1)
+    def _build_incident_plane_wave(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
+        wave_vector = property.get("wave_vector")
+        coords, _ = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, wave_vector, color=color_names.BLUE, scale=1)
         # self.add_incident_plane_wave_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
