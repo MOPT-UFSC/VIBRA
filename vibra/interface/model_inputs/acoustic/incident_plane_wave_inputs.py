@@ -73,6 +73,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def _configure_qt_variables(self):
         #
+        self.tabWidget_main.setTabVisible(1, False)
+        #
         for i, w in enumerate([120]):
             self.treeWidget_incident_plane_wave.setColumnWidth(i, w)
             self.treeWidget_incident_plane_wave.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -164,80 +166,58 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         elif tab_index == 1:
             self.tabulated_data_assignment()
 
-    def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
+    def check_complex_entries(self, line_edit_real: QLineEdit, line_edit_imag: QLineEdit, label: str):
 
-        self.stop = False
-        message = ""
-
-        title = "Invalid value typed"
-        input_str = lineEdit.text()
-
-        if input_str != "":
-
-            input_str = input_str.replace(",", ".")
-
+        real_value = None
+        str_real = line_edit_real.text()
+        if str_real != "":
             try:
-
-                value = float(input_str)
-
-                if zero_included:
-                    if value < 0:
-                        message = f"Insert a positive or a zero value to the {label}."
-
-                else:
-                    if only_positive and value <= 0:
-                        message = f"Insert a non-zero positive value to the {label}."
-
-            except Exception as _err:
-                message = f"You have typed and invalid value at the {label} input field.\n\n"
-                message += str(_err)
-
-        else:
-            message = f"Insert some value at the {label} input field."
-
-        if message != "":
-            self.hide()
-            PrintMessageInput([window_title_1, title, message])
-            return None
-        else:
-            return value
-
-    def check_complex_entries(self, real_input: str, imag_input: str, label: str):
-
-        _real = None
-        if real_input != "":
-            try:
-                real_input = real_input.replace(",", ".")
-                _real = float(real_input)
+                str_real = str_real.replace(",", ".")
+                real_value = float(str_real)
 
             except Exception:
                 self.hide()
-                title = f"Invalid entry to the {label}"
+                line_edit_real.setFocus()
+                title = f"Invalid value detected"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([window_title_1, title, message])
-                return True, None
+                return True
 
-        _imag = None
-        if imag_input != "":
+        imag_value = None
+        str_imag = line_edit_imag.text()
+        if str_imag != "":
             try:
-                imag_input = imag_input.replace(",", ".")
-                _imag = float(imag_input)
+                str_imag = str_imag.replace(",", ".")
+                imag_value = float(str_imag)
 
             except Exception:
                 self.hide()
-                title = f"Invalid entry to the {label}"
+                line_edit_imag.setFocus()
+                title = f"Invalid value detected"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([window_title_1, title, message])
-                return True, None
+                return True
 
-        if _real is None and _imag is None:
+        if self.comboBox_wave_direction.currentIndex() == 0:
+            if real_value <= 0:
+                self.hide()
+                line_edit_real.setFocus()
+                title = f"Invalid value detected"
+                message = "Enter a positive value for the normal "
+                message += "incident wave amplitude."
+                PrintMessageInput([window_title_1, title, message])
+                return None
+
+            # return complex(real_value)
+
+        if real_value is None and imag_value is None:
             values = None
-        elif _real is None:
-            values = 1j * _imag
-        elif _imag is None:
-            values = complex(_real)
+        elif real_value is None:
+            values = 1j * imag_value
+        elif imag_value is None:
+            values = complex(real_value)
         else:
-            values = _real + 1j * _imag
+            values = real_value + 1j * imag_value
 
         return values
 
@@ -245,9 +225,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         index = self.comboBox_wave_direction.currentIndex()
         if index:
-            self.label_component_x.setText("Pressure (x-axis)")
+            self.label_component_x.setText("Pressure (x-axis):")
         else:
-            self.label_component_x.setText("Normal pressure")
+            self.label_component_x.setText("Normal pressure:")
 
         self.lineEdit_real_value_y.setEnabled(bool(index))
         self.lineEdit_imag_value_y.setEnabled(bool(index))
@@ -258,12 +238,12 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def get_incident_wave_inputs(self):
         
-        Px = self.check_complex_entries(self.lineEdit_real_value_x.text(), self.lineEdit_imag_value_x.text(), "Px")
+        Px = self.check_complex_entries(self.lineEdit_real_value_x, self.lineEdit_imag_value_x, "Px")
 
         if self.comboBox_wave_direction.currentIndex():
             wave_direction = "components"
-            Py = self.check_complex_entries(self.lineEdit_real_value_y.text(), self.lineEdit_imag_value_y.text(), "Py")
-            Pz = self.check_complex_entries(self.lineEdit_real_value_z.text(), self.lineEdit_imag_value_z.text(), "Pz")
+            Py = self.check_complex_entries(self.lineEdit_real_value_y, self.lineEdit_imag_value_y, "Py")
+            Pz = self.check_complex_entries(self.lineEdit_real_value_z, self.lineEdit_imag_value_z, "Pz")
             values = [Px, Py, Pz]
         else:
             values = [Px]

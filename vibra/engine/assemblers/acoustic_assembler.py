@@ -236,6 +236,9 @@ class AcousticAssembler:
         pressures_z = dict()
         pressures_abs = dict()
 
+        nf = self.number_frequencies
+        _, element_2D = self.get_element()
+
         for key, data in self.properties.surface_properties.items():
 
             prop, surface_id = key
@@ -245,6 +248,8 @@ class AcousticAssembler:
             data: dict
             pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
             tv_active, rho_eff_tv, C_eff_tv = self.model.is_viscous_thermal_model_active(surface_id)
+
+            wave_direction = data.get("wave_direction", "normal")
 
             if pm_active:
                 density = rho_eff_pm
@@ -259,21 +264,29 @@ class AcousticAssembler:
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
 
-            values = data.get("values")
-            _pressures_x = self.get_value_in_array_form(values[0], flatten=True)
+            surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
+            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
 
-            if len(values) == 1:
-                _pressures_y = np.zeros_like(_pressures_x)
-                _pressures_z = np.zeros_like(_pressures_x)
+            values = data.get("values")
+
+            if wave_direction == "normal":
+                element_2D.reorder_connect(surf_connect)
+                eface_normals = element_2D.get_stacked_element_face_normals()
+                face_normal = np.average(eface_normals, axis=0)
+
+                _pressures_n = self.get_value_in_array_form(values[0], flatten=True)
+                _pressures_xyz = -face_normal.T @ _pressures_n.reshape(1, nf)
+
+                _pressures_x = _pressures_xyz[0, :]
+                _pressures_y = _pressures_xyz[1, :]
+                _pressures_z = _pressures_xyz[2, :]
 
             else:
+                _pressures_x = self.get_value_in_array_form(values[0], flatten=True)
                 _pressures_y = self.get_value_in_array_form(values[1], flatten=True)
                 _pressures_z = self.get_value_in_array_form(values[2], flatten=True)
 
             Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
-
-            surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]         
 
             for i, el in enumerate(surface_elements):
                 aux_connect[el] = surf_connect[i]
@@ -1246,6 +1259,8 @@ class AcousticAssembler:
             element_2D.reorder_connect(connectivities_pw)
             for i, (el_index, Z) in enumerate(pw_impedances.items()):
 
+                normalized_excitation_vector = element_2D.load_vector(i)
+
                 # element face connectivity
                 e_connect = element_2D.connect_face[i, :]
 
@@ -1257,11 +1272,11 @@ class AcousticAssembler:
                                   pressures_y[el_index], 
                                   pressures_z[el_index]])
 
-                vector = (eface_normal @ p_inc) / Z
-                normalized_excitation_vector = element_2D.load_vector(i)
+                # the vector resulting from (P_inc/Z).k^.n^
+                p_kn_Z = (eface_normal @ p_inc) / Z
 
                 # the negative signal is being used to revert the signal from the elementary load vector
-                output[e_connect, :] +=  2 * normalized_excitation_vector @ vector.reshape(1, -1)
+                output[e_connect, :] +=  2 * normalized_excitation_vector @ p_kn_Z.reshape(1, -1)
 
         if self.prescribed_indexes:
             return output[self.unprescribed_indexes, :]
