@@ -36,6 +36,7 @@ class AcousticAssembler:
 
         self.reset()
 
+
     def reset(self):
         self.stiffness_matrix = None
         self.mass_matrix = None
@@ -46,6 +47,7 @@ class AcousticAssembler:
         self.prescribed_values = list()
         self.prescribed_indexes = list()
         self.unprescribed_indexes = list()
+
 
     def get_element(self):
         element_type = self.model.mesh.element_type
@@ -61,8 +63,10 @@ class AcousticAssembler:
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
+
     def set_element_formulation(self, element):
         self.element = element
+
 
     def update_number_of_frequencies(self):
         self.frequencies = self.model.frequencies
@@ -71,8 +75,10 @@ class AcousticAssembler:
         else:
             self.number_frequencies = len(self.frequencies)
 
+
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
+
 
     def get_prescribed_dofs_values(self):
         """
@@ -132,6 +138,7 @@ class AcousticAssembler:
 
         return global_prescribed, array_prescribed_values
 
+
     def get_prescribed_indexes(self):
         """
         """
@@ -145,6 +152,7 @@ class AcousticAssembler:
 
         return _prescribed_indexes
 
+
     def get_unprescribed_indexes(self):
         """
         """
@@ -154,12 +162,15 @@ class AcousticAssembler:
         prescribed_indexes = self.get_prescribed_indexes()
         return np.delete(all_indexes, prescribed_indexes)
 
+
     def process_indexes(self):
         self.prescribed_indexes = self.get_prescribed_indexes()
         self.unprescribed_indexes = self.get_unprescribed_indexes()
 
+
     def get_matrices_dropping_indexes(self):
         return self.unprescribed_indexes, self.prescribed_indexes
+
 
     def get_surface_data_for_element_integration_by_property(self, property_label: str) -> dict:
         """ """
@@ -230,11 +241,10 @@ class AcousticAssembler:
         aux_connect = dict()
         integration_data = dict()
 
+        k_wave = dict()
+        e_normals = dict()
+        pressures = dict()
         plane_wave_impedances = dict()
-        pressures_x = dict()
-        pressures_y = dict()
-        pressures_z = dict()
-        pressures_abs = dict()
 
         for key, data in self.properties.surface_properties.items():
 
@@ -245,6 +255,11 @@ class AcousticAssembler:
             data: dict
             pm_active, rho_eff_pm, C_eff_pm = self.model.is_porous_material_model_active(surface_id)
             tv_active, rho_eff_tv, C_eff_tv = self.model.is_viscous_thermal_model_active(surface_id)
+
+            wave_vector = np.array(data.get("wave_vector"), dtype=float)
+            norm_wave_vector = np.linalg.norm(wave_vector)
+            if norm_wave_vector > 1:
+                wave_vector /= norm_wave_vector
 
             if pm_active:
                 density = rho_eff_pm
@@ -259,42 +274,32 @@ class AcousticAssembler:
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
 
-            values = data.get("values")
-            _pressures_x = self.get_value_in_array_form(values[0], flatten=True)
-
-            if len(values) == 1:
-                _pressures_y = np.zeros_like(_pressures_x)
-                _pressures_z = np.zeros_like(_pressures_x)
-
-            else:
-                _pressures_y = self.get_value_in_array_form(values[1], flatten=True)
-                _pressures_z = self.get_value_in_array_form(values[2], flatten=True)
-
-            Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
-
             surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]         
+            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
+
+            values = data.get("values")
+            p_inc = self.get_value_in_array_form(values[0], flatten=True)
+            Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
 
             for i, el in enumerate(surface_elements):
                 aux_connect[el] = surf_connect[i]
                 plane_wave_impedances[el] = Z
-                pressures_x[el] = _pressures_x
-                pressures_y[el] = _pressures_y
-                pressures_z[el] = _pressures_z
-                pressures_abs[el] = np.sqrt(_pressures_x**2 + _pressures_y**2 + _pressures_z**2)
+                e_normals[el] = self.model.mesh.get_element_face_normal(surf_connect[i])
+                k_wave[el] = wave_vector
+                pressures[el] = p_inc
 
         if aux_connect:
             connectivities = np.array(list(aux_connect.values()), dtype=int)
             integration_data = {
                                 "connectivities" : connectivities,
                                 "plane_wave_impedances" : plane_wave_impedances,
-                                "pressures_x" : pressures_x,
-                                "pressures_y" : pressures_y,
-                                "pressures_z" : pressures_z,
-                                "pressures_abs" : pressures_abs,
+                                "e_normals" : e_normals,
+                                "k_wave" : k_wave,
+                                "pressures" : pressures,
                                 }
 
         return integration_data
+
 
     def get_value_in_array_form(self, value: float | np.ndarray, flatten: bool = False) -> np.ndarray:
         """
@@ -320,6 +325,7 @@ class AcousticAssembler:
             return complex_values.flatten()
 
         return complex_values
+
 
     def get_transfer_impedance_data_for_element_integration(self):
 
@@ -401,6 +407,7 @@ class AcousticAssembler:
                                 }
 
         return integration_data
+
 
     def get_perforated_plate_data_for_element_integration(self, solution: np.ndarray | None = None):
 
@@ -490,6 +497,7 @@ class AcousticAssembler:
                                 }
 
         return integration_data
+
 
     def gather_data_to_assemble_global_matrices(self, reorder: bool = True):
         """ 
@@ -593,6 +601,7 @@ class AcousticAssembler:
                 self.data_Qvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
 
         self.process_indexes()
+
 
     def gather_data_to_assemble_global_matrices_reference(self, reorder: bool = True):
         """ 
@@ -771,11 +780,10 @@ class AcousticAssembler:
             return
 
         logging.info(f"Processing the impedance data to assemble damping matrix... [1/10]")
-        connectivities = self.integration_data_pw.get("connectivities")       
-        _pressures_x = self.integration_data_pw.get("pressures_x")
-        _pressures_y = self.integration_data_pw.get("pressures_y")
-        _pressures_z = self.integration_data_pw.get("pressures_z")
-        _pressures_abs = self.integration_data_pw.get("pressures_abs")
+        _k_wave = self.integration_data_pw.get("k_wave")
+        _e_normals = self.integration_data_pw.get("e_normals")
+        _pressures = self.integration_data_pw.get("pressures")
+        connectivities = self.integration_data_pw.get("connectivities")
         _pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
 
         _, element_2D = self.get_element()
@@ -789,24 +797,21 @@ class AcousticAssembler:
         logging.info(f"Processing the impedance data to assemble damping matrix... [2/10]")
         self.ind_rows_Zpw, self.ind_cols_Zpw = element_2D.generate_ind_rows_cols(connectivities)
         normalized_matrix_Ze = element_2D.stacked_damping_matrices_Ce()
-        eface_normals = element_2D.get_stacked_element_face_normals()
+        # eface_normals = element_2D.get_stacked_element_face_normals()
 
-        pressures_x = np.array(list(_pressures_x.values()))
-        pressures_y = np.array(list(_pressures_y.values()))
-        pressures_z = np.array(list(_pressures_z.values()))
-        pressures_abs = np.array(list(_pressures_abs.values()))
+        e_normals = np.array(list(_e_normals.values())).reshape(-1, 1, 3)
+        k_wave = np.array(list(_k_wave.values())).reshape(-1, 3, 1)
+        pressures = np.array(list(_pressures.values()))
         pw_impedances = np.array(list(_pw_impedances.values()))
 
+        n_k = e_normals @ k_wave
+
         for j in range(self.number_frequencies):
-
-            pressures = np.array([pressures_x[:, j], pressures_y[:, j], pressures_z[:, j]]).T
-            norm_den = pressures_abs[:, j].reshape(-1, 1, 1)
-            norm_pressures = pressures.reshape(-1, 3, 1) / norm_den
-
+            P_inc = pressures[:, j].reshape(-1, 1, 1)
             Z_pw = pw_impedances[:, j].reshape(-1, 1, 1)
 
             # the negative signal is being used to revert the signal from the elementary matrix
-            self.data_Zpw[j] = -(1 / Z_pw) * normalized_matrix_Ze * (eface_normals @ norm_pressures)
+            self.data_Zpw[j] = - normalized_matrix_Ze * (P_inc / Z_pw) * n_k
 
         # TODO: remove after confirming that everything is working properly
         # for i, complex_values in enumerate(surface_data.values()):
@@ -857,6 +862,7 @@ class AcousticAssembler:
         #     normalized_matrix_Z = element_2D.damping_matrix_Ce(i)
         #     for j in range(self.number_frequencies):
         #         self.data_Zas[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
+
 
     def process_transfer_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):
         """
@@ -922,6 +928,7 @@ class AcousticAssembler:
         #     normalized_matrix_Z = element_2D.damping_matrix_Ce(i)
         #     for j in range(self.number_frequencies):
         #         self.data_Zti_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
+
 
     def process_perforated_plate_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):
         """
@@ -1008,12 +1015,14 @@ class AcousticAssembler:
         #     for j in range(self.number_frequencies):
         #         self.data_Zpp_B[j][i, :, :] = normalized_matrix_Z / Z_tr[j]
 
+
     def gather_data_to_assemble_damping_matrix(self):
         self.process_specific_impedance_data_to_assemble_damping_matrix()
         self.process_incident_plane_wave_data_to_assemble_damping_matrix()
         self.process_surface_impedance_data_to_assemble_damping_matrix()
         self.process_transfer_impedance_data_to_assemble_damping_matrix()
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
+
 
     def assemble_global_stiffness_matrix(self, index=0):
         """
@@ -1023,6 +1032,7 @@ class AcousticAssembler:
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
 
+
     def assemble_global_mass_matrix(self, index=0):
         """
         """
@@ -1030,6 +1040,7 @@ class AcousticAssembler:
         _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
+
 
     def assemble_global_damping_matrix_3d_elements(self):
         """
@@ -1043,6 +1054,7 @@ class AcousticAssembler:
         _Qvisc_damping_matrix_full = csr_matrix((self.data_Qvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         self.Qvisc_damping_matrix = _Qvisc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qvisc_damping_matrix_r = _Qvisc_damping_matrix_full[:, self.prescribed_indexes]
+
 
     def assemble_global_damping_matrix_2d_elements(self, index: int = 0):
         """
@@ -1117,6 +1129,7 @@ class AcousticAssembler:
 
         self.damping_matrix = _matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.damping_matrix_r = _matrix_full[:, self.prescribed_indexes]
+
 
     def get_acoustic_excitations_by_nodal_attribution(self):
         """ This method processes the acoustic model excitations and
@@ -1196,10 +1209,11 @@ class AcousticAssembler:
         else:
             return output
 
-    def get_acoustic_excitations_by_element_integration(self):
 
-        """ This method processes the acoustic model excitations and
-            returns the output data in the form of mass flow rate.
+    def get_acoustic_excitations_by_element_integration(self):
+        """ 
+        This method processes the acoustic model excitations and
+        returns the output data in the form of mass flow rate.
         """
 
         _, element_2D = self.get_element()
@@ -1237,58 +1251,45 @@ class AcousticAssembler:
                     output[indices, :] += normalized_excitation_matrix @ complex_values
 
         if self.integration_data_pw:
+
+            k_wave = self.integration_data_pw.get("k_wave")
+            e_normals = self.integration_data_pw.get("e_normals")
+            pressures = self.integration_data_pw.get("pressures")
             connectivities_pw = self.integration_data_pw.get("connectivities")
-            pressures_x = self.integration_data_pw.get("pressures_x")
-            pressures_y = self.integration_data_pw.get("pressures_y")
-            pressures_z = self.integration_data_pw.get("pressures_z")
             pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
 
             element_2D.reorder_connect(connectivities_pw)
+
             for i, (el_index, Z) in enumerate(pw_impedances.items()):
 
-                # element face connectivity
-                e_connect = element_2D.connect_face[i, :]
-
-                # element face normal
-                eface_normal = self.model.mesh.get_element_face_normal(e_connect)
-
-                # incident wave vector of the element face
-                p_inc = np.array([pressures_x[el_index], 
-                                  pressures_y[el_index], 
-                                  pressures_z[el_index]])
-
-                vector = (eface_normal @ p_inc) / Z
                 normalized_excitation_vector = element_2D.load_vector(i)
 
-                # the negative signal is being used to revert the signal from the elementary load vector
-                output[e_connect, :] +=  2 * normalized_excitation_vector @ vector.reshape(1, -1)
+                # element face connectivity
+                e_connect = connectivities_pw[i, :]
+
+                # element face normal
+                n = e_normals[el_index]
+
+                # incident wave vector
+                k = k_wave[el_index]
+
+                # incident pressure amplitude
+                p_inc = pressures[el_index]
+
+                # surface impedance
+                Z = pw_impedances[el_index]
+
+                # auxilar vector
+                aux = (p_inc / Z) * (n @ k )
+
+                # the negative signal is being used to revert the signal from the elementary load vector ???
+                output[e_connect, :] +=  2 * normalized_excitation_vector @ aux.reshape(1, -1)
 
         if self.prescribed_indexes:
             return output[self.unprescribed_indexes, :]
 
         return output
 
-    def show_required_memory(self):
-
-        sizes = dict(
-                     size_K = getsizeof(self.data_K),
-                     size_M = getsizeof(self.data_M),
-                     size_Cvisc = getsizeof(self.data_Cvisc),
-                     size_Qvisc = getsizeof(self.data_Qvisc),
-                     size_Cimp = getsizeof(self.data_Zout),
-                     size_ind_rows = getsizeof(self.ind_rows),
-                     size_ind_cols = getsizeof(self.ind_cols),
-                     size_ind_rows_Z = getsizeof(self.ind_rows_Zout),
-                     size_ind_cols_Z = getsizeof(self.ind_cols_Zout)
-                     )
-
-        total_size = 0.
-        for name, size in sizes.items():
-            size_MB = size / 1e6
-            print(f"{name} = {round(size_MB, 4)}[MB]")
-            total_size += size_MB
-
-        print(f"Total memory required: {round(total_size, 4)}[MB]\n")
 
     def process_assemble(self):
 
