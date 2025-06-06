@@ -19,10 +19,9 @@ from copy import deepcopy
 import logging, os, warnings
 import numpy as np
 
-# fmt: off
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
+
 
 class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -904,9 +903,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             logging.info("Processing the post-assignment actions... [80/100]")
             app().main_window.update_info_text()
 
-            logging.info("Processing the post-assignment actions... [90/100]")
-            app().main_window.update_symbols()
-
             logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.set_geometry_selection()
 
@@ -1157,5 +1153,3 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on
