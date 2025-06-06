@@ -23,6 +23,7 @@ from vibra.interface.viewer_3d.sources import (
     create_triple_arrow_source,
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
+    create_outwards_normal_pressure_load,
     create_degrees_of_freedom_decoupling_source,
     create_absorption_surface_source,
     create_acoustic_pressure_source,
@@ -30,6 +31,7 @@ from vibra.interface.viewer_3d.sources import (
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
     create_incident_plane_wave_source,
+    create_outwards_incident_plane_wave_source,
     create_surface_velocity_source,
 )
 
@@ -49,12 +51,14 @@ class Shape(Enum):
     IMPEDANCE = "impedance"
     TRANSFER_IMPEDANCE = "transfer_impedance"
     INCIDENT_PLANE_WAVE = "incident_plane_wave"
+    OUTWARDS_INCIDENT_PLANE_WAVE = "outwards_incident_plane_wave"
     ANECHOIC_TERMINATION = "anechoic_termination"
     SURFACE_VELOCITY = "surface_velocity"
     MASS_FLOW_RATE = "mass_flow_rate"
     DISTRIBUTED_LOADS = "distributed_loads"
     DISTRIBUTED_LOADS_OUTWARDS = "distributed_loads_outwards"
     NORMAL_PRESSURE_LOAD = "normal_pressure_load"
+    OUTWARDS_NORMAL_PRESSURE_LOAD = "outwards_normal_pressure_load"
     DEGREES_OF_FREEDOM_DECOUPLING = "degrees_of_freedom_decoupling"
     ABSORPTION_SURFACE = "absorption_surface"
     ACOUSTIC_PRESSURE = "acoustic_pressure"
@@ -97,7 +101,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
                 self._build_distributed_loads(property_name, surface_id)
             
             elif property_name == "normal_pressure_load":
-                self._build_normal_pressure_load(surface_id)
+                self._build_normal_pressure_load(property_name, surface_id)
             
             elif property_name == "specific_impedance":
                 self._build_specific_impedance(property_name, surface_id)
@@ -209,9 +213,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2, scale=1)
         # self.add_distributed_loads_symbol(coords, orientation, is_pointing)
     
-    def _build_normal_pressure_load(self, surface_id: int):
+    def _build_normal_pressure_load(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.NORMAL_PRESSURE_LOAD, coords, normal, color=color_names.RED_2, scale=1)
+        x = property["values"]
+        shape = Shape.OUTWARDS_NORMAL_PRESSURE_LOAD if x[0].real > 0 else Shape.NORMAL_PRESSURE_LOAD
+        
+        self.add_symbol_render(shape, coords, normal, color=color_names.RED_2, scale=1)
         # self.add_normal_pressure_load_symbol(coords, normal)
     
     def _build_specific_impedance(self, property_name: str, surface_id: int):
@@ -283,8 +293,12 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         property = surface_properties[property_name, surface_id]
         
         wave_vector = property.get("wave_vector")
-        coords, _ = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, wave_vector, color=color_names.BLUE, scale=1)
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        is_pointing = np.dot(normal, wave_vector) < 0
+
+        shape = Shape.INCIDENT_PLANE_WAVE if is_pointing else Shape.OUTWARDS_INCIDENT_PLANE_WAVE
+        
+        self.add_symbol_render(shape, coords, wave_vector, color=color_names.BLUE, scale=1)
         # self.add_incident_plane_wave_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
@@ -294,7 +308,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             position=position,
             orientation=orientation,
             color=color,
-            scale=1,
+            scale=scale
         )
     
     def add_force_symbol(self, position, orientation, pointing=True):
@@ -502,12 +516,14 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("perforated_plate_model", create_perforated_plate_source())
         self.register_shape("impedance", create_impedance_source())
         self.register_shape("incident_plane_wave", create_incident_plane_wave_source())
+        self.register_shape("outwards_incident_plane_wave", create_outwards_incident_plane_wave_source())
         self.register_shape("transfer_impedance", create_transfer_impedance_source())
         self.register_shape("anechoic_termination", create_anechoic_termination_source())
         self.register_shape("mass_flow_rate", create_mass_flow_rate_source())
         self.register_shape("distributed_loads", create_triple_arrow_source())
         self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
         self.register_shape("normal_pressure_load", create_normal_pressure_load())
+        self.register_shape("outwards_normal_pressure_load", create_outwards_normal_pressure_load())
         self.register_shape("degrees_of_freedom_decoupling", create_degrees_of_freedom_decoupling_source())
         self.register_shape("absorption_surface", create_absorption_surface_source())
         self.register_shape("acoustic_pressure", create_acoustic_pressure_source())

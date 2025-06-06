@@ -141,7 +141,7 @@ def create_normal_pressure_load():
     arrow.SetTipLength(0.25)
     arrow.Update()
     transform = vtkTransform()
-    transform.Translate(0.1, 0, 0)
+    transform.Translate(0.06, 0, 0)
     transform_arrow = vtkTransformPolyDataFilter()
     transform_arrow.SetInputConnection(arrow.GetOutputPort())
     transform_arrow.SetTransform(transform)
@@ -169,6 +169,40 @@ def create_normal_pressure_load():
         scale=(1.5, 1.5, 1.5),
     )
 
+def create_outwards_normal_pressure_load():
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    transform = vtkTransform()
+    transform.Translate(0.06, 0, 0)
+    transform_arrow = vtkTransformPolyDataFilter()
+    transform_arrow.SetInputConnection(arrow.GetOutputPort())
+    transform_arrow.SetTransform(transform)
+    transform_arrow.Update()
+    
+    cylinder = vtkCylinderSource()
+    cylinder.SetRadius(.3)
+    cylinder.SetHeight(0.1)
+    cylinder.SetResolution(50)
+    cylinder.Update()
+    transform = vtkTransform()
+    transform.RotateZ(90)
+    transform_cylinder = vtkTransformPolyDataFilter()
+    transform_cylinder.SetInputConnection(cylinder.GetOutputPort())
+    transform_cylinder.SetTransform(transform)
+    transform_cylinder.Update()
+    
+    source = vtkAppendPolyData()
+    source.AddInputData(transform_arrow.GetOutput())
+    source.AddInputData(transform_cylinder.GetOutput())
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        position=(1.5, 0, 0),
+        scale=(-1.5, 1.5, 1.5),
+    )
+
 def create_incident_plane_wave_source():
     source = vtkAppendPolyData()
 
@@ -193,6 +227,33 @@ def create_incident_plane_wave_source():
     return transform_polydata(
         source.GetOutput(),
         position=(-1.5, 0, 0),
+        scale=(1.5, 1.5, 1.5),
+    )
+
+def create_outwards_incident_plane_wave_source():
+    source = vtkAppendPolyData()
+
+    x_y_length = .5
+    step = .17
+    for i in range(3):
+        plane = vtkCubeSource()
+        plane.SetXLength(.05)
+        plane.SetYLength(x_y_length)
+        plane.SetZLength(x_y_length)
+        plane.SetCenter(i * step + 0.05, 0, 0)
+        plane.Update()
+        source.AddInputData(plane.GetOutput())
+    
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    
+    source.AddInputData(arrow.GetOutput())
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        position=(0, 0, 0),
         scale=(1.5, 1.5, 1.5),
     )
 
