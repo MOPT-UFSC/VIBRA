@@ -109,9 +109,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             elif property_name == "transfer_impedance":
                 self._build_transfer_impedance(surface_id)
             
-            elif property_name == "perforated_plate_model":
-                self._build_perforated_plate_model(surface_id)
-            
             elif property_name == "mass_flow_rate":
                 self._build_mass_flow_rate(surface_id)
             
