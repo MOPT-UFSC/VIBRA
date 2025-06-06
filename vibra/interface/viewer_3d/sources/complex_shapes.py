@@ -3,7 +3,7 @@ from vibra.utils.polydata_utils import read_obj_file, read_stl_file, transform_p
 
 
 def create_spring_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/spring_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/spring_symbol.stl")
     return transform_polydata(
         polydata,
         position=(-1.25, -0.18, 0.18),
@@ -34,7 +34,7 @@ def create_perforated_plate_source():
     )
 
 def create_impedance_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/specific_impedance_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/specific_impedance_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
@@ -42,7 +42,7 @@ def create_impedance_source():
     )
 
 def create_anechoic_termination_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/anechoic_termination_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/anechoic_termination_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
@@ -50,7 +50,7 @@ def create_anechoic_termination_source():
     )
 
 def create_transfer_impedance_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/transfer_impedance_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/transfer_impedance_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 0),
@@ -58,7 +58,7 @@ def create_transfer_impedance_source():
     )
 
 def create_mass_flow_rate_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/mass_flow_rate_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/mass_flow_rate_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
@@ -66,7 +66,7 @@ def create_mass_flow_rate_source():
     )
 
 def create_degrees_of_freedom_decoupling_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/degrees_of_freedom_decoupling_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/degrees_of_freedom_decoupling_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 0),
@@ -74,7 +74,7 @@ def create_degrees_of_freedom_decoupling_source():
     )
 
 def create_absorption_surface_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/absorption_surface_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/absorption_surface_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
@@ -82,29 +82,29 @@ def create_absorption_surface_source():
     )
 
 def create_acoustic_pressure_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol3.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
-        scale=(.025, .025, .025),
+        scale=(.03, .03, .03),
     )
 
 def create_reciprocating_compressor_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_symbol2.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_symbol2.stl")
     return transform_polydata(
         polydata,
         scale=(.2, .2, .2),
     )
 
 def create_dissipation_model_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.stl")
     return transform_polydata(
         polydata,
         scale=(.5, .5, .5),
     )
 
 def create_acoustic_transfer_element_data_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_transfer_element_data_symbol.STL")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_transfer_element_data_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
