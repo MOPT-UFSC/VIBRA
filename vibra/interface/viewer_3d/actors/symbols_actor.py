@@ -2,9 +2,22 @@ from enum import Enum
 import numpy as np
 from molde.colors import color_names, Color
 from molde.actors import CommonSymbolsActorVariableSize
+from dataclasses import dataclass
+
+from molde import Color
+from molde.utils import transform_polydata
+from vtkmodules.vtkCommonCore import (
+    vtkDoubleArray,
+    vtkIntArray,
+    vtkPoints,
+    vtkUnsignedCharArray,
+)
+from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDistanceToCamera, vtkGlyph3DMapper, vtkRenderer
 
 
 from vibra import app
+from vibra.utils.rotations import align_y_rotations
 from vibra.interface.viewer_3d.sources import (
     create_arrow_source,
     create_cone_source,
@@ -135,6 +148,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
         super().build()
 
+        # TODO: This operation should be handled inside the parent class
+        self.mapper.SetOrientationModeToRotation()
+
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
 
@@ -264,8 +280,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     
     def _build_acoustic_pressure(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.ACOUSTIC_PRESSURE, coords, normal, color=color_names.RED_2, scale=1)
-        # self.add_acoustic_pressure_symbol(coords, normal)
+        bias = np.pi if normal[0] < 0 else 0
+        rotations = np.degrees(align_y_rotations(normal, bias))
+        self.add_symbol_render(Shape.ACOUSTIC_PRESSURE, coords, rotations, color=color_names.RED_2, scale=1)
     
     def _build_reciprocating_compressor(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)

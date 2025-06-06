@@ -85,7 +85,7 @@ def create_acoustic_pressure_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol3.stl")
     return transform_polydata(
         polydata,
-        rotation=(0, 90, 180),
+        rotation=(90, 0, -90),
         scale=(.03, .03, .03),
     )
 
