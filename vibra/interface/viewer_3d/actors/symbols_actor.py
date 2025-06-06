@@ -135,7 +135,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
         super().build()
 
-    def _get_center_coords_and_normals(self, surface_id: int) -> float:
+    def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
 
         surface_nodes = mesh.nodes_from_surfaces.get(surface_id)
@@ -156,7 +156,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             index = np.argmin(dist)
             return surface_coordinates[index, :], surface_normals[index, :]
 
-        return center_coords, np.average(surface_normals, axis=0)
+        return center_coords, np.average(surface_normals, axis=0).round(6)
 
     def _build_surface_velocity(self, surface_id: int):
         if surface_id is None:
