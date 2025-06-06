@@ -24,10 +24,6 @@ def generate_table_of_constant_values(filename: str, value: float | complex, f_s
 
     """
 
-    f_step = 5
-    f_min = f_step
-    f_max = 600
-
     freq = np.arange(f_min, f_max+f_step, f_step, dtype=int)
     values = np.ones_like(freq, dtype=complex) * value
 
@@ -38,7 +34,7 @@ def generate_table_of_constant_values(filename: str, value: float | complex, f_s
     np.savetxt(path, data, delimiter=",")
 
 if __name__ == "__main__":
-    filename = "transfer_impedance_Z0.dat"
-    value = 413.5379
-    f_step, f_min, f_max = 5, 5, 600
+    filename = "incident_plane_wave.dat"
+    value = 1
+    f_step, f_min, f_max = 5, 10, 1400
     generate_table_of_constant_values(filename, value, f_step=f_step, f_min=f_min, f_max=f_max)
