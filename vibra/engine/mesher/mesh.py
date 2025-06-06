@@ -1477,6 +1477,7 @@ class Mesh:
         if nodes_from_surface is None:
             return dict()
 
+        nodes_from_surface = np.sort(nodes_from_surface)
         face_elements_connected_to_nodes = self.get_face_elements_connected_to_nodes(nodes_from_surface, surface_id)
 
         data_normals = dict()

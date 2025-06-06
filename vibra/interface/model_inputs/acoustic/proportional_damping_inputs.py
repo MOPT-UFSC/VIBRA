@@ -42,7 +42,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Dissipation model")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -107,6 +107,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         density_factor = data.get("density_factor", 0.)
         self.lineEdit_fluid_density_complex_factor.setText(f"{density_factor : .4f}")
+        self.actions_to_finalize()
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 
@@ -283,6 +284,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.load_info()
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
+        app().main_window.update_symbols()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -297,5 +299,3 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on

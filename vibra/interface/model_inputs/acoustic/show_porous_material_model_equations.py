@@ -17,7 +17,7 @@ class ShowPorousMaterialModelEquations(EquationsForDbmPorousMaterialModels_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Porous material model")
 
     def _create_connections(self):
         self.pushButton_exit.clicked.connect(self.close)

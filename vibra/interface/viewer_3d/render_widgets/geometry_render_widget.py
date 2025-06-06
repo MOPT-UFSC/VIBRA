@@ -13,7 +13,7 @@ from ..actors.lines_actor import LinesActor
 from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
-from ..actors.symbols.new_symbols_actor import NewSymbolsActor
+from ..actors.symbols_actor import SymbolsActor
 from ..selection.geometry_selection import GeometrySelection
 
 from .model_info_text import( 
@@ -38,7 +38,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.geometry_selection = GeometrySelection(self)
-        self.selection_color = (20, 106, 245)
         self.mouse_click = (0, 0)
 
         self.left_clicked.connect(self.click_callback)
@@ -48,7 +47,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -127,7 +128,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor = NewSymbolsActor(self.renderer)
+        self.symbols_actor = SymbolsActor(self.renderer)
 
         section_plane = app().main_window.section_plane
         has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
@@ -244,7 +245,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # but for some reason that I can't understand
         # it causes segmentation fault
         self.remove_actors(self.symbols_actor)
-        self.symbols_actor = NewSymbolsActor(self.renderer)
+        self.symbols_actor = SymbolsActor(self.renderer)
         self.add_actors(self.symbols_actor)
         self.update()
 
@@ -333,10 +334,13 @@ class GeometryRenderWidget(CommonRenderWidget):
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
-        self.points_actor.paint_points(self.selection_color, points)
-        self.lines_actor.paint_lines(self.selection_color, lines)
-        self.faces_actor.paint_cells(self.selection_color, all_faces_elements)
-        self.selection_color = app().config.user_preferences.selection_color.to_rgb()
+        self.points_actor.paint_cells(self.selection_nodes_points_color, points)
+        self.lines_actor.paint_lines(self.selection_lines_color, lines)
+        self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
+        
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
 
         self.update_info_text()
 

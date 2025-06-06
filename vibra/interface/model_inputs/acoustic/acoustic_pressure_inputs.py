@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -46,7 +44,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Acoustic pressure")
 
     def _initialize(self):
         self.imported_values = None
@@ -420,7 +418,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:
@@ -501,5 +499,3 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on

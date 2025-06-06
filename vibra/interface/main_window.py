@@ -233,7 +233,6 @@ class MainWindow(MainWindow_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
-
     def update_mesh_information(self):
         self.status_bar.update_mesh_information()
 
@@ -459,6 +458,7 @@ class MainWindow(MainWindow_UI):
             self.render_widgets_stack.removeWidget(widget)
 
     def update_plots(self, reset_camera=True):
+        self.model_setup_widget.model_setup_items.update_items_appearance()
         renders_number = self.render_widgets_stack.count()
         for i in range(renders_number):
             logging.info(f"Updating renders... [{i+1}/{renders_number}]")
@@ -467,6 +467,7 @@ class MainWindow(MainWindow_UI):
                 widget.update_plot(reset_camera)
 
     def update_symbols(self):
+        self.model_setup_widget.model_setup_items.update_items_appearance()
         for i in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_symbols"):
@@ -550,25 +551,30 @@ class MainWindow(MainWindow_UI):
         self.open_project_dialog()
     
     def action_home_exit_callback(self):
-        self.clear_selection()
-        self.results_widget.remove_all_actors()
-        self.mesh_widget.remove_all_actors()
-        self.geometry_widget.remove_all_actors()
-
-        self.section_plane.cutting = False
-        self.section_plane.keep_section_plane = False
-        self.section_plane.closeEvent(None)
-
-        self.analysis_toolbar.setDisabled(True)
-        self.renderer_toolbar.setDisabled(True)
-        self.animation_toolbar.setDisabled(True)
-        self.disable_advanced_acoustic_plots_buttons(True)
+        self.close_dialogs()
+        self.action_section_plane_callback(False)
+        self.action_section_plane.setChecked(False)
         
-        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+        self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
+        self.model_setup_widget.model_setup_items.reset_items_appearance()
+        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+        
+        self.clear_selection()
+        self.action_unhide_all_callback()
+        self.results_widget.remove_all_actors()
+        self.mesh_widget.remove_all_actors()
+        self.geometry_widget.remove_all_actors()
+        app().project.reset_variables()
+        app().project.reset_solutions()
+        
+        self.analysis_toolbar.setDisabled(True)
+        self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
+        self.disable_advanced_acoustic_plots_buttons(True)
 
     def action_import_mesh_callback(self):
         caption = "Select a mesh file"
@@ -687,9 +693,10 @@ class MainWindow(MainWindow_UI):
                 self,
                 "Save As",
                 path,
-                filter="Vibra File (*.vibra)",
+                filter="Vibra File (*.vibra)", 
+                options=QFileDialog.DontUseNativeDialog,
             )
-
+            
             if not check:
                 return
 
@@ -699,6 +706,9 @@ class MainWindow(MainWindow_UI):
             if obj.ignore_mesh_data:
                 app().file.remove_mesh_data_from_project_file()
 
+            if not file_path.endswith(".vibra"):
+                file_path += ".vibra"
+            
             self.save_project_as(file_path)
 
         return obj.complete
@@ -806,7 +816,8 @@ class MainWindow(MainWindow_UI):
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
-
+        self.model_setup_widget.model_setup_items.update_items_appearance()            
+        
         return True
 
     def update_window_title(self, project_path: str | Path):
@@ -842,10 +853,12 @@ class MainWindow(MainWindow_UI):
 
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
+            self.action_front_view_callback()
             self.update_mesh_information()
 
             LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()                
+            LoadingWindow(self.geometry_widget.update_plot).run()
+            self.model_setup_widget.model_setup_items.update_items_appearance()            
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
@@ -1031,8 +1044,6 @@ class MainWindow(MainWindow_UI):
             widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
-        # TODO: test this function.
-        #  OBS: I do not know if it is working because I do not have any symbols to check
         self.visualization_filter.acoustic_symbols = clicked
         self.visualization_filter.structural_symbols = clicked
         self.visualization_changed.emit()

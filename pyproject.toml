@@ -25,6 +25,7 @@ dependencies = [
     "pyside6 (>=6.9.0,<7.0.0)",
 ]
 
+
 [tool.poetry]
 
 [tool.poetry.group.dev.dependencies]

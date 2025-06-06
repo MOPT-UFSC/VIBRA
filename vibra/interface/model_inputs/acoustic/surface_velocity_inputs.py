@@ -45,7 +45,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):

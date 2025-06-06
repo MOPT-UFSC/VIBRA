@@ -14,9 +14,7 @@ from ..actors.nodes_actor import NodesActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
-from ..actors.symbols.symbols_actor import SymbolsActor
 from ..selection.mesh_selection import MeshSelection
-
 from .model_info_text import (
     nodes_info_text,
     mesh_faces_info_text,
@@ -141,7 +139,6 @@ class MeshRenderWidget(CommonRenderWidget):
             self.solids_actor,
             self.ghost_actor,
             self.plane_actor,
-            self.symbols_actor,
         )
 
         with self.update_lock:
@@ -174,12 +171,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.update_selection()
         self.update()
-
-    def update_symbols(self):
-        self.remove_actors(self.symbols_actor)
-        self.symbols_actor = SymbolsActor(self.renderer)
-        self.add_actors(self.symbols_actor)
-
+    
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
 
@@ -244,12 +236,12 @@ class MeshRenderWidget(CommonRenderWidget):
         faces = app().main_window.selected_mesh_faces
         solids = app().main_window.selected_mesh_solids
     
-        selection_color = app().config.user_preferences.selection_color
-        faces_selection_color = selection_color.apply_factor(1.2).to_rgb()
+        selection_faces_color = app().config.user_preferences.selection_faces_color
+        selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
 
-        self.nodes_actor.paint_cells(selection_color.to_rgb(), nodes)
-        self.faces_actor.paint_cells(faces_selection_color, faces)
-        self.solids_actor.paint_cells(selection_color.to_rgb(), solids)
+        self.nodes_actor.paint_cells(selection_nodes_points_color.to_rgb(), nodes)
+        self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4).to_rgb(), faces)
+        self.solids_actor.paint_cells(selection_faces_color.to_rgb(), solids)
         self.edges_actor.configure_appearance()
         self.update()
 
@@ -273,7 +265,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
-        self.symbols_actor = None
         self.nodes_actor = None
         self.ghost_actor = None
 
