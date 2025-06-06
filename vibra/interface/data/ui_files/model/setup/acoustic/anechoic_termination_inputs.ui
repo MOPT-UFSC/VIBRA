@@ -114,7 +114,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set anechoic termination</string>
+         <string>Anechoic termination setup</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
@@ -723,6 +723,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -104,13 +104,13 @@ class Ui_Dialog(object):
         self.tabWidget_main.setMinimumSize(QSize(360, 0))
         self.tabWidget_main.setMaximumSize(QSize(380, 16777215))
         self.tabWidget_main.setFont(font1)
-        self.tab_constant_values = QWidget()
-        self.tab_constant_values.setObjectName(u"tab_constant_values")
-        self.gridLayout_12 = QGridLayout(self.tab_constant_values)
+        self.tab_constant_data = QWidget()
+        self.tab_constant_data.setObjectName(u"tab_constant_data")
+        self.gridLayout_12 = QGridLayout(self.tab_constant_data)
         self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(2, 6, 2, 6)
-        self.frame_8 = QFrame(self.tab_constant_values)
+        self.frame_8 = QFrame(self.tab_constant_data)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(340, 80))
         self.frame_8.setMaximumSize(QSize(400, 160))
@@ -191,14 +191,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_8, 0, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_constant_values, "")
-        self.tab_load_tables = QWidget()
-        self.tab_load_tables.setObjectName(u"tab_load_tables")
-        self.gridLayout_3 = QGridLayout(self.tab_load_tables)
+        self.tabWidget_main.addTab(self.tab_constant_data, "")
+        self.tab_tabular_data = QWidget()
+        self.tab_tabular_data.setObjectName(u"tab_tabular_data")
+        self.gridLayout_3 = QGridLayout(self.tab_tabular_data)
         self.gridLayout_3.setSpacing(2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(2, 6, 2, 6)
-        self.frame_9 = QFrame(self.tab_load_tables)
+        self.frame_9 = QFrame(self.tab_tabular_data)
         self.frame_9.setObjectName(u"frame_9")
         self.frame_9.setMinimumSize(QSize(260, 0))
         self.frame_9.setMaximumSize(QSize(400, 200))
@@ -265,7 +265,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_load_tables, "")
+        self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_9 = QGridLayout(self.tab_list)
@@ -408,13 +408,13 @@ class Ui_Dialog(object):
         self.label_20.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa/m/s]", None))
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_values), QCoreApplication.translate("Dialog", u"Constant values", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.pushButton_load_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Filter the frequency range of interest</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setText("")
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_load_tables), QCoreApplication.translate("Dialog", u"Load table", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_specific_impedance.headerItem()
@@ -424,7 +424,7 @@ class Ui_Dialog(object):
         self.treeWidget_specific_impedance.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
-        self.label.setText(QCoreApplication.translate("Dialog", u"Set specific impedance", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Specific impedance setup", None))
         self.pushButton_attribute.setText(QCoreApplication.translate("Dialog", u"Attribute", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
     # retranslateUi
@@ -443,7 +443,7 @@ class SpecificImpedanceInputs_UI(QDialog, Ui_Dialog):
                                         - label_2: QLabel
                                         - lineEdit_selection_id: QLineEdit
                             - tabWidget_main: QTabWidget
-                                - tab_constant_values: QWidget
+                                - tab_constant_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
@@ -453,7 +453,7 @@ class SpecificImpedanceInputs_UI(QDialog, Ui_Dialog):
                                                         - label_4: QLabel
                                                         - lineEdit_imag_value: QLineEdit
                                                         - label_21: QLabel
-                                - tab_load_tables: QWidget
+                                - tab_tabular_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout

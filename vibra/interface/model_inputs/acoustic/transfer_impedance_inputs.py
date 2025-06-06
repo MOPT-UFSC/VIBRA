@@ -1,29 +1,25 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
-from molde import load_ui
 from copy import deepcopy
 
 import logging, os, warnings
 import numpy as np
 
-# fmt: off
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class TransferImpedanceInputs(QDialog):
+
+class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/transfer_impedance_inputs.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,8 +32,7 @@ class TransferImpedanceInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._define_qt_variables()
-        self._config_widgets()
+        self._configure_qt_variables()
         self._create_connections()
 
         self.load_model_info()
@@ -57,35 +52,14 @@ class TransferImpedanceInputs(QDialog):
         self.keep_window_open = True
         self.ti_data = dict()
 
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_selection_type : QComboBox
-
-        # QLabel
-        self.label_selection_A: QLabel
-        self.label_selection_B: QLabel
-
-        # QLineEdit
-        self.lineEdit_selection_id_A: QLineEdit
-        self.lineEdit_selection_id_B: QLineEdit
-        self.lineEdit_real_value : QLineEdit
-        self.lineEdit_imag_value : QLineEdit
-        self.lineEdit_table_path : QLineEdit
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_change_frequency_setup : QPushButton
-        self.pushButton_load_table : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
-
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_transfer_impedance : QTreeWidget
+    def _configure_qt_variables(self):
+        #
+        self.current_lineEdit = self.lineEdit_selection_id_A
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
+            self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -142,15 +116,6 @@ class TransferImpedanceInputs(QDialog):
             self.lineEdit_selection_id_B.setStyleSheet("")
         else:
             self.lineEdit_selection_id_A.setStyleSheet("")
-
-    def _config_widgets(self):
-        #
-        self.current_lineEdit = self.lineEdit_selection_id_A
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        for i, w in enumerate([120]):
-            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
-            self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
 

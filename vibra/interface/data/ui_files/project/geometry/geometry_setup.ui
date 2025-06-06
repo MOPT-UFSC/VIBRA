@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>318</width>
-    <height>223</height>
+    <width>353</width>
+    <height>241</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -272,13 +272,13 @@
        <widget class="QPushButton" name="pushButton_proceed">
         <property name="minimumSize">
          <size>
-          <width>80</width>
+          <width>100</width>
           <height>27</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>80</width>
+          <width>100</width>
           <height>28</height>
          </size>
         </property>
@@ -306,13 +306,13 @@
        <widget class="QPushButton" name="pushButton_exit">
         <property name="minimumSize">
          <size>
-          <width>80</width>
+          <width>100</width>
           <height>27</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>80</width>
+          <width>100</width>
           <height>28</height>
          </size>
         </property>

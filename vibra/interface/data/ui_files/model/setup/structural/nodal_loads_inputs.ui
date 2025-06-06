@@ -427,9 +427,9 @@
            <property name="currentIndex">
             <number>0</number>
            </property>
-           <widget class="QWidget" name="tab_constant_values">
+           <widget class="QWidget" name="tab_constant_data">
             <attribute name="title">
-             <string>Constant values</string>
+             <string>Constant data</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_12">
              <property name="leftMargin">
@@ -1442,9 +1442,9 @@
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tab_load_tables">
+           <widget class="QWidget" name="tab_tabular_data">
             <attribute name="title">
-             <string>Load tables</string>
+             <string>Tabular data</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_10">
              <property name="leftMargin">
@@ -2465,6 +2465,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

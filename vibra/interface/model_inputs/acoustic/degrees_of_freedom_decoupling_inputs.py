@@ -1,13 +1,13 @@
-from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem 
+from PySide6.QtWidgets import QTreeWidgetItem 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.interface.ui_generated.model.setup.acoustic.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
-from molde import load_ui
 from copy import deepcopy
 
 import logging
@@ -16,12 +16,9 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class DegreesOfFreedomDecouplingInputs(QDialog):
+class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/degrees_of_freedom_decoupling_inputs.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.project = app().project
         self.model = app().project.model
@@ -33,8 +30,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._define_qt_variables()
-        self._config_widgets()
+        self._configure_qt_variables()
         self._create_connections()
 
         self.load_model_info()
@@ -54,25 +50,7 @@ class DegreesOfFreedomDecouplingInputs(QDialog):
         self.keep_window_open = True
         self.cache_surface_properties = deepcopy(self.properties.surface_properties)
 
-    def _define_qt_variables(self):
-
-        # QLineEdit
-        self.lineEdit_selection_id : QLineEdit
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
-
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_dofs_decoupling : QTreeWidget
-        self.treeWidget_selection_info : QTreeWidget
-
-    def _config_widgets(self):
+    def _configure_qt_variables(self):
         #
         for i, width in enumerate([140]):
             self.treeWidget_selection_info.setColumnWidth(i, width)
