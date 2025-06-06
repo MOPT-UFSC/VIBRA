@@ -1,32 +1,24 @@
 # fmt: off
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QLineEdit, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR, TEMP_PROJECT_FILE
-
-from molde import load_ui
-
-import os
+from vibra.interface.ui_generated.project.geometry.geometry_setup_ui import GeometrySetup_UI
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class GeometrySetup(QDialog):
+class GeometrySetup(GeometrySetup_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "project/geometry/geometry_setup.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
         self._initialize()
         self._config_window()
-        self._create_qt_variables()
         self._create_connections()
 
         while self.keep_window_open:
@@ -41,14 +33,6 @@ class GeometrySetup(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
-
-    def _create_qt_variables(self):
-        #
-        self.comboBox_length_units: QComboBox
-        self.comboBox_geometry_quality: QComboBox
-        #
-        self.pushButton_exit: QPushButton
-        self.pushButton_proceed: QPushButton
 
     def _create_connections(self):
         self.pushButton_proceed.clicked.connect(self.proceed_callback)

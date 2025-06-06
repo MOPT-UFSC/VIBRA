@@ -1,15 +1,14 @@
 # fmt: off
 
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.interface.ui_generated.model.setup.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-from molde import load_ui
 
 import os
 import numpy as np
@@ -17,12 +16,10 @@ import numpy as np
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class AbsorptionSurfaceInputs(QDialog):
+
+class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/absorption_surface_inputs.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -35,8 +32,8 @@ class AbsorptionSurfaceInputs(QDialog):
         
         self._config_window()
         self._initialize()
+        self._configure_qt_variables()
         self._create_connections()
-        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -54,6 +51,14 @@ class AbsorptionSurfaceInputs(QDialog):
         self.imported_values = None
         self.keep_window_open = True
 
+    def _configure_qt_variables(self):
+        #
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_absorption_surface.setColumnWidth(i, w)
+            self.treeWidget_absorption_surface.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
@@ -68,14 +73,6 @@ class AbsorptionSurfaceInputs(QDialog):
         self.treeWidget_absorption_surface.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
-
-    def _config_widgets(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        for i, w in enumerate([120]):
-            self.treeWidget_absorption_surface.setColumnWidth(i, w)
-            self.treeWidget_absorption_surface.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
         self.pushButton_remove.setDisabled(True)
@@ -128,9 +125,9 @@ class AbsorptionSurfaceInputs(QDialog):
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == 0:
-            self.check_constant_values()
+            self.constant_data_assignment()
         elif tab_index == 1:
-            self.check_table_values()
+            self.tabular_data_assignment()
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
 
@@ -170,7 +167,7 @@ class AbsorptionSurfaceInputs(QDialog):
         else:
             return value
 
-    def check_constant_values(self):
+    def constant_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
@@ -301,7 +298,7 @@ class AbsorptionSurfaceInputs(QDialog):
     def load_specific_impedance_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def check_table_values(self):
+    def tabular_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(

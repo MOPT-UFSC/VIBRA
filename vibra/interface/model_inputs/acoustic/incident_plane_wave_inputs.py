@@ -32,8 +32,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         
         self._config_window()
         self._initialize()
-        self._create_connections()
         self._configure_qt_variables()
+        self._create_connections()
 
         self.load_model_info()
         self.wave_direction_callback()
@@ -128,7 +128,15 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             surface_ids = [int(surf_id) for surf_id in surfaces]
 
             if len(surface_ids) != 1:
+                self.lineEdit_component_x.setText("")
+                self.lineEdit_component_y.setText("")
+                self.lineEdit_component_z.setText("")
                 return
+
+            normal_vector = self.get_average_surface_normal(surface_ids[0])
+            self.lineEdit_normal_x.setText(f"{normal_vector[0] : .4f}".replace(" ", ""))
+            self.lineEdit_normal_y.setText(f"{normal_vector[1] : .4f}".replace(" ", ""))
+            self.lineEdit_normal_z.setText(f"{normal_vector[2] : .4f}".replace(" ", ""))
 
             data = self.properties._get_property("incident_plane_wave", surface=surface_ids[0])
             if isinstance(data, dict):
@@ -136,10 +144,10 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
             else:
                 if self.comboBox_wave_direction.currentIndex() == 0:
-                    inverse_normal_surface = -self.get_average_surface_normal(surface_ids[0])
-                    self.lineEdit_component_x.setText(f"{inverse_normal_surface[0] : .4f}")
-                    self.lineEdit_component_y.setText(f"{inverse_normal_surface[1] : .4f}")
-                    self.lineEdit_component_z.setText(f"{inverse_normal_surface[2] : .4f}")
+                    wave_vector = -normal_vector
+                    self.lineEdit_component_x.setText(f"{wave_vector[0] : .4f}".replace(" ", ""))
+                    self.lineEdit_component_y.setText(f"{wave_vector[1] : .4f}".replace(" ", ""))
+                    self.lineEdit_component_z.setText(f"{wave_vector[2] : .4f}".replace(" ", ""))
 
     def load_property_data(self, data: dict):
 
@@ -152,21 +160,21 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         values = data.get("values")
         self.lineEdit_incident_pressure_real.setText(f"{np.real(values[0])}")
         self.lineEdit_incident_pressure_imag.setText(f"{np.imag(values[0])}")
-        
+
         wave_vector = data.get("wave_vector")
         if wave_vector is None:
             return
 
-        self.lineEdit_component_x.setText(f"{wave_vector[0] : .4f}")
-        self.lineEdit_component_y.setText(f"{wave_vector[1] : .4f}")
-        self.lineEdit_component_z.setText(f"{wave_vector[2] : .4f}")
+        self.lineEdit_component_x.setText(f"{wave_vector[0] : .4f}".replace(" ", ""))
+        self.lineEdit_component_y.setText(f"{wave_vector[1] : .4f}".replace(" ", ""))
+        self.lineEdit_component_z.setText(f"{wave_vector[2] : .4f}".replace(" ", ""))
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == 0:
             self.constant_data_assignment()
         elif tab_index == 1:
-            self.tabulated_data_assignment()
+            self.tabular_data_assignment()
 
     def check_inputs(self, line_edit: QLineEdit, label, only_positive: bool = True):
 
@@ -273,7 +281,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def get_input_wave_vector(self, surface_id: int):
 
         if self.comboBox_wave_direction.currentIndex() == 0:
-            wave_vector = [float(value) for value in -self.get_average_surface_normal(surface_id)]
+            normal_vector = self.get_average_surface_normal(surface_id)
+            wave_vector = [float(value) for value in -normal_vector]
 
         else:
             e_x = self.check_inputs(self.lineEdit_component_x, "e_x", only_positive=False)
@@ -336,12 +345,12 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             for value in np.real(values):
                 if np.real(value) < 0:
                     continue
-
+            
                 self.hide()
                 title = 'Invalid setup detected'
-                message = "The plane wave should be incident, i.e., directed inward of the domain. "
-                message += "We recommend to verify the signals from the incident pressure amplitude "
-                message += "and/or from the wave vector."
+                message = "The plane wave should be incident, i.e., directed inwards of the domain. "
+                message += "We recommend to verify the entered values of the incident pressure amplitude "
+                message += "and of the wave vector."
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
@@ -495,7 +504,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def load_incident_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def tabulated_data_assignment(self):
+    def tabular_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
@@ -688,10 +697,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             analysis_setup = self.project.analysis_setup
             self.project.set_analysis_setup(analysis_setup)
             app().file.write_analysis_setup_in_file(analysis_setup)
-
-    def reset_input_fields(self):
-        self.lineEdit_real_value.setText("")
-        self.lineEdit_table_path.setText("")
 
     def update_tabs_visibility(self):
 

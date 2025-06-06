@@ -482,8 +482,8 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
-            self.tabWidget_main.setCurrentIndex(0)
-            self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(2, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

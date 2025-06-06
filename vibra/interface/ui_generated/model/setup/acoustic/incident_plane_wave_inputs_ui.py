@@ -25,7 +25,7 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModal)
-        Dialog.resize(460, 473)
+        Dialog.resize(446, 500)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -50,6 +50,7 @@ class Ui_Dialog(object):
         self.frame_2.setFrameShadow(QFrame.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_2)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setVerticalSpacing(4)
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
         self.tabWidget_main = QTabWidget(self.frame_2)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
@@ -58,13 +59,13 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(10)
         self.tabWidget_main.setFont(font1)
-        self.tab_constant_values = QWidget()
-        self.tab_constant_values.setObjectName(u"tab_constant_values")
-        self.gridLayout_12 = QGridLayout(self.tab_constant_values)
+        self.tab_constant_data = QWidget()
+        self.tab_constant_data.setObjectName(u"tab_constant_data")
+        self.gridLayout_12 = QGridLayout(self.tab_constant_data)
         self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(2, 6, 2, 6)
-        self.frame_8 = QFrame(self.tab_constant_values)
+        self.frame_8 = QFrame(self.tab_constant_data)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(340, 80))
         self.frame_8.setMaximumSize(QSize(16777215, 240))
@@ -157,14 +158,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_8, 1, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_constant_values, "")
-        self.tab_load_tables = QWidget()
-        self.tab_load_tables.setObjectName(u"tab_load_tables")
-        self.gridLayout_3 = QGridLayout(self.tab_load_tables)
+        self.tabWidget_main.addTab(self.tab_constant_data, "")
+        self.tab_tabular_data = QWidget()
+        self.tab_tabular_data.setObjectName(u"tab_tabular_data")
+        self.gridLayout_3 = QGridLayout(self.tab_tabular_data)
         self.gridLayout_3.setSpacing(2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(2, 6, 2, 6)
-        self.frame_9 = QFrame(self.tab_load_tables)
+        self.frame_9 = QFrame(self.tab_tabular_data)
         self.frame_9.setObjectName(u"frame_9")
         self.frame_9.setMinimumSize(QSize(260, 0))
         self.frame_9.setMaximumSize(QSize(600, 200))
@@ -179,15 +180,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addItem(self.horizontalSpacer_8, 1, 0, 1, 1)
 
-        self.label_incident_pressure_table = QLabel(self.frame_9)
-        self.label_incident_pressure_table.setObjectName(u"label_incident_pressure_table")
-        self.label_incident_pressure_table.setMinimumSize(QSize(110, 28))
-        self.label_incident_pressure_table.setMaximumSize(QSize(140, 28))
-        self.label_incident_pressure_table.setFont(font3)
-        self.label_incident_pressure_table.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_2.addWidget(self.label_incident_pressure_table, 1, 1, 1, 1)
-
         self.pushButton_load_table = QPushButton(self.frame_9)
         self.pushButton_load_table.setObjectName(u"pushButton_load_table")
         self.pushButton_load_table.setEnabled(True)
@@ -201,13 +193,13 @@ class Ui_Dialog(object):
         self.pushButton_load_table.setFont(font3)
         self.pushButton_load_table.setStyleSheet(u"")
 
-        self.gridLayout_2.addWidget(self.pushButton_load_table, 1, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_load_table, 1, 2, 1, 1)
 
         self.lineEdit_table_path = QLineEdit(self.frame_9)
         self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
         self.lineEdit_table_path.setEnabled(True)
-        self.lineEdit_table_path.setMinimumSize(QSize(240, 28))
-        self.lineEdit_table_path.setMaximumSize(QSize(240, 28))
+        self.lineEdit_table_path.setMinimumSize(QSize(280, 28))
+        self.lineEdit_table_path.setMaximumSize(QSize(280, 28))
         font4 = QFont()
         font4.setPointSize(8)
         font4.setBold(False)
@@ -215,24 +207,24 @@ class Ui_Dialog(object):
         self.lineEdit_table_path.setStyleSheet(u"")
         self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.lineEdit_table_path, 1, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.lineEdit_table_path, 1, 1, 1, 1)
 
         self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer_9, 1, 5, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer_9, 1, 4, 1, 1)
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addItem(self.verticalSpacer_4, 0, 2, 1, 1)
+        self.gridLayout_2.addItem(self.verticalSpacer_4, 0, 1, 1, 1)
 
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addItem(self.verticalSpacer_3, 2, 2, 1, 1)
+        self.gridLayout_2.addItem(self.verticalSpacer_3, 2, 1, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_load_tables, "")
+        self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_9 = QGridLayout(self.tab_list)
@@ -304,15 +296,6 @@ class Ui_Dialog(object):
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setVerticalSpacing(2)
         self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
-        self.label_component_x = QLabel(self.frame_wave_vector)
-        self.label_component_x.setObjectName(u"label_component_x")
-        self.label_component_x.setMinimumSize(QSize(80, 22))
-        self.label_component_x.setMaximumSize(QSize(80, 22))
-        self.label_component_x.setFont(font3)
-        self.label_component_x.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_10.addWidget(self.label_component_x, 0, 2, 1, 1)
-
         self.lineEdit_component_z = QLineEdit(self.frame_wave_vector)
         self.lineEdit_component_z.setObjectName(u"lineEdit_component_z")
         self.lineEdit_component_z.setMinimumSize(QSize(80, 28))
@@ -333,6 +316,29 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_component_y, 1, 3, 1, 1)
 
+        self.label_component_x = QLabel(self.frame_wave_vector)
+        self.label_component_x.setObjectName(u"label_component_x")
+        self.label_component_x.setMinimumSize(QSize(80, 22))
+        self.label_component_x.setMaximumSize(QSize(80, 22))
+        self.label_component_x.setFont(font3)
+        self.label_component_x.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.label_component_x, 0, 2, 1, 1)
+
+        self.lineEdit_component_x = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_component_x.setObjectName(u"lineEdit_component_x")
+        self.lineEdit_component_x.setMinimumSize(QSize(80, 28))
+        self.lineEdit_component_x.setMaximumSize(QSize(80, 28))
+        self.lineEdit_component_x.setFont(font3)
+        self.lineEdit_component_x.setStyleSheet(u"")
+        self.lineEdit_component_x.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.lineEdit_component_x, 1, 2, 1, 1)
+
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_10.addItem(self.horizontalSpacer_6, 1, 0, 1, 1)
+
         self.label_component_z = QLabel(self.frame_wave_vector)
         self.label_component_z.setObjectName(u"label_component_z")
         self.label_component_z.setMinimumSize(QSize(80, 22))
@@ -351,10 +357,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label_component_y, 0, 3, 1, 1)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_10.addItem(self.horizontalSpacer_6, 1, 0, 1, 1)
-
         self.label_wave_vector = QLabel(self.frame_wave_vector)
         self.label_wave_vector.setObjectName(u"label_wave_vector")
         self.label_wave_vector.setMinimumSize(QSize(100, 28))
@@ -364,19 +366,52 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label_wave_vector, 1, 1, 1, 1)
 
-        self.lineEdit_component_x = QLineEdit(self.frame_wave_vector)
-        self.lineEdit_component_x.setObjectName(u"lineEdit_component_x")
-        self.lineEdit_component_x.setMinimumSize(QSize(80, 28))
-        self.lineEdit_component_x.setMaximumSize(QSize(80, 28))
-        self.lineEdit_component_x.setFont(font3)
-        self.lineEdit_component_x.setStyleSheet(u"")
-        self.lineEdit_component_x.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_10.addWidget(self.lineEdit_component_x, 1, 2, 1, 1)
-
         self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_10.addItem(self.horizontalSpacer_5, 1, 5, 1, 1)
+
+        self.label_wave_vector_2 = QLabel(self.frame_wave_vector)
+        self.label_wave_vector_2.setObjectName(u"label_wave_vector_2")
+        self.label_wave_vector_2.setEnabled(False)
+        self.label_wave_vector_2.setMinimumSize(QSize(100, 28))
+        self.label_wave_vector_2.setMaximumSize(QSize(140, 28))
+        self.label_wave_vector_2.setFont(font3)
+        self.label_wave_vector_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_10.addWidget(self.label_wave_vector_2, 2, 1, 1, 1)
+
+        self.lineEdit_normal_x = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_normal_x.setObjectName(u"lineEdit_normal_x")
+        self.lineEdit_normal_x.setEnabled(False)
+        self.lineEdit_normal_x.setMinimumSize(QSize(80, 28))
+        self.lineEdit_normal_x.setMaximumSize(QSize(80, 28))
+        self.lineEdit_normal_x.setFont(font3)
+        self.lineEdit_normal_x.setStyleSheet(u"")
+        self.lineEdit_normal_x.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.lineEdit_normal_x, 2, 2, 1, 1)
+
+        self.lineEdit_normal_y = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_normal_y.setObjectName(u"lineEdit_normal_y")
+        self.lineEdit_normal_y.setEnabled(False)
+        self.lineEdit_normal_y.setMinimumSize(QSize(80, 28))
+        self.lineEdit_normal_y.setMaximumSize(QSize(80, 28))
+        self.lineEdit_normal_y.setFont(font3)
+        self.lineEdit_normal_y.setStyleSheet(u"")
+        self.lineEdit_normal_y.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.lineEdit_normal_y, 2, 3, 1, 1)
+
+        self.lineEdit_normal_z = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_normal_z.setObjectName(u"lineEdit_normal_z")
+        self.lineEdit_normal_z.setEnabled(False)
+        self.lineEdit_normal_z.setMinimumSize(QSize(80, 28))
+        self.lineEdit_normal_z.setMaximumSize(QSize(80, 28))
+        self.lineEdit_normal_z.setFont(font3)
+        self.lineEdit_normal_z.setStyleSheet(u"")
+        self.lineEdit_normal_z.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.lineEdit_normal_z, 2, 4, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_wave_vector, 2, 0, 1, 1)
@@ -533,10 +568,9 @@ class Ui_Dialog(object):
         self.label_5.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_values), QCoreApplication.translate("Dialog", u"Constant values", None))
-        self.label_incident_pressure_table.setText(QCoreApplication.translate("Dialog", u"Incident pressure:", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.pushButton_load_table.setText("")
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_load_tables), QCoreApplication.translate("Dialog", u"Load table", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_incident_plane_wave.headerItem()
@@ -551,6 +585,7 @@ class Ui_Dialog(object):
         self.label_component_z.setText(QCoreApplication.translate("Dialog", u"Comp. z", None))
         self.label_component_y.setText(QCoreApplication.translate("Dialog", u"Comp. y", None))
         self.label_wave_vector.setText(QCoreApplication.translate("Dialog", u"Wave vector:", None))
+        self.label_wave_vector_2.setText(QCoreApplication.translate("Dialog", u"Normal vector:", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.label_19.setText(QCoreApplication.translate("Dialog", u"Wave direction:", None))
         self.comboBox_wave_direction.setItemText(0, QCoreApplication.translate("Dialog", u"Normal", None))
@@ -571,7 +606,7 @@ class IncidentPlaneWaveInputs_UI(QDialog, Ui_Dialog):
                 - frame_2: QFrame
                     - (Layout): QGridLayout
                             - tabWidget_main: QTabWidget
-                                - tab_constant_values: QWidget
+                                - tab_constant_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
@@ -581,11 +616,10 @@ class IncidentPlaneWaveInputs_UI(QDialog, Ui_Dialog):
                                                         - label_5: QLabel
                                                         - label_4: QLabel
                                                         - label_21: QLabel
-                                - tab_load_tables: QWidget
+                                - tab_tabular_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout
-                                                        - label_incident_pressure_table: QLabel
                                                         - pushButton_load_table: QPushButton
                                                         - lineEdit_table_path: QLineEdit
                                 - tab_list: QWidget
@@ -597,13 +631,17 @@ class IncidentPlaneWaveInputs_UI(QDialog, Ui_Dialog):
                                             - treeWidget_incident_plane_wave: QTreeWidget
                             - frame_wave_vector: QFrame
                                 - (Layout): QGridLayout
-                                        - label_component_x: QLabel
                                         - lineEdit_component_z: QLineEdit
                                         - lineEdit_component_y: QLineEdit
+                                        - label_component_x: QLabel
+                                        - lineEdit_component_x: QLineEdit
                                         - label_component_z: QLabel
                                         - label_component_y: QLabel
                                         - label_wave_vector: QLabel
-                                        - lineEdit_component_x: QLineEdit
+                                        - label_wave_vector_2: QLabel
+                                        - lineEdit_normal_x: QLineEdit
+                                        - lineEdit_normal_y: QLineEdit
+                                        - lineEdit_normal_z: QLineEdit
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
                                         - label_2: QLabel

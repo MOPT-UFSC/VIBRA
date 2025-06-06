@@ -57,16 +57,16 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(10)
         self.tabWidget_main.setFont(font1)
-        self.tab_constant_values = QWidget()
-        self.tab_constant_values.setObjectName(u"tab_constant_values")
-        self.gridLayout_12 = QGridLayout(self.tab_constant_values)
+        self.tab_constant_data = QWidget()
+        self.tab_constant_data.setObjectName(u"tab_constant_data")
+        self.gridLayout_12 = QGridLayout(self.tab_constant_data)
         self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(2, 6, 2, 6)
-        self.frame_8 = QFrame(self.tab_constant_values)
+        self.frame_8 = QFrame(self.tab_constant_data)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(340, 80))
-        self.frame_8.setMaximumSize(QSize(400, 160))
+        self.frame_8.setMaximumSize(QSize(400, 1000))
         font2 = QFont()
         font2.setPointSize(11)
         self.frame_8.setFont(font2)
@@ -77,19 +77,49 @@ class Ui_Dialog(object):
         self.gridLayout.setHorizontalSpacing(6)
         self.gridLayout.setVerticalSpacing(2)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.label_18 = QLabel(self.frame_8)
-        self.label_18.setObjectName(u"label_18")
-        self.label_18.setMinimumSize(QSize(120, 28))
-        self.label_18.setMaximumSize(QSize(120, 28))
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer, 2, 0, 1, 1)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer_2, 3, 2, 1, 1)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer, 0, 2, 1, 1)
+
+        self.label_21 = QLabel(self.frame_8)
+        self.label_21.setObjectName(u"label_21")
+        self.label_21.setMinimumSize(QSize(60, 28))
+        self.label_21.setMaximumSize(QSize(60, 28))
         font3 = QFont()
         font3.setFamilies([u"MS Shell Dlg 2"])
         font3.setPointSize(10)
         font3.setBold(False)
         font3.setItalic(False)
+        self.label_21.setFont(font3)
+        self.label_21.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout.addWidget(self.label_21, 2, 4, 1, 1)
+
+        self.label_4 = QLabel(self.frame_8)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(80, 26))
+        self.label_4.setMaximumSize(QSize(80, 26))
+        self.label_4.setFont(font3)
+        self.label_4.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout.addWidget(self.label_4, 1, 2, 1, 1)
+
+        self.label_18 = QLabel(self.frame_8)
+        self.label_18.setObjectName(u"label_18")
+        self.label_18.setMinimumSize(QSize(120, 28))
+        self.label_18.setMaximumSize(QSize(120, 28))
         self.label_18.setFont(font3)
         self.label_18.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout.addWidget(self.label_18, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_18, 2, 1, 1, 1)
 
         self.lineEdit_real_value = QLineEdit(self.frame_8)
         self.lineEdit_real_value.setObjectName(u"lineEdit_real_value")
@@ -99,7 +129,7 @@ class Ui_Dialog(object):
         self.lineEdit_real_value.setStyleSheet(u"")
         self.lineEdit_real_value.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_value, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_real_value, 2, 2, 1, 1)
 
         self.label_20 = QLabel(self.frame_8)
         self.label_20.setObjectName(u"label_20")
@@ -108,16 +138,7 @@ class Ui_Dialog(object):
         self.label_20.setFont(font3)
         self.label_20.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout.addWidget(self.label_20, 1, 2, 1, 1)
-
-        self.label_4 = QLabel(self.frame_8)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(80, 26))
-        self.label_4.setMaximumSize(QSize(80, 26))
-        self.label_4.setFont(font3)
-        self.label_4.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout.addWidget(self.label_4, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.label_20, 1, 3, 1, 1)
 
         self.lineEdit_imag_value = QLineEdit(self.frame_8)
         self.lineEdit_imag_value.setObjectName(u"lineEdit_imag_value")
@@ -127,36 +148,23 @@ class Ui_Dialog(object):
         self.lineEdit_imag_value.setStyleSheet(u"")
         self.lineEdit_imag_value.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_value, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_imag_value, 2, 3, 1, 1)
 
-        self.label_21 = QLabel(self.frame_8)
-        self.label_21.setObjectName(u"label_21")
-        self.label_21.setMinimumSize(QSize(60, 28))
-        self.label_21.setMaximumSize(QSize(60, 28))
-        self.label_21.setFont(font3)
-        self.label_21.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout.addWidget(self.label_21, 2, 3, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 0, 1, 1, 1)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer_2, 3, 1, 1, 1)
+        self.gridLayout.addItem(self.horizontalSpacer_2, 2, 5, 1, 1)
 
 
         self.gridLayout_12.addWidget(self.frame_8, 0, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_constant_values, "")
-        self.tab_load_tables = QWidget()
-        self.tab_load_tables.setObjectName(u"tab_load_tables")
-        self.gridLayout_3 = QGridLayout(self.tab_load_tables)
+        self.tabWidget_main.addTab(self.tab_constant_data, "")
+        self.tab_tabular_data = QWidget()
+        self.tab_tabular_data.setObjectName(u"tab_tabular_data")
+        self.gridLayout_3 = QGridLayout(self.tab_tabular_data)
         self.gridLayout_3.setSpacing(2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(2, 6, 2, 6)
-        self.frame_9 = QFrame(self.tab_load_tables)
+        self.frame_9 = QFrame(self.tab_tabular_data)
         self.frame_9.setObjectName(u"frame_9")
         self.frame_9.setMinimumSize(QSize(260, 0))
         self.frame_9.setMaximumSize(QSize(400, 200))
@@ -243,7 +251,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_load_tables, "")
+        self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_9 = QGridLayout(self.tab_list)
@@ -471,18 +479,18 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
+        self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa/m/s]", None))
+        self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.label_18.setText(QCoreApplication.translate("Dialog", u"Transfer impedance:", None))
         self.label_20.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
-        self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
-        self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa/m/s]", None))
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_values), QCoreApplication.translate("Dialog", u"Constant values", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Choose a table file to import the data", None))
         self.pushButton_load_table.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Filter the frequency range of interest</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setText("")
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_load_tables), QCoreApplication.translate("Dialog", u"Load table", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_transfer_impedance.headerItem()
@@ -515,17 +523,17 @@ class TransferImpedanceInputs_UI(QDialog, Ui_Dialog):
                 - frame_2: QFrame
                     - (Layout): QGridLayout
                             - tabWidget_main: QTabWidget
-                                - tab_constant_values: QWidget
+                                - tab_constant_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
+                                                        - label_21: QLabel
+                                                        - label_4: QLabel
                                                         - label_18: QLabel
                                                         - lineEdit_real_value: QLineEdit
                                                         - label_20: QLabel
-                                                        - label_4: QLabel
                                                         - lineEdit_imag_value: QLineEdit
-                                                        - label_21: QLabel
-                                - tab_load_tables: QWidget
+                                - tab_tabular_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout

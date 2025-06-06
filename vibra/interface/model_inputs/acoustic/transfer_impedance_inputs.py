@@ -1,30 +1,26 @@
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent, QColor
 
 from vibra import app, UI_DIR
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
-from molde import load_ui
 from copy import deepcopy
 
 import logging, os, warnings
 import numpy as np
 
-# fmt: off
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class TransferImpedanceInputs(QDialog):
+
+class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/transfer_impedance_inputs.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -37,7 +33,7 @@ class TransferImpedanceInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._config_widgets()
+        self._configure_qt_variables()
         self._create_connections()
         self._paint_icons()
 
@@ -57,6 +53,15 @@ class TransferImpedanceInputs(QDialog):
         self.assignment_complete = False
         self.keep_window_open = True
         self.ti_data = dict()
+
+    def _configure_qt_variables(self):
+        #
+        self.current_lineEdit = self.lineEdit_selection_id_A
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
+            self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -126,15 +131,6 @@ class TransferImpedanceInputs(QDialog):
             self.lineEdit_selection_id_B.setStyleSheet("")
         else:
             self.lineEdit_selection_id_A.setStyleSheet("")
-
-    def _config_widgets(self):
-        #
-        self.current_lineEdit = self.lineEdit_selection_id_A
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        for i, w in enumerate([120]):
-            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
-            self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
 

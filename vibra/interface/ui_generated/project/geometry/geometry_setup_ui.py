@@ -23,7 +23,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(318, 223)
+        Dialog.resize(353, 241)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -119,8 +119,8 @@ class Ui_Dialog(object):
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
         self.pushButton_proceed = QPushButton(self.frame_3)
         self.pushButton_proceed.setObjectName(u"pushButton_proceed")
-        self.pushButton_proceed.setMinimumSize(QSize(80, 27))
-        self.pushButton_proceed.setMaximumSize(QSize(80, 28))
+        self.pushButton_proceed.setMinimumSize(QSize(100, 27))
+        self.pushButton_proceed.setMaximumSize(QSize(100, 28))
         font2 = QFont()
         font2.setFamilies([u"MS Shell Dlg 2"])
         font2.setPointSize(10)
@@ -133,8 +133,8 @@ class Ui_Dialog(object):
 
         self.pushButton_exit = QPushButton(self.frame_3)
         self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(80, 27))
-        self.pushButton_exit.setMaximumSize(QSize(80, 28))
+        self.pushButton_exit.setMinimumSize(QSize(100, 27))
+        self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font2)
         self.pushButton_exit.setStyleSheet(u"")
 
