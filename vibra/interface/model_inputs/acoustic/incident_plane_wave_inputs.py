@@ -59,9 +59,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_load_table_x.clicked.connect(self.load_specific_impedance_table)
-        self.pushButton_load_table_y.clicked.connect(self.load_specific_impedance_table)
-        self.pushButton_load_table_z.clicked.connect(self.load_specific_impedance_table)
+        self.pushButton_load_table.clicked.connect(self.load_incident_pressure_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -72,8 +70,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def _configure_qt_variables(self):
-        #
-        self.tabWidget_main.setTabVisible(1, False)
         #
         for i, w in enumerate([120, 160]):
             self.treeWidget_incident_plane_wave.setColumnWidth(i, w)
@@ -141,9 +137,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             else:
                 if self.comboBox_wave_direction.currentIndex() == 0:
                     inverse_normal_surface = -self.get_average_surface_normal(surface_ids[0])
-                    self.lineEdit_direction_x.setText(f"{inverse_normal_surface[0] : .4f}")
-                    self.lineEdit_direction_y.setText(f"{inverse_normal_surface[1] : .4f}")
-                    self.lineEdit_direction_z.setText(f"{inverse_normal_surface[2] : .4f}")
+                    self.lineEdit_component_x.setText(f"{inverse_normal_surface[0] : .4f}")
+                    self.lineEdit_component_y.setText(f"{inverse_normal_surface[1] : .4f}")
+                    self.lineEdit_component_z.setText(f"{inverse_normal_surface[2] : .4f}")
 
     def load_property_data(self, data: dict):
 
@@ -161,9 +157,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if wave_vector is None:
             return
 
-        self.lineEdit_direction_x.setText(f"{wave_vector[0] : .4f}")
-        self.lineEdit_direction_y.setText(f"{wave_vector[1] : .4f}")
-        self.lineEdit_direction_z.setText(f"{wave_vector[2] : .4f}")
+        self.lineEdit_component_x.setText(f"{wave_vector[0] : .4f}")
+        self.lineEdit_component_y.setText(f"{wave_vector[1] : .4f}")
+        self.lineEdit_component_z.setText(f"{wave_vector[2] : .4f}")
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
@@ -280,9 +276,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             wave_vector = [float(value) for value in -self.get_average_surface_normal(surface_id)]
 
         else:
-            e_x = self.check_inputs(self.lineEdit_direction_x, "e_x")
-            e_y = self.check_inputs(self.lineEdit_direction_y, "e_y")
-            e_z = self.check_inputs(self.lineEdit_direction_z, "e_z")
+            e_x = self.check_inputs(self.lineEdit_component_x, "e_x", only_positive=False)
+            e_y = self.check_inputs(self.lineEdit_component_y, "e_y", only_positive=False)
+            e_z = self.check_inputs(self.lineEdit_component_z, "e_z", only_positive=False)
 
             if (e_x, e_y, e_z).count(None):
                 return None
@@ -312,10 +308,43 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         return output
     
     def check_for_inside_surfaces(self, surface_ids: list[int]):
+        """
+        """
         for surface_id in surface_ids:
             volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
             if len(volumes_from_surface) != 1:
                 return True
+
+        return False
+
+    def check_wave_incidence(self, surface_ids: list[int], P_inc: complex | np.ndarray):
+        
+        if isinstance(P_inc, complex):
+            P_inc = np.array([P_inc], dtype=complex)
+
+        for surface_id in surface_ids:
+
+            wave_vector = self.get_input_wave_vector(surface_id)
+            if wave_vector is None:
+                return
+
+            wave_vector = np.array(wave_vector, dtype=float)
+            ns_vector = self.get_average_surface_normal(surface_id)
+            
+            values = P_inc * (ns_vector @ wave_vector)
+
+            for value in np.real(values):
+                if np.real(value) < 0:
+                    continue
+
+                self.hide()
+                title = 'Invalid setup detected'
+                message = "The plane wave should be incident, i.e., directed inward of the domain. "
+                message += "We recommend to verify the signals from the incident pressure amplitude "
+                message += "and/or from the wave vector."
+                PrintMessageInput([window_title_1, title, message])
+                return True
+
         return False
 
     def constant_data_assignment(self):
@@ -360,6 +389,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 "imag_values" : imag_values,
                 }
 
+        if self.check_wave_incidence(surface_ids, values[0]):
+            return
+
         for surface_id in surface_ids:
 
             wave_vector = self.get_input_wave_vector(surface_id)
@@ -401,9 +433,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             lineEdit.setText(imported_table_path)
             imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
-            if imported_file.shape[1] < 2:
-                message = "The imported table has insufficient number of columns. The absorption coefficient"
-                message += " data must have two columns in the form: frequencies and real values."
+            if imported_file.shape[1] < 3:
+                message = "The imported table has insufficient number of columns. The incident plane wave"
+                message += " data must have two columns in the form: frequencies real values, and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
@@ -460,7 +492,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def load_specific_impedance_table(self):
+    def load_incident_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def tabulated_data_assignment(self):
@@ -478,6 +510,20 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             PrintMessageInput(error_data)
             return
 
+        if self.check_for_inside_surfaces(surface_ids):
+            self.hide()
+            title = "Invalid surface selected"
+            message = "An invalid surface has been detected in the current "
+            message += "selection. The incident plane wave excitation can"
+            message += "only applied on the outside surfaces."
+            PrintMessageInput([window_title_1, title, message])
+            return
+
+        if self.comboBox_wave_direction.currentIndex():
+            wave_direction = "components"
+        else:
+            wave_direction = "normal"
+
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() != "":
@@ -485,31 +531,37 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             if self.imported_values is None:
                 self.imported_values = self.load_table( self.lineEdit_table_path, 
                                                         direct_load = True )
-                
-            for surface_id in surface_ids:
 
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] >= 3:
-
-                        table_name = f"incident_pressure_wave_{surface_id}"
-                        if self.save_table_values(table_name, self.imported_values):
-                            self.lineEdit_table_path.setFocus()
-                            self.imported_values = None
-                            return
-
-                else:
-                    return
-
-                if self.imported_values is None:
-                    return
-
-                absorption_coefficient = list(self.imported_values[:, 1])
+                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
+                if isinstance(self.imported_values, np.ndarray):
+                    if self.imported_values.shape[1] < 3:
+                        return
+                else:
+                    return
+            
+                if self.check_wave_incidence(surface_ids, complex_values):
+                   return
+
+            for surface_id in surface_ids:
+
+                wave_vector = self.get_input_wave_vector(surface_id)
+                if wave_vector is None:
+                    return
+
+                table_name = f"incident_pressure_wave_{surface_id}"
+                if self.save_table_values(table_name, self.imported_values):
+                    self.lineEdit_table_path.setFocus()
+                    self.imported_values = None
+                    return
+
                 data = {
+                        "wave_direction" : wave_direction,
+                        "wave_vector" : wave_vector,
                         "table_names": [table_name],
                         "table_paths" : [table_path],
-                        "values" : [absorption_coefficient]
+                        "values" : [complex_values],
                         }
 
                 self.properties._set_property("incident_plane_wave", data, surface=surface_id)

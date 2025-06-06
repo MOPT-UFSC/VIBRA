@@ -359,9 +359,16 @@ def acoustic_boundary_conditions_info_text():
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
     if incident_plane_wave is not None:
-        values = incident_plane_wave["values"]
-        loaded_table = "table_names" in incident_plane_wave.keys()
-        text += structural_format("Incident plane wave", values, ["P"], ["Pa"], loaded_table)
+        value = incident_plane_wave["values"][0]
+        tree_pw = TreeInfo("Incident plane wave")
+        if isinstance(value, Number | str | float | complex):
+            tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
+        else:
+            tree_pw.add_item("P_inc", "Table of values")
+
+        wave_vector = incident_plane_wave["wave_vector"]
+        tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
+        text += str(tree_pw)
 
     if mass_flow_rate is not None:
         values = mass_flow_rate["values"][0]
