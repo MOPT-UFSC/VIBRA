@@ -293,12 +293,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         property = surface_properties[property_name, surface_id]
         
         wave_vector = property.get("wave_vector")
-        coords, normal = self._get_center_coords_and_normals(surface_id)
-        is_pointing = np.dot(normal, wave_vector) < 0
-
-        shape = Shape.INCIDENT_PLANE_WAVE if is_pointing else Shape.OUTWARDS_INCIDENT_PLANE_WAVE
+        coords, _ = self._get_center_coords_and_normals(surface_id)
         
-        self.add_symbol_render(shape, coords, wave_vector, color=color_names.BLUE, scale=1)
+        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, wave_vector, color=color_names.BLUE, scale=1)
         # self.add_incident_plane_wave_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
