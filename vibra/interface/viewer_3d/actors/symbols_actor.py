@@ -198,7 +198,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         is_pointing = np.dot(normal, orientation) < 0
         shape = Shape.ARROW if is_pointing else Shape.OUTWARDS_ARROW
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2, scale=1)
-        # self.add_force_symbol(coords, orientation, is_pointing)
             
     def _build_distributed_loads(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -210,7 +209,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         is_pointing = np.dot(normal, orientation) < 0
         shape = Shape.DISTRIBUTED_LOADS if is_pointing else Shape.DISTRIBUTED_LOADS_OUTWARDS
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2, scale=1)
-        # self.add_distributed_loads_symbol(coords, orientation, is_pointing)
     
     def _build_normal_pressure_load(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -221,7 +219,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         shape = Shape.OUTWARDS_NORMAL_PRESSURE_LOAD if x[0].real > 0 else Shape.NORMAL_PRESSURE_LOAD
         
         self.add_symbol_render(shape, coords, normal, color=color_names.RED_2, scale=1)
-        # self.add_normal_pressure_load_symbol(coords, normal)
     
     def _build_specific_impedance(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -234,17 +231,14 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     def _build_transfer_impedance(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.TRANSFER_IMPEDANCE, coords, normal, color=color_names.PURPLE_2, scale=1)
-        # self.add_transfer_impedance_symbol(coords, normal)
     
     def _build_perforated_plate_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.PERFORATED_PLATE_MODEL, coords, normal, color=color_names.RED, scale=1)
-        # self.add_perforated_plate_symbol(coords, normal)
 
     def _build_mass_flow_rate(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.MASS_FLOW_RATE, coords, normal, color=color_names.PINK, scale=1)
-        # self.add_mass_flow_rate_symbol(coords, normal)
     
     def _build_dofs_decoupling(self, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -255,37 +249,30 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.DEGREES_OF_FREEDOM_DECOUPLING, coords, normal, color=color_names.GREEN, scale=1)
-        # self.add_dofs_decoupling_symbol(coords, normal)
     
     def _build_absorption_surface(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.ABSORPTION_SURFACE, coords, normal, color=color_names.GREEN, scale=1)
-        # self.add_absorption_surface_symbol(coords, normal)
     
     def _build_acoustic_pressure(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.ACOUSTIC_PRESSURE, coords, normal, color=color_names.RED_2, scale=1)
-        # self.add_acoustic_pressure_symbol(coords, normal)
     
     def _build_reciprocating_compressor(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.RECIPROCATING_COMPRESSOR, coords, normal, color=color_names.RED_2, scale=1)
-        # self.add_reciprocating_compressor_symbol(coords, normal)
     
     def _build_dissipation_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.DISSIPATION_MODEL, coords, normal, color=color_names.BLUE, scale=1)
-        # self.add_dissipation_model_symbol(coords, normal)
     
     def _build_viscous_thermal_loss_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.DISSIPATION_MODEL, coords, normal, color=color_names.ORANGE, scale=1)
-        # self.add_viscous_thermal_loss_model_symbol(coords, normal)
     
     def _build_acoustic_transfer_element_data(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render(Shape.ACOUSTIC_TRANSFER_ELEMENT_DATA, coords, normal, color=color_names.TURQUOISE, scale=1)
-        # self.add_acoustic_transfer_element_data_symbol(coords, normal)
     
     def _build_incident_plane_wave(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -295,7 +282,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         coords, _ = self._get_center_coords_and_normals(surface_id)
         
         self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, wave_vector, color=color_names.BLUE, scale=1)
-        # self.add_incident_plane_wave_symbol(coords, normal)
 
     # Specifications on how each symbol should look like
     def add_symbol_render(self, shape: Shape, position: Triple, orientation: Triple, color: Color, scale: float = 1):
@@ -305,197 +291,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             orientation=orientation,
             color=color,
             scale=scale
-        )
-    
-    def add_force_symbol(self, position, orientation, pointing=True):
-        shape_name = "arrow" if pointing else "outwards_arrow"
-        self.add_symbol(
-            shape_name,
-            position,
-            orientation,
-            color=color_names.RED_2,
-            scale=1,
-        )
-    
-    def add_distributed_loads_symbol(self, position, orientation, pointing=False):
-        shape_name = "distributed_loads_outwards" if pointing else "distributed_loads"
-        self.add_symbol(
-            shape_name,
-            position,
-            orientation,
-            color=color_names.RED_2,
-            scale=1,
-        )
-    
-    def add_normal_pressure_load_symbol(self, position, orientation):
-        self.add_symbol(
-            "normal_pressure_load",
-            position,
-            orientation,
-            color=color_names.RED_2,
-            scale=1,
-        )
-
-    def add_spring_symbol(self, position, orientation):
-        self.add_symbol(
-            "spring",
-            position,
-            orientation,
-            color=color_names.ORANGE,
-            scale=0.8,
-        )
-
-    def add_prescribed_dof_symbol(self, position, orientation):
-        self.add_symbol(
-            "cone",
-            position,
-            orientation,
-            color=color_names.GREEN,
-            scale=0.4,
-        )
-
-    def add_normal_surface_velocity_symbol(self, position, orientation):
-        self.add_symbol(
-            "surface_velocity",
-            position,
-            orientation,
-            color=color_names.RED_6,
-            scale=1,
-        )
-
-    def add_damper_symbol(self, position, orientation):
-        self.add_symbol(
-            "damper",
-            position,
-            orientation,
-            color=color_names.PINK,
-            scale=0.8,
-        )
-
-    def add_mass_symbol(self, position, orientation):
-        self.add_symbol(
-            "mass",
-            position,
-            orientation,
-            color=color_names.BLUE,
-            scale=2,
-        )
-    
-    def add_acoustic_pressure_symbol(self, position, orientation):
-        self.add_symbol(
-            "acoustic_pressure",
-            position,
-            orientation,
-            color=color_names.RED_2,
-            scale=1,
-        )
-
-    def add_impedance_symbol(self, position, orientation):
-        self.add_symbol(
-            "impedance",
-            position,
-            orientation,
-            color=color_names.PURPLE_2,
-            scale=1,
-        )
-
-    def add_normal_symbol(self, position, orientation):
-        self.add_symbol(
-            "outwards_arrow",
-            position,
-            orientation,
-            color=color_names.GRAY,
-            scale=1,
-        )
-    
-    def add_perforated_plate_symbol(self, position, orientation):
-        self.add_symbol(
-            "perforated_plate",
-            position,
-            orientation,
-            color=color_names.RED,
-            scale=1,
-        )
-    
-    def add_mass_flow_rate_symbol(self, position, orientation):
-        self.add_symbol(
-            "mass_flow_rate",
-            position,
-            orientation,
-            color=color_names.PINK_4,
-            scale=1,
-        )
-    
-    def add_dofs_decoupling_symbol(self, position, orientation):
-        self.add_symbol(
-            "degrees_of_freedom_decoupling",
-            position,
-            orientation,
-            color=color_names.GREEN,
-            scale=1,
-        )
-    
-    def add_absorption_surface_symbol(self, position, orientation):
-        self.add_symbol(
-            "absorption_surface",
-            position,
-            orientation,
-            color=color_names.GREEN,
-            scale=1,
-        )
-    
-    def add_reciprocating_compressor_symbol(self, position, orientation):
-        self.add_symbol(
-            "reciprocating_compressor",
-            position,
-            orientation,
-            color=color_names.RED_2,
-            scale=1,
-        )
-    
-    def add_dissipation_model_symbol(self, position, orientation):
-        self.add_symbol(
-            "dissipation_model",
-            position,
-            orientation,
-            color=color_names.BLUE,
-            scale=1,
-        )
-    
-    def add_viscous_thermal_loss_model_symbol(self, position, orientation):
-        self.add_symbol(
-            "dissipation_model",
-            position,
-            orientation,
-            color=color_names.ORANGE,
-            scale=1,
-        )
-    
-    def add_anechoic_termination_symbol(self, position, orientation):
-        self.add_symbol(
-            "anechoic_termination",
-            position,
-            orientation,
-            color=color_names.PURPLE_2,
-            scale=1,
-        )
-    
-    def add_transfer_impedance_symbol(self, position, orientation):
-        self.add_symbol(
-            "transfer_impedance",
-            position,
-            orientation,
-            color=color_names.PURPLE_2,
-            scale=1,
-        )
-    
-    def add_acoustic_transfer_element_data_symbol(self, position, orientation):
-        self.add_symbol(
-            "acoustic_transfer_element_data",
-            position,
-            orientation,
-            color=color_names.TURQUOISE,
-            scale=1,
         )
 
     # Preload the symbol shapes (they are likelly used in many symbols)
