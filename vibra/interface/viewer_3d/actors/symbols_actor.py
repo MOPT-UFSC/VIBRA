@@ -147,7 +147,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         surface_normals = mesh.normals_surface.get(surface_id)
         if surface_normals is None:
             surface_normals_data = mesh.get_average_normals_for_surface_nodes(surface_id)
-            surface_normals = np.array(list(surface_normals_data), dtype=float)
+            surface_normals = np.array(list(surface_normals_data.values()), dtype=float)
 
         curvatures_surface = mesh.curvatures_surface.get(surface_id)
         contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
