@@ -125,9 +125,6 @@ class ModelSetupItems(CommonMenuItems):
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
             return app().project.model.mesh_setup is not None
-        
-        if property_name == "degrees_of_freedom_decoupling":
-            return app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling")
 
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
@@ -146,9 +143,14 @@ class ModelSetupItems(CommonMenuItems):
                         return True
         
         # test other properties
-        for dic in property_dicts:
-            for key in dic.keys():
+        for property_dict in property_dicts:
+            for key in property_dict.keys():
                 if key[0] == property_name:
+                    if property_name == "degrees_of_freedom_decoupling":
+                        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=key[1])
+                        if isinstance(pp_data, dict):
+                            continue
+
                     return True
         
         return False
