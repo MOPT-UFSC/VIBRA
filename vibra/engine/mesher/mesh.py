@@ -1433,15 +1433,16 @@ class Mesh:
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         filtered_data = self.solids_connectivity[mask_0, :]
 
+        elem_ids = filtered_data[:, 0]
+        connect_nodes = filtered_data[:, 4:]
+
         progress = 0
         number_nodes = len(node_ids)
         solid_elements_connected_to_nodes = dict()
 
         for i, node_id in enumerate(node_ids):
-            # mask = np.sum(self.solids_connectivity[:, 4:] == node_id, axis=1) == 1
-            # solid_elements_connected_to_nodes[node_id] = self.solids_connectivity[:, 0][mask]
-            mask = np.sum(filtered_data[:, 4:] == node_id, axis=1) == 1
-            solid_elements_connected_to_nodes[node_id] = filtered_data[:, 0][mask]
+            mask = np.sum(connect_nodes == node_id, axis=1) == 1
+            solid_elements_connected_to_nodes[node_id] = elem_ids[mask]
 
             current_progress = int(100 * i / number_nodes)
             if current_progress % 5 and progress != current_progress:
@@ -1454,25 +1455,22 @@ class Mesh:
         return solid_elements_connected_to_nodes
 
 
-    def get_average_normals_for_surface_nodes(self, surface_id: int, TL: bool=False) -> dict:
+    def get_average_normals_for_surface_nodes_reference(self, surface_id: int) -> dict:
         """
-        This methdo process the average normals in the surface nodes considering the element faces
-        normals connected to same node ID.
+        This method processes the average normals in the surface nodes considering the element faces
+        normals connected to same node.
 
         Parameters
         ----------
         surface_id: int
             The tag of surface in which the normals average will be computed.
 
-        TL: bool, optional
-            An auxiliar argument to control the source data of the face elements 
-            connected to nodes.
-
         Returns
         -------
         data_normals: dict
             A dictionary mapping the node IDs to the average normal vector.
         """
+
         nodes_from_surface = self.nodes_from_surfaces.get(surface_id)
         if nodes_from_surface is None:
             return dict()
@@ -1483,10 +1481,7 @@ class Mesh:
         data_normals = dict()
         for node_id in nodes_from_surface:
 
-            if TL:
-                face_elem_connect = self.face_elements_connected_to_nodes[node_id]
-            else:
-                face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
+            face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
 
             n = 0.
             for face_connect in face_elem_connect:
@@ -1495,6 +1490,86 @@ class Mesh:
             data_normals[node_id] = n / len(face_elem_connect)
 
         return data_normals
+    
+
+    def get_average_normals_for_surface_nodes(self, surface_id: int, **kwargs):
+        """
+        This method processes the average normals in the surface nodes considering the element faces
+        normals connected to same node.
+
+        Parameters
+        ----------
+        surface_id: int
+            The tag of surface in which the normals average will be computed.
+
+        Returns
+        -------
+        avg_node_normals: dict
+            A dictionary mapping the node IDs to the average normal vector.
+        """
+
+        num = defaultdict(float)
+        den = defaultdict(int)
+
+        face_connectivity = self.connectivity_from_surfaces.get(surface_id)
+        eface_normals = self.get_stacked_normals_for_surface_elements(surface_id)
+        nodes_from_surface = np.sort(self.nodes_from_surfaces.get(surface_id))
+
+        for i, connect in enumerate(face_connectivity):
+            e_normal = eface_normals[i, :].flatten()
+            for node in connect:
+                num[node] += e_normal
+                den[node] += 1
+
+        avg_node_normals = {node : num[node] / den[node] for node in nodes_from_surface}
+
+        return avg_node_normals
+
+
+    def get_stacked_normals_for_surface_elements(self, surface_id: int):
+        """
+        This method processes the stacked surface elements normals from
+        selected surface.
+
+        Parameter
+        ---------
+        surface_id: int
+            The surface ID.
+
+        Returns
+        -------
+        stacked_normals: np.ndarray
+            The stacked element surface normals.
+        """
+
+        face_connectivity = self.connectivity_from_surfaces.get(surface_id)
+        if face_connectivity is None:
+            return
+
+        X1 = self.nodal_coordinates[face_connectivity[:, 0], 1]
+        Y1 = self.nodal_coordinates[face_connectivity[:, 0], 2]
+        Z1 = self.nodal_coordinates[face_connectivity[:, 0], 3]
+
+        X2 = self.nodal_coordinates[face_connectivity[:, 1], 1]
+        Y2 = self.nodal_coordinates[face_connectivity[:, 1], 2]
+        Z2 = self.nodal_coordinates[face_connectivity[:, 1], 3]
+
+        X3 = self.nodal_coordinates[face_connectivity[:, 2], 1]
+        Y3 = self.nodal_coordinates[face_connectivity[:, 2], 2]
+        Z3 = self.nodal_coordinates[face_connectivity[:, 2], 3]
+
+        P2P1 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+        P3P1 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
+
+        cross = np.cross(P2P1, P3P1, axis=1)
+        norm_cross = np.linalg.norm(cross, axis=1)
+
+        norm_cross = norm_cross.reshape(-1, 1, 1)
+        cross = cross.reshape(-1, 1, 3)
+        
+        stacked_normals = cross / norm_cross
+
+        return stacked_normals
 
 
     def compute_nodal_areas(self):

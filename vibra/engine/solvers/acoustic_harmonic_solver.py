@@ -281,7 +281,7 @@ class AcousticHarmonicSolver:
         return F_eq[self.unprescribed_indexes]
 
 
-    def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray, TL=False):
+    def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray):
         """ 
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -305,8 +305,7 @@ class AcousticHarmonicSolver:
         element_3d, _ = self.assembler.get_element()
         element_3d.reorder_connect()
 
-        # node_ids = self.assembler.model.mesh.nodes_from_surfaces[surface_id]
-        data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id, TL=TL)
+        data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id)
 
         pv_data = dict()
@@ -601,24 +600,19 @@ class AcousticHarmonicSolver:
             return None, None
 
         if isinstance(pw_data, dict):
-            values = pw_data.get("values")
-            P_inc = np.zeros((frequencies.size, 3), dtype=complex)
+            values = pw_data.get("values")[0]
+            _wave_vector = pw_data.get("wave_vector")
+            wave_vector = np.array(_wave_vector, dtype=float)
 
-            if len(values) == 1:
-                if isinstance(values, complex | float):
-                    P_inc[:, 0] = values[0] * np.ones_like(frequencies, dtype=complex)
-                else:
-                    P_inc[:, 0] = values[0]
-
+            if isinstance(values, complex | float):
+                P_inc = values * np.ones_like(frequencies, dtype=complex)
             else:
-                P_inc[:, 0] = values[0]
-                P_inc[:, 1] = values[1]
-                P_inc[:, 2] = values[2]
+                P_inc = values
 
-            node_normals = model.mesh.get_average_normals_for_surface_nodes(surface_id)
-            avg_normal = np.average(list(node_normals.values()), axis=0)
+            node_normals = model.mesh.get_stacked_normals_for_surface_elements(surface_id)
+            avg_normal = np.average(node_normals, axis=0).flatten()
 
-            P_downstream = P_inc @ avg_normal
+            P_downstream = P_inc * (avg_normal @ wave_vector)
             V_downstream = -P_downstream / Zo_in
 
         if isinstance(sv_data, dict):

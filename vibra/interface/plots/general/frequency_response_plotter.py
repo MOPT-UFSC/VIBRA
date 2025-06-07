@@ -430,6 +430,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
             self.imported_results_data = data
             self.plot_data_in_freq_domain()
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
+
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
         if self.exporter is not None:

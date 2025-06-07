@@ -136,14 +136,16 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-
         surface_nodes = mesh.nodes_from_surfaces.get(surface_id)
         surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
 
         surface_normals = mesh.normals_surface.get(surface_id)
         if surface_normals is None:
-            surface_normals_data = mesh.get_average_normals_for_surface_nodes(surface_id)
-            surface_normals = np.array(list(surface_normals_data.values()), dtype=float)
+            eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
+            avg_normal = np.average(eface_normals, axis=0).flatten()
+
+        else:
+            avg_normal = np.average(surface_normals, axis=0).round(6)
 
         curvatures_surface = mesh.curvatures_surface.get(surface_id)
         contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
@@ -155,7 +157,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             index = np.argmin(dist)
             return surface_coordinates[index, :], surface_normals[index, :]
 
-        return center_coords, np.average(surface_normals, axis=0).round(6)
+        return center_coords, avg_normal
 
     def _build_surface_velocity(self, surface_id: int):
         if surface_id is None:
