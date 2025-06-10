@@ -121,8 +121,8 @@ class AcousticHarmonicSolver:
         # the viscous-related source term is temporary disabled
         Q_visc = self.assembler.Qvisc_damping_matrix * 0
         
-        is_pm_active = self.assembler.model.porous_material_properties
-        is_vt_active = self.assembler.model.viscous_thermal_model_properties
+        # is_pm_active = self.assembler.model.porous_material_properties
+        # is_vt_active = self.assembler.model.viscous_thermal_model_properties
 
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
@@ -137,7 +137,8 @@ class AcousticHarmonicSolver:
         cols = len(frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
 
-        frequency_dependent = is_pm_active or is_vt_active
+        # frequency_dependent = is_pm_active or is_vt_active
+        frequency_dependent = self.assembler.frequency_dependent
 
         for i, freq in enumerate(frequencies):
 
@@ -179,8 +180,9 @@ class AcousticHarmonicSolver:
                 C = C_imp + C_visc
 
                 if frequency_dependent:
-                    self.assembler.assemble_global_mass_matrix(index=i)
-                    self.assembler.assemble_global_stiffness_matrix(index=i)
+                    factor_K, factor_M = self.assembler.compute_global_matrices_factors(index=i)
+                    self.assembler.assemble_global_mass_matrix(factor_M)
+                    self.assembler.assemble_global_stiffness_matrix(factor_K)
                     M = self.assembler.mass_matrix
                     K = self.assembler.stiffness_matrix
 

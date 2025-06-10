@@ -38,6 +38,7 @@ class AcousticAssembler:
 
 
     def reset(self):
+        self.frequency_dependent = False
         self.stiffness_matrix = None
         self.mass_matrix = None
         self.damping_matrix = None
@@ -498,6 +499,54 @@ class AcousticAssembler:
 
         return integration_data
 
+    
+    def process_fluid_properties_from_volumes(self):
+        """
+        This method maps the solid elements and the fluid properties for each
+        volume for matrix factor calculations. 
+        """
+        nf = self.number_frequencies
+        aux_nf = np.ones(nf, dtype=float)
+
+        self.frequency_dependent = False
+        self.fluid_properties_from_volume = dict()
+
+        for vol_id in self.model.mesh.elements_from_volume.keys():
+
+            pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
+            vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
+            fluid = self.properties._get_property("fluid", volume=vol_id)
+
+            if isinstance(pm_data, dict):
+                pm_data = self.model.porous_material_properties.get(vol_id)
+                rho_f = pm_data["rho_eff"]
+                C_f = pm_data["C_eff"]
+                self.frequency_dependent = True
+
+            elif isinstance(vt_data, dict):
+                vt_data = self.model.viscous_thermal_model_properties.get(vol_id)
+                rho_f = vt_data["rho_eff"]
+                C_f = vt_data["C_eff"]
+                self.frequency_dependent = True
+
+            elif isinstance(fluid, Fluid):
+                proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
+                rho = self.properties.get_fluid_density(fluid, proportional_damping)
+                C = self.properties.get_speed_of_sound(fluid, proportional_damping)
+                rho_f = rho * aux_nf
+                C_f = C * aux_nf
+
+            else:
+                continue
+
+            self.fluid_properties_from_volume[vol_id] = {
+                                                         "rho_f" : rho_f,
+                                                         "C_f" : C_f,
+                                                         "rho_0" : fluid.fluid_density,
+                                                         "C_0" : fluid.speed_of_sound, 
+                                                         "mu_0" : fluid.dynamic_viscosity
+                                                         }
+
 
     def gather_data_to_assemble_global_matrices(self, reorder: bool = True):
         """ 
@@ -513,94 +562,58 @@ class AcousticAssembler:
         element_3D, _ = self.get_element()
         self.ind_rows, self.ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
 
-        dofs = element_3D.DOFS_PER_ELEMENT
-        nel = len(element_3D.connectivity)
+        self.dofs = element_3D.DOFS_PER_ELEMENT
+        self.number_3d_elements = len(element_3D.connectivity)
         self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
-        self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
-        self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_Cvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
+        self.data_Qvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
         self.data_K, self.data_M = element_3D.stacked_elementary_matrices()
 
-        pm_model_active = self.model.porous_material_properties
-        vt_model_active = self.model.viscous_thermal_model_properties
+        self.process_fluid_properties_from_volumes()
+        self.process_indexes()
 
-        if pm_model_active or vt_model_active:
 
-            nf = self.number_frequencies
-            self.den_M = np.zeros((nel, nf), dtype=complex)
-            self.den_K = np.zeros((nel, nf), dtype=complex)
+    def compute_global_matrices_factors(self, index: int = 0):
+        """
+        This method calculates the global mass and stiffnes factors.
 
-            for (property, vol_id), p_data in self.properties.volume_properties.items():
+        Parameter
+        ---------
+        index: int, optional
+            The frequency index.
 
-                if property == "fluid":
-                    p_data: Fluid
-                    fluid = p_data
-                    mu_0 = fluid.dynamic_viscosity
-                    proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
-                    rho_f = self.properties.get_fluid_density(fluid, proportional_damping)
-                    C_f = self.properties.get_speed_of_sound(fluid, proportional_damping)
+        Returns
+        -------
+        factor_K: np.ndarray
+            The global stiffness matrix factor.
 
-                elif property == "porous_material_model":
-                    pm_data = self.model.porous_material_properties[vol_id]
-                    rho_f = pm_data["rho_eff"]
-                    C_f = pm_data["C_eff"]
-                    p_data = None
+        factor_M: np.ndarray
+            The global mass matrix factor.
+        """
 
-                elif property == "viscous_thermal_model":
-                    vt_data = self.model.viscous_thermal_model_properties[vol_id]
-                    rho_f = vt_data["rho_eff"]
-                    C_f = vt_data["C_eff"]
-                    p_data = None
+        factor_K = np.zeros(self.number_3d_elements, complex)
+        factor_M = np.zeros(self.number_3d_elements, complex)
 
-                else:
-                    continue
+        for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
+            data = self.fluid_properties_from_volume.get(vol_id)
+            rho_f = data.get("rho_f")[index]
+            C_f = data.get("C_f")[index]
+            mu_0 = data.get("mu_0")
+            rho_0 = data.get("rho_0")
+            C_0 = data.get("C_0")
+            
+            aux_ones = np.ones(elements_from_volume.size, dtype=float)
 
-                elements_from_volume = self.model.mesh.elements_from_volume.get(vol_id)
-                if elements_from_volume is None:
-                    continue
+            factor_K[elements_from_volume] = aux_ones / (rho_f)
+            factor_M[elements_from_volume] = aux_ones / (rho_f * C_f**2)
 
-                aux_ones = np.ones((elements_from_volume.size, nf), dtype=float)
-
-                self.den_K[elements_from_volume, :] = aux_ones / (rho_f)
-                self.den_M[elements_from_volume, :] = aux_ones / (rho_f * C_f**2)
-
-                # self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0 * C_0**2)) * Ke
-                # self.data_Qvisc[el, :, :] = 0 * ((4 * mu_0) / (3 * rho_0)) * Ke
-
-        else:
-
-            nf = 1
-            self.den_M = np.zeros((nel, nf), dtype=complex)
-            self.den_K = np.zeros((nel, nf), dtype=complex)
-
-            for (property, vol_id), p_data in self.properties.volume_properties.items():
-
-                if property == "fluid":
-                    p_data: Fluid
-                else:
-                    continue
-
-                fluid = p_data
-                mu_0 = fluid.dynamic_viscosity
-                proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
-
-                rho_0 = self.properties.get_fluid_density(fluid, proportional_damping)
-                C_0 = self.properties.get_speed_of_sound(fluid, proportional_damping)
-
-                elements_from_volume = self.model.mesh.elements_from_volume.get(vol_id)
-                if elements_from_volume is None:
-                    continue
-
-                aux_ones = np.ones((elements_from_volume.size, nf), dtype=float)
-
-                self.den_K[elements_from_volume, :] = aux_ones / (rho_0)
-                self.den_M[elements_from_volume, :] = aux_ones / (rho_0 * C_0**2)
-
+            if not self.frequency_dependent and index == 0:
                 Ke = self.data_K[elements_from_volume, :, :]
                 self.data_Cvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * Ke
                 self.data_Qvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
 
-        self.process_indexes()
+        return factor_K.reshape(-1, 1, 1), factor_M.reshape(-1, 1, 1)
 
 
     def gather_data_to_assemble_global_matrices_reference(self, reorder: bool = True):
@@ -617,14 +630,14 @@ class AcousticAssembler:
         element_3D, _ = self.get_element()
         self.ind_rows, self.ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
 
-        dofs = element_3D.DOFS_PER_ELEMENT
-        nel = len(element_3D.connectivity)
+        self.dofs = element_3D.DOFS_PER_ELEMENT
+        self.number_3d_elements = len(element_3D.connectivity)
         self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
-        self.data_K = np.zeros((nel, dofs, dofs), dtype=complex)
-        self.data_M = np.zeros((nel, dofs, dofs), dtype=complex)
-        self.data_Cvisc = np.zeros((nel, dofs, dofs), dtype=complex)
-        self.data_Qvisc = np.zeros((nel, dofs, dofs), dtype=complex)
+        self.data_K = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
+        self.data_M = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
+        self.data_Cvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
+        self.data_Qvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
 
         pm_model_active = self.model.porous_material_properties
         vt_model_active = self.model.viscous_thermal_model_properties
@@ -636,12 +649,12 @@ class AcousticAssembler:
             nf = self.number_frequencies
             aux_ones = np.ones(nf, dtype=complex)
 
-            self.den_M = np.zeros((nel, nf), dtype=complex)
-            self.den_K = np.zeros((nel, nf), dtype=complex)
+            self.den_M = np.zeros((self.number_3d_elements, nf), dtype=complex)
+            self.den_K = np.zeros((self.number_3d_elements, nf), dtype=complex)
 
-            for el in range(nel):
+            for el in range(self.number_3d_elements):
 
-                progress = 100 * np.round(el/nel, 2)
+                progress = 100 * np.round(el/self.number_3d_elements, 2)
                 if progress != last_progress:
                     logging.info(f"Processing the elementary matrices data... [{int(progress)}/100]")
 
@@ -688,12 +701,12 @@ class AcousticAssembler:
 
             nf = 1
             aux_ones = np.ones(nf, dtype=float)
-            self.den_M = np.zeros((nel, nf), dtype=complex)
-            self.den_K = np.zeros((nel, nf), dtype=complex)
+            self.den_M = np.zeros((self.number_3d_elements, nf), dtype=complex)
+            self.den_K = np.zeros((self.number_3d_elements, nf), dtype=complex)
 
-            for el in range(nel):
+            for el in range(self.number_3d_elements):
 
-                progress = 100 * np.round(el/nel, 2)
+                progress = 100 * np.round(el/self.number_3d_elements, 2)
                 if progress != last_progress:
                     logging.info(f"Processing the elementary matrices data... [{int(progress)}/100]")
 
@@ -1024,20 +1037,22 @@ class AcousticAssembler:
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
 
-    def assemble_global_stiffness_matrix(self, index=0):
+    def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
         """
         """
-        data_K = self.data_K * self.den_K[:, index].reshape(-1, 1, 1)
+        data_K = self.data_K * factor_K
         _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
 
 
-    def assemble_global_mass_matrix(self, index=0):
+    def assemble_global_mass_matrix(self, factor_M: np.ndarray):
         """
         """
-        data_M = self.data_M * self.den_M[:, index].reshape(-1, 1, 1)
+        data_M = self.data_M * factor_M
         _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+
         self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
 
@@ -1307,15 +1322,21 @@ class AcousticAssembler:
         dt = time() - t0
         print(f"Elapsed time to gather data to assemble damping matrices: {round(dt, 4)} [s]")
 
+        logging.info("Computing the global matrices factors... [45/100]")
+        t0 = time()
+        factor_K, factor_M = self.compute_global_matrices_factors()
+        dt = time() - t0
+        print(f"Elapsed time to compute global matrices factor: {round(dt, 4)} [s]")
+
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()
-        self.assemble_global_stiffness_matrix()
+        self.assemble_global_stiffness_matrix(factor_K)
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
 
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
-        self.assemble_global_mass_matrix()
+        self.assemble_global_mass_matrix(factor_M)
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {round(dt, 4)} [s]")
 
