@@ -174,7 +174,8 @@ class AcousticAssembler:
 
 
     def get_surface_data_for_element_integration_by_property(self, property_label: str) -> dict:
-        """ """
+        """ 
+        """
 
         surface_data = dict()
         aux_connect = dict()
@@ -185,8 +186,6 @@ class AcousticAssembler:
             prop, surface_id = key
             if prop != property_label:
                 continue
-
-            data: dict
 
             rho_eff_pm, C_eff_pm = self.model.get_porous_material_model_effective_properties(surface_id)
             rho_eff_tv, C_eff_tv = self.model.get_viscous_thermal_model_effective_properties(surface_id)
@@ -204,6 +203,7 @@ class AcousticAssembler:
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
 
+            data: dict
             if "anechoic_termination" in data.keys():
                 _complex_values = density * speed_of_sound
 
@@ -253,7 +253,6 @@ class AcousticAssembler:
             if prop != "incident_plane_wave":
                 continue
 
-            data: dict
             rho_eff_pm, C_eff_pm = self.model.get_porous_material_model_effective_properties(surface_id)
             rho_eff_tv, C_eff_tv = self.model.get_viscous_thermal_model_effective_properties(surface_id)
 
@@ -278,6 +277,7 @@ class AcousticAssembler:
             surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
             surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
 
+            data: dict
             values = data.get("values")
             p_inc = self.get_value_in_array_form(values[0], flatten=True)
             Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
@@ -329,6 +329,8 @@ class AcousticAssembler:
 
 
     def get_transfer_impedance_data_for_element_integration(self):
+        """
+        """
 
         surface_data_A = dict()
         surface_data_B = dict()
@@ -411,6 +413,8 @@ class AcousticAssembler:
 
 
     def get_perforated_plate_data_for_element_integration(self, solution: np.ndarray | None = None):
+        """
+        """
 
         surface_data_A = dict()
         surface_data_B = dict()
