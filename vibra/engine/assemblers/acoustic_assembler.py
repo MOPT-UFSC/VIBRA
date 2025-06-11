@@ -254,19 +254,19 @@ class AcousticAssembler:
                 continue
 
             data: dict
-            pm_active, rho_eff_pm, C_eff_pm = self.model.get_porous_material_model_effective_properties(surface_id)
-            tv_active, rho_eff_tv, C_eff_tv = self.model.get_viscous_thermal_model_effective_properties(surface_id)
+            rho_eff_pm, C_eff_pm = self.model.get_porous_material_model_effective_properties(surface_id)
+            rho_eff_tv, C_eff_tv = self.model.get_viscous_thermal_model_effective_properties(surface_id)
 
             wave_vector = np.array(data.get("wave_vector"), dtype=float)
             norm_wave_vector = np.linalg.norm(wave_vector)
             if norm_wave_vector > 1:
                 wave_vector /= norm_wave_vector
 
-            if pm_active:
+            if isinstance(rho_eff_pm, np.ndarray):
                 density = rho_eff_pm
                 speed_of_sound = C_eff_pm
 
-            elif tv_active:
+            elif isinstance(rho_eff_tv, np.ndarray):
                 density = rho_eff_tv
                 speed_of_sound = C_eff_tv
 
