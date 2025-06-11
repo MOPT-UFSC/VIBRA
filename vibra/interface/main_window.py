@@ -12,11 +12,9 @@ from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QFileDialog,
     QMenu,
     QMessageBox,
-    QWidget,
 )
 
 from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
@@ -1142,13 +1140,13 @@ class MainWindow(MainWindow_UI):
 
     def eventFilter(self, obj, event: QEvent):
         modifiers = app().keyboardModifiers()
-        alt_pressed = modifiers & Qt.AltModifier
+        alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
 
-        if event.type() == QEvent.ShortcutOverride:
-            if event.key() == Qt.Key_F5:
+        if event.type() == QEvent.Type.ShortcutOverride:
+            if event.key() == Qt.Key.Key_F5:
                 self.update_plots()
             
-            elif alt_pressed and (event.key() == Qt.Key_P):
+            elif alt_pressed and (event.key() == Qt.Key.Key_P):
                 if self.section_plane.isVisible():
                     return super(MainWindow, self).eventFilter(obj, event)
                 
@@ -1161,6 +1159,6 @@ class MainWindow(MainWindow_UI):
         
         return super(MainWindow, self).eventFilter(obj, event)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QEvent):
         self.close_app()
         event.ignore()

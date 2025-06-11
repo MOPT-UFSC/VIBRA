@@ -36,5 +36,5 @@ class PickColorInput(QColorDialog):
         self.close()
      
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self.close()
