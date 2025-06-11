@@ -9,8 +9,8 @@ from vibra.interface.formatters.icons import *
 
 
 class GetUserConfirmationInput(GetUserConfirmation_UI):
-    def __init__(self, title, message, buttons_config={}, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, title, message, *args, **kwargs):
+        super().__init__(*args)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -22,7 +22,7 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
 
         self.title = title
         self.message = message
-        self.buttons_config = buttons_config
+        self.buttons_config = kwargs.get("buttons_config", dict())
         self.window_title = kwargs.get('window_title', f'Vibra v{__version__}')
 
         self._config_window()
