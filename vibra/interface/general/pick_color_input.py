@@ -1,5 +1,7 @@
+import platform
+
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QColorDialog
-from PySide6.QtCore import Qt, QSize
 
 from vibra import app
 
@@ -15,9 +17,10 @@ class PickColorInput(QColorDialog):
         self.exec()
 
     def _config_window(self):
+        if platform.system() == "Linux":
+            self.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog)
         self.setFixedSize(QSize(540, 410))
-        self.setOption(QColorDialog.DontUseNativeDialog)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowIcon(app().main_window.vibra_icon) 
         self.setWindowTitle(self.title)
     

@@ -4,6 +4,7 @@ import sys
 from functools import partial
 from pathlib import Path
 from shutil import copy, rmtree
+import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
@@ -689,14 +690,18 @@ class MainWindow(MainWindow_UI):
             else:
                 path = last_path
 
+            kwargs = dict()
+            if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
             file_path, check = QFileDialog.getSaveFileName(
                 self,
                 "Save As",
                 path,
                 filter="Vibra File (*.vibra)", 
-                options=QFileDialog.DontUseNativeDialog,
+                **kwargs,
             )
-            
+
             if not check:
                 return
 
