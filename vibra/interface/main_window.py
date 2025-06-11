@@ -4,6 +4,7 @@ import sys
 from functools import partial
 from pathlib import Path
 from shutil import copy, rmtree
+import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
@@ -11,11 +12,9 @@ from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (
     QAbstractButton,
-    QDialog,
     QFileDialog,
     QMenu,
     QMessageBox,
-    QWidget,
 )
 
 from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
@@ -689,14 +688,18 @@ class MainWindow(MainWindow_UI):
             else:
                 path = last_path
 
+            kwargs = dict()
+            if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
             file_path, check = QFileDialog.getSaveFileName(
                 self,
                 "Save As",
                 path,
                 filter="Vibra File (*.vibra)", 
-                options=QFileDialog.DontUseNativeDialog,
+                **kwargs,
             )
-            
+
             if not check:
                 return
 
@@ -1049,7 +1052,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.emit()
 
     def close_app(self):
-        self.close_dialogs()
+        self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
         condition_2 = TEMP_PROJECT_FILE.exists()
@@ -1065,6 +1068,7 @@ class MainWindow(MainWindow_UI):
             )
 
             if close == QMessageBox.Cancel:
+                self.restore_open_dialogs()
                 return
 
             elif close == QMessageBox.Save:
@@ -1080,15 +1084,43 @@ class MainWindow(MainWindow_UI):
             )
 
             if close == QMessageBox.No:
+                self.restore_open_dialogs()
                 return
 
         self.reset_temporary_vibra_folder()
         app().quit()
 
     def close_dialogs(self):
-        if isinstance(self.dialog, (QDialog, QWidget)):
-            self.dialog.close()
-            self.dialog = None
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            window.close()
+
+    def minimize_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.showMinimized()
+    
+    def restore_open_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.showNormal()
 
     def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
@@ -1108,13 +1140,13 @@ class MainWindow(MainWindow_UI):
 
     def eventFilter(self, obj, event: QEvent):
         modifiers = app().keyboardModifiers()
-        alt_pressed = modifiers & Qt.AltModifier
+        alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
 
-        if event.type() == QEvent.ShortcutOverride:
-            if event.key() == Qt.Key_F5:
+        if event.type() == QEvent.Type.ShortcutOverride:
+            if event.key() == Qt.Key.Key_F5:
                 self.update_plots()
             
-            elif alt_pressed and (event.key() == Qt.Key_P):
+            elif alt_pressed and (event.key() == Qt.Key.Key_P):
                 if self.section_plane.isVisible():
                     return super(MainWindow, self).eventFilter(obj, event)
                 
@@ -1127,6 +1159,6 @@ class MainWindow(MainWindow_UI):
         
         return super(MainWindow, self).eventFilter(obj, event)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QEvent):
         self.close_app()
         event.ignore()
