@@ -502,8 +502,8 @@ class AcousticAssembler:
     
     def process_fluid_properties_from_volumes(self):
         """
-        This method maps the solid elements and the fluid properties for each
-        volume for matrix factor calculations. 
+        This method maps the fluid properties against each volume
+        to calculate the global matrices factors.
         """
         nf = self.number_frequencies
         aux_nf = np.ones(nf, dtype=float)
@@ -566,9 +566,9 @@ class AcousticAssembler:
         self.number_3d_elements = len(element_3D.connectivity)
         self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
+        self.data_K, self.data_M = element_3D.stacked_elementary_matrices()
         self.data_Cvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
         self.data_Qvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
-        self.data_K, self.data_M = element_3D.stacked_elementary_matrices()
 
         self.process_fluid_properties_from_volumes()
         self.process_indexes()
@@ -576,7 +576,7 @@ class AcousticAssembler:
 
     def compute_global_matrices_factors(self, index: int = 0):
         """
-        This method calculates the global mass and stiffnes factors.
+        This method calculates the global mass and stiffness matrix factors.
 
         Parameter
         ---------
@@ -596,13 +596,16 @@ class AcousticAssembler:
         factor_M = np.zeros(self.number_3d_elements, complex)
 
         for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
-            data = self.fluid_properties_from_volume.get(vol_id)
-            rho_f = data.get("rho_f")[index]
-            C_f = data.get("C_f")[index]
-            mu_0 = data.get("mu_0")
-            rho_0 = data.get("rho_0")
-            C_0 = data.get("C_0")
-            
+            fluid_data = self.fluid_properties_from_volume.get(vol_id)
+            if not isinstance(fluid_data, dict):
+                continue
+
+            rho_f = fluid_data.get("rho_f")[index]
+            C_f = fluid_data.get("C_f")[index]
+            mu_0 = fluid_data.get("mu_0")
+            rho_0 = fluid_data.get("rho_0")
+            C_0 = fluid_data.get("C_0")
+
             aux_ones = np.ones(elements_from_volume.size, dtype=float)
 
             factor_K[elements_from_volume] = aux_ones / (rho_f)
