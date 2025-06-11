@@ -1049,7 +1049,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.emit()
 
     def close_app(self):
-        self.close_dialogs()
+        self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
         condition_2 = TEMP_PROJECT_FILE.exists()
@@ -1065,6 +1065,7 @@ class MainWindow(MainWindow_UI):
             )
 
             if close == QMessageBox.Cancel:
+                self.restore_open_dialogs()
                 return
 
             elif close == QMessageBox.Save:
@@ -1080,15 +1081,43 @@ class MainWindow(MainWindow_UI):
             )
 
             if close == QMessageBox.No:
+                self.restore_open_dialogs()
                 return
 
         self.reset_temporary_vibra_folder()
         app().quit()
 
     def close_dialogs(self):
-        if isinstance(self.dialog, (QDialog, QWidget)):
-            self.dialog.close()
-            self.dialog = None
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            window.close()
+
+    def minimize_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.showMinimized()
+    
+    def restore_open_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.showNormal()
 
     def action_export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
