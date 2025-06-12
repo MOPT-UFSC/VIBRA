@@ -151,8 +151,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         with self.update_lock:
             self.update_theme()
-            self.visualization_changed_callback()
             self.update_section_plane()
+            self.visualization_changed_callback()
 
         if reset_camera:
             self.renderer.ResetCamera()
