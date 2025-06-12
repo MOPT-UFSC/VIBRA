@@ -209,7 +209,6 @@ class MaterialWidget(MaterialWidget_UI):
             self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
             return
 
-        print("Oi")
         material = self.list_of_materials[selected_column]
         self.remove_material_from_file(material)
 
@@ -396,7 +395,6 @@ class MaterialWidget(MaterialWidget_UI):
         config = app().file.read_material_library_from_file()
 
         identifier = str(material.identifier)
-        print(identifier, config.sections())
 
         if not identifier in config.sections():
             return
