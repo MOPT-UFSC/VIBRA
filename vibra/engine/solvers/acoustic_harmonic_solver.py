@@ -120,9 +120,6 @@ class AcousticHarmonicSolver:
 
         # the viscous-related source term is temporary disabled
         Q_visc = self.assembler.Qvisc_damping_matrix * 0
-        
-        is_pm_active = self.assembler.model.porous_material_properties
-        is_vt_active = self.assembler.model.viscous_thermal_model_properties
 
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
@@ -137,7 +134,7 @@ class AcousticHarmonicSolver:
         cols = len(frequencies)
         solution = np.zeros((rows, cols), dtype=complex)
 
-        frequency_dependent = is_pm_active or is_vt_active
+        frequency_dependent = self.assembler.frequency_dependent
 
         for i, freq in enumerate(frequencies):
 
@@ -179,14 +176,17 @@ class AcousticHarmonicSolver:
                 C = C_imp + C_visc
 
                 if frequency_dependent:
-                    self.assembler.assemble_global_mass_matrix(index=i)
-                    self.assembler.assemble_global_stiffness_matrix(index=i)
+                    # reassemble the global mass and stiffness matrices
+                    factor_K, factor_M = self.assembler.compute_global_matrices_factors(index=i)
+                    self.assembler.assemble_global_mass_matrix(factor_M)
+                    self.assembler.assemble_global_stiffness_matrix(factor_K)
                     M = self.assembler.mass_matrix
                     K = self.assembler.stiffness_matrix
 
                 # update the prescribed dofs-related load vector for each frequency step
                 F_eq = self.get_prescribed_pressure_model_excitation(index=i)
 
+            # define the linear system equation terms [A]{X} = {F}
             A = K - (omega**2) * M + 1j * omega * C
             F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
 
@@ -517,14 +517,14 @@ class AcousticHarmonicSolver:
                 impedance = real_values + 1j * imag_values
 
             elif "anechoic_termination" in si_data.keys():
-                pm_active, rho_eff_pm, C_eff_pm = model.is_porous_material_model_active(surface_id)
-                tv_active, rho_eff_tv, C_eff_tv = model.is_viscous_thermal_model_active(surface_id)
+                rho_eff_pm, C_eff_pm = model.get_porous_material_model_effective_properties(surface_id)
+                rho_eff_tv, C_eff_tv = model.get_viscous_thermal_model_effective_properties(surface_id)
 
-                if pm_active:
+                if isinstance(rho_eff_pm, np.ndarray):
                     density = rho_eff_pm
                     speed_of_sound = C_eff_pm
 
-                elif tv_active:
+                elif isinstance(rho_eff_tv, np.ndarray):
                     density = rho_eff_tv
                     speed_of_sound = C_eff_tv
 
@@ -543,14 +543,14 @@ class AcousticHarmonicSolver:
                 impedance = si_data["values"][0]
 
         elif isinstance(pw_data, dict):
-            pm_active, rho_eff_pm, C_eff_pm = model.is_porous_material_model_active(surface_id)
-            tv_active, rho_eff_tv, C_eff_tv = model.is_viscous_thermal_model_active(surface_id)
+            rho_eff_pm, C_eff_pm = model.get_porous_material_model_effective_properties(surface_id)
+            rho_eff_tv, C_eff_tv = model.get_viscous_thermal_model_effective_properties(surface_id)
 
-            if pm_active:
+            if isinstance(rho_eff_pm, np.ndarray):
                 density = rho_eff_pm
                 speed_of_sound = C_eff_pm
 
-            elif tv_active:
+            elif isinstance(rho_eff_tv, np.ndarray):
                 density = rho_eff_tv
                 speed_of_sound = C_eff_tv
 

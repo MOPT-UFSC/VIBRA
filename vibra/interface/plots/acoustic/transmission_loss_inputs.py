@@ -4,18 +4,12 @@ from PySide6.QtGui import QCloseEvent
 from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import TransmissionLossInputs_UI
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
 
-import os
 import logging
-import numpy as np
-
-from time import time
-from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"

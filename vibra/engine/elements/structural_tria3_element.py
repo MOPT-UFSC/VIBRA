@@ -918,7 +918,7 @@ def elementary_matrices(nodal_coords: np.ndarray):
 #fmt: on
 
 if __name__ == "__main__":
-
+    
     from vibra import PROJECT_DIR
 
     nodal_coords = np.array([[1.0, 0.0, 0.0],
@@ -937,48 +937,48 @@ if __name__ == "__main__":
     #                          [0.5, 0.5, 0.0],
     #                          [0.0, 0.5, 0.0]], dtype=float)
 
-    x_loc, y_loc, area, T = get_local_coordinates(nodal_coords)
+    # x_loc, y_loc, area, T = get_local_coordinates(nodal_coords)
 
-    print(f"=> x coordinates (lcs): {x_loc}")
-    print(f"=> y coordinates (lcs): {y_loc}")
-    print(f"element area: {area} [m²]")
+    # print(f"=> x coordinates (lcs): {x_loc}")
+    # print(f"=> y coordinates (lcs): {y_loc}")
+    # print(f"element area: {area} [m²]")
 
-    Ke, Me = elementary_matrices(nodal_coords)
-    np.savetxt("Ke_Vibra.dat", Ke, delimiter=",")
-    np.savetxt("Me_Vibra.dat", Me, delimiter=",")
+    # Ke, Me = elementary_matrices(nodal_coords)
+    # np.savetxt("Ke_Vibra.dat", Ke, delimiter=",")
+    # np.savetxt("Me_Vibra.dat", Me, delimiter=",")
 
-    Ke_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\Ke_ref.dat", delimiter=",")
-    Me_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\Me_ref.dat", delimiter=",")
+    # Ke_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\Ke_ref.dat", delimiter=",")
+    # Me_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\Me_ref.dat", delimiter=",")
 
-    diff_K = np.abs(Ke - Ke_ref)
-    diff_M = np.abs(Me - Me_ref)
+    # diff_K = np.abs(Ke - Ke_ref)
+    # diff_M = np.abs(Me - Me_ref)
 
-    print(f"Max. diff_K: {np.sum(diff_K)}")
-    print(f"Max. diff_M: {np.sum(diff_M)}")
+    # print(f"Max. diff_K: {np.sum(diff_K)}")
+    # print(f"Max. diff_M: {np.sum(diff_M)}")
 
-    np.savetxt("diff_K.dat", diff_K, delimiter=",")
-    np.savetxt("diff_M.dat", diff_M, delimiter=",")
+    # np.savetxt("diff_K.dat", diff_K, delimiter=",")
+    # np.savetxt("diff_M.dat", diff_M, delimiter=",")
 
-    K_bend_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\K_bend_ref.dat", delimiter=",")
-    M_bend_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\M_bend_ref.dat", delimiter=",")
+    # K_bend_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\K_bend_ref.dat", delimiter=",")
+    # M_bend_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\M_bend_ref.dat", delimiter=",")
 
-    K_memb_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\K_memb_ref.dat", delimiter=",")
-    M_memb_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\M_memb_ref.dat", delimiter=",")
+    # K_memb_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\K_memb_ref.dat", delimiter=",")
+    # M_memb_ref = np.loadtxt(PROJECT_DIR / "validation\data\structural\shell_element\dkt_cst\M_memb_ref.dat", delimiter=",")
 
-    K_bend_Vibra = np.loadtxt(PROJECT_DIR / "K_bend_Vibra.dat", delimiter=",")
-    M_bend_Vibra = np.loadtxt(PROJECT_DIR / "M_bend_Vibra.dat", delimiter=",")
+    # K_bend_Vibra = np.loadtxt(PROJECT_DIR / "K_bend_Vibra.dat", delimiter=",")
+    # M_bend_Vibra = np.loadtxt(PROJECT_DIR / "M_bend_Vibra.dat", delimiter=",")
 
-    K_memb_Vibra = np.loadtxt(PROJECT_DIR / "K_memb_Vibra.dat", delimiter=",")
-    M_memb_Vibra = np.loadtxt(PROJECT_DIR / "M_memb_Vibra.dat", delimiter=",")
+    # K_memb_Vibra = np.loadtxt(PROJECT_DIR / "K_memb_Vibra.dat", delimiter=",")
+    # M_memb_Vibra = np.loadtxt(PROJECT_DIR / "M_memb_Vibra.dat", delimiter=",")
 
-    diff_K_bend = np.abs(K_bend_ref - K_bend_Vibra)
-    diff_M_bend = np.abs(M_bend_ref - M_bend_Vibra)
+    # diff_K_bend = np.abs(K_bend_ref - K_bend_Vibra)
+    # diff_M_bend = np.abs(M_bend_ref - M_bend_Vibra)
 
-    diff_K_memb = np.abs(K_memb_ref - K_memb_Vibra)
-    diff_M_memb = np.abs(M_memb_ref - M_memb_Vibra)
+    # diff_K_memb = np.abs(K_memb_ref - K_memb_Vibra)
+    # diff_M_memb = np.abs(M_memb_ref - M_memb_Vibra)
 
-    print(np.max(diff_K_bend))
-    print(np.max(diff_M_bend))
+    # print(np.max(diff_K_bend))
+    # print(np.max(diff_M_bend))
 
-    print(np.max(diff_K_memb))
-    print(np.max(diff_M_memb))
+    # print(np.max(diff_K_memb))
+    # print(np.max(diff_M_memb))
