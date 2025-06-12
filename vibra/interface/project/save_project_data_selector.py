@@ -1,12 +1,9 @@
 # fmt: off
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
-from PyQt5.QtWidgets import QCheckBox, QDialog, QLineEdit, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCloseEvent
-from PyQt5 import uic
-
-from vibra import app, UI_DIR, TEMP_PROJECT_FILE
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
+from vibra import app, TEMP_PROJECT_FILE
+from vibra.interface.ui_generated.project.save_project_data_selector_ui import SaveProjectDataSelector_UI
 
 import os
 
@@ -14,22 +11,17 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class SaveProjectDataSelector(QDialog):
+class SaveProjectDataSelector(SaveProjectDataSelector_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "project/save_project_data_selector.ui"
-        uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self, tool_tip=True)
 
         self.get_required_memory()
 
@@ -46,26 +38,20 @@ class SaveProjectDataSelector(QDialog):
         self.keep_window_open = True
         self.complete = False
 
-    def _define_qt_variables(self):
-
-        # QCheckBox
-        self.checkBox_mesh_data : QCheckBox
-        self.checkBox_solution_data : QCheckBox
-
-        # QLineEdit
-        self.lineEdit_required_memory : QLineEdit
+    def _configure_qt_variables(self):
         self.lineEdit_required_memory.setDisabled(True)
 
-        # QPushButton
-        self.pushButton_proceed : QPushButton
-
     def _create_connections(self):
+        #
         self.checkBox_mesh_data.stateChanged.connect(self.remove_solution_data)
+        #
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_proceed.clicked.connect(self.proceed_callback)
 
     def get_required_memory(self):
-        size_of_file = os.path.getsize(TEMP_PROJECT_FILE) / 1e6
-        self.lineEdit_required_memory.setText(str(round(size_of_file, 4)))
+        if TEMP_PROJECT_FILE.exists():
+            size_of_file = TEMP_PROJECT_FILE.stat().st_size / 1e6
+            self.lineEdit_required_memory.setText(f"{size_of_file:.4}")
 
     def remove_solution_data(self):
         if self.checkBox_mesh_data.isChecked():

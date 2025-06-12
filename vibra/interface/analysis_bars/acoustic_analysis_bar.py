@@ -1,18 +1,19 @@
 from pathlib import Path
 
-from PyQt5 import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide6 import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 from vibra import app, ICON_DIR
+from vibra.engine import AnalysisID
 from vibra.utils.icons import load_icon
 
 
 class AcousticModalAnalysisBar(QWidget):
-    slider_pressed = pyqtSignal()
-    slider_released = pyqtSignal()
-    value_changed = pyqtSignal()
+    slider_pressed = Signal()
+    slider_released = Signal()
+    value_changed = Signal()
 
     def __init__(self):
         super().__init__()
@@ -89,11 +90,11 @@ class AcousticModalAnalysisBar(QWidget):
         if frequencies is None:
             return
 
-        analysis_data = app().project.analysis_data
-        if analysis_data is None:
+        analysis_setup = app().project.analysis_setup
+        if analysis_setup is None:
             return
 
-        if analysis_data["analysis_id"] == 4:
+        if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
             prefix = "Mode"
         else:
             prefix = "Frequency"

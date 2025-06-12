@@ -2,11 +2,13 @@
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.mesher.element_type import *
-from vibra.utils.utils import *
-from vibra.utils.progress_status import ProgressStatus
-
-from vibra.interface.loading_bar import load_function
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
+from vibra.utils.utils import get_color_rgb
 
 import logging
 import numpy as np
@@ -23,18 +25,25 @@ class LoadProject:
         self.properties = app().project.model.properties
 
     def load(self):
+        self.load_geometry_setup()
         self.load_geometry()
-        self.load_project_libraries()
+        self.load_geometry_data()
         self.load_mesh_setup()
+        self.load_mesh_data()
+        self.load_project_libraries()
         self.load_imported_table_data_from_file()
         self.load_model_properties()
         self.load_analysis_setup()
-        # self.load_thumbnail()
         self.load_analysis_results()
+
+    def load_geometry_setup(self):
+        length_unit, geometry_qf = self.file.read_geometry_setup_from_file()
+        self.model.set_length_unit(length_unit=length_unit)
+        self.model.set_geometry_quality_factor(geometry_qf=geometry_qf)
 
     def load_geometry(self):
         geometry_path = self.file.read_geometry_from_file()
-        app().main_window.import_geometry(geometry_path)
+        app().main_window.import_geometry_or_mesh(geometry_path, update_render=False)
 
     def load_project_libraries(self):
         self.load_fluid_library()
@@ -140,7 +149,7 @@ class LoadProject:
             identifier = int(section['identifier'])
             density = float(section['material_density'])
             poisson_ratio = float(section['poisson'])
-            young_modulus = float(section['young_modulus']) * 1e9
+            elasticity_modulus = float(section['elasticity_modulus']) * 1e9
             thermal_expansion_coefficient = float(section['thermal_expansion_coefficient'])
 
             material = Material(
@@ -148,173 +157,204 @@ class LoadProject:
                                 identifier = identifier, 
                                 density = density,
                                 poisson_ratio = poisson_ratio,
-                                young_modulus = young_modulus,
+                                elasticity_modulus = elasticity_modulus,
                                 thermal_expansion_coefficient = thermal_expansion_coefficient, 
                                 # color = getColorRGB(section['color'])
                                 )
             
             self.library_materials[identifier] = material
 
+    def load_geometry_data(self):
+        
+        self.model.mesh.clear_geometry_data()
+
+        geometry_data = self.file.read_geometry_data_from_file()
+        if not geometry_data:
+            # forces the project to reset, ensuring backward
+            # compatibility with older versions of project files
+            app().project.reset_solutions()
+            self.file.remove_mesh_data_from_project_file()
+            self.file.remove_results_data_from_project_file()
+            return
+
+        logging.info("Loading geometry data... [20/100]")
+
+        for key in ["points", "lines", "surfaces", "volumes"]:
+
+            data = geometry_data.get(key)
+            if data is None:
+                continue
+
+            self.model.mesh.geometry_information[key] = [int(value) for value in data]
+
+        logging.info(" geometry data... [60/100]")
+
+        for key, data in geometry_data.items():
+              
+            if "length_from" in key:
+                self.model.mesh.length_from_lines = {int(key) : value for key, value in data}
+
+            elif "area_from" in key:
+                self.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
+
+            elif "volume_from" in key:
+                self.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}
+
+            elif "surfaces_from_volume" in key:
+                tag = int(key.split("_")[-1])
+                _data = [int(_id) for _id in data]
+                if "cache" in key:
+                    self.model.mesh.cache_surfaces_from_volume[tag] = _data
+                else:
+                    self.model.mesh.surfaces_from_volume[tag] = _data
+
+            elif "lines_from_surface" in key:
+                tag = int(key.split("_")[-1])
+                _data = [int(_id) for _id in data]
+                if "cache" in key:
+                    self.model.mesh.cache_lines_from_surface[tag] = _data
+                else:
+                    self.model.mesh.lines_from_surface[tag] = _data
+
+            elif "points_from_line" in key:
+                tag = int(key.split("_")[-1])
+                _data = [int(_id) for _id in data]
+                if "cache" in key:
+                    self.model.mesh.cache_points_from_line[tag] = _data
+                else:    
+                    self.model.mesh.points_from_line[tag] = _data
+
+        logging.info("Loading geometry data... [95/100]")
+        self.model.mesh.process_upwards_adjacencies_from_entities()
+
+        app().main_window.update_geometry_information()
+
     def load_mesh_data_from_file(self, mesh_data: dict):
 
-        logging.info("Loading mesh..." + ProgressStatus(20, 100))
+        logging.info("Loading mesh... [20/100]")
+
+        self.model.mesh.clear_mesh_data()
 
         self.model.mesh.nodal_coordinates = mesh_data["nodal_coordinates"]
         self.model.mesh.lines_connectivity = mesh_data["lines_connectivity"]
         self.model.mesh.faces_connectivity = mesh_data["faces_connectivity"]
         self.model.mesh.solids_connectivity = mesh_data["solids_connectivity"]
 
-        map_line_elements = dict(zip(   mesh_data["map_line_elements"][:, 0],
-                                        mesh_data["map_line_elements"][:, 1]   ))
+        self.model.mesh.cache_nodal_coordinates = mesh_data.get("cache_nodal_coordinates")
+        self.model.mesh.cache_lines_connectivity = mesh_data.get("cache_lines_connectivity")
+        self.model.mesh.cache_faces_connectivity = mesh_data.get("cache_faces_connectivity")
+        self.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
 
-        map_face_elements = dict(zip(   mesh_data["map_face_elements"][:, 0],
-                                        mesh_data["map_face_elements"][:, 1]   ))
+        nodes_from_points = mesh_data.get("nodes_from_points")
+        if isinstance(nodes_from_points, np.ndarray):
+            self.model.mesh.nodes_from_points = {int(key) : int(value) for key, value in nodes_from_points}
+            self.model.mesh.points_from_nodes = {value : key for key, value in self.model.mesh.nodes_from_points.items()}
 
-        map_solid_elements = dict(zip(  mesh_data["map_solid_elements"][:, 0],
-                                        mesh_data["map_solid_elements"][:, 1]  ))
-
-        nodes_from_points = dict()
-        nodes_from_lines = dict()
-        nodes_from_surfaces = dict()
-        nodes_from_volumes = dict()
-
-        gmsh_elements_from_lines = dict()
-        gmsh_elements_from_surfaces = dict()
-        gmsh_elements_from_volumes = dict()
-
-        connectivity_from_surfaces = dict()
-        surfaces_from_volumes = dict()
-        volume_from_surface = defaultdict(list)
-
-        logging.info("Loading mesh..." + ProgressStatus(60, 100))
+        logging.info("Loading mesh... [60/100]")
 
         for key, data in mesh_data.items():
-
-            if "nodes_from_points" in key:
-                id = int(key.replace("nodes_from_points_", ""))
-                nodes_from_points[id] = data              
             
-            elif "nodes_from_lines" in key:
-                id = int(key.replace("nodes_from_lines_", ""))
-                nodes_from_lines[id] = data
+            # keep these lines for backwards compatibility
+            if "nodes_from_points_" in key:
+                tag = int(key.split("_")[-1])
+                self.model.mesh.nodes_from_points[tag] = data              
 
-            elif "nodes_from_surfaces" in key:
-                id = int(key.replace("nodes_from_surfaces_", ""))
-                nodes_from_surfaces[id] = data
+            elif "surfaces_from_volume" in key:
+                tag = int(key.split("_")[-1])
+                _data = [int(_id) for _id in data]
+                if "cache" in key:
+                    self.model.mesh.cache_surfaces_from_volume[tag] = _data
+                else:
+                    self.model.mesh.surfaces_from_volume[tag] = _data
 
-            elif "nodes_from_volumes" in key:
-                id = int(key.replace("nodes_from_volumes_", ""))
-                nodes_from_volumes[id] = data
+            elif "lines_from_surface" in key:
+                tag = int(key.split("_")[-1])
+                _data = [int(_id) for _id in data]
+                if "cache" in key:
+                    self.model.mesh.cache_lines_from_surface[tag] = _data
+                else:
+                    self.model.mesh.lines_from_surface[tag] = _data
 
-            elif "gmsh_elements_from_lines" in key:
-                id = int(key.replace("gmsh_elements_from_lines_", ""))
-                gmsh_elements_from_lines[id] = data
+            elif "points_from_line" in key:
+                tag = int(key.split("_")[-1])
+                _data = [int(_id) for _id in data]
+                if "cache" in key:
+                    self.model.mesh.cache_points_from_line[tag] = _data
+                else:    
+                    self.model.mesh.points_from_line[tag] = _data
 
-            elif "gmsh_elements_from_surfaces" in key:
-                id = int(key.replace("gmsh_elements_from_surfaces_", ""))
-                gmsh_elements_from_surfaces[id] = data
+            elif "normals_surface" in key:
+                tag = int(key.split("_")[-1])
+                self.model.mesh.normals_surface[tag] = data
 
-            elif "gmsh_elements_from_volumes" in key:
-                id = int(key.replace("gmsh_elements_from_volumes_", ""))
-                gmsh_elements_from_volumes[id] = data
+            elif "curvatures_surface" in key:
+                tag = int(key.split("_")[-1])
+                self.model.mesh.curvatures_surface[tag] = data
 
-            elif "connectivity_from_surfaces" in key:
-                id = int(key.replace("connectivity_from_surfaces_", ""))
-                connectivity_from_surfaces[id] = data
+        self.model.mesh.process_upwards_adjacencies_from_entities()
 
-            elif "surfaces_from_volumes" in key:
-                id = int(key.replace("surfaces_from_volumes_", ""))
-                surfaces_from_volumes[id] = data
+        logging.info("Loading mesh... [65/100]")
+        self.model.mesh.process_mesh_related_mappings()
 
-        for vol_id, face_ids in surfaces_from_volumes.items():
-            for face_id in face_ids:
-                volume_from_surface[face_id].append(vol_id) 
-
-        self.model.mesh.nodes_from_points = nodes_from_points
-        self.model.mesh.nodes_from_lines = nodes_from_lines
-        self.model.mesh.nodes_from_surfaces = nodes_from_surfaces
-        self.model.mesh.nodes_from_volumes = nodes_from_volumes
-
-        self.model.mesh.map_line_elements = map_line_elements
-        self.model.mesh.map_face_elements = map_face_elements
-        self.model.mesh.map_solid_elements = map_solid_elements
-
-        self.model.mesh.gmsh_elements_from_lines = gmsh_elements_from_lines
-        self.model.mesh.gmsh_elements_from_surfaces = gmsh_elements_from_surfaces
-        self.model.mesh.gmsh_elements_from_volumes = gmsh_elements_from_volumes
-
-        self.model.mesh.connectivity_from_surfaces = connectivity_from_surfaces
-        self.model.mesh.surfaces_from_volumes = surfaces_from_volumes
-        self.model.mesh.volume_from_surface = volume_from_surface
-
-        logging.info("Loading mesh..." + ProgressStatus(80, 100))
-
-        self.model.mesh._maps_lines_by_elements()
-        self.model.mesh._maps_surfaces_by_elements()
-        self.model.mesh._maps_volumes_by_elements()
-
+        logging.info("Loading mesh... [90/100]")
+        self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
         self.model.generated_mesh = True
 
-        logging.info("Loading mesh..." + ProgressStatus(95, 100))
-        self.model.mesh._process_solid_elements_connected_to_nodes()
-
-        # logging.info("Loading mesh..." + ProgressStatus(95, 100))
-        # self.model.mesh._process_element_average_coordinates()
+        logging.info("Loading mesh... [95/100]")
+        self.model.mesh.process_solid_elements_connected_to_nodes()
 
     def load_mesh_setup(self):
 
-        app().main_window.viewer_tabs.close_mesh_tabs()
         mesh_setup = self.file.read_mesh_setup_from_file()
 
         if "element_type" in mesh_setup.keys():
             if "shape_function" in mesh_setup.keys():
 
-                element_type = mesh_setup["element_type"]
-                shape_function = mesh_setup["shape_function"]
+                element_type = mesh_setup.get("element_type", "").strip().lower()
+                shape_function = mesh_setup.get("shape_function", "").strip().lower()
                 
-                if element_type == " Tetrahedral" and shape_function == " Linear":
+                if element_type == "tetrahedral" and shape_function == "linear":
                     solid_element = TETRAHEDRON_4
 
-                elif element_type == " Tetrahedral" and shape_function == " Quadratic":
+                elif element_type == "tetrahedral" and shape_function == "quadratic":
                     solid_element = TETRAHEDRON_10
 
-                elif element_type == " Hexahedral" and shape_function == " Linear":
+                elif element_type == "hexahedral" and shape_function == "linear":
                     solid_element = HEXAHEDRON_8
 
-                elif element_type == " Hexahedral" and shape_function == " Quadratic":
+                elif element_type == "hexahedral" and shape_function == "quadratic":
                     solid_element = HEXAHEDRON_20
 
                 else:
-                    raise NotImplementedError(f"Element type not defined!")
-                
+                    raise NotImplementedError(f'Element type "{element_type}" not defined!')
+
+                algorithm_3d = mesh_setup.get("algorithm_3d")
+                if algorithm_3d is not None:
+                    solid_element.algorithm_3d = algorithm_3d
+
                 mesh_setup["element_type"] = solid_element
-                mesh_setup.pop("shape_function")
 
                 app().project.reset_solutions()
                 app().project.set_mesh_setup(mesh_setup)
 
-                mesh_data = self.file.read_mesh_data_from_file()
+    def load_mesh_data(self):
 
-                if mesh_data:
-                    self.load_mesh_data_from_file(mesh_data)
-                else:
-                    app().project.generate_mesh()
-                    app().file.write_mesh_data_in_file()
+        mesh_data = self.file.read_mesh_data_from_file()
+        if mesh_data:
+            self.load_mesh_data_from_file(mesh_data)
 
-                self.update_render()
-
-        app().main_window.viewer_tabs.show_geometry()
+        # else:
+        #     app().project.generate_mesh()
+        #     app().file.write_mesh_data_in_file()
+        #     app().file.app().file.write_geometry_data_in_file()
 
     def update_render(self):
 
-        logging.info("Updating render..." + ProgressStatus(20, 100))
-        app().main_window.viewer_tabs.show_mesh()
+        logging.info("Updating render... [20/100]")
+        app().main_window.update_mesh_information()
 
-        logging.info("Updating render..." + ProgressStatus(40, 100))
-        app().main_window.viewer_tabs.close_analysis_tabs()
-
-        logging.info("Updating render..." + ProgressStatus(90, 100))
-        app().main_window.viewer_tabs.update_plots()
+        logging.info("Updating render... [90/100]")
+        app().main_window.update_plots()
 
     def load_imported_table_data_from_file(self):
 
@@ -369,7 +409,6 @@ class LoadProject:
     def load_analysis_setup(self):
 
         analysis_setup = self.file.read_analysis_setup_from_file()
-
         if analysis_setup:
 
             f_min = None
@@ -387,7 +426,7 @@ class LoadProject:
             if ([f_min, f_max, f_step]).count(None) == 0:
                 analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().project.create_solver()
 
     def load_thumbnail(self):
@@ -396,59 +435,65 @@ class LoadProject:
             app().project.thumbnail = thumbnail
 
     def load_analysis_results(self):
-    
-        act_modal_analysis = False
-        str_modal_analysis = False
-        act_harmonic_analysis = False
-        str_harmonic_analysis = False
 
+        project = app().project
         results_data = self.file.read_results_data_from_file()
 
         if results_data:
-            logging.info("Loading results..." + ProgressStatus(20, 100))
+            logging.info("Loading results... [20/100]")
             for key, data in results_data.items():
+                data: dict
 
-                if key == "modal_acoustic":
-                    act_modal_analysis = True
-                    app().project.acoustic_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().project.acoustic_modal_solver.modal_shape = data["modal_shape"]
-                
-                elif key == "modal_structural":
-                    str_modal_analysis = True
-                    app().project.structural_modal_solver.natural_frequencies = data["natural_frequencies"]
-                    app().project.structural_modal_solver.modal_shape = data["modal_shape"]
+                if key == "modal_acoustic" and project.acoustic_modal_solver is not None:
+                    if np.iscomplexobj(data["natural_frequencies"]):
+                        project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    else:
+                        project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    project.acoustic_modal_solver.solution = data.get("solution")
 
-                elif key == "harmonic_acoustic":
-                    act_harmonic_analysis = True
-                    app().project.acoustic_harmonic_solver.frequencies = data["frequencies"]
-                    app().project.acoustic_harmonic_solver.solution = data["solution"]
-                    app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
+                elif key == "modal_structural" and project.structural_modal_solver is not None:
+                    project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                    project.structural_modal_solver.solution = data.get("solution")
+                    project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
-                elif key == "harmonic_structural":
-                    str_harmonic_analysis = True
-                    app().project.structural_harmonic_solver.frequencies = data["frequencies"]
-                    app().project.structural_harmonic_solver.solution = data["solution"]
+                elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None:
+                    project.acoustic_harmonic_solver.solution = data.get("solution")
+                    app().main_window.disable_advanced_acoustic_plots_buttons(False)
+
+                elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
+                    project.structural_harmonic_solver.solution = data.get("solution")
+                    project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
 
                 else:
                     continue
+
+            logging.info("Updating analysis render... [85/100]")
             
-            logging.info("Updating analysis render..." + ProgressStatus(85, 100))
-            if act_modal_analysis:
-                app().main_window.viewer_tabs.show_acoustic_modal_analysis()
-                app().main_window.menu_widget.update_items()
 
-            elif str_modal_analysis:
-                app().main_window.viewer_tabs.show_structural_modal_analysis()
-                app().main_window.menu_widget.update_items()
 
-            elif act_harmonic_analysis:
-                app().main_window.viewer_tabs.show_acoustic_harmonic_analysis()
-                app().main_window.menu_widget.update_items()
+def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):
+    """ This method converts a two columns array into an 
+        equivalent numeric dictionary. The elements of the 
+        first column are the keys, and the elements of 
+        second colum are the values.
 
-            elif str_harmonic_analysis:
-                return
-                app().main_window.viewer_tabs.show_structural_harmonic_analysis()
-                app().main_window.menu_widget.update_items()
+        Parameters
+        ----------
+        input_data: np.ndarray
+            the array of two columns to be converted 
+            into a numeric dictionary
 
-            else:
-                return
+        values_dtype: int or float
+            the values data type
+
+        Return
+        ------
+        output_data: dict
+            the output numeric dictionary
+    """
+    output_data = dict()
+    if len(input_data[0, :]) == 2:       
+        for k, v in input_data:
+            output_data[int(k)] = values_dtype(v)
+
+    return output_data

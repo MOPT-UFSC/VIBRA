@@ -1,9 +1,9 @@
-from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QWidget
-from PyQt5.QtGui import QCloseEvent, QColor
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
+from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, Signal, QSize
 
-from vibra import app, UI_DIR, TEMP_PROJECT_FILE
+from vibra import app, TEMP_PROJECT_FILE
+from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
 from vibra.interface.formatters.icons import *
 
 from vibra.interface.general.pick_color_input import PickColorInput
@@ -13,9 +13,9 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
 
-import configparser
+# import configparser
 from itertools import count
-from pathlib import Path
+# from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -29,22 +29,22 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-class MaterialWidget(QWidget):
+
+class MaterialWidget(MaterialWidget_UI):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
-        ui_path = UI_DIR / "model/setup/material/material_widget.ui"
-        uic.loadUi(ui_path, self)
-
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model
         self.properties = self.model.properties
 
+        self.dialog = kwargs.get("dialog", None)
+
         self._initialize()
-        self.define_qt_variables()
-        self.create_connections()
+        self._create_connections()
+        self._config_widgets()
         self.load_data_from_materials_library()
 
     # def _config_window(self):
@@ -67,25 +67,13 @@ class MaterialWidget(QWidget):
                                     "name",
                                     "identifier",
                                     "material_density",
-                                    "young_modulus",
+                                    "elasticity_modulus",
                                     "poisson",
                                     "thermal_expansion_coefficient",
                                     "color"
                                     ]
 
-    def define_qt_variables(self):
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_add_column : QPushButton
-        self.pushButton_remove_column : QPushButton
-        self.pushButton_reset_library : QPushButton
-
-        # QTableWidget
-        self.tableWidget_material_data : QTableWidget
-
-    def create_connections(self):
+    def _create_connections(self):
         #
         self.pushButton_add_column.clicked.connect(self.add_column)
         self.pushButton_remove_column.clicked.connect(self.remove_selected_column)
@@ -94,32 +82,18 @@ class MaterialWidget(QWidget):
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
 
-    def config_table_of_material_data(self):
-        return
-        header = [
-            'Name',
-            'Density \n[kg/m³]',
-            'Elasticity \nmodulus [GPa]',
-            'Poisson',
-            'Thermal expansion \ncoefficient [m/mK]',
-            'Color',
-        ]
-        
-        self.tableWidget_material_data.setColumnCount(len(header))
-        self.tableWidget_material_data.setHorizontalHeaderLabels(header)
-        self.tableWidget_material_data.setSelectionBehavior(1)
-        self.tableWidget_material_data.resizeColumnsToContents()
-
-        self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(0)
-        self.tableWidget_material_data.horizontalHeader().setStretchLastSection(True)
-
-        for j, width in enumerate([140, 80, 120, 80, 140, 40]):
-            self.tableWidget_material_data.horizontalHeader().resizeSection(j, width)
-            self.tableWidget_material_data.horizontalHeaderItem(j).setTextAlignment(Qt.AlignCenter)
+    def _config_widgets(self):
+        self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
     
+    def _update_size_policy(self):
+        if len(self.list_of_materials) > 6:
+            self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        else:
+            self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
     def load_data_from_materials_library(self):
 
-        if not os.path.exists(TEMP_PROJECT_FILE):
+        if not TEMP_PROJECT_FILE.exists():
             self.reset_library_to_default()
             return
 
@@ -140,7 +114,7 @@ class MaterialWidget(QWidget):
                                 identifier = int(config[tag]['identifier']), 
                                 density = float(config[tag]['material_density']),
                                 poisson_ratio = float(config[tag]['poisson']),
-                                young_modulus = float(config[tag]['young_modulus']) * 1e9,
+                                elasticity_modulus = float(config[tag]['elasticity_modulus']) * 1e9,
                                 thermal_expansion_coefficient = float(config[tag]['thermal_expansion_coefficient']), 
                                 color = getColorRGB(config[tag]['color'])
                                 )
@@ -151,7 +125,6 @@ class MaterialWidget(QWidget):
 
     def update_table(self):
 
-        self.config_table_of_material_data()
         self.tableWidget_material_data.clearContents()
         self.tableWidget_material_data.blockSignals(True)
         self.tableWidget_material_data.setRowCount(COLOR_ROW + 1)
@@ -163,13 +136,14 @@ class MaterialWidget(QWidget):
                 self.tableWidget_material_data.setItem(0, j, QTableWidgetItem(str(material.name)))
                 self.tableWidget_material_data.setItem(1, j, QTableWidgetItem(str(material.identifier)))
                 self.tableWidget_material_data.setItem(2, j, QTableWidgetItem(str(material.density)))
-                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.young_modulus/1e9 :.2f}"))
+                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.elasticity_modulus/1e9 :.2f}"))
                 self.tableWidget_material_data.setItem(4, j, QTableWidgetItem(str(material.poisson_ratio)))
                 self.tableWidget_material_data.setItem(5, j, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
 
                 item = QTableWidgetItem()
                 item.setBackground(QColor(*material.color))
                 item.setForeground(QColor(*material.color))
+                item.setSizeHint(QSize(80, 30))
                 self.tableWidget_material_data.setItem(6, j, item)
 
         for i in range(self.tableWidget_material_data.rowCount()):
@@ -177,6 +151,7 @@ class MaterialWidget(QWidget):
                 self.tableWidget_material_data.item(i, j).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_material_data.blockSignals(False)
+        self._update_size_policy()
 
     def get_selected_column(self) -> int:
         selected_items = self.tableWidget_material_data.selectedIndexes()
@@ -210,6 +185,7 @@ class MaterialWidget(QWidget):
 
         for i in range(self.tableWidget_material_data.rowCount()):
             item = QTableWidgetItem()
+            item.setSizeHint(QSize(80, 30))
             self.tableWidget_material_data.setItem(i, last_col, item)
             self.tableWidget_material_data.item(i, last_col).setTextAlignment(Qt.AlignCenter)
 
@@ -228,10 +204,16 @@ class MaterialWidget(QWidget):
             # material, just remove the last line
             current_size = self.tableWidget_material_data.columnCount()
             self.tableWidget_material_data.setColumnCount(current_size - 1)
+
+            self._update_size_policy()
+            self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
             return
 
         material = self.list_of_materials[selected_column]
         self.remove_material_from_file(material)
+
+        self._update_size_policy()
+        self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
 
     def item_changed_callback(self, item : QTableWidgetItem):
 
@@ -261,6 +243,7 @@ class MaterialWidget(QWidget):
         self.load_data_from_materials_library()
 
         self.tableWidget_material_data.blockSignals(False)
+        self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
 
     def go_to_next_cell(self, item : QTableWidgetItem):
 
@@ -340,7 +323,7 @@ class MaterialWidget(QWidget):
 
         prop_labels = {
                         2 : "material_density", 
-                        3 : "young_modulus",
+                        3 : "elasticity_modulus",
                         4 : "poisson",
                         5 : "thermal_expansion_coefficient"
                     }
@@ -392,14 +375,12 @@ class MaterialWidget(QWidget):
                 else:
                     material_data[key] = item.text()
 
-            # material_data["identifier"] = self.new_identifier()
-
-            material_name = material_data["name"]
-            if not material_name:
+            material_identifier = material_data["identifier"]
+            if not material_identifier:
                 return
 
             config = app().file.read_material_library_from_file()
-            config[material_name] = material_data
+            config[material_identifier] = material_data
 
             app().file.write_material_library_in_file(config)
                     
@@ -409,17 +390,19 @@ class MaterialWidget(QWidget):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-    def remove_material_from_file(self, material : Material):
+    def remove_material_from_file(self, material: Material):
 
         config = app().file.read_material_library_from_file()
 
-        if not material.name in config.sections():
+        identifier = str(material.identifier)
+
+        if not identifier in config.sections():
             return
 
-        config.remove_section(material.name)
+        config.remove_section(identifier)
         app().file.write_material_library_in_file(config)
 
-        self.reset_materials_from_bodies_and_surfaces([material.name])
+        self.reset_materials_from_bodies_and_surfaces([material.identifier])
         self.load_data_from_materials_library()
 
     def new_identifier(self):
@@ -486,15 +469,16 @@ class MaterialWidget(QWidget):
 
         config = app().file.read_material_library_from_file()
 
-        material_names = list()
+        material_identifiers = list()
         for section_cache in sections_cache:
             if section_cache not in config.sections():
-                material_names.append(config_cache[section_cache]["name"])
+                identifier = config_cache[section_cache]["identifier"]
+                material_identifiers.append(int(identifier))
 
-        self.reset_materials_from_bodies_and_surfaces(material_names)
+        self.reset_materials_from_bodies_and_surfaces(material_identifiers)
         self.load_data_from_materials_library()
 
-    def reset_materials_from_bodies_and_surfaces(self, material_names : list):
+    def reset_materials_from_bodies_and_surfaces(self, material_identifiers: list):
 
         surfaces_to_remove_material = list()
         volumes_to_remove_material = list()
@@ -503,9 +487,9 @@ class MaterialWidget(QWidget):
             property, volume_id = key
             if property == "material":
                 if isinstance(data, Material):
-                    if data.name in material_names:
+                    if data.identifier in material_identifiers:
                         volumes_to_remove_material.append(volume_id)
-                        surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
+                        surface_ids = self.model.mesh.surfaces_from_volume[volume_id]
                         for surface_id in surface_ids:
                             surfaces_to_remove_material.append(surface_id)
 
@@ -515,13 +499,25 @@ class MaterialWidget(QWidget):
         for surf_id in surfaces_to_remove_material:
             self.model.properties._remove_surface_property("material", surface_id=surf_id)
 
+        app().file.write_model_properties_in_file()
+
+        if isinstance(self.dialog, QDialog):
+            self.dialog.load_model_info()
+
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            return
+            if isinstance(self.dialog, QDialog):
+                self.dialog.attribute_callback()
+
         elif event.key() == Qt.Key_Delete:
             self.remove_selected_column()
+
         elif event.key() == Qt.Key_Escape:
-            self.close()
+            if isinstance(self.dialog, QDialog):
+                self.dialog.close()
+            else:
+                self.close()
 
     def closeEvent(self, event):
         super().closeEvent(event)

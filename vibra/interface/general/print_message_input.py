@@ -1,20 +1,17 @@
-from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QProgressBar, QPushButton
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5 import uic
+from PySide6.QtWidgets import QFrame, QLabel, QProgressBar, QPushButton, QDialog
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QTimer
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.messages.print_message_ui import PrintMessage_UI
 from vibra.interface.formatters.icons import *
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 from time import sleep, time 
 
-class PrintMessageInput(QDialog):
+
+class PrintMessageInput(PrintMessage_UI):
     def __init__(self, text_info, *args, **kwargs):
         super().__init__()
-
-        ui_path = UI_DIR / "messages/print_message.ui"
-        uic.loadUi(ui_path, self)
 
         self.auto_close = kwargs.get("auto_close", False)
         self.window_title, self.title, self.message = text_info
@@ -25,35 +22,17 @@ class PrintMessageInput(QDialog):
         self._define_qt_variables()
         self._create_connections()
 
-        ConfigWidgetAppearance(self)
-
         self._config_widgets()
         self._set_texts()
-        self.exec()
+
+        if kwargs.get("exec", True):
+            self.exec()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
 
     def _define_qt_variables(self):
-
-        # QFrame
-        self.frame_button : QFrame
-        self.frame_message : QFrame
-        self.frame_progress_bar : QFrame
-        self.frame_title : QFrame
-
-        # QLabel
-        self.label_title : QLabel
-        self.label_message : QLabel
-
-        # QProgressBar
-        self.progress_bar_timer : QProgressBar
-
-        # QPushButton
-        self.pushButton_close : QPushButton
-
-        # QTimer
         self.timer = QTimer()
 
     def _create_connections(self):

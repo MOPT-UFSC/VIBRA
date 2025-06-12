@@ -1,86 +1,130 @@
+from molde import Color
+from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
 )
 from vtkmodules.vtkCommonDataModel import (
+    VTK_QUAD,
+    VTK_QUADRATIC_QUAD,
+    VTK_QUADRATIC_TRIANGLE,
+    VTK_TRIANGLE,
     vtkPlane,
     vtkPolyData,
-    VTK_TRIANGLE,
-    VTK_QUADRATIC_TRIANGLE,
-    VTK_QUAD,
-    VTK_QUADRATIC_QUAD
+    vtkUnstructuredGrid,
 )
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkDataSetMapper
 
 from vibra import app
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
+from vibra.utils.interface_utils import ColorMode
 
 
 class FacesActor(vtkActor):
-    def __init__(self, mesh, allow_hidding=True):
+    NODES_TO_VTK_CELL = {
+        3: VTK_TRIANGLE,
+        6: VTK_QUADRATIC_TRIANGLE,
+        4: VTK_QUAD,
+        8: VTK_QUADRATIC_QUAD,
+    }
+
+    def __init__(self, mesh: Mesh, allow_hidding=True, update_normals=True):
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding
+        self.update_normals = update_normals
 
         self.create_geometry()
         self.configure_appearance()
 
     def create_geometry(self):
-        #
-        data = vtkPolyData()
-        points = vtkPoints()
-        mapper = vtkPolyDataMapper()
-        point_colors = vtkUnsignedCharArray()
-        cell_colors = vtkUnsignedCharArray()
-        cell_indexes = vtkIntArray()
-        cell_indexes.SetName("cell_indexes")
-        cell_colors.Fill(0)
-        #
-        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
-        number_of_elements = len(self.mesh.faces_connectivity)
-        face_nodes = [3, 6, 4, 8]
-        types = [VTK_TRIANGLE, VTK_QUADRATIC_TRIANGLE, VTK_QUAD, VTK_QUADRATIC_QUAD]
-        aux = dict(zip(face_nodes, types))
-        try:
-            cell_type = aux[nodes_per_element]
-        except:
-            raise NotImplementedError("Not implemented plane element")
+        if self.mesh.nodal_coordinates.size == 0:
+            return
 
-        #
-        data.Allocate(nodes_per_element * number_of_elements)
+        number_of_nodes = self.mesh.nodal_coordinates.shape[0]
+        number_of_elements = len(self.mesh.faces_connectivity)
+        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
+
+        if nodes_per_element in [6, 8]:
+            data = vtkUnstructuredGrid()
+            mapper = vtkDataSetMapper()
+        else:
+            data = vtkPolyData()
+            mapper = vtkPolyDataMapper()
+
+        points = vtkPoints()
+        point_colors = vtkUnsignedCharArray()
         point_colors.SetNumberOfComponents(3)
-        point_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
+        point_colors.SetNumberOfTuples(number_of_nodes)
+        point_colors.Fill(0)
+
+        cell_colors = vtkUnsignedCharArray()
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        cell_indexes.Allocate(number_of_elements)
+        cell_colors.Fill(0)
 
-        for _, x, y, z in self.mesh.nodal_coordinates:
-            points.InsertNextPoint(x, y, z)
-        #
+        face_indexes = vtkIntArray()
+        face_indexes.SetName("face_indexes")
+        face_indexes.Allocate(number_of_elements)
+
+        surface_indexes = vtkIntArray()
+        surface_indexes.SetName("surface_indexes")
+        surface_indexes.Allocate(number_of_elements)
+
+        volume_indexes = vtkIntArray()
+        volume_indexes.SetName("volume_indexes")
+        volume_indexes.Allocate(number_of_elements)
+
+        cell_type = self.NODES_TO_VTK_CELL[nodes_per_element]
+        data.Allocate(nodes_per_element * number_of_elements)
+
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        points.SetData(numpy_to_vtk(coordinates))
+
+        surface_to_volume = dict()
+        for volume, surfaces in self.mesh.surfaces_from_volume.items():
+            for surface in surfaces:
+                surface_to_volume[surface] = volume
+
         self.visible_indexes = dict()
         hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
-        # for i, values in enumerate(self.mesh.faces_connectivity[:, 4:]):
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue
-            data.InsertNextCell(cell_type, nodes_per_element, list(values))
+
+            volume = surface_to_volume.get(surface, -1)
+            surface_indexes.InsertNextValue(surface)
+            volume_indexes.InsertNextValue(volume)
+
             # This is usefull if part of the cells are hidden
-            visible_index = cell_indexes.InsertNextValue(i)
+            visible_index = face_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
+            data.InsertNextCell(cell_type, nodes_per_element, list(values))
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(cell_indexes)
+        data.GetCellData().AddArray(face_indexes)
+        data.GetCellData().AddArray(surface_indexes)
+        data.GetCellData().AddArray(volume_indexes)
 
-        normals_filter = vtkPolyDataNormals()
-        normals_filter.AddInputData(data)
-        normals_filter.Update()
+        # Updating normals messes with the colors
+        # this is why this option exists.
+        if self.update_normals and isinstance(data, vtkPolyData):
+            normals_filter = vtkPolyDataNormals()
+            normals_filter.AddInputData(data)
+            normals_filter.Update()
+            self.data = normals_filter.GetOutput()
+        else:
+            self.data = data
 
-        self.data = normals_filter.GetOutput()
         mapper.SetInputData(self.data)
         self.SetMapper(mapper)
+        self.clear_colors()
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
@@ -90,17 +134,52 @@ class FacesActor(vtkActor):
         self.GetProperty().SetSpecularColor(1, 1, 1)
         self.clear_colors()
 
-    def clear_colors(self, color=(255, 255, 255, 255)):
+    def clear_colors(self):
+        if self.data is None:
+            return
+
+        mesh = app().project.model.mesh
+        properties = app().project.model.properties
+        color_mode = app().main_window.visualization_filter.color_mode
+        no_info_color = Color(20, 20, 20)
+
+        if color_mode == ColorMode.MATERIAL:
+            for surface, face_elements in mesh.elements_from_surface.items():
+                material: Material | None = properties._get_property("material", surface=surface)
+                
+                if (material is None) and (surface in mesh.volumes_from_surface):
+                    volume = mesh.volumes_from_surface[surface][0]
+                    material = properties._get_property("material", volume=volume)
+
+                color = Color(*material.color) if (material is not None) else no_info_color
+                self.paint_cells(color.to_rgba(), face_elements)
+
+        elif color_mode == ColorMode.FLUID:
+            for surface, face_elements in mesh.elements_from_surface.items():
+                fluid: Fluid | None = properties._get_property("fluid", surface=surface)
+
+                if (fluid is None) and (surface in mesh.volumes_from_surface):
+                    volume = mesh.volumes_from_surface[surface][0]
+                    fluid = properties._get_property("fluid", volume=volume)
+
+                color = Color(*fluid.color) if (fluid is not None) else no_info_color
+                self.paint_cells(color.to_rgba(), face_elements)
+        
+        elif color_mode == ColorMode.EMPTY:
+            color = app().config.user_preferences.faces_color
+            self.set_color(color.to_rgba())
+
+    def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+        # TODO: update these functions to work with the molde.Colors instead of tuples
+
         if self.data is None:
             return
 
         cell_colors = self.data.GetCellData().GetScalars()
-        r, g, b, a = color
+        cell_colors.Fill(255)
 
-        cell_colors.FillComponent(0, r)
-        cell_colors.FillComponent(1, g)
-        cell_colors.FillComponent(2, b)
-        cell_colors.FillComponent(3, a)
+        for component, value in enumerate(color):
+            cell_colors.FillComponent(component, value)
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
@@ -120,7 +199,9 @@ class FacesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def paint_cells(
-        self, color: tuple[int, int, int] | tuple[int, int, int, int], faces: tuple[int]
+        self,
+        color: tuple[int, int, int] | tuple[int, int, int, int],
+        faces: tuple[int],
     ):
         if self.data is None:
             return

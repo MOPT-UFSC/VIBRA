@@ -74,8 +74,8 @@ def get_local_coordinates(coords):
 class ACT_FACE_4(Element2D):
     #
     NODES_PER_ELEMENT = 4
-    DOF_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 1
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         #
@@ -141,7 +141,7 @@ class ACT_FACE_4(Element2D):
         """ This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect(connect_face)
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs*self.connect_face[:, :]
 
         vect_indices = ind_dofs.flatten()

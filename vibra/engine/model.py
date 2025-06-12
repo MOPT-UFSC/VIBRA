@@ -1,22 +1,19 @@
-import os
-import logging
-from pathlib import Path
-from collections import defaultdict
-
-import numpy as np
-from scipy.special import jv
 
 from vibra import app
-from vibra.interface.loading_bar import load_function
-from vibra.engine.dissipation_models.low_reduced_frequency_model import LowReducedFrequencyModel
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.progress_status import ProgressStatus
+
+import logging
+import numpy as np
+
+from copy import deepcopy
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -38,15 +35,19 @@ class Model:
         self.mesh_setup = None
         self.generated_mesh = False
         self.geometry_path = None
+        self.initial_element_size = None
 
-        self.f_min = 2
+        self.f_min = 5
         self.f_max = 600
-        self.f_step = 2
+        self.f_step = 5
         self.frequencies = None
-        self.frequency_setup = dict()
         self.list_frequencies = list()
 
-        self.analysis_data = None
+        self.decouple_info = dict()
+        self.nodes_mapping = dict()
+        self.frequency_setup = dict()
+
+        self.analysis_setup = None
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
         self.solid_structural_element = None
@@ -57,8 +58,15 @@ class Model:
         self.reset_dissipation_model_properties()
 
     def reset_dissipation_model_properties(self):
+        self.perforated_plate_impedance_data = dict()
         self.porous_material_properties = dict()
         self.viscous_thermal_model_properties = dict()
+
+    def set_length_unit(self, length_unit: str = "milimeter"):
+        self.length_unit = length_unit
+
+    def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
+        self.geometry_qf = geometry_qf
 
     def set_geometry_path(self, path : str):
         self.geometry_path = path
@@ -69,23 +77,71 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
+    def initialize_mesh(self):
+        self.mesh = Mesh(
+                         length_unit = self.length_unit, 
+                         geometry_qf = self.geometry_qf
+                         )
+
     def process_visual_geometry_mesh(self, path : str):
 
-        try:
+        self.initialize_mesh()
 
+        try:
             try:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=10, maximum_element_size=40)
+
+                element_size = self.mesh.compute_initial_mesh_size(path)
+                self.mesh.load_cad(
+                    path,
+                    dimension=2,
+                    minimum_element_size=element_size * 0.4,
+                    maximum_element_size=element_size,
+                )
+
             except:
-                self.mesh = Mesh.from_cad(path, dimension=2, size_factor=0.0, minimum_element_size=5, maximum_element_size=20)
+                self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
+
+                element_size = 10
+                self.mesh.load_cad(
+                    path,
+                    dimension=2,
+                    minimum_element_size=element_size * 0.5,
+                    maximum_element_size=element_size,
+                )
 
             self.generated_mesh = False
-            app().main_window.update_geometry_information(self.mesh.geometry_information)
+            self.initial_element_size = element_size
 
         except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return -1       
+
+    def process_mesh_data(self, path : str):
+
+        self.initialize_mesh()
+
+        try:
+
+            logging.info("Processing mesh... [15/100]")
+
+            self.mesh.geometry_imported = False
+            self.mesh.load_mesh(path)
+            self.generated_mesh = True
+
+            logging.info("Processing mesh... [90/100]")
+            self.mesh.process_solid_elements_connected_to_nodes()
+
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
+            return -1
 
     def process_mesh(self):
 
@@ -103,38 +159,27 @@ class Model:
                         "You should to configure the mesher to proceed." )
             raise IncompleteSetupError(message, context=context)
 
-        # if self.mesh is None:
-        #     self.mesh = Mesh.from_cad(self.geometry_path)
-
-        logging.info("Processing mesh..." + ProgressStatus(80, 100))
+        logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
 
-        logging.info("Processing mesh..." + ProgressStatus(90, 100))
-        self.mesh._process_solid_elements_connected_to_nodes()
-
-        # logging.info("Renumbering nodes..." + ProgressStatus(90, 100))
-        # self.mesh._process_nodes_reordering()
-
-    def set_material(self, material, **kwargs):
-        self.properties.set_material(material, **kwargs)
-
-    def set_fluid(self, fluid, **kwargs):
-        self.properties.set_fluid(fluid, **kwargs)
+        logging.info("Processing mesh... [90/100]")
+        self.mesh.process_solid_elements_connected_to_nodes()
 
     def set_mesh(self, mesh):
         self.mesh = mesh
         self.generated_mesh = True
 
-    def set_frequency_setup(self, analysis_setup: dict):
-
-        self.frequency_setup.clear()
+    def set_analysis_setup(self, analysis_setup: dict):
 
         self.frequencies = None
         self.f_min = analysis_setup.get("f_min", None)
         self.f_max = analysis_setup.get("f_max", None)
         self.f_step = analysis_setup.get("f_step", None)
 
+        self.analysis_setup = analysis_setup
+
+        self.frequency_setup.clear()
         if "frequencies" in analysis_setup.keys():
             self.frequencies = analysis_setup.get("frequencies", None)
 
@@ -174,7 +219,7 @@ class Model:
             #                     "f_max" : float(f_max),
             #                     "f_step" : float(f_step) }
 
-            # self.set_frequency_setup(frequency_setup)
+            # self.set_analysis_setup(frequency_setup)
 
             self.list_frequencies = frequencies
 
@@ -195,24 +240,6 @@ class Model:
                 volume = 1
         return volume
 
-    def get_fluid(self, **kwargs):
-        """ This method returns the fluid relative to an element or volume and the volume id itself. """
-        volume = self.get_volume(**kwargs)
-        fluid = self.properties.get_fluid(volume=volume)
-        return fluid, volume
-
-    def get_fluid_properties(self, proportional_damping=False, **kwargs):
-        """ This method returns the fluid properties """
-        fluid, volume = self.get_fluid(**kwargs)
-        dynamic_viscosity = fluid.dynamic_viscosity
-        if proportional_damping:
-            c_0 = self.properties.get_speed_of_sound(fluid, volume=volume)
-            rho_0 = self.properties.get_fluid_density(fluid, volume=volume)
-        else:
-            c_0 = fluid.speed_of_sound
-            rho_0 = fluid.fluid_density
-        return rho_0, c_0, dynamic_viscosity
-
     def set_acoustic_element(self, element):
         self.solid_acoustic_element, self.surface_acoustic_element = element
 
@@ -222,125 +249,226 @@ class Model:
     def get_acoustic_global_dofs_from_nodes(self, nodes: np.ndarray):
         if self.solid_acoustic_element is None:
             return list()
-        _dofs_per_node = self.solid_acoustic_element.DOF_PER_NODE
+        _dofs_per_node = self.solid_acoustic_element.DOFS_PER_NODE
         _nodes = nodes.reshape(-1, 1)
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         return np.array(global_dofs.flatten(), dtype=int)
 
-    def get_structural_global_dofs_from_nodes(self, nodes):
-        if self.solid_structural_element is None:
-            return list()
-        _dofs_per_node = self.solid_structural_element.DOF_PER_NODE
-        _nodes = nodes.reshape(-1, 1)
-        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
-        return np.array(global_dofs.flatten(), dtype=int)
+    def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
 
-    def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):
+        output_data = dict()
+        if data["element_type"] == "2d_element":
+            if self.surface_structural_element is None:
+                return output_data
+            dofs_per_node = self.surface_structural_element.DOFS_PER_NODE
 
-        rho = None
-        volume_ids = self.mesh.volume_from_surface[surface_id]
+        else:
+            if self.solid_structural_element is None:
+                return output_data
+            dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
 
-        if len(volume_ids) == 1:
+        local_dofs = np.arange(dofs_per_node, dtype=int)
+        global_dofs = dofs_per_node * nodes.reshape(-1, 1) + local_dofs
+
+        den = 1
+        if "nodal_attribution" in data.keys():
+
+            nodal_attribution = data["nodal_attribution"]
+            averaged = data["averaged"]
+            if nodal_attribution and averaged:
+                den = len(nodes)
+
+            elif not nodal_attribution:
+                #TODO: process element integration
+                den = 1
+
+                if selection == "surfaces":
+                    pass
+                elif selection == "lines":
+                    pass
+                else:
+                    pass
+
+        for node_gdofs in global_dofs:
+            for j, gdof in enumerate(node_gdofs):
+
+                values = data["values"][j]
+                if values is None:
+                    continue
+
+                output_data[gdof] = values / den
+
+        return output_data
+
+    def get_fluid_properties_from_surface(self, surface_id: int, frequencies: np.ndarray):
+        """
+        """
+
+        fluid = None
+        density = None
+        speed_of_sound = None
+
+        volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
+
+        if len(volumes_from_surface) == 1:
 
             for key in self.properties.volume_properties.keys():
                 property, volume_id = key
-                if volume_id == volume_ids[0]:
+                if volume_id == volumes_from_surface[0]:
                     if property == "viscous_thermal_model":
                         vt_model = ViscousThermalLossModels(self)
                         vt_model.process_effective_properties(frequencies)
-                        return vt_model.effective_properties[volume_id]["rho_eff"]
+                        density = vt_model.effective_properties[volume_id]["rho_eff"]
+                        speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
+                        return density, speed_of_sound
 
                     elif property == "porous_material_model":
                         pm_model = PorousMaterialModels(self)
                         pm_model.process_effective_properties(frequencies)
-                        return pm_model.effective_properties[volume_id]["rho_eff"]
+                        density = pm_model.effective_properties[volume_id]["rho_eff"]
+                        speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
+                        return density, speed_of_sound
 
-            fluid = self.properties.get_fluid(surface=surface_id)
-            rho = fluid.fluid_density
+            fluid = self.properties._get_property("fluid", surface=surface_id)
         
-        elif len(volume_ids) > 1:
+        elif len(volumes_from_surface) > 1:
 
             fluids = list()
-            for volume_id in volume_ids:
-                fluid = self.properties.get_fluid(volume=volume_id)
-                if isinstance(fluid, Fluid):
-                    if fluid not in fluids:
-                        fluids.append(fluid)
+            for volume_id in volumes_from_surface:
+                fluid = self.properties._get_property("fluid", volume=volume_id)
+                if not isinstance(fluid, Fluid):
+                    continue
+                if fluid not in fluids:
+                    fluids.append(fluid)
 
             if len(fluids) == 1:
                 fluid = fluids[0]
-                rho = fluid.fluid_density
 
-        return rho
+        if isinstance(fluid, Fluid):
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+
+        return density, speed_of_sound
 
     def process_porous_material_properties(self, frequencies: np.ndarray):
+        """
+        This method processes the porous material model effective properties.
 
-        model = PorousMaterialModels(self)
-        model.process_effective_properties(frequencies)
+        Parameters
+        ----------
+        frequencies: np.ndarray
+            The frequencies vector.
+        """
+        pm_model = PorousMaterialModels(self)
+        pm_model.process_effective_properties(frequencies)
+        self.porous_material_properties = deepcopy(pm_model.effective_properties)
 
-        self.porous_material_properties = dict()
-        for volume_id, data in model.effective_properties.items():
-            for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.porous_material_properties[element_id] = data
-            # print(len(self.mesh.elements_from_volume[volume_id]))
+    def get_porous_material_model_effective_properties(self, surface_id: int):
+        """
+        This method returns the porous material model-related 
+        effective properties of selected surface.
 
-    def is_porous_material_model_active(self, surface_id):
+        Parameter
+        ---------
+        surface_id: int
+            The surface tag.
 
-        for key, data in self.properties.volume_properties.items():
+        Returns
+        -------
+        rho_eff: np.ndarray or None
+            The effective fluid density.
+
+        C_eff: np.ndarray or None
+            The effective speed of sound.
+        """
+
+        rho_eff = None
+        C_eff = None
+
+        for key in self.properties.volume_properties.keys():
             prop, volume_id = key
-            if prop == "porous_material_model":
+            if prop != "porous_material_model":
+                continue
 
-                if volume_id in self.mesh.surfaces_from_volumes.keys():
-                    surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
+            if not volume_id in self.mesh.surfaces_from_volume.keys():
+                continue
 
-                    if surface_id in surfaces_from_volume:
-                        elements = self.mesh.elements_from_volume[volume_id]
-                        rho_eff = self.porous_material_properties[elements[0]]["rho_eff"]
-                        C_eff = self.porous_material_properties[elements[0]]["C_eff"]
-                        return True, rho_eff, C_eff
-
-        return False, None, None
+            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                pm_properties = self.porous_material_properties.get(volume_id)
+                rho_eff = pm_properties["rho_eff"]
+                C_eff = pm_properties["C_eff"]
+                break
+        
+        return rho_eff, C_eff
 
     def process_viscous_thermal_model_properties(self, frequencies: np.ndarray):
+        """
+        This method processes the viscous thermal model effective properties.
 
-        model = ViscousThermalLossModels(self)
-        model.process_effective_properties(frequencies)
+        Parameters
+        ----------
+        frequencies: np.ndarray
+            The frequencies vector.
+        """
+        vt_model = ViscousThermalLossModels(self)
+        vt_model.process_effective_properties(frequencies)
+        self.viscous_thermal_model_properties = deepcopy(vt_model.effective_properties)
 
-        self.viscous_thermal_model_properties = dict()
-        for volume_id, data in model.effective_properties.items():
-            for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.viscous_thermal_model_properties[element_id] = data
-            # print(len(self.mesh.elements_from_volume[volume_id]))
+    def get_viscous_thermal_model_effective_properties(self, surface_id: int):
+        """
+        This method returns the viscous thermal model-related 
+        effective properties of selected surface.
 
-    def is_viscous_thermal_model_active(self, surface_id):
+        Parameter
+        ---------
+        surface_id: int
+            The surface tag.
 
-        for key, data in self.properties.volume_properties.items():
+        Returns
+        -------
+        rho_eff: np.ndarray or None
+            The effective fluid density.
+
+        C_eff: np.ndarray or None
+            The effective speed of sound.
+        """
+
+        rho_eff = None
+        C_eff = None
+
+        for key in self.properties.volume_properties.keys():
             prop, volume_id = key
-            if prop == "viscous_thermal_model":
+            if prop != "viscous_thermal_model":
+                continue
 
-                if volume_id in self.mesh.surfaces_from_volumes.keys():
-                    surfaces_from_volume = self.mesh.surfaces_from_volumes[volume_id]
+            if not volume_id in self.mesh.surfaces_from_volume.keys():
+                continue
 
-                    if surface_id in surfaces_from_volume:
-                        elements = self.mesh.elements_from_volume[volume_id]
-                        rho_eff = self.viscous_thermal_model_properties[elements[0]]["rho_eff"]
-                        C_eff = self.viscous_thermal_model_properties[elements[0]]["C_eff"]
-                        return True, rho_eff, C_eff
-
-        return False, None, None
-
-    # Properties can be accessed from outside, so this "indirection layer" is not needed
-    def set_dissipation_model_data(self, data, volume=None):
-        self.properties.set_dissipation_model(data, volume=volume)
-
-    def set_porous_material_model_data(self, data, surface=None, volume=None):
-        self.properties.set_porous_material_model_data(data, surface=surface, volume=volume)
+            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                vt_properties = self.viscous_thermal_model_properties.get(volume_id)
+                rho_eff = vt_properties["rho_eff"]
+                C_eff = vt_properties["C_eff"]
+                break
+    
+        return rho_eff, C_eff
 
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)
 
-    def set_structural_boundary_condition(self, data, line, surface):
-        self.properties.set_structural_boundary_condition(data, line, surface)
+    def process_perforated_plate_impedance(self, frequencies: np.ndarray, solution: np.ndarray | None = None):
 
-    def set_structural_load(self, data, line, surface):
-        self.properties.set_structural_load(data, line, surface)
+        pp_model = PerforatedPlateModels(self)
+        pp_model.process_acoustic_transfer_impedances(frequencies)
+
+        self.perforated_plate_impedance_data.clear()
+        self.perforated_plate_impedance_data = pp_model.perforated_plate_impedance_data
+
+    def process_surface_thickness(self):
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "surface_thickness":
+                self.mesh.set_face_element_thickness(surface_id, data)
+
+    def process_degrees_of_freedom_decoupling(self):
+        self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
+        self.dofs_decoupling.process_degrees_of_freedom_decoupling()

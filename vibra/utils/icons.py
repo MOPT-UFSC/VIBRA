@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 
 
 def load_icon(path: Path | str, color: QColor):

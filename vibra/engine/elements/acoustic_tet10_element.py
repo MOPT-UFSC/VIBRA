@@ -120,8 +120,8 @@ def get_detJAC_and_invJAC(JAC):
 
 class ACT_TETRAHEDRON_10C(Element3D):
     NODES_PER_ELEMENT = 10
-    DOF_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_NODE = 1
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
     def __init__(self, model):
         #
@@ -247,27 +247,20 @@ class ACT_TETRAHEDRON_10C(Element3D):
         """T10S stiffness and mass matrices.
         Solid187 not mixed (pure displacement)
         """
-        #
-        # fluid = self.model.properties.get_fluid(element=el_index)
-        # rho = fluid.fluid_density
-        # c_0 = fluid.speed_of_sound
 
-        # c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
-        #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
-        #
+
         B = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        #
         B[:, 0, :] = dphi_t[:, 0, :]
         B[:, 1, :] = dphi_t[:, 1, :]
         B[:, 2, :] = dphi_t[:, 2, :]
-        #
+
+        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
         N[:, 0, :] = self.phi
-        #
+
         # integration loop
         Ke, Me = 0, 0
         for i in range(self.nint):
@@ -290,7 +283,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         else:
             self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]]
 
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()

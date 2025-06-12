@@ -1,23 +1,19 @@
-from PyQt5.QtWidgets import QDialog, QLabel, QPushButton
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QRect
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR, __version__
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
-from vibra.interface.formatters.icons import * 
+from vibra import app, __version__
+from vibra.interface.ui_generated.messages.get_user_confirmation_ui import GetUserConfirmation_UI
+from vibra.interface.formatters.icons import *
 
 
-class GetUserConfirmationInput(QDialog):
-    def __init__(self, title, message, buttons_config={}, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "messages/get_user_confirmation.ui"
-        uic.loadUi(ui_path, self)
+class GetUserConfirmationInput(GetUserConfirmation_UI):
+    def __init__(self, title, message, *args, **kwargs):
+        super().__init__(*args)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.viewer_tabs.show_geometry()
+        self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model
@@ -25,42 +21,27 @@ class GetUserConfirmationInput(QDialog):
 
         self.title = title
         self.message = message
-        self.buttons_config = buttons_config
+        self.buttons_config = kwargs.get("buttons_config", dict())
         self.window_title = kwargs.get('window_title', f'Vibra v{__version__}')
 
-        self._load_icons()
         self._config_window()
         self._reset_variables()
-        self._define_qt_variables()
         self._create_connections()
-
-        ConfigWidgetAppearance(self)
 
         self._configure_labels()
         self._configure_buttons()
         self.exec()
 
-    def _load_icons(self):
-        self.icon = app().main_window.vibra_icon
-
     def _config_window(self):
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.icon)
         self.setWindowTitle(self.window_title)
 
     def _reset_variables(self):
         self._stop = True
         self._continue = False
         self._cancel = True
-
-    def _define_qt_variables(self):
-        # QLabel
-        self.label_message : QLabel
-        self.label_title : QLabel
-        # QPushButton
-        self.pushButton_rightButton : QPushButton
-        self.pushButton_leftButton : QPushButton
 
     def _create_connections(self):
         self.pushButton_rightButton.clicked.connect(self.confirm_action)

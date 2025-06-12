@@ -1,28 +1,21 @@
 from pathlib import Path
 
-from PyQt5 import uic
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.analysis.coupled.coupled_harmonic_analysis_input_ui import CoupledHarmonicAnalysisInput_UI
 
-class CoupledHarmonicAnalysisInput(QDialog):
+
+class CoupledHarmonicAnalysisInput(CoupledHarmonicAnalysisInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "analysis/coupled/coupled_harmonic_analysis_input.ui"
-        uic.loadUi(ui_path, self)
-
         self.setWindowIcon(app().main_window.vibra_icon)
 
-        self.index = 0
-
-        self.comboBox = self.findChild(QComboBox, "comboBox")
         self.comboBox.currentIndexChanged.connect(self.selectionChange)
         self.index = self.comboBox.currentIndex()
-
-        self.pushButton_2 = self.findChild(QPushButton, "pushButton_2")
         self.pushButton_2.clicked.connect(self.button_clicked)
 
         self.exec_()

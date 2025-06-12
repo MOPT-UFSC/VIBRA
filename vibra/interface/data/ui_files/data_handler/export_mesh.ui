@@ -259,6 +259,10 @@
            <property name="text">
             <string> Export mesh</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>:/icons/import.png</normaloff>:/icons/import.png</iconset>
+           </property>
            <property name="autoDefault">
             <bool>false</bool>
            </property>
@@ -285,6 +289,10 @@
            </property>
            <property name="text">
             <string>Exit</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>:/icons/exit.png</normaloff>:/icons/exit.png</iconset>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
@@ -367,7 +375,7 @@
            </property>
            <property name="icon">
             <iconset>
-             <normaloff>../../icons/import.png</normaloff>../../icons/import.png</iconset>
+             <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -466,6 +474,6 @@
   <tabstop>checkBox_export_vtu_file</tabstop>
   <tabstop>pushButton_export_mesh</tabstop>
  </tabstops>
- <resources/>
+ <resources><include location="../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

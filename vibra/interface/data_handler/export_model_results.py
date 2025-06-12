@@ -1,7 +1,6 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PyQt5.QtGui import * 
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
+from PySide6.QtGui import * 
+from PySide6.QtCore import Qt
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -25,7 +24,7 @@ class ExportModelResults(QFileDialog):
     def _initialize(self):
         self.data = dict()
 
-    def _set_data_to_export(self, data : dict, **kwargs):
+    def _set_data_to_export(self, data: dict, **kwargs):
         self.data = data
         if data:
             self.call_file_dialog_and_export_data(**kwargs)
@@ -79,10 +78,18 @@ class ExportModelResults(QFileDialog):
                 existing_df: DataFrame
                 existing_df.to_excel(writer, sheet_name=key, index=False)
 
+            count = 0
             for key, data in self.data.items():
 
-                selection_type, selection_id = key
-                sheet_name = f"{selection_type}_{selection_id}"
+                if len(key) == 2:
+                    if key[1] is None:
+                        sheet_name = f"{key[0]}"
+                    else:
+                        selection_type, selection_id = key
+                        sheet_name = f"{selection_type}_{selection_id}"
+                else:
+                    count += 1
+                    sheet_name = f"sheet_{count}"
 
                 x_data = data["x_data"]
                 y_data = data["y_data"]
@@ -107,7 +114,7 @@ class ExportModelResults(QFileDialog):
 
             caption = "Export the model results"
 
-            path = app().config.get_last_folder_for("exported data folder")
+            path = app().config.get_last_folder_for("exported_data_folder")
             if path is None:
                 directory_path = os.path.expanduser("~")
             else:
@@ -129,7 +136,7 @@ class ExportModelResults(QFileDialog):
         else:
             file_path = existing_path
 
-        app().config.write_last_folder_path_in_file("exported data folder", file_path)
+        app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
         sufix = Path(file_path).suffix      
         if sufix == ".xlsx":

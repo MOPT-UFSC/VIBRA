@@ -178,60 +178,96 @@
          <property name="text">
           <string>Name</string>
          </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
         </row>
         <row>
          <property name="text">
           <string>ID</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
         <row>
          <property name="text">
           <string>Temperature [K]</string>
          </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
         </row>
         <row>
          <property name="text">
           <string>Pressure [Pa]</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
         <row>
          <property name="text">
           <string>Density [kg/m³]</string>
          </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
         </row>
         <row>
          <property name="text">
           <string>Speed of sound [m/s]</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
         <row>
          <property name="text">
           <string>Isentropic exponent</string>
          </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>Thermal conductivity [W/mK]</string>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
         <row>
          <property name="text">
-          <string>Specific heat Cp [J/kgK]</string>
+          <string>Thermal conductivity [W/m.K]</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
         <row>
          <property name="text">
-          <string>Dynamic viscosity [Ns/m²]</string>
+          <string>Specific heat Cp [J/kg.K]</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
+        </row>
+        <row>
+         <property name="text">
+          <string>Dynamic viscosity [N.s/m²]</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
         <row>
          <property name="text">
           <string>Molar mass [kg/kmol]</string>
          </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
+         </property>
         </row>
         <row>
          <property name="text">
           <string>Color</string>
+         </property>
+         <property name="textAlignment">
+          <set>AlignCenter</set>
          </property>
         </row>
        </widget>
@@ -453,6 +489,6 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources><include location="../../../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

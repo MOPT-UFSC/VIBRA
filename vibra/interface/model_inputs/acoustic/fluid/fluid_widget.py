@@ -1,15 +1,15 @@
-from PyQt5.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget
-from PyQt5.QtGui import QIcon, QColor, QBrush, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
+from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, QSize
 
-from vibra import app, UI_DIR, TEMP_PROJECT_FILE
+from vibra import app, TEMP_PROJECT_FILE
+from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.interface.formatters.icons import *
 
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_input import SetFluidCompositionInput
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
@@ -30,25 +30,23 @@ def get_color_rgb(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
-class FluidWidget(QWidget):
+class FluidWidget(FluidWidget_UI):
     def __init__(self, *argas, **kwargs):
         super().__init__()
-        
-        ui_path = UI_DIR  / "model/setup/fluid/fluid_widget.ui"
-        uic.loadUi(ui_path, self)
 
-        self.parent_widget = kwargs.get("parent_widget", None)
+        self.dialog = kwargs.get("dialog", None)
         self.state_properties = kwargs.get("state_properties", dict())
 
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model
         self.properties = self.model.properties
 
         self._initialize()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
+        self._config_widgets()
         self.load_data_from_fluids_library()
 
     def _initialize(self):
@@ -77,18 +75,7 @@ class FluidWidget(QWidget):
                                 "color"
                                 ]
 
-    def _define_qt_variables(self):
-
-        # QPushButton
-        self.pushButton_add_column: QPushButton
-        self.pushButton_attribute: QPushButton
-        self.pushButton_exit: QPushButton
-        self.pushButton_refprop: QPushButton
-        self.pushButton_remove_column: QPushButton
-        self.pushButton_reset_library: QPushButton
-
-        # QTableWidget
-        self.tableWidget_fluid_data: QTableWidget
+    def _configure_qt_variables(self):
         self.tableWidget_fluid_data.setStyleSheet("")
 
     def _create_connections(self):
@@ -107,6 +94,15 @@ class FluidWidget(QWidget):
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+
+    def _config_widgets(self):
+        self.tableWidget_fluid_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+    
+    def _update_size_policy(self):
+        if len(self.list_of_fluids) > 6:
+            self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        else:
+            self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def _add_icon_and_title(self):
         self._config_window()
@@ -136,7 +132,7 @@ class FluidWidget(QWidget):
 
     def load_data_from_fluids_library(self):
 
-        if not os.path.exists(TEMP_PROJECT_FILE):
+        if not TEMP_PROJECT_FILE.exists():
             self.reset_library_to_default()
             return
 
@@ -270,6 +266,7 @@ class FluidWidget(QWidget):
                 self.tableWidget_fluid_data.item(i, j).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_fluid_data.blockSignals(False)
+        self._update_size_policy()
 
     def get_selected_column(self) -> int:
         selected_items = self.tableWidget_fluid_data.selectedIndexes()
@@ -308,6 +305,7 @@ class FluidWidget(QWidget):
 
         for i in range(self.tableWidget_fluid_data.rowCount()):
             item = QTableWidgetItem()
+            item.setSizeHint(QSize(80, 30))
             self.tableWidget_fluid_data.setItem(i, last_col, item)
             self.tableWidget_fluid_data.item(i, last_col).setTextAlignment(Qt.AlignCenter)
 
@@ -329,6 +327,9 @@ class FluidWidget(QWidget):
             # fluid, just remove the last line
             current_size = self.tableWidget_fluid_data.columnCount()
             self.tableWidget_fluid_data.setColumnCount(current_size - 1)
+
+            self._update_size_policy()
+            self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
             return
 
         item = self.tableWidget_fluid_data.item(1, selected_column)
@@ -336,6 +337,9 @@ class FluidWidget(QWidget):
         fluid = self.list_of_fluids[identifier]
 
         self.remove_fluid_from_file(fluid)
+
+        self._update_size_policy()
+        self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
 
     def item_changed_callback(self, item):
 
@@ -365,6 +369,7 @@ class FluidWidget(QWidget):
         self.load_data_from_fluids_library()
 
         self.tableWidget_fluid_data.blockSignals(False)
+        self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
     
     def go_to_next_cell(self, item):
 
@@ -516,7 +521,7 @@ class FluidWidget(QWidget):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-    def remove_fluid_from_file(self, fluid : Fluid):
+    def remove_fluid_from_file(self, fluid: Fluid):
 
         config = app().file.read_fluid_library_from_file()
 
@@ -539,11 +544,11 @@ class FluidWidget(QWidget):
         fluid_name = self.tableWidget_fluid_data.item(0, col).text()
 
         if fluid_name in self.fluid_name_to_refprop_data.keys():
-            if isinstance(self.parent_widget, QDialog):
-                self.parent_widget.hide()
+            if isinstance(self.dialog, QDialog):
+                self.dialog.hide()
 
             selected_fluid = self.fluid_name_to_refprop_data[fluid_name]
-            self.refprop = SetFluidCompositionInput(selected_fluid_to_edit = selected_fluid, 
+            self.refprop = SetFluidCompositionInputs(selected_fluid_to_edit = selected_fluid, 
                                                     state_properties = self.state_properties)
 
             if not self.refprop.complete:
@@ -633,7 +638,7 @@ class FluidWidget(QWidget):
                 if isinstance(data, Fluid):
                     if data.identifier in fluid_identifiers:
                         volumes_to_remove_fluid.append(volume_id)
-                        surface_ids = self.model.mesh.surfaces_from_volumes[volume_id]
+                        surface_ids = self.model.mesh.surfaces_from_volume[volume_id]
                         for surface_id in surface_ids:
                             surfaces_to_remove_fluid.append(surface_id)
 
@@ -645,12 +650,15 @@ class FluidWidget(QWidget):
 
         app().file.write_model_properties_in_file()
 
+        if isinstance(self.dialog, QDialog):
+            self.dialog.load_model_info()
+
     def call_refprop_interface(self):
 
-        if isinstance(self.parent_widget, QDialog):
-            self.parent_widget.hide()
+        if isinstance(self.dialog, QDialog):
+            self.dialog.hide()
 
-        self.refprop = SetFluidCompositionInput(state_properties = self.state_properties)
+        self.refprop = SetFluidCompositionInputs(state_properties = self.state_properties)
         if not self.refprop.complete:
             self.refprop = None
             app().main_window.set_input_widget(self)
@@ -687,7 +695,7 @@ class FluidWidget(QWidget):
                     data = self.fluid_data_refprop[key]
                     if isinstance(data, float):
 
-                        if key in ["pressure", "thermal conductivity", "dynamic viscosity"]:
+                        if key in ["pressure", "thermal_conductivity", "dynamic_viscosity"]:
                             _data = f"{data : .6e}"
                         else:
                             _data = f"{data : .6f}"
@@ -708,21 +716,21 @@ class FluidWidget(QWidget):
 
         if self.state_properties:
 
-            if isinstance(self.parent_widget, QDialog):
+            if isinstance(self.dialog, QDialog):
                 return
 
                 volume_id = self.state_properties['volume_id']
-                self.parent_widget.comboBox_attribution_type.setCurrentIndex(1)
-                self.parent_widget.write_ids(volume_id)
-                self.parent_widget.lineEdit_selection_id.setDisabled(True)
+                self.dialog.comboBox_attribution_type.setCurrentIndex(1)
+                self.dialog.write_ids(volume_id)
+                self.dialog.lineEdit_selection_id.setDisabled(True)
                 if self.fluid_data_refprop:
                     fluid_name = self.fluid_data_refprop["name"]
-                    self.parent_widget.lineEdit_fluid_name.setText(fluid_name)
+                    self.dialog.lineEdit_fluid_name.setText(fluid_name)
 
                 connection_type_comp = self.state_properties['connection type']
                 connection_label = "discharge" if connection_type_comp else "suction"
                 
-                self.parent_widget.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {connection_label}")
+                self.dialog.setWindowTitle(f"Set a fluid thermodynamic state at the compressor {connection_label}")
 
     def update_compressor_fluid_temperature_and_pressure(self):
         return
@@ -746,9 +754,16 @@ class FluidWidget(QWidget):
                     self.state_properties["molar_mass"] = self.fluid_data_refprop["molar_mass"]
 
     def keyPressEvent(self, event):
+
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            return
+            if isinstance(self.dialog, QDialog):
+                self.dialog.attribute_callback()
+
         elif event.key() == Qt.Key_Delete:
             self.remove_selected_column()
+
         elif event.key() == Qt.Key_Escape:
-            self.close()
+            if isinstance(self.dialog, QDialog):
+                self.dialog.close()
+            else:
+                self.close()

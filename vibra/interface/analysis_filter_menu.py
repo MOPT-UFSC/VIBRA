@@ -1,6 +1,6 @@
-from PyQt5.QtCore import Qt, QSize
-# from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFrame, QLabel, QComboBox
+from PySide6.QtCore import Qt, QSize
+# from PySide6.QtGui import *
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QLabel, QComboBox
 
 from vibra import app
 

@@ -1,26 +1,40 @@
 import numpy as np
 
-f_min = 0
-f_max = 200
-df = 2
+def generate_table_of_constant_values(filename: str, value: float | complex, f_step: float=5, f_min: float=5, f_max: float=600):
+    """ 
+    This function create an array of constant complex values and save it in a text file.
 
-frequencies = np.arange(f_min, f_max+df, df)
-a = float(1e7)
-real = a*np.ones(len(frequencies))
-imag = np.zeros(len(frequencies))
+    Parameters
+    ----------
 
-data = np.array([frequencies, real]).T 
+    filename : str
+        The complete filename including the file extension
 
-header = "Frequency [Hz], real, imaginary"
+    value : float or complex
+        The constant value of table 
 
-filename = 'load_Kxyz.dat'
-np.savetxt(filename, data, delimiter=",", header=header)
-teste = np.loadtxt(filename,delimiter=",")
+    f_step : float, optional
+        The frequency step of frequency vector data
+    
+    f_min: float, optional
+        The minimum frequency of frequency vector data
+    
+    f_max: float, optional
+        The maximum frequency of frequency vector data
 
-f = open(filename)
-header_r = f.readline()
-# last_col_name = header.split(',')[-1]
-# np.savetxt('load_Fx.dat', data, delimiter=",", header=header)
-# np.savetxt('acoustic_pressure_table.dat', data, delimiter=",", header=header)
-# np.savetxt('volume_velocity_table.dat', data, delimiter=",", header=header)
-# np.savetxt('specific_impedance_table.dat', data, delimiter=",", header=header)
+    """
+
+    freq = np.arange(f_min, f_max+f_step, f_step, dtype=int)
+    values = np.ones_like(freq, dtype=complex) * value
+
+    data = np.array([freq, np.real(values), np.imag(values)]).T
+    # data = np.round(data, 8)
+
+    path = f"data/examples/tables/{filename}"
+    np.savetxt(path, data, delimiter=",")
+
+if __name__ == "__main__":
+    filename = "incident_plane_wave.dat"
+    value = 1
+    f_step, f_min, f_max = 5, 10, 1400
+    generate_table_of_constant_values(filename, value, f_step=f_step, f_min=f_min, f_max=f_max)

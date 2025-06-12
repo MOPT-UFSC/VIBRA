@@ -1,25 +1,20 @@
-from PyQt5.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5 import uic
+from PySide6.QtWidgets import QFileDialog, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 
-from vibra import app, UI_DIR
-from vibra.interface.mesh.mesher_inputs import MesherInputs
+from vibra import app
+from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 import os
-import numpy as np
 from pathlib import Path
 
 
-class ExportMeshData(QDialog):
+class ExportMeshData(ExportMesh_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "data_handler/export_mesh.ui"
-        uic.loadUi(ui_path, self)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -32,51 +27,33 @@ class ExportMeshData(QDialog):
         if self.mesh is None:
             return
         else:
-            self.main_window.viewer_tabs.show_mesh()
+            self.main_window.action_mesh_workspace_callback()
 
-        self._load_icons()
+        self._configure_window()
         self._reset_variables()
-        self._define_qt_variables()
         self._create_connections()
+        self.update_icons_color()
         self.exec()
 
-    def _load_icons(self):
+    def _configure_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Export mesh data")
 
-    def _reset_variables(self):
-        self.folder_path = ""
-        self.temp_path = os.path.expanduser('~')
-
-    def _define_qt_variables(self):
-        # QCheckBox
-        self.checkBox_nodal_coordinates = self.findChild(QCheckBox, 'checkBox_nodal_coordinates')
-        self.checkBox_solid_elements_connectivity = self.findChild(QCheckBox, 'checkBox_solid_elements_connectivity')
-        self.checkBox_face_elements_connectivity = self.findChild(QCheckBox, 'checkBox_face_elements_connectivity')
-        self.checkBox_export_vtu_file = self.findChild(QCheckBox, 'checkBox_export_vtu_file')
         self.checkBox_nodal_coordinates.setChecked(True)
         self.checkBox_face_elements_connectivity.setChecked(True)
         self.checkBox_solid_elements_connectivity.setChecked(True)
         self.checkBox_export_vtu_file.setChecked(True)
-        # QLineEdit
-        self.lineEdit_folder_path = self.findChild(QLineEdit, 'lineEdit_folder_path')
-        # QPushButton
-        self.pushButton_export_mesh = self.findChild(QPushButton, 'pushButton_export_mesh')
-        self.pushButton_search_folder = self.findChild(QPushButton, 'pushButton_search_folder')
-        self.pushButton_export_mesh.setIcon(self.export_icon)
-        self.pushButton_search_folder.setIcon(self.search_icon)
+
+    def _reset_variables(self):
+        self.folder_path = ""
+        self.temp_path = os.path.expanduser('~')
     
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.export_mesh_data()
-        if event.key() == Qt.Key_Escape:
-            self.close()
+        self.main_window.theme_changed.connect(self.update_icons_color)
 
     def search_folder(self):
         self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', self.temp_path)
@@ -123,7 +100,7 @@ class ExportMeshData(QDialog):
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
-            self.mesher = MesherInputs(close_after_generate=True)
+            self.mesher = MeshSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
                 return True
@@ -143,3 +120,19 @@ class ExportMeshData(QDialog):
             window_title = "Warning"
             PrintMessageInput([window_title, title, message], auto_close=False)
             return False
+    
+    def update_icons_color(self):
+        theme = app().config.user_preferences.interface_theme
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        elif theme == "light":
+            icon_color = QColor("#1a73e8")
+
+        widgets = self.findChildren(QPushButton)
+        change_icon_color_for_widgets(widgets, icon_color)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.export_mesh_data()
+        if event.key() == Qt.Key_Escape:
+            self.close()

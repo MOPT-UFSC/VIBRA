@@ -1,24 +1,24 @@
-from vibra import app
-from vibra.interface.loading_bar import load_function
+# fmt: off
+
+from vibra.engine.properties.fluid import Fluid
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
 import numpy as np
 from scipy.special import jv
-# import matplotlib.pyplot as plt
 
-# fmt: off
 
 class ViscousThermalLossModels:
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         super().__init__()
 
         self.model = model
         self.properties = model.properties
 
         self.effective_properties = dict()
-
-    def set_external_model(self, model):
-        self.external_model = model
 
     def process_effective_properties(self, frequencies: np.ndarray):
 
@@ -30,12 +30,15 @@ class ViscousThermalLossModels:
 
         omega = 2 * np.pi * freq
 
+        if not self.properties.is_the_volume_property_present_in_the_model("viscous_thermal_model"):
+            return
+
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
             if property == "viscous_thermal_model":
 
-                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volumes[volume_id]
-                fluid = self.properties.get_fluid(volume = volume_id)
+                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volume[volume_id]
+                fluid = self.properties._get_property("fluid", volume = volume_id)
 
                 if data["section_type"] in ["Rectangular duct", "Quadrangular duct"]:
                     rho_eff, C_eff = self.get_rectangular_section_effective_properties(omega, fluid, data)
@@ -57,12 +60,8 @@ class ViscousThermalLossModels:
                                                        "rho_eff" : rho_eff,
                                                        "C_eff" : C_eff   
                                                        }
-                
-                # data = np.array([np.arange(len(C_eff)), C_eff])
-                # np.savetxt("complex_sound.dat", data.T, delimiter=";")
 
-
-    def get_rectangular_section_effective_properties(self, omega, fluid, data):
+    def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density

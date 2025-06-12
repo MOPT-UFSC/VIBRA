@@ -18,7 +18,7 @@ class ElementType:
 
 TETRAHEDRON_4 = ElementType(
     algorithm_2d=gmsh_constants.DELAUNAY_2D,
-    algorithm_3d=gmsh_constants.DELAUNAY_3D,
+    algorithm_3d=gmsh_constants.HXT_3D,
     subdivision_algorithm=gmsh_constants.NO_SUBDIVISION,
     recombination_algorithm=gmsh_constants.SIMPLE_RECOMBINATION,
     recombine_all=False,
@@ -29,7 +29,7 @@ TETRAHEDRON_4 = ElementType(
 
 TETRAHEDRON_10 = ElementType(
     algorithm_2d=gmsh_constants.DELAUNAY_2D,
-    algorithm_3d=gmsh_constants.DELAUNAY_3D,
+    algorithm_3d=gmsh_constants.HXT_3D,
     subdivision_algorithm=gmsh_constants.NO_SUBDIVISION,
     recombination_algorithm=gmsh_constants.SIMPLE_RECOMBINATION,
     recombine_all=False,

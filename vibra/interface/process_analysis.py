@@ -14,7 +14,7 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.viewer_tabs.show_acoustic_modal_analysis()
+            self.main_window.configure_results_render_widget()
 
     def process_structural_modal_analysis(self):
         try:
@@ -22,7 +22,7 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.viewer_tabs.show_structural_modal_analysis()
+            self.main_window.configure_results_render_widget()
 
     def process_acoustic_harmonic_analysis(self):
         try:
@@ -30,4 +30,12 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.viewer_tabs.show_acoustic_harmonic_analysis()
+            self.main_window.configure_results_render_widget()
+
+    def process_structural_harmonic_analysis(self):
+        try:
+            self.project.solve_structural_harmonic_analysis()
+        except NotImplementedError as e:
+            ErrorMessage(e)
+        else:
+            self.main_window.configure_results_render_widget()

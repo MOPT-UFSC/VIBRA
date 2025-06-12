@@ -1,33 +1,32 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import *
+from PySide6.QtGui import *
+from PySide6.QtCore import Qt
 from pathlib import Path
 
 import os
 import numpy as np
 
-from vibra import app, UI_DIR
+from vibra import app
+from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class ImportDataToCompare(QDialog):
-    def __init__(self, plotter, *args, **kwargs):
+class ImportDataToCompare(ImportDataToCompare_UI):
+    def __init__(self, plotter: 'FrequencyResponsePlotter', *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "data_handler/import_data_to_compare.ui"
-        uic.loadUi(ui_path, self)
         
         self.plotter = plotter
 
-        self.main_window = app().main_window
+        app().main_window.set_input_widget(self)
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widgets()
         
@@ -36,6 +35,7 @@ class ImportDataToCompare(QDialog):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Import data to compare")
+        self.lineEdit_import_results_path.setDisabled(True)
 
     def _initialize(self):
 
@@ -53,28 +53,6 @@ class ImportDataToCompare(QDialog):
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
                         [0.25, 0.25, 0.25] ]
-
-    def _define_qt_variables(self):
-
-        # CheckBox
-        self.checkBox_skiprows : QCheckBox
-
-        # LineEdit
-        self.lineEdit_import_results_path : QLineEdit
-        self.lineEdit_import_results_path.setDisabled(True)
-
-        # PushButton
-        self.pushButton_add_imported_data_to_plot : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_reset_imported_data : QPushButton
-        self.pushButton_search_file_to_import : QPushButton
-
-        # SpinBox
-        self.spinBox_skiprows : QSpinBox
-
-        # TreeWidget
-        self.treeWidget_import_text_files : QTreeWidget
-        self.treeWidget_import_sheet_files : QTreeWidget
 
     def _create_connections(self):
         #
@@ -102,7 +80,7 @@ class ImportDataToCompare(QDialog):
 
     def choose_path_to_import_results(self):
 
-        path = app().config.get_last_folder_for("imported data folder")
+        path = app().config.get_last_folder_for("imported_data_folder")
         if path is None:
             folder_path = os.path.expanduser("~")
         else:
@@ -116,7 +94,7 @@ class ImportDataToCompare(QDialog):
         if not check:
             return
 
-        app().config.write_last_folder_path_in_file("imported data folder", imported_path)
+        app().config.write_last_folder_path_in_file("imported_data_folder", imported_path)
 
         self.import_name = os.path.basename(imported_path)
         self.lineEdit_import_results_path.setText(imported_path)
@@ -239,17 +217,21 @@ class ImportDataToCompare(QDialog):
         return key
     
     def join_imported_data(self):
+
         j = 0
         imported_results_data = dict()
         for id, checkBox in self.ids_to_checkBox.items():
-            temp_dict = dict()
+            
+            checkBox: QCheckBox
+            aux = dict()
+
             if checkBox.isChecked():
 
-                if id < len(self.colors):
+                if len(imported_results_data) <= len(self.colors):
                     color = self.colors[j]
                     j += 1
                 else:
-                    color = np.random.randint(0,255,3)/255
+                    color = np.random.randint(0,255,3) / 255
 
                 data = self.imported_results[id]["data"]
                 cols = data.shape[1]
@@ -265,19 +247,23 @@ class ImportDataToCompare(QDialog):
                 else:
                     legend_label = self.imported_results[id]["filename"]
 
-                temp_dict = {   "type" : "imported_data",
-                                "x_data" : x_values,
-                                "y_data" : y_values,
-                                "x_label" : "Frequency [Hz]",
-                                "y_label" : "Nodal response",
-                                "legend" : legend_label,
-                                "unit" : "",
-                                "title" : "",
-                                "color" : color,
-                                "linestyle" : "--"   }
+                y_label = self.plotter.y_label.replace(" [dB]", "").split(" - ")[0]
+
+                aux = { 
+                       "type" : "imported_data",
+                       "x_data" : x_values,
+                       "y_data" : y_values,
+                       "x_label" : "Frequency [Hz]",
+                       "y_label" : y_label,
+                       "legend" : legend_label,
+                       "unit" : "",
+                       "title" : "",
+                       "color" : color,
+                       "linestyle" : "--" 
+                       }
 
                 key = (id)
-                imported_results_data[key] = temp_dict
+                imported_results_data[key] = aux
 
         self.plotter._set_imported_results_data_to_plot(imported_results_data)
 

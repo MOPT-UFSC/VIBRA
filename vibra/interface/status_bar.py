@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import QLabel, QStatusBar
+from PySide6.QtWidgets import QLabel, QStatusBar
 
-from vibra.utils.interface_functions import get_main_window
 from vibra import app
 
 
@@ -16,11 +15,11 @@ class StatusBar(QStatusBar):
 
     def _create_qt_variables(self):
         self.selected_points_label = QLabel("Selected pooints:\t")
-        self.selected_curves_label = QLabel("Selected lines:\t")
+        self.selected_lines_label = QLabel("Selected lines:\t")
         self.selected_faces_label = QLabel("Selected surfaces:\t")
         self.selected_volumes_label = QLabel("Selected volumes:\t")
         self.points_label = QLabel("Points: \t")
-        self.curves_label = QLabel("Lines: \t")
+        self.lines_label = QLabel("Lines: \t")
         self.surfaces_label = QLabel("Faces: \t")
         self.volumes_label = QLabel("Volumes: \t")
         self.nodes_label = QLabel("Nodes: \t")
@@ -29,12 +28,12 @@ class StatusBar(QStatusBar):
     
     def _config_widgets(self):
         # adding label to status bar
-        self.addWidget(self.selected_curves_label)
+        self.addWidget(self.selected_lines_label)
         self.addWidget(self.selected_points_label)
         self.addWidget(self.selected_faces_label)
         self.addWidget(self.selected_volumes_label)
         self.addWidget(self.points_label)
-        self.addWidget(self.curves_label)
+        self.addWidget(self.lines_label)
         self.addWidget(self.surfaces_label)
         self.addWidget(self.volumes_label)
         self.addWidget(self.nodes_label)
@@ -44,16 +43,16 @@ class StatusBar(QStatusBar):
     
     def _config_sizes(self):
         self.selected_points_label.setFixedWidth(160)
-        self.selected_curves_label.setFixedWidth(160)
+        self.selected_lines_label.setFixedWidth(160)
         self.selected_faces_label.setFixedWidth(160)
         self.selected_volumes_label.setFixedWidth(160)
         self.points_label.setFixedWidth(100)
-        self.curves_label.setFixedWidth(100)
+        self.lines_label.setFixedWidth(100)
         self.surfaces_label.setFixedWidth(100)
         self.volumes_label.setFixedWidth(100)
-        self.nodes_label.setFixedWidth(100)
-        self.surface_elements_label.setFixedWidth(140)
-        self.solid_elements_label.setFixedWidth(140)
+        self.nodes_label.setFixedWidth(140)
+        self.surface_elements_label.setFixedWidth(180)
+        self.solid_elements_label.setFixedWidth(180)
 
     def set_selection(self, points, lines, faces, volumes):
         self.reset_selections_visibility()
@@ -61,7 +60,7 @@ class StatusBar(QStatusBar):
             self.selected_points_label.setVisible(True)
             self.show_points(points)
         if lines:
-            self.selected_curves_label.setVisible(True)
+            self.selected_lines_label.setVisible(True)
             self.show_lines(lines)
         if faces:
             self.selected_faces_label.setVisible(True)
@@ -84,11 +83,11 @@ class StatusBar(QStatusBar):
         str_lines = ", ".join([str(i) for i in n_lines])
         if len(n_lines) > 1:
             if len(n_lines) <= 3:
-                self.selected_curves_label.setText(f"Selected lines: {str_lines}")
+                self.selected_lines_label.setText(f"Selected lines: {str_lines}")
             else:
-                self.selected_curves_label.setText(f"Selected lines: [{len(n_lines)}]")
+                self.selected_lines_label.setText(f"Selected lines: [{len(n_lines)}]")
         else:
-            self.selected_curves_label.setText(f"Selected line: {str_lines}")
+            self.selected_lines_label.setText(f"Selected line: {str_lines}")
 
     def show_faces(self, n_faces):
         str_faces = ", ".join([str(i) for i in n_faces])
@@ -110,21 +109,24 @@ class StatusBar(QStatusBar):
         else:
             self.selected_volumes_label.setText(f"Selected volume: {str_volumes}")
 
-    def update_mesh_information(self, nodes, surface_elements, solid_elements):
+    def update_mesh_information(self):
+        nodes, surface_elements, solid_elements = app().project.model.mesh.get_mesh_info()
         self.nodes_label.setText(f"Nodes: {nodes}")
         self.surface_elements_label.setText(f"Surface elements: {surface_elements}")
         self.solid_elements_label.setText(f"Solid elements: {solid_elements}")
         self.reset_mesh_info_visibility(key=True)
 
-    def update_geometry_information(self, geometry_info: dict):
+    def update_geometry_information(self):
+
+        geometry_info = app().project.model.mesh.geometry_information
 
         points = geometry_info.get("points", "--")
         if isinstance(points, list):
             points = len(points)
 
-        curves = geometry_info.get("curves", "--")
-        if isinstance(curves, list):
-            curves = len(curves)
+        lines = geometry_info.get("lines", "--")
+        if isinstance(lines, list):
+            lines = len(lines)
 
         surfaces = geometry_info.get("surfaces", "--")
         if isinstance(surfaces, list):
@@ -135,7 +137,7 @@ class StatusBar(QStatusBar):
             volumes = len(volumes)
 
         self.points_label.setText(f"Points: {points}")
-        self.curves_label.setText(f"Curves: {curves}")
+        self.lines_label.setText(f"Curves: {lines}")
         self.surfaces_label.setText(f"Faces: {surfaces}")
         self.volumes_label.setText(f"Volumes: {volumes}")
         self.reset_geometry_info_visibility(key=True)
@@ -147,12 +149,12 @@ class StatusBar(QStatusBar):
 
     def reset_geometry_info_visibility(self, key=False):
         self.points_label.setVisible(key)
-        self.curves_label.setVisible(key)
+        self.lines_label.setVisible(key)
         self.surfaces_label.setVisible(key)
         self.volumes_label.setVisible(key)
 
     def reset_selections_visibility(self, key=False):
-        self.selected_curves_label.setVisible(key)
+        self.selected_lines_label.setVisible(key)
         self.selected_points_label.setVisible(key)
         self.selected_faces_label.setVisible(key)
         self.selected_volumes_label.setVisible(key)

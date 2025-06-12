@@ -1,44 +1,50 @@
-import logging
-from pathlib import Path
-from time import sleep, time
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-from vibra.utils.progress_status import ProgressStatus
+from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
+from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
-import numpy as np
+from vibra.interface.process_analysis import ProcessAnalysis
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.loading_window import LoadingWindow
+
+import logging
+from time import sleep, time
+
 
 class Project:
     def __init__(self):
         self.reset_variables()
 
     def reset_variables(self):
-        #
-        self.name = "Project"
-        self.thumbnail = None
-        #
-        self.save_path = None
 
+        self.name = "Project"
         self.fluid_list_path = ""
         self.material_list_path = ""
 
-        self.analysis_data = None
-        self.dissipation_model = None
-        #
+        self.thumbnail = None
+        self.save_path = None
+
+        self.analysis_setup = dict()
+        self.analysis_id = AnalysisID.NO_ANALYSIS
+
         self.model = Model()
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
-        #
+
         self.static_solver = None
         self.acoustic_modal_solver = None
         self.structural_modal_solver = None
         self.acoustic_harmonic_solver = None
         self.structural_harmonic_solver = None
+
+        self.dissipation_model = None
 
     def reset_solutions(self):
 
@@ -54,16 +60,29 @@ class Project:
         if self.acoustic_harmonic_solver is not None:
             self.acoustic_harmonic_solver.reset_variables()
 
-        if self.structural_modal_solver is not None:
-            self.structural_modal_solver.reset_variables()
-
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 
-        if self.analysis_data is None:
+        if len(self.analysis_setup) == 0:
             return
 
         self.create_solver()
+
+    def load_project_without_process_mesh(self, path: str, geometry_file: bool):
+        self.model.set_geometry_path(path)
+        self.model.initialize_mesh()
+        self.generated_mesh = True
+        self.model.mesh.geometry_imported = geometry_file
+
+    def import_geometry(self, path : str):
+        self.model.set_geometry_path(path)
+        logging.info("Importing geometry file...")
+        return self.model.process_visual_geometry_mesh(path)
+
+    def import_mesh(self, path : str):
+        self.model.set_geometry_path(path)
+        logging.info("Importing mesh file...")
+        return self.model.process_mesh_data(path)
 
     def get_fluid_list_path(self):
         return self.fluid_list_path
@@ -76,17 +95,6 @@ class Project:
 
     def set_material_list_path(self, path):
         self.material_list_path = path
-
-    def import_geometry(self, path : str):
-        self.model.set_geometry_path(path)
-        logging.info(f"Importing geometry file...")
-        return self.model.process_visual_geometry_mesh(path)
-
-    def set_fluid(self, fluid, **kwargs):
-        self.model.set_fluid(fluid, **kwargs)
-
-    def set_material(self, material, **kwargs):
-        self.model.set_material(material, **kwargs)
 
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
@@ -102,64 +110,96 @@ class Project:
             return
         self.model.process_mesh()
 
-    def set_structural_boundary_condition(self, data, line, surface):
-        self.model.set_structural_boundary_condition(data, line, surface)
+    def set_analysis_setup(self, data: dict):
+        self.analysis_setup = data
+        self.model.set_analysis_setup(data)
 
-    def set_dissipation_model(self, data, volume):
-        self.model.set_dissipation_model_data(data, volume=volume)
+    def is_analysis_setup_complete(self):
 
-    def set_porous_material_model(self, data, **kwargs):
-        self.model.set_porous_material_model_data(data, **kwargs)
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if isinstance(analysis_setup, dict):
+            analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-    def set_viscous_thermal_model(self, data, **kwargs):
-        self.model.set_viscous_thermal_model_data(data, **kwargs)
+            if analysis_id in [
+                AnalysisID.STRUCTURAL_MODAL,
+                AnalysisID.ACOUSTIC_MODAL,
+            ]:
+                if "modes" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["modes"], int):
+                        return False
+                else:
+                    return False
 
-    def set_analysis_data(self, data: dict):
-        self.analysis_data = data
-        self.model.set_frequency_setup(data)
+                if "sigma_factor" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["sigma_factor"], int | float):
+                        return False
+                else:
+                    return False
+
+                return True
+
+            elif analysis_id in [
+                AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                AnalysisID.ACOUSTIC_HARMONIC,
+            ]:
+                for f_type in ["f_min", "f_max", "f_step"]:    
+                    if f_type in analysis_setup.keys():
+                        if not isinstance(analysis_setup[f_type], int | float):
+                            return False
+                    else:
+                        return False
+                return True
+
+        return False
 
     def create_solver(self):
         """ """
 
-        data = self.analysis_data
+        data = self.analysis_setup
         if "analysis_id" in data.keys():
+
             # structural harmonic analysis - direct method
-            if data["analysis_id"] == 0:
-                print("Structural harmonic analysis (direct method) not implemented")
-                raise NotImplementedError("Not implemented solver")
+            if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
+                self.set_structural_element_to_model()
+                self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler)
+                self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
-            elif data["analysis_id"] == 1:
+            elif data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
                 print("Structural harmonic analysis (mode superposition method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
             # structural modal analysis
-            elif data["analysis_id"] == 2:
+            elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
                 self.set_structural_element_to_model()
-                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler, analysis_data=data)
-           
+                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler)
+                self.analysis_id = AnalysisID.STRUCTURAL_MODAL
+
             # acoustic harmonic analysis
-            elif data["analysis_id"] == 3:
+            elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.set_acoustic_element_to_model()
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, analysis_data=data)
-            
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler)
+                self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+
             # acoustic modal analysis
-            elif data["analysis_id"] == 4:
+            elif data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
                 self.set_acoustic_element_to_model()
-                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler, analysis_data=data)
-            
-            # couled harmonic analysis (direct method)
-            elif data["analysis_id"] == 5:
+                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler)
+                self.analysis_id = AnalysisID.ACOUSTIC_MODAL
+
+            # coupled harmonic analysis (direct method)
+            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD:
                 print("Coupled harmonic analysis (direct method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
-            # couled harmonic analysis (mode superposition method)
-            elif data["analysis_id"] == 6:
+            # coupled harmonic analysis (mode superposition method)
+            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION:
                 print("Coupled harmonic analysis (mode superposition method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
             # static analysis
-            elif data["analysis_id"] == 7:
+            elif data["analysis_id"] == AnalysisID.STATIC_ANALYSIS:
                 print("Static analysis not implemented")
                 raise NotImplementedError("Not implemented solver")
 
@@ -177,28 +217,200 @@ class Project:
         self.acoustic_modal_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
-        app().file.write_results_data_in_file()
-        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
-        app().file.write_results_data_in_file()
-        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties(self.model.frequencies)
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
+        self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
         t0 = time()
         self.acoustic_harmonic_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
-        app().file.write_results_data_in_file()
-        app().main_window.advanced_results_menu.disable_advanced_acoustic_plots_buttons(False)
+        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+
+    def solve_structural_harmonic_analysis(self):
+        self.structural_assembler.process_assemble()
+        t0 = time()
+        if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
+            self.structural_harmonic_solver.solve_direct_method()
+        else:
+            self.structural_harmonic_solver.solve_mode_superposition_method()
+            return
+        dt = time() - t0
+        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+
+    def run_analysis(self):
+
+        if not self.model.generated_mesh:
+            obj = MeshSetupInputs(close_after_generate=True)
+            if obj.complete:
+                app().main_window.update_plots()
+            else:
+                return
+
+        if len(self.analysis_setup) == 0:
+            return
+
+        analysis = ProcessAnalysis()
+        analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
+        checker = AnalysisRequirementsChecker()
+
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+        ]:
+            if checker.check_structural_harmonic_analysis():
+                return True
+            LoadingWindow(analysis.process_structural_harmonic_analysis).run()
+
+        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+            if checker.check_structural_modal_analysis():
+                return True
+            LoadingWindow(analysis.process_structural_modal_analysis).run()
+
+        elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            if checker.check_acoustic_harmonic_analysis():
+                return True
+            LoadingWindow(analysis.process_acoustic_harmonic_analysis).run()
+
+        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+            if checker.check_acoustic_modal_analysis():
+                return True
+            LoadingWindow(analysis.process_acoustic_modal_analysis).run()
+
+        else:
+            raise NotImplementedError("Not implemented analysis")
+
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
+
+    def is_there_a_valid_solution(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return
+        
+        if not any([self.structural_harmonic_solver, self.structural_modal_solver, self.acoustic_modal_solver, self.acoustic_harmonic_solver]):
+            return False
+            
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
+            if self.structural_harmonic_solver is None:
+                return
+
+            solution  = self.structural_harmonic_solver.solution
+            if solution is not None:
+                return True
+
+        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+            if self.structural_modal_solver is None:
+                return
+
+            solution  = self.structural_modal_solver.solution
+            if solution is not None:
+                return True
+
+        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+            if self.acoustic_modal_solver is None:
+                return
+
+            solution  = self.acoustic_modal_solver.solution
+            if solution is not None:
+                return True
+
+        elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            if self.acoustic_harmonic_solver is None:
+                return
+
+            solution  = self.acoustic_harmonic_solver.solution
+            if solution is not None:
+                return True
+
+        return False
+
+    def get_analysis_type_and_physical_domain(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return "", ""
+
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return "", ""
+
+        if analysis_id in [
+                           AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                           AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                           AnalysisID.ACOUSTIC_HARMONIC, 
+                           AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+                           AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
+                           ]:
+            analysis_type = "harmonic"
+
+        elif analysis_id == AnalysisID.STATIC_ANALYSIS:
+            analysis_type = "static"
+
+        else:
+            analysis_type = "modal"
+
+        if analysis_id in [
+                           AnalysisID.ACOUSTIC_HARMONIC, 
+                           AnalysisID.ACOUSTIC_MODAL
+                           ]:
+            physical_domain = "acoustic"
+
+        elif analysis_id in [
+                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
+                            ]:
+            physical_domain = "coupled"
+
+        else:
+            physical_domain = "structural"
+
+        return analysis_type, physical_domain
+
+    def is_there_a_valid_analysis_setup(self):
+
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if analysis_setup is None:
+            return True
+
+        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return True
+
+        if analysis_id in [
+                            AnalysisID.ACOUSTIC_HARMONIC,
+                            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
+                            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
+                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
+                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
+                            ]:
+            for key in ["f_min", "f_max", "f_step"]:
+                if key not in analysis_setup.keys():
+                    return False
+            return True
+
+        elif analysis_id in [
+                             AnalysisID.ACOUSTIC_MODAL, 
+                             AnalysisID.STRUCTURAL_MODAL
+                             ]:
+            for key in ["modes", "sigma_factor"]:
+                if key not in analysis_setup.keys():
+                    return False
+            return True
 
     def long_function(self):
         for i in range(20):
-            logging.info("long_function" + ProgressStatus(i, 20))
+            logging.info(f"long_function [{i}/20]")
             sleep(0.1)

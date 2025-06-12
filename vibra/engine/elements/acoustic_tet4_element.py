@@ -1,34 +1,83 @@
-import numpy as np
-
-from vibra.engine.elements.solid_elements import Element3D
 
 # fmt: off
 
-def shapeT4C(ssx, ttx, rrx):
-    """This function returns the shape functions and its derivatives."""
+from vibra.engine.elements.solid_elements import Element3D
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
+import numpy as np
+
+
+def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray, rrx: np.ndarray) -> np.ndarray:
+
+    """
+    This function returns the shape functions and its derivatives.
+    
+    Parameters
+    ----------
+    ssx: np.ndarray
+        The x coordinates of the integration points.
+    
+    ttx: np.ndarray
+        The y coordinates of the integration points.
+
+    rrx: np.ndarray
+        The z coordinates of the integration points.
+
+    Returns
+    -------
+    phi: np.ndarray
+        The shape functions evaluated in the integration points.
+
+    dphi: np.ndarray
+        The shape functions derivatives.
+    """
+
     # shape functions
     phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float).T
+
     # derivatives
     dphi = np.array([[-1, 0, 0, 1], 
                      [-1, 1, 0, 0], 
                      [-1, 0, 1, 0]], dtype=float)
+
     return phi, dphi
 
-def get_detJAC_and_invJAC(JAC):
-    """ """
 
-    detJAC = (
-        JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-        + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-        + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-    ) - (
-        JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-        + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-        + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-    )
+def get_detJAC_and_invJAC(JAC: np.ndarray):
+    """
+    This function computes the determinant and inverse
+    of Jacobian matrix.
 
-    # adj(JAC)
+    Parameters
+    ----------
+    JAC: np.array
+        The Jacobian matrices.
+
+    Returns
+    -------
+    det_jac: np.ndarray
+        The determinant of Jacobian matrix.
+
+    inv_jac: np.ndarray
+        The inverse of Jacobian matrix.
+    """
+
+    det_jac = (
+                  JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
+                + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
+                + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
+                ) - (
+                  JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
+                + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
+                + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
+                )
+
+    # the adjoint matrix
     AUJJ = np.zeros((3, 3), dtype=float)
+
     AUJJ[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
     AUJJ[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
     AUJJ[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
@@ -39,42 +88,109 @@ def get_detJAC_and_invJAC(JAC):
     AUJJ[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
     AUJJ[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
 
-    return detJAC, (1 / detJAC) * AUJJ
+    inv_jac = (1 / det_jac) * AUJJ
+
+    return det_jac, inv_jac
+
+
+def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
+    """
+    This function computes the determinants and inverses
+    of Jacobian matrices in stacked form.
+
+    Parameters
+    ----------
+    JAC: np.array
+        The stacked Jacobian matrices.
+
+    Returns
+    -------
+    det_jacs: np.ndarray
+        The stacked determinants of Jacobian matrices.
+
+    inv_jacs: np.ndarray
+        The stacked inverse of Jacobian matrices.
+
+    """
+
+    det_jacs = (  
+                  JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
+                + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
+                + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
+                ) - (
+                  JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
+                + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
+                + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
+                )
+
+    det_jacs = det_jacs.reshape(-1, 1, 1)
+
+    # the adjoint matrix
+    nel = JAC.shape[0]
+    AUJJ = np.zeros((nel, 3, 3), dtype=float)
+
+    AUJJ[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
+    AUJJ[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
+    AUJJ[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
+    AUJJ[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
+    AUJJ[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
+    AUJJ[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
+    AUJJ[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+
+    inv_jacs = (1 / det_jacs) * AUJJ
+
+    return det_jacs, inv_jacs
 
 
 class ACT_TETRAHEDRON_4C(Element3D):
 
-    DOF_PER_NODE = 1
+    DOFS_PER_NODE = 1
     NODES_PER_ELEMENT = 4
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-    def __init__(self, model):
+
+    def __init__(self, model: "Model"):
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
+
     def initialize_variables(self):
-        """ """
         self.element_label = "acoustic_tetrahedron_4"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
         self.connectivity = self.model.mesh.solids_connectivity
         self.faces_connectivity = self.model.mesh.faces_connectivity
-        #
+
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
 
+
+    def update_nodal_coordinates(self, nodal_coordinates: np.ndarray):
+        self.nodal_coordinates = nodal_coordinates
+
+
+    def update_solids_connectivity(self, connectivity: np.ndarray):
+        self.connectivity = connectivity
+
+
     def define_integration_points(self):
-        """ """
+        """ 
+        This method defines the integration points and their
+        weights for numerical integration.
+        """
         self.nint = 4
-        con1 = (5 - np.sqrt(5))/20
-        con2 = (5 + 3 * np.sqrt(5))/20
-        self.wps = 1/4
+        con1 = (5 - np.sqrt(5)) / 20
+        con2 = (5 + 3 * np.sqrt(5)) / 20
+        self.wps = 1 / 4
 
         self.pint = np.array([[con1, con1, con1], 
                               [con1, con1, con2], 
                               [con1, con2, con1], 
-                              [con2, con1, con1]])
+                              [con2, con1, con1]], dtype=float)
+
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -84,41 +200,86 @@ class ACT_TETRAHEDRON_4C(Element3D):
         ssx = self.pint[:, 0]
         ttx = self.pint[:, 1]
         rrx = self.pint[:, 2]
-        #
-        self.phi, self.dphi = shapeT4C(ssx, ttx, rrx)
 
-    def elementary_matrices(self, el_index):
+        self.phi, self.dphi = get_shape_functions_and_derivatives(ssx, ttx, rrx)
+
+
+    def elementary_matrices(self, el_index: int) -> tuple[np.ndarray, np.ndarray]:
         """
-        Stiffness and mass matrices.
+        This method computes the elementary mass and stiffness matrices.
+
+        Parameter
+        ---------
+        el_index: int
+            Corresponds to the solid element index.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness matrix.
+
+        Me: np.ndarray
+            The elementary mass matrix.
         """
 
-        # fluid = self.model.properties.get_fluid(element=el_index)
-        # rho = fluid.fluid_density
-        # c_0 = fluid.speed_of_sound
-        # c_0 = self.model.properties.get_speed_of_sound(element=el_index)
         ie = self.connectivity[el_index, 1:]
-        #
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
+
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
-        #
-        B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        #
-        B[0, :] = dphi_t[0, :]
-        B[1, :] = dphi_t[1, :]
-        B[2, :] = dphi_t[2, :]
-        #
-        N[:, 0, :] = self.phi
 
-        # integration loop
-        Ke, Me = 0, 0
-        for i in range(self.nint):
-            Ke += (1 / 6) * B.T @ B * (detJAC * self.wps)
-            Me += (1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
-            # Me += (1 / 6) * (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+        # shape functions
+        N = self.phi
+
+        # derivative of shape functions
+        B = dphi_t
+
+        Ke = self.nint * (1 / 6) * B.T @ B * (detJAC * self.wps)
+        Me = (1 / 6) * N.T @ N * (detJAC * self.wps)
 
         return Ke, Me
+
+
+    def stacked_elementary_matrices(self):
+        """
+        This method computes all mass and stiffness matrices in
+        stacked form.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness stacked matrices.
+
+        Me: np.ndarray
+            The elementary mass stacked matrices.
+        """
+        
+        nel = self.connectivity.shape[0]
+        aux_ones = np.ones((nel, 1, 1), dtype=float)
+
+        stacked_coords = np.zeros((nel, self.DOFS_PER_ELEMENT, 3), dtype=float)
+        stacked_coords[:, 0, :] = self.nodal_coordinates[self.connectivity[:, 1], 1:4]
+        stacked_coords[:, 1, :] = self.nodal_coordinates[self.connectivity[:, 2], 1:4]
+        stacked_coords[:, 2, :] = self.nodal_coordinates[self.connectivity[:, 3], 1:4]
+        stacked_coords[:, 3, :] = self.nodal_coordinates[self.connectivity[:, 4], 1:4]
+
+        JAC = (self.dphi * aux_ones) @ stacked_coords
+
+        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC)
+        dphi_t = inv_jacs @ (aux_ones * self.dphi)
+
+        # shape functions
+        N = self.phi
+
+        # derivative of shape functions
+        B = dphi_t
+        B_t = np.transpose(B, axes=(0, 2, 1))
+
+        Ke = self.nint * (1 / 6) * B_t @ B * (det_jacs * self.wps)
+        Me = (1 / 6) * N.T @ N * (det_jacs * self.wps)
+
+        return Ke, Me
+
     
     def process_particle_velocity(  self, 
                                     element_id : int, 
@@ -127,37 +288,84 @@ class ACT_TETRAHEDRON_4C(Element3D):
                                     frequencies : np.ndarray, 
                                     nodal_pressures : np.ndarray  ):
         """
-        Process the particle velocity.
+        This method computes the particle velocity components in
+        the x, y, and z directions.
+
+        Parameters
+        ----------
+        element_id: int
+            The element index.
+
+        node_id: int
+            The node index.
+
+        rho: float
+            The fluid density in kg/m³.
+
+        frequencies: np.ndarray
+            The frequencies vector.
+
+        nodal_pressures: np.ndarray
+            The nodal pressures solution.
+
+        Return
+        ------
+        particle_velocity: np.array
+            An array containing the particle velocity components in the
+            x, y, and z directions.
         """
 
-        ie = self.connectivity[element_id, 1:]
-        Pe = nodal_pressures[ie, :]
+        node_ids = self.connectivity[element_id, 1:]
+        Pe = nodal_pressures[node_ids, :]
 
         p_calc = np.array([ [ 0, 0, 0 ],
                             [ 1, 0, 0 ],
                             [ 0, 1, 0 ],
                             [ 0, 0, 1 ] ], dtype=float)
 
+        omega = 2 * np.pi * frequencies
+
         for i, (ssx, ttx, rrx) in enumerate(p_calc):
+            if node_ids[i] != node_id:
+                continue
 
-            if ie[i] == node_id:
+            _, dphi = get_shape_functions_and_derivatives(ssx, ttx, rrx)
+            JAC = dphi @ self.nodal_coordinates[node_ids, 1:4]
 
-                phi, dphi = shapeT4C(ssx, ttx, rrx)
+            _, invJAC = get_detJAC_and_invJAC(JAC)
+            B = invJAC @ dphi
 
-                JAC = dphi @ self.nodal_coordinates[ie, 1:4]
-                detJAC, invJAC = get_detJAC_and_invJAC(JAC)
-                B = invJAC @ dphi
+            particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
 
-                # B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
-                # B[0, :] = dphi_t[0, :]
-                # B[1, :] = dphi_t[1, :]
-                # B[2, :] = dphi_t[2, :]
+            return particle_velocity
 
-                omega = 2 * np.pi * frequencies
+    # def elementary_matrices_reference(self, el_index: int):
+    #     """
+    #     Stiffness and mass matrices.
+    #     """
 
-                Ve = -(1 / (1j * rho * omega)) * (B @ Pe)
+    #     ie = self.connectivity[el_index, 1:]
+    #     JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
 
-                return Ve
+    #     detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+    #     dphi_t = invJAC @ self.dphi
+
+    #     B = np.zeros((3, self.DOFS_PER_ELEMENT), dtype=float)
+    #     B[0, :] = dphi_t[0, :]
+    #     B[1, :] = dphi_t[1, :]
+    #     B[2, :] = dphi_t[2, :]
+
+    #     N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+    #     N[:, 0, :] = self.phi
+
+    #     # integration loop
+    #     Ke, Me = 0, 0
+    #     for i in range(self.nint):
+    #         Ke += (1 / 6) * B.T @ B * (detJAC * self.wps)
+    #         Me += (1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+    #         # Me += (1 / 6) * (1 / c_0**2) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+
+    #     return Ke, Me
 
     # def velpartT4C(self, element_id, node_id, rho, freq, pressures):
     #     """ Stiffness and mass matrices.
@@ -200,7 +408,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
     #     # integration
     #     for i in range(ncalc):
     #         l1, l2, l3 = pcalc[i, 0], pcalc[i, 1], pcalc[i, 2]
-    #         phi, dphi = shapeT4C(l1, l2, l3)
+    #         phi, dphi = get_shape_functions_and_derivatives(l1, l2, l3)
     #         dxdydz = dphi @ self.nodal_coordinates[ie, 1:4]
     #         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
     #         JAC = np.array([[dxdydz[0,0], dxdydz[0,1], dxdydz[0,2]],
@@ -258,10 +466,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
     #     return VK
 
+
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         if self.connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
             self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
+
 
     def generate_ind_rows_cols(self, reorder=True):
         """ This method processess the dofs indices (rows and columns) for assembly"""
@@ -271,7 +481,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         else:
             self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
 
-        dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
 
         vect_indices = ind_dofs.flatten()

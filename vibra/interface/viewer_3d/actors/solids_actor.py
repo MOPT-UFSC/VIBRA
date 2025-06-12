@@ -1,6 +1,4 @@
-from time import time
-
-import numpy as np
+from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
@@ -12,13 +10,23 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_QUADRATIC_TETRA,
     VTK_TETRA,
     vtkPlane,
+    vtkPolyData,
+    vtkSphere,
     vtkUnstructuredGrid,
 )
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+)
+
+ALWAYS_FALSE = vtkSphere()
+ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
@@ -43,8 +51,8 @@ class SolidsActor(vtkActor):
         mapper = vtkDataSetMapper()
         point_colors = vtkUnsignedCharArray()
         cell_colors = vtkUnsignedCharArray()
-        cell_indexes = vtkIntArray()
-        cell_indexes.SetName("cell_indexes")
+        solid_indexes = vtkIntArray()
+        solid_indexes.SetName("solid_indexes")
 
         if self.mesh.element_type == TETRAHEDRON_4:
             cell_type = VTK_TETRA
@@ -62,7 +70,10 @@ class SolidsActor(vtkActor):
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
             # fmt: off
-            nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19)
+            nodes_order = (
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+                15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
+            )
             # fmt: on
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
@@ -79,37 +90,48 @@ class SolidsActor(vtkActor):
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(3)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        cell_indexes.Allocate(number_of_elements)
+        solid_indexes.Allocate(number_of_elements)
 
-        for x, y, z in self.get_coordinates():
-            points.InsertNextPoint(x, y, z)
+        coordinates = self.get_coordinates()
+        points.SetData(numpy_to_vtk(coordinates))
 
         hidden_volumes = app().main_window.hidden_volumes if self.allow_hidding else set()
         self.visible_indexes = dict()
-        # for i, nodes in enumerate(nodes_connectivity):
+
         for i, volume, _, _, *nodes in nodes_connectivity:
             if volume in hidden_volumes:
                 continue
-            data.InsertNextCell(cell_type, len(nodes), nodes)
-            visible_index = cell_indexes.InsertNextValue(
-                i
-            )  # This is usefull if part of the cells are hidden
+
+            # This is usefull if part of the cells are hidden
+            visible_index = solid_indexes.InsertNextValue(i)
             self.visible_indexes[i] = visible_index
+            data.InsertNextCell(cell_type, len(nodes), nodes)
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(cell_indexes)
+        data.GetCellData().AddArray(solid_indexes)
 
-        self.data = data
-        mapper.SetInputData(self.data)
+        self.data: vtkPolyData = data
+        self.clipper = vtkExtractGeometry()
+        self.clipper.SetInputData(self.data)
+        self.clipper.SetImplicitFunction(ALWAYS_FALSE)
+        self.clipper.ExtractInsideOff()
+        self.clipper.Update()
+
+        mapper.InterpolateScalarsBeforeMappingOn()
+        mapper.SetInputConnection(self.clipper.GetOutputPort())
         self.SetMapper(mapper)
+
+    def replace_data(self, data: vtkPolyData):
+        self.data = data
+        self.clipper.SetInputData(data)
+        self.clipper.Modified()
+        self.clipper.Update()
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
-        for i, xyz in enumerate(coordinates):
-            points.SetPoint(i, xyz)
-        points.Modified()
+        points.SetData(numpy_to_vtk(coordinates))
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
@@ -117,25 +139,27 @@ class SolidsActor(vtkActor):
         self.GetProperty().SetLineWidth(0.1)
         self.clear_colors()
 
+        mapper = self.GetMapper()
+        mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(1.1, 0)
+
     def clear_colors(self):
         if self.data is None:
             return
 
+        color = (255, 255, 255)
+        self.set_color(color)
+
+    def set_color(self, color):
         point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
 
-        r, g, b = self.GetProperty().GetColor()
-        r = int(r * 255)
-        g = int(g * 255)
-        b = int(b * 255)
+        point_colors.Fill(255)
+        cell_colors.Fill(255)
 
-        point_colors.FillComponent(0, r)
-        point_colors.FillComponent(1, g)
-        point_colors.FillComponent(2, b)
-
-        cell_colors.FillComponent(0, r)
-        cell_colors.FillComponent(1, g)
-        cell_colors.FillComponent(2, b)
+        for component, value in enumerate(color):
+            point_colors.FillComponent(component, value)
+            cell_colors.FillComponent(component, value)
 
         self.GetMapper().ScalarVisibilityOff()
 
@@ -145,6 +169,8 @@ class SolidsActor(vtkActor):
 
         point_colors = self.data.GetPointData().GetScalars()
         for i in points:
+            if point_colors.GetNumberOfTuples() <= i:
+                break
             point_colors.SetTuple(i, color)
 
         self.GetMapper().SetScalarModeToUsePointData()
@@ -170,20 +196,7 @@ class SolidsActor(vtkActor):
         plane = vtkPlane()
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
-
-        clipper = vtkExtractGeometry()
-        clipper.SetInputData(self.data)
-        clipper.SetImplicitFunction(plane)
-        clipper.ExtractInsideOff()
-        clipper.Update()
-        self.clipped_data = clipper.GetOutput()
-
-        mapper = self.GetMapper()
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputConnection(clipper.GetOutputPort())
-        mapper.Modified()
+        self.clipper.SetImplicitFunction(plane)
 
     def disable_cut(self):
-        self.GetMapper().RemoveAllClippingPlanes()
-        self.GetMapper().RemoveAllInputConnections(0)
-        self.GetMapper().SetInputData(self.data)
+        self.clipper.SetImplicitFunction(ALWAYS_FALSE)

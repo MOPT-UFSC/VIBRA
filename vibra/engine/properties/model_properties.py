@@ -1,12 +1,11 @@
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
+
 import json
 import numpy as np
 import os
 from dataclasses import dataclass
-
-from vibra import app
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
-# from vibra.project.project_file import *
 
 
 DEFAULT_MATERIAL = Material(
@@ -14,7 +13,7 @@ DEFAULT_MATERIAL = Material(
     identifier=1,
     color=(200, 200, 200),
     density=7860,
-    young_modulus=210e9,
+    elasticity_modulus=210e9,
     poisson_ratio=0.3,
 )
 
@@ -69,96 +68,43 @@ class ModelProperties:
         self.volume_properties = dict()
         self.surface_properties = dict()
         self.line_properties = dict()
+        self.point_properties = dict()
         self.element_properties = dict()
         self.nodal_properties = dict()
 
-        self.global_properties["material", "global"] = DEFAULT_MATERIAL
-        self.global_properties["fluid", "global"] = DEFAULT_FLUID
+        # self.global_properties["material", "global"] = DEFAULT_MATERIAL
+        # self.global_properties["fluid", "global"] = DEFAULT_FLUID
 
-    def get_material(self, element=None, **kwargs) -> Material:
-        return self._get_property("material", **kwargs)
-
-    def get_fluid(self, **kwargs) -> Fluid:
-        return self._get_property("fluid", **kwargs)
-
-    def get_dissipation_model(self, **kwargs):
-        return self._get_property("dissipation_model", **kwargs)
-    
-    def get_lrf_model_inputs(self, element_id):
-        return self._get_property("lrf_eq_model", element=element_id)
-
-    def set_material(self, material: Material, surface=None, volume=None):
-        self._set_property("material", material, surface=surface, volume=volume)
-
-    def set_fluid(self, fluid: Fluid, surface=None, volume=None):
-        self._set_property("fluid", fluid, surface=surface, volume=volume)
-
-    def set_dissipation_model(self, data, **kwargs):
-        self._set_property("dissipation_model", data, **kwargs)
-
-    def set_porous_material_model_data(self, data, **kwargs):
-        self._set_property("porous_material_model", data, **kwargs)
-
-    def get_fluid_density(self, fluid, **kwargs):
+    def get_fluid_density(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         rho_0 = fluid.fluid_density
-        dissipation_model = self.get_dissipation_model(**kwargs)
-        if dissipation_model is None:
+        if proportional_damping is None:
             return rho_0
-        elif dissipation_model["model"] == "proportional damping":
-            factor = dissipation_model["fluid density factor"]
+        else:
+            factor = proportional_damping.get("fluid_density_factor", 0)
             return (1 + factor * 1j) * rho_0
 
-    def get_speed_of_sound(self, fluid, **kwargs):
+    def get_speed_of_sound(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         c_0 = fluid.speed_of_sound
-        dissipation_model = self.get_dissipation_model(**kwargs)
-        if dissipation_model is None:
+        if proportional_damping is None:
             return c_0
-        elif dissipation_model["model"] == "proportional damping":
-            factor = dissipation_model["speed of sound factor"]
+        else:
+            factor = proportional_damping.get("speed_of_sound_factor", 0)
             return (1 + factor * 1j) * c_0
-        
-    def get_lrf_model_inputs(self):
-        pass
 
-    def get_structural_boundary_condition(self, surface):
-        return self._get_property("prescribed_dofs", surface=surface)
-
-    def get_structural_load(self, surface):
-        return self._get_property("structural_load", surface=surface)
-
-    def set_structural_boundary_condition(self, data, line_id, surface_id):
-        if line_id is not None:
-            self._set_property("prescribed_dofs", data, line_id)
-        if surface_id is not None:
-            self._set_property("prescribed_dofs", data, surface_id)
-
-    def set_structural_load(self, data, line_id, surface_id):
-        if line_id is not None:
-            self._set_property("structural_load", data, line_id)
-        if surface_id is not None:
-            self._set_property("structural_load", data, surface_id)
-
-    def get_acoustic_pressure(self, surface):
-        return self._get_property("acoustic_pressure", surface=surface)
-
-    def get_mass_flow_rate(self, surface):
-        return self._get_property("mass_flow_rate", surface=surface)
-
-    def get_volume_velocity(self, surface):
-        return self._get_property("volume_velocity", surface=surface)
-
-    def get_surface_velocity(self, surface):
-        return self._get_property("surface_velocity", surface=surface)
-
-    def get_specific_impedance(self, surface):
-        return self._get_property("specific_impedance", surface=surface)
-
-    def get_porous_material_model_data(self, volume):
-        return self._get_property("porous_material_model", volume=volume)
-
-    def _set_property(self, property: str, data: dict | Fluid | Material, node=None, element=None, line=None, surface=None, volume=None, group=None):
+    def _set_property(
+                      self, 
+                      property: str, 
+                      data: dict | Fluid | Material, 
+                      node: int | None = None, 
+                      element: int | None = None, 
+                      point: int | None = None, 
+                      line: int | None = None, 
+                      surface: int | tuple[int] | None = None, 
+                      volume: int | None = None, 
+                      group: int | None = None
+                      ):
         """
-        Sets a data to a property by node, element, line, surface or volume
+        This method sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         """
@@ -173,9 +119,13 @@ class ModelProperties:
 
                     if a is None:
                         tables_values.append(None)
+
                     else:
-                        b = data["imag_values"][i]                
-                        tables_values.append(a + 1j*b)
+                        b = data["imag_values"][i]  
+                        if b is None:
+                            tables_values.append(a)
+                        else:
+                            tables_values.append(a + 1j*b)
 
             elif "values" in data.keys():
                 tables_values = data["values"]
@@ -195,7 +145,11 @@ class ModelProperties:
 
                     if table_name in imported_tables.keys():
                         data_array = imported_tables[table_name]
-                        values = data_array[:, 1] + 1j * data_array[:, 2]
+                        if data_array.shape[1] >= 3:
+                            values = data_array[:, 1] + 1j * data_array[:, 2]
+                        else:
+                            values = data_array[:, 1]
+
                         tables_values.append(values)
 
             data["values"] = tables_values
@@ -212,6 +166,9 @@ class ModelProperties:
         elif line is not None:
             self.line_properties[property, line] = data
 
+        elif point is not None:
+            self.point_properties[property, point] = data
+
         elif element is not None:
             self.element_properties[property, element] = data
 
@@ -221,7 +178,7 @@ class ModelProperties:
         else:
             self.global_properties[property, "global"] = data
 
-    def _get_property(self, property: str, node=None, element=None, line=None, surface=None, volume=None):
+    def _get_property(self, property: str, node=None, element=None, point=None, line=None, surface=None, volume=None):
         """
         Finds the value that corresponds to the property needed.
         Checks node, element, entity, volume and global data by
@@ -233,6 +190,9 @@ class ModelProperties:
 
         if (property, element) in self.element_properties:
             return self.element_properties[property, element]
+
+        if (property, point) in self.point_properties:
+            return self.point_properties[property, point]
 
         if (property, line) in self.line_properties:
             return self.line_properties[property, line]
@@ -274,13 +234,14 @@ class ModelProperties:
         Clears all instances of a specific property from the structure.
         """
         data_dicts = [  
+                      self.volume_properties,
+                      self.surface_properties,
+                      self.line_properties,
+                      self.point_properties,
+                      self.group_properties,
+                      self.global_properties,
                       self.nodal_properties,
                       self.element_properties,
-                      self.line_properties,
-                      self.surface_properties,
-                      self.volume_properties,
-                      self.group_properties,
-                      self.global_properties
                       ]
 
         for data in data_dicts:
@@ -309,6 +270,12 @@ class ModelProperties:
         key = (property, element_id)
         if key in self.element_properties.keys():
             self.element_properties.pop(key)
+
+    def _remove_point_property(self, property: str, point_id: int):
+        """Remove a point property at specific point_id."""
+        key = (property, point_id)
+        if key in self.point_properties.keys():
+            self.point_properties.pop(key)
 
     def _remove_line_property(self, property: str, line_id: int):
         """Remove a line property at specific line_id."""
@@ -353,17 +320,20 @@ class ModelProperties:
             if table_name in self.structural_imported_tables.keys():
                 self.structural_imported_tables.pop(table_name)
 
-    def get_data_group_label(self, property : str):
+    def get_data_group_label(self, property : str) -> str:
 
         acoustic_labels = [ 
-                            "acoustic_pressure",
-                            "surface_velocity",
-                            "mass_flow_rate",
-                            "specific_impedance",
-                            "radiation_impedance",
-                            "reciprocating_compressor_excitation",
-                            "reciprocating_pump_excitation",
-                            "acoustic_transfer_element"
+                           "acoustic_pressure",
+                           "surface_velocity",
+                           "mass_flow_rate",
+                           "incident_plane_wave",
+                           "specific_impedance",
+                           "transfer_impedance",
+                           "absorption_surface",
+                           "perforated_plate_model",
+                           "reciprocating_compressor_excitation",
+                           "reciprocating_pump_excitation",
+                           "acoustic_transfer_element",
                            ]
 
         if property in acoustic_labels:
@@ -371,31 +341,56 @@ class ModelProperties:
         else:
             return "structural"
 
-    def get_surface_related_table_names(self, property : str, surface_ids : int | list) -> list:
+    def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
         """
         table_names = list()
-        if isinstance(surface_ids, int):
-            test_key = (property, surface_ids)
-
-        elif isinstance(surface_ids, list) and len(surface_ids) == 1:
-            test_key = (property, surface_ids[0])
-
-        elif isinstance(surface_ids, list) and len(surface_ids) == 2:
-            test_key = (property, surface_ids[0], surface_ids[1])
-
+        if isinstance(selected_ids, int):
+            test_key = (property, selected_ids)
+        elif isinstance(selected_ids, list) and len(selected_ids) == 1:
+            test_key = (property, selected_ids[0])
+        elif isinstance(selected_ids, list) and len(selected_ids) == 2:
+            test_key = (property, selected_ids[0], selected_ids[1])
+        elif isinstance(selected_ids, tuple) and len(selected_ids) == 2:
+            test_key = (property, selected_ids)
         else:
             return table_names
 
-        if test_key in self.surface_properties.keys():
-            data = self.surface_properties[test_key]
+        if selection == "surfaces":
+            _properties = self.surface_properties
+        elif selection == "lines":
+            _properties = self.line_properties
+        elif selection == "points":
+            _properties = self.point_properties
+        elif selection == "nodes":
+            _properties = self.nodal_properties
+        else:
+            return table_names
 
+        data = _properties.get(test_key)
+        if isinstance(data, dict):
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:
                     if table_name is not None:
                         table_names.append(table_name)
 
         return table_names
+
+    def is_the_volume_property_present_in_the_model(self, property_to_check: str):
+
+        for (property, _) in self.volume_properties.keys():
+            if property == property_to_check:
+                return True
+
+        return False
+
+    def is_the_surface_property_present_in_the_model(self, property_to_check: str):
+
+        for (property, _) in self.surface_properties.keys():
+            if property == property_to_check:
+                return True
+
+        return False
 
 if __name__ == "__main__":
     p = ModelProperties()

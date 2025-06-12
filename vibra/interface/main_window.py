@@ -1,52 +1,61 @@
-from PyQt5.QtWidgets import QDialog, QFileDialog, QFrame, QGridLayout, QMainWindow, QMessageBox, QAction
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import pyqtSignal
-
-from vibra import *
-# from vibra.config import UserConfig
-from vibra.interface.analysis_filter_menu import AnalysisFilter
-from vibra.interface.section_plane_widget import SectionPlaneWidget
-from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.exception_message import ErrorMessage
-from vibra.interface.loading_bar import load_function
-from vibra.interface.menu_items import MenuItems
-from vibra.interface.menus.help_menu import HelpMenu
-from vibra.interface.menus.mesher_menu import MesherMenu
-from vibra.interface.menus.project_menu import ProjectMenu
-from vibra.interface.menus.settings_menu import VisibilitySettingsMenu
-from vibra.interface.menus.view_mode_menu import ViewModeMenu
-from vibra.interface.menus.advanced_results_menu import AdvancedResultsMenu
-from vibra.interface.menus.views_menu import ViewsMenu
-from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
-from vibra.interface.renderer_toolbar import RendererToolbar
-from vibra.interface.status_bar import StatusBar
-from vibra.interface.viewer_tabs import ViewerTabs
-from vibra.interface.formatters.icons import *
-from vibra.interface.general.print_message_input import PrintMessageInput
-from molde.render_widgets import CommonRenderWidget
-
-from vibra.utils.progress_status import ProgressStatus
-
-from vibra.project_files.load_project import LoadProject
-from vibra.project_files.project import Project
-from vibra.project_files.project_file import ProjectFile
-
-import qdarktheme
-
-import sys
 import logging
+import os
+import sys
+from functools import partial
 from pathlib import Path
-from shutil import rmtree, copy
-from time import sleep, time
+from shutil import copy, rmtree
+import platform
+
+from molde import stylesheets
+from molde.render_widgets import CommonRenderWidget
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QAction, QColor
+from PySide6.QtWidgets import (
+    QAbstractButton,
+    QFileDialog,
+    QMenu,
+    QMessageBox,
+)
+
+from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
+from vibra.interface.analysis_toolbar import AnalysisToolbar
+from vibra.interface.animation_toolbar import AnimationToolbar
+from vibra.interface.data_handler.export_mesh_data import ExportMeshData
+from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.help_widget import HelpWidget
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.menus.model_setup_widget import ModelSetupWidget
+from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
+from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
+from vibra.interface.project.geometry_setup import GeometrySetup
+from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
+from vibra.interface.section_plane_widget import SectionPlaneWidget
+from vibra.interface.status_bar import StatusBar
+from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
+from vibra.interface.user_input.input_ui import InputUi
+from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
+from vibra.interface.viewer_3d.render_widgets import (
+    GeometryRenderWidget,
+    MeshRenderWidget,
+    ResultsRenderWidget,
+)
+from vibra.interface.welcome_widget import WelcomeWidget
+from vibra.utils.icons import load_icon
+from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 
-class MainWindow(QMainWindow):
-    theme_changed = pyqtSignal(str)
-    visualization_changed = pyqtSignal()
-    selection_changed = pyqtSignal()
+class MainWindow(MainWindow_UI):
+    theme_changed = Signal(str)
+    visualization_changed = Signal()
+    render_widget_changed = Signal()
+    selection_changed = Signal()
 
     def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
+        super().__init__(parent)
+        
+        self.visualization_filter = VisualizationFilter.all_true()
+        self.visualization_filter.points = False
 
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
@@ -58,11 +67,11 @@ class MainWindow(QMainWindow):
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
-        
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
 
-        self.dialog = None
+        self.show_menu_items = True
+        self.last_render_index = None
 
         self._initialize()
 
@@ -71,15 +80,245 @@ class MainWindow(QMainWindow):
         self.project_data_modified = False
         self.user_path = Path().home()
 
-    def _define_qt_variables(self):
-        pass
+    def _connect_actions(self):
+        """
+        Instead of connecting every action manually, one by one,
+        this function loops through every action and connects it
+        to a function ending with "_callback".
 
-    def _create_connections(self):
-        self.viewer_tabs.geometry_widget.selection_changed.connect(self.selection_changed_callback)
-        self.section_plane.slider_pressed.connect(self.slider_pressed_callback)
-        self.section_plane.value_changed.connect(self.slider_moved_callback)
-        self.section_plane.slider_released.connect(self.slider_released_callback)
-        self.section_plane.closed.connect(self.disable_section_plane_visibility)
+        For example an action named "action_new" will be connected to
+        the function named "action_new_callback" if it exists.
+        """
+        for action in self.findChildren(QAction):
+            action: QAction
+            function_name = action.objectName() + "_callback"
+            function_exists = hasattr(self, function_name)
+            if not function_exists:
+                continue
+
+            function = getattr(self, function_name)
+            if callable(function):
+                action.triggered.connect(function)
+
+    def _create_basic_layout(self):
+        self.status_bar = StatusBar(self)
+        self.analysis_toolbar = AnalysisToolbar()
+        self.animation_toolbar = AnimationToolbar()
+
+        self.create_recents_menu()
+        self.create_status_bar()
+
+        self.clear_render_widgets_stack()
+        self.render_widgets_stack.addWidget(self.geometry_widget)
+        self.render_widgets_stack.addWidget(self.mesh_widget)
+        self.render_widgets_stack.addWidget(self.results_widget)
+        self.render_widgets_stack.addWidget(self.help_widget)
+        self.render_widgets_stack.addWidget(self.welcome_widget)
+
+        self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
+        self.visualization_changed.connect(self.update_visualization_filter)
+        self.update_visualization_filter()
+
+        self.stacked_setup.addWidget(self.model_setup_widget)
+        self.stacked_setup.addWidget(self.results_viewer_widget)
+
+        self.addToolBar(self.analysis_toolbar)
+        self.insertToolBarBreak(self.analysis_toolbar)
+        self.addToolBar(self.animation_toolbar)
+        self.insertToolBarBreak(self.animation_toolbar)
+
+        self.analysis_toolbar.setDisabled(True)
+        self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
+        self.disable_advanced_acoustic_plots_buttons(True)
+
+        self.splitter.setSizes([100, 400])
+        self.splitter.widget(0).setVisible(False)
+        self.splitter.widget(0).setMinimumWidth(360)
+
+    def _config_window(self):
+        self.setMinimumSize(800, 600)
+        self.showMinimized()
+        self.vibra_icon = get_vibra_icon()
+        self.setWindowIcon(self.vibra_icon)
+        self.setWindowTitle("Vibra")
+        self.installEventFilter(self)
+
+        # for qdarktheme
+        self.custom_colors = {
+            "[dark]": {
+                "toolbar.background": "#202124",
+            }
+        }
+        # for qdarktheme
+        self.custom_colors = {
+            "[dark]": {
+                "toolbar.background": "#202124",
+            }
+        }
+
+    def configure_main_window(self):
+        app().splash.update_progress(10)
+        self._config_window()
+        self._connect_actions()
+
+        app().splash.update_progress(30)
+        self._load_menu_widgets()
+        self._load_render_widgets()
+
+        app().splash.update_progress(60)
+        self._create_basic_layout()
+        self._configure_render_widgets_stack()
+        self._configure_stacked_setup()
+
+        app().splash.update_progress(90)
+        self.load_user_preferences()
+        self.config_tool_tip_appearance()
+        self.create_temporary_vibra_folder()
+
+        app().splash.close()
+        self.showMaximized()
+
+        app().processEvents()
+
+        if not self.is_temporary_vibra_folder_empty():
+            self.recovery_dialog()
+        
+        else:
+            self.try_to_open_argv_path()
+    
+    def try_to_open_argv_path(self):
+        '''
+        Check every argument passed in the command line and try to open it if it is a valid file.
+        '''
+
+        if len(sys.argv) <= 1:
+            return
+        
+        for arg in sys.argv[1:]:
+            path = Path(arg)
+            
+            if not path.is_file():
+                continue
+            
+            if not path.exists():
+                continue
+            
+            if path.suffix == ".vibra":
+                self.open_project(path)
+                break
+
+    # External functions that may be usefull
+    def set_theme(self, theme: str):
+        """
+        Changes Qt stylesheets using qdarktheme library and the
+        renderer background colors.
+
+        The input is a string "light" or "dark".
+        """
+        # qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
+        app().config.user_preferences.interface_theme = theme
+        stylesheets.set_theme(theme)
+
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        elif theme == "light":
+            icon_color = QColor("#1a73e8")
+
+        widgets_type = [QAction, QAbstractButton]
+        widgets = list()
+        for widget_type in widgets_type:
+            widgets += self.findChildren(widget_type)
+        change_icon_color_for_widgets(widgets, icon_color)
+
+        self.theme_changed.emit(theme)
+    def update_mesh_information(self):
+        self.status_bar.update_mesh_information()
+
+    def update_geometry_information(self):
+        self.status_bar.update_geometry_information()
+
+    def _configure_render_widgets_stack(self):
+        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+
+    def _configure_stacked_setup(self):
+        self.stacked_setup.setCurrentWidget(self.model_setup_widget)
+
+    def create_status_bar(self):
+        self.setStatusBar(self.status_bar)
+
+    def config_tool_tip_appearance(self):
+        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
+        self.setStyleSheet(tool_tip_style)
+
+    def _load_render_widgets(self):
+        self.section_plane = SectionPlaneWidget(self)
+        self.geometry_widget = GeometryRenderWidget()
+        self.mesh_widget = MeshRenderWidget()
+        self.results_widget = ResultsRenderWidget()
+
+        self.welcome_widget = WelcomeWidget()
+        self.help_widget = HelpWidget()
+
+    def _load_menu_widgets(self):
+        self.results_viewer_widget = ResultsViewerWidget()
+        self.model_setup_widget = ModelSetupWidget()
+        self.input_ui = InputUi(self)
+
+    def load_user_preferences(self):
+        theme = app().config.user_preferences.interface_theme
+        self.set_theme(theme)
+
+        show = app().config.user_preferences.show_reference_scale_bar
+        self.update_scale_bar(show)
+        self.update_renderer_font_size()
+
+    def clear_selection(self):
+        self.set_geometry_selection()
+        self.set_mesh_selection()
+
+    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
+        if points is None:
+            points = set()
+
+        if lines is None:
+            lines = set()
+
+        if surfaces is None:
+            surfaces = set()
+
+        if volumes is None:
+            volumes = set()
+
+        mesh = app().project.model.mesh
+
+        # Select the surfaces associated to the selected volumes
+        for volume in volumes:
+            volume_surfaces = mesh.surfaces_from_volume.get(volume, [])
+            surfaces |= set(volume_surfaces)
+
+        if join and remove:
+            self.selected_geometry_points ^= set(points)
+            self.selected_geometry_lines ^= set(lines)
+            self.selected_geometry_surfaces ^= set(surfaces)
+            self.selected_geometry_volumes ^= set(volumes)
+        elif join:
+            self.selected_geometry_points |= set(points)
+            self.selected_geometry_lines |= set(lines)
+            self.selected_geometry_surfaces |= set(surfaces)
+            self.selected_geometry_volumes |= set(volumes)
+        elif remove:
+            self.selected_geometry_points -= set(points)
+            self.selected_geometry_lines -= set(lines)
+            self.selected_geometry_surfaces -= set(surfaces)
+            self.selected_geometry_volumes -= set(volumes)
+        else:
+            self.selected_geometry_points = set(points)
+            self.selected_geometry_lines = set(lines)
+            self.selected_geometry_surfaces = set(surfaces)
+            self.selected_geometry_volumes = set(volumes)
+
+        self.selection_changed.emit()
 
     def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
         if nodes is None:
@@ -116,154 +355,237 @@ class MainWindow(QMainWindow):
 
         self.selection_changed.emit()
 
-    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
-        s = time()
-        if points is None:
-            points = set()
-        
-        if lines is None:
-            lines = set()
+    def create_recents_menu(self):
+        color = QColor("#448cff") 
+        self.recent_icon = load_icon(":/icons/recent.png", color)
 
-        if surfaces is None:
-            surfaces = set()
+        self.recents_menu = QMenu("Recent projects", self)
+        self.recents_menu.setIcon(self.recent_icon)
+        self.update_recents_menu()
 
-        if volumes is None:
-            volumes = set()
+        self.menu_project.insertMenu(self.action_save, self.recents_menu)
+        self.menu_project.insertSeparator(self.action_save)
 
-        mesh = app().project.model.mesh
+    def update_recents_menu(self):
+        self.recents_menu.clear()
+        recent_paths = app().config.get_recent_files()
+        for path in recent_paths:
+            import_action = QAction(str(path), self)
+            import_action.triggered.connect(partial(self.open_project, path))
+            self.recents_menu.addAction(import_action)
 
-        # Select the surfaces associated to the selected volumes
-        for volume in volumes:
-            volume_surfaces = mesh.surfaces_from_volumes.get(volume, [])
-            surfaces |= set(volume_surfaces)
+    def render_changed_callback(self, new_index):
+        if self.last_render_index is None:
+            self.last_render_index = new_index
+            return
 
-        # Select the mesh elements associated with the selected geometry
-        # mesh_faces = []
-        # mesh_solids = []
-        # for surface in surfaces:
-        #     mesh_faces.extend(mesh.elements_from_surface.get(surface, []))
-        # for volume in volumes:
-        #     mesh_solids.extend(mesh.elements_from_volume.get(volume, []))
-        # self.set_mesh_selection(faces=mesh_faces, solids=mesh_solids, join=join, remove=remove)
+        new_widget = self.render_widgets_stack.widget(new_index)
+        if isinstance(new_widget, CommonRenderWidget):
+            last_widget = self.render_widgets_stack.widget(self.last_render_index)
+            new_widget.copy_camera_from(last_widget)
+            # if last_widget is not a valid render the operation will be ignored
 
-        if join and remove:
-            self.selected_geometry_points ^= set(points)
-            self.selected_geometry_lines ^= set(lines)
-            self.selected_geometry_surfaces ^= set(surfaces)
-            self.selected_geometry_volumes ^= set(volumes)
-        elif join:
-            self.selected_geometry_points |= set(points)
-            self.selected_geometry_lines |= set(lines)
-            self.selected_geometry_surfaces |= set(surfaces)
-            self.selected_geometry_volumes |= set(volumes)
-        elif remove:
-            self.selected_geometry_points -= set(points)
-            self.selected_geometry_lines -= set(lines)
-            self.selected_geometry_surfaces -= set(surfaces)
-            self.selected_geometry_volumes -= set(volumes)
-        else:
-            self.selected_geometry_points = set(points)
-            self.selected_geometry_lines = set(lines)
-            self.selected_geometry_surfaces = set(surfaces)
-            self.selected_geometry_volumes = set(volumes)
-
-        self.selection_changed.emit()
-        # print("COMBINING SELECTION", time() - s)
+        self.last_render_index = new_index
 
     def selection_changed_callback(self, points, lines, faces, volumes):
         self.status_bar.set_selection(points, lines, faces, volumes)
 
-    def update_mesh_information(self, nodes, face_elements, solid_elements):
-        self.status_bar.update_mesh_information(nodes, face_elements, solid_elements)
-
-    def update_geometry_information(self, geometry_info: dict):
-        self.status_bar.update_geometry_information(geometry_info)
-
-    def show_hide_section_plane_callback(self, option):
-        if option:
-            self.viewer_tabs.start_cutting_mode()
+    def action_section_plane_callback(self, condition: bool):
+        if condition:
+            self.section_plane.show()
         else:
-            self.viewer_tabs.stop_cutting_mode()
+            self.section_plane.cutting = False
+            self.section_plane.keep_section_plane = False
+            self.section_plane.close()
+            self.section_plane.value_changed.emit()
 
-    def show_config_section_plane(self):
-        pass
+    def action_theme_callback(self):
+        color = QColor("#448cff")
 
-    def slider_pressed_callback(self):
-        self.viewer_tabs.start_cutting_mode()
+        self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
+        self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
 
-    def slider_moved_callback(self):
-        position = self.section_plane.get_position("sliders")
-        orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.configure_cutting_plane(position, orientation)
+        if app().config.user_preferences.interface_theme == "light":
+            app().config.user_preferences.set_dark_theme()
+            self.set_theme("dark")
+            self.action_theme.setIcon(self.theme_sun_icon)
 
-    def slider_released_callback(self):
-        position = self.section_plane.get_position("sliders")
-        orientation = self.section_plane.get_rotation("sliders")
-        self.viewer_tabs.apply_cutting_plane(position, orientation, self.section_plane.invert_value)
+        elif app().config.user_preferences.interface_theme == "dark":
+            app().config.user_preferences.set_light_theme()
+            self.set_theme("light")
+            self.action_theme.setIcon(self.theme_moon_icon)
 
-    def disable_section_plane_visibility(self):
-        for tab in self.viewer_tabs.tabs():
-            if hasattr(tab, "plane_actor") and tab.plane_actor is not None:
-                tab.plane_actor.VisibilityOff()
+        app().config.update_config_file()
+    
+    def action_show_materials_callback(self):
+        self.visualization_filter.color_mode = ColorMode.MATERIAL
+        self.visualization_changed.emit()
 
-    def _config_window(self):
-        self.setMinimumSize(800, 600)
-        # self.showMaximized()
-        self.showMinimized()
-        self.vibra_icon = get_vibra_icon()
-        self.setWindowIcon(self.vibra_icon)
-        self.setWindowTitle("Vibra")
+    def action_show_fluids_callback(self):
+        self.visualization_filter.color_mode = ColorMode.FLUID
+        self.visualization_changed.emit()
 
-        # for qdarktheme
-        self.custom_colors = {
-            "[dark]": {
-                "toolbar.background": "#202124",
-            }
-        }
+    def action_show_empty_callback(self):
+        self.visualization_filter.color_mode = ColorMode.EMPTY
+        self.visualization_changed.emit()
 
-    def create_basic_layout(self):
-        # self.unhide_all = QAction("Unhide All")
-        # self.unhide_all.setShortcut("ctrl+shift+h")
-        # self.unhide_all.triggered.connect(self.unhide_all_callback)
-        # self.addAction(self.unhide_all)
+    def action_user_preferences_callback(self):
+        self.close_dialogs()
+        self.render_user_preferences = RendererUserPreferencesInput()
+
+    def configure_results_render_widget(self):
+        self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+        self.results_viewer_widget.hide_bottom_widget()
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_model_workspace.setChecked(False)
+
+        self.animation_toolbar.setEnabled(False)
+
+    def show_geometry_render_widget(self):
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+
+    def show_mesh_render_widget(self):
+        self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+    
+    def clear_render_widgets_stack(self):
+        for _ in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(0)
+            self.render_widgets_stack.removeWidget(widget)
+
+    def update_plots(self, reset_camera=True):
+        self.model_setup_widget.model_setup_items.update_items_appearance()
+        renders_number = self.render_widgets_stack.count()
+        for i in range(renders_number):
+            logging.info(f"Updating renders... [{i+1}/{renders_number}]")
+            widget = self.render_widgets_stack.widget(i)
+            if isinstance(widget, CommonRenderWidget):
+                widget.update_plot(reset_camera)
+
+    def update_symbols(self):
+        self.model_setup_widget.model_setup_items.update_items_appearance()
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_symbols"):
+                widget.update_symbols()
+
+    def update_info_text(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_info_text"):
+                widget.update_info_text()
+
+    def update_scale_bar(self, show: bool):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "scale_bar_actor"):
+                widget.scale_bar_actor.SetVisibility(show)
+
+    def update_renderer_font_size(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_renderer_font_size"):
+                widget.update_renderer_font_size()
+
+    def action_model_workspace_callback(self):
+        self.action_node_view.setToolTip("Points view")
+        self.action_model_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_results_workspace.setChecked(False)
+
+        if app().project.is_there_a_valid_solution():
+            self.action_results_workspace.setEnabled(True)
+        else:
+            self.action_results_workspace.setEnabled(False)
+
+        self.splitter.widget(0).setVisible(True)
+        self.stacked_setup.setCurrentWidget(self.model_setup_widget)
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+
+        self.animation_toolbar.setDisabled(True)
+        self.animation_toolbar.pause_animation()
+
+    def action_mesh_workspace_callback(self):
+        self.action_node_view.setToolTip("Nodes view")
+        self.action_mesh_workspace.setChecked(True)
+        self.action_model_workspace.setChecked(False)
+        self.action_results_workspace.setChecked(False)
+
+        if app().project.is_there_a_valid_solution():
+            self.action_results_workspace.setEnabled(True)
+        else:
+            self.action_results_workspace.setEnabled(False)
+
+        self.update_mesh_information()
+        self.splitter.widget(0).setVisible(True)
+        self.stacked_setup.setCurrentWidget(self.model_setup_widget)
+        self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+
+        self.animation_toolbar.setDisabled(True)
+        self.animation_toolbar.pause_animation()
+
+    def action_results_workspace_callback(self):
+        if not app().project.is_there_a_valid_solution():
+            return
         
-        self.menu_widget = MenuItems()
-        self.analysis_filter = AnalysisFilter()
-        self.status_bar = StatusBar(self)
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_model_workspace.setChecked(False)
+        self.action_mesh_workspace.setChecked(False)
 
-        grid_layout_left = QGridLayout()
-        grid_layout_left.addWidget(self.analysis_filter, 0, 0)
-        grid_layout_left.addWidget(self.menu_widget, 1, 0)
-        grid_layout_left.setContentsMargins(0, 0, 0, 0)
-        grid_layout_left.setVerticalSpacing(0)
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+        self.results_viewer_widget.results_viewer_items.update_items()
+        self.analysis_toolbar.update_analysis_combo_boxes()
 
-        left_widget = QWidget()
-        left_widget.setLayout(grid_layout_left)
-        left_widget.setMinimumWidth(300)
-        left_widget.setMaximumWidth(360)
+    def action_new_project_callback(self):
+        self.new_project_dialog()
 
-        self.vertical_line = QFrame()
-        self.vertical_line.setLineWidth(4)
-        self.vertical_line.setFrameShape(QFrame.VLine)
-        self.vertical_line.setFrameShadow(QFrame.Sunken)
+    def action_open_project_callback(self):
+        self.open_project_dialog()
+    
+    def action_home_exit_callback(self):
+        self.close_dialogs()
+        self.action_section_plane_callback(False)
+        self.action_section_plane.setChecked(False)
+        
+        self.setWindowTitle("Vibra")
+        self.stacked_setup.setVisible(False)
+        self.status_bar.setVisible(False)
+        self.results_viewer_widget.hide_bottom_widget()
+        self.welcome_widget.update_recent_projects()
+        self.model_setup_widget.model_setup_items.reset_items_appearance()
+        self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+        
+        self.clear_selection()
+        self.action_unhide_all_callback()
+        self.results_widget.remove_all_actors()
+        self.mesh_widget.remove_all_actors()
+        self.geometry_widget.remove_all_actors()
+        app().project.reset_variables()
+        app().project.reset_solutions()
+        
+        self.analysis_toolbar.setDisabled(True)
+        self.renderer_toolbar.setDisabled(True)
+        self.animation_toolbar.setDisabled(True)
+        self.disable_advanced_acoustic_plots_buttons(True)
 
-        self.setCentralWidget(None)
-        self.create_menu_bar()
-        self.create_tool_bars()
-        self.create_status_bar()
+    def action_import_mesh_callback(self):
+        caption = "Select a mesh file"
+        ext_filter = "Geometry Files (*.bdf *.BDF *.nas *.NAS)"
+        self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
-        grid_layout_central = QGridLayout()
-        grid_layout_central.addWidget(left_widget, 0, 0)
-        grid_layout_central.addWidget(self.vertical_line, 0, 1)
-        grid_layout_central.addWidget(self.viewer_tabs, 0, 2)
-        grid_layout_central.setContentsMargins(0, 0, 0, 0)
-        grid_layout_central.setHorizontalSpacing(0)
+    def action_import_geometry_callback(self):
+        caption = "Select a geometry file"
+        ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES)"
+        self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
-        central_widget = QWidget()
-        central_widget.setLayout(grid_layout_central)
-        self.setCentralWidget(central_widget)
-
-    def hide_selection_callback(self):
+    def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
 
         volumes_to_hide = set()
@@ -271,123 +593,370 @@ class MainWindow(QMainWindow):
             volumes_to_hide |= self.selected_geometry_volumes
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
-                volumes_to_hide |= set(mesh.volume_from_surface[surface])
+                volumes_to_hide |= set(mesh.volumes_from_surface[surface])
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
                 volumes_to_hide.add(mesh.volume_from_element[element])
 
+        self.hide_volumes(volumes_to_hide)
+        self.clear_selection()
+
+    def recompute_hidden_volumes(self):
+        self.hidden_surfaces.clear()
+        self.hide_volumes(app().main_window.hidden_volumes)
+
+    def hide_volumes(self, volumes: set[int]):
+        mesh = app().project.model.mesh
+
+        volumes = set(volumes)
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
-        for volume, surfaces in mesh.surfaces_from_volumes.items():
-            if volume in volumes_to_hide:
+
+        for volume, surfaces in mesh.surfaces_from_volume.items():
+            if volume in volumes:
                 selected_volume_surfaces |= set(surfaces)
             elif volume not in self.hidden_volumes:
                 visible_volume_surfaces |= set(surfaces)
-        surfaces_to_keep_visible = set.intersection(selected_volume_surfaces,
-                                                    visible_volume_surfaces)
+        surfaces_to_keep_visible = set.intersection(selected_volume_surfaces, visible_volume_surfaces)
 
-        self.hidden_volumes |= volumes_to_hide
+        self.hidden_volumes |= volumes
         self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
-        self.viewer_tabs.update_hidden_plots()
+        self.update_hidden_plots()
 
-        # Clear selection
-        self.set_mesh_selection()
-        self.set_geometry_selection()
-
-    def unhide_all_callback(self):
+    def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
         self.hidden_volumes.clear()
-        self.viewer_tabs.update_hidden_plots()
+        self.update_hidden_plots()
 
-    def create_menu_bar(self):
+    def action_save_callback(self):
+        self.save_project_dialog()
+
+    def create_temporary_vibra_folder(self):
+        temp_path = self.user_path / "temp_vibra"
+        if not temp_path.exists():
+            temp_path.mkdir(parents=True)
+        return temp_path
+
+    def reset_temporary_vibra_folder(self):
+        if TEMP_PROJECT_DIR.exists():
+            rmtree(TEMP_PROJECT_DIR)  # delete the directory
+        TEMP_PROJECT_DIR.mkdir(parents=True, exist_ok=True)  # create a new empty directory
+
+    def is_temporary_vibra_folder_empty(self):
+        if TEMP_PROJECT_DIR.exists():
+            return not any(TEMP_PROJECT_DIR.iterdir())
+        else:
+            return True
+
+    def recovery_dialog(self):
+        caption = "The recovery project data has been detected in the application backup files. "
+        caption += "Would you like to try to recover the last project files?"
+
+        obj = QMessageBox.question(
+            self,
+            "Project recovery",
+            caption,
+            QMessageBox.Yes | QMessageBox.No,
+        )
+
+        if obj == QMessageBox.Yes:
+            self.open_project()
+        else:
+            self.reset_temporary_vibra_folder()
+            self.try_to_open_argv_path()
+
+    def new_project_dialog(self):
+        self.reset_temporary_vibra_folder()
+        self.import_geometry_or_mesh_dialog()
+
+    def save_project_dialog(self):
+        if app().project.save_path is None:
+            return self.save_project_as_dialog()
+        else:
+            self.save_project_as(app().project.save_path)
+            return True
+
+    def save_project_as_dialog(self):
+        if not TEMP_PROJECT_FILE.exists():
+            return
+
+        obj = SaveProjectDataSelector()
+        if obj.complete:
+            last_path = app().config.get_last_folder_for("project_folder")
+            if last_path is None:
+                path = os.path.expanduser("~")
+            else:
+                path = last_path
+
+            kwargs = dict()
+            if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+            file_path, check = QFileDialog.getSaveFileName(
+                self,
+                "Save As",
+                path,
+                filter="Vibra File (*.vibra)", 
+                **kwargs,
+            )
+
+            if not check:
+                return
+
+            if obj.ignore_results_data:
+                app().file.remove_results_data_from_project_file()
+
+            if obj.ignore_mesh_data:
+                app().file.remove_mesh_data_from_project_file()
+
+            if not file_path.endswith(".vibra"):
+                file_path += ".vibra"
+            
+            self.save_project_as(file_path)
+
+        return obj.complete
+
+    def save_project_as(self, path: str):
+
+        def save_data(path):
+
+            path = Path(path)
+            app().project.name = path.stem
+            app().project.save_path = path
+            logging.info("Saving project data... [10/100]")
+
+            app().file.write_thumbnail()
+            app().config.add_recent_file(path)
+            logging.info("Saving project data... [30/100]")
+
+            app().config.write_last_folder_path_in_file("project_folder", path)
+            self.update_recents_menu()
+            logging.info("Saving project data... [75/100]")
+
+            copy(TEMP_PROJECT_FILE, path)
+            self.update_window_title(path)
+            self.project_data_modified = False
+            logging.info("The project data has been saved. [100/100]")
+
+        LoadingWindow(save_data).run(path)
+
+        from datetime import datetime
+
+        message = f"The project data has been saved: {datetime.now()}"
+        print(message)
+
+    def open_project_dialog(self):
+        last_path = app().config.get_last_folder_for("project_folder")
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        project_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Open Project",
+            path,
+            filter="Vibra File (*.vibra)",
+        )
+
+        if not check:
+            return
+
+        self.open_project(project_path)
+
+    def import_geometry_or_mesh_dialog(self, caption: str | None = None, ext_filter: str | None = None):
+        self.close_dialogs()
+
+        last_path = app().config.get_last_folder_for("geometry_mesh_folder")
+        if last_path is None:
+            path = os.path.expanduser("~")
+        else:
+            path = last_path
+
+        if caption is None:
+            caption = "Select a geometry or mesh file"
+
+        if ext_filter is None:
+            ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES *.bdf *.BDF *.nas *.NAS)"
+
+        load_path, check = QFileDialog.getOpenFileName(
+            self,
+            caption,
+            path,
+            filter=ext_filter,
+        )
+
+        if not check:
+            return False
+
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
+
+        app().project.reset_variables()
+        app().project.reset_solutions()
+
+        # call geometry setup
+        read = GeometrySetup()
+        if not read.complete:
+            return False
+
+        app().file.write_geometry_in_file(
+            load_path,
+            app().project.model.length_unit,
+            app().project.model.geometry_qf,
+        )
+
+        def remove_callback():
+            logging.info("Removing the model properties from project file... [10/100]")
+            app().file.remove_model_properties_from_project_file()
+
+            logging.info("Removing the mesh data from project file... [40/100]")
+            app().file.remove_mesh_data_from_project_file()
+
+            logging.info("Removing the results data from project file... [75/100]")
+            app().file.remove_results_data_from_project_file()
+
+        LoadingWindow(remove_callback).run()
+
+        _geometry_path = app().file.read_geometry_from_file()
+        self.import_geometry_or_mesh(_geometry_path)
+        self.model_setup_widget.model_setup_items.update_items_appearance()            
         
-        self.project_menu = ProjectMenu(self)
-        self.visibility_settings_menu = VisibilitySettingsMenu(self)
-        self.mesher_menu = MesherMenu(self)
-        # self.view_menu = ViewsMenu(self)
-        self.view_mode_menu = ViewModeMenu(self)
-        self.advanced_results_menu = AdvancedResultsMenu(self)
-        self.help_menu = HelpMenu(self)
+        return True
 
-        self.menu_bar = self.menuBar()
-        self.menu_bar.addMenu(self.project_menu)
-        self.menu_bar.addMenu(self.visibility_settings_menu)
-        self.menu_bar.addMenu(self.mesher_menu)
-        # self.menu_bar.addMenu(self.view_menu)
-        self.menu_bar.addMenu(self.view_mode_menu)
-        self.menu_bar.addMenu(self.advanced_results_menu)
-        self.menu_bar.addMenu(self.help_menu)
+    def update_window_title(self, project_path: str | Path):
+        if isinstance(project_path, str):
+            project_path = Path(project_path)
+        project_name = project_path.stem
+        self.setWindowTitle(f"{project_name}")
 
-    def create_status_bar(self):
-        self.setStatusBar(self.status_bar)
-
-    def create_tool_bars(self):
-        self.renderer_toolbar = RendererToolbar(self, self.viewer_tabs)
-        self.addToolBar(self.renderer_toolbar)
-        self.renderer_toolbar.setDisabled(True)
-        self.analysis_filter.setDisabled(True)
-
-    def config_tool_tip_appearance(self):
-        tool_tip_style = "QToolTip { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255) }"
-        self.setStyleSheet(tool_tip_style)
-
-    def _load_render_widgets(self):
-        self.section_plane = SectionPlaneWidget(self)
-        # t0 = time()
-        self.viewer_tabs = ViewerTabs(self)
-        # dt = time() - t0
-        # print(f"elapsed time to load class: {round(dt, 4)}")
-
-    def configure_main_window(self):
-
-        app().splash.update_progress(10)
-        self._config_window()
-
-        app().splash.update_progress(30)
-        self._load_render_widgets()
-
-        app().splash.update_progress(60)
-        self._define_qt_variables()
-        self._create_connections()
-        self.create_basic_layout()
-
-        app().splash.update_progress(90)
-        self.load_user_preferences()
-        self.config_tool_tip_appearance()
-        self.create_temporary_vibra_folder()
-
-        app().splash.close()
-        self.showMaximized()
-
-        app().processEvents()
-
-        if len(sys.argv) > 1:
-            self.open_project(Path(sys.argv[1]))
-
-        elif not self.is_temporary_vibra_folder_empty():
-            self.recovery_dialog()
-
-    def load_user_preferences(self):
-        self.set_theme(app().user_config.theme)
-
-    def get_user_config(self):
-        return app().user_config
-
-    # External functions that may be usefull
-    def set_theme(self, theme: str):
+    def open_project(self, project_path: str | Path | None = None):
         """
-        Changes Qt stylesheets using qdarktheme library and the
-        renderer background colors.
-
-        The input is a string "light" or "dark".
+        This function loads a new project in a temporary folder.
+        If you pass a valid vibra file to this function, it will first copy
+        the file to a temporary folder and then load it.
         """
-        qdarktheme.setup_theme(theme, custom_colors=self.custom_colors)
-        app().user_config.theme = theme
-        self.menu_widget._configItems()
-        self.theme_changed.emit(theme)
+        try:
+            if project_path is not None:
+                project_path = Path(project_path)
+                app().config.add_recent_file(project_path)
+                app().config.write_last_folder_path_in_file("project_folder", project_path)
+                self.update_recents_menu()
+                copy(project_path, TEMP_PROJECT_FILE)
+                self.update_window_title(project_path)
 
-    def set_menu_items_visibility_state(self, state: bool):
-        app().user_config.menu_items_visible = state
+            app().project.reset_variables()
+            app().project.reset_solutions()
+
+            if project_path is not None:
+                app().project.name = project_path.stem
+                app().project.save_path = project_path
+
+            app().load_project.initialize()
+            LoadingWindow(app().load_project.load).run()
+
+            self.analysis_toolbar.check_analysis_setup_callback()
+            self.status_bar.setVisible(True)
+            self.action_front_view_callback()
+            self.update_mesh_information()
+
+            LoadingWindow(self.mesh_widget.update_plot).run()
+            LoadingWindow(self.geometry_widget.update_plot).run()
+            self.model_setup_widget.model_setup_items.update_items_appearance()            
+
+            self.action_results_workspace.setDisabled(True)
+            self.action_model_workspace_callback()
+            
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            window_title = "Error"
+            title = "Error while processing the 'open_project' method"
+            message = str(error_log)
+            PrintMessageInput([window_title, title, message])
+
+            app().config.remove_path_from_config_file(project_path)
+            self.welcome_widget.update_recent_projects()
+            self.update_recents_menu()
+
+    def import_geometry_or_mesh(self, path: str, update_render: bool = True):
+
+        geometry_file = self.check_path_for_geometry_file(path)
+
+        if app().file.read_mesh_data_from_file():
+            app().project.load_project_without_process_mesh(path, geometry_file)
+
+        else:
+
+            if geometry_file:
+                if LoadingWindow(app().project.import_geometry).run(path) == -1:
+                    return
+
+            else:
+                if LoadingWindow(app().project.import_mesh).run(path) == -1:
+                    return
+
+                self.update_mesh_information()
+                app().file.write_geometry_data_in_file()
+                app().file.write_mesh_data_in_file()
+                app().main_window.project_data_modified = False
+
+            self.update_geometry_information()
+
+        try:
+            self.renderer_toolbar.setDisabled(False)
+            self.analysis_toolbar.setDisabled(False)
+            self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+            self.analysis_toolbar.update_analysis_combo_boxes()
+
+            app().project.reset_solutions()
+            app().project.model.properties._reset_variables()
+
+            if update_render:
+                LoadingWindow(self.update_plots).run()
+
+            if geometry_file:
+                self.action_model_workspace_callback()
+            else:
+                self.action_mesh_workspace_callback()
+
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            
+            window_title = "Error"
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title, title, message])
+
+    def check_path_for_geometry_file(self, path: Path | str):
+        """
+        This method returns True if a CAD extension file is detected 
+        in the input path, otherwise, it returns False.
+        """
+
+        if isinstance(path, Path):
+            path = str(path)
+
+        ext = path.split(".")[-1]
+        if ext in ["IGES", "iges", "IGS", "igs", "STEP", "step"]:
+            return True
+
+        return False
+
+    def action_save_as_callback(self):
+        self.save_project_as_dialog()
+
+    def action_export_mesh_callback(self):
+        self.export_mesh()
+
+    def export_mesh(self):
+        ExportMeshData()
+
+    def set_input_widget(self, dialog):
+        self.dialog = dialog
+
+    def action_capture_image_callback(self):
+        self.capture_image()
 
     def capture_image(self):
         path, check = QFileDialog.getSaveFileName(
@@ -399,260 +968,107 @@ class MainWindow(QMainWindow):
         if not check:
             return
 
-        # self.viewer_3d.save_png(path)
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            image = widget.get_screenshot()
+            with open(path, "wb") as file:
+                image.save(file)
 
-    def create_temporary_vibra_folder(self):
-        create_new_folder(self.user_path, "temp_vibra")
-
-    def reset_temporary_vibra_folder(self):
-        if TEMP_PROJECT_DIR.exists():
-            for filename in os.listdir(TEMP_PROJECT_DIR).copy():
-                file_path = TEMP_PROJECT_DIR / filename
-                if os.path.exists(file_path):
-                    if "." in filename:
-                        os.remove(file_path)
-                    else:
-                        rmtree(file_path)
-
-    def is_temporary_vibra_folder_empty(self):
-        if TEMP_PROJECT_DIR.exists():
-            if os.listdir(TEMP_PROJECT_DIR):
-                return False
-        return True
-
-    def recovery_dialog(self):
-
-        caption = "The recovery project data has been detected in the application backup files. "
-        caption += "Would you like to try to recover the last project files?"
-
-        obj = QMessageBox.question(   
-            self, 
-            "Project recovery", 
-            caption, 
-            QMessageBox.Yes | QMessageBox.No
-        )
-
-        if obj == QMessageBox.Yes:
-            self.open_project()
-        else:
-            self.reset_temporary_vibra_folder()
-
-    def new_project_dialog(self):
-        self.reset_temporary_vibra_folder()
-        self.import_geometry_dialog()
-
-    def save_project_dialog(self):
-        if app().project.save_path is None:
-            return self.save_project_as_dialog()
-        else:
-            self.save_project_as(app().project.save_path)
-            return True
-
-    def save_project_as_dialog(self):
-
-        obj = SaveProjectDataSelector()
-        if obj.complete:
-
-            last_path = app().config.get_last_folder_for("project folder")
-            if last_path is None:
-                path = os.path.expanduser("~")
-            else:
-                path = last_path
-
-            file_path, check = QFileDialog.getSaveFileName(
-                                                            self,
-                                                            "Save As",
-                                                            path,
-                                                            filter = "Vibra File (*.vibra)",
-                                                        )
-
-            if not check:
-                return
-
-            if obj.ignore_results_data:
-                app().file.remove_results_data_from_project_file()
-            
-            if obj.ignore_mesh_data:
-                app().file.remove_mesh_data_from_project_file()
-
-            self.save_project_as(file_path)
-
-        return obj.complete
-
-    def save_project_as(self, path):
-
-        def save_data(path):
-            path = Path(path)
-            app().project.name = path.stem
-            app().project.save_path = path
-            app().file.write_thumbnail()
-            app().config.add_recent_file(path)
-            logging.info("Saving project data..." + ProgressStatus(10, 100))
-
-            app().config.write_last_folder_path_in_file("project folder", path)
-            self.project_menu.update_recents_menu()
-            logging.info("Saving project data..." + ProgressStatus(60, 100))
-            
-            copy(TEMP_PROJECT_FILE, path)
-            self.update_window_title(path)
-            self.project_data_modified = False
-            logging.info("The project data has been saved." + ProgressStatus(100, 100))
-
-        save_func = load_function(save_data, self)
-        save_func(path)
-
-        from datetime import datetime
-        message = f"The project data has been saved @{datetime.now()}"
-        print(message)
-
-    def open_project_dialog(self):
-
-        last_path = app().config.get_last_folder_for("project folder")
-        if last_path is None:
-            path = os.path.expanduser("~")
-        else:
-            path = last_path
-
-        project_path, check = QFileDialog.getOpenFileName( 
-                                                            self, 
-                                                            "Open Project", 
-                                                            path, 
-                                                            filter = "Vibra File (*.vibra)"
-                                                         )
-
-        if not check:
-            return
-
-        self.open_project(project_path)
-
-    def import_geometry_dialog(self):
-
-        last_path = app().config.get_last_folder_for("geometry folder")
-        if last_path is None:
-            path = os.path.expanduser("~")
-        else:
-            path = last_path
-
-        geometry_path, check = QFileDialog.getOpenFileName(
-                                                            self,
-                                                            "Select Geometry",
-                                                            path,
-                                                            filter = "Geometry Files (*.stp *.step *.igs *.iges)",
-                                                            )
-
-        if not check:
-            return False
-
-        app().config.write_last_folder_path_in_file("geometry folder", geometry_path)
-
-        app().project.reset_variables()
-        app().project.reset_solutions()
-
-        # self.file = ProjectFile(TEMP_PROJECT_FILE)
-        app().file.write_geometry_in_file(geometry_path)
-
-        def remove_callback():
-            logging.info("Removing the model properties from project file..." + ProgressStatus(10, 100))
-            app().file.remove_model_properties_from_project_file()
-            
-            logging.info("Removing the mesh data from project file..." + ProgressStatus(40, 100))
-            app().file.remove_mesh_data_from_project_file()
-
-            logging.info("Removing the results data from project file..." + ProgressStatus(75, 100))
-            app().file.remove_results_data_from_project_file()
-
-        remove = load_function(remove_callback, self)
-        remove()
-
-        _geometry_path = app().file.read_geometry_from_file()
-        self.import_geometry(_geometry_path)
-
-        return True
-
-    def export_mesh(self):
-        ExportMeshData()
-
-    def update_window_title(self, project_path : str | Path):
-        if isinstance(project_path, str):
-            project_path = Path(project_path)
-        project_name = project_path.stem
-        self.setWindowTitle(f"{project_name}")
-
-    def open_project(self, project_path: str | Path | None = None):
-        '''
-        This function loads a new project in a temporary folder.
-        If you pass a valid vibra file to this function, it will first copy 
-        the file to a temporary folder and then load it.
-        '''
-
-        if project_path is not None:
-            app().config.add_recent_file(project_path)
-            app().config.write_last_folder_path_in_file("project folder", project_path)
-            self.project_menu.update_recents_menu()
-            copy(project_path, TEMP_PROJECT_FILE)
-            self.update_window_title(project_path)
-
-        app().project.reset_variables()
-        app().project.reset_solutions()
-
-        # self.file = ProjectFile(TEMP_PROJECT_FILE, override=False)
-
-        if project_path is not None:
-            path = Path(project_path)
-            app().project.name = path.stem
-            app().project.save_path = path
-
-        # self.load_project = LoadProject()
-        app().load_project.initialize()
-        load = load_function(app().load_project.load, self)
-        load()
-
-    def import_geometry(self, path : str):
-
-        import_geometry = load_function(app().project.import_geometry, self)
-        if import_geometry(path) == -1:
-            return
-
-        try:
-
-            self.viewer_tabs.reset_tab_visibility()
-            self.viewer_tabs.show_geometry()
-
-            self.renderer_toolbar.setDisabled(False)
-            self.analysis_filter.setDisabled(False)
-            self.menu_widget.modify_items_access_after_geometry_importing()
-
-            app().project.reset_solutions()
-            app().project.model.properties._reset_variables()
-
-        except Exception as error_log:
-            window_title = "Error"
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([window_title, title, message])
-
-    def closeEvent(self, event):
+    def action_exit_callback(self):
         self.close_app()
-        event.ignore()
+
+    def action_face_view_callback(self, clicked: bool):
+        self.visualization_filter.faces = clicked
+        self.visualization_filter.solids = clicked
+        self.visualization_changed.emit()
+
+    def action_line_view_callback(self, clicked: bool):
+        self.visualization_filter.lines = clicked
+        self.visualization_changed.emit()
+
+    def action_node_view_callback(self, clicked: bool):
+        self.visualization_filter.points = clicked
+        self.visualization_changed.emit()
+    
+    def action_ghost_view_callback(self, clicked: bool):
+        self.visualization_filter.ghost = clicked
+        self.visualization_changed.emit()
+
+    def update_visualization_filter(self):
+        self.blockSignals(True)
+        self.action_node_view.setChecked(self.visualization_filter.points)
+        self.action_line_view.setChecked(self.visualization_filter.lines)
+        self.action_face_view.setChecked(self.visualization_filter.faces and self.visualization_filter.solids)
+        self.action_ghost_view.setChecked(self.visualization_filter.ghost)
+        self.blockSignals(False)
+
+    def action_about_vibra_callback(self):
+        self.render_widgets_stack.setCurrentWidget(self.help_widget)
+
+    def action_top_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_top_view()
+
+    def action_bottom_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_bottom_view()
+
+    def action_right_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_right_view()
+
+    def action_left_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_left_view()
+
+    def action_front_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_front_view()
+
+    def action_back_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_back_view()
+
+    def action_isometric_view_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.set_isometric_view()
+
+    def action_zoom_to_fit_callback(self):
+        widget = self.render_widgets_stack.currentWidget()
+        if isinstance(widget, CommonRenderWidget):
+            widget.renderer.ResetCamera()
+            widget.update()
+
+    def action_hide_show_symbols_callback(self, clicked: bool):
+        self.visualization_filter.acoustic_symbols = clicked
+        self.visualization_filter.structural_symbols = clicked
+        self.visualization_changed.emit()
 
     def close_app(self):
-
-        self.close_dialogs()
+        self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
-        condition_2 = os.path.exists(TEMP_PROJECT_FILE)
+        condition_2 = TEMP_PROJECT_FILE.exists()
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
         if condition:
-            close = QMessageBox.question(   
-                                            self, 
-                                            "QUIT", 
-                                            "Would you like to save the project data before exit?", 
-                                            QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save
-                                        )
+            close = QMessageBox.question(
+                self,
+                "QUIT",
+                "Would you like to save the project data before exit?",
+                QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save,
+            )
 
             if close == QMessageBox.Cancel:
+                self.restore_open_dialogs()
                 return
 
             elif close == QMessageBox.Save:
@@ -661,28 +1077,88 @@ class MainWindow(QMainWindow):
 
         else:
             close = QMessageBox.question(
-                                            self, 
-                                            "QUIT", 
-                                            "Would you like to close the application?", 
-                                            QMessageBox.Yes | QMessageBox.No
-                                        )
+                self,
+                "QUIT",
+                "Would you like to close the application?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
 
             if close == QMessageBox.No:
+                self.restore_open_dialogs()
                 return
 
-        app().user_config.save()
         self.reset_temporary_vibra_folder()
-        sys.exit()
-
-    def set_input_widget(self, dialog):
-        self.dialog = dialog
+        app().quit()
 
     def close_dialogs(self):
-        if isinstance(self.dialog, (QDialog, QWidget)):
-            self.dialog.close()
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
 
-def create_new_folder(path : Path, folder_name : str) -> Path:
-    folder_path = path / folder_name
-    if not os.path.exists(folder_path):
-        os.mkdir(folder_path)
-    return folder_path
+            if isinstance(window, LoadingWindow):
+                continue
+
+            window.close()
+
+    def minimize_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.showMinimized()
+    
+    def restore_open_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.showNormal()
+
+    def action_export_element_transfer_data_callback(self):
+        if app().project.acoustic_harmonic_solver.solution is None:
+            return
+        ExportElementTransferDataInputs()
+
+    def update_hidden_plots(self):
+        for i in range(self.render_widgets_stack.count()):
+            widget = self.render_widgets_stack.widget(i)
+            if hasattr(widget, "update_hidden_plot"):
+                widget.update_hidden_plot()
+
+    def disable_advanced_acoustic_plots_buttons(self, disabled: bool):
+        self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
+        self.action_plot_particle_velocity.setDisabled(disabled)
+        self.action_export_element_transfer_data.setDisabled(disabled)
+
+    def eventFilter(self, obj, event: QEvent):
+        modifiers = app().keyboardModifiers()
+        alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
+
+        if event.type() == QEvent.Type.ShortcutOverride:
+            if event.key() == Qt.Key.Key_F5:
+                self.update_plots()
+            
+            elif alt_pressed and (event.key() == Qt.Key.Key_P):
+                if self.section_plane.isVisible():
+                    return super(MainWindow, self).eventFilter(obj, event)
+                
+                active = self.action_section_plane.isChecked()
+                self.action_section_plane.blockSignals(True)
+                self.action_section_plane.setChecked(not active)
+                self.action_section_plane.blockSignals(False)
+                self.section_plane.cutting = not active
+                self.section_plane.value_changed.emit()
+        
+        return super(MainWindow, self).eventFilter(obj, event)
+
+    def closeEvent(self, event: QEvent):
+        self.close_app()
+        event.ignore()

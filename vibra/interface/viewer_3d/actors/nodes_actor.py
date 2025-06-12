@@ -10,6 +10,7 @@ from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra.engine.mesher.element_type import *
+from vibra import app
 
 
 class NodesActor(vtkActor):
@@ -51,10 +52,11 @@ class NodesActor(vtkActor):
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(cell_indexes)
         self.data = data
-
         mapper.SetInputData(data)
         mapper.SetScalarModeToUseCellData()
         self.SetMapper(mapper)
+
+        self.clear_colors()
 
     def update_coordinates(self, coordinates):
         points: vtkPoints
@@ -64,18 +66,23 @@ class NodesActor(vtkActor):
         points.Modified()
 
     def configure_appearance(self):
-        self.GetProperty().RenderPointsAsSpheresOn()
-        self.GetProperty().SetPointSize(10)
+        nodes_size = app().config.user_preferences.nodes_size
+        if not app().config.user_preferences.compatibility_mode:
+            self.GetProperty().RenderPointsAsSpheresOn()
+        self.GetProperty().SetPointSize(nodes_size)
         self.GetProperty().LightingOff()
-        self.clear_colors((0, 0, 0, 0))
+        self.clear_colors()
 
-    def clear_colors(self, color=(255, 255, 255, 255)):
+    def clear_colors(self):
+        color = app().config.user_preferences.nodes_points_color.to_rgba()
+        self.set_color(color)
+    
+    def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
         if self.data is None:
             return
 
-        cell_colors = self.data.GetCellData().GetScalars()
         r, g, b, a = color
-
+        cell_colors = self.data.GetCellData().GetScalars()
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
         cell_colors.FillComponent(2, b)

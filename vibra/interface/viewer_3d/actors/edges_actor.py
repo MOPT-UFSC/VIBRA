@@ -3,6 +3,8 @@ from vtkmodules.vtkFiltersCore import vtkExtractEdges
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
+from vibra import app
+
 
 class EdgesActor(vtkActor):
     def __init__(self, data):
@@ -12,10 +14,10 @@ class EdgesActor(vtkActor):
         self.data = None
 
         self.mapper.ScalarVisibilityOff()
-        self.GetProperty().SetRepresentationToWireframe()
 
         self.SetMapper(self.mapper)
         self.extract_data(data)
+        self.configure_appearance()
 
     def extract_data(self, data):
         if data == self.edges_extractor.GetInput():
@@ -54,3 +56,10 @@ class EdgesActor(vtkActor):
         self.GetMapper().RemoveAllClippingPlanes()
         self.GetMapper().RemoveAllInputConnections(0)
         self.GetMapper().SetInputData(self.data)
+
+    def configure_appearance(self):
+        edges_thickness = app().config.user_preferences.edges_thickness
+        r, g, b = app().config.user_preferences.edges_color.to_rgb_f()
+        self.GetProperty().SetColor(r, g, b)
+        self.GetProperty().SetRepresentationToWireframe()
+        self.GetProperty().SetLineWidth(edges_thickness)

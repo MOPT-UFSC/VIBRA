@@ -1,11 +1,12 @@
-from PyQt5.QtWidgets import QDialog, QComboBox, QLabel, QLineEdit, QPushButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtCore import Qt
 
-from vibra import app, UI_DIR
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input import SetFluidInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_input_simplified import SetFluidInputSimplified
+from vibra import app
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -14,7 +15,6 @@ from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCom
 
 import numpy as np
 
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
@@ -22,24 +22,23 @@ psi_to_Pa = (0.45359237 * 9.80665) / ((0.0254)**2)
 kgf_cm2_to_Pa = 9.80665e4
 bar_to_Pa = 1e5
 
-class ReciprocatingCompressorInputs(QDialog):
+
+class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        ui_path = UI_DIR / "model/setup/acoustic/reciprocating_compressor_inputs.ui"
-        uic.loadUi(ui_path, self)
-
         app().main_window.set_input_widget(self)
-        app().main_window.viewer_tabs.show_geometry()
+        app().main_window.action_model_workspace_callback()
 
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
-        self._define_qt_variables()
         self._create_connections()
         self._config_widget()
+        self._paint_icons()
 
         self.load_compressor_excitation_info()
         self.selection_callback()
@@ -60,86 +59,6 @@ class ReciprocatingCompressorInputs(QDialog):
 
         self.aquisition_parameters_processed = False
         self.not_update_event = False  
-
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_connection_type: QComboBox
-        self.comboBox_cylinder_acting: QComboBox
-        self.comboBox_fluid_data_source: QComboBox
-        self.comboBox_frequency_resolution: QComboBox
-        self.comboBox_stage: QComboBox
-        self.comboBox_pressure_units: QComboBox
-        self.comboBox_temperature_units: QComboBox
-
-        # QLabel
-        self.label_molar_mass: QLabel
-        self.label_molar_mass_unit: QLabel
-        self.label_isentropic_exp: QLabel
-        self.label_isentropic_exp_unit: QLabel
-        self.label_suction_pressure_unit: QLabel
-        self.label_discharge_pressure_unit: QLabel
-        self.label_suction_temperature_unit: QLabel
-        self.label_discharge_temperature_unit: QLabel
-        
-        # QLineEdit
-        self.lineEdit_selected_surface_id: QLineEdit
-        self.lineEdit_frequency_resolution: QLineEdit
-        self.lineEdit_number_of_revolutions: QLineEdit
-        self.lineEdit_bore_diameter: QLineEdit
-        self.lineEdit_stroke: QLineEdit
-        self.lineEdit_connecting_rod_length: QLineEdit
-        self.lineEdit_rod_diameter: QLineEdit
-        self.lineEdit_pressure_ratio: QLineEdit
-        self.lineEdit_clearance_head_end: QLineEdit
-        self.lineEdit_clearance_crank_end: QLineEdit
-        self.lineEdit_rotational_speed: QLineEdit
-        self.lineEdit_isentropic_exponent: QLineEdit
-        self.lineEdit_molar_mass: QLineEdit
-        self.lineEdit_pressure_at_suction: QLineEdit
-        self.lineEdit_pressure_at_discharge: QLineEdit
-        self.lineEdit_temperature_at_suction: QLineEdit
-        self.lineEdit_temperature_at_discharge: QLineEdit
-        self.lineEdit_connection_type: QLineEdit
-        self.lineEdit_selected_fluid: QLineEdit
-
-        # QPushButton
-        self.pushButton_plot_PV_diagram_head_end: QPushButton
-        self.pushButton_plot_PV_diagram_crank_end: QPushButton
-        self.pushButton_plot_PV_diagram_both_ends: QPushButton
-        self.pushButton_plot_piston_position_and_velocity_time: QPushButton
-        self.pushButton_plot_volumetric_flow_rate_at_suction_time: QPushButton
-        self.pushButton_plot_volumetric_flow_rate_at_discharge_time: QPushButton
-        self.pushButton_plot_rod_pressure_load_frequency: QPushButton
-        self.pushButton_plot_rod_pressure_load_time: QPushButton
-        self.pushButton_plot_volumetric_flow_rate_at_suction_frequency: QPushButton
-        self.pushButton_plot_volumetric_flow_rate_at_discharge_frequency: QPushButton
-        self.pushButton_plot_pressure_head_end_angle: QPushButton
-        self.pushButton_plot_volume_head_end_angle: QPushButton
-        self.pushButton_plot_pressure_crank_end_angle: QPushButton
-        self.pushButton_plot_volume_crank_end_angle: QPushButton
-        self.pushButton_process_aquisition_parameters: QPushButton
-        #
-        self.pushButton_exit: QPushButton
-        self.pushButton_confirm: QPushButton
-        self.pushButton_get_fluid: QPushButton
-        self.pushButton_remove: QPushButton
-        self.pushButton_reset: QPushButton
-        self.pushButton_reset_entries: QPushButton
-
-        # QSpinBox
-        self.spinBox_number_of_points: QSpinBox
-        self.spinBox_max_frequency: QSpinBox
-        self.spinBox_number_of_cylinders: QSpinBox
-        self.spinBox_tdc1_crank_angle: QSpinBox
-        self.spinBox_tdc2_crank_angle: QSpinBox
-        self.spinBox_capacity: QSpinBox
-
-        # QTabWidget
-        self.tabWidget_compressor: QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_compressor_excitation: QTreeWidget
 
     def _config_widget(self):
         self.treeWidget_compressor_excitation.setColumnWidth(0, 100)
@@ -192,11 +111,24 @@ class ReciprocatingCompressorInputs(QDialog):
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
         app().main_window.selection_changed.connect(self.selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.comboBox_event_stage()
         self.update_compressing_cylinders_setup()
         self.spinBox_event_number_of_cylinders()
         self.update_state_properties_at_discharge()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_reset_entries]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def fluid_data_source_callback(self):
 
@@ -219,16 +151,19 @@ class ReciprocatingCompressorInputs(QDialog):
         if selected_surfaces:
 
             surface_ids = [str(i) for i in selected_surfaces]
-            self.lineEdit_selected_surface_id.setText(surface_ids[0])
+            self.lineEdit_selection_id.setText(surface_ids[0])
 
-            stop, surface_id = self.model.mesh.check_selected_ids(
-                                                                  self.lineEdit_selected_surface_id.text(), 
-                                                                  selection = "surfaces", 
-                                                                  single_id = True
-                                                                  )
+            input_ids = self.lineEdit_selection_id.text()
+            surface_id, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "surfaces",
+                                                                   single_id = True
+                                                                   )
 
-            if stop:
-                self.lineEdit_selected_surface_id.setFocus()
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id.setFocus()
+                PrintMessageInput(error_data)
                 return True
 
             data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
@@ -237,7 +172,7 @@ class ReciprocatingCompressorInputs(QDialog):
                 self.update_compressor_inputs(data)
 
     def tab_event_callback(self):
-        # self.lineEdit_selected_surface_id.setText("")
+        # self.lineEdit_selection_id.setText("")
         # self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
         return
@@ -334,7 +269,7 @@ class ReciprocatingCompressorInputs(QDialog):
 
         if state_properties:
             self.hide()
-            self.fluid_dialog = SetFluidInputSimplified(state_properties = state_properties)
+            self.fluid_dialog = SimplifiedFluidInputs(state_properties = state_properties)
             self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
             self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
             self.fluid_dialog.exec_and_keep_window_open()
@@ -488,22 +423,22 @@ class ReciprocatingCompressorInputs(QDialog):
 
     def check_surface_id(self, lineEdit: QLineEdit):
 
-        input_selected_id = lineEdit.text()
-        stop, surface_id = self.model.mesh.check_selected_ids(
-                                                            input_selected_id, 
-                                                            selection = "surfaces", 
-                                                            single_id = True
-                                                            )
+        input_ids = lineEdit.text()
+        surface_id = self.model.mesh.check_selected_ids(
+                                                        input_ids, 
+                                                        selection = "surfaces", 
+                                                        single_id = True
+                                                        )
 
-        if stop:
+        if surface_id is None:
             lineEdit.setFocus()
             lineEdit.selectAll()
-            return True, None
+            return None
 
-        volumes_from_surface = self.model.mesh.volume_from_surface[surface_id]
+        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
-            return stop, surface_id
+            return surface_id
 
         else:
             self.hide()
@@ -513,14 +448,14 @@ class ReciprocatingCompressorInputs(QDialog):
             message += "compressor excitation attribution."
             PrintMessageInput([window_title_1, title, message])
             lineEdit.setText("")
-            return True, None
+            return None
 
     def check_input_surfaces(self):
 
-        stop, surface_id = self.check_surface_id(self.lineEdit_selected_surface_id)
+        surface_id = self.check_surface_id(self.lineEdit_selection_id)
 
-        if stop:
-            self.lineEdit_selected_surface_id.setFocus()
+        if surface_id is None:
+            self.lineEdit_selection_id.setFocus()
             return True
 
         if self.comboBox_connection_type.currentIndex() == 0:
@@ -770,7 +705,7 @@ class ReciprocatingCompressorInputs(QDialog):
         analysis_setup["f_max"] = float(f_max)
         analysis_setup["f_step"] = float(f_step)
 
-        app().project.set_analysis_data(analysis_setup)
+        app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
@@ -825,7 +760,7 @@ class ReciprocatingCompressorInputs(QDialog):
             connection_type = "discharge"
             surface_id = self.discharge_surface_id
 
-        volume_id = self.model.mesh.volume_from_surface[surface_id]
+        volume_id = self.model.mesh.volumes_from_surface[surface_id]
 
         compressor_info = { 
                             "temperature_at_suction" : self.T_suction,
@@ -840,7 +775,7 @@ class ReciprocatingCompressorInputs(QDialog):
                             }
 
         self.hide()
-        read = SetFluidInput(state_properties = compressor_info)
+        read = SetFluidInputs(state_properties = compressor_info)
         app().main_window.set_input_widget(self)
 
         if not read.complete:
@@ -892,7 +827,7 @@ class ReciprocatingCompressorInputs(QDialog):
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.set_geometry_selection()
-        # app().main_window.update_plots()
+        app().main_window.update_symbols()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -901,20 +836,30 @@ class ReciprocatingCompressorInputs(QDialog):
             app().file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, surface_id: int):
-        for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
-            table_names = self.properties.get_surface_related_table_names(label, surface_id)
+
+        labels = [
+                  "acoustic_pressure", 
+                  "surface_velocity", 
+                  "incident_plane_wave",
+                  "mass_flow_rate", 
+                  "reciprocating_compressor_excitation", 
+                  "reciprocating_pump_excitation"
+                  ]
+
+        for label in labels:
+            table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_surface_related_table_names("reciprocating_compressor_excitation", surface_id)
+        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
-        if self.lineEdit_selected_surface_id.text() != "":   
+        if self.lineEdit_selection_id.text() != "":   
 
-            surface_id = int(self.lineEdit_selected_surface_id.text())
+            surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
 
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
@@ -968,14 +913,14 @@ class ReciprocatingCompressorInputs(QDialog):
     def on_click_item(self, item):
         if item.text(0) != "":
             surface_id = int(item.text(0))
-            self.lineEdit_selected_surface_id.setText(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
             self.lineEdit_connection_type.setText(item.text(1))
             app().main_window.set_geometry_selection(surfaces=[surface_id])
             self.pushButton_remove.setDisabled(False)
 
     def update_tabs_visibility(self):
 
-        self.lineEdit_selected_surface_id.setText("")
+        self.lineEdit_selection_id.setText("")
         self.lineEdit_connection_type.setText("")
         self.pushButton_remove.setDisabled(True)
         self.tabWidget_compressor.setTabVisible(2, False)

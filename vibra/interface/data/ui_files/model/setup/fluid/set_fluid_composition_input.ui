@@ -837,7 +837,7 @@
              <enum>QAbstractItemView::DropOnly</enum>
             </property>
             <property name="alternatingRowColors">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="selectionBehavior">
              <enum>QAbstractItemView::SelectItems</enum>
@@ -1313,6 +1313,6 @@ QLineEdit:disabled{color: rgb(100, 100, 100); background-color: rgb(240, 240, 24
   <tabstop>treeWidget_reference_gases</tabstop>
   <tabstop>tableWidget_new_fluid</tabstop>
  </tabstops>
- <resources/>
+ <resources><include location="../../../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

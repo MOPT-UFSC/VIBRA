@@ -1730,7 +1730,7 @@
                       </property>
                       <property name="icon">
                        <iconset>
-                        <normaloff>../../../../icons/broom.png</normaloff>../../../../icons/broom.png</iconset>
+                        <normaloff>:/icons/broom.png</normaloff>:/icons/broom.png</iconset>
                       </property>
                       <property name="iconSize">
                        <size>
@@ -3845,9 +3845,9 @@ at suction</string>
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tab_remove">
+           <widget class="QWidget" name="tab_list">
             <attribute name="title">
-             <string>Remove</string>
+             <string>List</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_9">
              <property name="leftMargin">
@@ -4233,7 +4233,7 @@ at suction</string>
           </spacer>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_selected_surface_id">
+          <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
              <width>160</width>
@@ -4345,6 +4345,6 @@ at suction</string>
   <tabstop>pushButton_reset</tabstop>
   <tabstop>pushButton_remove</tabstop>
  </tabstops>
- <resources/>
+ <resources><include location="../../../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

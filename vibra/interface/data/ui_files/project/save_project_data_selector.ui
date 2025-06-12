@@ -423,17 +423,17 @@
       <property name="bottomMargin">
        <number>4</number>
       </property>
-      <item row="0" column="0">
+      <item row="0" column="1">
        <widget class="QPushButton" name="pushButton_proceed">
         <property name="minimumSize">
          <size>
-          <width>120</width>
+          <width>100</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>120</width>
+          <width>100</width>
           <height>30</height>
          </size>
         </property>
@@ -450,6 +450,33 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButton_exit">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Exit</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -460,6 +487,6 @@
   <tabstop>checkBox_solution_data</tabstop>
   <tabstop>pushButton_proceed</tabstop>
  </tabstops>
- <resources/>
+ <resources><include location="../../icons/resources.qrc" /></resources>
  <connections/>
 </ui>

@@ -26,8 +26,8 @@
    <string>Form</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>../../icons/logo_vibra.png</normaloff>../../icons/logo_vibra.png</iconset>
+   <iconset resource="../../icons/resources.qrc">
+    <normaloff>:/icons/logo_vibra.png</normaloff>:/icons/logo_vibra.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: qlineargradient(spread:pad, x1:0.506, y1:0, x2:0.494318, y2:1, stop:0 rgba(155, 155, 155, 207), stop:0.823864 rgba(0, 0, 0, 203), stop:1 rgba(0, 0, 0, 230));</string>
@@ -48,6 +48,85 @@
    <property name="spacing">
     <number>4</number>
    </property>
+   <item row="2" column="1">
+    <widget class="QLabel" name="label_loading">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgba(0,0,0,0);</string>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic; color:#b9b9b9;&quot;&gt;loading application...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QFrame" name="frame">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>48</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QProgressBar" name="progressBar">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="value">
+         <number>5</number>
+        </property>
+        <property name="textVisible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QFrame" name="frame_2">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="1">
     <widget class="QFrame" name="frame_main">
      <property name="maximumSize">
@@ -87,7 +166,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap>../../icons/azul cinza.png</pixmap>
+         <pixmap resource="../../icons/resources.qrc">:/icons/azul cinza.png</pixmap>
         </property>
         <property name="scaledContents">
          <bool>true</bool>
@@ -100,87 +179,10 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QFrame" name="frame">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>48</height>
-      </size>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QProgressBar" name="progressBar">
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="value">
-         <number>5</number>
-        </property>
-        <property name="textVisible">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QLabel" name="label_loading">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>32</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>11</pointsize>
-       <weight>50</weight>
-       <bold>false</bold>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgba(0,0,0,0);</string>
-     </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic; color:#b9b9b9;&quot;&gt;loading application...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QFrame" name="frame_2">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>20</height>
-      </size>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

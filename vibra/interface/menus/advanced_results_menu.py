@@ -1,9 +1,7 @@
-from PyQt5.QtWidgets import QAction, QMenu
-from PyQt5.QtGui import QColor
+from PySide6.QtWidgets import QMenu
+from PySide6.QtGui import QColor, QAction
 
-from vibra.interface.plots.acoustic.export_element_transfer_data_input import ExportElementTransferDataInput
-from vibra.interface.plots.acoustic.plot_particle_velocity_frequency_response_input import PlotParticleVelocityFrequencyResponseInput
-from vibra.interface.plots.acoustic.plot_specific_acoustic_impedance_input import PlotSpecificAcousticImpedanceInput
+from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 
 from molde.render_widgets import CommonRenderWidget
 
@@ -41,20 +39,10 @@ class AdvancedResultsMenu(QMenu):
         self.addAction(self.plot_specific_acoustic_impedance_action)
         self.addAction(self.export_element_transfer_data_action)
 
-    def plot_specific_acoustic_impedance(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
-            return
-        PlotSpecificAcousticImpedanceInput()
-
-    def plot_particle_velocity(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
-            return
-        PlotParticleVelocityFrequencyResponseInput()
-
     def export_element_transfer_data_callback(self):
         if app().project.acoustic_harmonic_solver.solution is None:
             return
-        ExportElementTransferDataInput()
+        ExportElementTransferDataInputs()
 
     def disable_advanced_acoustic_plots_buttons(self, disabled : bool):
         self.plot_specific_acoustic_impedance_action.setDisabled(disabled)

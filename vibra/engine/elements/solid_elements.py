@@ -23,7 +23,7 @@ class Element3D:
     #     that will be used in the assembler.
     #     """
     #     self.reorder_connect()
-    #     dofs, edofs = self.DOF_PER_NODE, self.DOFS_PER_ELEMENT
+    #     dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
     #     ind_dofs = dofs * self.connectivity[:, 1:]
 
     #     vect_indices = ind_dofs.flatten()

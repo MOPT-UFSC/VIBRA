@@ -1,0 +1,24 @@
+name: VIBRA
+channels:
+  - conda-forge
+dependencies:
+  - pip=25.0.1
+  - python=3.12.9
+  - python-mumps=0.0.3
+  - pip:
+      - black==23.12.1
+      - ctrefprop==0.10.2
+      - gmsh==4.13.1
+      - h5py==3.13.0
+      - intel-openmp==2023.2.0
+      - invoke==2.2.0
+      - mkl==2023.2.0
+      - molde==0.1.4
+      - moviepy==1.0.3
+      - numpy==2.0.0
+      - openpyxl==3.1.5
+      - pandas==2.2.3
+      - fileboxes==0.1.4
+      - pypardiso-mopt==0.1.0
+      - pyside6==6.8.2.1
+      - vtk==9.4.1
