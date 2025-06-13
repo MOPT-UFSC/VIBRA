@@ -13,6 +13,7 @@ exported_mesh_files/
 __pycache__/
 *.py[cod]
 *$py.class
+*.ui.md5
 
 # C extensions
 *.so

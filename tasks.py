@@ -1,8 +1,11 @@
+import hashlib
 import os
 import re
+from typing import Tuple
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from invoke import task
+from importlib.metadata import version
 
 UI_FILES_PATH = Path("vibra/interface/data/ui_files")
 GENERATED_PATH = Path("vibra/interface/ui_generated")
@@ -11,7 +14,7 @@ QRC_PATH = RESOURCE_DIR / "resources.qrc"
 QRC_PREFIX_NAME = "/icons/"
 QRC_PREFIX = f":{QRC_PREFIX_NAME}"
 
-   
+
 @task
 def qrc_codegen(c):
     '''
@@ -60,6 +63,9 @@ def ui_compile(c):
     
     Usage example: inv ui-compile
     """
+    compiler_version = get_current_compiler_version()
+    print('Current Compiler Version:', compiler_version)
+
     root_dir = os.path.abspath(UI_FILES_PATH)
     output_root = os.path.abspath(GENERATED_PATH)
 
@@ -87,6 +93,11 @@ def ui_compile(c):
                     continue
 
                 wrapper_class_name = to_camel_case(os.path.splitext(filename)[0])
+
+                need_compile, ui_md5 = check_recompile(ui_path, py_path, compiler_version)
+
+                if not need_compile: 
+                    continue
 
                 # Run pyside6-uic to generate the Python file
                 command = f"pyside6-uic \"{ui_path}\" -o \"{py_path}\""
@@ -121,6 +132,9 @@ class {wrapper_class_name}_UI({qt_class_name}, Ui_{ui_class_name}):
 
                     with open(py_path, "w", encoding="utf-8") as file:
                         file.writelines(modified_lines)
+
+                    # Saving ui md5 hash for the next recompile checking.
+                    save_md5(ui_path, ui_md5)
 
                     print(f"✅ Generated: {ui_path} → {py_path}")
                 else:
@@ -242,3 +256,49 @@ def fix_ui_file_text(file_path: Path) -> None:
 def find_relative_paths(text: str) -> list[str]:
     pattern = r'(?:(?:\.\./)+[\w\-/]+\.[\w]+)'
     return re.findall(pattern, text)
+
+
+def check_recompile(ui_path: str, py_path: str, current_version: str) -> Tuple[bool, str | None]:
+    current_md5 = compute_md5(ui_path)
+    saved_md5_file = Path(f'{ui_path}.md5')
+    saved_py_file = Path(py_path)
+    if saved_md5_file.exists() and saved_py_file.exists():
+        saved_version = extract_compiler_version_from_compiled_file(py_path)
+        if saved_version != current_version:
+            return True, current_md5
+        
+        saved_md5 = saved_md5_file.read_text()
+        if current_md5 == saved_md5:
+            return False, None
+        
+    return True, current_md5
+
+
+def compute_md5(file_path: str, block=8192) -> str:
+    md5 = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(block), b""):
+            md5.update(chunk)
+    return md5.hexdigest()
+
+
+def save_md5(ui_path: str, md5: str):
+    path_md5 = f'{ui_path}.md5'
+
+    with open(path_md5, "w") as f:
+        f.write(md5)
+
+
+def extract_compiler_version_from_compiled_file(py_path: str) -> str | None:
+    pattern = r"^## Created by: Qt User Interface Compiler version ([\d\.]+)"
+
+    with open(py_path, "r", encoding="utf-8") as f:
+        for line in f:
+            match = re.match(pattern, line)
+            if match:
+                return match.group(1)
+
+    return None
+
+def get_current_compiler_version() -> str:
+    return version('pyside6')
