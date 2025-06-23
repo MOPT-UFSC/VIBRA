@@ -1,6 +1,6 @@
 [project]
 name = "vibra"
-version = "0.2.4"
+version = "0.3.1"
 description = ""
 authors = [
     {name = "Your Name",email = "you@example.com"}
