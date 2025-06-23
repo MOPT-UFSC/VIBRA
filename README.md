@@ -11,6 +11,16 @@ Vibra is an open-source software developed in Python for modeling vibroacoustic 
 <p align="center">
    <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/275Hz.gif?raw=true" alt="FILTRO gif" width="900"/>
 
+*What's new?*
+
+- Optimized solvers for harmonic and modal analysis.
+- Complete set of boundary conditions for 3D acoustic analysis.
+- Acoustic transfer admittance model for representing complex devices as equivalent models.
+- Perforate plate transfer admittance model.
+- New interface and visualization tools (enhanced symbols for boundary condition, excitation, etc).
+- Project file management improvements: structural and acoustic results can now be saved and retrieved.
+- Enhanced animation of results (real and imaginary parts, phase monitoring, etc).
+
 ## Documentation
 
 - The theoretical background for the acoustic formulation implemented in Vibra is based on [Finite Element and Boundary Methods in Structural Acoustics and Vibration, by Noureddine Atalla and Franck Sgard (CRC Press, 2015)](https://www.taylorfrancis.com/books/mono/10.1201/b18366/finite-element-boundary-methods-structural-acoustics-vibration-noureddine-atalla-franck-sgard).
