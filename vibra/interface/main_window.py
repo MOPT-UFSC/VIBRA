@@ -938,7 +938,7 @@ class MainWindow(MainWindow_UI):
             path = str(path)
 
         ext = path.split(".")[-1]
-        if ext in ["IGES", "iges", "IGS", "igs", "STEP", "step"]:
+        if ext in ["iges", "IGES", "igs", "IGS", "step", "STEP", "stp", "STP"]:
             return True
 
         return False
