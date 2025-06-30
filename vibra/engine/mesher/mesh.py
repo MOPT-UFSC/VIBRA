@@ -103,6 +103,7 @@ class Mesh:
         self.nodal_normals_data = dict()
 
         self.principal_diagonal = None
+        self.nodes_collapsed_elements = None
 
         self.cache_nodal_coordinates = None
         self.cache_lines_connectivity = None
@@ -1351,20 +1352,26 @@ class Mesh:
         A message will be printed whether some problematic connectivity has been detected.
         """
 
+        self.nodes_collapsed_elements = set()
         # solid elements
         for els_id, vol_id, _, ns_nodes, *s_connect in self.solids_connectivity:
             if np.unique(s_connect).size < ns_nodes:
                 print(f"The solid element {els_id} from volume {vol_id} is collapsed -> connectivity: {s_connect}")
+                self.nodes_collapsed_elements |= set(s_connect)
 
         # face elements
         for elf_id, surf_id, _, nf_nodes, *f_connect in self.faces_connectivity:
             if np.unique(f_connect).size < nf_nodes:
                 print(f"The face element {elf_id} from surface {surf_id} is collapsed -> connectivity: {f_connect}")
+                self.nodes_collapsed_elements |= set(f_connect)
 
         # line elements
         for ell_id, line_id, _, nl_nodes, *l_connect in self.lines_connectivity:
             if np.unique(l_connect).size < nl_nodes:
                 print(f"The line element {ell_id} from line {line_id} is collapsed -> connectivity: {l_connect}")
+                self.nodes_collapsed_elements |= set(l_connect)
+
+        # print(self.nodes_collapsed_elements)
 
 
     def get_face_elements_connected_to_nodes(self, node_ids: list[int] | np.ndarray, surface_id: int | None = None) -> dict:
