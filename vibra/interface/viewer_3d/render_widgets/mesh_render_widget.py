@@ -241,7 +241,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.nodes_actor.paint_cells(selection_nodes_points_color.to_rgb(), nodes)
         self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4).to_rgb(), faces)
-        self.solids_actor.paint_cells(selection_faces_color.to_rgb(), solids)
+        self.solids_actor.paint_solids(selection_faces_color.to_rgb(), solids)
         self.edges_actor.configure_appearance()
         self.update()
 

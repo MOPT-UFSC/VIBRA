@@ -69,12 +69,10 @@ class SolidsActor(vtkActor):
 
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
-            # fmt: off
             nodes_order = (
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
                 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
-            )
-            # fmt: on
+            )  # fmt: skip
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
@@ -86,9 +84,9 @@ class SolidsActor(vtkActor):
 
         data.Allocate(number_of_elements * nodes_per_element)
 
-        point_colors.SetNumberOfComponents(3)
+        point_colors.SetNumberOfComponents(4)
         point_colors.SetNumberOfTuples(number_of_nodes)
-        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
         solid_indexes.Allocate(number_of_elements)
 
@@ -177,15 +175,24 @@ class SolidsActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[3], volumes: tuple[int]):
-        if self.data is None:
-            return
-
-        cell_colors = self.data.GetCellData().GetScalars()
+    def paint_solids(self, color: tuple[3], volumes: tuple[int]):
+        cells = []
         for i in volumes:
             visible_index = self.visible_indexes.get(i, -1)
             if visible_index >= 0:
-                cell_colors.SetTuple(visible_index, color)
+                cells.append(visible_index)
+        self.paint_cells(color, cells)
+
+    def paint_cells(self, color: tuple[3], cells: tuple[int]):
+        if self.data is None:
+            return
+
+        if len(color) == 3:
+            color = *color, 255
+
+        cell_colors = self.data.GetCellData().GetScalars()
+        for cell in cells:
+            cell_colors.SetTuple(cell, color)
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
