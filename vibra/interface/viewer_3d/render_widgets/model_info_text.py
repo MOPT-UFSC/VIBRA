@@ -68,7 +68,14 @@ def lines_info_text():
         tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
 
+        # nodes_from_line = app().project.model.mesh.nodes_from_lines.get(line_ids[0])
+        # if nodes_from_line is not None:
+        #     print()
+        #     print(f"There are {len(nodes_from_line)} nodes in line {line_ids[0]}")
+        #     print(f"Nodes: {[int(node) for node in nodes_from_line]}")
+
     else:
+
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
             sequence = sequence[:20 - 4] + " ..."
@@ -100,6 +107,12 @@ def faces_info_text():
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
+
+        # nodes_from_surface = app().project.model.mesh.nodes_from_surfaces.get(surface_ids[0])
+        # if nodes_from_surface is not None:
+        #     print(f"There are {len(nodes_from_surface)} nodes in surface {surface_ids[0]}")
+        #     print(f"Nodes: {nodes_from_surface}")
+        #     print()
 
         surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
@@ -308,12 +321,31 @@ def acoustic_boundary_conditions_info_text():
         "surface_velocity",
         surface=selected_faces[0],
     )
+    incident_plane_wave = app().project.model.properties._get_property(
+    "incident_plane_wave",
+    surface=selected_faces[0],
+    )
+    mass_flow_rate = app().project.model.properties._get_property(
+        "mass_flow_rate",
+        surface=selected_faces[0],
+    )
+    absorption_surface = app().project.model.properties._get_property(
+        "absorption_surface",
+        surface=selected_faces[0],
+    )
     specific_impedance = app().project.model.properties._get_property(
         "specific_impedance",
         surface=selected_faces[0],
     )
 
-    boundary_conditions_list = [acoustic_pressure, surface_velocity, specific_impedance]
+    boundary_conditions_list = [
+                                acoustic_pressure,
+                                surface_velocity,
+                                incident_plane_wave,
+                                mass_flow_rate,
+                                absorption_surface,
+                                specific_impedance,
+                                ]
 
     if all(condition is None for condition in boundary_conditions_list):
         return text
@@ -325,6 +357,26 @@ def acoustic_boundary_conditions_info_text():
     if surface_velocity is not None:
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
+
+    if incident_plane_wave is not None:
+        value = incident_plane_wave["values"][0]
+        tree_pw = TreeInfo("Incident plane wave")
+        if isinstance(value, Number | str | float | complex):
+            tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
+        else:
+            tree_pw.add_item("P_inc", "Table of values")
+
+        wave_vector = incident_plane_wave["wave_vector"]
+        tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
+        text += str(tree_pw)
+
+    if mass_flow_rate is not None:
+        values = mass_flow_rate["values"][0]
+        text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
+
+    if absorption_surface is not None:
+        values = absorption_surface["values"][0]
+        text += acoustic_format("Absorption surface", values, "alpha", "--")
 
     if specific_impedance is not None:
         if "anechoic_termination" in specific_impedance.keys():

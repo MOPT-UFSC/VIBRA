@@ -41,7 +41,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Acoustic properties gradient")
 
     def _initialize(self):
         self.selected_fluid = None
@@ -59,7 +59,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -118,7 +118,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
 
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         return
 

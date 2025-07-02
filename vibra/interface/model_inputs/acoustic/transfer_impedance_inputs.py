@@ -1,29 +1,26 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 
 from vibra import app, UI_DIR
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
-from molde import load_ui
 from copy import deepcopy
 
-import os, warnings
+import logging, os, warnings
 import numpy as np
-
-# fmt: off
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-class TransferImpedanceInputs(QDialog):
+
+class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        ui_path = UI_DIR / "model/setup/acoustic/transfer_impedance_inputs.ui"
-        load_ui(ui_path, self, ui_path.parent)
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
@@ -36,9 +33,9 @@ class TransferImpedanceInputs(QDialog):
 
         self._initialize()
         self._config_window()
-        self._define_qt_variables()
+        self._configure_qt_variables()
         self._create_connections()
-        self._config_widgets()
+        self._paint_icons()
 
         self.load_model_info()
 
@@ -53,44 +50,18 @@ class TransferImpedanceInputs(QDialog):
 
     def _initialize(self):
         self.imported_values = None
-        self.setup_complete = False
+        self.assignment_complete = False
         self.keep_window_open = True
-        self.transfer_impedance_data = dict()
+        self.ti_data = dict()
 
-    def _define_qt_variables(self):
-
-        # QComboBox
-        self.comboBox_selection_type : QComboBox
-
-        # QLabel
-        self.label_selection_A: QLabel
-        self.label_selection_B: QLabel
-
-        # QLineEdit
-        self.lineEdit_selection_id_A: QLineEdit
-        self.lineEdit_selection_id_B: QLineEdit
-        self.lineEdit_real_value : QLineEdit
-        self.lineEdit_imag_value : QLineEdit
-        self.lineEdit_table_path : QLineEdit
-        self.current_lineEdit = self.lineEdit_selection_id_A
-
-        # QPushButton
-        self.pushButton_attribute : QPushButton
-        self.pushButton_exit : QPushButton
-        self.pushButton_change_frequency_setup : QPushButton
-        self.pushButton_load_table : QPushButton
-        self.pushButton_remove : QPushButton
-        self.pushButton_reset : QPushButton
+    def _configure_qt_variables(self):
         #
+        self.current_lineEdit = self.lineEdit_selection_id_A
         self.pushButton_change_frequency_setup.setDisabled(True)
-
-        # QTabWidget
-        self.tabWidget_main : QTabWidget
-
-        # QTreeWidget
-        self.treeWidget_transfer_impedance : QTreeWidget
-        self.treeWidget_transfer_impedance.setColumnWidth(1, 20)
-        self.treeWidget_transfer_impedance.setColumnWidth(2, 80)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
+            self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -102,18 +73,31 @@ class TransferImpedanceInputs(QDialog):
         self.pushButton_load_table.clicked.connect(self.load_transfer_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_transfer_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
         self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
         #
         self.geometry_selection_callback()
         self.selection_type_callback()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_load_table]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def clickable(self, widget: QLineEdit):
         class Filter(QObject):
@@ -147,11 +131,6 @@ class TransferImpedanceInputs(QDialog):
             self.lineEdit_selection_id_B.setStyleSheet("")
         else:
             self.lineEdit_selection_id_A.setStyleSheet("")
-
-    def _config_widgets(self):
-        for i, w in enumerate([120]):
-            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
-            self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
 
@@ -245,60 +224,64 @@ class TransferImpedanceInputs(QDialog):
         if self.comboBox_selection_type.currentText() == "Inside surfaces":
         
             input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A = self.mesh.check_selected_ids(
-                                                        input_ids_A, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids_A,
+                                                                    selection = "surfaces",
+                                                                    single_id = False,
+                                                                    )
 
-            if surface_ids_A is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
-            self.check_selection_type(surface_ids_A)
-            if not self.transfer_impedance_data:
+            self.check_selection_type(surface_ids)
+            if not self.ti_data:
                 return list()
-            
-            surface_ids_A.sort()
-            self.transfer_impedance_data["surfaces_A"] = surface_ids_A
-            surface_ids.extend(surface_ids_A)
+
+            surface_ids.sort()
 
         else:
 
             input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A = self.mesh.check_selected_ids(
-                                                        input_ids_A, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids_A, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids_A, 
+                                                                    selection = "surfaces", 
+                                                                    single_id = False,
+                                                                    )
 
-            if surface_ids_A is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             input_ids_B = self.lineEdit_selection_id_B.text()
-            surface_ids_B = self.mesh.check_selected_ids(
-                                                        input_ids_B, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids_B, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids_B, 
+                                                                    selection = "surfaces", 
+                                                                    single_id = False,
+                                                                    )
 
-            if surface_ids_B is None:
-                self.lineEdit_selection_id_A.setFocus()
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id_B.setFocus()
+                PrintMessageInput(error_data)
                 return list()
 
             self.check_selection_type(surface_ids_A)
-            if not self.transfer_impedance_data:
+            if not self.ti_data:
                 return list()
 
             self.check_selection_type(surface_ids_B)
-            if not self.transfer_impedance_data:
+            if not self.ti_data:
                 return list()
 
             surface_ids_A.sort()
             surface_ids_B.sort()
-            self.transfer_impedance_data["surfaces_A"] = surface_ids_A
-            self.transfer_impedance_data["surfaces_B"] = surface_ids_B
+            self.ti_data["surfaces_A"] = surface_ids_A
+            self.ti_data["surfaces_B"] = surface_ids_B
             surface_ids.extend(surface_ids_A)
             surface_ids.extend(surface_ids_B)
 
@@ -324,6 +307,9 @@ class TransferImpedanceInputs(QDialog):
         elif tab_index == 1:
             self.process_assignment_for_table_values(surface_ids)
 
+        self.lineEdit_selection_id_A.setText("")
+        self.lineEdit_selection_id_B.setText("")
+
     def process_assignment_for_constant_values(self, surface_ids: int | tuple[int]):
         
         real_value = self.check_inputs(self.lineEdit_real_value, "Real part of transfer impedance", only_positive=False)
@@ -341,20 +327,26 @@ class TransferImpedanceInputs(QDialog):
             self.lineEdit_real_value.setFocus()
             return
 
-        self.transfer_impedance_data.update({
-                                             "real_values" : [real_value],
-                                             "imag_values" : [imag_value],
-                                             })
+        self.ti_data.update({
+                             "real_values" : [real_value],
+                             "imag_values" : [imag_value],
+                             })
 
-        if self.transfer_impedance_data.get("coupling_type") == "inside_surfaces":
+        data = deepcopy(self.ti_data)
+
+        if self.ti_data.get("coupling_type") == "inside_surfaces":
             for surface_id in surface_ids:
-                self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=surface_id)
+                self.properties._set_property("transfer_impedance", data, surface=surface_id)
                 self.decouple_degrees_of_freedom(surface_id)
 
         else:
-            self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=tuple(surface_ids))
+            self.properties._set_property("transfer_impedance", data, surface=tuple(surface_ids))
 
-        self.setup_complete = True
+        self.assignment_complete = True
+        self.lineEdit_selection_id_A.setText("")
+        self.lineEdit_selection_id_B.setText("")
+
+        self.hide()
         self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
@@ -462,21 +454,27 @@ class TransferImpedanceInputs(QDialog):
         if self.imported_values is None:
             self.imported_values = self.load_table( self.lineEdit_table_path, 
                                                     direct_load = True )
-            
+
         if self.imported_values is None:
             return
 
-        if self.transfer_impedance_data.get("coupling_type") == "inside_surfaces":
+        if self.ti_data.get("coupling_type") == "inside_surfaces":
             for surface_id in surface_ids:
                 self.include_transfer_impedance_table_data(surface_id)
-                self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=surface_id)
+                data = deepcopy(self.ti_data)
+                self.properties._set_property("transfer_impedance", data, surface=surface_id)
                 self.decouple_degrees_of_freedom(surface_id)
 
         else:
+            data = deepcopy(self.ti_data)
             self.include_transfer_impedance_table_data(surface_ids)
-            self.properties._set_property("transfer_impedance",self.transfer_impedance_data, surface=tuple(surface_ids))
+            self.properties._set_property("transfer_impedance", data, surface=tuple(surface_ids))
 
-        self.setup_complete = True
+        self.assignment_complete = True
+        self.lineEdit_selection_id_A.setText("")
+        self.lineEdit_selection_id_B.setText("")
+
+        self.hide()
         self.actions_to_finalize()
 
     def process_table_file_removal(self, table_names: list):
@@ -502,7 +500,7 @@ class TransferImpedanceInputs(QDialog):
         table_names = self.properties.get_property_related_table_names("transfer_impedance", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
-    def tabEvent_callback(self):
+    def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 1:
@@ -516,6 +514,9 @@ class TransferImpedanceInputs(QDialog):
                 self.lineEdit_selection_id_A.setText("")
                 self.lineEdit_selection_id_B.setText("")
                 app().main_window.set_geometry_selection()
+
+            else:
+                self.geometry_selection_callback()
 
             self.lineEdit_selection_id_A.setDisabled(False)
 
@@ -551,7 +552,7 @@ class TransferImpedanceInputs(QDialog):
                     message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
                     message += "assignment will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
-                    self.transfer_impedance_data.clear()
+                    self.ti_data.clear()
                     return True
 
         else:
@@ -563,10 +564,10 @@ class TransferImpedanceInputs(QDialog):
                     message += "(surfaces associated to only one volume). The transfer impedance assignment "
                     message += "will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
-                    self.transfer_impedance_data.clear()
+                    self.ti_data.clear()
                     return True
 
-        self.transfer_impedance_data["coupling_type"] = selection_type.lower().replace(" ", "_")
+        self.ti_data["coupling_type"] = selection_type.lower().replace(" ", "_")
 
     def load_model_info(self):
 
@@ -598,8 +599,8 @@ class TransferImpedanceInputs(QDialog):
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
-        self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(2, False)
 
     def load_table(self, lineEdit : QLineEdit, direct_load: bool=False):
 
@@ -704,15 +705,15 @@ class TransferImpedanceInputs(QDialog):
         if self.save_table_values(table_name, self.imported_values):
             self.lineEdit_table_path.setFocus()
             self.imported_values = None
-            self.transfer_impedance_data.clear()
+            self.ti_data.clear()
             return
 
         complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
         table_path = self.lineEdit_table_path.text()
 
-        self.transfer_impedance_data["table_names"] = [table_name]
-        self.transfer_impedance_data["table_paths"] = [table_path]
-        self.transfer_impedance_data["values"] = [complex_values]
+        self.ti_data["table_names"] = [table_name]
+        self.ti_data["table_paths"] = [table_path]
+        self.ti_data["values"] = [complex_values]
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
@@ -780,13 +781,18 @@ class TransferImpedanceInputs(QDialog):
         input_ids = self.lineEdit_selection_id_A.text()
 
         if input_ids != "":
-
             input_ids = input_ids.replace("(", "").replace(")", "")
-            surface_ids = self.mesh.check_selected_ids(
-                                                        input_ids, 
-                                                        selection = "surfaces", 
-                                                        single_id = False,
-                                                        )
+            surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                   input_ids, 
+                                                                   selection = "surfaces", 
+                                                                   single_id = False,
+                                                                   )
+
+            if error_data is not None:
+                self.hide()
+                self.lineEdit_selection_id_A.setFocus()
+                PrintMessageInput(error_data)
+                return
 
             if len(surface_ids) == 1:
                 surface_ids = surface_ids[0]
@@ -795,8 +801,6 @@ class TransferImpedanceInputs(QDialog):
 
             self.remove_table_files_from_surfaces(surface_ids)
             self.properties._remove_surface_property("transfer_impedance", surface_ids)
-
-            app().project.reset_solutions()
 
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
             if isinstance(data, dict):
@@ -812,6 +816,7 @@ class TransferImpedanceInputs(QDialog):
                 self.restore_mesh_data_modified_by_decoupling()
 
             self.actions_to_finalize()
+            self.restore_mesh_data_modified_by_decoupling()
             self.pushButton_remove.setDisabled(True)
 
     def reset_callback(self):
@@ -849,45 +854,91 @@ class TransferImpedanceInputs(QDialog):
                     new_surface_ids.append(new_surface_id)
                     self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
 
+        self.remove_all_surface_properties_from_surface(new_surface_ids)
+        self.remove_all_line_properties_boundind_surface(new_surface_ids)
         self.properties._reset_property("transfer_impedance")
-        app().project.reset_solutions()
-
-        if new_surface_ids:
-            self.remove_all_surface_properties_from_surface(new_surface_ids)
-            self.remove_all_line_properties_boundind_surface(new_surface_ids)
-            app().file.remove_mesh_data_from_project_file()
-            app().file.remove_results_data_from_project_file()
-            self.restore_mesh_data_modified_by_decoupling()
 
         self.actions_to_finalize()
+        self.restore_mesh_data_modified_by_decoupling()
+
+    def actions_to_finalize(self):
+
+        def callback():
+
+            logging.info("Processing the post-assignment actions... [10/100]")
+            self.load_model_info()
+
+            logging.info("Processing the post-assignment actions... [20/100]")
+            app().project.reset_solutions()
+
+            logging.info("Processing the post-assignment actions... [30/100]")
+            app().file.remove_mesh_data_from_project_file()
+
+            logging.info("Processing the post-assignment actions... [40/100]")
+            app().file.remove_results_data_from_project_file()
+
+            logging.info("Processing the post-assignment actions... [50/100]")
+            app().file.write_model_properties_in_file()
+
+            logging.info("Processing the post-assignment actions... [60/100]")
+            app().file.write_imported_table_data_in_file()
+
+            logging.info("Processing the post-assignment actions... [70/100]")
+            app().main_window.recompute_hidden_volumes()
+
+            logging.info("Processing the post-assignment actions... [80/100]")
+            app().main_window.update_info_text()
+
+            logging.info("Processing the post-assignment actions... [90/100]")
+            app().main_window.update_symbols()
+
+            logging.info("Processing the post-assignment actions... [95/100]")
+            app().main_window.set_geometry_selection()
+
+            logging.info("Processing the post-assignment actions... [100/100]")
+            app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+
+        LoadingWindow(callback).run()
+
+    def process_decoupling_actions(self):
+
+        def callback():
+            logging.info("Processing degress of freedom decoupling... [10/100]")
+            self.model.process_degrees_of_freedom_decoupling()
+
+            logging.info("Processing degress of freedom decoupling... [70/100]")
+            app().file.write_mesh_data_in_file()
+            
+            logging.info("Processing degress of freedom decoupling... [75/100]")
+            app().file.write_geometry_data_in_file()
+
+            # the degrees of freedom modifies the surfaces properties
+            logging.info("Processing degress of freedom decoupling... [80/100]")
+            app().file.write_model_properties_in_file()
+
+            logging.info("Processing degress of freedom decoupling... [85/100]")
+            app().main_window.update_mesh_information()
+
+            logging.info("Processing degress of freedom decoupling... [90/100]")
+            app().main_window.update_geometry_information()
+        
+            logging.info("Processing degress of freedom decoupling... [95/100]")
+            app().main_window.update_plots()
+
+        LoadingWindow(callback).run()
 
     def restore_mesh_data_modified_by_decoupling(self):
 
-        app().project.model.generated_mesh = False
-        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            return
-        
         if self.mesh.cache_nodal_coordinates is None:
             return
 
         self.mesh.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
-        app().project.model.generated_mesh = True
 
-        app().file.write_mesh_data_in_file()
-        app().file.write_geometry_data_in_file()
-        app().main_window.update_mesh_information()
-        app().main_window.update_geometry_information()
-        app().main_window.update_plots()
-        app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            self.mesh.cache_mesh_information()
 
-    def actions_to_finalize(self):
-        self.load_model_info()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
-        app().main_window.update_info_text()
-        app().main_window.mesh_widget.update_symbols()
-        app().main_window.set_geometry_selection()
+        self.process_decoupling_actions()
 
     def check_inputs(self, line_edit: QLineEdit, label: str, only_positive: bool=True):
 
@@ -923,7 +974,7 @@ class TransferImpedanceInputs(QDialog):
 
     def process_degress_of_freedom_decoupling(self):
 
-        if not self.setup_complete:
+        if not self.assignment_complete:
             return False
 
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
@@ -935,24 +986,15 @@ class TransferImpedanceInputs(QDialog):
             app().main_window.set_input_widget(self)
             return False
 
-            # if not app().project.model.generated_mesh:
-            #     return True
-            # else:
-            #     return False
-
         if self.mesh.cache_nodal_coordinates is None:
             self.mesh.cache_mesh_information()
+        else:
+            self.mesh.restore_data_from_cache()
+            self.mesh.process_upwards_adjacencies_from_entities()
+            self.mesh.cache_mesh_information()
 
-        def process_decoupling():
-            self.model.process_degrees_of_freedom_decoupling()
-            app().file.write_model_properties_in_file()
-            app().file.write_mesh_data_in_file()
-            app().file.write_geometry_data_in_file()
-            app().main_window.update_mesh_information()
-            app().main_window.update_geometry_information()
-            app().main_window.update_plots()
+        self.process_decoupling_actions()
 
-        LoadingWindow(process_decoupling).run()
         return False
 
     def keyPressEvent(self, event):

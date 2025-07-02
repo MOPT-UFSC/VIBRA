@@ -1,7 +1,3 @@
-from .symbols.example_symbols_actors import *
-from .symbols.symbols_actor import *
-from .symbols.symbols_common import *
-
 from .analysis_actor import *
 from .edges_actor import *
 from .faces_actor import *
@@ -15,5 +11,3 @@ from .points_actor import *
 from .section_plane_actor import *
 from .selection_spheres import *
 from .solids_actor import *
-
-

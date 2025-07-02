@@ -5,10 +5,12 @@ from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
 from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
+from vibra.interface.model_inputs.acoustic.incident_plane_wave_inputs import IncidentPlaneWaveInputs
 from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
 from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
 from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
-from vibra.interface.model_inputs.acoustic.dissipation_model_inputs import DissipationModelInput
+from vibra.interface.model_inputs.acoustic.absorption_surface_inputs import AbsorptionSurfaceInputs
+from vibra.interface.model_inputs.acoustic.proportional_damping_inputs import ProportionalDampingInput
 from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
 from vibra.interface.model_inputs.acoustic.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
 from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import PerforatedPlateModelInputs
@@ -117,6 +119,10 @@ class InputUi:
         if not self.model_setup_items.item_child_surface_velocity.isDisabled():
             self.process_input(SurfaceVelocityInputs)
 
+    def set_incident_plane_wave(self):
+        if not self.model_setup_items.item_child_incident_plane_wave.isDisabled():
+            self.process_input(IncidentPlaneWaveInputs)
+
     def set_specific_impedance(self):
         self.process_input(SpecificImpedanceInputs)
 
@@ -126,10 +132,14 @@ class InputUi:
     def set_anechoic_termination(self):
         if not self.model_setup_items.item_child_anechoic_termination.isDisabled():
             self.process_input(AnechoicTerminationInputs)
+
+    def set_absorption_surface(self):
+        if not self.model_setup_items.item_child_absorption_surface.isDisabled():
+            self.process_input(AbsorptionSurfaceInputs)
         
-    def set_dissipation_model(self):
-        if not self.model_setup_items.item_child_dissipation_model.isDisabled():
-            self.process_input(DissipationModelInput)
+    def set_proportional_damping_for_acoustic_model(self):
+        if not self.model_setup_items.item_child_proportional_damping.isDisabled():
+            self.process_input(ProportionalDampingInput)
 
     def set_perforated_plate_model(self):
         if not self.model_setup_items.item_child_perforated_plate_model.isDisabled():

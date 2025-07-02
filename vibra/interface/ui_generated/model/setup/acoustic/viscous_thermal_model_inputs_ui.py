@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'viscous_thermal_model_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -206,6 +206,7 @@ class Ui_Dialog(object):
         self.pushButton_selection_info.setMaximumSize(QSize(200, 28))
         self.pushButton_selection_info.setFont(font2)
         self.pushButton_selection_info.setStyleSheet(u"")
+        self.pushButton_selection_info.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_selection_info, 5, 2, 1, 1)
 
@@ -588,6 +589,7 @@ class Ui_Dialog(object):
         self.pushButton_get_fluid.setMinimumSize(QSize(72, 28))
         self.pushButton_get_fluid.setMaximumSize(QSize(72, 28))
         self.pushButton_get_fluid.setFont(font1)
+        self.pushButton_get_fluid.setAutoDefault(False)
 
         self.gridLayout_18.addWidget(self.pushButton_get_fluid, 0, 3, 1, 1)
 
@@ -738,6 +740,7 @@ class Ui_Dialog(object):
         self.pushButton_plot_data.setMinimumSize(QSize(80, 28))
         self.pushButton_plot_data.setMaximumSize(QSize(220, 28))
         self.pushButton_plot_data.setFont(font1)
+        self.pushButton_plot_data.setAutoDefault(False)
 
         self.gridLayout_19.addWidget(self.pushButton_plot_data, 0, 3, 1, 1)
 
@@ -768,6 +771,7 @@ class Ui_Dialog(object):
         self.pushButton_confirm.setMinimumSize(QSize(100, 28))
         self.pushButton_confirm.setMaximumSize(QSize(100, 28))
         self.pushButton_confirm.setFont(font1)
+        self.pushButton_confirm.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
 
@@ -776,6 +780,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMinimumSize(QSize(100, 28))
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font1)
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_4.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 

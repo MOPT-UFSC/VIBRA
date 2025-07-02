@@ -1,9 +1,7 @@
 
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
-from molde.utils import TreeInfo
-from molde.utils.format_sequences import format_long_sequence
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
@@ -16,23 +14,15 @@ from ..actors.nodes_actor import NodesActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
-from ..actors.symbols.symbols_actor import SymbolsActor
 from ..selection.mesh_selection import MeshSelection
-
 from .model_info_text import (
     nodes_info_text,
     mesh_faces_info_text,
-    mesh_faces_info_text,
     mesh_solids_info_text,
-    mesh_material_info_text,
-    mesh_fluid_info_text,
-    mesh_structural_boundary_conditions_info_text,
-    mesh_structural_format, 
+    mesh_structural_boundary_conditions_info_text, 
 )
 
 import logging
-import numpy as np
-from numbers import Number
 
 
 class MeshRenderWidget(CommonRenderWidget):
@@ -128,14 +118,15 @@ class MeshRenderWidget(CommonRenderWidget):
         # TODO: load the mesh directly inside the actors
         self.nodes_actor = NodesActor(mesh)
         self.faces_actor = FacesActor(mesh)
-        self.edges_actor = EdgesActor(self.faces_actor.data)
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
-        self.symbols_actor = SymbolsActor(self.renderer)
+        self.edges_actor = EdgesActor(self.solids_actor.data)
         self.selection_spheres_actor = SelectionSpheres()
 
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
         self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -148,13 +139,12 @@ class MeshRenderWidget(CommonRenderWidget):
             self.solids_actor,
             self.ghost_actor,
             self.plane_actor,
-            self.symbols_actor,
         )
 
         with self.update_lock:
             self.update_theme()
-            self.visualization_changed_callback()
             self.update_section_plane()
+            self.visualization_changed_callback()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -167,7 +157,8 @@ class MeshRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
 
         # Nodes actor are always visible.
         # We hide them painting the cells as transparent.
@@ -176,16 +167,11 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
 
         self.update_selection()
         self.update()
-
-    def update_symbols(self):
-        self.remove_actors(self.symbols_actor)
-        self.symbols_actor = SymbolsActor(self.renderer)
-        self.add_actors(self.symbols_actor)
-
+    
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
 
@@ -250,12 +236,12 @@ class MeshRenderWidget(CommonRenderWidget):
         faces = app().main_window.selected_mesh_faces
         solids = app().main_window.selected_mesh_solids
     
-        selection_color = app().config.user_preferences.selection_color
-        faces_selection_color = selection_color.apply_factor(1.2).to_rgb()
+        selection_faces_color = app().config.user_preferences.selection_faces_color
+        selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
 
-        self.nodes_actor.paint_cells(selection_color.to_rgb(), nodes)
-        self.faces_actor.paint_cells(faces_selection_color, faces)
-        self.solids_actor.paint_cells(selection_color.to_rgb(), solids)
+        self.nodes_actor.paint_cells(selection_nodes_points_color.to_rgb(), nodes)
+        self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4).to_rgb(), faces)
+        self.solids_actor.paint_cells(selection_faces_color.to_rgb(), solids)
         self.edges_actor.configure_appearance()
         self.update()
 
@@ -279,7 +265,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
-        self.symbols_actor = None
         self.nodes_actor = None
         self.ghost_actor = None
 
@@ -313,16 +298,6 @@ class MeshRenderWidget(CommonRenderWidget):
             show_plane = not section_plane.keep_section_plane
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
-    def _disable_section_plane(self):
-        has_hidden_part = bool(app().main_window.hidden_surfaces)
-        self.ghost_actor.SetVisibility(has_hidden_part)
-        self.plane_actor.VisibilityOff()
-
-        self.faces_actor.disable_cut()
-        self.solids_actor.disable_cut()
-        self.edges_actor.disable_cut()
-        self.update()
-
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         if isinstance(self.solids_actor, HollowSolidsActor):
             mesh = app().project.model.mesh
@@ -330,9 +305,10 @@ class MeshRenderWidget(CommonRenderWidget):
                 return
 
             if mesh.solids_connectivity.size > 0:
-                self.remove_actors(self.solids_actor)
+                self.remove_actors(self.solids_actor, self.edges_actor)
                 self.solids_actor = SolidsActor(mesh)
-                self.add_actors(self.solids_actor)
+                self.edges_actor = EdgesActor(self.solids_actor.data)
+                self.add_actors(self.solids_actor, self.edges_actor)
 
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
@@ -345,10 +321,24 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
-        self.ghost_actor.VisibilityOn()
+        visualization = app().main_window.visualization_filter
+        self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        self.update()
+
+    def _disable_section_plane(self):
+        visualization = app().main_window.visualization_filter
+        section_plane = app().main_window.section_plane
+        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
+        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.plane_actor.VisibilityOff()
+
+        self.nodes_actor.disable_cut()
+        self.faces_actor.disable_cut()
+        self.solids_actor.disable_cut()
+        self.edges_actor.disable_cut()
         self.update()
 
     def update_info_text(self):
@@ -356,8 +346,6 @@ class MeshRenderWidget(CommonRenderWidget):
         text += nodes_info_text()
         text += mesh_faces_info_text()
         text += mesh_solids_info_text()
-        # text += mesh_material_info_text()
-        # text += mesh_fluid_info_text()
         text += mesh_structural_boundary_conditions_info_text()
 
         self.set_info_text(text)

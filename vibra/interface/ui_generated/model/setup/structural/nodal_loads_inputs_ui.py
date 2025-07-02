@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'nodal_loads_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -169,13 +169,13 @@ class Ui_Dialog(object):
         self.tabWidget_main.setMinimumSize(QSize(360, 0))
         self.tabWidget_main.setMaximumSize(QSize(420, 16777215))
         self.tabWidget_main.setFont(font3)
-        self.tab_constant_values = QWidget()
-        self.tab_constant_values.setObjectName(u"tab_constant_values")
-        self.gridLayout_12 = QGridLayout(self.tab_constant_values)
+        self.tab_constant_data = QWidget()
+        self.tab_constant_data.setObjectName(u"tab_constant_data")
+        self.gridLayout_12 = QGridLayout(self.tab_constant_data)
         self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(2, 2, 2, 2)
-        self.frame_20 = QFrame(self.tab_constant_values)
+        self.frame_20 = QFrame(self.tab_constant_data)
         self.frame_20.setObjectName(u"frame_20")
         self.frame_20.setMinimumSize(QSize(0, 32))
         self.frame_20.setFrameShape(QFrame.NoFrame)
@@ -204,7 +204,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_20, 4, 0, 1, 1)
 
-        self.frame_8 = QFrame(self.tab_constant_values)
+        self.frame_8 = QFrame(self.tab_constant_data)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(340, 0))
         self.frame_8.setMaximumSize(QSize(16777215, 320))
@@ -498,14 +498,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addItem(self.verticalSpacer_8, 3, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_constant_values, "")
-        self.tab_load_tables = QWidget()
-        self.tab_load_tables.setObjectName(u"tab_load_tables")
-        self.gridLayout_10 = QGridLayout(self.tab_load_tables)
+        self.tabWidget_main.addTab(self.tab_constant_data, "")
+        self.tab_tabular_data = QWidget()
+        self.tab_tabular_data.setObjectName(u"tab_tabular_data")
+        self.gridLayout_10 = QGridLayout(self.tab_tabular_data)
         self.gridLayout_10.setSpacing(2)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setContentsMargins(2, 2, 2, 2)
-        self.frame_9 = QFrame(self.tab_load_tables)
+        self.frame_9 = QFrame(self.tab_tabular_data)
         self.frame_9.setObjectName(u"frame_9")
         self.frame_9.setFrameShape(QFrame.NoFrame)
         self.frame_9.setFrameShadow(QFrame.Raised)
@@ -708,7 +708,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.frame_9, 1, 0, 1, 1)
 
-        self.frame_21 = QFrame(self.tab_load_tables)
+        self.frame_21 = QFrame(self.tab_tabular_data)
         self.frame_21.setObjectName(u"frame_21")
         self.frame_21.setMinimumSize(QSize(0, 32))
         self.frame_21.setFrameShape(QFrame.NoFrame)
@@ -749,7 +749,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addItem(self.verticalSpacer_3, 2, 0, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_load_tables, "")
+        self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_9 = QGridLayout(self.tab_list)
@@ -903,7 +903,7 @@ class Ui_Dialog(object):
         self.label_My_constant.setText(QCoreApplication.translate("Dialog", u"My:", None))
         self.label_Mz_constant.setText(QCoreApplication.translate("Dialog", u"Mz:", None))
         self.label_Mx_constant.setText(QCoreApplication.translate("Dialog", u"Mx:", None))
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_values), QCoreApplication.translate("Dialog", u"Constant values", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.pushButton_load_My_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
         self.label_My_table.setText(QCoreApplication.translate("Dialog", u"My:", None))
         self.label_Mz_table.setText(QCoreApplication.translate("Dialog", u"Mz:", None))
@@ -917,7 +917,7 @@ class Ui_Dialog(object):
         self.label_Fz_table.setText(QCoreApplication.translate("Dialog", u"Fz:", None))
         self.pushButton_load_Fx_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
         self.checkBox_averaged_table_values.setText(QCoreApplication.translate("Dialog", u"Average value over all nodes", None))
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_load_tables), QCoreApplication.translate("Dialog", u"Load tables", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_nodal_loads.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Nodal loads", None));
@@ -954,7 +954,7 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
                                         - tabWidget_main: QTabWidget
-                                            - tab_constant_values: QWidget
+                                            - tab_constant_data: QWidget
                                                 - (Layout): QGridLayout
                                                         - frame_20: QFrame
                                                             - (Layout): QGridLayout
@@ -987,7 +987,7 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                                                                     - lineEdit_imag_My: QLineEdit
                                                                     - lineEdit_imag_Mx: QLineEdit
                                                                     - lineEdit_imag_Mz: QLineEdit
-                                            - tab_load_tables: QWidget
+                                            - tab_tabular_data: QWidget
                                                 - (Layout): QGridLayout
                                                         - frame_9: QFrame
                                                             - (Layout): QGridLayout

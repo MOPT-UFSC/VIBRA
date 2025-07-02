@@ -1,0 +1,325 @@
+from enum import Enum
+import numpy as np
+from molde.colors import color_names, Color
+from molde.actors import CommonSymbolsActorVariableSize
+
+
+from vibra import app
+from vibra.interface.viewer_3d.sources import (
+    create_arrow_source,
+    create_cone_source,
+    create_cube_source,
+    create_damper_source,
+    create_double_arrow_source,
+    create_long_arrow_source,
+    create_mass_source,
+    create_outwards_arrow_source,
+    create_spring_source,
+    create_perforated_plate_source,
+    create_impedance_source,
+    create_anechoic_termination_source,
+    create_transfer_impedance_source,
+    create_mass_flow_rate_source,
+    create_triple_arrow_source,
+    create_outwards_triple_arrow_source,
+    create_normal_pressure_load,
+    create_outwards_normal_pressure_load,
+    create_degrees_of_freedom_decoupling_source,
+    create_absorption_surface_source,
+    create_acoustic_pressure_source,
+    create_reciprocating_compressor_source,
+    create_dissipation_model_source,
+    create_acoustic_transfer_element_data_source,
+    create_incident_plane_wave_source,
+    create_outwards_incident_plane_wave_source,
+    create_surface_velocity_source,
+)
+
+Triple = tuple[float, float, float]
+
+class Shape(Enum):
+    ARROW = "arrow"
+    LONG_ARROW = "long_arrow"
+    DOUBLE_ARROW = "double_arrow"
+    OUTWARDS_ARROW = "outwards_arrow"
+    CONE = "cone"
+    CUBE = "cube"
+    SPRING = "spring"
+    DAMPER = "damper"
+    MASS = "mass"
+    PERFORATED_PLATE_MODEL = "perforated_plate_model"
+    IMPEDANCE = "impedance"
+    TRANSFER_IMPEDANCE = "transfer_impedance"
+    INCIDENT_PLANE_WAVE = "incident_plane_wave"
+    OUTWARDS_INCIDENT_PLANE_WAVE = "outwards_incident_plane_wave"
+    ANECHOIC_TERMINATION = "anechoic_termination"
+    SURFACE_VELOCITY = "surface_velocity"
+    MASS_FLOW_RATE = "mass_flow_rate"
+    DISTRIBUTED_LOADS = "distributed_loads"
+    DISTRIBUTED_LOADS_OUTWARDS = "distributed_loads_outwards"
+    NORMAL_PRESSURE_LOAD = "normal_pressure_load"
+    OUTWARDS_NORMAL_PRESSURE_LOAD = "outwards_normal_pressure_load"
+    DEGREES_OF_FREEDOM_DECOUPLING = "degrees_of_freedom_decoupling"
+    ABSORPTION_SURFACE = "absorption_surface"
+    ACOUSTIC_PRESSURE = "acoustic_pressure"
+    RECIPROCATING_COMPRESSOR = "reciprocating_compressor"
+    DISSIPATION_MODEL = "dissipation_model"
+    ACOUSTIC_TRANSFER_ELEMENT_DATA = "acoustic_transfer_element_data"
+
+    @classmethod
+    def get_shapes(cls):
+        return [v.value for v in cls.__members__.values()]
+
+class SymbolsActor(CommonSymbolsActorVariableSize):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.configure_appearance()
+        self._register_shapes()
+        self.build()
+
+    def configure_appearance(self):
+        self.GetProperty().SetAmbient(0.5)
+        self.PickableOff()
+
+    def build(self):
+        self.clear_symbols()
+        self._build_nodal_normals()
+        
+        surface_properties = app().project.model.properties.surface_properties
+        for (property_name, surface_id) in surface_properties.keys():
+            if property_name == "surface_velocity":
+                self._build_surface_velocity(surface_id)
+            
+            elif property_name == "prescribed_dofs":
+                self._build_prescribed_dofs(property_name, surface_id)
+            
+            elif property_name == "nodal_loads":
+                self._build_nodal_loads(property_name, surface_id)
+            
+            elif property_name == "distributed_loads":
+                self._build_distributed_loads(property_name, surface_id)
+            
+            elif property_name == "normal_pressure_load":
+                self._build_normal_pressure_load(property_name, surface_id)
+            
+            elif property_name == "specific_impedance":
+                self._build_specific_impedance(property_name, surface_id)
+                
+            elif property_name == "transfer_impedance":
+                self._build_transfer_impedance(surface_id)
+            
+            elif property_name == "mass_flow_rate":
+                self._build_mass_flow_rate(surface_id)
+            
+            elif property_name == "degrees_of_freedom_decoupling":
+                self._build_dofs_decoupling(surface_id)
+            
+            elif property_name == "absorption_surface":    
+                self._build_absorption_surface(surface_id)
+            
+            elif property_name == "acoustic_pressure":
+                self._build_acoustic_pressure(surface_id)
+            
+            elif property_name == "reciprocating_compressor":
+                self._build_reciprocating_compressor(surface_id)
+            
+            elif property_name == "dissipation_model":
+                self._build_dissipation_model(surface_id)
+            
+            elif property_name == "acoustic_transfer_element_data":
+                self._build_acoustic_transfer_element_data(surface_id)
+            
+            elif property_name == "incident_plane_wave":
+                self._build_incident_plane_wave(property_name, surface_id)
+
+        super().build()
+
+    def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
+        mesh = app().project.model.mesh
+        surface_nodes = mesh.nodes_from_surfaces.get(surface_id)
+        surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
+
+        surface_normals = mesh.normals_surface.get(surface_id)
+        if surface_normals is None:
+            eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
+            avg_normal = np.average(eface_normals, axis=0).flatten()
+
+        else:
+            avg_normal = np.average(surface_normals, axis=0).round(6)
+
+        curvatures_surface = mesh.curvatures_surface.get(surface_id)
+        contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
+        center_coords = np.average(surface_coordinates, axis=0)
+
+        if contains_curvature:
+            # Finds the node that is closest to the center coords
+            dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
+            index = np.argmin(dist)
+            return surface_coordinates[index, :], surface_normals[index, :]
+
+        return center_coords, avg_normal
+
+    def _build_surface_velocity(self, surface_id: int):
+        if surface_id is None:
+            return
+        
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.SURFACE_VELOCITY, coords, normal, color=color_names.RED_6)
+
+    def _build_nodal_normals(self):
+        mesh = app().project.model.mesh
+        for node_id, normal_vector in mesh.nodal_normals_data.items():
+            coords = mesh.nodal_coordinates[node_id, 1:]
+            self.add_symbol_render(Shape.OUTWARDS_ARROW, coords, normal_vector, color=color_names.GRAY)
+
+    def _build_prescribed_dofs(self, property_name, surface_id):
+        coords, _ = self._get_center_coords_and_normals(surface_id)
+            
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        x, y, z, *_ = property["values"]
+
+        # alternate add_symbol function to a generic one
+        if x is not None:
+            self.add_symbol_render(Shape.CONE, coords, (1, 0, 0), color=color_names.GREEN)
+
+        if y is not None:
+            self.add_symbol_render(Shape.CONE, coords, (0, 1, 0), color=color_names.GREEN)
+
+        if z is not None:
+            self.add_symbol_render(Shape.CONE, coords, (0, 0, 1), color=color_names.GREEN)
+
+    def _build_nodal_loads(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        
+        x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+        orientation = np.real((x, y, z))
+        is_pointing = np.dot(normal, orientation) < 0
+        shape = Shape.ARROW if is_pointing else Shape.OUTWARDS_ARROW
+        self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
+            
+    def _build_distributed_loads(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+        orientation = np.real((x, y, z))
+        is_pointing = np.dot(normal, orientation) < 0
+        shape = Shape.DISTRIBUTED_LOADS if is_pointing else Shape.DISTRIBUTED_LOADS_OUTWARDS
+        self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
+    
+    def _build_normal_pressure_load(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        x = property["values"]
+        shape = Shape.OUTWARDS_NORMAL_PRESSURE_LOAD if x[0].real > 0 else Shape.NORMAL_PRESSURE_LOAD
+        
+        self.add_symbol_render(shape, coords, normal, color=color_names.RED_2)
+    
+    def _build_specific_impedance(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        shape = Shape.ANECHOIC_TERMINATION if "anechoic_termination" in property.keys() else Shape.IMPEDANCE
+        self.add_symbol_render(shape, coords, normal, color=color_names.PURPLE_2)
+   
+    def _build_transfer_impedance(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.TRANSFER_IMPEDANCE, coords, normal, color=color_names.PURPLE_2)
+    
+    def _build_perforated_plate_model(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.PERFORATED_PLATE_MODEL, coords, normal, color=color_names.RED)
+
+    def _build_mass_flow_rate(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.MASS_FLOW_RATE, coords, normal, color=color_names.PINK)
+    
+    def _build_dofs_decoupling(self, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        if ("perforated_plate_model", surface_id) in surface_properties.keys():
+            return
+        if ("transfer_impedance", surface_id) in surface_properties.keys():
+            return 
+
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.DEGREES_OF_FREEDOM_DECOUPLING, coords, normal, color=color_names.GREEN)
+    
+    def _build_absorption_surface(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.ABSORPTION_SURFACE, coords, normal, color=color_names.GREEN)
+    
+    def _build_acoustic_pressure(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.ACOUSTIC_PRESSURE, coords, normal, color=color_names.RED_2)
+    
+    def _build_reciprocating_compressor(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.RECIPROCATING_COMPRESSOR, coords, normal, color=color_names.RED_2)
+    
+    def _build_dissipation_model(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.DISSIPATION_MODEL, coords, normal, color=color_names.BLUE)
+    
+    def _build_viscous_thermal_loss_model(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.DISSIPATION_MODEL, coords, normal, color=color_names.ORANGE)
+    
+    def _build_acoustic_transfer_element_data(self, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol_render(Shape.ACOUSTIC_TRANSFER_ELEMENT_DATA, coords, normal, color=color_names.TURQUOISE)
+    
+    def _build_incident_plane_wave(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
+        wave_vector = property.get("wave_vector")
+        coords, _ = self._get_center_coords_and_normals(surface_id)
+        
+        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, wave_vector, color=color_names.BLUE)
+
+    # Specifications on how each symbol should look like
+    def add_symbol_render(self, shape: Shape, position: Triple, orientation: Triple, color: Color, scale: float = 1):
+        self.add_symbol(
+            shape_name=shape.value,
+            position=position,
+            orientation=orientation,
+            color=color,
+            scale=scale
+        )
+
+    # Preload the symbol shapes (they are likelly used in many symbols)
+    def _register_shapes(self):
+        self.register_shape("arrow", create_arrow_source())
+        self.register_shape("long_arrow", create_long_arrow_source())
+        self.register_shape("double_arrow", create_double_arrow_source())
+        self.register_shape("outwards_arrow", create_outwards_arrow_source())
+        self.register_shape("cone", create_cone_source())
+        self.register_shape("cube", create_cube_source())
+        self.register_shape("spring", create_spring_source())
+        self.register_shape("damper", create_damper_source())
+        self.register_shape("mass", create_mass_source())
+        self.register_shape("perforated_plate_model", create_perforated_plate_source())
+        self.register_shape("impedance", create_impedance_source())
+        self.register_shape("incident_plane_wave", create_incident_plane_wave_source())
+        self.register_shape("outwards_incident_plane_wave", create_outwards_incident_plane_wave_source())
+        self.register_shape("transfer_impedance", create_transfer_impedance_source())
+        self.register_shape("anechoic_termination", create_anechoic_termination_source())
+        self.register_shape("mass_flow_rate", create_mass_flow_rate_source())
+        self.register_shape("distributed_loads", create_triple_arrow_source())
+        self.register_shape("distributed_loads_outwards", create_outwards_triple_arrow_source())
+        self.register_shape("normal_pressure_load", create_normal_pressure_load())
+        self.register_shape("outwards_normal_pressure_load", create_outwards_normal_pressure_load())
+        self.register_shape("degrees_of_freedom_decoupling", create_degrees_of_freedom_decoupling_source())
+        self.register_shape("absorption_surface", create_absorption_surface_source())
+        self.register_shape("acoustic_pressure", create_acoustic_pressure_source())
+        self.register_shape("reciprocating_compressor", create_reciprocating_compressor_source())
+        self.register_shape("dissipation_model", create_dissipation_model_source())
+        self.register_shape("acoustic_transfer_element_data", create_acoustic_transfer_element_data_source())
+        self.register_shape("surface_velocity", create_surface_velocity_source())

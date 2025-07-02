@@ -1,9 +1,10 @@
 # fmt: off
-from PySide6.QtWidgets import QComboBox, QDialog, QDoubleSpinBox, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QDialog, QTreeWidgetItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 
 from vibra import app
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
@@ -38,7 +39,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self._initialize()
         self._config_window()
         self._create_connections()
-
+        self._paint_icons()
         self.load_info()
         self.geometry_selection_callback()
 
@@ -49,7 +50,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Porous material model")
 
     def _initialize(self):
         self.selected_fluid = None
@@ -78,10 +79,26 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
 
+        widgets = [self.pushButton_DB_equations, self.pushButton_DBM_equations]
+        change_icon_color_for_widgets(widgets, icon_color)
+
+    def actions_to_finalize(self):
+        app().main_window.update_symbols()
+    
     def geometry_selection_callback(self):
 
         volumes = self.main_window.selected_geometry_volumes
@@ -172,6 +189,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.properties._remove_volume_property("porous_material_model", volume_id)
             app().file.write_model_properties_in_file()
             self.load_info()
+            self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -200,6 +218,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     self.properties._remove_volume_property("porous_material_model", volume_id)
 
                 app().file.write_model_properties_in_file()
+                self.actions_to_finalize()
                 self.close()
 
     def tabEvent_porous_material_model(self):
@@ -395,23 +414,25 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             elif attribute_type == 1:
-                input_ids = self.lineEdit_selection_id.text()
-                volume_ids = self.mesh.check_selected_ids(
-                                                          input_ids, 
-                                                          selection = "volumes", 
-                                                          single_id = False
-                                                          )
 
-                if volume_ids is None:
+                input_ids = self.lineEdit_selection_id.text()
+                volume_ids, error_data = self.mesh.check_selected_ids(
+                                                                      input_ids, 
+                                                                      selection = "volumes", 
+                                                                      single_id = False,
+                                                                      )
+
+                if error_data is not None:
+                    self.hide()
                     self.lineEdit_selection_id.setFocus()
+                    PrintMessageInput(error_data)
                     return True
 
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data, volume=volume_id)
 
             app().file.write_model_properties_in_file()
-
-            print(f"The porous material model '{model_data['model']}' has been attributed to the volumes {volume_ids}")
+            self.actions_to_finalize()
             self.load_info()
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):

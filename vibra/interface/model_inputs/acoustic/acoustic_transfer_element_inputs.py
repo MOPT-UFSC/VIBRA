@@ -49,7 +49,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Acoustic transfer element data")
 
     def _reset_variables(self):
         self.keep_window_open = True
@@ -154,30 +154,34 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         app().config.write_last_folder_path_in_file("exported_data_folder", path)
 
     def check_typed_ids(self):
- 
-        input_selected_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id = self.mesh.check_selected_ids( 
-                                                               input_selected_id, 
-                                                               selection = "surfaces", 
-                                                               single_id = True
-                                                               )
 
-        if self.input_selection_id is None:
+        input_selected_id = self.lineEdit_input_selected_id.text()
+        self.input_selection_id, error_data = self.mesh.check_selected_ids(
+                                                                            input_selected_id, 
+                                                                            selection = "surfaces",
+                                                                            single_id = True,
+                                                                            )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_input_selected_id.setFocus()
             self.lineEdit_input_selected_id.selectAll()
-            return True
+            PrintMessageInput(error_data)
+            return
 
         output_selected_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id = self.mesh.check_selected_ids(  
-                                                                output_selected_id, 
-                                                                selection = "surfaces", 
-                                                                single_id = True  
-                                                                )
+        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
+                                                                            output_selected_id, 
+                                                                            selection = "surfaces", 
+                                                                            single_id = True  
+                                                                            )
 
-        if self.output_selection_id is None:
-            self.lineEdit_output_selected_id.setFocus()
-            self.lineEdit_output_selected_id.selectAll()
-            return True
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_input_selected_id.setFocus()
+            self.lineEdit_input_selected_id.selectAll()
+            PrintMessageInput(error_data)
+            return
 
     def check_frequency_entries(self):
 
@@ -328,8 +332,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         data = {
                 "real_values": [1.0],
                 "imag_values": [0.0],
-                "nodal_attribution": False,
-                "averaged": False,
                 }
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -353,7 +355,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
 
-        rho = self.model.get_fluid_density_for_particle_velocity_calculation(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:
             return None
         
@@ -469,8 +471,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         else:
             icon_color = QColor("#1a73e8")
 
-        icons = [self.pushButton_invert_selection, self.pushButton_search]
-        change_icon_color_for_widgets(icons, icon_color)
+        widgets = [self.pushButton_invert_selection, self.pushButton_search]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def print_final_message(self):
 

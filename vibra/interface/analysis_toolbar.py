@@ -67,6 +67,8 @@ class AnalysisToolbar(QToolBar):
 
     def _create_connections(self):
         #
+        # self.combo_box_physical_domain.currentIndexChanged.connect(self._update_state)
+        # self.combo_box_analysis_type.currentIndexChanged.connect(self._update_state)
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
         #
@@ -75,6 +77,9 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
+    
+    # def _update_state(self):
+    #     app().main_window.update_symbols()
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -189,6 +194,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setEnabled(True)
 
     def check_analysis_setup_callback(self):
+        app().main_window.update_symbols()
         valid_setup = app().project.is_there_a_valid_analysis_setup()
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
@@ -203,6 +209,14 @@ class AnalysisToolbar(QToolBar):
         # This is needed specially when the geometry
         # and mesh changes because of the analysis
         app().main_window.update_plots(reset_camera=False)
+
+        if not app().file.read_geometry_data_from_file():
+            app().file.write_geometry_data_in_file()
+
+        if not app().file.read_mesh_data_from_file():
+            app().file.write_mesh_data_in_file()
+
+        app().file.write_model_properties_in_file()
         app().file.write_results_data_in_file()
 
     def reset_solution(self):
@@ -213,6 +227,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
 
     def configure_analysis(self):
+        # aqui
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
 

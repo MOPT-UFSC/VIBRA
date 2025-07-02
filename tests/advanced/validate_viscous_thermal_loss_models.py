@@ -186,8 +186,8 @@ def load_external_mesh_and_solve():
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
-    rho_eff_v1 = model.get_fluid_density_for_particle_velocity_calculation(1, frequencies)
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(list_nodes)
+    rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
+    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
 
     input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1, rho_eff_v1)
     output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2, rho_eff_v1)
@@ -216,9 +216,9 @@ def load_external_mesh_and_solve():
     # output_Vx /= len(mesh.nodes_from_surfaces[2])
 
     mesh._process_face_elements_connected_to_nodes([1, 2])
-    mesh._process_nodal_areas()
+    mesh.compute_nodal_areas()
 
-    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2)
+    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2, surface_integration=False)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")

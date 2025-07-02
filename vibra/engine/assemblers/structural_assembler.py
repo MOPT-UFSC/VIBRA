@@ -90,11 +90,17 @@ class StructuralAssembler:
                     prescribed_data[gdof] += p_data
 
         for (property, point_id), data in self.properties.point_properties.items():
-            if property == selected_property:
-                nodes = self.model.mesh.nodes_from_points[point_id]
-                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "points")
-                for gdof, p_data in property_data_from_nodes.items():
-                    prescribed_data[gdof] += p_data
+            if property != selected_property:
+                continue
+
+            node_id = self.model.mesh.nodes_from_points.get(point_id)
+            if node_id is None:
+                continue
+
+            _node_id = np.array([node_id], dtype=int)
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_node_id, data, "points")
+            for gdof, p_data in property_data_from_nodes.items():
+                prescribed_data[gdof] += p_data
 
         for (property, node_id), data in self.properties.nodal_properties.items():
             if property == selected_property:

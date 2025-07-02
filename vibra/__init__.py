@@ -5,8 +5,8 @@ if TYPE_CHECKING:
 
 from importlib.metadata import version
 # copying the version from pyproject.toml
-__version__ = '0.2.4'
-__release_date__ = 'July 22th 2024'
+__version__ = '0.3.1'
+__release_date__ = 'June 24th 2024'
 
 from PySide6.QtWidgets import QApplication
 from pathlib import Path

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'dissipation_model_inputs.ui'
+## Form generated from reading UI file 'proportional_damping_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -57,13 +57,13 @@ class Ui_Dialog(object):
         self.frame_2.setFrameShadow(QFrame.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_2)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.tabWidget_dissipation_model = QTabWidget(self.frame_2)
-        self.tabWidget_dissipation_model.setObjectName(u"tabWidget_dissipation_model")
-        self.tabWidget_dissipation_model.setMinimumSize(QSize(360, 0))
-        self.tabWidget_dissipation_model.setMaximumSize(QSize(16777215, 16777215))
+        self.tabWidget_main = QTabWidget(self.frame_2)
+        self.tabWidget_main.setObjectName(u"tabWidget_main")
+        self.tabWidget_main.setMinimumSize(QSize(360, 0))
+        self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
         font1 = QFont()
         font1.setPointSize(10)
-        self.tabWidget_dissipation_model.setFont(font1)
+        self.tabWidget_main.setFont(font1)
         self.tab_proportional_damping = QWidget()
         self.tab_proportional_damping.setObjectName(u"tab_proportional_damping")
         self.gridLayout_12 = QGridLayout(self.tab_proportional_damping)
@@ -134,32 +134,32 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_8, 0, 0, 1, 1)
 
-        self.tabWidget_dissipation_model.addTab(self.tab_proportional_damping, "")
+        self.tabWidget_main.addTab(self.tab_proportional_damping, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_6 = QGridLayout(self.tab_list)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.treeWidget_dissipation_model = QTreeWidget(self.tab_list)
+        self.treeWidget_proportional_damping = QTreeWidget(self.tab_list)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_dissipation_model.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_dissipation_model.setObjectName(u"treeWidget_dissipation_model")
-        self.treeWidget_dissipation_model.setMinimumSize(QSize(320, 100))
-        self.treeWidget_dissipation_model.setMaximumSize(QSize(16777215, 200))
+        self.treeWidget_proportional_damping.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_proportional_damping.setObjectName(u"treeWidget_proportional_damping")
+        self.treeWidget_proportional_damping.setMinimumSize(QSize(320, 100))
+        self.treeWidget_proportional_damping.setMaximumSize(QSize(16777215, 200))
         font3 = QFont()
         font3.setFamilies([u"MS Shell Dlg 2"])
         font3.setPointSize(10)
         font3.setItalic(False)
-        self.treeWidget_dissipation_model.setFont(font3)
-        self.treeWidget_dissipation_model.setIndentation(1)
-        self.treeWidget_dissipation_model.setHeaderHidden(False)
-        self.treeWidget_dissipation_model.header().setHighlightSections(False)
-        self.treeWidget_dissipation_model.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_dissipation_model.header().setStretchLastSection(True)
+        self.treeWidget_proportional_damping.setFont(font3)
+        self.treeWidget_proportional_damping.setIndentation(1)
+        self.treeWidget_proportional_damping.setHeaderHidden(False)
+        self.treeWidget_proportional_damping.header().setHighlightSections(False)
+        self.treeWidget_proportional_damping.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_proportional_damping.header().setStretchLastSection(True)
 
-        self.gridLayout_6.addWidget(self.treeWidget_dissipation_model, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.treeWidget_proportional_damping, 0, 0, 1, 1)
 
         self.frame_3 = QFrame(self.tab_list)
         self.frame_3.setObjectName(u"frame_3")
@@ -192,9 +192,9 @@ class Ui_Dialog(object):
 
         self.gridLayout_6.addWidget(self.frame_3, 1, 0, 1, 1)
 
-        self.tabWidget_dissipation_model.addTab(self.tab_list, "")
+        self.tabWidget_main.addTab(self.tab_list, "")
 
-        self.gridLayout_4.addWidget(self.tabWidget_dissipation_model, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.tabWidget_main, 1, 0, 1, 1)
 
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
@@ -290,7 +290,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_dissipation_model.setCurrentIndex(0)
+        self.tabWidget_main.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -298,7 +298,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Set the dissipation model", None))
-        self.label.setText(QCoreApplication.translate("Dialog", u"Set the dissipation model", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Set the proportional damping", None))
         self.label_19.setText(QCoreApplication.translate("Dialog", u"Fluid density factor:", None))
         self.label_18.setText(QCoreApplication.translate("Dialog", u"Speed of sound factor:", None))
 #if QT_CONFIG(tooltip)
@@ -307,17 +307,17 @@ class Ui_Dialog(object):
 #if QT_CONFIG(tooltip)
         self.lineEdit_fluid_density_complex_factor.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"center\">Complex factor '\u03b7' for fluid density:</p><p align=\"center\">\u03c1<span style=\" vertical-align:sub;\">complex</span> = (1 + \u03b7*1j)*\u03c1<span style=\" vertical-align:sub;\">o</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.tabWidget_dissipation_model.setTabText(self.tabWidget_dissipation_model.indexOf(self.tab_proportional_damping), QCoreApplication.translate("Dialog", u"Proportional damping", None))
-        ___qtreewidgetitem = self.treeWidget_dissipation_model.headerItem()
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Inputs", None));
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Model", None));
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_proportional_damping), QCoreApplication.translate("Dialog", u"Setup", None))
+        ___qtreewidgetitem = self.treeWidget_proportional_damping.headerItem()
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Fluid density factor", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Speed of sound factor", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Volumes", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_dissipation_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+        self.treeWidget_proportional_damping.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
-        self.tabWidget_dissipation_model.setTabText(self.tabWidget_dissipation_model.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u" All bodies", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u" Selected bodies", None))
 
@@ -329,7 +329,7 @@ class Ui_Dialog(object):
 
 
 
-class DissipationModelInputs_UI(QDialog, Ui_Dialog):
+class ProportionalDampingInputs_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
     - Dialog: QDialog
@@ -339,7 +339,7 @@ class DissipationModelInputs_UI(QDialog, Ui_Dialog):
                             - label: QLabel
                 - frame_2: QFrame
                     - (Layout): QGridLayout
-                            - tabWidget_dissipation_model: QTabWidget
+                            - tabWidget_main: QTabWidget
                                 - tab_proportional_damping: QWidget
                                     - (Layout): QGridLayout
                                             - frame_8: QFrame
@@ -350,7 +350,7 @@ class DissipationModelInputs_UI(QDialog, Ui_Dialog):
                                                         - lineEdit_fluid_density_complex_factor: QLineEdit
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
-                                            - treeWidget_dissipation_model: QTreeWidget
+                                            - treeWidget_proportional_damping: QTreeWidget
                                             - frame_3: QFrame
                                                 - (Layout): QGridLayout
                                                         - pushButton_reset: QPushButton

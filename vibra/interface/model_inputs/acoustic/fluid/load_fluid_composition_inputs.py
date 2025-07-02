@@ -1,17 +1,14 @@
-from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PySide6.QtGui import QCloseEvent, QIcon
+from PySide6.QtWidgets import QFileDialog
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
-from pathlib import Path
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
 from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.formatters.config_widget_appearance import ConfigWidgetAppearance
 
 import os
-
+from pathlib import Path
 
 class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def __init__(self, *args, **kwargs):

@@ -13,6 +13,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import logging
 import numpy as np
 
+from copy import deepcopy
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -36,9 +37,9 @@ class Model:
         self.geometry_path = None
         self.initial_element_size = None
 
-        self.f_min = 2
+        self.f_min = 5
         self.f_max = 600
-        self.f_step = 2
+        self.f_step = 5
         self.frequencies = None
         self.list_frequencies = list()
 
@@ -76,16 +77,18 @@ class Model:
     def set_mesh_setup(self, mesh_setup):
         self.mesh_setup = mesh_setup
 
+    def initialize_mesh(self):
+        self.mesh = Mesh(
+                         length_unit = self.length_unit, 
+                         geometry_qf = self.geometry_qf
+                         )
+
     def process_visual_geometry_mesh(self, path : str):
 
+        self.initialize_mesh()
+
         try:
-
             try:
-
-                self.mesh = Mesh(
-                                 length_unit = self.length_unit, 
-                                 geometry_qf = self.geometry_qf
-                                 )
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
@@ -109,8 +112,6 @@ class Model:
             self.generated_mesh = False
             self.initial_element_size = element_size
 
-            app().main_window.update_geometry_information()
-
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
@@ -118,6 +119,29 @@ class Model:
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
             return -1       
+
+    def process_mesh_data(self, path : str):
+
+        self.initialize_mesh()
+
+        try:
+
+            logging.info("Processing mesh... [15/100]")
+
+            self.mesh.geometry_imported = False
+            self.mesh.load_mesh(path)
+            self.generated_mesh = True
+
+            logging.info("Processing mesh... [90/100]")
+            self.mesh.process_solid_elements_connected_to_nodes()
+
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            title = "Error while processing geometry"
+            message = str(error_log)
+            PrintMessageInput([window_title_1, title, message])
+            return -1
 
     def process_mesh(self):
 
@@ -140,7 +164,7 @@ class Model:
         self.generated_mesh = True
 
         logging.info("Processing mesh... [90/100]")
-        self.mesh._process_solid_elements_connected_to_nodes()
+        self.mesh.process_solid_elements_connected_to_nodes()
 
     def set_mesh(self, mesh):
         self.mesh = mesh
@@ -276,97 +300,157 @@ class Model:
 
         return output_data
 
-    def get_fluid_density_for_particle_velocity_calculation(self, surface_id: int, frequencies: np.ndarray):
+    def get_fluid_properties_from_surface(self, surface_id: int, frequencies: np.ndarray):
+        """
+        """
 
-        rho = None
-        volume_ids = self.mesh.volumes_from_surface[surface_id]
+        fluid = None
+        density = None
+        speed_of_sound = None
 
-        if len(volume_ids) == 1:
+        volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
+
+        if len(volumes_from_surface) == 1:
 
             for key in self.properties.volume_properties.keys():
                 property, volume_id = key
-                if volume_id == volume_ids[0]:
+                if volume_id == volumes_from_surface[0]:
                     if property == "viscous_thermal_model":
                         vt_model = ViscousThermalLossModels(self)
                         vt_model.process_effective_properties(frequencies)
-                        return vt_model.effective_properties[volume_id]["rho_eff"]
+                        density = vt_model.effective_properties[volume_id]["rho_eff"]
+                        speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
+                        return density, speed_of_sound
 
                     elif property == "porous_material_model":
                         pm_model = PorousMaterialModels(self)
                         pm_model.process_effective_properties(frequencies)
-                        return pm_model.effective_properties[volume_id]["rho_eff"]
+                        density = pm_model.effective_properties[volume_id]["rho_eff"]
+                        speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
+                        return density, speed_of_sound
 
             fluid = self.properties._get_property("fluid", surface=surface_id)
-            rho = fluid.fluid_density
         
-        elif len(volume_ids) > 1:
+        elif len(volumes_from_surface) > 1:
 
             fluids = list()
-            for volume_id in volume_ids:
+            for volume_id in volumes_from_surface:
                 fluid = self.properties._get_property("fluid", volume=volume_id)
-                if isinstance(fluid, Fluid):
-                    if fluid not in fluids:
-                        fluids.append(fluid)
+                if not isinstance(fluid, Fluid):
+                    continue
+                if fluid not in fluids:
+                    fluids.append(fluid)
 
             if len(fluids) == 1:
                 fluid = fluids[0]
-                rho = fluid.fluid_density
 
-        return rho
+        if isinstance(fluid, Fluid):
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+
+        return density, speed_of_sound
 
     def process_porous_material_properties(self, frequencies: np.ndarray):
+        """
+        This method processes the porous material model effective properties.
 
+        Parameters
+        ----------
+        frequencies: np.ndarray
+            The frequencies vector.
+        """
         pm_model = PorousMaterialModels(self)
         pm_model.process_effective_properties(frequencies)
+        self.porous_material_properties = deepcopy(pm_model.effective_properties)
 
-        self.porous_material_properties = dict()
-        for volume_id, data in pm_model.effective_properties.items():
-            for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.porous_material_properties[element_id] = data
+    def get_porous_material_model_effective_properties(self, surface_id: int):
+        """
+        This method returns the porous material model-related 
+        effective properties of selected surface.
 
-    def is_porous_material_model_active(self, surface_id):
+        Parameter
+        ---------
+        surface_id: int
+            The surface tag.
 
-        for key, data in self.properties.volume_properties.items():
+        Returns
+        -------
+        rho_eff: np.ndarray or None
+            The effective fluid density.
+
+        C_eff: np.ndarray or None
+            The effective speed of sound.
+        """
+
+        rho_eff = None
+        C_eff = None
+
+        for key in self.properties.volume_properties.keys():
             prop, volume_id = key
-            if prop == "porous_material_model":
+            if prop != "porous_material_model":
+                continue
 
-                if volume_id in self.mesh.surfaces_from_volume.keys():
-                    surfaces_from_volume = self.mesh.surfaces_from_volume[volume_id]
+            if not volume_id in self.mesh.surfaces_from_volume.keys():
+                continue
 
-                    if surface_id in surfaces_from_volume:
-                        elements = self.mesh.elements_from_volume[volume_id]
-                        rho_eff = self.porous_material_properties[elements[0]]["rho_eff"]
-                        C_eff = self.porous_material_properties[elements[0]]["C_eff"]
-                        return True, rho_eff, C_eff
-
-        return False, None, None
+            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                pm_properties = self.porous_material_properties.get(volume_id)
+                rho_eff = pm_properties["rho_eff"]
+                C_eff = pm_properties["C_eff"]
+                break
+        
+        return rho_eff, C_eff
 
     def process_viscous_thermal_model_properties(self, frequencies: np.ndarray):
+        """
+        This method processes the viscous thermal model effective properties.
 
-        model = ViscousThermalLossModels(self)
-        model.process_effective_properties(frequencies)
+        Parameters
+        ----------
+        frequencies: np.ndarray
+            The frequencies vector.
+        """
+        vt_model = ViscousThermalLossModels(self)
+        vt_model.process_effective_properties(frequencies)
+        self.viscous_thermal_model_properties = deepcopy(vt_model.effective_properties)
 
-        self.viscous_thermal_model_properties = dict()
-        for volume_id, data in model.effective_properties.items():
-            for element_id in self.mesh.elements_from_volume[volume_id]:
-                self.viscous_thermal_model_properties[element_id] = data
+    def get_viscous_thermal_model_effective_properties(self, surface_id: int):
+        """
+        This method returns the viscous thermal model-related 
+        effective properties of selected surface.
 
-    def is_viscous_thermal_model_active(self, surface_id):
+        Parameter
+        ---------
+        surface_id: int
+            The surface tag.
 
-        for key, data in self.properties.volume_properties.items():
+        Returns
+        -------
+        rho_eff: np.ndarray or None
+            The effective fluid density.
+
+        C_eff: np.ndarray or None
+            The effective speed of sound.
+        """
+
+        rho_eff = None
+        C_eff = None
+
+        for key in self.properties.volume_properties.keys():
             prop, volume_id = key
-            if prop == "viscous_thermal_model":
+            if prop != "viscous_thermal_model":
+                continue
 
-                if volume_id in self.mesh.surfaces_from_volume.keys():
-                    surfaces_from_volume = self.mesh.surfaces_from_volume[volume_id]
+            if not volume_id in self.mesh.surfaces_from_volume.keys():
+                continue
 
-                    if surface_id in surfaces_from_volume:
-                        elements = self.mesh.elements_from_volume[volume_id]
-                        rho_eff = self.viscous_thermal_model_properties[elements[0]]["rho_eff"]
-                        C_eff = self.viscous_thermal_model_properties[elements[0]]["C_eff"]
-                        return True, rho_eff, C_eff
-
-        return False, None, None
+            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                vt_properties = self.viscous_thermal_model_properties.get(volume_id)
+                rho_eff = vt_properties["rho_eff"]
+                C_eff = vt_properties["C_eff"]
+                break
+    
+        return rho_eff, C_eff
 
     def set_viscous_thermal_model_data(self, data, group=None, volume=None):
         self.properties._set_property("viscous_thermal_model", data, group=group, volume=volume)

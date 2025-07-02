@@ -361,7 +361,7 @@ class MeshSetupInputs(MesherSetup_UI):
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
         self.worst_value = app().project.model.mesh.mesh_quality_worst_value
 
-
+        app().main_window.update_symbols()
 
     def get_mesh_refinement_data(self):
 

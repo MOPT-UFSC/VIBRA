@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
 
 from vibra import app, TEMP_PROJECT_FILE
 from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
@@ -83,8 +83,13 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
 
     def _config_widgets(self):
-        self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
         self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+    
+    def _update_size_policy(self):
+        if len(self.list_of_materials) > 6:
+            self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        else:
+            self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def load_data_from_materials_library(self):
 
@@ -138,6 +143,7 @@ class MaterialWidget(MaterialWidget_UI):
                 item = QTableWidgetItem()
                 item.setBackground(QColor(*material.color))
                 item.setForeground(QColor(*material.color))
+                item.setSizeHint(QSize(80, 30))
                 self.tableWidget_material_data.setItem(6, j, item)
 
         for i in range(self.tableWidget_material_data.rowCount()):
@@ -145,6 +151,7 @@ class MaterialWidget(MaterialWidget_UI):
                 self.tableWidget_material_data.item(i, j).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_material_data.blockSignals(False)
+        self._update_size_policy()
 
     def get_selected_column(self) -> int:
         selected_items = self.tableWidget_material_data.selectedIndexes()
@@ -178,6 +185,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         for i in range(self.tableWidget_material_data.rowCount()):
             item = QTableWidgetItem()
+            item.setSizeHint(QSize(80, 30))
             self.tableWidget_material_data.setItem(i, last_col, item)
             self.tableWidget_material_data.item(i, last_col).setTextAlignment(Qt.AlignCenter)
 
@@ -196,10 +204,16 @@ class MaterialWidget(MaterialWidget_UI):
             # material, just remove the last line
             current_size = self.tableWidget_material_data.columnCount()
             self.tableWidget_material_data.setColumnCount(current_size - 1)
+
+            self._update_size_policy()
+            self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
             return
 
         material = self.list_of_materials[selected_column]
         self.remove_material_from_file(material)
+
+        self._update_size_policy()
+        self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
 
     def item_changed_callback(self, item : QTableWidgetItem):
 
@@ -229,6 +243,7 @@ class MaterialWidget(MaterialWidget_UI):
         self.load_data_from_materials_library()
 
         self.tableWidget_material_data.blockSignals(False)
+        self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
 
     def go_to_next_cell(self, item : QTableWidgetItem):
 
@@ -360,14 +375,12 @@ class MaterialWidget(MaterialWidget_UI):
                 else:
                     material_data[key] = item.text()
 
-            # material_data["identifier"] = self.new_identifier()
-
-            material_name = material_data["name"]
-            if not material_name:
+            material_identifier = material_data["identifier"]
+            if not material_identifier:
                 return
 
             config = app().file.read_material_library_from_file()
-            config[material_name] = material_data
+            config[material_identifier] = material_data
 
             app().file.write_material_library_in_file(config)
                     
@@ -382,6 +395,7 @@ class MaterialWidget(MaterialWidget_UI):
         config = app().file.read_material_library_from_file()
 
         identifier = str(material.identifier)
+
         if not identifier in config.sections():
             return
 

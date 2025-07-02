@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QDialog, QHeaderView, QPushButton, QTableWidget, QTableWidgetItem, QWidget
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 
 from vibra import app, TEMP_PROJECT_FILE
 from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
@@ -96,8 +96,13 @@ class FluidWidget(FluidWidget_UI):
         self.setWindowTitle("Vibra")
 
     def _config_widgets(self):
-        self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
         self.tableWidget_fluid_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+    
+    def _update_size_policy(self):
+        if len(self.list_of_fluids) > 6:
+            self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        else:
+            self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
     def _add_icon_and_title(self):
         self._config_window()
@@ -261,6 +266,7 @@ class FluidWidget(FluidWidget_UI):
                 self.tableWidget_fluid_data.item(i, j).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_fluid_data.blockSignals(False)
+        self._update_size_policy()
 
     def get_selected_column(self) -> int:
         selected_items = self.tableWidget_fluid_data.selectedIndexes()
@@ -299,6 +305,7 @@ class FluidWidget(FluidWidget_UI):
 
         for i in range(self.tableWidget_fluid_data.rowCount()):
             item = QTableWidgetItem()
+            item.setSizeHint(QSize(80, 30))
             self.tableWidget_fluid_data.setItem(i, last_col, item)
             self.tableWidget_fluid_data.item(i, last_col).setTextAlignment(Qt.AlignCenter)
 
@@ -320,6 +327,9 @@ class FluidWidget(FluidWidget_UI):
             # fluid, just remove the last line
             current_size = self.tableWidget_fluid_data.columnCount()
             self.tableWidget_fluid_data.setColumnCount(current_size - 1)
+
+            self._update_size_policy()
+            self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
             return
 
         item = self.tableWidget_fluid_data.item(1, selected_column)
@@ -327,6 +337,9 @@ class FluidWidget(FluidWidget_UI):
         fluid = self.list_of_fluids[identifier]
 
         self.remove_fluid_from_file(fluid)
+
+        self._update_size_policy()
+        self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
 
     def item_changed_callback(self, item):
 
@@ -356,6 +369,7 @@ class FluidWidget(FluidWidget_UI):
         self.load_data_from_fluids_library()
 
         self.tableWidget_fluid_data.blockSignals(False)
+        self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
     
     def go_to_next_cell(self, item):
 

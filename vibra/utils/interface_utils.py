@@ -26,18 +26,19 @@ class VisualizationFilter:
     solids: bool = False
     acoustic_symbols: bool = False
     structural_symbols: bool = False
+    ghost: bool = True
     color_mode: ColorMode = ColorMode.EMPTY
 
     @classmethod
     def all_false(cls):
         # It is dumb, but it works
-        args = [False] * 6
+        args = [False] * 7
         return cls(*args)
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
-        args = [True] * 6
+        args = [True] * 7
         return cls(*args)
 
 

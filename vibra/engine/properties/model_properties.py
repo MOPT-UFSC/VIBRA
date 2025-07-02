@@ -104,8 +104,8 @@ class ModelProperties:
                       group: int | None = None
                       ):
         """
-            This method sets a data to a property by node, element, line, surface or volume
-            if any of these exists. Otherwise sets the property as global.
+        This method sets a data to a property by node, element, line, surface or volume
+        if any of these exists. Otherwise sets the property as global.
 
         """
 
@@ -119,9 +119,13 @@ class ModelProperties:
 
                     if a is None:
                         tables_values.append(None)
+
                     else:
-                        b = data["imag_values"][i]                
-                        tables_values.append(a + 1j*b)
+                        b = data["imag_values"][i]  
+                        if b is None:
+                            tables_values.append(a)
+                        else:
+                            tables_values.append(a + 1j*b)
 
             elif "values" in data.keys():
                 tables_values = data["values"]
@@ -141,7 +145,11 @@ class ModelProperties:
 
                     if table_name in imported_tables.keys():
                         data_array = imported_tables[table_name]
-                        values = data_array[:, 1] + 1j * data_array[:, 2]
+                        if data_array.shape[1] >= 3:
+                            values = data_array[:, 1] + 1j * data_array[:, 2]
+                        else:
+                            values = data_array[:, 1]
+
                         tables_values.append(values)
 
             data["values"] = tables_values
@@ -318,9 +326,10 @@ class ModelProperties:
                            "acoustic_pressure",
                            "surface_velocity",
                            "mass_flow_rate",
+                           "incident_plane_wave",
                            "specific_impedance",
                            "transfer_impedance",
-                           "radiation_impedance",
+                           "absorption_surface",
                            "perforated_plate_model",
                            "reciprocating_compressor_excitation",
                            "reciprocating_pump_excitation",

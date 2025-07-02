@@ -30,8 +30,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self._config_window()
         self._configure_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -41,7 +42,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Anechoic termination")
 
     def _reset(self):
         self.keep_window_open = True
@@ -49,9 +50,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def _configure_qt_variables(self):
         self.comboBox_volume_id.setDisabled(True)
-
         self.lineEdit_selection_id.setDisabled(True)
-
         self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
         self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
 
@@ -62,13 +61,23 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
 
-    def tabEvent_callback(self):
+    def _config_widgets(self):
+        #
+        self.comboBox_volume_id.setDisabled(True)
+        #
+        self.lineEdit_selection_id.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_anechoic_termination.setColumnWidth(i, w)
+            self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
@@ -89,12 +98,15 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def update_volumes_from_faces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(
-                                                   input_ids, 
-                                                   selection = "surfaces"
-                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
 
-        if surface_ids is None:
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         list_volumes = list()
@@ -118,12 +130,18 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def attribute_callback(self):
 
-        str_selection_ids = self.lineEdit_selection_id.text()
-        surface_ids = self.mesh.check_selected_ids(str_selection_ids, selection="surfaces")
-        if surface_ids is None:
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces"
+                                                                )
+
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
-        
+
         self.remove_conflicting_excitations(surface_ids)
 
         for surface_id in surface_ids:
@@ -145,12 +163,19 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             if self.comboBox_volume_id.currentText() == "multiple":
                 volume_id = volume_ids[0]
             else:
-                volume_id = int(self.comboBox_volume_id.currentText())
+                try:
+                    volume_id = int(self.comboBox_volume_id.currentText())
+                except Exception:
+                    window_title = "Error"
+                    title = "Error in the model setup"
+                    message = "You cannot set an anechoic termination for a shell element"
+
+                    PrintMessageInput([window_title, title, message])
+                    return
 
             data = {
                     "anechoic_termination" : True,
                     "volume_id" : volume_id,
-                    "nodal_attribution": False
                     }
 
             self.properties._set_property("specific_impedance", data, surface=surface_id)
@@ -168,7 +193,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["specific_impedance"]
+        labels = [
+                  "specific_impedance"
+                  "incident_plane_wave"
+                  ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -218,12 +246,12 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
 
@@ -239,13 +267,15 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):
+
         for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+            property, *args = key
             if property == "specific_impedance":
                 if "anechoic_termination" in data.keys():
                     self.tabWidget_main.setTabVisible(1, True)
                     return
 
+        self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_main.setTabVisible(1, False)
 
     def on_click_item(self, item):
@@ -257,7 +287,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def load_model_info(self):
         self.treeWidget_anechoic_termination.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key

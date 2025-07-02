@@ -22,6 +22,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         super().__init__(*args, **kwargs)
 
         self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         app().main_window.set_input_widget(self)
@@ -43,7 +44,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set structural distributed loads")
+        self.setWindowTitle("Structural distributed loads")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -68,18 +69,17 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.Fz_table_name = None
 
     def _create_list_lineEdits(self):
-
-        self.list_lineEdit_constant_values = [  
-                                              [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-                                              [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-                                              [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-                                              ]
+        self.list_lineEdit_constant_values = [
+            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
+            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
+            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+        ]
 
         self.table_lineEdits = {
-                                "Fx" : self.lineEdit_path_table_Fx,
-                                "Fy" : self.lineEdit_path_table_Fy,
-                                "Fz" : self.lineEdit_path_table_Fz,
-                                }
+            "Fx": self.lineEdit_path_table_Fx,
+            "Fy": self.lineEdit_path_table_Fy,
+            "Fz": self.lineEdit_path_table_Fz,
+        }
 
     def _config_widgets(self):
         #
@@ -181,8 +181,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 return
             
         if isinstance(line_id, int):
-            for node_id in app().project.model.mesh.nodes_from_lines[line_id]:
-                for surface_id in self.model.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.nodes_from_lines[line_id]:
+                for surface_id in self.mesh.surfaces_from_node[node_id]:
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
@@ -265,13 +265,16 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -426,7 +429,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if self.model.change_analysis_frequency_setup(list(self.frequencies)):
 
             self.hide()
             lineEdit = self.table_lineEdits[load_label]
@@ -434,7 +437,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup"
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
@@ -466,13 +469,16 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids = app().project.model.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = selection
-                                                                   )
+        selected_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = selection, 
+                                                                single_id = False
+                                                                )
 
-        if selected_ids is None:
+        if error_data is not None:
+            self.hide()
             self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
             return
 
         self.remove_duplicated_attributions(selected_ids, selection)
@@ -547,14 +553,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-                for line_id in app().project.model.mesh.lines_from_surface[selected_id]:
+                for line_id in self.mesh.lines_from_surface[selected_id]:
                     data = self.properties._get_property("distributed_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("distributed_loads", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("distributed_loads", line_id, "lines"))
 
             elif selection == "lines":
-                for surface_id in app().project.model.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("distributed_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_loads", surface_id)
@@ -791,7 +797,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        # app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

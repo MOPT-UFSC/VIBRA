@@ -15,12 +15,12 @@ class AnalysisRequirementsChecker:
 
         self.model = app().project.model
         self.properties = app().project.model.properties
-    
+
         self.surface_ids = self.model.mesh.geometry_information["surfaces"]
         self.volume_ids = self.model.mesh.geometry_information["volumes"]
-        
+
     def check_materials(self, surface_thickness=True):
-        
+
         volumes_without_material = list()
         for volume_id in self.volume_ids:
             prop_data = self.properties._get_property("material", volume=volume_id)
@@ -134,7 +134,9 @@ class AnalysisRequirementsChecker:
 
         prop_labels = [
                        "acoustic_pressure", 
-                       "surface_velocity", 
+                       "surface_velocity",
+                       "mass_flow_rate",
+                       "incident_plane_wave",
                        "compressor_excitation",
                        ]
 
