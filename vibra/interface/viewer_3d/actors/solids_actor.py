@@ -1,5 +1,6 @@
 from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
+    vtkIdList,
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
@@ -14,6 +15,7 @@ from vtkmodules.vtkCommonDataModel import (
     vtkSphere,
     vtkUnstructuredGrid,
 )
+from vtkmodules.vtkFiltersCore import vtkExtractCells
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
@@ -34,6 +36,7 @@ class SolidsActor(vtkActor):
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding
+        self.has_distinguished_cells = False
 
         self.create_geometry()
         self.configure_appearance()
@@ -109,10 +112,16 @@ class SolidsActor(vtkActor):
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(solid_indexes)
-
         self.data: vtkPolyData = data
+
+        self.has_distinguished_cells = False
+        self.cell_extractor = vtkExtractCells()
+        self.cell_extractor.SetInputData(data)
+        self.cell_extractor.ExtractAllCellsOn()
+        self.cell_extractor.Update()
+
         self.clipper = vtkExtractGeometry()
-        self.clipper.SetInputData(self.data)
+        self.clipper.SetInputConnection(self.cell_extractor.GetOutputPort())
         self.clipper.SetImplicitFunction(ALWAYS_FALSE)
         self.clipper.ExtractInsideOff()
         self.clipper.Update()
@@ -120,12 +129,6 @@ class SolidsActor(vtkActor):
         mapper.InterpolateScalarsBeforeMappingOn()
         mapper.SetInputConnection(self.clipper.GetOutputPort())
         self.SetMapper(mapper)
-
-    def replace_data(self, data: vtkPolyData):
-        self.data = data
-        self.clipper.SetInputData(data)
-        self.clipper.Modified()
-        self.clipper.Update()
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -145,7 +148,11 @@ class SolidsActor(vtkActor):
         if self.data is None:
             return
 
-        color = (255, 255, 255)
+        if self.has_distinguished_cells:
+            color = (255, 0, 0)
+        else:
+            color = (255, 255, 255)
+
         self.set_color(color)
 
     def set_color(self, color):
@@ -159,7 +166,10 @@ class SolidsActor(vtkActor):
             point_colors.FillComponent(component, value)
             cell_colors.FillComponent(component, value)
 
+        self.data.Modified()
+        self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()
+        self.GetMapper().ScalarVisibilityOn()
 
     def paint_points(self, color, points):
         if self.data is None:
@@ -175,9 +185,9 @@ class SolidsActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_solids(self, color: tuple[3], volumes: tuple[int]):
+    def paint_solids(self, color: tuple[3], solids: tuple[int]):
         cells = []
-        for i in volumes:
+        for i in solids:
             visible_index = self.visible_indexes.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
@@ -207,3 +217,30 @@ class SolidsActor(vtkActor):
 
     def disable_cut(self):
         self.clipper.SetImplicitFunction(ALWAYS_FALSE)
+
+    def distinguish_solids(self, solids: tuple[int]):
+        cells = []
+        for i in solids:
+            visible_index = self.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cells.append(visible_index)
+
+        self.distinguish_cells(cells)
+
+    def distinguish_cells(self, cells: tuple[int]):
+        if len(cells) == 0:  # disable if empty
+            self.has_distinguished_cells = False
+            self.cell_extractor.ExtractAllCellsOn()
+            return
+
+        self.has_distinguished_cells = True
+
+        ids = vtkIdList()
+        for cell in cells:
+            ids.InsertNextId(cell)
+
+        self.cell_extractor.ExtractAllCellsOff()
+        self.cell_extractor.SetCellList(ids)
+        self.cell_extractor.Update()
+
+        self.clear_colors()
