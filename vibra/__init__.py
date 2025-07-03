@@ -4,14 +4,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.interface.application import Application
 
-from importlib.metadata import version
-
 # copying the version from pyproject.toml
 __version__ = "0.3.1"
 __release_date__ = "June 24th 2024"
 
-from PySide6.QtWidgets import QApplication
 from pathlib import Path
+
+from PySide6.QtWidgets import QApplication
 
 VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
