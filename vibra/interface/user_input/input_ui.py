@@ -78,6 +78,8 @@ class InputUi:
         LoadingWindow(app().project.generate_mesh).run()
         self.main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
+        nodes = list(app().project.model.mesh.nodes_collapsed_elements)
+        app().main_window.set_mesh_selection(nodes=nodes)
 
     def set_material(self):
         if not self.model_setup_items.item_child_material.isDisabled():
