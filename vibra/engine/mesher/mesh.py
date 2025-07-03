@@ -14,7 +14,6 @@ import numpy as np
 from copy import deepcopy
 from collections import defaultdict
 from pathlib import Path
-from time import time
 from traceback import print_exception
 
 
@@ -1636,9 +1635,8 @@ class Mesh:
 
             self.mesh_quality[parameter] = qualities
             self.mesh_quality_worst_value[parameter] = min(element_qualities)
-        # print(self.mesh_quality_worst_value)
 
-        return self.mesh_quality_worst_value   
+        return self.mesh_quality   
 
 
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
@@ -2052,7 +2050,7 @@ class Mesh:
                 tokens = selected_ids.strip().split(",")
                 try:
                     tokens.remove("")
-                except:
+                except Exception:
                     pass
                 list_ids = list(map(int, tokens))
 

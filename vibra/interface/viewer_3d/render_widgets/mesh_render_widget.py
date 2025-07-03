@@ -273,6 +273,24 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def _get_info_tab(self):
         pass
+    
+    def distinguish_solids(self, solids: list[int]):
+        if isinstance(self.solids_actor, HollowSolidsActor):
+            mesh = app().project.model.mesh
+            if mesh is None:
+                return
+
+            if mesh.solids_connectivity.size > 0:
+                self.remove_actors(self.solids_actor, self.edges_actor)
+                self.solids_actor = SolidsActor(mesh)
+                self.edges_actor = EdgesActor(self.solids_actor.data)
+                self.add_actors(self.solids_actor, self.edges_actor)
+
+        self.solids_actor.distinguish_solids(solids)
+        self.edges_actor.VisibilityOff()
+        self.faces_actor.VisibilityOff()
+        self.ghost_actor.VisibilityOn()
+        self.update()
 
     def update_section_plane(self):
         if not self.actors_exists():
@@ -297,7 +315,7 @@ class MeshRenderWidget(CommonRenderWidget):
         else:
             show_plane = not section_plane.keep_section_plane
             self._apply_section_plane(position, rotation, inverted, show_plane)
-
+    
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         if isinstance(self.solids_actor, HollowSolidsActor):
             mesh = app().project.model.mesh

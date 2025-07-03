@@ -97,6 +97,7 @@ class MeshSetupInputs(MesherSetup_UI):
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
+        self.pushButton_plot_parameter.clicked.connect(self.plot_mesh_parameter)
         #
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         #
@@ -334,7 +335,24 @@ class MeshSetupInputs(MesherSetup_UI):
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
+    
+    def plot_mesh_parameter(self):
+        mesh_quality = app().project.model.mesh.mesh_quality["minSICN"]
+        bad_elements = []
 
+        for element, quality in mesh_quality.items():
+            if quality < 0.4:
+                bad_elements.append(element)
+        
+        # print(len(bad_elements), bad_elements)
+
+        mesh_widget = app().main_window.mesh_widget
+
+        mesh_widget.distinguish_solids(bad_elements)
+
+
+
+    
     def process_degress_of_freedom_if_necessary(self):
 
         if not app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
