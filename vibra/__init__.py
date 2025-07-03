@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from vibra.interface.application import Application
 
 # copying the version from pyproject.toml
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 __release_date__ = "June 24th 2024"
 
 from pathlib import Path
