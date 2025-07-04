@@ -16,6 +16,7 @@ from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
 
+from copy import deepcopy
 from itertools import count
 
 window_title_1 = "Error"
@@ -47,6 +48,7 @@ class FluidWidget(FluidWidget_UI):
         self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
+        self._paint_icons()
         self.load_data_from_fluids_library()
 
     def _initialize(self):
@@ -81,6 +83,7 @@ class FluidWidget(FluidWidget_UI):
     def _create_connections(self):
         #
         self.pushButton_add_column.clicked.connect(self.add_column)
+        self.pushButton_duplicate.clicked.connect(self.duplicate_selected_fluid)
         self.pushButton_refprop.clicked.connect(self.call_refprop_interface)
         self.pushButton_remove_column.clicked.connect(self.remove_selected_column)
         # self.pushButton_reset_library.clicked.connect(self.reset_library_to_default)
@@ -103,6 +106,18 @@ class FluidWidget(FluidWidget_UI):
             self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         else:
             self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_duplicate]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def _add_icon_and_title(self):
         self._config_window()
@@ -285,9 +300,8 @@ class FluidWidget(FluidWidget_UI):
 
         item = self.tableWidget_fluid_data.item(1, selected_column)
         identifier = int(item.text())
-        fluid = self.list_of_fluids[identifier]
 
-        return fluid
+        return self.list_of_fluids.get(identifier)
 
     def add_column(self):
     
@@ -334,12 +348,40 @@ class FluidWidget(FluidWidget_UI):
 
         item = self.tableWidget_fluid_data.item(1, selected_column)
         identifier = int(item.text())
-        fluid = self.list_of_fluids[identifier]
+        fluid = self.list_of_fluids.get(identifier)
 
         self.remove_fluid_from_file(fluid)
 
         self._update_size_policy()
         self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
+
+    def duplicate_selected_fluid(self):
+
+        selected_column = self.get_selected_column()
+        if selected_column < 0:
+            return
+        
+        self.refprop = None
+        item = self.tableWidget_fluid_data.item(1, selected_column)
+        if item.text() == "":
+            return
+
+        identifier = int(item.text())
+        fluid = self.list_of_fluids.get(identifier)
+        if not isinstance(fluid, Fluid):
+            return
+
+        dfluid = deepcopy(fluid)
+        new_identifier = self.new_identifier()
+
+        dfluid.identifier = new_identifier
+        dfluid.name = dfluid.name + "_copy"
+        self.list_of_fluids[new_identifier] = dfluid
+
+        self.update_table()
+        last_col = self.tableWidget_fluid_data.columnCount()
+
+        self.add_fluid_to_file(last_col-1, fluid=dfluid.__dict__)
 
     def item_changed_callback(self, item):
 
@@ -489,19 +531,23 @@ class FluidWidget(FluidWidget_UI):
 
         return False
 
-    def add_fluid_to_file(self, column: int):
+    def add_fluid_to_file(self, column: int, fluid: None | dict = None):
         try:
 
             fluid_data = dict()
-
             for i, key in enumerate(self.fluid_data_keys):
                 item = self.tableWidget_fluid_data.item(i, column)
+
                 if key == "color":
                     color = item.background().color().getRgb()
-                    fluid_data[key] = list(color)
+                    fluid_data[key] = list(color[:3])
+
                 else:
-                    fluid_data[key] = item.text()
-            
+                    if fluid is None:
+                        fluid_data[key] = item.text()
+                    else:
+                        fluid_data[key] = str(fluid.get(key))
+
             identifier = fluid_data["identifier"]
 
             if self.refprop is not None:
