@@ -143,19 +143,18 @@ class LoadProject:
         for tag in config.sections():
 
             section = config[tag]
-            # keys = section.keys()
 
             name = section['name']
             identifier = int(section['identifier'])
             density = float(section['material_density'])
-            poisson_ratio = float(section['poisson'])
-            elasticity_modulus = float(section['elasticity_modulus']) * 1e9
+            poisson_ratio = float(section['poisson_ratio'])
+            elasticity_modulus = float(section['elasticity_modulus'])
             thermal_expansion_coefficient = float(section['thermal_expansion_coefficient'])
 
             material = Material(
                                 name = name,
                                 identifier = identifier, 
-                                density = density,
+                                material_density = density,
                                 poisson_ratio = poisson_ratio,
                                 elasticity_modulus = elasticity_modulus,
                                 thermal_expansion_coefficient = thermal_expansion_coefficient, 
