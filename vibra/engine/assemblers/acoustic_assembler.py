@@ -39,18 +39,21 @@ class AcousticAssembler:
 
     def reset(self):
         self.frequency_dependent = False
-        self.stiffness_matrix = None
-        self.mass_matrix = None
-        self.damping_matrix = None
-        self.mass_flow_vectors = None
         self.frequencies = None
         self.number_frequencies = 1
         self.prescribed_values = list()
         self.prescribed_indexes = list()
         self.unprescribed_indexes = list()
+        self.reset_global_matrices_and_vectors()
 
+
+    def reset_global_matrices_and_vectors(self):
         self.stiffness_matrix_full = None
         self.mass_matrix_full = None
+        self.stiffness_matrix = None
+        self.mass_matrix = None
+        self.damping_matrix = None
+        self.mass_flow_vectors = None
 
 
     def get_element(self):
@@ -1324,6 +1327,7 @@ class AcousticAssembler:
 
     def process_assemble(self):
 
+        self.reset_global_matrices_and_vectors()
         self.update_number_of_frequencies()
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
