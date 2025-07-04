@@ -209,7 +209,7 @@ class Ui_Form(object):
         ___qtablewidgetitem3 = self.tableWidget_material_data.verticalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"Elasticity modulus [Pa]", None));
         ___qtablewidgetitem4 = self.tableWidget_material_data.verticalHeaderItem(4)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"Poisson", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"Poisson ratio", None));
         ___qtablewidgetitem5 = self.tableWidget_material_data.verticalHeaderItem(5)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Form", u"Thermal expansion coefficient [1/K]", None));
         ___qtablewidgetitem6 = self.tableWidget_material_data.verticalHeaderItem(6)

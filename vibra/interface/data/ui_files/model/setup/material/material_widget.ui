@@ -202,7 +202,7 @@
         </row>
         <row>
          <property name="text">
-          <string>Poisson</string>
+          <string>Poisson ratio</string>
          </property>
          <property name="textAlignment">
           <set>AlignCenter</set>
