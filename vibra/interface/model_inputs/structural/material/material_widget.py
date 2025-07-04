@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QDialog, QPushButton, QTableWidget, QTableWidgetItem, QWidget, QHeaderView
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QHeaderView
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, QSize
 
 from vibra import app, TEMP_PROJECT_FILE
 from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
@@ -13,9 +13,8 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
 
-# import configparser
+from copy import deepcopy
 from itertools import count
-# from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -45,6 +44,7 @@ class MaterialWidget(MaterialWidget_UI):
         self._initialize()
         self._create_connections()
         self._config_widgets()
+        self._paint_icons()
         self.load_data_from_materials_library()
 
     # def _config_window(self):
@@ -61,14 +61,14 @@ class MaterialWidget(MaterialWidget_UI):
         self.row = None
         self.col = None
 
-        self.list_of_materials = list()
+        self.list_of_materials = dict()
 
         self.material_data_keys = [
                                     "name",
                                     "identifier",
                                     "material_density",
                                     "elasticity_modulus",
-                                    "poisson",
+                                    "poisson_ratio",
                                     "thermal_expansion_coefficient",
                                     "color"
                                     ]
@@ -76,6 +76,7 @@ class MaterialWidget(MaterialWidget_UI):
     def _create_connections(self):
         #
         self.pushButton_add_column.clicked.connect(self.add_column)
+        self.pushButton_duplicate.clicked.connect(self.duplicate_selected_material)
         self.pushButton_remove_column.clicked.connect(self.remove_selected_column)
         # self.pushButton_reset_library.clicked.connect(self.reset_library_to_default)
         #
@@ -90,6 +91,18 @@ class MaterialWidget(MaterialWidget_UI):
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         else:
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_duplicate]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def load_data_from_materials_library(self):
 
@@ -109,17 +122,21 @@ class MaterialWidget(MaterialWidget_UI):
             return
 
         for tag in config.sections():
+
+            section = config[tag]
+            identifier =  int(section['identifier'])
+
             material = Material(
-                                name = config[tag]['name'],
-                                identifier = int(config[tag]['identifier']), 
-                                density = float(config[tag]['material_density']),
-                                poisson_ratio = float(config[tag]['poisson']),
-                                elasticity_modulus = float(config[tag]['elasticity_modulus']) * 1e9,
-                                thermal_expansion_coefficient = float(config[tag]['thermal_expansion_coefficient']), 
-                                color = getColorRGB(config[tag]['color'])
+                                name = section['name'],
+                                identifier = identifier, 
+                                material_density = float(section['material_density']),
+                                poisson_ratio = float(section['poisson_ratio']),
+                                elasticity_modulus = float(section['elasticity_modulus']),
+                                thermal_expansion_coefficient = float(section['thermal_expansion_coefficient']), 
+                                color = getColorRGB(section['color'])
                                 )
 
-            self.list_of_materials.append(material)
+            self.list_of_materials[identifier] = material
 
         self.update_table()
 
@@ -130,13 +147,13 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.setRowCount(COLOR_ROW + 1)
         self.tableWidget_material_data.setColumnCount(len(self.list_of_materials))
 
-        for j, material in enumerate(self.list_of_materials):
+        for j, material in enumerate(self.list_of_materials.values()):
             if isinstance(material, Material):
 
                 self.tableWidget_material_data.setItem(0, j, QTableWidgetItem(str(material.name)))
                 self.tableWidget_material_data.setItem(1, j, QTableWidgetItem(str(material.identifier)))
-                self.tableWidget_material_data.setItem(2, j, QTableWidgetItem(str(material.density)))
-                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.elasticity_modulus/1e9 :.2f}"))
+                self.tableWidget_material_data.setItem(2, j, QTableWidgetItem(str(material.material_density)))
+                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.elasticity_modulus :.4e}"))
                 self.tableWidget_material_data.setItem(4, j, QTableWidgetItem(str(material.poisson_ratio)))
                 self.tableWidget_material_data.setItem(5, j, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
 
@@ -166,8 +183,11 @@ class MaterialWidget(MaterialWidget_UI):
 
         if selected_column >= len(self.list_of_materials):
             return
+        
+        item = self.tableWidget_material_data.item(1, selected_column)
+        identifier = int(item.text())
 
-        return self.list_of_materials[selected_column]
+        return self.list_of_materials.get(identifier)
 
     def add_column(self):
     
@@ -209,11 +229,39 @@ class MaterialWidget(MaterialWidget_UI):
             self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
             return
 
-        material = self.list_of_materials[selected_column]
+        material = self.list_of_materials.get(selected_column)
         self.remove_material_from_file(material)
 
         self._update_size_policy()
         self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
+
+    def duplicate_selected_material(self):
+
+        selected_column = self.get_selected_column()
+        if selected_column < 0:
+            return
+        
+        self.refprop = None
+        item = self.tableWidget_material_data.item(1, selected_column)
+        if item.text() == "":
+            return
+
+        identifier = int(item.text())
+        material = self.list_of_materials.get(identifier)
+        if not isinstance(material, Material):
+            return
+
+        dmaterial = deepcopy(material)
+        new_identifier = self.new_identifier()
+
+        dmaterial.identifier = new_identifier
+        dmaterial.name = dmaterial.name + "_copy"
+        self.list_of_materials[new_identifier] = dmaterial
+
+        self.update_table()
+        last_col = self.tableWidget_material_data.columnCount()
+
+        self.add_material_to_file(last_col-1, material=dmaterial.__dict__)
 
     def item_changed_callback(self, item : QTableWidgetItem):
 
@@ -270,7 +318,7 @@ class MaterialWidget(MaterialWidget_UI):
         if not column_name:
             return True
 
-        for material in self.list_of_materials:
+        for material in self.list_of_materials.values():
             if material.name == column_name:
                 return True
 
@@ -281,7 +329,7 @@ class MaterialWidget(MaterialWidget_UI):
         item = self.tableWidget_material_data.item(1, column)
 
         already_used_ids = set()
-        for material in self.list_of_materials:
+        for material in self.list_of_materials.values():
             already_used_ids.add(material.identifier)
         
         if item.text() == "":
@@ -324,7 +372,7 @@ class MaterialWidget(MaterialWidget_UI):
         prop_labels = {
                         2 : "material_density", 
                         3 : "elasticity_modulus",
-                        4 : "poisson",
+                        4 : "poisson_ratio",
                         5 : "thermal_expansion_coefficient"
                     }
 
@@ -362,7 +410,7 @@ class MaterialWidget(MaterialWidget_UI):
         if row == COLOR_ROW:
             self.pick_color(row, col)
 
-    def add_material_to_file(self, column):
+    def add_material_to_file(self, column: int, material: None | dict = None):
         try:
 
             material_data = dict()
@@ -371,9 +419,13 @@ class MaterialWidget(MaterialWidget_UI):
                 item = self.tableWidget_material_data.item(i, column)
                 if key == "color":
                     color = item.background().color().getRgb()
-                    material_data[key] = list(color)
+                    material_data[key] = list(color[:3])
+
                 else:
-                    material_data[key] = item.text()
+                    if material is None:
+                        material_data[key] = item.text()
+                    else:
+                        material_data[key] = str(material.get(key))
 
             material_identifier = material_data["identifier"]
             if not material_identifier:
@@ -407,7 +459,7 @@ class MaterialWidget(MaterialWidget_UI):
 
     def new_identifier(self):
         already_used_ids = set()
-        for material in self.list_of_materials:
+        for material in self.list_of_materials.values():
             already_used_ids.add(material.identifier)
 
         for i in count(1):
