@@ -1053,11 +1053,17 @@ class AcousticAssembler:
     def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
         """
         """
+        t0 = time()
+
         data_K = self.data_K * factor_K
         if self.stiffness_matrix_full is None:
             self.stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         else:
             self.stiffness_matrix_full.data = data_K
+
+        dt = time() - t0
+        print()
+        print(f"Elapsed time to assemble stiffness matrix (test): {dt : .6f}")
 
         self.stiffness_matrix = self.stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.stiffness_matrix_r = self.stiffness_matrix_full[:, self.prescribed_indexes]
@@ -1066,11 +1072,17 @@ class AcousticAssembler:
     def assemble_global_mass_matrix(self, factor_M: np.ndarray):
         """
         """
+        t0 = time()
+
         data_M = self.data_M * factor_M
-        if self.mass_matrix_full:
+        if self.mass_matrix_full is None:
             self.mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         else:
             self.mass_matrix_full.data = data_M
+
+        dt = time() - t0
+        print()
+        print(f"Elapsed time to assemble mass matrix (test): {dt : .6f}")
 
         self.mass_matrix = self.mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.mass_matrix_r = self.mass_matrix_full[:, self.prescribed_indexes]
