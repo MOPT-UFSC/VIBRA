@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'fluid_widget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -72,6 +72,93 @@ class Ui_Form(object):
         self.gridLayout_2.setHorizontalSpacing(4)
         self.gridLayout_2.setVerticalSpacing(6)
         self.gridLayout_2.setContentsMargins(4, 4, 4, 4)
+        self.frame_6 = QFrame(self.frame_2)
+        self.frame_6.setObjectName(u"frame_6")
+        self.frame_6.setMinimumSize(QSize(0, 0))
+        self.frame_6.setFrameShape(QFrame.NoFrame)
+        self.frame_6.setFrameShadow(QFrame.Raised)
+        self.gridLayout_5 = QGridLayout(self.frame_6)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setHorizontalSpacing(8)
+        self.gridLayout_5.setVerticalSpacing(0)
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.frame_7 = QFrame(self.frame_6)
+        self.frame_7.setObjectName(u"frame_7")
+        self.frame_7.setFrameShape(QFrame.NoFrame)
+        self.frame_7.setFrameShadow(QFrame.Raised)
+        self.gridLayout = QGridLayout(self.frame_7)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.pushButton_reset_library = QPushButton(self.frame_7)
+        self.pushButton_reset_library.setObjectName(u"pushButton_reset_library")
+        self.pushButton_reset_library.setMinimumSize(QSize(60, 28))
+        self.pushButton_reset_library.setMaximumSize(QSize(60, 28))
+        self.pushButton_reset_library.setFont(font)
+        self.pushButton_reset_library.setStyleSheet(u"")
+
+        self.gridLayout.addWidget(self.pushButton_reset_library, 0, 0, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer, 0, 1, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_7, 0, 0, 1, 1)
+
+        self.pushButton_refprop = QPushButton(self.frame_6)
+        self.pushButton_refprop.setObjectName(u"pushButton_refprop")
+        self.pushButton_refprop.setMinimumSize(QSize(80, 28))
+        self.pushButton_refprop.setMaximumSize(QSize(80, 28))
+        self.pushButton_refprop.setFont(font)
+        self.pushButton_refprop.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_refprop, 0, 2, 1, 1)
+
+        self.pushButton_add_column = QPushButton(self.frame_6)
+        self.pushButton_add_column.setObjectName(u"pushButton_add_column")
+        self.pushButton_add_column.setMinimumSize(QSize(28, 28))
+        self.pushButton_add_column.setMaximumSize(QSize(28, 28))
+        font1 = QFont()
+        font1.setFamilies([u"MS Shell Dlg 2"])
+        font1.setPointSize(9)
+        font1.setBold(True)
+        font1.setItalic(False)
+        self.pushButton_add_column.setFont(font1)
+        self.pushButton_add_column.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_add_column, 0, 3, 1, 1)
+
+        self.pushButton_duplicate = QPushButton(self.frame_6)
+        self.pushButton_duplicate.setObjectName(u"pushButton_duplicate")
+        self.pushButton_duplicate.setMinimumSize(QSize(28, 28))
+        self.pushButton_duplicate.setMaximumSize(QSize(28, 28))
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(9)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.pushButton_duplicate.setFont(font2)
+        self.pushButton_duplicate.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/copy_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_duplicate.setIcon(icon)
+        self.pushButton_duplicate.setIconSize(QSize(18, 18))
+
+        self.gridLayout_5.addWidget(self.pushButton_duplicate, 0, 5, 1, 1)
+
+        self.pushButton_remove_column = QPushButton(self.frame_6)
+        self.pushButton_remove_column.setObjectName(u"pushButton_remove_column")
+        self.pushButton_remove_column.setMinimumSize(QSize(28, 28))
+        self.pushButton_remove_column.setMaximumSize(QSize(28, 28))
+        self.pushButton_remove_column.setFont(font2)
+        self.pushButton_remove_column.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_remove_column, 0, 4, 1, 1)
+
+
+        self.gridLayout_2.addWidget(self.frame_6, 0, 0, 1, 1)
+
         self.tableWidget_fluid_data = QTableWidget(self.frame_2)
         if (self.tableWidget_fluid_data.rowCount() < 12):
             self.tableWidget_fluid_data.setRowCount(12)
@@ -120,80 +207,6 @@ class Ui_Form(object):
 
         self.gridLayout_2.addWidget(self.tableWidget_fluid_data, 1, 0, 1, 1)
 
-        self.frame_6 = QFrame(self.frame_2)
-        self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setMinimumSize(QSize(0, 0))
-        self.frame_6.setFrameShape(QFrame.NoFrame)
-        self.frame_6.setFrameShadow(QFrame.Raised)
-        self.gridLayout_5 = QGridLayout(self.frame_6)
-        self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.gridLayout_5.setHorizontalSpacing(8)
-        self.gridLayout_5.setVerticalSpacing(0)
-        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.frame_7 = QFrame(self.frame_6)
-        self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.NoFrame)
-        self.frame_7.setFrameShadow(QFrame.Raised)
-        self.gridLayout = QGridLayout(self.frame_7)
-        self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_reset_library = QPushButton(self.frame_7)
-        self.pushButton_reset_library.setObjectName(u"pushButton_reset_library")
-        self.pushButton_reset_library.setMinimumSize(QSize(60, 28))
-        self.pushButton_reset_library.setMaximumSize(QSize(60, 28))
-        self.pushButton_reset_library.setFont(font)
-        self.pushButton_reset_library.setStyleSheet(u"")
-
-        self.gridLayout.addWidget(self.pushButton_reset_library, 0, 0, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer, 0, 1, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_7, 0, 0, 1, 1)
-
-        self.pushButton_add_column = QPushButton(self.frame_6)
-        self.pushButton_add_column.setObjectName(u"pushButton_add_column")
-        self.pushButton_add_column.setMinimumSize(QSize(28, 28))
-        self.pushButton_add_column.setMaximumSize(QSize(28, 28))
-        font1 = QFont()
-        font1.setFamilies([u"MS Shell Dlg 2"])
-        font1.setPointSize(9)
-        font1.setBold(True)
-        font1.setItalic(False)
-        self.pushButton_add_column.setFont(font1)
-        self.pushButton_add_column.setStyleSheet(u"")
-
-        self.gridLayout_5.addWidget(self.pushButton_add_column, 0, 3, 1, 1)
-
-        self.pushButton_remove_column = QPushButton(self.frame_6)
-        self.pushButton_remove_column.setObjectName(u"pushButton_remove_column")
-        self.pushButton_remove_column.setMinimumSize(QSize(28, 28))
-        self.pushButton_remove_column.setMaximumSize(QSize(28, 28))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(9)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.pushButton_remove_column.setFont(font2)
-        self.pushButton_remove_column.setStyleSheet(u"")
-
-        self.gridLayout_5.addWidget(self.pushButton_remove_column, 0, 4, 1, 1)
-
-        self.pushButton_refprop = QPushButton(self.frame_6)
-        self.pushButton_refprop.setObjectName(u"pushButton_refprop")
-        self.pushButton_refprop.setMinimumSize(QSize(80, 28))
-        self.pushButton_refprop.setMaximumSize(QSize(80, 28))
-        self.pushButton_refprop.setFont(font)
-        self.pushButton_refprop.setStyleSheet(u"")
-
-        self.gridLayout_5.addWidget(self.pushButton_refprop, 0, 2, 1, 1)
-
-
-        self.gridLayout_2.addWidget(self.frame_6, 0, 0, 1, 1)
-
 
         self.gridLayout_4.addWidget(self.frame_2, 0, 0, 1, 1)
 
@@ -213,6 +226,26 @@ class Ui_Form(object):
         self.pushButton_exit.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Confirm material attribution</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_exit.setText(QCoreApplication.translate("Form", u"Exit", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_reset_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Reset to default material library</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_reset_library.setText(QCoreApplication.translate("Form", u"Reset", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_refprop.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Press to open the REFPROP interface</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_refprop.setText(QCoreApplication.translate("Form", u"Refprop", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add row</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_add_column.setText(QCoreApplication.translate("Form", u"+", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_duplicate.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Duplicate selected fluid</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_duplicate.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Remove selected row</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
         ___qtablewidgetitem = self.tableWidget_fluid_data.verticalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Form", u"Name", None));
         ___qtablewidgetitem1 = self.tableWidget_fluid_data.verticalHeaderItem(1)
@@ -237,22 +270,6 @@ class Ui_Form(object):
         ___qtablewidgetitem10.setText(QCoreApplication.translate("Form", u"Molar mass [kg/kmol]", None));
         ___qtablewidgetitem11 = self.tableWidget_fluid_data.verticalHeaderItem(11)
         ___qtablewidgetitem11.setText(QCoreApplication.translate("Form", u"Color", None));
-#if QT_CONFIG(tooltip)
-        self.pushButton_reset_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Reset to default material library</span></p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_reset_library.setText(QCoreApplication.translate("Form", u"Reset", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add row</span></p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_add_column.setText(QCoreApplication.translate("Form", u"+", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Remove selected row</span></p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_refprop.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Press to open the REFPROP interface</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_refprop.setText(QCoreApplication.translate("Form", u"Refprop", None))
     # retranslateUi
 
 
@@ -268,15 +285,16 @@ class FluidWidget_UI(QWidget, Ui_Form):
                             - pushButton_exit: QPushButton
                 - frame_2: QFrame
                     - (Layout): QGridLayout
-                            - tableWidget_fluid_data: QTableWidget
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
                                         - frame_7: QFrame
                                             - (Layout): QGridLayout
                                                     - pushButton_reset_library: QPushButton
-                                        - pushButton_add_column: QPushButton
-                                        - pushButton_remove_column: QPushButton
                                         - pushButton_refprop: QPushButton
+                                        - pushButton_add_column: QPushButton
+                                        - pushButton_duplicate: QPushButton
+                                        - pushButton_remove_column: QPushButton
+                            - tableWidget_fluid_data: QTableWidget
     """
 
     def __init__(self, *args, **kwargs):
