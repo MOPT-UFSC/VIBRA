@@ -128,12 +128,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = SelectionSpheres()
 
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = (
-            bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        )
         self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -163,20 +159,21 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             return
 
-        visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = (
-            bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        )
-
         # Nodes actor are always visible.
         # We hide them painting the cells as transparent.
         self.nodes_actor.SetVisibility(True)
 
+        visualization = app().main_window.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
+
+        if app().main_window.distinguished_solids:
+            self.switch_to_solids_actor()
+            self.solids_actor.distinguish_solids(
+                app().main_window.distinguished_solids
+            )
 
         self.update_selection()
         self.update()
@@ -309,14 +306,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.add_actors(self.solids_actor, self.edges_actor)
 
-    def distinguish_solids(self, solids: list[int]):
-        self.switch_to_solids_actor()
-        self.solids_actor.distinguish_solids(solids)
-        self.edges_actor.VisibilityOff()
-        self.faces_actor.VisibilityOff()
-        self.ghost_actor.VisibilityOn()
-        self.update()
-
     def update_section_plane(self):
         if not self.actors_exists():
             return
@@ -363,11 +352,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = (
-            bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        )
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
         self.nodes_actor.disable_cut()

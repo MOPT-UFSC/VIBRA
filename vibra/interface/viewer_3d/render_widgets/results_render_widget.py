@@ -95,9 +95,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         )
 
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
         with self.update_lock:
@@ -319,10 +317,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if not section_plane.cutting:
             visualization = app().main_window.visualization_filter
-            section_plane = app().main_window.section_plane
-            has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-
-            self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+            self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
             self.plane_actor.VisibilityOff()
             self.analysis_actor.disable_cut()
             self.edges_actor.disable_cut()
@@ -349,12 +344,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-
         self.edges_actor.SetVisibility(visualization.lines)
         self.analysis_actor.SetVisibility(visualization.faces)
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.update()
 

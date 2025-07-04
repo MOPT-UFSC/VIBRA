@@ -331,8 +331,6 @@ class MeshSetupInputs(MesherSetup_UI):
         self.worst_value = app().project.model.mesh.mesh_quality_worst_value
         self.config_control_quality_table()
 
-
-
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
     
@@ -343,15 +341,8 @@ class MeshSetupInputs(MesherSetup_UI):
         for element, quality in mesh_quality.items():
             if quality < 0.4:
                 bad_elements.append(element)
-        
-        # print(len(bad_elements), bad_elements)
 
-        mesh_widget = app().main_window.mesh_widget
-
-        mesh_widget.distinguish_solids(bad_elements)
-
-
-
+        app().main_window.distinguish_mesh_solids(bad_elements)
     
     def process_degress_of_freedom_if_necessary(self):
 

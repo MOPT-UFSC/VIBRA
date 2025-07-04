@@ -69,6 +69,7 @@ class MainWindow(MainWindow_UI):
         self.hidden_mesh_solids = set()
         self.hidden_surfaces = set()
         self.hidden_volumes = set()
+        self.distinguished_solids = set()
 
         self.show_menu_items = True
         self.last_render_index = None
@@ -622,6 +623,22 @@ class MainWindow(MainWindow_UI):
         self.hidden_volumes |= volumes
         self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
         self.update_hidden_plots()
+
+    def has_hidden_part(self) -> bool:
+        return any(
+            [
+                len(self.hidden_surfaces) != 0,
+                len(self.distinguished_solids) != 0,
+                self.section_plane.cutting,
+            ]
+        )
+
+    def distinguish_mesh_solids(self, solids: list[int]):
+        self.distinguished_solids = set(solids)
+        self.show_mesh_render_widget()
+        self.action_line_view_callback(False)
+        self.update_visualization_filter()
+        self.visualization_changed.emit()
 
     def action_unhide_all_callback(self):
         self.hidden_surfaces.clear()
