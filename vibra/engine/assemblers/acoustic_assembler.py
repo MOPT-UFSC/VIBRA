@@ -49,6 +49,9 @@ class AcousticAssembler:
         self.prescribed_indexes = list()
         self.unprescribed_indexes = list()
 
+        self.stiffness_matrix_full = None
+        self.mass_matrix_full = None
+
 
     def get_element(self):
         element_type = self.model.mesh.element_type
@@ -1048,20 +1051,26 @@ class AcousticAssembler:
         """
         """
         data_K = self.data_K * factor_K
-        _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        if self.stiffness_matrix_full is None:
+            self.stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        else:
+            self.stiffness_matrix_full.data = data_K
 
-        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
+        self.stiffness_matrix = self.stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.stiffness_matrix_r = self.stiffness_matrix_full[:, self.prescribed_indexes]
 
 
     def assemble_global_mass_matrix(self, factor_M: np.ndarray):
         """
         """
         data_M = self.data_M * factor_M
-        _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        if self.mass_matrix_full:
+            self.mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        else:
+            self.mass_matrix_full.data = data_M
 
-        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
+        self.mass_matrix = self.mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.mass_matrix_r = self.mass_matrix_full[:, self.prescribed_indexes]
 
 
     def assemble_global_damping_matrix_3d_elements(self):
