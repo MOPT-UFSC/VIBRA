@@ -334,8 +334,8 @@ class FluidWidget(FluidWidget_UI):
         fluid = self.fluids_from_library.get(identifier)
 
         self.remove_fluid_from_file(fluid)
-
         self._update_size_policy()
+
         self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
 
     def duplicate_selected_fluid(self):
@@ -365,6 +365,11 @@ class FluidWidget(FluidWidget_UI):
         last_col = self.tableWidget_fluid_data.columnCount()
 
         self.add_fluid_to_file(last_col-1, fluid=dfluid.__dict__)
+        self.set_scroll_bar_to_maximum()
+
+    def set_scroll_bar_to_maximum(self):
+        scroll_bar = self.tableWidget_fluid_data.horizontalScrollBar()
+        scroll_bar.setSliderPosition(scroll_bar.maximum())
 
     def item_changed_callback(self, item):
 

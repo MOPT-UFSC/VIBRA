@@ -61,7 +61,7 @@ class MaterialWidget(MaterialWidget_UI):
         self.row = None
         self.col = None
 
-        self.list_of_materials = dict()
+        self.materials_from_library = dict()
 
         self.material_data_keys = [
                                     "name",
@@ -82,12 +82,12 @@ class MaterialWidget(MaterialWidget_UI):
         #
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
-
+    
     def _config_widgets(self):
         self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
     
     def _update_size_policy(self):
-        if len(self.list_of_materials) > 6:
+        if len(self.materials_from_library) > 6:
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         else:
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -115,7 +115,7 @@ class MaterialWidget(MaterialWidget_UI):
             self.reset_library_to_default()
             return
 
-        self.list_of_materials.clear()
+        self.materials_from_library.clear()
 
         if not list(config.sections()):
             self.update_table()
@@ -136,7 +136,7 @@ class MaterialWidget(MaterialWidget_UI):
                                 color = getColorRGB(section['color'])
                                 )
 
-            self.list_of_materials[identifier] = material
+            self.materials_from_library[identifier] = material
 
         self.update_table()
 
@@ -145,9 +145,9 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.clearContents()
         self.tableWidget_material_data.blockSignals(True)
         self.tableWidget_material_data.setRowCount(COLOR_ROW + 1)
-        self.tableWidget_material_data.setColumnCount(len(self.list_of_materials))
+        self.tableWidget_material_data.setColumnCount(len(self.materials_from_library))
 
-        for j, material in enumerate(self.list_of_materials.values()):
+        for j, material in enumerate(self.materials_from_library.values()):
             if isinstance(material, Material):
 
                 self.tableWidget_material_data.setItem(0, j, QTableWidgetItem(str(material.name)))
@@ -181,20 +181,20 @@ class MaterialWidget(MaterialWidget_UI):
         if selected_column < 0:
             return
 
-        if selected_column >= len(self.list_of_materials):
+        if selected_column >= len(self.materials_from_library):
             return
         
         item = self.tableWidget_material_data.item(1, selected_column)
         identifier = int(item.text())
 
-        return self.list_of_materials.get(identifier)
+        return self.materials_from_library.get(identifier)
 
     def add_column(self):
     
         self.tableWidget_material_data.blockSignals(True)
 
         table_size = self.tableWidget_material_data.columnCount()
-        if table_size > len(self.list_of_materials):
+        if table_size > len(self.materials_from_library):
             # it means that if you already have a new row
             # to insert data you don't need another one
             self.tableWidget_material_data.blockSignals(False)
@@ -210,7 +210,6 @@ class MaterialWidget(MaterialWidget_UI):
             self.tableWidget_material_data.item(i, last_col).setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_material_data.selectColumn(last_col)
-        first_item = self.tableWidget_material_data.item(0, last_col)
         self.tableWidget_material_data.blockSignals(False)
 
     def remove_selected_column(self):
@@ -219,7 +218,7 @@ class MaterialWidget(MaterialWidget_UI):
         if selected_column < 0:
             return
 
-        if selected_column >= len(self.list_of_materials):
+        if selected_column >= len(self.materials_from_library):
             # if it is the last item and a not an already configured
             # material, just remove the last line
             current_size = self.tableWidget_material_data.columnCount()
@@ -229,10 +228,13 @@ class MaterialWidget(MaterialWidget_UI):
             self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
             return
 
-        material = self.list_of_materials.get(selected_column)
-        self.remove_material_from_file(material)
+        item = self.tableWidget_material_data.item(1, selected_column)
+        identifier = int(item.text())
+        material = self.materials_from_library.get(identifier)
 
+        self.remove_material_from_file(material)
         self._update_size_policy()
+
         self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
 
     def duplicate_selected_material(self):
@@ -247,7 +249,7 @@ class MaterialWidget(MaterialWidget_UI):
             return
 
         identifier = int(item.text())
-        material = self.list_of_materials.get(identifier)
+        material = self.materials_from_library.get(identifier)
         if not isinstance(material, Material):
             return
 
@@ -256,12 +258,17 @@ class MaterialWidget(MaterialWidget_UI):
 
         dmaterial.identifier = new_identifier
         dmaterial.name = dmaterial.name + "_copy"
-        self.list_of_materials[new_identifier] = dmaterial
+        self.materials_from_library[new_identifier] = dmaterial
 
         self.update_table()
         last_col = self.tableWidget_material_data.columnCount()
 
         self.add_material_to_file(last_col-1, material=dmaterial.__dict__)
+        self.set_scroll_bar_to_maximum()
+
+    def set_scroll_bar_to_maximum(self):
+        scroll_bar = self.tableWidget_material_data.horizontalScrollBar()
+        scroll_bar.setSliderPosition(scroll_bar.maximum())
 
     def item_changed_callback(self, item : QTableWidgetItem):
 
@@ -318,7 +325,7 @@ class MaterialWidget(MaterialWidget_UI):
         if not column_name:
             return True
 
-        for material in self.list_of_materials.values():
+        for material in self.materials_from_library.values():
             if material.name == column_name:
                 return True
 
@@ -329,7 +336,7 @@ class MaterialWidget(MaterialWidget_UI):
         item = self.tableWidget_material_data.item(1, column)
 
         already_used_ids = set()
-        for material in self.list_of_materials.values():
+        for material in self.materials_from_library.values():
             already_used_ids.add(material.identifier)
         
         if item.text() == "":
@@ -459,7 +466,7 @@ class MaterialWidget(MaterialWidget_UI):
 
     def new_identifier(self):
         already_used_ids = set()
-        for material in self.list_of_materials.values():
+        for material in self.materials_from_library.values():
             already_used_ids.add(material.identifier)
 
         for i in count(1):
