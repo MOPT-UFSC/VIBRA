@@ -215,7 +215,7 @@ class Ui_Form(object):
         ___qtablewidgetitem6 = self.tableWidget_material_data.verticalHeaderItem(6)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Form", u"Color", None));
 #if QT_CONFIG(tooltip)
-        self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add row</span></p></body></html>", None))
+        self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add an empty material</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_add_column.setText(QCoreApplication.translate("Form", u"+", None))
 #if QT_CONFIG(tooltip)
@@ -223,11 +223,11 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset_library.setText(QCoreApplication.translate("Form", u"Reset", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_duplicate.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Duplicate selected fluid</p></body></html>", None))
+        self.pushButton_duplicate.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Duplicate the selected material</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_duplicate.setText("")
 #if QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Remove selected row</span></p></body></html>", None))
+        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove the selected material</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
     # retranslateUi
