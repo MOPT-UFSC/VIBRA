@@ -257,7 +257,7 @@ class MaterialWidget(MaterialWidget_UI):
         new_identifier = self.new_identifier()
 
         dmaterial.identifier = new_identifier
-        dmaterial.name = dmaterial.name + "_copy"
+        dmaterial.name = self.get_suffix_for_duplicated_material(dmaterial.name)
         self.materials_from_library[new_identifier] = dmaterial
 
         self.update_table()
@@ -265,6 +265,19 @@ class MaterialWidget(MaterialWidget_UI):
 
         self.add_material_to_file(last_col-1, material=dmaterial.__dict__)
         self.set_scroll_bar_to_maximum()
+
+    def get_suffix_for_duplicated_material(self, material_name: str):
+
+        already_used_names = set()
+        for material in self.materials_from_library.values():
+            material: Material
+            if material_name in material.name:
+                already_used_names.add(material.name)
+
+        for i in count(1):
+            new_name = f"{material_name} ({i})"
+            if new_name not in already_used_names:
+                return new_name
 
     def set_scroll_bar_to_maximum(self):
         scroll_bar = self.tableWidget_material_data.horizontalScrollBar()
@@ -467,6 +480,7 @@ class MaterialWidget(MaterialWidget_UI):
     def new_identifier(self):
         already_used_ids = set()
         for material in self.materials_from_library.values():
+            material: Material
             already_used_ids.add(material.identifier)
 
         for i in count(1):

@@ -358,7 +358,7 @@ class FluidWidget(FluidWidget_UI):
         new_identifier = self.new_identifier()
 
         dfluid.identifier = new_identifier
-        dfluid.name = dfluid.name + "_copy"
+        dfluid.name = self.get_suffix_for_duplicated_fluid(dfluid.name)
         self.fluids_from_library[new_identifier] = dfluid
 
         self.update_table()
@@ -366,6 +366,19 @@ class FluidWidget(FluidWidget_UI):
 
         self.add_fluid_to_file(last_col-1, fluid=dfluid.__dict__)
         self.set_scroll_bar_to_maximum()
+
+    def get_suffix_for_duplicated_fluid(self, fluid_name: str):
+
+        already_used_names = set()
+        for fluid in self.fluids_from_library.values():
+            fluid: Fluid
+            if fluid_name in fluid.name:
+                already_used_names.add(fluid.name)
+
+        for i in count(1):
+            new_name = f"{fluid_name} ({i})"
+            if new_name not in already_used_names:
+                return new_name
 
     def set_scroll_bar_to_maximum(self):
         scroll_bar = self.tableWidget_fluid_data.horizontalScrollBar()
