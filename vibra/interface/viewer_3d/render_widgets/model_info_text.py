@@ -178,7 +178,7 @@ def process_volumes_and_masses(volume_ids: list):
 
         material = app().project.model.properties._get_property("material", volume=volume_id)
         if isinstance(material, Material):
-            material_density = material.density
+            material_density = material.material_density
             material_mass += volume * material_density
     
     return volume_compound, fluid_mass, material_mass
@@ -203,8 +203,8 @@ def material_info_text():
     tree = TreeInfo("Material")
     tree.add_item("Name", material.name)
     tree.add_item("Identifier", material.identifier)
-    tree.add_item("Density", material.density, "kg/m³")
-    tree.add_item("elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
+    tree.add_item("Density", material.material_density, "kg/m³")
+    tree.add_item("Elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
     tree.add_item("Poisson ratio", material.poisson_ratio, "--")
     tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
@@ -568,8 +568,8 @@ def mesh_material_info_text():
         tree = TreeInfo("Material")
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
-        tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
+        tree.add_item("Density", material.material_density, "kg/m³")
+        tree.add_item("Elasticity Modulus", material.elasticity_modulus / 1e9, "GPa")
         tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
         tree.add_item(
             "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"

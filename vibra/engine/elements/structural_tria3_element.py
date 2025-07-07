@@ -298,7 +298,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
         self.material = material
         E = self.material.elasticity_modulus
         nu = self.material.poisson_ratio
-        rho = self.material.density
+        rho = self.material.material_density
 
         if model_type == "linear-isotropic":
 

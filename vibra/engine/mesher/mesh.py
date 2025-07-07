@@ -996,7 +996,7 @@ class Mesh:
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
         self.process_mesh_related_mappings()
-        # self.loooking_for_collapsed_elements()
+        # self.looking_for_collapsed_elements()
 
 
     def cache_mesh_information(self):
@@ -1346,7 +1346,7 @@ class Mesh:
             self.solid_to_face_elements[solid_id].append(face_id)
 
 
-    def loooking_for_collapsed_elements(self):
+    def looking_for_collapsed_elements(self):
         """
         This method loops through all the elements' connectivities, searching for collapsed elements.
         A message will be printed whether some problematic connectivity has been detected.
