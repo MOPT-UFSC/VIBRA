@@ -264,6 +264,7 @@ class MaterialWidget(MaterialWidget_UI):
         last_col = self.tableWidget_material_data.columnCount()
 
         self.add_material_to_file(last_col-1, material=dmaterial.__dict__)
+        app().processEvents()
         self.set_scroll_bar_to_maximum()
 
     def get_suffix_for_duplicated_material(self, material_name: str):
@@ -281,6 +282,8 @@ class MaterialWidget(MaterialWidget_UI):
 
     def set_scroll_bar_to_maximum(self):
         scroll_bar = self.tableWidget_material_data.horizontalScrollBar()
+        scroll_bar.setSliderPosition(scroll_bar.minimum())
+        app().processEvents()
         scroll_bar.setSliderPosition(scroll_bar.maximum())
 
     def item_changed_callback(self, item : QTableWidgetItem):

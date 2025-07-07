@@ -365,6 +365,8 @@ class FluidWidget(FluidWidget_UI):
         last_col = self.tableWidget_fluid_data.columnCount()
 
         self.add_fluid_to_file(last_col-1, fluid=dfluid.__dict__)
+
+        app().processEvents()
         self.set_scroll_bar_to_maximum()
 
     def get_suffix_for_duplicated_fluid(self, fluid_name: str):
@@ -382,8 +384,11 @@ class FluidWidget(FluidWidget_UI):
 
     def set_scroll_bar_to_maximum(self):
         scroll_bar = self.tableWidget_fluid_data.horizontalScrollBar()
+        scroll_bar.setSliderPosition(scroll_bar.minimum())
+        app().processEvents()
         scroll_bar.setSliderPosition(scroll_bar.maximum())
 
+        
     def item_changed_callback(self, item):
 
         self.tableWidget_fluid_data.blockSignals(True)
