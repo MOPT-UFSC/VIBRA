@@ -138,9 +138,13 @@ class AnalysisRequirementsChecker:
                        "mass_flow_rate",
                        "incident_plane_wave",
                        "compressor_excitation",
+                       "mass_source",
                        ]
 
-        properties = [self.properties.surface_properties]
+        properties = [
+                      self.properties.surface_properties, 
+                      self.properties.nodal_properties,
+                      ]
 
         for property in properties:
             for (prop_label, *_), data in property.items():
