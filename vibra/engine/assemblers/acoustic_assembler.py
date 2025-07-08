@@ -571,6 +571,7 @@ class AcousticAssembler:
 
         element_3D, _ = self.get_element()
         self.ind_rows, self.ind_cols = element_3D.generate_ind_rows_cols(reorder=reorder)
+        self.reordering_indexes = self._get_reordering_indexes(self.ind_rows, self.ind_cols) 
 
         self.dofs = element_3D.DOFS_PER_ELEMENT
         self.number_3d_elements = len(element_3D.connectivity)
@@ -582,6 +583,32 @@ class AcousticAssembler:
 
         self.process_fluid_properties_from_volumes()
         self.process_indexes()
+
+
+    def _get_reordering_indexes(self, rows: np.ndarray, cols: np.ndarray):
+        order: np.ndarray = np.lexsort((cols, rows))
+        rows: np.ndarray = rows[order]
+        cols: np.ndarray = cols[order]
+
+        repeated = np.ones_like(rows, dtype=bool)
+        repeated[0] = False
+        repeated[1:] &= rows[1:] == rows[:-1]
+        repeated[1:] &= cols[1:] == cols[:-1]
+
+        unified_indexes = np.cumsum(~repeated) - 1
+        reordering = unified_indexes[order.argsort()] 
+        return reordering
+
+
+    def _reorder_data(self, data: np.ndarray, reordering: np.ndarray, target: np.ndarray | None = None):
+        if target is None:
+            n_different_values = np.max(reordering) + 1
+            target = np.zeros(n_different_values, data.dtype)
+        else:
+            target *= 0
+
+        np.add.at(target, reordering, data.flatten())
+        return target
 
 
     def compute_global_matrices_factors(self, index: int = 0):
@@ -1059,7 +1086,7 @@ class AcousticAssembler:
         if self.stiffness_matrix_full is None:
             self.stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         else:
-            self.stiffness_matrix_full.data = data_K
+            self._reorder_data(data_K, self.reordering_indexes, target=self.mass_matrix_full.data)
 
         dt = time() - t0
         print()
@@ -1078,7 +1105,7 @@ class AcousticAssembler:
         if self.mass_matrix_full is None:
             self.mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         else:
-            self.mass_matrix_full.data = data_M
+            self._reorder_data(data_M, self.reordering_indexes, target=self.mass_matrix_full.data)
 
         dt = time() - t0
         print()
