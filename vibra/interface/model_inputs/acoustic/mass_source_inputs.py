@@ -1,11 +1,9 @@
-# fmt: off
-
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.mass_flow_rate_inputs_ui import MassFlowRateInputs_UI
+from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -17,7 +15,7 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class MassFlowRateInputs(MassFlowRateInputs_UI):
+class MassSourceInputs(MassSourceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -30,10 +28,11 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self._initialize()
         self._config_window()
-        self._config_widgets()
+        self._initialize()
+        self._configure_qt_variables()
         self._create_connections()
+        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -45,50 +44,67 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Acoustic pressure")
 
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
 
-    def _config_widgets(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)        
-        self.radioButton_element_integration_constant.setDisabled(True)
-        self.radioButton_element_integration_table.setDisabled(True)
-
-        self.treeWidget_mass_flow_rate.setColumnWidth(1, 20)
-        self.treeWidget_mass_flow_rate.setColumnWidth(2, 80)
-        #
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
-        #
+    def _configure_qt_variables(self):
         self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        for i, w in enumerate([120]):
-            self.treeWidget_mass_flow_rate.setColumnWidth(i, w)
-            self.treeWidget_mass_flow_rate.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
+        self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        self.pushButton_load_table.clicked.connect(self.load_mass_flow_rate_table)
-        #
-        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
-        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
-        self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
+        self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+    
+    def _config_widgets(self):
         #
-        self.update_controls_for_constant_value()
-        self.update_controls_for_table_of_values()
+        self.pushButton_change_frequency_setup.setDisabled(True)
+        #
+        for i, w in enumerate([120]):
+            self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
+            self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def geometry_selection_callback(self):
+
+        faces = self.main_window.selected_geometry_surfaces
+
+        if faces:
+            text = ", ".join([str(i) for i in faces])
+            self.lineEdit_selection_id.setText(text)
+
+            if len(faces) == 1:
+                surface_id = list(faces)[0]
+                self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+
+        if self.tabWidget_main.currentIndex() == 2:
+            return
+
+        data = self.model.properties._get_property("acoustic_pressure", surface=surface_id)
+
+        if isinstance(data, dict):
+
+            if "table_paths" in data.keys():
+                self.tabWidget_main.setCurrentIndex(1)
+                self.lineEdit_table_path.setText(data["table_paths"][0])
+            else:
+                self.tabWidget_main.setCurrentIndex(0)
+                self.lineEdit_real_value.setText(str(data["real_values"][0]))
+                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
@@ -106,53 +122,18 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         elif tab_index == 1:
             self.check_table_values()
 
-    def on_click_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-
-    def on_doubleclick_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-        self.remove_callback()
-
-    def load_model_info(self):
-        self.treeWidget_mass_flow_rate.clear()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "mass_flow_rate":
-
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
-
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_mass_flow_rate.addTopLevelItem(new)
-
-        self.update_tabs_visibility()
-
-    def geometry_selection_callback(self):
-
-        faces = app().main_window.selected_geometry_surfaces
-
-        if faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
-
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
-
-        title = "Invalid entry to the mass flow rate"
+        self.stop = False
+        title = "Invalid entry to the acoustic pressure"
         if lineEdit_real.text() != "":
             try:
                 real_F = float(lineEdit_real.text())
             except Exception:
-                message = "Wrong input for real part of mass flow rate."
+                message = "Wrong input for real part of acoustic pressure."
                 PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_real_value.setFocus()
-                return None
+                self.stop = True
+                return
         else:
             real_F = 0
 
@@ -160,10 +141,11 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
             try:
                 imag_F = float(lineEdit_imag.text())
             except Exception:
-                message = "Wrong input for imaginary part of mass flow rate."
+                message = "Wrong input for imaginary part of acoustic pressure."
                 PrintMessageInput([window_title_1, title, message])
                 self.lineEdit_imag_value.setFocus()
-                return None
+                self.stop = True
+                return
         else:
             imag_F = 0
 
@@ -176,9 +158,9 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+                                                               input_ids, 
+                                                               selection = "surfaces"
+                                                               )
 
         if error_data is not None:
             self.hide()
@@ -188,31 +170,33 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids)
 
-        mass_flow_rate = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
+        acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
-        if isinstance(mass_flow_rate, complex):
+        if acoustic_pressure is not None:
 
-            real_values = [np.real(mass_flow_rate)]
-            imag_values = [np.imag(mass_flow_rate)]
-
-            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
+            real_values = [np.real(acoustic_pressure)]
+            imag_values = [np.imag(acoustic_pressure)]
 
             data = {
                     "real_values": real_values,
                     "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
                     }
 
             for surface_id in surface_ids:
-                self.properties._set_property("mass_flow_rate", data, surface=surface_id)
+                self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
             self.actions_to_finalize()
-            
+
+        else:
+            title = "Additional inputs required"
+            message = "You must inform at least one acoustic pressure\n"
+            message += "before confirming the input!"
+            PrintMessageInput([window_title_1, title, message])
+            self.lineEdit_real_value.setFocus()
+
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
-        title = "Error reached while loading 'mass flow rate' table"
+        title = "Error reached while loading 'acoustic pressure' table"
 
         try:
             if direct_load:
@@ -226,7 +210,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                 else:
                     path = last_path
 
-                caption = "Choose a table to import the mass flow rate"
+                caption = "Choose a table to import the acoustic pressure"
                 imported_table_path, check = QFileDialog.getOpenFileName(  None, 
                                                                             caption, 
                                                                             path, 
@@ -299,7 +283,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def load_mass_flow_rate_table(self):
+    def load_acoustic_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def check_table_values(self):
@@ -329,7 +313,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                 if isinstance(self.imported_values, np.ndarray):
                     if self.imported_values.shape[1] >= 3:
 
-                        table_name = f"surface_velocity_at_surface_{surface_id}"
+                        table_name = f"precribed_pressure_at_surface_{surface_id}"
                         if self.save_table_values(table_name, self.imported_values):
                             self.lineEdit_table_path.setFocus()
                             self.imported_values = None
@@ -341,27 +325,22 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                 if self.imported_values is None:
                     return
 
-                nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
-                key_avg = self.checkBox_averaged_constant_values.isChecked()
-
                 complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "table_paths" : [table_path],
                         "table_names" : [table_name],
+                        "table_paths" : [table_path],
                         "values" : [complex_values],
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
                         }
 
-                self.properties._set_property("mass_flow_rate", data, surface=surface_id)
+                self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
             self.actions_to_finalize()
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one mass flow rate\n"
+            message = "You must inform at least one acoustic pressure\n"
             message += "table path before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_table_path.setFocus()
@@ -381,6 +360,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                   "acoustic_pressure",
                   "surface_velocity",
                   "incident_plane_wave",
+                  "mass_flow_rate",
                   "reciprocating_compressor_excitation",
                   "reciprocating_pump_excitation",
                   ]
@@ -392,7 +372,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("mass_flow_rate", surface_id, "surfaces")
+        table_names = self.properties.get_property_related_table_names("acoustic_pressure", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -402,15 +382,15 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
             surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
 
-            self.properties._remove_surface_property("mass_flow_rate", surface_id)
+            self.properties._remove_surface_property("acoustic_pressure", surface_id)
             self.actions_to_finalize()
 
     def reset_callback(self):
 
         self.hide()
 
-        title = "Specific impedance resetting"
-        message = "Would you like to remove the all applied specific impedances from model?"
+        title = "Acoustic pressure resetting"
+        message = "Would you like to remove the all applied acoustic pressures from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -421,22 +401,23 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         if read._continue:
 
             surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "mass_flow_rate":
+            for (property, *args) in self.properties.surface_properties.keys():
+                if property == "acoustic_pressure":
+
                     surface_id = args[0]
                     surface_ids.append(surface_id)
 
             self.remove_table_files_from_surfaces(surface_ids)
 
-            self.properties._reset_property("mass_flow_rate")
+            self.properties._reset_property("acoustic_pressure")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
+        self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.update_info_text()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -450,7 +431,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate", "reciprocating_compressor_excitation"]:
+            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
                 if "table_names" in data.keys():
                     return
 
@@ -464,33 +445,50 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         self.lineEdit_imag_value.setText("")
         self.lineEdit_table_path.setText("")
 
-    def update_controls_for_constant_value(self):
-        _bool = self.radioButton_element_integration_constant.isChecked()
-        self.checkBox_averaged_constant_values.setChecked(not _bool)
-        self.checkBox_averaged_constant_values.setDisabled(_bool)
-
-    def update_controls_for_table_of_values(self):
-        _bool = self.radioButton_element_integration_table.isChecked()
-        self.checkBox_averaged_table_values.setChecked(not _bool)
-        self.checkBox_averaged_table_values.setDisabled(_bool)
-
     def update_tabs_visibility(self):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "mass_flow_rate":
+            if property == "acoustic_pressure":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setCurrentIndex(0)    
         self.tabWidget_main.setTabVisible(2, False)
+
+    def on_click_item(self, item):
+        if item.text(0) != "":
+            surface_id = int(item.text(0))
+            self.lineEdit_selection_id.setText(item.text(0))
+            app().main_window.set_geometry_selection(surfaces=[surface_id])
+
+    def on_doubleclick_item(self, item):
+        self.on_click_item(item)
+
+    def load_model_info(self):
+        self.treeWidget_acoustic_pressure.clear()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "acoustic_pressure":
+
+                if "table_names" in data.keys():
+                    str_value = "Table of values"
+                else:
+                    real_values = np.array(data["real_values"])
+                    imag_values = np.array(data["imag_values"])
+                    complex_values = real_values + 1j * imag_values
+                    str_value = str(complex_values)
+
+                new = QTreeWidgetItem([str(surface_id), str_value])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_acoustic_pressure.addTopLevelItem(new)
+
+        self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_main.currentIndex() == 0:
-                self.check_constant_values()
-            if self.tabWidget_main.currentIndex() == 1:
-                self.check_table_values()
+            self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
@@ -501,5 +499,3 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
-
-# fmt: on

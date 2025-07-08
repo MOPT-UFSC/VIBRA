@@ -278,6 +278,12 @@ class Project:
             LoadingWindow(analysis.process_structural_modal_analysis).run()
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            data = {
+                    "real_values" : [1],
+                    "imag_values" : [0],
+                    }
+            for node_id in [7]:
+                self.model.properties._set_property("mass_source", node=node_id, data=data)
             if checker.check_acoustic_harmonic_analysis():
                 return True
             LoadingWindow(analysis.process_acoustic_harmonic_analysis).run()
