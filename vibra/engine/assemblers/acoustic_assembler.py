@@ -633,7 +633,7 @@ class AcousticAssembler:
             factor_M[elements_from_volume] = aux_ones / (rho_f * C_f**2)
 
             if not self.frequency_dependent and index == 0:
-                Ke = self.data_K[elements_from_volume, :, :]
+                Ke = self.data_Kn[elements_from_volume, :, :]
                 self.data_Cvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * Ke
                 self.data_Qvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
 
