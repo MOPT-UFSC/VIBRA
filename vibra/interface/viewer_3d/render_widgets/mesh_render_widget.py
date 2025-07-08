@@ -171,6 +171,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         if app().main_window.distinguished_solids:
             self.switch_to_solids_actor()
+
+        if isinstance(self.solids_actor, SolidsActor):
             self.solids_actor.distinguish_solids(
                 app().main_window.distinguished_solids
             )

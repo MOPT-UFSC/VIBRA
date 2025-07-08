@@ -463,8 +463,6 @@ class MeshSetupInputs(MesherSetup_UI):
             value_item.setForeground(QBrush(QColor(color)))
             self.tableWidget_mesh_quality.setItem(i, 1, value_item)
                 
-            # self.tableWidget_mesh_quality.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
 
     def update_gmsh_controls(self):
 
@@ -529,6 +527,7 @@ class MeshSetupInputs(MesherSetup_UI):
             self.close()
 
     def closeEvent(self, a0):
+        app().main_window.distinguish_mesh_solids([])
         self.keep_window_open = False
         return super().closeEvent(a0)
 
