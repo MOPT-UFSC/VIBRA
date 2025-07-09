@@ -586,6 +586,9 @@ class AcousticAssembler:
 
     def _get_reordering_indexes(self, rows: np.ndarray, cols: np.ndarray):
         order: np.ndarray = np.lexsort((cols, rows))
+        inverse_ordering = np.empty_like(order)
+        inverse_ordering[order] = np.arange(len(order))
+
         rows: np.ndarray = rows[order]
         cols: np.ndarray = cols[order]
 
@@ -595,7 +598,7 @@ class AcousticAssembler:
         repeated[1:] &= cols[1:] == cols[:-1]
 
         unified_indexes = np.cumsum(~repeated) - 1
-        reordering = unified_indexes[order.argsort()] 
+        reordering = unified_indexes[inverse_ordering] 
         return reordering
 
 
