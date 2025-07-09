@@ -2121,6 +2121,34 @@ class Mesh:
         else:
             return list_ids, None
 
+    def get_nearest_node_from_coordinate(self, point_coords: np.ndarray):
+        """
+        This method calculates the nearest node from the input
+        point's coordinates.
+
+        Parameter
+        ---------
+        point_coords: np.ndarray
+            The point coordinates.
+
+        Return
+        ------
+        nearest_node: int
+            The nearest Node ID.
+
+        nearest_coords: np.ndarray
+            The nearest Node coordinates.
+        """
+        if not self.nodal_coordinates.any():
+            return None, None
+
+        diff = self.nodal_coordinates[: , 1:] - point_coords
+        indexes = np.argsort(np.linalg.norm(diff, axis=1))
+
+        nearest_node = int(self.nodal_coordinates[indexes[0], 0])
+        nearest_coords = self.nodal_coordinates[indexes[0], 1:]
+
+        return nearest_node, nearest_coords
 
 if __name__ == "__main__":
     # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Paralelepipedo.STEP"

@@ -42,6 +42,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
         self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
+        self.item_child_mass_source = self.add_item("Mass Source")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_incident_plane_wave = self.add_item("Incident Plane Wave")
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
@@ -249,6 +250,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_mass_flow_rate_callback(self):
         app().main_window.input_ui.set_mass_flow_rate()
+
+    def item_child_mass_source_callback(self):
+        app().main_window.input_ui.set_mass_source()
     
     def item_child_surface_velocity_callback(self):
         app().main_window.input_ui.set_surface_velocity()
@@ -308,6 +312,7 @@ class ModelSetupItems(CommonMenuItems):
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_acoustic_pressure.setDisabled(key)
         self.item_child_mass_flow_rate.setDisabled(key)
+        self.item_child_mass_source.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
         self.item_child_incident_plane_wave.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)

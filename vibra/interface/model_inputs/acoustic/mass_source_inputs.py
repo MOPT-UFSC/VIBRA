@@ -21,7 +21,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -32,7 +31,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         self._initialize()
         self._configure_qt_variables()
         self._create_connections()
-        self._config_widgets()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -51,50 +49,61 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.keep_window_open = True
 
     def _configure_qt_variables(self):
+        #
+        self.lineEdit_nearest_node_id.setDisabled(True)
+        self.lineEdit_node_coord_x.setDisabled(True)
+        self.lineEdit_node_coord_y.setDisabled(True)
+        self.lineEdit_node_coord_z.setDisabled(True)
+        #
         self.pushButton_change_frequency_setup.setDisabled(True)
-        self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
-        self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
+        #
+        for i, w in enumerate([100, 120]):
+            self.treeWidget_mass_source.setColumnWidth(i, w)
+            self.treeWidget_mass_source.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
+        #
+        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_get_nearest_node.clicked.connect(self.compute_nearest_node_from_coordinate)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
-        self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_mass_source.itemClicked.connect(self.on_click_item)
+        self.treeWidget_mass_source.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
-    
-    def _config_widgets(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        for i, w in enumerate([120]):
-            self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
-            self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
-        if faces:
-            text = ", ".join([str(i) for i in faces])
+        text = ""
+
+        if points:
+            text = ", ".join([str(i) for i in points])
+            
+        elif nodes:
+            text = ", ".join([str(i) for i in nodes])
+
+        if text != "":
             self.lineEdit_selection_id.setText(text)
 
-            if len(faces) == 1:
-                surface_id = list(faces)[0]
-                self.load_property_data(surface_id)
+        if len(points) == 1:
+            point_id = list(points)[0]
+            self.load_property_data(point_id)
 
     def load_property_data(self, surface_id: int):
 
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == 3:
             return
 
-        data = self.model.properties._get_property("acoustic_pressure", surface=surface_id)
+        data = self.model.properties._get_property("mass_source", surface=surface_id)
 
         if isinstance(data, dict):
 
@@ -106,12 +115,101 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
+    def attribution_type_callback(self):
+        attribution_type = self.comboBox_attribution_type.currentIndex()
+        if attribution_type == 0:
+            app().main_window.action_model_workspace_callback()
+        else:
+            app().main_window.action_mesh_workspace_callback()
+
+    def check_inputs(
+                     self, 
+                     lineEdit: QLineEdit, 
+                     label: str, 
+                     _float: bool=True, 
+                     only_positive: bool=False, 
+                     zero_included: bool=True
+                     ):
+
+        message = ""
+
+        title = "Invalid value typed"
+        input_str = lineEdit.text()
+
+        if input_str != "":
+
+            input_str = input_str.replace(",", ".")
+
+            try:
+                if _float:
+                    out = float(input_str)
+                else:
+                    out = int(input_str)
+
+                if only_positive:
+                    if zero_included:
+                        if out < 0:
+                            message = f"Insert a positive value to the {label}."
+                            message += "\nNote: zero value is allowed."
+                    else:
+                        if out <= 0:
+                            message = f"Insert a positive value to the {label}."
+                            message += "\nNote: zero value is not allowed."
+
+            except Exception as _err:
+                message = f"You have typed and invalid value at the {label} input field.\n\n"
+                message += str(_err)
+
+        else:
+            message = f"Insert some value at the {label} input field."
+
+        if message != "":
+            self.hide()
+            PrintMessageInput([window_title_1, title, message])
+            return None
+        else:
+            return out
+
+    def compute_nearest_node_from_coordinate(self):
+
+        self.comboBox_attribution_type.setCurrentIndex(1)
+
+        coord_x = self.check_inputs(self.lineEdit_point_coord_x, "Point coord. x")
+        if coord_x is None:
+            return
+
+        coord_y = self.check_inputs(self.lineEdit_point_coord_y, "Point coord. x")
+        if coord_y is None:
+            return
+
+        coord_z = self.check_inputs(self.lineEdit_point_coord_z, "Point coord. x")
+        if coord_z is None:
+            return
+
+        # point coordinates
+        point_coords = np.array([coord_x, coord_y, coord_z], dtype=float)
+
+        nearest_node, nearest_coords = self.mesh.get_nearest_node_from_coordinate(point_coords)
+        if nearest_node is None:
+            return
+
+        self.lineEdit_nearest_node_id.setText(f"{nearest_node}")
+        self.lineEdit_node_coord_x.setText(f"{nearest_coords[0] : .6f}")
+        self.lineEdit_node_coord_y.setText(f"{nearest_coords[1] : .6f}")
+        self.lineEdit_node_coord_z.setText(f"{nearest_coords[2] : .6f}")
+
+        app().main_window.set_mesh_selection(nodes=[nearest_node])
+
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == 3:
+            self.comboBox_attribution_type.setDisabled(True)
+            app().main_window.set_mesh_selection()
+            app().main_window.set_geometry_selection()
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
         else:
+            self.comboBox_attribution_type.setEnabled(True)
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
 
@@ -156,11 +254,16 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def check_constant_values(self):
 
+        if self.comboBox_attribution_type.currentIndex() == 0:
+            selection = "points"    
+        else:
+            selection = "nodes"
+
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+        selection_ids, error_data = self.mesh.check_selected_ids(
+                                                                 input_ids, 
+                                                                 selection = selection
+                                                                 )
 
         if error_data is not None:
             self.hide()
@@ -168,7 +271,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(surface_ids)
+        self.remove_conflicting_excitations(selection_ids)
 
         acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
@@ -182,15 +285,18 @@ class MassSourceInputs(MassSourceInputs_UI):
                     "imag_values": imag_values,
                     }
 
-            for surface_id in surface_ids:
-                self.properties._set_property("acoustic_pressure", data, surface=surface_id)
+            for selection_id in selection_ids:
+                if self.comboBox_attribution_type.currentIndex() == 0:
+                    self.properties._set_property("mass_source", data, point=selection_id)
+                else:
+                    self.properties._set_property("mass_source", data, node=selection_id)
 
             self.actions_to_finalize()
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure\n"
-            message += "before confirming the input!"
+            message = "You must inform at least one non-zero value to mass source \n"
+            message += "input fields before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_real_value.setFocus()
 
@@ -288,11 +394,16 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def check_table_values(self):
 
+        if self.comboBox_attribution_type.currentIndex() == 0:
+            selection_type = "points"    
+        else:
+            selection_type = "nodes"
+
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+        selection_ids, error_data = self.mesh.check_selected_ids(
+                                                                 input_ids, 
+                                                                 selection = selection_type
+                                                                 )
 
         if error_data is not None:
             self.hide()
@@ -300,7 +411,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(surface_ids)
+        self.remove_conflicting_excitations(selection_ids)
 
         if self.lineEdit_table_path.text() != "":
 
@@ -308,12 +419,12 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.imported_values = self.load_table( self.lineEdit_table_path, 
                                                         direct_load = True )
 
-            for surface_id in surface_ids:
+            for selection_id in selection_ids:
 
                 if isinstance(self.imported_values, np.ndarray):
                     if self.imported_values.shape[1] >= 3:
 
-                        table_name = f"precribed_pressure_at_surface_{surface_id}"
+                        table_name = f"mass_source_at_{selection_type}_{selection_id}"
                         if self.save_table_values(table_name, self.imported_values):
                             self.lineEdit_table_path.setFocus()
                             self.imported_values = None
@@ -334,14 +445,17 @@ class MassSourceInputs(MassSourceInputs_UI):
                         "values" : [complex_values],
                         }
 
-                self.properties._set_property("acoustic_pressure", data, surface=surface_id)
+                if self.comboBox_attribution_type.currentIndex() == 0:
+                    self.properties._set_property("mass_source", data, point=selection_id)
+                else:
+                    self.properties._set_property("mass_source", data, node=selection_id)
 
             self.actions_to_finalize()
 
         else:
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure\n"
-            message += "table path before confirming the input!"
+            message = "You must inform a valid table path to the mass source \n"
+            message += "data before confirming the input!"
             PrintMessageInput([window_title_1, title, message])
             self.lineEdit_table_path.setFocus()
 
@@ -356,14 +470,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = [
-                  "acoustic_pressure",
-                  "surface_velocity",
-                  "incident_plane_wave",
-                  "mass_flow_rate",
-                  "reciprocating_compressor_excitation",
-                  "reciprocating_pump_excitation",
-                  ]
+        labels = ["mass_source"]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -371,26 +478,32 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("acoustic_pressure", surface_id, "surfaces")
+    def remove_table_files_from_selection(self, surface_id : list, selection_type: str):
+        table_names = self.properties.get_property_related_table_names("mass_source", surface_id, selection_type)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
 
-            surface_id = int(self.lineEdit_selection_id.text())
-            self.remove_table_files_from_surfaces(surface_id)
+            selection_id = int(self.lineEdit_selection_id.text())
 
-            self.properties._remove_surface_property("acoustic_pressure", surface_id)
+            if self.comboBox_attribution_type.currentIndex() == 0:
+                self.remove_table_files_from_selection(selection_id, "points")
+                self.properties._remove_point_property("mass_source", selection_id)
+
+            else:
+                self.remove_table_files_from_selection(selection_id, "nodes")
+                self.properties._remove_nodal_property("mass_source", selection_id)
+
             self.actions_to_finalize()
 
     def reset_callback(self):
 
         self.hide()
 
-        title = "Acoustic pressure resetting"
-        message = "Would you like to remove the all applied acoustic pressures from model?"
+        title = "Mass source resetting"
+        message = "Would you like to remove the all applied mass sources from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -400,16 +513,26 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if read._continue:
 
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "acoustic_pressure":
+            point_ids = list()
+            for (property, *args) in self.properties.point_properties.keys():
+                if property != "mass_source":
+                    continue
 
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
+                point_id = args[0]
+                point_ids.append(point_id)
 
-            self.remove_table_files_from_surfaces(surface_ids)
+            node_ids = list()
+            for (property, *args) in self.properties.point_properties.keys():
+                if property != "mass_source":
+                    continue
 
-            self.properties._reset_property("acoustic_pressure")
+                node_id = args[0]
+                node_ids.append(node_id)
+
+            self.remove_table_files_from_selection(point_ids, "points")
+            self.remove_table_files_from_selection(node_ids, "nodes")
+
+            self.properties._reset_property("mass_source")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
@@ -418,6 +541,8 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
+        app().main_window.set_mesh_selection()
+        app().main_window.set_geometry_selection()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -429,9 +554,17 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def check_model_frequency_controls(self):
 
+        properties = [
+                        "acoustic_pressure", 
+                        "surface_velocity", 
+                        "specific_impedance", 
+                        "reciprocating_compressor_excitation",
+                        "mass_source",
+                        ]
+
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+            if property in properties:
                 if "table_names" in data.keys():
                     return
 
@@ -447,29 +580,52 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
-            property, *args = key
-            if property == "acoustic_pressure":
-                self.tabWidget_main.setTabVisible(2, True)
+        properties = [
+                      self.properties.point_properties,
+                      self.properties.nodal_properties
+                      ]
+
+        for _property in properties:
+            for key in _property.keys():
+                property, *args = key
+                if property != "mass_source":
+                    continue
+
+                self.tabWidget_main.setTabVisible(3, True)
                 return
 
         self.tabWidget_main.setCurrentIndex(0)    
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setTabVisible(3, False)
 
     def on_click_item(self, item):
         if item.text(0) != "":
-            surface_id = int(item.text(0))
+            selection_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            if item.text(1)== "point":
+                self.comboBox_attribution_type.setCurrentIndex(0)
+                app().main_window.set_geometry_selection(points=[selection_id])
+            else:
+                self.comboBox_attribution_type.setCurrentIndex(1)
+                app().main_window.set_mesh_selection(nodes=[selection_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
     def load_model_info(self):
-        self.treeWidget_acoustic_pressure.clear()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "acoustic_pressure":
+
+        properties = {
+                      "point" : self.properties.point_properties,
+                      "node" : self.properties.nodal_properties
+                      }
+
+        self.treeWidget_mass_source.clear()
+        for selection_label, _property in properties.items():
+            for key, data in _property.items():
+                property, selection_id = key
+                if property != "mass_source":
+                    continue
+
+                # print(key, data)
 
                 if "table_names" in data.keys():
                     str_value = "Table of values"
@@ -479,10 +635,11 @@ class MassSourceInputs(MassSourceInputs_UI):
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_acoustic_pressure.addTopLevelItem(new)
+                new = QTreeWidgetItem([str(selection_id), selection_label, str_value])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_mass_source.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 

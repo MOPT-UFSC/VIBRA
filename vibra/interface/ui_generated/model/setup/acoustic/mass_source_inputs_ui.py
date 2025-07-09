@@ -290,7 +290,7 @@ class Ui_Dialog(object):
         self.gridLayout_11.setContentsMargins(4, 4, 4, 4)
         self.frame_7 = QFrame(self.tab_advanced_search)
         self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.StyledPanel)
+        self.frame_7.setFrameShape(QFrame.NoFrame)
         self.frame_7.setFrameShadow(QFrame.Raised)
         self.gridLayout_15 = QGridLayout(self.frame_7)
         self.gridLayout_15.setSpacing(6)
@@ -316,41 +316,21 @@ class Ui_Dialog(object):
 
         self.gridLayout_15.addWidget(self.lineEdit_nearest_node_id, 0, 1, 1, 1)
 
-        self.pushButton_attribute_2 = QPushButton(self.frame_7)
-        self.pushButton_attribute_2.setObjectName(u"pushButton_attribute_2")
-        self.pushButton_attribute_2.setMinimumSize(QSize(80, 28))
-        self.pushButton_attribute_2.setMaximumSize(QSize(80, 28))
-        self.pushButton_attribute_2.setFont(font1)
-        self.pushButton_attribute_2.setStyleSheet(u"")
+        self.pushButton_get_nearest_node = QPushButton(self.frame_7)
+        self.pushButton_get_nearest_node.setObjectName(u"pushButton_get_nearest_node")
+        self.pushButton_get_nearest_node.setMinimumSize(QSize(80, 28))
+        self.pushButton_get_nearest_node.setMaximumSize(QSize(80, 28))
+        self.pushButton_get_nearest_node.setFont(font1)
+        self.pushButton_get_nearest_node.setStyleSheet(u"")
 
-        self.gridLayout_15.addWidget(self.pushButton_attribute_2, 0, 2, 1, 1)
+        self.gridLayout_15.addWidget(self.pushButton_get_nearest_node, 0, 2, 1, 1)
 
 
         self.gridLayout_11.addWidget(self.frame_7, 1, 0, 1, 1)
 
-        self.frame_6 = QFrame(self.tab_advanced_search)
-        self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setFrameShape(QFrame.StyledPanel)
-        self.frame_6.setFrameShadow(QFrame.Raised)
-        self.gridLayout_13 = QGridLayout(self.frame_6)
-        self.gridLayout_13.setSpacing(4)
-        self.gridLayout_13.setObjectName(u"gridLayout_13")
-        self.gridLayout_13.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_transfer_node_id = QPushButton(self.frame_6)
-        self.pushButton_transfer_node_id.setObjectName(u"pushButton_transfer_node_id")
-        self.pushButton_transfer_node_id.setMinimumSize(QSize(140, 28))
-        self.pushButton_transfer_node_id.setMaximumSize(QSize(140, 28))
-        self.pushButton_transfer_node_id.setFont(font1)
-        self.pushButton_transfer_node_id.setStyleSheet(u"")
-
-        self.gridLayout_13.addWidget(self.pushButton_transfer_node_id, 0, 1, 1, 1)
-
-
-        self.gridLayout_11.addWidget(self.frame_6, 2, 0, 1, 1)
-
         self.frame_5 = QFrame(self.tab_advanced_search)
         self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setFrameShape(QFrame.StyledPanel)
+        self.frame_5.setFrameShape(QFrame.NoFrame)
         self.frame_5.setFrameShadow(QFrame.Raised)
         self.gridLayout_10 = QGridLayout(self.frame_5)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
@@ -495,26 +475,27 @@ class Ui_Dialog(object):
 
         self.gridLayout_9.addWidget(self.frame_3, 1, 0, 1, 1)
 
-        self.treeWidget_mass_flow_rate = QTreeWidget(self.tab_list)
+        self.treeWidget_mass_source = QTreeWidget(self.tab_list)
         __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_mass_flow_rate.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_mass_flow_rate.setObjectName(u"treeWidget_mass_flow_rate")
-        self.treeWidget_mass_flow_rate.setMinimumSize(QSize(320, 100))
-        self.treeWidget_mass_flow_rate.setMaximumSize(QSize(320, 200))
+        self.treeWidget_mass_source.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_mass_source.setObjectName(u"treeWidget_mass_source")
+        self.treeWidget_mass_source.setMinimumSize(QSize(320, 100))
+        self.treeWidget_mass_source.setMaximumSize(QSize(320, 200))
         font4 = QFont()
         font4.setFamilies([u"MS Shell Dlg 2"])
         font4.setPointSize(10)
         font4.setItalic(False)
-        self.treeWidget_mass_flow_rate.setFont(font4)
-        self.treeWidget_mass_flow_rate.setIndentation(1)
-        self.treeWidget_mass_flow_rate.setHeaderHidden(False)
-        self.treeWidget_mass_flow_rate.header().setHighlightSections(False)
-        self.treeWidget_mass_flow_rate.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_mass_flow_rate.header().setStretchLastSection(True)
+        self.treeWidget_mass_source.setFont(font4)
+        self.treeWidget_mass_source.setIndentation(1)
+        self.treeWidget_mass_source.setHeaderHidden(False)
+        self.treeWidget_mass_source.header().setHighlightSections(False)
+        self.treeWidget_mass_source.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_mass_source.header().setStretchLastSection(True)
 
-        self.gridLayout_9.addWidget(self.treeWidget_mass_flow_rate, 0, 0, 1, 1)
+        self.gridLayout_9.addWidget(self.treeWidget_mass_source, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_list, "")
 
@@ -589,7 +570,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Set mass flow rate acoustic excitation", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Set mass source acoustic excitation", None))
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
@@ -610,10 +591,9 @@ class Ui_Dialog(object):
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Node ID:", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_attribute_2.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Get the nearest Node ID</p></body></html>", None))
+        self.pushButton_get_nearest_node.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Get the nearest Node ID</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_attribute_2.setText(QCoreApplication.translate("Dialog", u"Get node", None))
-        self.pushButton_transfer_node_id.setText(QCoreApplication.translate("Dialog", u"Transfer selection", None))
+        self.pushButton_get_nearest_node.setText(QCoreApplication.translate("Dialog", u"Get node", None))
         self.label_5.setText(QCoreApplication.translate("Dialog", u"x", None))
         self.label_6.setText(QCoreApplication.translate("Dialog", u"y", None))
         self.label_7.setText(QCoreApplication.translate("Dialog", u"z", None))
@@ -622,11 +602,12 @@ class Ui_Dialog(object):
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_advanced_search), QCoreApplication.translate("Dialog", u"Advanced search", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
-        ___qtreewidgetitem = self.treeWidget_mass_flow_rate.headerItem()
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Values", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Nodes", None));
+        ___qtreewidgetitem = self.treeWidget_mass_source.headerItem()
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Values", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Selection type", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Selection ID", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_mass_flow_rate.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+        self.treeWidget_mass_source.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Mass source setup", None))
@@ -672,10 +653,7 @@ class MassSourceInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - label_8: QLabel
                                                         - lineEdit_nearest_node_id: QLineEdit
-                                                        - pushButton_attribute_2: QPushButton
-                                            - frame_6: QFrame
-                                                - (Layout): QGridLayout
-                                                        - pushButton_transfer_node_id: QPushButton
+                                                        - pushButton_get_nearest_node: QPushButton
                                             - frame_5: QFrame
                                                 - (Layout): QGridLayout
                                                         - label_5: QLabel
@@ -695,7 +673,7 @@ class MassSourceInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - pushButton_reset: QPushButton
                                                         - pushButton_remove: QPushButton
-                                            - treeWidget_mass_flow_rate: QTreeWidget
+                                            - treeWidget_mass_source: QTreeWidget
                 - frame: QFrame
                     - (Layout): QGridLayout
                             - label: QLabel
