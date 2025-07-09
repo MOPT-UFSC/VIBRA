@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
 
+
 from vibra import app
 from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_type import (
@@ -20,6 +21,7 @@ from vibra.engine.mesher.element_type import (
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
+from PySide6.QtCore import QModelIndex
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -442,7 +444,7 @@ class MeshSetupInputs(MesherSetup_UI):
         if not worst_value:
             return
         
-        quality_bins = {
+        self.quality_bins = {
             "gamma": (2, 5),
             "volume": (1e-3, 0),
             "minSJ": (0.3, 0.1),
@@ -450,11 +452,11 @@ class MeshSetupInputs(MesherSetup_UI):
             "minSICN": (0.7, 0.3)
         }
         param_map = {
-            "gamma": ("Gamma", lambda v: "green" if v < quality_bins["gamma"][0] else "yellow" if v < quality_bins["gamma"][1] else "red"),
-            "volume": ("Volume", lambda v: "green" if v > quality_bins["volume"][0] else "yellow" if v > quality_bins["volume"][1] else "red"),
-            "minSJ": ("Jacobian", lambda v: "green" if v > quality_bins["minSJ"][0] else "yellow" if v > quality_bins["minSJ"][1] else "red"),
-            "minSIGE": ("minSIGE", lambda v: "green" if v > quality_bins["minSIGE"][0] else "yellow" if v > quality_bins["minSIGE"][1] else "red"),
-            "minSICN": ("minSICN", lambda v: "green" if v > quality_bins["minSICN"][0] else "yellow" if v > quality_bins["minSICN"][1] else "red"),
+            "gamma": ("Gamma", lambda v: "green" if v < self.quality_bins["gamma"][0] else "yellow" if v < self.quality_bins["gamma"][1] else "red"),
+            "volume": ("Volume", lambda v: "green" if v > self.quality_bins["volume"][0] else "yellow" if v > self.quality_bins["volume"][1] else "red"),
+            "minSJ": ("Jacobian", lambda v: "green" if v > self.quality_bins["minSJ"][0] else "yellow" if v > self.quality_bins["minSJ"][1] else "red"),
+            "minSIGE": ("minSIGE", lambda v: "green" if v > self.quality_bins["minSIGE"][0] else "yellow" if v > self.quality_bins["minSIGE"][1] else "red"),
+            "minSICN": ("minSICN", lambda v: "green" if v > self.quality_bins["minSICN"][0] else "yellow" if v > self.quality_bins["minSICN"][1] else "red"),
         }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
@@ -476,8 +478,11 @@ class MeshSetupInputs(MesherSetup_UI):
                     value_item.setForeground(QBrush(QColor(color)))
 
                 self.tableWidget_mesh_quality.setItem(i, j, value_item)
+
+        if self.tableWidget_mesh_quality.rowCount() > 0:
+            self.tableWidget_mesh_quality.setCurrentCell(0, 0)
     
-    def plot_mesh_parameter_histogram(self, parameter):
+    def plot_mesh_parameter_histogram(self):
         qualidades = np.random.gamma(shape=2, scale=2, size=1000)
 
         bins = np.linspace(min(qualidades), max(qualidades), 30)
@@ -504,12 +509,20 @@ class MeshSetupInputs(MesherSetup_UI):
         plt.show()
 
     def plot_mesh_parameter(self):
-        mesh_quality = app().project.model.mesh.mesh_quality["minSICN"]
+        parameter_position = ["gamma", "volume", "minSJ", "minSIGE", "minSICN"]
+        parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
+        parameter = parameter_position[parameter_index]
+
+        mesh_quality = app().project.model.mesh.mesh_quality[parameter]
         bad_elements = []
 
         for element, quality in mesh_quality.items():
-            if quality < 0.4:
+            if quality < self.quality_bins[parameter][0]:
                 bad_elements.append(element)
+        
+        # TODO implementar alguma logica para lidar com desativar o botao nesse caso ou alguma coisa assim
+        if not bad_elements:
+            bad_elements = None
 
         app().main_window.distinguish_mesh_solids(bad_elements)
 
