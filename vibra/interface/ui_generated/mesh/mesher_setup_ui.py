@@ -517,15 +517,20 @@ class Ui_Dialog(object):
         self.tabWidget_main.addTab(self.tab_2, "")
         self.tab_5 = QWidget()
         self.tab_5.setObjectName(u"tab_5")
+        self.tab_5.setEnabled(True)
         self.verticalLayout = QVBoxLayout(self.tab_5)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.tableWidget_mesh_quality = QTableWidget(self.tab_5)
-        if (self.tableWidget_mesh_quality.columnCount() < 2):
-            self.tableWidget_mesh_quality.setColumnCount(2)
+        if (self.tableWidget_mesh_quality.columnCount() < 4):
+            self.tableWidget_mesh_quality.setColumnCount(4)
         __qtablewidgetitem3 = QTableWidgetItem()
         self.tableWidget_mesh_quality.setHorizontalHeaderItem(0, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
         self.tableWidget_mesh_quality.setHorizontalHeaderItem(1, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(2, __qtablewidgetitem5)
+        __qtablewidgetitem6 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(3, __qtablewidgetitem6)
         self.tableWidget_mesh_quality.setObjectName(u"tableWidget_mesh_quality")
         self.tableWidget_mesh_quality.setMaximumSize(QSize(654654, 16777215))
         self.tableWidget_mesh_quality.horizontalHeader().setStretchLastSection(True)
@@ -608,7 +613,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(2)
+        self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_global_settings.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
         self.pushButton_generate_mesh.setDefault(False)
@@ -686,7 +691,11 @@ class Ui_Dialog(object):
         ___qtablewidgetitem3 = self.tableWidget_mesh_quality.horizontalHeaderItem(0)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Parameter", None));
         ___qtablewidgetitem4 = self.tableWidget_mesh_quality.horizontalHeaderItem(1)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Minimum value", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Minimum", None));
+        ___qtablewidgetitem5 = self.tableWidget_mesh_quality.horizontalHeaderItem(2)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Average", None));
+        ___qtablewidgetitem6 = self.tableWidget_mesh_quality.horizontalHeaderItem(3)
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Std. Deviation", None));
         self.pushButton_plot_parameter.setText(QCoreApplication.translate("Dialog", u"Plot parameter", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_5), QCoreApplication.translate("Dialog", u"Mesh quality", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Mesh configuration", None))

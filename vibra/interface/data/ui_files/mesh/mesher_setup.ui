@@ -1343,6 +1343,9 @@
          </layout>
         </widget>
         <widget class="QWidget" name="tab_5">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <attribute name="title">
           <string>Mesh quality</string>
          </attribute>
@@ -1371,7 +1374,17 @@
             </column>
             <column>
              <property name="text">
-              <string>Minimum value</string>
+              <string>Minimum</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Average</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Std. Deviation</string>
              </property>
             </column>
            </widget>

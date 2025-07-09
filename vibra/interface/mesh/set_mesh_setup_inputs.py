@@ -1,18 +1,25 @@
-# fmt: off
-
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor
-
-from vibra import app
-from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
-from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_type import TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8, HEXAHEDRON_20, ElementType
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_window import LoadingWindow
-
 import logging
 from collections import defaultdict
+
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QColor
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
+
+from vibra import app
+from vibra.engine.mesher import gmsh_constants
+from vibra.engine.mesher.element_type import (
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementType,
+)
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -45,15 +52,13 @@ class MeshSetupInputs(MesherSetup_UI):
 
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.worst_value = dict()
-
         self._config_window()
         self._initialize()
         self._create_connections()
         self._config_widgets()
-
         self.update_gmsh_controls()
         self._load_current_mesh_setup()
+        self.config_control_quality_table()
 
         while self.keep_window_open:
             self.exec()
@@ -328,22 +333,12 @@ class MeshSetupInputs(MesherSetup_UI):
         app().file.write_geometry_data_in_file()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
-        self.worst_value = app().project.model.mesh.mesh_quality_worst_value
+
         self.config_control_quality_table()
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
-    
-    def plot_mesh_parameter(self):
-        mesh_quality = app().project.model.mesh.mesh_quality["minSICN"]
-        bad_elements = []
-
-        for element, quality in mesh_quality.items():
-            if quality < 0.4:
-                bad_elements.append(element)
-
-        app().main_window.distinguish_mesh_solids(bad_elements)
-    
+        
     def process_degress_of_freedom_if_necessary(self):
 
         if not app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
@@ -368,7 +363,7 @@ class MeshSetupInputs(MesherSetup_UI):
         app().file.remove_results_data_from_project_file()
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
-        self.worst_value = app().project.model.mesh.mesh_quality_worst_value
+        # self.worst_value = app().project.model.mesh.mesh_quality_worst_value
 
         app().main_window.update_symbols()
 
@@ -439,30 +434,84 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        if not self.worst_value:
+
+        worst_value = app().project.model.mesh.mesh_quality_worst_value
+        average_value = app().project.model.mesh.mesh_quality_average
+        stdev_value = app().project.model.mesh.mesh_quality_stdev
+
+        if not worst_value:
             return
-
-        param_map = {
-            "gamma": ("Gamma", lambda v: "green" if v < 2 else "yellow" if v < 5 else "red"),
-            "volume": ("Volume", lambda v: "green" if v > 1e-3 else "yellow" if v > 0 else "red"),
-            "minSJ": ("Minimum Scaled Jacobian", lambda v: "green" if v > 0.3 else "yellow" if v > 0.1 else "red"),
-            "minSIGE": ("Minimum Scaled Interpolation Error Gradient", lambda v: "green" if v > 0.7 else "yellow" if v > 0.5 else "red"),
-            "minSICN": ("Minimum Scaled Inverse Condition Number", lambda v: "green" if v > 0.7 else "yellow" if v > 0.3 else "red"),
+        
+        quality_bins = {
+            "gamma": (2, 5),
+            "volume": (1e-3, 0),
+            "minSJ": (0.3, 0.1),
+            "minSIGE": (0.7, 0.5),
+            "minSICN": (0.7, 0.3)
         }
-
+        param_map = {
+            "gamma": ("Gamma", lambda v: "green" if v < quality_bins["gamma"][0] else "yellow" if v < quality_bins["gamma"][1] else "red"),
+            "volume": ("Volume", lambda v: "green" if v > quality_bins["volume"][0] else "yellow" if v > quality_bins["volume"][1] else "red"),
+            "minSJ": ("Jacobian", lambda v: "green" if v > quality_bins["minSJ"][0] else "yellow" if v > quality_bins["minSJ"][1] else "red"),
+            "minSIGE": ("minSIGE", lambda v: "green" if v > quality_bins["minSIGE"][0] else "yellow" if v > quality_bins["minSIGE"][1] else "red"),
+            "minSICN": ("minSICN", lambda v: "green" if v > quality_bins["minSICN"][0] else "yellow" if v > quality_bins["minSICN"][1] else "red"),
+        }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
-        self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 300)
+        self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
 
+        values_list = [
+            worst_value,
+            average_value,
+            stdev_value,
+        ]
+        for j, quality_parameter in enumerate(values_list, start=1):
+            for i, (key, (label, color_fn)) in enumerate(param_map.items()):
+                self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(label))
 
-        for i, (key, (label, color_fn)) in enumerate(param_map.items()):
-            self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(label))
+                value = quality_parameter.get(key)
+                value_item = QTableWidgetItem(str(round(value, 3)))
 
-            value = self.worst_value.get(key)
-            color = color_fn(value)
-            value_item = QTableWidgetItem(str(round(value, 3)))
-            value_item.setForeground(QBrush(QColor(color)))
-            self.tableWidget_mesh_quality.setItem(i, 1, value_item)
-                
+                if quality_parameter != values_list[2]:
+                    color = color_fn(value)
+                    value_item.setForeground(QBrush(QColor(color)))
+
+                self.tableWidget_mesh_quality.setItem(i, j, value_item)
+    
+    def plot_mesh_parameter_histogram(self, parameter):
+        qualidades = np.random.gamma(shape=2, scale=2, size=1000)
+
+        bins = np.linspace(min(qualidades), max(qualidades), 30)
+        hist, bin_edges = np.histogram(qualidades, bins=bins)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        cmap = mcolors.LinearSegmentedColormap.from_list(
+            "qualidade", [(0, "red"), (0.3, "gold"), (1, "green")]
+        )
+        norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
+        colors = cmap(norm(bin_centers))
+
+        plt.figure(figsize=(10, 5))
+        for i in range(len(hist)):
+            plt.bar(bin_edges[i], hist[i], width=bin_edges[i+1]-bin_edges[i],
+                    align='edge', color=colors[i], edgecolor='black', alpha=0.9)
+            
+
+        plt.title("parametro")
+        plt.xlabel("valor do parametro")
+        plt.ylabel("numero de elementos")
+        plt.tight_layout()
+        plt.grid(True, linestyle=':', alpha=0.5)
+        plt.show()
+
+    def plot_mesh_parameter(self):
+        mesh_quality = app().project.model.mesh.mesh_quality["minSICN"]
+        bad_elements = []
+
+        for element, quality in mesh_quality.items():
+            if quality < 0.4:
+                bad_elements.append(element)
+
+        app().main_window.distinguish_mesh_solids(bad_elements)
 
     def update_gmsh_controls(self):
 

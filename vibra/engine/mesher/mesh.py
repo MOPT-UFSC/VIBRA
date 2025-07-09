@@ -62,6 +62,8 @@ class Mesh:
 
         self.mesh_quality = dict()
         self.mesh_quality_worst_value = dict()
+        self.mesh_quality_average = dict()
+        self.mesh_quality_stdev = dict()
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -1633,8 +1635,12 @@ class Mesh:
             for i, element in enumerate(elements):
                 qualities[element] = element_qualities[i]
 
+            element_qualities = np.array(element_qualities)
             self.mesh_quality[parameter] = qualities
-            self.mesh_quality_worst_value[parameter] = min(element_qualities)
+
+            self.mesh_quality_worst_value[parameter] = np.min(element_qualities)
+            self.mesh_quality_average[parameter] = np.average(element_qualities)
+            self.mesh_quality_stdev[parameter] = np.std(element_qualities)
 
         return self.mesh_quality   
 
