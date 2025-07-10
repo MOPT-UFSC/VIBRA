@@ -1138,7 +1138,7 @@ class AcousticAssembler:
         if self.stiffness_matrix_full is None:
             self.stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
         else:
-            self._reorder_data(data_K, self.reordering_indexes, target=self.mass_matrix_full.data)
+            self._reorder_data(data_K, self.reordering_indexes, target=self.stiffness_matrix_full.data)
 
         dt = time() - t0
         print()
