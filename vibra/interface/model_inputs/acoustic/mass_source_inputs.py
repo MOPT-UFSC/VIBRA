@@ -67,7 +67,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
+        self.pushButton_load_table.clicked.connect(self.load_mass_source_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_nearest_node.clicked.connect(self.compute_nearest_node_from_coordinate)
@@ -84,10 +84,8 @@ class MassSourceInputs(MassSourceInputs_UI):
         nodes = app().main_window.selected_mesh_nodes
 
         text = ""
-
         if points:
             text = ", ".join([str(i) for i in points])
-            
         elif nodes:
             text = ", ".join([str(i) for i in nodes])
 
@@ -96,14 +94,21 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if len(points) == 1:
             point_id = list(points)[0]
-            self.load_property_data(point_id)
+            self.load_property_data(point_id, "points")
 
-    def load_property_data(self, surface_id: int):
+        elif len(nodes) == 1:
+            node_id = list(nodes)[0]
+            self.load_property_data(node_id, "points")
+
+    def load_property_data(self, selection_id: int, selection_type: str):
 
         if self.tabWidget_main.currentIndex() == 3:
             return
-
-        data = self.model.properties._get_property("mass_source", surface=surface_id)
+        
+        if selection_type == "points":
+            data = self.model.properties._get_property("mass_source", point=selection_id)
+        else:
+            data = self.model.properties._get_property("mass_source", node=selection_id)
 
         if isinstance(data, dict):
 
@@ -165,6 +170,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if message != "":
             self.hide()
+            lineEdit.setFocus()
             PrintMessageInput([window_title_1, title, message])
             return None
         else:
@@ -255,14 +261,14 @@ class MassSourceInputs(MassSourceInputs_UI):
     def check_constant_values(self):
 
         if self.comboBox_attribution_type.currentIndex() == 0:
-            selection = "points"    
+            selection_type = "points"    
         else:
-            selection = "nodes"
+            selection_type = "nodes"
 
         input_ids = self.lineEdit_selection_id.text()
         selection_ids, error_data = self.mesh.check_selected_ids(
                                                                  input_ids, 
-                                                                 selection = selection
+                                                                 selection = selection_type
                                                                  )
 
         if error_data is not None:
@@ -271,14 +277,14 @@ class MassSourceInputs(MassSourceInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(selection_ids)
+        self.remove_conflicting_excitations(selection_ids, selection_type)
 
-        acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
+        mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
-        if acoustic_pressure is not None:
+        if mass_source is not None:
 
-            real_values = [np.real(acoustic_pressure)]
-            imag_values = [np.imag(acoustic_pressure)]
+            real_values = [np.real(mass_source)]
+            imag_values = [np.imag(mass_source)]
 
             data = {
                     "real_values": real_values,
@@ -302,7 +308,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
-        title = "Error reached while loading 'acoustic pressure' table"
+        title = "Error reached while loading 'mass source' table"
 
         try:
             if direct_load:
@@ -316,7 +322,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 else:
                     path = last_path
 
-                caption = "Choose a table to import the acoustic pressure"
+                caption = "Choose a table to import the mass source"
                 imported_table_path, check = QFileDialog.getOpenFileName(  None, 
                                                                             caption, 
                                                                             path, 
@@ -329,15 +335,17 @@ class MassSourceInputs(MassSourceInputs_UI):
             lineEdit.setText(imported_table_path)
             app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
 
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
+            imported_values = np.loadtxt(imported_table_path, delimiter=",")
 
-            if imported_file.shape[1] < 3:
-                message = "The imported table has insufficient number of columns. The spectrum"
-                message += " data must have three columns in the form: frequencies, real and imaginary values."
+            if imported_values.shape[1] < 3:
+                message = "The imported table has insufficient number of columns. The spectrum data must "
+                message += "have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            return imported_file
+            mask = imported_values[:, 0] > 0
+
+            return imported_values[mask, :]
 
         except Exception as log_error:
             message = str(log_error)
@@ -347,9 +355,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        mask = imported_values[:, 0] > 0
-        _imported_values = imported_values[mask, :]
-        _frequencies = _imported_values[:, 0]
+        _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
@@ -363,11 +369,10 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
-        real_values = _imported_values[:, 1]
-        imag_values = _imported_values[:, 2]
+        real_values = imported_values[:, 1]
+        imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
-
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
@@ -389,7 +394,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def load_acoustic_pressure_table(self):
+    def load_mass_source_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def check_table_values(self):
@@ -411,7 +416,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        self.remove_conflicting_excitations(selection_ids)
+        self.remove_conflicting_excitations(selection_ids, selection_type)
 
         if self.lineEdit_table_path.text() != "":
 
@@ -465,21 +470,24 @@ class MassSourceInputs(MassSourceInputs_UI):
         if table_names:
             app().file.write_imported_table_data_in_file()
 
-    def remove_conflicting_excitations(self, surface_ids: int | list):
+    def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
-        if isinstance(surface_ids, int):
-            surface_ids = [surface_ids]
+        if isinstance(selection_ids, int):
+            selection_ids = [selection_ids]
 
-        labels = ["mass_source"]
+        label = "mass_source"
 
-        for surface_id in surface_ids:
-            for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
-                self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
+        for selection_id in selection_ids:
+            table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
+            if selection_type == "points":
+                self.properties._remove_point_property(label, selection_id)
+            else:
+                self.properties._remove_nodal_property(label, selection_id)
 
-    def remove_table_files_from_selection(self, surface_id : list, selection_type: str):
-        table_names = self.properties.get_property_related_table_names("mass_source", surface_id, selection_type)
+            self.process_table_file_removal(table_names)
+
+    def remove_table_files_from_selection(self, selection_id : list, selection_type: str):
+        table_names = self.properties.get_property_related_table_names("mass_source", selection_id, selection_type)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -517,20 +525,21 @@ class MassSourceInputs(MassSourceInputs_UI):
             for (property, *args) in self.properties.point_properties.keys():
                 if property != "mass_source":
                     continue
+ 
+                point_ids.append(args[0])
 
-                point_id = args[0]
-                point_ids.append(point_id)
+            for point_id in point_ids:
+                self.remove_table_files_from_selection(point_id, "points")
 
             node_ids = list()
-            for (property, *args) in self.properties.point_properties.keys():
+            for (property, *args) in self.properties.nodal_properties.keys():
                 if property != "mass_source":
                     continue
 
-                node_id = args[0]
-                node_ids.append(node_id)
+                node_ids.append(args[0])
 
-            self.remove_table_files_from_selection(point_ids, "points")
-            self.remove_table_files_from_selection(node_ids, "nodes")
+            for node_id in node_ids:
+                self.remove_table_files_from_selection(node_id, "nodes")
 
             self.properties._reset_property("mass_source")
             self.actions_to_finalize()
@@ -554,19 +563,30 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def check_model_frequency_controls(self):
 
-        properties = [
-                        "acoustic_pressure", 
-                        "surface_velocity", 
-                        "specific_impedance", 
-                        "reciprocating_compressor_excitation",
-                        "mass_source",
-                        ]
+        model_properties = [
+                            self.properties.surface_properties,
+                            self.properties.point_properties,
+                            self.properties.nodal_properties,
+                            ]
 
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in properties:
-                if "table_names" in data.keys():
-                    return
+        properties = [
+                      "acoustic_pressure", 
+                      "surface_velocity", 
+                      "specific_impedance",
+                      "incident_plane_wave",
+                      "incident_plane_wave",
+                      "transfer_impedance",
+                      "perforated_plate", 
+                      "reciprocating_compressor_excitation",
+                      "mass_source",
+                      ]
+
+        for model_property in model_properties:
+            for key, data in model_property.items():
+                property, _ = key
+                if property in properties:
+                    if "table_names" in data.keys():
+                        return
 
         if isinstance(self.project.analysis_setup, dict):
             analysis_setup = self.project.analysis_setup
@@ -580,13 +600,8 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def update_tabs_visibility(self):
 
-        properties = [
-                      self.properties.point_properties,
-                      self.properties.nodal_properties
-                      ]
-
-        for _property in properties:
-            for key in _property.keys():
+        for m_property in [self.properties.point_properties, self.properties.nodal_properties]:
+            for key in m_property.keys():
                 property, *args = key
                 if property != "mass_source":
                     continue
@@ -613,14 +628,14 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def load_model_info(self):
 
-        properties = {
-                      "point" : self.properties.point_properties,
-                      "node" : self.properties.nodal_properties
-                      }
+        model_properties = {
+                            "point" : self.properties.point_properties,
+                            "node" : self.properties.nodal_properties
+                            }
 
         self.treeWidget_mass_source.clear()
-        for selection_label, _property in properties.items():
-            for key, data in _property.items():
+        for selection_label, m_property in model_properties.items():
+            for key, data in m_property.items():
                 property, selection_id = key
                 if property != "mass_source":
                     continue

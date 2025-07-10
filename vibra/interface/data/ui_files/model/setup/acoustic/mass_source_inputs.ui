@@ -1269,19 +1269,22 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_9">
           <property name="leftMargin">
-           <number>2</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
-           <number>8</number>
+           <number>10</number>
           </property>
           <property name="rightMargin">
-           <number>2</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
+           <number>4</number>
+          </property>
+          <property name="horizontalSpacing">
            <number>2</number>
           </property>
-          <property name="spacing">
-           <number>2</number>
+          <property name="verticalSpacing">
+           <number>8</number>
           </property>
           <item row="1" column="0">
            <widget class="QFrame" name="frame_3">
@@ -1293,7 +1296,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>320</width>
+              <width>16777215</width>
               <height>40</height>
              </size>
             </property>
@@ -1394,7 +1397,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>320</width>
+              <width>16777215</width>
               <height>200</height>
              </size>
             </property>

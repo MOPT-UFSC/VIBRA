@@ -509,16 +509,29 @@ class AcousticAssembler:
         """ 
         This method processes the nodal mass source vector data.
         """
+        model_properties = {
+                            "point_properties" : self.properties.point_properties,
+                            "nodal_properties" : self.properties.nodal_properties,
+                            }
+
         self.mass_source_vectors = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
-        for (property, node_id), data in self.model.properties.nodal_properties.items():
 
-            if property != "mass_source":
-                continue
+        for prop_label, model_property in model_properties.items():
+            for (property, *args), data in model_property.items():
 
-            if "values" in data.keys():
-                _complex_values = data.get("values")[0]
+                if property != "mass_source":
+                    continue
 
-            self.mass_source_vectors[node_id, :] = self.get_value_in_array_form(_complex_values)
+                if "values" in data.keys():
+                    _complex_values = data.get("values")[0]
+
+                if prop_label == "nodal_properties":
+                    node_id = args[0]
+                else:
+                    point_id = args[0]
+                    node_id = self.model.mesh.nodes_from_points.get(point_id)
+
+                self.mass_source_vectors[node_id, :] += self.get_value_in_array_form(_complex_values, flatten=True)
 
     
     def process_fluid_properties_from_volumes(self):
@@ -690,21 +703,20 @@ class AcousticAssembler:
         index: int, optional
             The frequency index.
         """
-        if self.mass_source_vectors is None:
-            self.process_nodal_mass_source_data()
 
-        if self.mass_source_vectors.any():
+        if not self.mass_source_vectors.any():
+            return
 
-            factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors(index=index)
+        factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors(index=index)
 
-            data_Qms1 = factor_Qms1 * self.data_Mn
-            Q_ms1 = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        data_Qms1 = factor_Qms1 * self.data_Mn
+        Q_ms1 = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
 
-            data_Qms2 = factor_Qms2 * self.data_Kn
-            Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
+        data_Qms2 = factor_Qms2 * self.data_Kn
+        Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
 
-            self.Q_ms1 = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-            self.Q_ms2 = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Q_ms1 = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Q_ms2 = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
 
 
     def compute_mass_source_load_vector(self, omega: float, index: int = 0):
@@ -1465,7 +1477,8 @@ class AcousticAssembler:
         A = self.get_acoustic_excitations_by_nodal_attribution()
 
         logging.info("Processing nodal related loads... [95/100]")
-        self.mass_flow_vectors = A + B
+        self.process_nodal_mass_source_data()
+        self.assemble_mass_source_matrices()
 
         logging.info("Finishing the model building... [98/100]")
-        self.assemble_mass_source_matrices()
+        self.mass_flow_vectors = A + B
