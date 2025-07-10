@@ -234,15 +234,17 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                     return None
 
             lineEdit.setText(imported_table_path)
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
+            imported_values = np.loadtxt(imported_table_path, delimiter=",")
 
-            if imported_file.shape[1] < 2:
+            if imported_values.shape[1] < 2:
                 message = "The imported table has insufficient number of columns. The absorption coefficient"
                 message += " data must have two columns in the form: frequencies and real values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            return imported_file
+            mask = imported_values[:, 0] > 0
+
+            return imported_values[mask, :]
 
         except Exception as log_error:
             message = str(log_error)
@@ -252,9 +254,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        mask = imported_values[:, 0] > 0
-        _imported_values = imported_values[mask, :]
-        _frequencies = _imported_values[:, 0]
+        _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
@@ -268,8 +268,8 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
-        real_values = _imported_values[:, 1]
-        # imag_values = _imported_values[:, 2]
+        real_values = imported_values[:, 1]
+        # imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values], dtype=float).T
         # data = np.array([_frequencies, real_values, imag_values], dtype=float).T
