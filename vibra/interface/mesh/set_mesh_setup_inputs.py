@@ -488,20 +488,17 @@ class MeshSetupInputs(MesherSetup_UI):
         parameter_position = ["gamma", "volume", "minSJ"]
         parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
         parameter = parameter_position[parameter_index]
-
         mesh_quality = list(app().project.model.mesh.mesh_quality[parameter].values())
 
         bins = np.linspace(min(mesh_quality), max(mesh_quality), 30)
         hist, bin_edges = np.histogram(mesh_quality, bins=bins)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        
-        
         bin_min = self.quality_bins[parameter][1]
         bin_max = self.quality_bins[parameter][0]
         bin_med = (bin_min + bin_max) / 2
+
         cmap = mcolors.LinearSegmentedColormap.from_list(
-            "qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")]
-        )
+            "qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")])
         norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
         colors = cmap(norm(bin_centers))
 
@@ -510,6 +507,10 @@ class MeshSetupInputs(MesherSetup_UI):
             plt.bar(bin_edges[i], hist[i], width=bin_edges[i+1]-bin_edges[i],
                     align='edge', color=colors[i], edgecolor='black', alpha=0.9)
             
+        percentile_5 = np.percentile(mesh_quality, 5)
+        plt.axvline(percentile_5, color='k', linestyle='--', linewidth=2, label='5% percentile')
+        plt.legend()
+        
         title = {
             "gamma": "Gamma",
             "volume": "Volume",

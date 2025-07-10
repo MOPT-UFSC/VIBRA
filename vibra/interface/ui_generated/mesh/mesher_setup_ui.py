@@ -627,7 +627,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(2)
+        self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_global_settings.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
         self.pushButton_generate_mesh.setDefault(False)
