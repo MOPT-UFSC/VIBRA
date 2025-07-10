@@ -559,7 +559,7 @@ class MeshSetupInputs(MesherSetup_UI):
 
         percentile_5 = np.percentile(mesh_quality, 5)
         plt.axvline(
-            percentile_5, color="k", linestyle="--", linewidth=2, label="5% percentile"
+            percentile_5, color="grey", linestyle="--", linewidth=2, label="5% percentile"
         )
         plt.legend()
 
@@ -592,7 +592,7 @@ class MeshSetupInputs(MesherSetup_UI):
 
         # TODO implementar alguma logica para lidar com desativar o botao nesse caso ou alguma coisa assim
         if not bad_elements:
-            bad_elements = None
+            PrintMessageInput(['Warning', 'No elements to plot', 'There are no elements that compromise the mesh according to this parameter.'])
 
         app().main_window.distinguish_mesh_solids(bad_elements)
 
