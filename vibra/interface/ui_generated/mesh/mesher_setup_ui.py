@@ -16,10 +16,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
-    QDoubleSpinBox, QFrame, QGridLayout, QHeaderView,
-    QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QWidget)
+    QDoubleSpinBox, QFrame, QGridLayout, QHBoxLayout,
+    QHeaderView, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QTabWidget, QTableWidget,
+    QTableWidgetItem, QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -539,6 +539,17 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.tableWidget_mesh_quality)
 
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.pushButton_plot_histogram = QPushButton(self.tab_5)
+        self.pushButton_plot_histogram.setObjectName(u"pushButton_plot_histogram")
+        self.pushButton_plot_histogram.setEnabled(True)
+        self.pushButton_plot_histogram.setMinimumSize(QSize(140, 30))
+        self.pushButton_plot_histogram.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_plot_histogram.setAutoDefault(False)
+
+        self.horizontalLayout.addWidget(self.pushButton_plot_histogram)
+
         self.pushButton_show_bad_elements = QPushButton(self.tab_5)
         self.pushButton_show_bad_elements.setObjectName(u"pushButton_show_bad_elements")
         self.pushButton_show_bad_elements.setEnabled(True)
@@ -546,7 +557,10 @@ class Ui_Dialog(object):
         self.pushButton_show_bad_elements.setMaximumSize(QSize(140, 16777215))
         self.pushButton_show_bad_elements.setAutoDefault(False)
 
-        self.verticalLayout.addWidget(self.pushButton_show_bad_elements, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.horizontalLayout.addWidget(self.pushButton_show_bad_elements)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.tabWidget_main.addTab(self.tab_5, "")
 
@@ -613,7 +627,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setCurrentIndex(2)
         self.tabWidget_global_settings.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
         self.pushButton_generate_mesh.setDefault(False)
@@ -696,6 +710,7 @@ class Ui_Dialog(object):
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Average", None));
         ___qtablewidgetitem6 = self.tableWidget_mesh_quality.horizontalHeaderItem(3)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Std. Deviation", None));
+        self.pushButton_plot_histogram.setText(QCoreApplication.translate("Dialog", u"Plot Histogram", None))
         self.pushButton_show_bad_elements.setText(QCoreApplication.translate("Dialog", u"Show bad elements", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_5), QCoreApplication.translate("Dialog", u"Mesh quality", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Mesh configuration", None))
@@ -774,7 +789,9 @@ class MesherSetup_UI(QDialog, Ui_Dialog):
                                 - tab_5: QWidget
                                     - (Layout): QVBoxLayout
                                             - tableWidget_mesh_quality: QTableWidget
-                                            - pushButton_show_bad_elements: QPushButton
+                                            - (Layout): QHBoxLayout
+                                                    - pushButton_plot_histogram: QPushButton
+                                                    - pushButton_show_bad_elements: QPushButton
                 - frame_6: QFrame
                     - (Layout): QGridLayout
                             - label_8: QLabel

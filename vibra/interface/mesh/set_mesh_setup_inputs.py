@@ -105,6 +105,7 @@ class MeshSetupInputs(MesherSetup_UI):
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
+        self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         #
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         #
@@ -445,14 +446,14 @@ class MeshSetupInputs(MesherSetup_UI):
             return
         
         self.quality_bins = {
-            "gamma": (2, 5),
+            "gamma": (0.7, 0.2),
             "volume": (1e-3, 0),
             "minSJ": (0.3, 0.1),
             "minSIGE": (0.7, 0.5),
             "minSICN": (0.7, 0.3)
         }
         param_map = {
-            "gamma": ("Aspect Ratio", lambda v: "green" if v < self.quality_bins["gamma"][0] else "yellow" if v < self.quality_bins["gamma"][1] else "red"),
+            "gamma": ("Gamma", lambda v: "green" if v > self.quality_bins["gamma"][0] else "yellow" if v > self.quality_bins["gamma"][1] else "red"),
             "volume": ("Volume", lambda v: "green" if v > self.quality_bins["volume"][0] else "yellow" if v > self.quality_bins["volume"][1] else "red"),
             "minSJ": ("Jacobian", lambda v: "green" if v > self.quality_bins["minSJ"][0] else "yellow" if v > self.quality_bins["minSJ"][1] else "red"),
             # "minSIGE": ("minSIGE", lambda v: "green" if v > self.quality_bins["minSIGE"][0] else "yellow" if v > self.quality_bins["minSIGE"][1] else "red"),
@@ -483,14 +484,23 @@ class MeshSetupInputs(MesherSetup_UI):
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)
     
     def plot_mesh_parameter_histogram(self):
-        qualidades = np.random.gamma(shape=2, scale=2, size=1000)
+        parameter_position = ["gamma", "volume", "minSJ", "minSIGE", "minSICN"]
+        parameter_position = ["gamma", "volume", "minSJ"]
+        parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
+        parameter = parameter_position[parameter_index]
 
-        bins = np.linspace(min(qualidades), max(qualidades), 30)
-        hist, bin_edges = np.histogram(qualidades, bins=bins)
+        mesh_quality = list(app().project.model.mesh.mesh_quality[parameter].values())
+
+        bins = np.linspace(min(mesh_quality), max(mesh_quality), 30)
+        hist, bin_edges = np.histogram(mesh_quality, bins=bins)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-
+        
+        
+        bin_min = self.quality_bins[parameter][1]
+        bin_max = self.quality_bins[parameter][0]
+        bin_med = (bin_min + bin_max) / 2
         cmap = mcolors.LinearSegmentedColormap.from_list(
-            "qualidade", [(0, "red"), (0.3, "gold"), (1, "green")]
+            "qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")]
         )
         norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
         colors = cmap(norm(bin_centers))
@@ -500,16 +510,21 @@ class MeshSetupInputs(MesherSetup_UI):
             plt.bar(bin_edges[i], hist[i], width=bin_edges[i+1]-bin_edges[i],
                     align='edge', color=colors[i], edgecolor='black', alpha=0.9)
             
-
-        plt.title("parametro")
-        plt.xlabel("valor do parametro")
-        plt.ylabel("numero de elementos")
+        title = {
+            "gamma": "Gamma",
+            "volume": "Volume",
+            "minSJ": "Jacobian",}
+        
+        plt.title(f"{title[parameter]} histogram")
+        plt.xlabel("Parameter value")
+        plt.ylabel("Number of elements")
         plt.tight_layout()
         plt.grid(True, linestyle=':', alpha=0.5)
         plt.show()
 
     def show_bad_elements(self):
         parameter_position = ["gamma", "volume", "minSJ", "minSIGE", "minSICN"]
+        parameter_position = ["gamma", "volume", "minSJ"]
         parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
         parameter = parameter_position[parameter_index]
 
@@ -517,8 +532,9 @@ class MeshSetupInputs(MesherSetup_UI):
         bad_elements = []
 
         for element, quality in mesh_quality.items():
-            if quality < self.quality_bins[parameter][0]:
+            if quality < self.quality_bins[parameter][1]:
                 bad_elements.append(element)
+                print("ID dos elementos ruins: ",element)
         
         # TODO implementar alguma logica para lidar com desativar o botao nesse caso ou alguma coisa assim
         if not bad_elements:
