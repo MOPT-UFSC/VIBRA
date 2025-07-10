@@ -334,7 +334,7 @@ class GeometryRenderWidget(CommonRenderWidget):
                 indexes = app().project.model.mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
-        self.points_actor.paint_cells(self.selection_nodes_points_color, points)
+        self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
         self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
         
