@@ -533,6 +533,7 @@ class AcousticAssembler:
 
                 self.mass_source_vectors[node_id, :] += self.get_value_in_array_form(_complex_values, flatten=True)
 
+        self.mass_source_vectors = self.mass_source_vectors[self.unprescribed_indexes, :]
     
     def process_fluid_properties_from_volumes(self):
         """
@@ -600,7 +601,7 @@ class AcousticAssembler:
         self.number_3d_elements = len(element_3D.connectivity)
         self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
-        self.data_Kn, self.data_Mn = element_3D.stacked_elementary_matrices()
+        self.int_Bt_B, self.int_Nt_N = element_3D.stacked_elementary_matrices()
         self.data_Cvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
         self.data_Qvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
 
@@ -646,7 +647,7 @@ class AcousticAssembler:
             factor_M[elements_from_volume] = aux_ones / (rho_f * C_f**2)
 
             if not self.frequency_dependent and index == 0:
-                Ke = self.data_Kn[elements_from_volume, :, :]
+                Ke = self.int_Bt_B[elements_from_volume, :, :]
                 self.data_Cvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * Ke
                 self.data_Qvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
 
@@ -665,15 +666,11 @@ class AcousticAssembler:
 
         Returns
         -------
-        factor_Qms1: np.ndarray
-            The first mass-source vector factor.
-
-        factor_Qms2: np.ndarray
-            The second mass-source vector factor.
+        factor_Qms: np.ndarray
+            An array containing the first and second mass-source vector factors.
         """
 
-        factor_Qms1 = np.zeros(self.number_3d_elements, complex)
-        factor_Qms2 = np.zeros(self.number_3d_elements, complex)
+        factor_Qms = np.zeros((self.number_3d_elements, 2), complex)
 
         for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
             fluid_data = self.fluid_properties_from_volume.get(vol_id)
@@ -688,10 +685,10 @@ class AcousticAssembler:
 
             aux_ones = np.ones(elements_from_volume.size, dtype=float)
 
-            factor_Qms1[elements_from_volume] = aux_ones / (rho_f)
-            factor_Qms2[elements_from_volume] = aux_ones * ((4 * mu_0) / (3 * rho_f**2))
+            factor_Qms[elements_from_volume, 0] = aux_ones / (rho_f)
+            factor_Qms[elements_from_volume, 1] = aux_ones * ((4 * mu_0) / (3 * rho_f**2))
 
-        return factor_Qms1.reshape(-1, 1, 1), factor_Qms2.reshape(-1, 1, 1)
+        return factor_Qms
 
 
     def assemble_mass_source_matrices(self, index: int = 0):
@@ -707,12 +704,12 @@ class AcousticAssembler:
         if not self.mass_source_vectors.any():
             return
 
-        factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors(index=index)
+        factor_Qms = self.compute_mass_source_load_factors(index=index)
 
-        data_Qms1 = factor_Qms1 * self.data_Mn
+        data_Qms1 = factor_Qms[:, 0].reshape(-1, 1, 1) * self.int_Nt_N
         Q_ms1 = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
 
-        data_Qms2 = factor_Qms2 * self.data_Kn
+        data_Qms2 = factor_Qms[:, 1].reshape(-1, 1, 1) * self.int_Bt_B
         Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
 
         self.Q_ms1 = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
@@ -733,7 +730,7 @@ class AcousticAssembler:
         """
         Q_ms = 0.
         if self.mass_source_vectors.any():
-            mass_source = self.mass_source_vectors[self.unprescribed_indexes, index]
+            mass_source = self.mass_source_vectors[:, index]
             Q_ms = (1j * omega * self.Q_ms1 + self.Q_ms2) @ mass_source
 
         return Q_ms
@@ -757,8 +754,8 @@ class AcousticAssembler:
         self.number_3d_elements = len(element_3D.connectivity)
         self.total_dofs = element_3D.DOFS_PER_NODE * len(element_3D.nodal_coordinates)
 
-        self.data_Kn = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
-        self.data_Mn = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
+        self.int_Bt_B = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
+        self.int_Nt_N = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
         self.data_Cvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
         self.data_Qvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
 
@@ -784,8 +781,8 @@ class AcousticAssembler:
                 last_progress = progress
 
                 Ke, Me = element_3D.elementary_matrices(el)
-                self.data_Kn[el, :, :] = Ke
-                self.data_Mn[el, :, :] = Me
+                self.int_Bt_B[el, :, :] = Ke
+                self.int_Nt_N[el, :, :] = Me
 
                 volume_id = self.model.get_volume(element=el)
 
@@ -847,8 +844,8 @@ class AcousticAssembler:
                 self.den_M[el, :] = aux_ones / (rho_0 * C_0**2)
 
                 Ke, Me = element_3D.elementary_matrices(el)
-                self.data_Kn[el, :, :] = Ke
-                self.data_Mn[el, :, :] = Me
+                self.int_Bt_B[el, :, :] = Ke
+                self.int_Nt_N[el, :, :] = Me
 
                 self.data_Cvisc[el, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * Ke
                 self.data_Qvisc[el, :, :] = ((4 * mu_0) / (3 * rho_0**2)) * Ke
@@ -1163,7 +1160,7 @@ class AcousticAssembler:
     def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
         """
         """
-        data_K = self.data_Kn * factor_K
+        data_K = self.int_Bt_B * factor_K
         _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
 
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
@@ -1173,7 +1170,7 @@ class AcousticAssembler:
     def assemble_global_mass_matrix(self, factor_M: np.ndarray):
         """
         """
-        data_M = self.data_Mn * factor_M
+        data_M = self.int_Nt_N * factor_M
         _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=(self.total_dofs, self.total_dofs))
 
         self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
