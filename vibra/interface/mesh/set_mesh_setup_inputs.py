@@ -104,7 +104,7 @@ class MeshSetupInputs(MesherSetup_UI):
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
-        self.pushButton_plot_parameter.clicked.connect(self.plot_mesh_parameter)
+        self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
         #
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         #
@@ -452,11 +452,11 @@ class MeshSetupInputs(MesherSetup_UI):
             "minSICN": (0.7, 0.3)
         }
         param_map = {
-            "gamma": ("Gamma", lambda v: "green" if v < self.quality_bins["gamma"][0] else "yellow" if v < self.quality_bins["gamma"][1] else "red"),
+            "gamma": ("Aspect Ratio", lambda v: "green" if v < self.quality_bins["gamma"][0] else "yellow" if v < self.quality_bins["gamma"][1] else "red"),
             "volume": ("Volume", lambda v: "green" if v > self.quality_bins["volume"][0] else "yellow" if v > self.quality_bins["volume"][1] else "red"),
             "minSJ": ("Jacobian", lambda v: "green" if v > self.quality_bins["minSJ"][0] else "yellow" if v > self.quality_bins["minSJ"][1] else "red"),
-            "minSIGE": ("minSIGE", lambda v: "green" if v > self.quality_bins["minSIGE"][0] else "yellow" if v > self.quality_bins["minSIGE"][1] else "red"),
-            "minSICN": ("minSICN", lambda v: "green" if v > self.quality_bins["minSICN"][0] else "yellow" if v > self.quality_bins["minSICN"][1] else "red"),
+            # "minSIGE": ("minSIGE", lambda v: "green" if v > self.quality_bins["minSIGE"][0] else "yellow" if v > self.quality_bins["minSIGE"][1] else "red"),
+            # "minSICN": ("minSICN", lambda v: "green" if v > self.quality_bins["minSICN"][0] else "yellow" if v > self.quality_bins["minSICN"][1] else "red"),
         }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
@@ -508,7 +508,7 @@ class MeshSetupInputs(MesherSetup_UI):
         plt.grid(True, linestyle=':', alpha=0.5)
         plt.show()
 
-    def plot_mesh_parameter(self):
+    def show_bad_elements(self):
         parameter_position = ["gamma", "volume", "minSJ", "minSIGE", "minSICN"]
         parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
         parameter = parameter_position[parameter_index]
