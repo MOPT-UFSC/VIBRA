@@ -381,9 +381,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        print("remove_table_files...")
         table_names = self.properties.get_property_related_table_names("absorption_surface", surface_id, "surfaces")
-        print(table_names)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

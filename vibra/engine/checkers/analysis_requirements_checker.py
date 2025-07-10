@@ -146,13 +146,10 @@ class AnalysisRequirementsChecker:
                       self.properties.point_properties,
                       self.properties.nodal_properties,
                       ]
-        
-        print(self.properties.nodal_properties)
 
         for property in properties:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
-                    print(prop_label)
                     if np.sum(data["values"]):
                         return False
 
