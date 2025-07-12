@@ -7,6 +7,7 @@
 !ds_connected_rectangular_cavities_400mm.dat
 !ds_connected_rectangular_resonant_cavities_2mm.dat
 !ds_connected_rectangular_resonant_cavities_5mm.dat
+!ds_connected_rectangular_cavities_50mm.dat
 
 # Validation files for structural shell DKT-CST element
 !Ke_ref.dat
