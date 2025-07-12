@@ -82,6 +82,42 @@ def get_stacked_jacobian_determinant(JAC: np.ndarray) -> float:
     return det_jac.reshape(-1, 1, 1)
 
 
+def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
+    """
+    This function computes the determinants and inverses
+    of Jacobian matrices in stacked form.
+
+    Parameters
+    ----------
+    JAC: np.array
+        The stacked Jacobian matrices.
+
+    Returns
+    -------
+    det_jacs: np.ndarray
+        The stacked determinants of Jacobian matrices.
+
+    inv_jacs: np.ndarray
+        The stacked inverse of Jacobian matrices.
+
+    """
+
+    det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
+    det_jacs = det_jacs.reshape(-1, 1, 1)
+
+    # the adjoint matrix
+    nel = JAC.shape[0]
+    AUJJ = np.zeros((nel, 2, 2), dtype=float)
+
+    AUJJ[:, 0, 0] =  JAC[:, 1, 1]
+    AUJJ[:, 0, 1] = -JAC[:, 0, 1]
+    AUJJ[:, 1, 0] = -JAC[:, 1, 0]
+    AUJJ[:, 1, 1] =  JAC[:, 0, 0]
+
+    inv_jacs = (1 / det_jacs) * AUJJ
+
+    return det_jacs, inv_jacs
+
 def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     """
     This funtion computes the local coordinates from global coordinates.
@@ -266,6 +302,43 @@ class ACT_FACE_3(Element2D):
         return normals
 
 
+    def stacked_matrices_NtN_and_BtB(self) -> np.ndarray:
+        """
+        This method processes all elementary matrices for mass source
+        and returns them in the stacked array form.
+
+        Returns
+        -------
+        Nt_N_stacked: np.ndarray
+            The array containing the elementary stacked matrices int(Nt @ N, gamma_s).
+
+        Bt_B_stacked: np.ndarray
+            The array containing the elementary stacked matrices int(Bt @ B, gamma_s).
+        """
+
+        nel = self.connect_face.shape[0]
+        aux_ones = np.ones((nel, 1, 1), dtype=float)
+
+        local_coords = self.get_stacked_local_coordinates()
+        JAC_3d = (self.dphi * aux_ones) @ local_coords
+        # det_jacs = get_stacked_jacobian_determinant(JAC_3d)
+
+        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_3d)
+        dphi_t = inv_jacs @ (aux_ones * self.dphi)
+
+        # shape functions
+        N = self.phi
+
+        # derivative of shape functions
+        B = dphi_t
+        B_t = np.transpose(B, axes=(0, 2, 1))
+
+        int2d_Nt_N = - (1/2) * N.T @ N * (det_jacs * self.wps)
+        int2d_Bt_B = - (1/2) * B_t @ B * (det_jacs * self.wps)
+
+        return int2d_Nt_N, int2d_Bt_B
+
+
     def damping_matrix_Ce(self, el_index: int, rho: float = 1.0, impedance: float = 1.0) -> np.ndarray:
         """ 
         This method computes the elementary impedance matrix.
@@ -327,6 +400,23 @@ class ACT_FACE_3(Element2D):
             The array containing the stacked elementary matrices.
         """
 
+        int2d_NtN = self.stacked_matrices_NtN()
+        Ze_stacked = (rho / impedance) * int2d_NtN
+
+        return Ze_stacked
+
+
+    def stacked_matrices_NtN(self) -> np.ndarray:
+        """
+        This method processes all elementary matrices and returns them
+        in the stacked array form.
+
+        Returns
+        -------
+        int2d_NtN: np.ndarray
+            The array containing the stacked elementary matrices.
+        """
+
         nel = self.connect_face.shape[0]
         aux_ones = np.ones((nel, 1, 1), dtype=float)
 
@@ -334,10 +424,12 @@ class ACT_FACE_3(Element2D):
         JAC_3d = (self.dphi * aux_ones) @ local_coords
         det_jacs = get_stacked_jacobian_determinant(JAC_3d)
 
+        # shape functions
         N = self.phi
-        Ze_stacked = - (1/2) * (rho/impedance) * N.T @ N * (det_jacs * self.wps)
 
-        return Ze_stacked
+        int2d_NtN = - (1/2) * N.T @ N * (det_jacs * self.wps)
+
+        return int2d_NtN
 
 
     def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:

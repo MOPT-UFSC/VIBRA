@@ -240,7 +240,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         return Ke, Me
 
 
-    def stacked_elementary_matrices(self):
+    def stacked_elementary_matrices_NtN_BtB(self):
         """
         This method computes all mass and stiffness matrices in
         stacked form.
@@ -263,9 +263,9 @@ class ACT_TETRAHEDRON_4C(Element3D):
         stacked_coords[:, 2, :] = self.nodal_coordinates[self.connectivity[:, 3], 1:4]
         stacked_coords[:, 3, :] = self.nodal_coordinates[self.connectivity[:, 4], 1:4]
 
-        JAC = (self.dphi * aux_ones) @ stacked_coords
+        JAC_3d = (self.dphi * aux_ones) @ stacked_coords
 
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC)
+        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_3d)
         dphi_t = inv_jacs @ (aux_ones * self.dphi)
 
         # shape functions
