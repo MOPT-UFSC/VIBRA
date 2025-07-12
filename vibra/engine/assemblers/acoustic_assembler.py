@@ -86,7 +86,7 @@ class AcousticAssembler:
         This method returns all the values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
         Returns
-        ----------
+        -------
         array
             Values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
@@ -180,10 +180,10 @@ class AcousticAssembler:
         This method processes the surface property data for element face
         integration.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         property_label: str
-            The property label in which the surface data will be processed.
+            The property label on which the surface data will be processed.
 
         Returns
         -------
@@ -383,8 +383,8 @@ class AcousticAssembler:
         This method returns, for a given input value, an output vector with 
         the same length as the frequencies vector.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         value: float or np.ndarray
             The input value to be converted in array with
             the same lenght as the frequencies vector.
@@ -392,9 +392,11 @@ class AcousticAssembler:
         flatten: bool, optional
             Controls whether the output vector will be flattened or not.
 
+        Returns
+        -------
         output_vector: np.ndarray
-            The output vector with the same length as the
-            frequencies vector.
+            The output vector with the same length as the frequencies
+            vector.
         """
 
         aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
@@ -516,8 +518,8 @@ class AcousticAssembler:
         This method processes the perforated plate data for element face
         integration.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         solution: np.ndarray, optional
             It corresponds to the acoustic pressure field that is adopted to
             update the impedance of the perforated plate whenever nonlinear 
@@ -703,8 +705,8 @@ class AcousticAssembler:
         """
         This method assembles the mass source matrices Q_ms1 and Q_ms2.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         index: int, optional
             The frequency index.
         """
@@ -791,8 +793,8 @@ class AcousticAssembler:
         This method processes the data required to assemble the global matrices
         based on the stacked elementary matrices.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         reorder: bool, optional
             Control when the connectivity matrix will be reordered.
         """
@@ -818,8 +820,8 @@ class AcousticAssembler:
         """
         This method calculates the global mass and stiffness matrix factors.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         index: int, optional
             The frequency index.
 
@@ -863,8 +865,8 @@ class AcousticAssembler:
         This method evaluates the mass source factors that will multiply the 
         normalized global matrices.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         index: int, optional
             The frequency index.
 
@@ -905,8 +907,8 @@ class AcousticAssembler:
         This method assembles the mass source matrices Q_ms1 and Q_ms2
         due to surface assignment.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         index: int, optional
             The frequency index.
         """
@@ -932,8 +934,8 @@ class AcousticAssembler:
         This method assembles the mass source matrices Q_ms1 and Q_ms2
         due to volume assignment.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         index: int, optional
             The frequency index.
         """
@@ -958,7 +960,7 @@ class AcousticAssembler:
         Computes the mass source load vector for the i-th frequency index.
 
         Parameters
-        ---------
+        ----------
         omega: float
             The frequency in radians.
 
@@ -992,8 +994,8 @@ class AcousticAssembler:
         This method processes the data required to assemble the global matrices
         sweeping all solid elements.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         reorder: bool, optional
             Control when the connectivity matrix will be reordered.
         """
@@ -1279,8 +1281,8 @@ class AcousticAssembler:
         This method processes the perforated plate impedance data 
         to assemble the global damping matrix.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         solution: np.ndarray, optional
         """
 
@@ -1387,9 +1389,8 @@ class AcousticAssembler:
 
         Parameters
         ----------
-
         index: int, optional.
-            it corresponds to the frequency step index.
+            It corresponds to the frequency step index.
         """
 
         N_dofs = self.total_dofs_2d
@@ -1457,8 +1458,9 @@ class AcousticAssembler:
 
 
     def get_acoustic_excitations_by_nodal_attribution(self):
-        """ This method processes the acoustic model excitations and
-            returns the output data in the form of mass flow rate.
+        """ 
+        This method processes the acoustic model excitations and
+        returns the output data in the form of mass flow rate.
         """
 
         aux_ones = np.ones((self.number_frequencies), dtype=complex)
