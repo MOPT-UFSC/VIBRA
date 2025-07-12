@@ -118,9 +118,6 @@ class AcousticHarmonicSolver:
         # mass flow load vector
         f_Q = self.assembler.mass_flow_vectors
 
-        # the viscous-related source term is temporary disabled
-        Q_visc = self.assembler.Qvisc_damping_matrix * 0
-
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
 
@@ -155,7 +152,7 @@ class AcousticHarmonicSolver:
                 f_eq = self.get_prescribed_pressure_model_excitation()
 
                 # compute the load vector f for omega = 1
-                f = Q_visc @ f_Q[:, i] + f_Qms - 1j * f_Q[:, i] - f_eq
+                f = f_Qms - 1j * f_Q[:, i] - f_eq
 
                 # compose the damping matrix [C]
                 C = C_imp + C_visc
@@ -189,7 +186,8 @@ class AcousticHarmonicSolver:
                     K = self.assembler.stiffness_matrix
 
                     # reassemble the mass source matrices
-                    self.assembler.assemble_mass_source_matrices(index=i)
+                    self.assembler.assemble_mass_source_matrices_from_surfaces(index=i)
+                    self.assembler.assemble_mass_source_matrices_from_volumes(index=i)
 
                 # update the prescribed dofs-related load vector for each frequency step
                 f_eq = self.get_prescribed_pressure_model_excitation(index=i)
@@ -199,7 +197,7 @@ class AcousticHarmonicSolver:
 
             # define the linear system equation terms [A]{x} = {f}
             A = K - (omega**2) * M + 1j * omega * C
-            f = Q_visc @ f_Q[:, i] + f_Qms - 1j * omega * f_Q[:, i] - f_eq
+            f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
 
             if not is_complex:
                 A.data = np.real(A.data)
