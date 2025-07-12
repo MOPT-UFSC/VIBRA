@@ -142,7 +142,9 @@ class AnalysisRequirementsChecker:
                        ]
 
         properties = [
+                      self.properties.volume_properties,
                       self.properties.surface_properties,
+                      self.properties.line_properties,
                       self.properties.point_properties,
                       self.properties.nodal_properties,
                       ]

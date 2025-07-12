@@ -12,6 +12,7 @@ import os
 import numpy as np
 
 from collections import defaultdict
+from traceback import print_exception
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -49,6 +50,12 @@ class MassSourceInputs(MassSourceInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
+        self.selection_type = {
+                               0 : "nodes",
+                               1 : "points",
+                               2 : "surfaces",
+                               3 : "volumes"
+                               }
 
     def _configure_qt_variables(self):
         #
@@ -124,7 +131,11 @@ class MassSourceInputs(MassSourceInputs_UI):
             volume_id = list(volumes)[0]
             self.load_property_data(volume_id, "volumes")
 
-        if len(nodes) + len(points) + len(surfaces):
+        if len(volumes):
+            self.comboBox_inherit_fluid_from.clear()
+            self.comboBox_inherit_fluid_from.addItem("Each volume")
+
+        elif len(nodes) + len(points) + len(surfaces):
             self.check_fluid_inheritance()
 
     def load_property_data(self, selection_id: int, selection_type: str):
@@ -163,10 +174,23 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.label_mass_source_unit.setText("[kg/s]")
 
         elif attribution_type == 2:
+            self.comboBox_inherit_fluid_from.setEnabled(True)
             self.label_mass_source_unit.setText("[kg/m².s]")
 
         else:
+            self.comboBox_inherit_fluid_from.clear()
+            self.comboBox_inherit_fluid_from.setDisabled(True)
+            self.comboBox_inherit_fluid_from.addItem("Each volume")
             self.label_mass_source_unit.setText("[kg/m³.s]")
+
+        selection_data = self.check_selection_data(False)
+        if selection_data is None:
+            self.comboBox_inherit_fluid_from.clear()
+            self.comboBox_inherit_fluid_from.setDisabled(True)
+            self.lineEdit_selection_id.setFocus()
+            return
+
+        self.check_fluid_inheritance()
 
     def get_volumes_from_selected_nodes(self, selected_nodes: list | np.ndarray):
         volumes_from_nodes = defaultdict(list)
@@ -201,7 +225,6 @@ class MassSourceInputs(MassSourceInputs_UI):
                             volumes_from_points[point_id].append(vol_id)
 
         return volumes_from_points
-    
 
     def get_volumes_from_selected_surfaces(self, selected_surfaces: list | np.ndarray):
         volumes_from_surfaces = defaultdict(list)
@@ -219,34 +242,120 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         return volumes_from_surfaces
 
-    def update_inheritance_combo_box_data(self, data: dict):
-        self.comboBox_inherit_fluid_from.clear()
-        self.comboBox_inherit_fluid_from.setDisabled(True)
+    def check_volumes_from_selection(self, data: dict, print_message: bool = False):
+
+        volume_ids_sets = list()
+        non_repeated_volume_ids = set()
+
+        last_size = 0
+        current_size = 0
+        multiple_selection = False
+
+        for vol_ids in data.values():
+            if len(vol_ids) == 1:
+                non_repeated_volume_ids |= set(vol_ids)
+
+            sorted_vol_ids = list(np.sort(vol_ids))               
+            if sorted_vol_ids in volume_ids_sets:
+               continue
+            
+            current_size = len(sorted_vol_ids)
+            volume_ids_sets.append(sorted_vol_ids)
+            if last_size:
+                if last_size != current_size:
+                    multiple_selection = True    
+
+            last_size = current_size      
+
+        if not multiple_selection:
+            try:
+                volume_sets = np.array(volume_ids_sets, dtype=int)
+                if len(np.unique(volume_sets, axis=0)) != 1:
+                    multiple_selection = True
+
+                if non_repeated_volume_ids and not multiple_selection:
+                    if len(np.unique(non_repeated_volume_ids)) != 1:
+                        multiple_selection = True
+
+            except Exception as error_log:
+                print_exception(error_log)
+                multiple_selection = True
+
+        if multiple_selection:
+            self.comboBox_inherit_fluid_from.clear()
+            self.comboBox_inherit_fluid_from.setDisabled(True)
+            self.comboBox_inherit_fluid_from.addItem("Invalid selection")
+
+            app().main_window.set_geometry_selection()
+            app().main_window.set_mesh_selection()
+
+            if print_message:
+                self.hide()
+                title = "Invalid selection detected"
+                message = "The current selection resulted in improper mapping between selected "
+                message += "between selected entities and the volumes. To univocally assign fluids "
+                message += "for mass source calculation, select groups of entities associated "
+                message += "with the same volume or volume sets."
+                PrintMessageInput([window_title_1, title, message])
+
+            return True
+
+        return False
+
+    def update_inheritance_combo_box_data(self, data: dict, print_message: bool = False):
+
+        if self.check_volumes_from_selection(data, print_message):
+            return True
+
+        combo_box = self.comboBox_inherit_fluid_from
+        combo_box.clear()
+        combo_box.setDisabled(True)
+
+        def check_item_text(item_text: str) -> bool:
+            for i in range(combo_box.count()):
+                if item_text == combo_box.itemText(i):
+                    return True
+            return False
+
         for vol_ids in data.values():
             for vol_id in vol_ids:
-                self.comboBox_inherit_fluid_from.addItem(f"Volume - {vol_id}")
+                item_text = f"Volume - {vol_id}"
+                if check_item_text(item_text):
+                    continue
+                combo_box.addItem(item_text)
+
             if len(vol_ids) > 1:
-                self.comboBox_inherit_fluid_from.setEnabled(True)
+                combo_box.setEnabled(True)
 
-    def check_fluid_inheritance(self):
+        return False
 
-        selection_data = self.check_selection_data()
-        if selection_data is None:
-            return
+    def check_fluid_inheritance(
+                                self, 
+                                selection_ids: list | None = None, 
+                                selection_type: str | None = None, 
+                                print_message: bool = False
+                                ):
 
-        selection_ids, selection_type = selection_data
+        if selection_type is None:
+            selection_data = self.check_selection_data()
+            if selection_data is None:
+                return
+
+            selection_ids, selection_type = selection_data
 
         if selection_type == "points":
             volumes_from_points = self.get_volumes_from_selected_points(selection_ids)
-            self.update_inheritance_combo_box_data(volumes_from_points)
+            return self.update_inheritance_combo_box_data(volumes_from_points, print_message)
 
         elif selection_type == "nodes":
             volumes_from_nodes = self.get_volumes_from_selected_nodes(selection_ids)
-            self.update_inheritance_combo_box_data(volumes_from_nodes)
+            return self.update_inheritance_combo_box_data(volumes_from_nodes, print_message)
 
         elif selection_type == "surfaces":
             volumes_from_surfaces = self.get_volumes_from_selected_surfaces(selection_ids)
-            self.update_inheritance_combo_box_data(volumes_from_surfaces)
+            return self.update_inheritance_combo_box_data(volumes_from_surfaces, print_message)
+
+        return False
 
     def check_inputs(
                      self, 
@@ -347,17 +456,10 @@ class MassSourceInputs(MassSourceInputs_UI):
         elif tab_index == 1:
             self.check_table_values()
 
-    def check_selection_data(self):
+    def check_selection_data(self, print_message: bool = True):
         
         attribution_type = self.comboBox_attribution_type.currentIndex()
-        if attribution_type == 0:
-            selection_type = "nodes"    
-        elif attribution_type == 1:
-            selection_type = "points"
-        elif attribution_type == 2:
-            selection_type = "surfaces"
-        else:
-            selection_type = "volumes"
+        selection_type = self.selection_type.get(attribution_type)
 
         input_ids = self.lineEdit_selection_id.text()
         selection_ids, error_data = self.mesh.check_selected_ids(
@@ -366,13 +468,11 @@ class MassSourceInputs(MassSourceInputs_UI):
                                                                  )
 
         if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
+            if print_message:
+                self.hide()
+                self.lineEdit_selection_id.setFocus()
+                PrintMessageInput(error_data)
             return None
-
-        # if self.comboBox_inherit_fluid_from.currentText() == "":
-        #     self.check_fluid_inheritance()
 
         return (selection_ids, selection_type)
 
@@ -415,6 +515,9 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         selection_ids, selection_type = selection_data
+        if self.check_fluid_inheritance(selection_ids, selection_type, True):
+            return
+
         self.remove_conflicting_excitations(selection_ids, selection_type)
         
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
@@ -556,6 +659,9 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         selection_ids, selection_type = selection_data
+        if self.check_fluid_inheritance(selection_ids, selection_type, True):
+            return
+
         self.remove_conflicting_excitations(selection_ids, selection_type)
 
         if self.lineEdit_table_path.text() != "":
@@ -631,13 +737,16 @@ class MassSourceInputs(MassSourceInputs_UI):
             selection_ids = [selection_ids]
 
         label = "mass_source"
-
         for selection_id in selection_ids:
             table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
-            if selection_type == "points":
-                self.properties._remove_point_property(label, selection_id)
-            else:
+            if selection_type == "nodes":
                 self.properties._remove_nodal_property(label, selection_id)
+            elif selection_type == "points":
+                self.properties._remove_point_property(label, selection_id)
+            elif selection_type == "surfaces":
+                self.properties._remove_surface_property(label, selection_id)
+            elif selection_type == "volumes":
+                self.properties._remove_volume_property(label, selection_id)
 
             self.process_table_file_removal(table_names)
 
@@ -813,6 +922,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         model_properties = {
                             "node" : self.properties.nodal_properties,
                             "point" : self.properties.point_properties,
+                            "line" : self.properties.line_properties,
                             "surface" : self.properties.surface_properties,
                             "volume" : self.properties.volume_properties,
                             }
@@ -823,8 +933,6 @@ class MassSourceInputs(MassSourceInputs_UI):
                 property, selection_id = key
                 if property != "mass_source":
                     continue
-
-                # print(key, data)
 
                 if "table_names" in data.keys():
                     str_value = "Table of values"

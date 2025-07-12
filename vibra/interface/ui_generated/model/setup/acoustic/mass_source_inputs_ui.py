@@ -528,7 +528,7 @@ class Ui_Dialog(object):
 
         self.comboBox_inherit_fluid_from = QComboBox(self.frame_inherit_fluid)
         self.comboBox_inherit_fluid_from.setObjectName(u"comboBox_inherit_fluid_from")
-        self.comboBox_inherit_fluid_from.setMinimumSize(QSize(100, 28))
+        self.comboBox_inherit_fluid_from.setMinimumSize(QSize(140, 28))
         self.comboBox_inherit_fluid_from.setMaximumSize(QSize(16777215, 28))
 
         self.gridLayout_13.addWidget(self.comboBox_inherit_fluid_from, 0, 2, 1, 1)
@@ -603,6 +603,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
+        self.comboBox_attribution_type.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Dialog)
