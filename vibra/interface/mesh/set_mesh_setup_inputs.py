@@ -588,9 +588,7 @@ class MeshSetupInputs(MesherSetup_UI):
         for element, quality in mesh_quality.items():
             if quality < self.quality_bins[parameter][1]:
                 bad_elements.append(element)
-                print("ID dos elementos ruins: ", element)
 
-        # TODO implementar alguma logica para lidar com desativar o botao nesse caso ou alguma coisa assim
         if not bad_elements:
             PrintMessageInput(['Warning', 'No elements to plot', 'There are no elements that compromise the mesh according to this parameter.'])
 
