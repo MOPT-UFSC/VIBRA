@@ -458,5 +458,4 @@ def get_external_results(path: str):
 if __name__ == "__main__":
 
     assignment_type = "surface"
-
     load_external_mesh_and_solve(assignment_type=assignment_type)
