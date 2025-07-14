@@ -187,7 +187,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if self.lineEdit_selection_id.text() != "":
             volume_id = int(self.lineEdit_selection_id.text())
             self.properties._remove_volume_property("porous_material_model", volume_id)
-            app().file.write_model_properties_in_file()
+            app().project.file.write_model_properties_in_file()
             self.load_info()
             self.actions_to_finalize()
 
@@ -217,7 +217,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("porous_material_model", volume_id)
 
-                app().file.write_model_properties_in_file()
+                app().project.file.write_model_properties_in_file()
                 self.actions_to_finalize()
                 self.close()
 
@@ -431,7 +431,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data, volume=volume_id)
 
-            app().file.write_model_properties_in_file()
+            app().project.file.write_model_properties_in_file()
             self.actions_to_finalize()
             self.load_info()
 

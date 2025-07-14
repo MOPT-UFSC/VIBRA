@@ -144,7 +144,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             else:
                 self.properties._remove_group_property("viscous_thermal_model", selection_id)
 
-            app().file.write_model_properties_in_file()
+            app().project.file.write_model_properties_in_file()
             self.actions_to_finalize()
             self.pushButton_remove.setDisabled(True)
             self.load_info()
@@ -184,7 +184,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for group_id in group_ids:
                     self.properties._remove_group_property("viscous_thermal_model", group_id)
 
-                app().file.write_model_properties_in_file()
+                app().project.file.write_model_properties_in_file()
                 self.load_info()
         self.actions_to_finalize()
 
@@ -620,7 +620,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
-        app().file.write_model_properties_in_file()
+        app().project.file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.load_info()
 

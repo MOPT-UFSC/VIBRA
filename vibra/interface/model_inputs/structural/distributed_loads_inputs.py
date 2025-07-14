@@ -406,7 +406,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = app().project.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
@@ -419,7 +419,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         analysis_setup["f_step"] = float(f_step)
 
         app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
+        app().project.file.write_analysis_setup_in_file(analysis_setup)
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
@@ -710,7 +710,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        app().file.write_imported_table_data_in_file()
+        app().project.file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -795,8 +795,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.file.write_model_properties_in_file()
+        app().project.file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -817,7 +817,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if isinstance(app().project.analysis_setup, dict):
             analysis_setup = app().project.analysis_setup
             app().project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+            app().project.file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self, reset_all=False):
 

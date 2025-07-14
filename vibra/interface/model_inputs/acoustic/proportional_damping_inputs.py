@@ -283,7 +283,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def actions_to_finalize(self):
         self.load_info()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
+        app().project.file.write_model_properties_in_file()
         app().main_window.update_symbols()
 
     def keyPressEvent(self, event):

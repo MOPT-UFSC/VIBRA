@@ -110,7 +110,7 @@ class MaterialWidget(MaterialWidget_UI):
             self.reset_library_to_default()
             return
 
-        config = app().file.read_material_library_from_file()
+        config = app().project.file.read_material_library_from_file()
         if config is None:
             self.reset_library_to_default()
             return
@@ -454,10 +454,10 @@ class MaterialWidget(MaterialWidget_UI):
             if not material_identifier:
                 return
 
-            config = app().file.read_material_library_from_file()
+            config = app().project.file.read_material_library_from_file()
             config[material_identifier] = material_data
 
-            app().file.write_material_library_in_file(config)
+            app().project.file.write_material_library_in_file(config)
                     
         except Exception as error_log:
             title = "Error while writing material data in file"
@@ -467,7 +467,7 @@ class MaterialWidget(MaterialWidget_UI):
 
     def remove_material_from_file(self, material: Material):
 
-        config = app().file.read_material_library_from_file()
+        config = app().project.file.read_material_library_from_file()
 
         identifier = str(material.identifier)
 
@@ -475,7 +475,7 @@ class MaterialWidget(MaterialWidget_UI):
             return
 
         config.remove_section(identifier)
-        app().file.write_material_library_in_file(config)
+        app().project.file.write_material_library_in_file(config)
 
         self.reset_materials_from_bodies_and_surfaces([material.identifier])
         self.load_data_from_materials_library()
@@ -535,7 +535,7 @@ class MaterialWidget(MaterialWidget_UI):
 
     def reset_library_to_default(self):
 
-        config_cache = app().file.read_material_library_from_file()
+        config_cache = app().project.file.read_material_library_from_file()
 
         sections_cache = list()
         if config_cache is not None:
@@ -543,7 +543,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         default_material_library()
 
-        config = app().file.read_material_library_from_file()
+        config = app().project.file.read_material_library_from_file()
 
         material_identifiers = list()
         for section_cache in sections_cache:
@@ -575,7 +575,7 @@ class MaterialWidget(MaterialWidget_UI):
         for surf_id in surfaces_to_remove_material:
             self.model.properties._remove_surface_property("material", surface_id=surf_id)
 
-        app().file.write_model_properties_in_file()
+        app().project.file.write_model_properties_in_file()
 
         if isinstance(self.dialog, QDialog):
             self.dialog.load_model_info()

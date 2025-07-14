@@ -135,7 +135,7 @@ class AnalysisTypeInput(AnalysisTypeInput_UI):
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
         ]:
-            app().file.write_analysis_setup_in_file(self.analysis_setup)
+            app().project.file.write_analysis_setup_in_file(self.analysis_setup)
 
         self.close()
 

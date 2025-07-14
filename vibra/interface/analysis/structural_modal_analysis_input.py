@@ -44,7 +44,7 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
 
     def _load_analysis_setup(self):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = app().project.file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
             if analysis_setup.get("analysis_id") in [
                 AnalysisID.STRUCTURAL_MODAL,

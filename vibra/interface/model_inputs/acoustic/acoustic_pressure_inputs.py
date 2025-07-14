@@ -268,7 +268,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = app().project.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
@@ -281,7 +281,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         analysis_setup["f_step"] = float(f_step)
 
         app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
+        app().project.file.write_analysis_setup_in_file(analysis_setup)
 
     def load_acoustic_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -349,7 +349,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -416,8 +416,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         self.main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.file.write_model_properties_in_file()
+        app().project.file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -438,7 +438,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if isinstance(self.project.analysis_setup, dict):
             analysis_setup = self.project.analysis_setup
             self.project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+            app().project.file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

@@ -43,7 +43,7 @@ class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
 
     def _load_analysis_setup(self):
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = app().project.file.read_analysis_setup_from_file()
 
         if not analysis_setup:
             return

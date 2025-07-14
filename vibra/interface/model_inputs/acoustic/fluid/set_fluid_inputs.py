@@ -315,7 +315,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.load_model_info()
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
-        app().file.write_model_properties_in_file()
+        app().project.file.write_model_properties_in_file()
         app().main_window.update_symbols()
         
         self.complete = True

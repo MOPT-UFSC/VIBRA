@@ -10,6 +10,10 @@ from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
+from vibra import TEMP_PROJECT_FILE
+from vibra.project_files.load_project import LoadProject
+from vibra.project_files.project_file import ProjectFile
+
 from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.loading_window import LoadingWindow
@@ -68,6 +72,10 @@ class Project:
 
         self.create_solver()
 
+    def initialize_file_and_loader(self):   
+        self.file = ProjectFile(self, TEMP_PROJECT_FILE) 
+        self.loader = LoadProject(self)
+
     def load_project_without_process_mesh(self, path: str, geometry_file: bool):
         self.model.set_geometry_path(path)
         self.model.initialize_mesh()
@@ -116,7 +124,7 @@ class Project:
 
     def is_analysis_setup_complete(self):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = self.file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
             analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
@@ -294,7 +302,7 @@ class Project:
 
     def is_there_a_valid_solution(self):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = self.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
         
@@ -339,7 +347,7 @@ class Project:
 
     def get_analysis_type_and_physical_domain(self):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = self.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return "", ""
 
@@ -381,7 +389,7 @@ class Project:
 
     def is_there_a_valid_analysis_setup(self):
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = self.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return True
 

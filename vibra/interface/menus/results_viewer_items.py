@@ -133,7 +133,7 @@ class ResultsViewerItems(CommonMenuItems):
         if len(app().project.analysis_setup) == 0:
             return
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = app().project.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
 

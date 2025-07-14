@@ -705,10 +705,10 @@ class MainWindow(MainWindow_UI):
                 return
 
             if obj.ignore_results_data:
-                app().file.remove_results_data_from_project_file()
+                app().project.file.remove_results_data_from_project_file()
 
             if obj.ignore_mesh_data:
-                app().file.remove_mesh_data_from_project_file()
+                app().project.file.remove_mesh_data_from_project_file()
 
             if not file_path.endswith(".vibra"):
                 file_path += ".vibra"
@@ -726,7 +726,7 @@ class MainWindow(MainWindow_UI):
             app().project.save_path = path
             logging.info("Saving project data... [10/100]")
 
-            app().file.write_thumbnail()
+            app().project.file.write_thumbnail()
             app().config.add_recent_file(path)
             logging.info("Saving project data... [30/100]")
 
@@ -807,7 +807,7 @@ class MainWindow(MainWindow_UI):
         if not read.complete:
             return False
 
-        app().file.write_geometry_in_file(
+        app().project.file.write_geometry_in_file(
             load_path,
             app().project.model.length_unit,
             app().project.model.geometry_qf,
@@ -815,17 +815,17 @@ class MainWindow(MainWindow_UI):
 
         def remove_callback():
             logging.info("Removing the model properties from project file... [10/100]")
-            app().file.remove_model_properties_from_project_file()
+            app().project.file.remove_model_properties_from_project_file()
 
             logging.info("Removing the mesh data from project file... [40/100]")
-            app().file.remove_mesh_data_from_project_file()
+            app().project.file.remove_mesh_data_from_project_file()
 
             logging.info("Removing the results data from project file... [75/100]")
-            app().file.remove_results_data_from_project_file()
+            app().project.file.remove_results_data_from_project_file()
 
         LoadingWindow(remove_callback).run()
 
-        _geometry_path = app().file.read_geometry_from_file()
+        _geometry_path = app().project.file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
         self.model_setup_widget.model_setup_items.update_items_appearance()            
         
@@ -859,8 +859,8 @@ class MainWindow(MainWindow_UI):
                 app().project.name = project_path.stem
                 app().project.save_path = project_path
 
-            app().load_project.initialize()
-            LoadingWindow(app().load_project.load).run()
+            app().project.loader.initialize()
+            LoadingWindow(app().project.loader.load).run()
 
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
@@ -890,7 +890,7 @@ class MainWindow(MainWindow_UI):
 
         geometry_file = self.check_path_for_geometry_file(path)
 
-        if app().file.read_mesh_data_from_file():
+        if app().project.file.read_mesh_data_from_file():
             app().project.load_project_without_process_mesh(path, geometry_file)
 
         else:
@@ -904,8 +904,8 @@ class MainWindow(MainWindow_UI):
                     return
 
                 self.update_mesh_information()
-                app().file.write_geometry_data_in_file()
-                app().file.write_mesh_data_in_file()
+                app().project.file.write_geometry_data_in_file()
+                app().project.file.write_mesh_data_in_file()
                 app().main_window.project_data_modified = False
 
             self.update_geometry_information()

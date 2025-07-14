@@ -259,7 +259,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         app().project.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(self.analysis_setup)
+        app().project.file.write_analysis_setup_in_file(self.analysis_setup)
 
     def process_data_callback(self):
         """
@@ -336,7 +336,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
-        app().file.write_model_properties_in_file()
+        app().project.file.write_model_properties_in_file()
         # app().main_window.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):

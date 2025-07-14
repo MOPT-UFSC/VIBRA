@@ -236,16 +236,16 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             app().project.reset_solutions()
 
             logging.info("Processing the post-assignment actions... [30/100]")
-            app().file.remove_mesh_data_from_project_file()
+            app().project.file.remove_mesh_data_from_project_file()
 
             logging.info("Processing the post-assignment actions... [40/100]")
-            app().file.remove_results_data_from_project_file()
+            app().project.file.remove_results_data_from_project_file()
 
             logging.info("Processing the post-assignment actions... [50/100]")
-            app().file.write_model_properties_in_file()
+            app().project.file.write_model_properties_in_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
-            app().file.write_imported_table_data_in_file()
+            app().project.file.write_imported_table_data_in_file()
 
             logging.info("Processing the post-assignment actions... [70/100]")
             app().main_window.recompute_hidden_volumes()
@@ -271,14 +271,14 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.model.process_degrees_of_freedom_decoupling()
 
             logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().file.write_mesh_data_in_file()
+            app().project.file.write_mesh_data_in_file()
             
             logging.info("Processing degress of freedom decoupling... [75/100]")
-            app().file.write_geometry_data_in_file()
+            app().project.file.write_geometry_data_in_file()
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().file.write_model_properties_in_file()
+            app().project.file.write_model_properties_in_file()
 
             logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()

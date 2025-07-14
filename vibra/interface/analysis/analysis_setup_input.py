@@ -108,7 +108,7 @@ class AnalysisSetupInput():
         self.lineEdit_fstep.setDisabled(key)        
 
     def enter_setup_callback(self):
-        analysis_setup = app().file.read_analysis_setup_from_file()
+        analysis_setup = app().project.file.read_analysis_setup_from_file()
         if analysis_setup is None:
             analysis_setup = dict()
 
@@ -202,7 +202,7 @@ class AnalysisSetupInput():
         ]:
             analysis_setup["modes"] = number_of_modes
 
-        app().file.write_analysis_setup_in_file(analysis_setup)
+        app().project.file.write_analysis_setup_in_file(analysis_setup)
 
         self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()

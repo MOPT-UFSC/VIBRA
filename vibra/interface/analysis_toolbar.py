@@ -210,18 +210,18 @@ class AnalysisToolbar(QToolBar):
         # and mesh changes because of the analysis
         app().main_window.update_plots(reset_camera=False)
 
-        if not app().file.read_geometry_data_from_file():
-            app().file.write_geometry_data_in_file()
+        if not app().project.file.read_geometry_data_from_file():
+            app().project.file.write_geometry_data_in_file()
 
-        if not app().file.read_mesh_data_from_file():
-            app().file.write_mesh_data_in_file()
+        if not app().project.file.read_mesh_data_from_file():
+            app().project.file.write_mesh_data_in_file()
 
-        app().file.write_model_properties_in_file()
-        app().file.write_results_data_in_file()
+        app().project.file.write_model_properties_in_file()
+        app().project.file.write_results_data_in_file()
 
     def reset_solution(self):
         app().project.reset_solutions()
-        app().file.remove_results_data_from_project_file()
+        app().project.file.remove_results_data_from_project_file()
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
         self.pushButton_reset_solution.setDisabled(True)
@@ -308,4 +308,4 @@ class AnalysisToolbar(QToolBar):
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_setup)
+        app().project.file.write_analysis_setup_in_file(app().project.analysis_setup)

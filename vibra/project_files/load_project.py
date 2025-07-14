@@ -1,4 +1,8 @@
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.project_files.project import Project
+
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
@@ -16,13 +20,14 @@ import numpy as np
 from collections import defaultdict
 
 class LoadProject:
-    def __init__(self):
+    def __init__(self, project: "Project"):
+        self.project = project
         super().__init__()
 
     def initialize(self):
-        self.file = app().file
-        self.model = app().project.model
-        self.properties = app().project.model.properties
+        self.file = self.project.file
+        self.model = self.project.model
+        self.properties = self.project.model.properties
 
     def load(self):
         self.load_geometry_setup()
@@ -171,7 +176,7 @@ class LoadProject:
         if not geometry_data:
             # forces the project to reset, ensuring backward
             # compatibility with older versions of project files
-            app().project.reset_solutions()
+            self.project.reset_solutions()
             self.file.remove_mesh_data_from_project_file()
             self.file.remove_results_data_from_project_file()
             return
@@ -333,8 +338,8 @@ class LoadProject:
 
                 mesh_setup["element_type"] = solid_element
 
-                app().project.reset_solutions()
-                app().project.set_mesh_setup(mesh_setup)
+                self.project.reset_solutions()
+                self.project.set_mesh_setup(mesh_setup)
 
     def load_mesh_data(self):
 
@@ -343,7 +348,7 @@ class LoadProject:
             self.load_mesh_data_from_file(mesh_data)
 
         # else:
-        #     app().project.generate_mesh()
+        #     self.project.generate_mesh()
         #     app().file.write_mesh_data_in_file()
         #     app().file.app().file.write_geometry_data_in_file()
 
@@ -357,13 +362,13 @@ class LoadProject:
 
     def load_imported_table_data_from_file(self):
 
-        imported_tables = app().file.read_imported_table_data_from_file()
+        imported_tables = self.file.read_imported_table_data_from_file()
 
         if "acoustic" in imported_tables.keys():
-            app().project.model.properties.acoustic_imported_tables = imported_tables["acoustic"]
+            self.project.model.properties.acoustic_imported_tables = imported_tables["acoustic"]
 
         if "structural" in imported_tables.keys():
-            app().project.model.properties.structural_imported_tables = imported_tables["structural"]
+            self.project.model.properties.structural_imported_tables = imported_tables["structural"]
 
     def load_model_properties(self):
 
@@ -425,17 +430,17 @@ class LoadProject:
             if ([f_min, f_max, f_step]).count(None) == 0:
                 analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
 
-        app().project.set_analysis_setup(analysis_setup)
-        app().project.create_solver()
+        self.project.set_analysis_setup(analysis_setup)
+        self.project.create_solver()
 
     def load_thumbnail(self):
         thumbnail = self.file.read_thumbnail()
         if thumbnail is not None:
-            app().project.thumbnail = thumbnail
+            self.project.thumbnail = thumbnail
 
     def load_analysis_results(self):
 
-        project = app().project
+        project = self.project
         results_data = self.file.read_results_data_from_file()
 
         if results_data:

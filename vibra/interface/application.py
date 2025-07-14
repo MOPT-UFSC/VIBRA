@@ -6,8 +6,8 @@ from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
 
-from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project import Project
+from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project_file import ProjectFile
 
 
@@ -28,9 +28,8 @@ class Application(QApplication):
         # global params
         self.config = Config()
 
-        self.file = ProjectFile(TEMP_PROJECT_FILE)
         self.project = Project()
-        self.load_project = LoadProject()
+        self.project.initialize_file_and_loader()
 
         # gui
         self.main_window = MainWindow()

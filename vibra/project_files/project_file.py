@@ -1,18 +1,20 @@
+from typing import TYPE_CHECKING
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-from fileboxes import Filebox
+if TYPE_CHECKING:
+    from vibra.project_files.project import Project
 
 import os
-import io
-import h5py
-import numpy as np
-
 from copy import deepcopy
 from pathlib import Path
+
+import h5py
+import numpy as np
+from fileboxes import Filebox
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -20,10 +22,11 @@ window_title_2 = "Warning"
 
 class ProjectFile:
     
-    def __init__(self, path : str, override=False):
+    def __init__(self, project: "Project", path : str, override=False):
         super().__init__()
 
         self.path = path
+        self.project = project
         self.filebox = Filebox(Path(path), override=override)
 
         self._initialize()
@@ -112,7 +115,7 @@ class ProjectFile:
 
     def write_geometry_data_in_file(self):
 
-        mesh = app().project.model.mesh
+        mesh = self.project.model.mesh
 
         geometry_data = dict(
                             geometry_info = mesh.geometry_information,
@@ -124,7 +127,7 @@ class ProjectFile:
                             points_from_line = mesh.points_from_line,
                             )
 
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        if self.project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             geometry_data.update(dict(
                                       cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
@@ -207,7 +210,7 @@ class ProjectFile:
                             except:
                                 geometry_data[key] = int(values)
 
-        except Exception as error_log:
+        except Exception:
             # from traceback import print_exception
             # print_exception(error_log)
             return dict()
@@ -236,7 +239,7 @@ class ProjectFile:
 
     def write_mesh_data_in_file(self):
 
-        mesh = app().project.model.mesh
+        mesh = self.project.model.mesh
 
         mesh_data = dict(
                          nodal_coordinates = mesh.nodal_coordinates,
@@ -248,7 +251,7 @@ class ProjectFile:
                          curvatures_surface = mesh.curvatures_surface,
                          )
 
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        if self.project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             mesh_data.update(dict(
                                   cache_nodal_coordinates = mesh.cache_nodal_coordinates,
@@ -310,7 +313,7 @@ class ProjectFile:
                             except:
                                 mesh_data[key] = int(values)
 
-        except Exception as error_log:
+        except Exception:
             # from traceback import print_exception
             # print_exception(error_log)
             return dict()
@@ -417,7 +420,7 @@ class ProjectFile:
 
                 return output
 
-            properties = app().project.model.properties
+            properties = self.project.model.properties
             data = dict(
                         # global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
@@ -474,8 +477,8 @@ class ProjectFile:
     def write_imported_table_data_in_file(self):
 
         self.filebox.remove(self.imported_table_data_filename)
-        acoustic_imported_tables = app().project.model.properties.acoustic_imported_tables
-        structural_imported_tables = app().project.model.properties.structural_imported_tables
+        acoustic_imported_tables = self.project.model.properties.acoustic_imported_tables
+        structural_imported_tables = self.project.model.properties.structural_imported_tables
 
         if acoustic_imported_tables or structural_imported_tables:
 
@@ -524,7 +527,7 @@ class ProjectFile:
         return tables_data
 
     def write_thumbnail(self):
-        thumbnail = app().project.thumbnail
+        thumbnail = self.project.thumbnail
         if thumbnail is None:
             return
         self.filebox.write(self.thumbnail_filename, thumbnail)
@@ -538,7 +541,7 @@ class ProjectFile:
         with self.filebox.open(self.results_data_filename, "w") as internal_file:
             with h5py.File(internal_file, "w") as f:
 
-                acoustic_modal_solver = app().project.acoustic_modal_solver
+                acoustic_modal_solver = self.project.acoustic_modal_solver
                 if acoustic_modal_solver is not None:
                     if acoustic_modal_solver.solution is not None:
                         modal_shapes = acoustic_modal_solver.solution
@@ -550,7 +553,7 @@ class ProjectFile:
                             f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
                         f.create_dataset("modal_acoustic/solution", data=modal_shapes, dtype=complex)
 
-                structural_modal_solver = app().project.structural_modal_solver
+                structural_modal_solver = self.project.structural_modal_solver
                 if structural_modal_solver is not None:
                     if structural_modal_solver.solution is not None:
                         natural_frequencies = structural_modal_solver.natural_frequencies
@@ -560,18 +563,18 @@ class ProjectFile:
                         f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
                         f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
-                acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
+                acoustic_harmonic_solver = self.project.acoustic_harmonic_solver
                 if acoustic_harmonic_solver is not None:
                     if acoustic_harmonic_solver.solution is not None:
-                        frequencies = app().project.model.frequencies
+                        frequencies = self.project.model.frequencies
                         solution = acoustic_harmonic_solver.solution
                         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
                         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
                 
-                structural_harmonic_solver = app().project.structural_harmonic_solver
+                structural_harmonic_solver = self.project.structural_harmonic_solver
                 if structural_harmonic_solver is not None:
                     if structural_harmonic_solver.solution is not None:
-                        frequencies = app().project.model.frequencies
+                        frequencies = self.project.model.frequencies
                         solution = structural_harmonic_solver.solution
                         displacement_dofs = structural_harmonic_solver.displacement_dofs
                         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)

@@ -311,7 +311,7 @@ class MeshSetupInputs(MesherSetup_UI):
 
             logging.info("Processing mesh... [30/100]")
             app().project.set_mesh_setup(self.mesh_setup)
-            app().file.write_mesh_setup_in_file(self.file_mesh_setup)
+            app().project.file.write_mesh_setup_in_file(self.file_mesh_setup)
 
             logging.info("Processing mesh... [40/100]")
             app().project.generate_mesh()
@@ -320,8 +320,8 @@ class MeshSetupInputs(MesherSetup_UI):
 
         self.process_degress_of_freedom_if_necessary()
 
-        app().file.write_mesh_data_in_file()
-        app().file.write_geometry_data_in_file()
+        app().project.file.write_mesh_data_in_file()
+        app().project.file.write_geometry_data_in_file()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
 
@@ -349,7 +349,7 @@ class MeshSetupInputs(MesherSetup_UI):
         app().main_window.update_plots()
 
         app().project.reset_solutions()
-        app().file.remove_results_data_from_project_file()
+        app().project.file.remove_results_data_from_project_file()
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
         app().main_window.update_symbols()

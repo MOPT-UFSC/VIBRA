@@ -128,7 +128,7 @@ class FluidWidget(FluidWidget_UI):
             self.reset_library_to_default()
             return
 
-        config = app().file.read_fluid_library_from_file()
+        config = app().project.file.read_fluid_library_from_file()
         if config is None:
             self.reset_library_to_default()
             return
@@ -562,10 +562,10 @@ class FluidWidget(FluidWidget_UI):
                 fluid_data['molar_fractions'] = molar_fractions
                 fluid_data['molar_mass'] = round(self.fluid_data_refprop['molar_mass'], 6)
 
-            config = app().file.read_fluid_library_from_file()
+            config = app().project.file.read_fluid_library_from_file()
             config[identifier] = fluid_data
 
-            app().file.write_fluid_library_in_file(config)
+            app().project.file.write_fluid_library_in_file(config)
 
         except Exception as error_log:
             title = "Error while writing fluid data in file"
@@ -575,14 +575,14 @@ class FluidWidget(FluidWidget_UI):
 
     def remove_fluid_from_file(self, fluid: Fluid):
 
-        config = app().file.read_fluid_library_from_file()
+        config = app().project.file.read_fluid_library_from_file()
 
         identifier = str(fluid.identifier)
         if not identifier in config.sections():
             return
 
         config.remove_section(identifier)
-        app().file.write_fluid_library_in_file(config)
+        app().project.file.write_fluid_library_in_file(config)
 
         self.reset_fluids_from_bodies_and_surfaces([fluid.identifier])
         self.load_data_from_fluids_library()
@@ -670,7 +670,7 @@ class FluidWidget(FluidWidget_UI):
 
     def reset_library_to_default(self):
 
-        config_cache = app().file.read_fluid_library_from_file()
+        config_cache = app().project.file.read_fluid_library_from_file()
 
         sections_cache = list()
         if config_cache is not None:
@@ -678,7 +678,7 @@ class FluidWidget(FluidWidget_UI):
 
         default_fluid_library()
 
-        config = app().file.read_fluid_library_from_file()
+        config = app().project.file.read_fluid_library_from_file()
 
         fluid_identifiers = list()
         for section_cache in sections_cache:
@@ -710,7 +710,7 @@ class FluidWidget(FluidWidget_UI):
         for surf_id in surfaces_to_remove_fluid:
             self.model.properties._remove_surface_property("fluid", surface_id=surf_id)
 
-        app().file.write_model_properties_in_file()
+        app().project.file.write_model_properties_in_file()
 
         if isinstance(self.dialog, QDialog):
             self.dialog.load_model_info()
