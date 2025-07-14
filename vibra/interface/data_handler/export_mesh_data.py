@@ -39,7 +39,7 @@ class ExportMeshData(ExportMesh_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Export mesh data")
+        self.setWindowTitle("Vibra")
 
         self.checkBox_nodal_coordinates.setChecked(True)
         self.checkBox_face_elements_connectivity.setChecked(True)

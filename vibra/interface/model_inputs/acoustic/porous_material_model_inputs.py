@@ -47,10 +47,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Porous material model")
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.selected_fluid = None

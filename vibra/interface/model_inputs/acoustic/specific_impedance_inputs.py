@@ -46,7 +46,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
-        self.setWindowTitle("Specific impedance")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.imported_values = None

@@ -45,7 +45,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Acoustic pressure")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.imported_values = None

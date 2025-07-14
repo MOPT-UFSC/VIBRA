@@ -39,10 +39,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Anechoic termination")
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
 
     def _reset(self):
         self.keep_window_open = True

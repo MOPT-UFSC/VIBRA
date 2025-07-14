@@ -48,7 +48,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Viscous thermal loss model")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.selected_fluid = None
