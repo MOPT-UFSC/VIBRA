@@ -46,7 +46,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Specific impedance")
 
     def _initialize(self):
         self.imported_values = None
@@ -377,7 +377,10 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["specific_impedance"]
+        labels = [
+                  "specific_impedance",
+                  "incident_plane_wave",
+                  ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -436,7 +439,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.mesh_widget.update_symbols()
+        app().main_window.update_symbols()
 
     def change_frequency_setup(self):
         if self.imported_values is not None:

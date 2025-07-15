@@ -6,7 +6,7 @@ from pathlib import Path
 @dataclass
 class Material:
     name: str
-    density: float
+    material_density: float
     elasticity_modulus: float
     poisson_ratio: float
     identifier: int = 0

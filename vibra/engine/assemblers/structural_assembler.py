@@ -391,6 +391,8 @@ class StructuralAssembler:
             if progress != last_progress:
                 logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
+            last_progress = progress
+
             material = self.model.properties._get_property("material", volume=vol_id)
             if material is None:
                 continue
@@ -435,6 +437,8 @@ class StructuralAssembler:
                 progress = 100 * np.round(el_index/nel, 2)
                 if progress != last_progress:
                     logging.info(f"Processing the elementary matrices data for face elements... [{int(progress)}/100]")
+
+                last_progress = progress
 
                 material = self.model.properties._get_property("material", surface=surf_id)
                 if material is None:

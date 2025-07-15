@@ -306,6 +306,7 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
         app().file.write_model_properties_in_file()
+        app().main_window.update_symbols()
 
     def load_model_info(self):
 
@@ -335,17 +336,17 @@ class MaterialInputs(SetMaterial_UI):
         self.tableWidget_model_materials.setRowCount(len(self.materials_from_model))
         self.tableWidget_model_materials.setColumnCount(6)
 
-        for i, (key, maeterial) in enumerate(self.materials_from_model.items()):
-            maeterial: Material
+        for i, (key, material) in enumerate(self.materials_from_model.items()):
+            material: Material
             _, selection_id = key
-            if isinstance(maeterial, Material):
+            if isinstance(material, Material):
                 
                 self.tableWidget_model_materials.setItem(i, 0, QTableWidgetItem(selection_id))
-                self.tableWidget_model_materials.setItem(i, 1, QTableWidgetItem(str(maeterial.name)))
-                self.tableWidget_model_materials.setItem(i, 2, QTableWidgetItem(str(maeterial.identifier)))
-                self.tableWidget_model_materials.setItem(i, 3, QTableWidgetItem(str(maeterial.density)))
-                self.tableWidget_model_materials.setItem(i, 4, QTableWidgetItem(str(maeterial.elasticity_modulus / 1e9)))
-                self.tableWidget_model_materials.setItem(i, 5, QTableWidgetItem(str(maeterial.poisson_ratio)))
+                self.tableWidget_model_materials.setItem(i, 1, QTableWidgetItem(str(material.name)))
+                self.tableWidget_model_materials.setItem(i, 2, QTableWidgetItem(str(material.identifier)))
+                self.tableWidget_model_materials.setItem(i, 3, QTableWidgetItem(str(material.material_density)))
+                self.tableWidget_model_materials.setItem(i, 4, QTableWidgetItem(str(material.elasticity_modulus)))
+                self.tableWidget_model_materials.setItem(i, 5, QTableWidgetItem(str(material.poisson_ratio)))
 
         for i in range(self.tableWidget_model_materials.rowCount()):
             for j in range(self.tableWidget_model_materials.columnCount()):

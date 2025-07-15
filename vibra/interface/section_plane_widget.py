@@ -1,6 +1,5 @@
-from PySide6.QtWidgets import QDialog, QSlider, QSpinBox, QPushButton, QWidget
+from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
 
 from vibra import app
 from vibra.interface.ui_generated.render.section_plane_inputs_ui import SectionPlaneInputs_UI

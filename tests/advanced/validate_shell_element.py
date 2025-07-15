@@ -93,7 +93,7 @@ def load_external_mesh_and_solve():
                         name = "Carbon steel",
                         identifier = 1,
                         color = (200, 200, 200),
-                        density = density,
+                        material_density = density,
                         elasticity_modulus = elasticity_modulus,
                         poisson_ratio = poisson_ratio,
                         thermal_expansion_coefficient = thermal_expansion_coefficient
@@ -149,4 +149,4 @@ def load_external_mesh_and_solve():
     # element_3d.reorder_connect()
 
     # mesh._process_face_elements_connected_to_nodes([1, 2])
-    # mesh._process_nodal_areas()
+    # mesh.compute_nodal_areas()

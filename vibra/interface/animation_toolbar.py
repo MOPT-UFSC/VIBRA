@@ -1,3 +1,4 @@
+import platform
 from pathlib import Path
 
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
@@ -9,7 +10,6 @@ from vibra import ICON_DIR, app
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
 from vibra.utils.icons import load_icon
 
 window_title_1 = "Error"
@@ -279,10 +279,15 @@ class AnimationToolbar(QToolBar):
         self.phase_slider.setSingleStep(single_step)
 
     def save_animation(self):
+        kwargs = dict()
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
         file_path, extension = QFileDialog.getSaveFileName(
             self,
             "Save As",
             filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;",
+            **kwargs
         )
 
         if not extension:

@@ -48,7 +48,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Viscous thermal loss model")
 
     def _initialize(self):
         self.selected_fluid = None
@@ -89,6 +89,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.attribution_type_callback()
         self.update_plot_buttons_access()
 
+    def actions_to_finalize(self):
+        app().main_window.update_symbols()
+    
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
         self.comboBox_plot_type.setDisabled(state)
@@ -142,6 +145,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.properties._remove_group_property("viscous_thermal_model", selection_id)
 
             app().file.write_model_properties_in_file()
+            self.actions_to_finalize()
             self.pushButton_remove.setDisabled(True)
             self.load_info()
 
@@ -182,6 +186,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
                 app().file.write_model_properties_in_file()
                 self.load_info()
+        self.actions_to_finalize()
 
     def tab_event_callback(self):
 
@@ -616,6 +621,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
         app().file.write_model_properties_in_file()
+        self.actions_to_finalize()
         self.load_info()
 
     def check_inputs(self, lineEdit, label, _float=True):

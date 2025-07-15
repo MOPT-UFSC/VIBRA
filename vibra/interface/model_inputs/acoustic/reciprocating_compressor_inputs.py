@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import Qt
 
 from vibra import app
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
@@ -37,6 +38,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self._initialize()
         self._create_connections()
         self._config_widget()
+        self._paint_icons()
 
         self.load_compressor_excitation_info()
         self.selection_callback()
@@ -109,11 +111,24 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
         app().main_window.selection_changed.connect(self.selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.comboBox_event_stage()
         self.update_compressing_cylinders_setup()
         self.spinBox_event_number_of_cylinders()
         self.update_state_properties_at_discharge()
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        if theme == "dark":
+            icon_color = QColor("#5f9af4")
+        else:
+            icon_color = QColor("#1a73e8")
+
+        widgets = [self.pushButton_reset_entries]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def fluid_data_source_callback(self):
 
@@ -812,6 +827,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.set_geometry_selection()
+        app().main_window.update_symbols()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -820,7 +836,17 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             app().file.write_imported_table_data_in_file()
 
     def remove_conflicting_excitations(self, surface_id: int):
-        for label in ["acoustic_pressure", "surface_velocity", "mass_flow_rate", "reciprocating_compressor_excitation", "reciprocating_pump_excitation"]:
+
+        labels = [
+                  "acoustic_pressure", 
+                  "surface_velocity", 
+                  "incident_plane_wave",
+                  "mass_flow_rate", 
+                  "reciprocating_compressor_excitation", 
+                  "reciprocating_pump_excitation"
+                  ]
+
+        for label in labels:
             table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
             self.process_table_file_removal(table_names)

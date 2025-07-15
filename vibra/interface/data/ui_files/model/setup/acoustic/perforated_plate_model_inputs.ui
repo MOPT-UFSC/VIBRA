@@ -435,7 +435,7 @@
                  <property name="geometry">
                   <rect>
                    <x>0</x>
-                   <y>0</y>
+                   <y>-236</y>
                    <width>571</width>
                    <height>568</height>
                   </rect>
@@ -934,8 +934,8 @@
                         <string/>
                        </property>
                        <property name="icon">
-                        <iconset>
-                         <normaloff>../../../../icons/import.png</normaloff>../../../../icons/import.png</iconset>
+                        <iconset resource="../../../../icons/resources.qrc">
+                         <normaloff>:/icons/import.png</normaloff>:/icons/import.png</iconset>
                        </property>
                        <property name="iconSize">
                         <size>
@@ -1633,8 +1633,8 @@
                         <string/>
                        </property>
                        <property name="icon">
-                        <iconset>
-                         <normaloff>../../../../icons/broom.png</normaloff>../../../../icons/broom.png</iconset>
+                        <iconset resource="../../../../icons/resources.qrc">
+                         <normaloff>:/icons/broom.png</normaloff>:/icons/broom.png</iconset>
                        </property>
                        <property name="iconSize">
                         <size>
@@ -2045,6 +2045,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

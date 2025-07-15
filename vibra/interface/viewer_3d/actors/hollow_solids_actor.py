@@ -29,6 +29,10 @@ class HollowSolidsActor(FacesActor):
         points = self.data.GetPoints()
         points.SetData(numpy_to_vtk(coordinates))
     
+    def clear_colors(self):
+        color = app().config.user_preferences.faces_color
+        self.set_color(color.to_rgba())
+
     def paint_cells(self, color, solids: list[int]):
         faces = []
         for solid in solids:

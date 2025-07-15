@@ -45,7 +45,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowIcon(self.main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
@@ -409,10 +409,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         labels = [
                   "acoustic_pressure", 
-                  "surface_velocity", 
-                  "mass_flow_rate", 
-                  "reciprocating_compressor_excitation", 
-                  "reciprocating_pump_excitation"
+                  "surface_velocity",
+                  "incident_plane_wave",
+                  "mass_flow_rate",
+                  "reciprocating_compressor_excitation",
+                  "reciprocating_pump_excitation",
                   ]
 
         for surface_id in surface_ids:

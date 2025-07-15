@@ -1,6 +1,13 @@
-import numpy as np
 
 from vibra.engine.elements.surface_elements import Element2D
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
+import numpy as np
+
+ones_31 = np.ones((3, 1), dtype=float)
 
 
 def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
@@ -34,6 +41,7 @@ def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
 
     return phi, dphi
 
+
 def get_jacobian_determinant(JAC: np.ndarray) -> float:
     """
     This function computes the determinant of the Jacobian
@@ -52,6 +60,27 @@ def get_jacobian_determinant(JAC: np.ndarray) -> float:
     det_jac = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
 
     return det_jac
+
+
+def get_stacked_jacobian_determinant(JAC: np.ndarray) -> float:
+    """
+    This function computes the determinant of the Jacobian
+    matrix.
+
+    Parameter
+    ---------
+    JAC: np.ndarray
+        The Jacobian matrix.
+    
+    Return
+    ------
+    det_jac: float
+        The determinant of the Jacobian matrix.
+    """
+    det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]  
+
+    return det_jac.reshape(-1, 1, 1)
+
 
 def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     """
@@ -94,18 +123,21 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
                           [x3, y3]], dtype=float)
     return coord_loc
 
+
 class ACT_FACE_3(Element2D):
     #
     NODES_PER_ELEMENT = 3
     DOFS_PER_NODE = 1
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-    def __init__(self, model):
-        #
+
+    def __init__(self, model: "Model"):
+
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
+
 
     def initialize_variables(self):
         """ """
@@ -116,6 +148,7 @@ class ACT_FACE_3(Element2D):
         #
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
+
 
     def define_integration_points(self):
         """ 
@@ -130,6 +163,7 @@ class ACT_FACE_3(Element2D):
                               [con2, con1],
                               [con1, con2]], dtype=float)
 
+
     def process_shape_functions_and_derivatives(self):
         """
         This method processes the shape functions and their
@@ -140,7 +174,99 @@ class ACT_FACE_3(Element2D):
         #
         self.phi, self.dphi = get_shape_functions_and_derivatives(ssx, ttx)
 
-    def matrices_Z(self, el_index: int, rho: float = 1.0, impedance: float = 1.0) -> np.ndarray:
+
+    def get_stacked_local_coordinates(self) -> np.ndarray:
+        """
+        This funtion computes the local coordinates from global coordinates.
+
+        Parameter
+        ---------
+        coords: np.ndarray
+            An array containing the global coordinates to be converted.
+
+        Returns
+        -------
+        coord_loc: np.ndarray
+            The array of the stacked coordinates in the local coordinate system.
+        """
+
+        X1 = self.nodal_coordinates[self.connect_face[:, 0], 1]
+        Y1 = self.nodal_coordinates[self.connect_face[:, 0], 2]
+        Z1 = self.nodal_coordinates[self.connect_face[:, 0], 3]
+
+        X2 = self.nodal_coordinates[self.connect_face[:, 1], 1]
+        Y2 = self.nodal_coordinates[self.connect_face[:, 1], 2]
+        Z2 = self.nodal_coordinates[self.connect_face[:, 1], 3]
+        
+        X3 = self.nodal_coordinates[self.connect_face[:, 2], 1]
+        Y3 = self.nodal_coordinates[self.connect_face[:, 2], 2]
+        Z3 = self.nodal_coordinates[self.connect_face[:, 2], 3]
+
+        vec_21 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+        vec_31 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
+
+        loc_x_axis = vec_21.copy()
+        loc_z_axis = np.cross(loc_x_axis, vec_31, axis=1)
+        loc_y_axis = np.cross(loc_z_axis, loc_x_axis, axis=1)
+
+        nx = np.linalg.norm(loc_x_axis, axis=1).reshape(-1, 1, 1)
+        ny = np.linalg.norm(loc_y_axis, axis=1).reshape(-1, 1, 1)
+
+        unit_x_axis = loc_x_axis.reshape(-1, 1, 3) / nx
+        unit_y_axis = loc_y_axis.reshape(-1, 1, 3) / ny
+
+        unit_x_axis = unit_x_axis.reshape(-1, 3)
+        unit_y_axis = unit_y_axis.reshape(-1, 3)
+
+        x2 = np.sum(vec_21 * unit_x_axis, axis=1)
+        x3 = np.sum(vec_31 * unit_x_axis, axis=1)
+
+        y2 = np.sum(vec_21 * unit_y_axis, axis=1)
+        y3 = np.sum(vec_31 * unit_y_axis, axis=1)
+
+        nel = self.connect_face.shape[0]
+        coord_loc = np.zeros((nel, 3, 2), dtype=float)
+
+        coord_loc[:, 1, 0] = x2
+        coord_loc[:, 1, 1] = y2
+        coord_loc[:, 2, 0] = x3
+        coord_loc[:, 2, 1] = y3
+
+        return coord_loc
+    
+
+    def get_stacked_element_face_normals(self) -> np.ndarray:
+        """
+        This method processes the stacked element face normals.
+        """
+
+        X1 = self.nodal_coordinates[self.connect_face[:, 0], 1]
+        Y1 = self.nodal_coordinates[self.connect_face[:, 0], 2]
+        Z1 = self.nodal_coordinates[self.connect_face[:, 0], 3]
+
+        X2 = self.nodal_coordinates[self.connect_face[:, 1], 1]
+        Y2 = self.nodal_coordinates[self.connect_face[:, 1], 2]
+        Z2 = self.nodal_coordinates[self.connect_face[:, 1], 3]
+        
+        X3 = self.nodal_coordinates[self.connect_face[:, 2], 1]
+        Y3 = self.nodal_coordinates[self.connect_face[:, 2], 2]
+        Z3 = self.nodal_coordinates[self.connect_face[:, 2], 3]
+
+        P2P1 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+        P3P1 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
+
+        cross = np.cross(P2P1, P3P1, axis=1)
+        norm_cross = np.linalg.norm(cross, axis=1)
+
+        norm_cross = norm_cross.reshape(-1, 1, 1)
+        cross = cross.reshape(-1, 1, 3)
+        
+        normals = cross / norm_cross
+
+        return normals
+
+
+    def damping_matrix_Ce(self, el_index: int, rho: float = 1.0, impedance: float = 1.0) -> np.ndarray:
         """ 
         This method computes the elementary impedance matrix.
 
@@ -148,7 +274,7 @@ class ACT_FACE_3(Element2D):
         ----------
         el_index: int
             The element index.
-        
+
         rho: float, optional
             The fluid density in kg/m³.
 
@@ -177,21 +303,54 @@ class ACT_FACE_3(Element2D):
         #     # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
 
         N = self.phi
-        Ze = -(1/2) * (rho / impedance) * N.T @ N * (detJAC * self.wps)
+        Ze = - (1/2) * (rho / impedance) * N.T @ N * (detJAC * self.wps)
 
         return Ze
 
-    def excitation_F(self, el_index: int, Vn: float = 1.0) -> np.ndarray:
+
+    def stacked_damping_matrices_Ce(self, rho: float = 1, impedance: float = 1) -> np.ndarray:
+        """
+        This method processes all impedance-related elementary matrices and returns them
+        in the stacked array form.
+
+        Parameters
+        ----------
+        rho: float, optional
+            The fluid density in kg/m³.
+        
+        impedance: float, optional
+            The specific impedance in kg/m²s.
+
+        Returns
+        -------
+        Ze_stacked: np.ndarray
+            The array containing the stacked elementary matrices.
+        """
+
+        nel = self.connect_face.shape[0]
+        aux_ones = np.ones((nel, 1, 1), dtype=float)
+
+        local_coords = self.get_stacked_local_coordinates()
+        JAC_3d = (self.dphi * aux_ones) @ local_coords
+        det_jacs = get_stacked_jacobian_determinant(JAC_3d)
+
+        N = self.phi
+        Ze_stacked = - (1/2) * (rho/impedance) * N.T @ N * (det_jacs * self.wps)
+
+        return Ze_stacked
+
+
+    def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:
         """ 
-        This method computes the elementary load vector due to the flow mass.
+        This method computes the elementary load vector.
 
         Parameters
         ----------
         el_index: int
             The element index.
-        
-        Vn: float, optional
-            The surface velocity normal to the surface in m/s.
+
+        load: float, optional
+            The load vector.
 
         Returns
         -------
@@ -204,21 +363,122 @@ class ACT_FACE_3(Element2D):
         coord_loc = get_local_coordinates(coords)
 
         JAC = self.dphi @ coord_loc
-        detJAC = get_jacobian_determinant(JAC)
+        det_jac = get_jacobian_determinant(JAC)
 
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        N[:, 0, :] = self.phi
+        # N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        # N[:, 0, :] = self.phi
 
-        Fe = 0.
-        for i in range(self.nint):            
-            Fe += -(1/2) * Vn * N[i, :, :].T * (detJAC * self.wps)
+        # Fe = 0.
+        # for i in range(self.nint):            
+        #     Fe += -(1/2) * load * N[i, :, :].T * (det_jac * self.wps)
+
+        N = self.phi
+        Fe = - (1/2) * load * (N @ ones_31) * (det_jac * self.wps)
 
         return Fe
 
-        # N = self.phi
-        # Fe = -(1/2) * Vn * np.sum(N.T, axis=0) * (detJAC * self.wps)
 
-        # return Fe.reshape(-1, 1)
+    def surface_integrator(self, e_connect: np.ndarray, sound_intensity: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        load: float, optional
+            The load vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary load vector.
+        """
+
+        # e_connect = self.connect_face[el_index, :]
+        coords = self.nodal_coordinates[e_connect, :]
+        coord_loc = get_local_coordinates(coords)
+
+        JAC = self.dphi @ coord_loc
+        det_jac = get_jacobian_determinant(JAC)
+
+        # N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
+        # N[:, 0, :] = self.phi
+
+        # Fe = 0.
+        # for i in range(self.nint):            
+        #     Fe += -(1/2) * load * N[i, :, :].T * (det_jac * self.wps)
+
+        N = self.phi
+        Fe = - (1/2) * (N @ sound_intensity) * (det_jac * self.wps)
+
+        return Fe
+
+
+    def elementary_sound_power_from_sound_intensity(self, e_connect: np.ndarray, sound_intensity: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        sound_intensity: np.ndarray, optional
+            The sound intensity vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary sound power.
+        """
+
+        coords = self.nodal_coordinates[e_connect, :]
+        coord_loc = get_local_coordinates(coords)
+
+        JAC = self.dphi @ coord_loc
+        det_jac = get_jacobian_determinant(JAC)
+
+        N = self.phi
+
+        Fe = - (1/2) * (N @ sound_intensity) * (det_jac * self.wps)
+
+        return Fe
+
+
+    def elementary_sound_power(self, e_connect: np.ndarray, L_sv: np.ndarray, R_sv: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        L_sv: np.ndarray
+            The left stacked vector (complex-conjugate of particle velocities).
+
+        R_sv: np.ndarray
+            The righ stacked vector (complex-conjugate of pressures).
+
+        Returns
+        -------
+        Ce: np.ndarray
+            The elementary sound power vector.
+        """
+
+        coords = self.nodal_coordinates[e_connect, :]
+        coord_loc = get_local_coordinates(coords)
+
+        JAC = self.dphi @ coord_loc
+        det_jac = get_jacobian_determinant(JAC)
+
+        N = self.phi
+        Ce = - (1/2) * L_sv @ (N.T @ N) @ R_sv * (det_jac * self.wps)
+
+        return Ce.flatten()
+
 
     def reorder_connect(self, connect_face):
         """
@@ -227,6 +487,7 @@ class ACT_FACE_3(Element2D):
         """
 
         self.connect_face = connect_face[:, [0, 1, 2]]
+
 
     def generate_ind_rows_cols(self, connect_face):
         """
@@ -243,6 +504,7 @@ class ACT_FACE_3(Element2D):
         ind_cols_face = (np.tile(ind_dofs, edofs)).flatten()
 
         return ind_rows_face, ind_cols_face
+
 
     def excitation_F_base(self, ee, Vn=1):
         """ F3 matrices
@@ -310,6 +572,7 @@ class ACT_FACE_3(Element2D):
             Fe += -(1/2) * Vn * N.T * (detJAC * wps)
 
         return Fe
+
 
     def matrices_Z_base(self, ee, rho=1, impedance=1):
         """ Z3 matrices
@@ -379,21 +642,3 @@ class ACT_FACE_3(Element2D):
             Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
 
         return Ze
-    
-    
-    def get_element_face_normal(self, connect):
-        
-        # ie = self.faces_connectivity[element_id, 4:]
-        coords = self.nodal_coordinates[connect, 1:]
-
-        P1 = coords[0, :]
-        P2 = coords[1, :]
-        P3 = coords[2, :]
-
-        P2P1 = np.array(P2 - P1)
-        P3P1 = np.array(P3 - P1)
-
-        cross = np.cross(P2P1, P3P1)
-        normal = cross / np.linalg.norm(cross)
-
-        return normal

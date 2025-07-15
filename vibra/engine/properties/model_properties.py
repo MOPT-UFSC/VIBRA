@@ -12,7 +12,7 @@ DEFAULT_MATERIAL = Material(
     name="Steel",
     identifier=1,
     color=(200, 200, 200),
-    density=7860,
+    material_density=7860,
     elasticity_modulus=210e9,
     poisson_ratio=0.3,
 )
@@ -326,6 +326,7 @@ class ModelProperties:
                            "acoustic_pressure",
                            "surface_velocity",
                            "mass_flow_rate",
+                           "incident_plane_wave",
                            "specific_impedance",
                            "transfer_impedance",
                            "absorption_surface",

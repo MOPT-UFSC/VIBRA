@@ -1,8 +1,10 @@
+import platform
+
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QColorDialog
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QColor
 
 from vibra import app
+
 
 class PickColorInput(QColorDialog):
     def __init__(self, *args, **kwargs):
@@ -15,8 +17,10 @@ class PickColorInput(QColorDialog):
         self.exec()
 
     def _config_window(self):
+        if platform.system() == "Linux":
+            self.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog)
         self.setFixedSize(QSize(540, 410))
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowIcon(app().main_window.vibra_icon) 
         self.setWindowTitle(self.title)
     
@@ -32,7 +36,5 @@ class PickColorInput(QColorDialog):
         self.close()
      
     def keyPressEvent(self, event):
-        # if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-        #     self.check()
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self.close()

@@ -1,15 +1,16 @@
 # Use this to allow type hints without circular imports
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from vibra.interface.application import Application
 
-from importlib.metadata import version
 # copying the version from pyproject.toml
-__version__ = '0.2.4'
-__release_date__ = 'July 22th 2024'
+__version__ = "0.3.2"
+__release_date__ = "June 24th 2024"
+
+from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
-from pathlib import Path
 
 VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
@@ -22,6 +23,25 @@ EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 USER_PATH = Path().home()
 TEMP_PROJECT_DIR = USER_PATH / "temp_vibra"
 TEMP_PROJECT_FILE = TEMP_PROJECT_DIR / "tmp.vibra"
+
+SUPPORTED_GEOMETRY_EXTENSIONS = [
+    "iges",
+    "IGES",
+    "igs",
+    "IGS",
+    "step",
+    "STEP",
+    "stp",
+    "STP",
+]
+
+SUPPORTED_MESH_EXTENSIONS = [
+    "bdf",
+    "BDF",
+    "nas",
+    "NAS",
+]
+
 
 def app() -> "Application":
     return QApplication.instance()

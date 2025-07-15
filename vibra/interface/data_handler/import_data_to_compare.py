@@ -23,7 +23,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         
         self.plotter = plotter
 
-        self.main_window = app().main_window
+        app().main_window.set_input_widget(self)
 
         self._config_window()
         self._initialize()
@@ -247,7 +247,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 else:
                     legend_label = self.imported_results[id]["filename"]
 
-                y_label = self.plotter.y_label.split(" - ")[0]
+                y_label = self.plotter.y_label.replace(" [dB]", "").split(" - ")[0]
 
                 aux = { 
                        "type" : "imported_data",

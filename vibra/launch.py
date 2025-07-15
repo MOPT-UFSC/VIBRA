@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from traceback import format_tb
+import platform
 
 from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
@@ -84,6 +85,11 @@ def main():
 
     # Make the window scale evenly for every monitor
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
+    # Ensure the use of X11 instead of Wayland in Linux systems
+    # This is needed because VTK is not compatible with Wayland
+    if platform.system() == "Linux":
+        os.environ["QT_QPA_PLATFORM"] = "xcb"
 
     app = Application(sys.argv)
     sys.exit(app.exec_())

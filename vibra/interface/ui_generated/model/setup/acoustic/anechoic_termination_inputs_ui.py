@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'anechoic_termination_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -289,7 +289,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label.setText(QCoreApplication.translate("Dialog", u"Set anechoic termination", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Anechoic termination setup", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Volume ID:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))

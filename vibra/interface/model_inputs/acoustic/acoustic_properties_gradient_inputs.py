@@ -41,7 +41,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Vibra")
+        self.setWindowTitle("Acoustic properties gradient")
 
     def _initialize(self):
         self.selected_fluid = None

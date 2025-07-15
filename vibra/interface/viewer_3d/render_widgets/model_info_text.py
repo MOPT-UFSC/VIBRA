@@ -178,7 +178,7 @@ def process_volumes_and_masses(volume_ids: list):
 
         material = app().project.model.properties._get_property("material", volume=volume_id)
         if isinstance(material, Material):
-            material_density = material.density
+            material_density = material.material_density
             material_mass += volume * material_density
     
     return volume_compound, fluid_mass, material_mass
@@ -203,8 +203,8 @@ def material_info_text():
     tree = TreeInfo("Material")
     tree.add_item("Name", material.name)
     tree.add_item("Identifier", material.identifier)
-    tree.add_item("Density", material.density, "kg/m³")
-    tree.add_item("elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
+    tree.add_item("Density", material.material_density, "kg/m³")
+    tree.add_item("Elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
     tree.add_item("Poisson ratio", material.poisson_ratio, "--")
     tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
@@ -320,7 +320,11 @@ def acoustic_boundary_conditions_info_text():
     surface_velocity = app().project.model.properties._get_property(
         "surface_velocity",
         surface=selected_faces[0],
-    )   
+    )
+    incident_plane_wave = app().project.model.properties._get_property(
+    "incident_plane_wave",
+    surface=selected_faces[0],
+    )
     mass_flow_rate = app().project.model.properties._get_property(
         "mass_flow_rate",
         surface=selected_faces[0],
@@ -337,6 +341,7 @@ def acoustic_boundary_conditions_info_text():
     boundary_conditions_list = [
                                 acoustic_pressure,
                                 surface_velocity,
+                                incident_plane_wave,
                                 mass_flow_rate,
                                 absorption_surface,
                                 specific_impedance,
@@ -352,6 +357,18 @@ def acoustic_boundary_conditions_info_text():
     if surface_velocity is not None:
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
+
+    if incident_plane_wave is not None:
+        value = incident_plane_wave["values"][0]
+        tree_pw = TreeInfo("Incident plane wave")
+        if isinstance(value, Number | str | float | complex):
+            tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
+        else:
+            tree_pw.add_item("P_inc", "Table of values")
+
+        wave_vector = incident_plane_wave["wave_vector"]
+        tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
+        text += str(tree_pw)
 
     if mass_flow_rate is not None:
         values = mass_flow_rate["values"][0]
@@ -551,8 +568,8 @@ def mesh_material_info_text():
         tree = TreeInfo("Material")
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
-        tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
+        tree.add_item("Density", material.material_density, "kg/m³")
+        tree.add_item("Elasticity Modulus", material.elasticity_modulus / 1e9, "GPa")
         tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
         tree.add_item(
             "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
