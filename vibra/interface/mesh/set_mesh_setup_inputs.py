@@ -533,19 +533,24 @@ class MeshSetupInputs(MesherSetup_UI):
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)
 
     def plot_mesh_parameter_histogram(self):
-        parameter_position = ["gamma", "volume", "minSJ", "aspectRatio"]
-        parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
-        parameter = parameter_position[parameter_index]
-        mesh_quality = list(app().project.model.mesh.mesh_quality[parameter].values())
+        parameter_idx = self.tableWidget_mesh_quality.currentIndex().row()
+        parameter = {
+            0: "gamma",
+            1: "volume",
+            2: "minSJ",
+            3: "aspectRatio",
+        }
+        mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx, :]['val']
 
-        bins = np.linspace(min(mesh_quality), max(mesh_quality), 30)
-        hist, bin_edges = np.histogram(mesh_quality, bins=bins)
+
+        bins = np.linspace(min(mesh_quality_vals), max(mesh_quality_vals), 30)
+        hist, bin_edges = np.histogram(mesh_quality_vals, bins=bins)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_min = self.quality_bins[parameter][1]
-        bin_max = self.quality_bins[parameter][0]
+        bin_min = self.quality_bins[parameter[parameter_idx]][1]
+        bin_max = self.quality_bins[parameter[parameter_idx]][0]
         bin_med = (bin_min + bin_max) / 2
 
-        if parameter == "aspectRatio":
+        if parameter[parameter_idx] == "aspectRatio":
             cmap = mcolors.LinearSegmentedColormap.from_list(
                 "qualidade", [(0, "green"), (bin_med, "gold"), (1, "red")]
             )
@@ -569,8 +574,8 @@ class MeshSetupInputs(MesherSetup_UI):
                 alpha=0.9,
             )
 
-        percentile_5 = np.percentile(mesh_quality, 5)
-        percentile_95 = np.percentile(mesh_quality, 95)
+        percentile_5 = np.percentile(mesh_quality_vals, 5)
+        percentile_95 = np.percentile(mesh_quality_vals, 95)
         plt.axvline(
             percentile_5, color="grey", linestyle="--", linewidth=2, label="5% percentile"
         )
@@ -586,7 +591,7 @@ class MeshSetupInputs(MesherSetup_UI):
             "aspectRatio": "Aspect Ratio",
         }
 
-        plt.title(f"{title[parameter]} histogram")
+        plt.title(f"{title[parameter[parameter_idx]]} histogram")
         plt.xlabel("Parameter value")
         plt.ylabel("Number of elements")
         plt.tight_layout()
