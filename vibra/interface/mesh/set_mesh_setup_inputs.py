@@ -599,18 +599,21 @@ class MeshSetupInputs(MesherSetup_UI):
         plt.show()
 
     def show_bad_elements(self):
-        parameter_position = ["gamma", "volume", "minSJ", "aspectRatio"]
-        parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
-        parameter = parameter_position[parameter_index]
-
-        mesh_quality = app().project.model.mesh.mesh_quality[parameter]
+        parameter_idx = self.tableWidget_mesh_quality.currentIndex().row()
+        parameter = {
+            0: "gamma",
+            1: "volume",
+            2: "minSJ",
+            3: "aspectRatio",
+        }
+        mesh_quality = app().project.model.mesh.mesh_quality[parameter_idx]
         bad_elements = []
 
-        for element, quality in mesh_quality.items():
-            if parameter == "aspectRatio":
-                if quality > self.quality_bins[parameter][0]:
+        for element, quality in mesh_quality:
+            if parameter[parameter_idx] == "aspectRatio":
+                if quality > self.quality_bins[parameter[parameter_idx]][0]:
                     bad_elements.append(element)
-            elif quality < self.quality_bins[parameter][1]:
+            elif quality < self.quality_bins[parameter[parameter_idx]][1]:
                 bad_elements.append(element)
 
         if not bad_elements:
