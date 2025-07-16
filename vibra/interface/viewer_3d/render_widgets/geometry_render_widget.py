@@ -47,9 +47,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
-        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
-        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -171,7 +171,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         color = Color(247, 0, 255)
         self.renderer.SetBackground(color.to_rgb_f())
         self.renderer.SetBackground2(color.to_rgb_f())
-        self.faces_actor.set_color((255, 255, 255))
+        self.faces_actor.set_color(Color(255, 255, 255))
         self.lines_actor.set_color(Color(0, 0, 0))
 
         self.disable_scale_bar()
@@ -338,9 +338,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
         self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
         
-        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
-        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
-        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color
 
         self.update_info_text()
 

@@ -1,4 +1,4 @@
-
+from molde import Color
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
@@ -224,13 +224,13 @@ class MeshRenderWidget(CommonRenderWidget):
 
         # In this renderer the faces should be transparent
         # all the time, except when they are selected
-        self.faces_actor.set_color((0, 0, 0, 0))
+        self.faces_actor.set_color(Color(0, 0, 0, 0))
         self.solids_actor.clear_colors()
 
         if visualization.points:
             self.nodes_actor.clear_colors()
         else:
-            self.nodes_actor.set_color((0, 0, 0, 0))
+            self.nodes_actor.set_color(Color(0, 0, 0, 0))
 
         nodes = app().main_window.selected_mesh_nodes
         faces = app().main_window.selected_mesh_faces
@@ -239,9 +239,9 @@ class MeshRenderWidget(CommonRenderWidget):
         selection_faces_color = app().config.user_preferences.selection_faces_color
         selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
 
-        self.nodes_actor.paint_cells(selection_nodes_points_color.to_rgb(), nodes)
-        self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4).to_rgb(), faces)
-        self.solids_actor.paint_cells(selection_faces_color.to_rgb(), solids)
+        self.nodes_actor.paint_cells(selection_nodes_points_color, nodes)
+        self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4), faces)
+        self.solids_actor.paint_cells(selection_faces_color, solids)
         self.edges_actor.configure_appearance()
         self.update()
 
