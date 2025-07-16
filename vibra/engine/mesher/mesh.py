@@ -1625,11 +1625,13 @@ class Mesh:
             "minSJ",
             "minSIGE",
             "minSICN",
+            "minEdge",
+            "maxEdge",
         ]
         
+        elements = gmsh.model.mesh.getElements(3, -1)[1][0]
         for parameter in parameters:
             qualities = dict()
-            elements = gmsh.model.mesh.getElements(3, -1)[1][0]
             
             element_qualities = gmsh.model.mesh.getElementQualities(elements, parameter)
             for i, element in enumerate(elements):
@@ -1641,6 +1643,17 @@ class Mesh:
             self.mesh_quality_worst_value[parameter] = np.min(element_qualities)
             self.mesh_quality_average[parameter] = np.average(element_qualities)
             self.mesh_quality_stdev[parameter] = np.std(element_qualities)
+
+        for i, element in enumerate(elements):
+            qualities[element] = self.mesh_quality["maxEdge"][element] / self.mesh_quality["minEdge"][element]
+
+        self.mesh_quality["aspectRatio"] = qualities
+        element_qualities = np.array(list(qualities.values()), dtype=float)
+        self.mesh_quality_worst_value["aspectRatio"] = np.max(element_qualities)
+        self.mesh_quality_average["aspectRatio"] = np.average(element_qualities)
+        self.mesh_quality_stdev["aspectRatio"] = np.std(element_qualities)
+
+
 
         return self.mesh_quality   
 

@@ -705,7 +705,7 @@ class Ui_Dialog(object):
         ___qtablewidgetitem3 = self.tableWidget_mesh_quality.horizontalHeaderItem(0)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Parameter", None));
         ___qtablewidgetitem4 = self.tableWidget_mesh_quality.horizontalHeaderItem(1)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Minimum", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Worst Value", None));
         ___qtablewidgetitem5 = self.tableWidget_mesh_quality.horizontalHeaderItem(2)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Average", None));
         ___qtablewidgetitem6 = self.tableWidget_mesh_quality.horizontalHeaderItem(3)

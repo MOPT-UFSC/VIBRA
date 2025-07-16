@@ -1374,7 +1374,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Minimum</string>
+              <string>Worst Value</string>
              </property>
             </column>
             <column>

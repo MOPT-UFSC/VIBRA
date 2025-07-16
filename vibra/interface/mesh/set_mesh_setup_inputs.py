@@ -468,10 +468,11 @@ class MeshSetupInputs(MesherSetup_UI):
 
         self.quality_bins = {
             "gamma": (0.7, 0.2),
-            "volume": (1e-3, 0),
+            "volume": (1e-5, 0),
             "minSJ": (0.3, 0.1),
             "minSIGE": (0.7, 0.5),
             "minSICN": (0.7, 0.3),
+            "aspectRatio": (4, 1.5),
         }
         param_map = {
             "gamma": (
@@ -498,6 +499,15 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["minSJ"][1]
                 else "red",
             ),
+            "aspectRatio": (
+                "Aspect Ratio",
+                lambda v: "green"
+                if v < self.quality_bins["aspectRatio"][0]
+                else "yellow"
+                if v < self.quality_bins["aspectRatio"][1]
+                else "red",
+            ),
+
             # "minSIGE": ("minSIGE", lambda v: "green" if v > self.quality_bins["minSIGE"][0] else "yellow" if v > self.quality_bins["minSIGE"][1] else "red"),
             # "minSICN": ("minSICN", lambda v: "green" if v > self.quality_bins["minSICN"][0] else "yellow" if v > self.quality_bins["minSICN"][1] else "red"),
         }
@@ -526,8 +536,7 @@ class MeshSetupInputs(MesherSetup_UI):
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)
 
     def plot_mesh_parameter_histogram(self):
-        parameter_position = ["gamma", "volume", "minSJ", "minSIGE", "minSICN"]
-        parameter_position = ["gamma", "volume", "minSJ"]
+        parameter_position = ["gamma", "volume", "minSJ", "aspectRatio"]
         parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
         parameter = parameter_position[parameter_index]
         mesh_quality = list(app().project.model.mesh.mesh_quality[parameter].values())
@@ -539,11 +548,17 @@ class MeshSetupInputs(MesherSetup_UI):
         bin_max = self.quality_bins[parameter][0]
         bin_med = (bin_min + bin_max) / 2
 
-        cmap = mcolors.LinearSegmentedColormap.from_list(
-            "qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")]
-        )
-        norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
-        colors = cmap(norm(bin_centers))
+        if parameter == "aspectRatio":
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "qualidade", [(0, "green"), (bin_med, "gold"), (1, "red")]
+            )
+
+        else:
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")]
+            )
+            norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
+            colors = cmap(norm(bin_centers))
 
         plt.figure(figsize=(10, 5))
         for i in range(len(hist)):
@@ -558,8 +573,12 @@ class MeshSetupInputs(MesherSetup_UI):
             )
 
         percentile_5 = np.percentile(mesh_quality, 5)
+        percentile_95 = np.percentile(mesh_quality, 95)
         plt.axvline(
             percentile_5, color="grey", linestyle="--", linewidth=2, label="5% percentile"
+        )
+        plt.axvline(
+            percentile_95, color="black", linestyle="--", linewidth=2, label="95% percentile"
         )
         plt.legend()
 
@@ -567,6 +586,7 @@ class MeshSetupInputs(MesherSetup_UI):
             "gamma": "Gamma",
             "volume": "Volume",
             "minSJ": "Scaled Jacobian",
+            "aspectRatio": "Aspect Ratio",
         }
 
         plt.title(f"{title[parameter]} histogram")
@@ -577,8 +597,7 @@ class MeshSetupInputs(MesherSetup_UI):
         plt.show()
 
     def show_bad_elements(self):
-        parameter_position = ["gamma", "volume", "minSJ", "minSIGE", "minSICN"]
-        parameter_position = ["gamma", "volume", "minSJ"]
+        parameter_position = ["gamma", "volume", "minSJ", "aspectRatio"]
         parameter_index = self.tableWidget_mesh_quality.currentIndex().row()
         parameter = parameter_position[parameter_index]
 
@@ -586,7 +605,10 @@ class MeshSetupInputs(MesherSetup_UI):
         bad_elements = []
 
         for element, quality in mesh_quality.items():
-            if quality < self.quality_bins[parameter][1]:
+            if parameter == "aspectRatio":
+                if quality > self.quality_bins[parameter][0]:
+                    bad_elements.append(element)
+            elif quality < self.quality_bins[parameter][1]:
                 bad_elements.append(element)
 
         if not bad_elements:
