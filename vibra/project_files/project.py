@@ -75,8 +75,6 @@ class Project:
 
     def save_project(self, path: Path | str):
         path = Path(path)
-        if not path.exists():
-            raise FileNotFoundError(f'File "{str(path)}" does not exist')
 
         self.save_path = path
         self.name = path.stem
