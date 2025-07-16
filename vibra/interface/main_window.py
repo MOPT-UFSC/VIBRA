@@ -765,6 +765,54 @@ class MainWindow(MainWindow_UI):
 
         self.open_project(project_path)
 
+    def open_project(self, project_path: str | Path | None = None):
+        """
+        This function loads a new project in a temporary folder.
+        If you pass a valid vibra file to this function, it will first copy
+        the file to a temporary folder and then load it.
+        """
+        try:
+            if project_path is not None:
+                project_path = Path(project_path)
+                app().config.add_recent_file(project_path)
+                app().config.write_last_folder_path_in_file("project_folder", project_path)
+                self.update_recents_menu()
+                copy(project_path, TEMP_PROJECT_FILE)
+                self.update_window_title(project_path)
+
+            app().project.reset_variables()
+            app().project.reset_solutions()
+
+            if project_path is not None:
+                app().project.name = project_path.stem
+                app().project.save_path = project_path
+
+            LoadingWindow(app().project.loader.load).run()
+
+            self.analysis_toolbar.check_analysis_setup_callback()
+            self.status_bar.setVisible(True)
+            self.action_front_view_callback()
+            self.update_mesh_information()
+
+            LoadingWindow(self.mesh_widget.update_plot).run()
+            LoadingWindow(self.geometry_widget.update_plot).run()
+            self.model_setup_widget.model_setup_items.update_items_appearance()            
+
+            self.action_results_workspace.setDisabled(True)
+            self.action_model_workspace_callback()
+            
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            window_title = "Error"
+            title = "Error while processing the 'open_project' method"
+            message = str(error_log)
+            PrintMessageInput([window_title, title, message])
+
+            app().config.remove_path_from_config_file(project_path)
+            self.welcome_widget.update_recent_projects()
+            self.update_recents_menu()
+
     def import_geometry_or_mesh_dialog(self, caption: str | None = None, ext_filter: str | None = None):
         self.close_dialogs()
 
@@ -830,60 +878,6 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.update_items_appearance()            
         
         return True
-
-    def update_window_title(self, project_path: str | Path):
-        if isinstance(project_path, str):
-            project_path = Path(project_path)
-        project_name = project_path.stem
-        self.setWindowTitle(f"{project_name}")
-
-    def open_project(self, project_path: str | Path | None = None):
-        """
-        This function loads a new project in a temporary folder.
-        If you pass a valid vibra file to this function, it will first copy
-        the file to a temporary folder and then load it.
-        """
-        try:
-            if project_path is not None:
-                project_path = Path(project_path)
-                app().config.add_recent_file(project_path)
-                app().config.write_last_folder_path_in_file("project_folder", project_path)
-                self.update_recents_menu()
-                copy(project_path, TEMP_PROJECT_FILE)
-                self.update_window_title(project_path)
-
-            app().project.reset_variables()
-            app().project.reset_solutions()
-
-            if project_path is not None:
-                app().project.name = project_path.stem
-                app().project.save_path = project_path
-
-            LoadingWindow(app().project.loader.load).run()
-
-            self.analysis_toolbar.check_analysis_setup_callback()
-            self.status_bar.setVisible(True)
-            self.action_front_view_callback()
-            self.update_mesh_information()
-
-            LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
-            self.model_setup_widget.model_setup_items.update_items_appearance()            
-
-            self.action_results_workspace.setDisabled(True)
-            self.action_model_workspace_callback()
-            
-        except Exception as error_log:
-            from traceback import print_exception
-            print_exception(error_log)
-            window_title = "Error"
-            title = "Error while processing the 'open_project' method"
-            message = str(error_log)
-            PrintMessageInput([window_title, title, message])
-
-            app().config.remove_path_from_config_file(project_path)
-            self.welcome_widget.update_recent_projects()
-            self.update_recents_menu()
 
     def import_geometry_or_mesh(self, path: str, update_render: bool = True):
 
@@ -980,6 +974,12 @@ class MainWindow(MainWindow_UI):
             image = widget.get_screenshot()
             with open(path, "wb") as file:
                 image.save(file)
+
+    def update_window_title(self, project_path: str | Path):
+        if isinstance(project_path, str):
+            project_path = Path(project_path)
+        project_name = project_path.stem
+        self.setWindowTitle(f"{project_name}")
 
     def action_exit_callback(self):
         self.close_app()
