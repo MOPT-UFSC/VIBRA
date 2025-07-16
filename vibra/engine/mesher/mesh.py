@@ -1693,17 +1693,23 @@ class Mesh:
             list(zip(elements, aspect_ratio_quals)), dtype=dtype
         )
 
-        # worst_value - average value - stdev
-        for i in range(3):
-            self.mesh_quality_statistics[i, 0] = np.amin(self.mesh_quality[i, :]["val"])
-            self.mesh_quality_statistics[i, 1] = np.mean(self.mesh_quality[i, :]["val"])
-            self.mesh_quality_statistics[i, 2] = np.std(self.mesh_quality[i, :]["val"])
-
-        self.mesh_quality_statistics[3, 0] = np.amax(self.mesh_quality[3, :]["val"])
-        self.mesh_quality_statistics[3, 1] = np.mean(self.mesh_quality[3, :]["val"])
-        self.mesh_quality_statistics[3, 2] = np.std(self.mesh_quality[3, :]["val"])
+        self.get_mesh_quality_statistics(self.mesh_quality)
 
         return self.mesh_quality
+    
+    def get_mesh_quality_statistics(self, mesh_quality_parameters):
+        # worst_value - average value - stdev
+        for i in range(3):
+            self.mesh_quality_statistics[i, 0] = np.amin(mesh_quality_parameters[i, :]["val"])
+            self.mesh_quality_statistics[i, 1] = np.mean(mesh_quality_parameters[i, :]["val"])
+            self.mesh_quality_statistics[i, 2] = np.std(mesh_quality_parameters[i, :]["val"])
+
+        self.mesh_quality_statistics[3, 0] = np.amax(mesh_quality_parameters[3, :]["val"])
+        self.mesh_quality_statistics[3, 1] = np.mean(mesh_quality_parameters[3, :]["val"])
+        self.mesh_quality_statistics[3, 2] = np.std(mesh_quality_parameters[3, :]["val"])
+
+        return self.mesh_quality_statistics
+
 
     def compute_initial_mesh_size(
         self, path, geometry_tolerance: float = 1e-10, threads: int = 0

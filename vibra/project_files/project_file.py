@@ -40,6 +40,7 @@ class ProjectFile:
         self.geometry_data_filename = "geometry_data.hdf5"
         self.model_properties_filename = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
+        self.mesh_quality_parameters_filename = "mesh_qulity_parameters.hdf5"
         self.imported_table_data_filename = "imported_tables_data.hdf5"
         self.results_data_filename = "results_data.hdf5"
         self.thumbnail_filename = "thumbnail.png"
@@ -223,7 +224,56 @@ class ProjectFile:
         project_setup["mesh_setup"] = mesh_setup           
         self.filebox.write(self.project_setup_filename, project_setup)
         app().main_window.project_data_modified = True
-    
+
+    def write_mesh_quality_parameters_in_file(self):
+        mesh_quality = app().project.model.mesh.mesh_quality
+
+        dtype = [("el", int), ("val", float)]
+        
+        structured_array = np.array(mesh_quality, dtype=dtype)
+
+        dtype = tuple(structured_array)
+        
+        with self.filebox.open(self.mesh_data_filename, "a") as internal_file:
+            with h5py.File(internal_file, "a") as f:
+                f.create_dataset("mesh_quality/mesh_quality_matrix", 
+                            data=mesh_quality
+                )
+        
+        app().main_window.project_data_modified = True    
+
+    def read_mesh_quality_parameters_from_file(self):
+        mesh_quality_data = dict()
+        try:
+            if not self.filebox.contains(self.mesh_data_filename):
+                return None
+             
+            with self.filebox.open(self.mesh_data_filename) as internal_file:
+                with h5py.File(internal_file, "r") as f:
+                    
+                    if "mesh_quality" in f:
+                        quality_group = f["mesh_quality"]
+                        
+                        for key, values in quality_group.items():
+                            try:
+                                if isinstance(values, h5py.Dataset):
+                                    mesh_quality_data[key] = np.array(values)
+                                else:
+                                    mesh_quality_data[key] = values[()]
+                                    
+                            except Exception as e:
+                                try:
+                                    mesh_quality_data[key] = tuple(values[()])
+                                except:
+                                    mesh_quality_data[key] = values[()]
+        
+        except Exception as error_log:
+            # from traceback import print_exception
+            # print_exception(error_log)
+            return 
+        
+        return mesh_quality_data
+
     def read_mesh_setup_from_file(self):
 
         project_setup = self.filebox.read(self.project_setup_filename)

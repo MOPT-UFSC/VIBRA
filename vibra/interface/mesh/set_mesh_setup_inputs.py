@@ -360,6 +360,7 @@ class MeshSetupInputs(MesherSetup_UI):
         app().main_window.update_geometry_information()
 
         self.config_control_quality_table()
+        app().file.write_mesh_quality_parameters_in_file()
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
@@ -388,7 +389,6 @@ class MeshSetupInputs(MesherSetup_UI):
         app().file.remove_results_data_from_project_file()
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
-        # self.worst_value = app().project.model.mesh.mesh_quality_worst_value
 
         app().main_window.update_symbols()
 
@@ -459,9 +459,16 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        mesh_statistics = app().project.model.mesh.mesh_quality_statistics
+        mesh_data = app().file.read_mesh_quality_parameters_from_file()
 
-        if not mesh_statistics.all():
+        if mesh_data is not None:
+            mesh_quality_parameters = np.array(list(mesh_data.values())[0])
+            mesh_statistics = app().project.model.mesh.get_mesh_quality_statistics(mesh_quality_parameters)
+
+        else:
+            mesh_statistics = app().project.model.mesh.mesh_quality_statistics
+
+        if not np.any(mesh_statistics):
             return
 
         worst_values = mesh_statistics[:, 0]
