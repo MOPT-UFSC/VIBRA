@@ -459,10 +459,10 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        mesh_data = app().file.read_mesh_quality_parameters_from_file()
+        mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
 
-        if mesh_data:
-            mesh_quality_parameters = np.array(list(mesh_data.values())[0])
+        if mesh_quality_parameters:
+            mesh_quality_parameters = np.array(list(mesh_quality_parameters.values())[0])
             mesh_statistics = app().project.model.mesh.get_mesh_quality_statistics(mesh_quality_parameters)
 
         else:
@@ -476,7 +476,7 @@ class MeshSetupInputs(MesherSetup_UI):
         stdevs = mesh_statistics[:, 2]
 
         self.quality_bins = {
-            "gamma": (0.7, 0.2),
+            "gamma": (0.7, 0.1),
             "volume": (1e-5, 0),
             "minSJ": (0.3, 0.1),
             "aspectRatio": (4, 1.5),
@@ -546,9 +546,15 @@ class MeshSetupInputs(MesherSetup_UI):
             2: "minSJ",
             3: "aspectRatio",
         }
-        mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx, :][
-            "val"
-        ]
+
+        mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
+
+        if mesh_quality_parameters:
+            mesh_quality_vals = np.array(list(mesh_quality_parameters.values())[0])[parameter_idx]['val']
+
+        else:
+            mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx]['val']
+
 
         bins = np.linspace(min(mesh_quality_vals), max(mesh_quality_vals), 30)
         hist, bin_edges = np.histogram(mesh_quality_vals, bins=bins)
@@ -621,7 +627,15 @@ class MeshSetupInputs(MesherSetup_UI):
             2: "minSJ",
             3: "aspectRatio",
         }
-        mesh_quality = app().project.model.mesh.mesh_quality[parameter_idx]
+
+        mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
+
+        if mesh_quality_parameters:
+            mesh_quality = np.array(list(mesh_quality_parameters.values())[0])[parameter_idx]
+
+        else:
+            mesh_quality = app().project.model.mesh.mesh_quality[parameter_idx]
+
         bad_elements = []
 
         for element, quality in mesh_quality:
