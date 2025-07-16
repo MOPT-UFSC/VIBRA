@@ -459,23 +459,24 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        worst_value = app().project.model.mesh.mesh_quality_worst_value
-        average_value = app().project.model.mesh.mesh_quality_average
-        stdev_value = app().project.model.mesh.mesh_quality_stdev
-
-        if not worst_value:
+        mesh_statistics = app().project.model.mesh.mesh_quality_statistics
+        
+        if not mesh_statistics.all():
             return
+        
+        worst_values = mesh_statistics[:, 0]
+        avgs = mesh_statistics[:, 1]
+        stdevs = mesh_statistics[:, 2]
+
 
         self.quality_bins = {
             "gamma": (0.7, 0.2),
             "volume": (1e-5, 0),
             "minSJ": (0.3, 0.1),
-            "minSIGE": (0.7, 0.5),
-            "minSICN": (0.7, 0.3),
             "aspectRatio": (4, 1.5),
         }
         param_map = {
-            "gamma": (
+            0: (
                 "Gamma",
                 lambda v: "green"
                 if v > self.quality_bins["gamma"][0]
@@ -483,7 +484,7 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["gamma"][1]
                 else "red",
             ),
-            "volume": (
+            1: (
                 "Volume",
                 lambda v: "green"
                 if v > self.quality_bins["volume"][0]
@@ -491,7 +492,7 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["volume"][1]
                 else "red",
             ),
-            "minSJ": (
+            2: (
                 "Scaled Jacobian",
                 lambda v: "green"
                 if v > self.quality_bins["minSJ"][0]
@@ -499,7 +500,7 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["minSJ"][1]
                 else "red",
             ),
-            "aspectRatio": (
+            5: (
                 "Aspect Ratio",
                 lambda v: "green"
                 if v < self.quality_bins["aspectRatio"][0]
@@ -507,30 +508,26 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v < self.quality_bins["aspectRatio"][1]
                 else "red",
             ),
-
-            # "minSIGE": ("minSIGE", lambda v: "green" if v > self.quality_bins["minSIGE"][0] else "yellow" if v > self.quality_bins["minSIGE"][1] else "red"),
-            # "minSICN": ("minSICN", lambda v: "green" if v > self.quality_bins["minSICN"][0] else "yellow" if v > self.quality_bins["minSICN"][1] else "red"),
         }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
 
-        values_list = [
-            worst_value,
-            average_value,
-            stdev_value,
-        ]
-        for j, quality_parameter in enumerate(values_list, start=1):
-            for i, (key, (label, color_fn)) in enumerate(param_map.items()):
-                self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(label))
+        for i, (key, (label, color_fn)) in enumerate(param_map.items()):
+            self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(label))
 
-                value = quality_parameter.get(key)
-                value_item = QTableWidgetItem(str(round(value, 3)))
+            worst_value_item = QTableWidgetItem(str(round(worst_values[key], 3)))
+            avg_item = QTableWidgetItem(str(round(avgs[key], 3)))
+            stdev_item = QTableWidgetItem(str(round(stdevs[key], 3)))
 
-                if quality_parameter != values_list[2]:
-                    color = color_fn(value)
-                    value_item.setForeground(QBrush(QColor(color)))
+            worst_value_color = color_fn(worst_values[key])
+            worst_value_item.setForeground(QBrush(QColor(worst_value_color)))
 
-                self.tableWidget_mesh_quality.setItem(i, j, value_item)
+            avg_color = color_fn(avgs[key])
+            avg_item.setForeground(QBrush(QColor(avg_color)))
+
+            self.tableWidget_mesh_quality.setItem(i, 1, worst_value_item)
+            self.tableWidget_mesh_quality.setItem(i, 2, avg_item)
+            self.tableWidget_mesh_quality.setItem(i, 3, stdev_item)
 
         if self.tableWidget_mesh_quality.rowCount() > 0:
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)

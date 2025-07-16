@@ -60,10 +60,8 @@ class Mesh:
 
         self.geometry_information = defaultdict(list)
 
-        self.mesh_quality = dict()
-        self.mesh_quality_worst_value = dict()
-        self.mesh_quality_average = dict()
-        self.mesh_quality_stdev = dict()
+        self.mesh_quality = None
+        self.mesh_quality_statistics = np.zeros((6, 3))
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -1614,49 +1612,47 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
     
-    
     def get_mesh_quality_parameters(self):
         if not gmsh.model.mesh.getElements(3, -1)[1]:
             return
         
         parameters = [
-            "gamma",
-            "volume",
-            "minSJ",
-            "minSIGE",
-            "minSICN",
-            "minEdge",
-            "maxEdge",
+            "gamma", #0
+            "volume", #1
+            "minSJ", #2
+            "minEdge", #3
+            "maxEdge", #4
         ]
         
         elements = gmsh.model.mesh.getElements(3, -1)[1][0]
-        for parameter in parameters:
-            qualities = dict()
-            
-            element_qualities = gmsh.model.mesh.getElementQualities(elements, parameter)
-            for i, element in enumerate(elements):
-                qualities[element] = element_qualities[i]
+        num_elements = len(elements)
+        dtype = np.dtype([('el', int), ('val', float)])
+        self.mesh_quality = np.empty((len(parameters) + 1, num_elements), dtype=dtype)
 
-            element_qualities = np.array(element_qualities)
-            self.mesh_quality[parameter] = qualities
+        for param_idx, param in enumerate(parameters):
+            qualities = gmsh.model.mesh.getElementQualities(elements, param)
+            self.mesh_quality[param_idx, :] = np.array(list(zip(elements, qualities)), dtype=dtype)
 
-            self.mesh_quality_worst_value[parameter] = np.min(element_qualities)
-            self.mesh_quality_average[parameter] = np.average(element_qualities)
-            self.mesh_quality_stdev[parameter] = np.std(element_qualities)
+        max_edge_vals = self.mesh_quality[4, :]['val']
+        min_edge_vals = self.mesh_quality[3, :]['val']
+        aspect_ratio = max_edge_vals / min_edge_vals
+        self.mesh_quality[5, :] = np.array(list(zip(elements, aspect_ratio)), dtype=dtype)
 
-        for i, element in enumerate(elements):
-            qualities[element] = self.mesh_quality["maxEdge"][element] / self.mesh_quality["minEdge"][element]
-
-        self.mesh_quality["aspectRatio"] = qualities
-        element_qualities = np.array(list(qualities.values()), dtype=float)
-        self.mesh_quality_worst_value["aspectRatio"] = np.max(element_qualities)
-        self.mesh_quality_average["aspectRatio"] = np.average(element_qualities)
-        self.mesh_quality_stdev["aspectRatio"] = np.std(element_qualities)
-
-
-
-        return self.mesh_quality   
-
+        print(self.mesh_quality[5, :]['val'])
+        print(np.mean(self.mesh_quality[5, :]['val']))
+        # worst_value - average value - stdev
+        for i in range(5):
+            self.mesh_quality_statistics[i, 0] = np.amin(self.mesh_quality[i, :]['val'])
+            self.mesh_quality_statistics[i, 1] = np.mean(self.mesh_quality[i, :]['val'])
+            self.mesh_quality_statistics[i, 2] = np.std(self.mesh_quality[i, :]['val'])
+        
+        self.mesh_quality_statistics[5, 0] = np.amax(self.mesh_quality[5, :]['val'])
+        self.mesh_quality_statistics[5, 1] = np.mean(self.mesh_quality[5, :]['val'])
+        self.mesh_quality_statistics[5, 2] = np.std(self.mesh_quality[5, :]['val'])
+        
+        
+        return self.mesh_quality 
+        
 
     def compute_initial_mesh_size(self, path, geometry_tolerance: float = 1e-10, threads: int = 0):
         gmsh.initialize("", False, interruptible=False)
