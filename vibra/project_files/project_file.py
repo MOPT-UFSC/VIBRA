@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -21,13 +20,13 @@ window_title_2 = "Warning"
 
 
 class ProjectFile:
-    
     def __init__(self, project: "Project", path : str, override=False):
         super().__init__()
 
         self.path = path
         self.project = project
         self.filebox = Filebox(Path(path), override=override)
+        self.data_modified = False
 
         self._initialize()
         self._default_filenames()
@@ -79,7 +78,7 @@ class ProjectFile:
                 project_setup["geometry_filename"] = basename
             
             self.filebox.write(self.project_setup_filename, project_setup)
-            app().main_window.project_data_modified = True
+            self.project_data_modified = True
 
         except Exception as error_log:
             from traceback import print_exception
@@ -191,7 +190,7 @@ class ProjectFile:
                         f.create_dataset(prefix, data=output_data, dtype=dtype)
 
         self.filebox.remove(self.results_data_filename)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_geometry_data_from_file(self):
 
@@ -225,7 +224,7 @@ class ProjectFile:
 
         project_setup["mesh_setup"] = mesh_setup           
         self.filebox.write(self.project_setup_filename, project_setup)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
     
     def read_mesh_setup_from_file(self):
 
@@ -294,7 +293,7 @@ class ProjectFile:
                         f.create_dataset(prefix, data=data, dtype=dtype)
 
         self.filebox.remove(self.results_data_filename)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_mesh_data_from_file(self):
 
@@ -337,7 +336,7 @@ class ProjectFile:
 
         project_setup["analysis_setup"] = aux         
         self.filebox.write(self.project_setup_filename, project_setup)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_analysis_setup_from_file(self):
 
@@ -354,21 +353,21 @@ class ProjectFile:
 
     def write_model_setup_in_file(self, project_setup : dict):
         self.filebox.write(self.project_setup_filename, project_setup)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_model_setup_from_file(self):
         return self.filebox.read(self.project_setup_filename)
 
     def write_material_library_in_file(self, config):
         self.filebox.write(self.material_library_filename, config)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_material_library_from_file(self):
         return self.filebox.read(self.material_library_filename)
 
     def write_fluid_library_in_file(self, config):
         self.filebox.write(self.fluid_library_filename, config)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_fluid_library_from_file(self):
         return self.filebox.read(self.fluid_library_filename)
@@ -431,7 +430,7 @@ class ProjectFile:
                         )
 
             self.filebox.write(self.model_properties_filename, data)
-            app().main_window.project_data_modified = True
+            self.project_data_modified = True
 
         except Exception as error_log:
 
@@ -500,7 +499,7 @@ class ProjectFile:
                             data_name = f"{group_label}/{table_name}"
                             f.create_dataset(data_name, data=data_array, dtype=float)
 
-                    app().main_window.project_data_modified = True
+                    self.project_data_modified = True
 
     def read_imported_table_data_from_file(self):
 
@@ -531,7 +530,7 @@ class ProjectFile:
         if thumbnail is None:
             return
         self.filebox.write(self.thumbnail_filename, thumbnail)
-        app().main_window.project_data_modified = True
+        self.project_data_modified = True
 
     def read_thumbnail(self):
         return self.filebox.read(self.thumbnail_filename)
@@ -581,7 +580,7 @@ class ProjectFile:
                         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
                         f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
-                app().main_window.project_data_modified = True
+                self.project_data_modified = True
 
     def read_results_data_from_file(self):
         

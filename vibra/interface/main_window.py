@@ -77,7 +77,7 @@ class MainWindow(MainWindow_UI):
 
     def _initialize(self):
         self.dialog = None
-        self.project_data_modified = False
+        app().project.file.project_data_modified = False
         self.user_path = Path().home()
 
     def _connect_actions(self):
@@ -736,7 +736,7 @@ class MainWindow(MainWindow_UI):
 
             copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
-            self.project_data_modified = False
+            app().project.file.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
 
         LoadingWindow(save_data).run(path)
@@ -906,7 +906,7 @@ class MainWindow(MainWindow_UI):
                 self.update_mesh_information()
                 app().project.file.write_geometry_data_in_file()
                 app().project.file.write_mesh_data_in_file()
-                app().main_window.project_data_modified = False
+                app().project.file.project_data_modified = False
 
             self.update_geometry_information()
 
@@ -1064,7 +1064,7 @@ class MainWindow(MainWindow_UI):
 
         condition_1 = app().project.save_path is None
         condition_2 = TEMP_PROJECT_FILE.exists()
-        condition_3 = self.project_data_modified
+        condition_3 = app().project.file.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
         if condition:
