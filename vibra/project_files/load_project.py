@@ -17,17 +17,11 @@ from vibra.utils.utils import get_color_rgb
 import logging
 import numpy as np
 
-from collections import defaultdict
+
 
 class LoadProject:
     def __init__(self, project: "Project"):
         self.project = project
-        super().__init__()
-
-    def initialize(self):
-        self.file = self.project.file
-        self.model = self.project.model
-        self.properties = self.project.model.properties
 
     def load(self):
         self.load_geometry_setup()
@@ -42,12 +36,12 @@ class LoadProject:
         self.load_analysis_results()
 
     def load_geometry_setup(self):
-        length_unit, geometry_qf = self.file.read_geometry_setup_from_file()
-        self.model.set_length_unit(length_unit=length_unit)
-        self.model.set_geometry_quality_factor(geometry_qf=geometry_qf)
+        length_unit, geometry_qf = self.project.file.read_geometry_setup_from_file()
+        self.project.model.set_length_unit(length_unit=length_unit)
+        self.project.model.set_geometry_quality_factor(geometry_qf=geometry_qf)
 
     def load_geometry(self):
-        geometry_path = self.file.read_geometry_from_file()
+        geometry_path = self.project.file.read_geometry_from_file()
         app().main_window.import_geometry_or_mesh(geometry_path, update_render=False)
 
     def load_project_libraries(self):
@@ -57,7 +51,7 @@ class LoadProject:
     def load_fluid_library(self):
 
         self.library_fluids = dict()
-        config = self.file.read_fluid_library_from_file()
+        config = self.project.file.read_fluid_library_from_file()
 
         if config is None:
             return
@@ -140,7 +134,7 @@ class LoadProject:
     def load_material_library(self):
 
         self.library_materials = dict()
-        config = self.file.read_material_library_from_file()
+        config = self.project.file.read_material_library_from_file()
 
         if config is None:
             return
@@ -170,15 +164,15 @@ class LoadProject:
 
     def load_geometry_data(self):
         
-        self.model.mesh.clear_geometry_data()
+        self.project.model.mesh.clear_geometry_data()
 
-        geometry_data = self.file.read_geometry_data_from_file()
+        geometry_data = self.project.file.read_geometry_data_from_file()
         if not geometry_data:
             # forces the project to reset, ensuring backward
             # compatibility with older versions of project files
             self.project.reset_solutions()
-            self.file.remove_mesh_data_from_project_file()
-            self.file.remove_results_data_from_project_file()
+            self.project.file.remove_mesh_data_from_project_file()
+            self.project.file.remove_results_data_from_project_file()
             return
 
         logging.info("Loading geometry data... [20/100]")
@@ -189,47 +183,47 @@ class LoadProject:
             if data is None:
                 continue
 
-            self.model.mesh.geometry_information[key] = [int(value) for value in data]
+            self.project.model.mesh.geometry_information[key] = [int(value) for value in data]
 
         logging.info(" geometry data... [60/100]")
 
         for key, data in geometry_data.items():
               
             if "length_from" in key:
-                self.model.mesh.length_from_lines = {int(key) : value for key, value in data}
+                self.project.model.mesh.length_from_lines = {int(key) : value for key, value in data}
 
             elif "area_from" in key:
-                self.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
+                self.project.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
 
             elif "volume_from" in key:
-                self.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}
+                self.project.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}
 
             elif "surfaces_from_volume" in key:
                 tag = int(key.split("_")[-1])
                 _data = [int(_id) for _id in data]
                 if "cache" in key:
-                    self.model.mesh.cache_surfaces_from_volume[tag] = _data
+                    self.project.model.mesh.cache_surfaces_from_volume[tag] = _data
                 else:
-                    self.model.mesh.surfaces_from_volume[tag] = _data
+                    self.project.model.mesh.surfaces_from_volume[tag] = _data
 
             elif "lines_from_surface" in key:
                 tag = int(key.split("_")[-1])
                 _data = [int(_id) for _id in data]
                 if "cache" in key:
-                    self.model.mesh.cache_lines_from_surface[tag] = _data
+                    self.project.model.mesh.cache_lines_from_surface[tag] = _data
                 else:
-                    self.model.mesh.lines_from_surface[tag] = _data
+                    self.project.model.mesh.lines_from_surface[tag] = _data
 
             elif "points_from_line" in key:
                 tag = int(key.split("_")[-1])
                 _data = [int(_id) for _id in data]
                 if "cache" in key:
-                    self.model.mesh.cache_points_from_line[tag] = _data
+                    self.project.model.mesh.cache_points_from_line[tag] = _data
                 else:    
-                    self.model.mesh.points_from_line[tag] = _data
+                    self.project.model.mesh.points_from_line[tag] = _data
 
         logging.info("Loading geometry data... [95/100]")
-        self.model.mesh.process_upwards_adjacencies_from_entities()
+        self.project.model.mesh.process_upwards_adjacencies_from_entities()
 
         app().main_window.update_geometry_information()
 
@@ -237,22 +231,22 @@ class LoadProject:
 
         logging.info("Loading mesh... [20/100]")
 
-        self.model.mesh.clear_mesh_data()
+        self.project.model.mesh.clear_mesh_data()
 
-        self.model.mesh.nodal_coordinates = mesh_data["nodal_coordinates"]
-        self.model.mesh.lines_connectivity = mesh_data["lines_connectivity"]
-        self.model.mesh.faces_connectivity = mesh_data["faces_connectivity"]
-        self.model.mesh.solids_connectivity = mesh_data["solids_connectivity"]
+        self.project.model.mesh.nodal_coordinates = mesh_data["nodal_coordinates"]
+        self.project.model.mesh.lines_connectivity = mesh_data["lines_connectivity"]
+        self.project.model.mesh.faces_connectivity = mesh_data["faces_connectivity"]
+        self.project.model.mesh.solids_connectivity = mesh_data["solids_connectivity"]
 
-        self.model.mesh.cache_nodal_coordinates = mesh_data.get("cache_nodal_coordinates")
-        self.model.mesh.cache_lines_connectivity = mesh_data.get("cache_lines_connectivity")
-        self.model.mesh.cache_faces_connectivity = mesh_data.get("cache_faces_connectivity")
-        self.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
+        self.project.model.mesh.cache_nodal_coordinates = mesh_data.get("cache_nodal_coordinates")
+        self.project.model.mesh.cache_lines_connectivity = mesh_data.get("cache_lines_connectivity")
+        self.project.model.mesh.cache_faces_connectivity = mesh_data.get("cache_faces_connectivity")
+        self.project.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
 
         nodes_from_points = mesh_data.get("nodes_from_points")
         if isinstance(nodes_from_points, np.ndarray):
-            self.model.mesh.nodes_from_points = {int(key) : int(value) for key, value in nodes_from_points}
-            self.model.mesh.points_from_nodes = {value : key for key, value in self.model.mesh.nodes_from_points.items()}
+            self.project.model.mesh.nodes_from_points = {int(key) : int(value) for key, value in nodes_from_points}
+            self.project.model.mesh.points_from_nodes = {value : key for key, value in self.project.model.mesh.nodes_from_points.items()}
 
         logging.info("Loading mesh... [60/100]")
 
@@ -261,55 +255,55 @@ class LoadProject:
             # keep these lines for backwards compatibility
             if "nodes_from_points_" in key:
                 tag = int(key.split("_")[-1])
-                self.model.mesh.nodes_from_points[tag] = data              
+                self.project.model.mesh.nodes_from_points[tag] = data              
 
             elif "surfaces_from_volume" in key:
                 tag = int(key.split("_")[-1])
                 _data = [int(_id) for _id in data]
                 if "cache" in key:
-                    self.model.mesh.cache_surfaces_from_volume[tag] = _data
+                    self.project.model.mesh.cache_surfaces_from_volume[tag] = _data
                 else:
-                    self.model.mesh.surfaces_from_volume[tag] = _data
+                    self.project.model.mesh.surfaces_from_volume[tag] = _data
 
             elif "lines_from_surface" in key:
                 tag = int(key.split("_")[-1])
                 _data = [int(_id) for _id in data]
                 if "cache" in key:
-                    self.model.mesh.cache_lines_from_surface[tag] = _data
+                    self.project.model.mesh.cache_lines_from_surface[tag] = _data
                 else:
-                    self.model.mesh.lines_from_surface[tag] = _data
+                    self.project.model.mesh.lines_from_surface[tag] = _data
 
             elif "points_from_line" in key:
                 tag = int(key.split("_")[-1])
                 _data = [int(_id) for _id in data]
                 if "cache" in key:
-                    self.model.mesh.cache_points_from_line[tag] = _data
+                    self.project.model.mesh.cache_points_from_line[tag] = _data
                 else:    
-                    self.model.mesh.points_from_line[tag] = _data
+                    self.project.model.mesh.points_from_line[tag] = _data
 
             elif "normals_surface" in key:
                 tag = int(key.split("_")[-1])
-                self.model.mesh.normals_surface[tag] = data
+                self.project.model.mesh.normals_surface[tag] = data
 
             elif "curvatures_surface" in key:
                 tag = int(key.split("_")[-1])
-                self.model.mesh.curvatures_surface[tag] = data
+                self.project.model.mesh.curvatures_surface[tag] = data
 
-        self.model.mesh.process_upwards_adjacencies_from_entities()
+        self.project.model.mesh.process_upwards_adjacencies_from_entities()
 
         logging.info("Loading mesh... [65/100]")
-        self.model.mesh.process_mesh_related_mappings()
+        self.project.model.mesh.process_mesh_related_mappings()
 
         logging.info("Loading mesh... [90/100]")
-        self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
-        self.model.generated_mesh = True
+        self.project.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
+        self.project.model.generated_mesh = True
 
         logging.info("Loading mesh... [95/100]")
-        self.model.mesh.process_solid_elements_connected_to_nodes()
+        self.project.model.mesh.process_solid_elements_connected_to_nodes()
 
     def load_mesh_setup(self):
 
-        mesh_setup = self.file.read_mesh_setup_from_file()
+        mesh_setup = self.project.file.read_mesh_setup_from_file()
 
         if "element_type" in mesh_setup.keys():
             if "shape_function" in mesh_setup.keys():
@@ -342,15 +336,9 @@ class LoadProject:
                 self.project.set_mesh_setup(mesh_setup)
 
     def load_mesh_data(self):
-
-        mesh_data = self.file.read_mesh_data_from_file()
+        mesh_data = self.project.file.read_mesh_data_from_file()
         if mesh_data:
             self.load_mesh_data_from_file(mesh_data)
-
-        # else:
-        #     self.project.generate_mesh()
-        #     app().file.write_mesh_data_in_file()
-        #     app().file.app().file.write_geometry_data_in_file()
 
     def update_render(self):
 
@@ -362,7 +350,7 @@ class LoadProject:
 
     def load_imported_table_data_from_file(self):
 
-        imported_tables = self.file.read_imported_table_data_from_file()
+        imported_tables = self.project.file.read_imported_table_data_from_file()
 
         if "acoustic" in imported_tables.keys():
             self.project.model.properties.acoustic_imported_tables = imported_tables["acoustic"]
@@ -372,7 +360,7 @@ class LoadProject:
 
     def load_model_properties(self):
 
-        _properties = self.file.read_model_properties_from_file()
+        _properties = self.project.file.read_model_properties_from_file()
 
         for key, data in _properties.items():
             if isinstance(data, dict):
@@ -393,26 +381,26 @@ class LoadProject:
                             prop_data = self.library_materials[material_id]
 
                     if key == "volume_properties":
-                        self.properties._set_property(property, prop_data, volume=id)
+                        self.project.model.properties._set_property(property, prop_data, volume=id)
 
                     elif key == "surface_properties":
-                        self.properties._set_property(property, prop_data, surface=id)
+                        self.project.model.properties._set_property(property, prop_data, surface=id)
 
                     elif key == "line_properties":
-                        self.properties._set_property(property, prop_data, line=id)
+                        self.project.model.properties._set_property(property, prop_data, line=id)
 
                     elif key == "element_properties":
-                        self.properties._set_property(property, prop_data, element=id)
+                        self.project.model.properties._set_property(property, prop_data, element=id)
 
                     elif key == "nodal_properties":
-                        self.properties._set_property(property, prop_data, node=id)
+                        self.project.model.properties._set_property(property, prop_data, node=id)
 
                     else:
-                        self.properties._set_property(property, prop_data)
+                        self.project.model.properties._set_property(property, prop_data)
 
     def load_analysis_setup(self):
 
-        analysis_setup = self.file.read_analysis_setup_from_file()
+        analysis_setup = self.project.file.read_analysis_setup_from_file()
         if analysis_setup:
 
             f_min = None
@@ -434,14 +422,14 @@ class LoadProject:
         self.project.create_solver()
 
     def load_thumbnail(self):
-        thumbnail = self.file.read_thumbnail()
+        thumbnail = self.project.file.read_thumbnail()
         if thumbnail is not None:
             self.project.thumbnail = thumbnail
 
     def load_analysis_results(self):
 
         project = self.project
-        results_data = self.file.read_results_data_from_file()
+        results_data = self.project.file.read_results_data_from_file()
 
         if results_data:
             logging.info("Loading results... [20/100]")

@@ -859,7 +859,6 @@ class MainWindow(MainWindow_UI):
                 app().project.name = project_path.stem
                 app().project.save_path = project_path
 
-            app().project.loader.initialize()
             LoadingWindow(app().project.loader.load).run()
 
             self.analysis_toolbar.check_analysis_setup_callback()
