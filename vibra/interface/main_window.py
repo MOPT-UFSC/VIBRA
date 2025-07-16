@@ -760,22 +760,15 @@ class MainWindow(MainWindow_UI):
         the file to a temporary folder and then load it.
         """
         try:
-            if project_path is not None:
-                project_path = Path(project_path)
+            if project_path is None:
+                LoadingWindow(app().project.load_tmp_project).run()
+
+            else:
                 app().config.add_recent_file(project_path)
                 app().config.write_last_folder_path_in_file("project_folder", project_path)
                 self.update_recents_menu()
-                copy(project_path, TEMP_PROJECT_FILE)
                 self.update_window_title(project_path)
-
-            app().project.reset_variables()
-            app().project.reset_solutions()
-
-            if project_path is not None:
-                app().project.name = project_path.stem
-                app().project.save_path = project_path
-
-            LoadingWindow(app().project.loader.load).run()
+                LoadingWindow(app().project.load_project).run(project_path)
 
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
@@ -788,7 +781,7 @@ class MainWindow(MainWindow_UI):
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            
+
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
