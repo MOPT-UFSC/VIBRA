@@ -61,7 +61,7 @@ class Mesh:
         self.geometry_information = defaultdict(list)
 
         self.mesh_quality = None
-        self.mesh_quality_statistics = np.zeros((6, 3))
+        self.mesh_quality_statistics = np.zeros((4, 3))
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -1620,8 +1620,6 @@ class Mesh:
             "gamma", #0
             "volume", #1
             "minSJ", #2
-            "minEdge", #3
-            "maxEdge", #4
         ]
         
         elements = gmsh.model.mesh.getElements(3, -1)[1][0]
@@ -1632,23 +1630,23 @@ class Mesh:
         for param_idx, param in enumerate(parameters):
             qualities = gmsh.model.mesh.getElementQualities(elements, param)
             self.mesh_quality[param_idx, :] = np.array(list(zip(elements, qualities)), dtype=dtype)
+        
+        min_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "minEdge"))
+        max_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "maxEdge"))
 
-        max_edge_vals = self.mesh_quality[4, :]['val']
-        min_edge_vals = self.mesh_quality[3, :]['val']
-        aspect_ratio = max_edge_vals / min_edge_vals
-        self.mesh_quality[5, :] = np.array(list(zip(elements, aspect_ratio)), dtype=dtype)
+        aspect_ratio_quals = max_edge_quals / min_edge_quals
 
-        print(self.mesh_quality[5, :]['val'])
-        print(np.mean(self.mesh_quality[5, :]['val']))
+        self.mesh_quality[3, :] = np.array(list(zip(elements, aspect_ratio_quals)), dtype=dtype)
+
         # worst_value - average value - stdev
-        for i in range(5):
+        for i in range(3):
             self.mesh_quality_statistics[i, 0] = np.amin(self.mesh_quality[i, :]['val'])
             self.mesh_quality_statistics[i, 1] = np.mean(self.mesh_quality[i, :]['val'])
             self.mesh_quality_statistics[i, 2] = np.std(self.mesh_quality[i, :]['val'])
         
-        self.mesh_quality_statistics[5, 0] = np.amax(self.mesh_quality[5, :]['val'])
-        self.mesh_quality_statistics[5, 1] = np.mean(self.mesh_quality[5, :]['val'])
-        self.mesh_quality_statistics[5, 2] = np.std(self.mesh_quality[5, :]['val'])
+        self.mesh_quality_statistics[3, 0] = np.amax(self.mesh_quality[3, :]['val'])
+        self.mesh_quality_statistics[3, 1] = np.mean(self.mesh_quality[3, :]['val'])
+        self.mesh_quality_statistics[3, 2] = np.std(self.mesh_quality[3, :]['val'])
         
         
         return self.mesh_quality 

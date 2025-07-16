@@ -500,7 +500,7 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["minSJ"][1]
                 else "red",
             ),
-            5: (
+            3: (
                 "Aspect Ratio",
                 lambda v: "green"
                 if v < self.quality_bins["aspectRatio"][0]
