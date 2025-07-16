@@ -720,24 +720,12 @@ class MainWindow(MainWindow_UI):
     def save_project_as(self, path: str):
 
         def save_data(path):
-
-            path = Path(path)
-            app().project.name = path.stem
-            app().project.save_path = path
-            logging.info("Saving project data... [10/100]")
-
-            app().project.file.write_thumbnail()
+            # TODO: this can be further simplified
+            app().project.save_project(path)
             app().config.add_recent_file(path)
-            logging.info("Saving project data... [30/100]")
-
             app().config.write_last_folder_path_in_file("project_folder", path)
             self.update_recents_menu()
-            logging.info("Saving project data... [75/100]")
-
-            copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
-            app().project.file.project_data_modified = False
-            logging.info("The project data has been saved. [100/100]")
 
         LoadingWindow(save_data).run(path)
 
