@@ -23,6 +23,9 @@ from vibra.project_files.project_file import ProjectFile
 
 class Project:
     def __init__(self):
+        self.file = ProjectFile(self, TEMP_PROJECT_FILE) 
+        self.loader = LoadProject(self)
+
         self.reset_variables()
 
     def reset_variables(self):
@@ -70,23 +73,39 @@ class Project:
 
         self.create_solver()
 
-    def initialize_file_and_loader(self):   
-        self.file = ProjectFile(self, TEMP_PROJECT_FILE) 
-        self.loader = LoadProject(self)
-
     def save_project(self, path: Path | str):
-        self.save_path = Path(path)
-        self.name = self.save_path.stem
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f'File "{str(path)}" does not exist')
+
+        self.save_path = path
+        self.name = path.stem
         logging.info("Saving project data... [10/100]")
 
         self.file.write_thumbnail()
-        self.file.project_data_modified = False
         logging.info("Saving project data... [30/100]")
 
         # All the data already exists in a temporary folder
         # so we just need to copy it to the final location
-        copy(TEMP_PROJECT_FILE, self.save_path)
+        copy(TEMP_PROJECT_FILE, path)
+        self.file.project_data_modified = False
         logging.info("The project data has been saved. [100/100]")
+
+    def load_project(self, path: Path | str):
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f'File "{str(path)}" does not exist')
+
+        copy(path, TEMP_PROJECT_FILE)
+        self.load_tmp_project()
+
+        self.name = path.stem
+        self.save_path = path
+
+    def load_tmp_project(self):
+        self.reset_solutions()
+        self.reset_variables()
+        self.loader.load()
 
     def load_project_without_process_mesh(self, path: str, geometry_file: bool):
         self.model.set_geometry_path(path)

@@ -26,7 +26,6 @@ class Application(QApplication):
         self.config = Config()
 
         self.project = Project()
-        self.project.initialize_file_and_loader()
 
         # gui
         self.main_window = MainWindow()
