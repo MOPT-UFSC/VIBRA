@@ -635,7 +635,6 @@ class MainWindow(MainWindow_UI):
 
     def distinguish_mesh_solids(self, solids):
         if solids is None:
-            # TODO colocar aqui alguma coisa pra mostrar que nao tem nenhum elemento, ou desativar o botao 
             pass
         self.distinguished_solids = set(solids)
         self.show_mesh_render_widget()
