@@ -461,7 +461,7 @@ class MeshSetupInputs(MesherSetup_UI):
     def config_control_quality_table(self):
         mesh_data = app().file.read_mesh_quality_parameters_from_file()
 
-        if mesh_data is not None:
+        if mesh_data:
             mesh_quality_parameters = np.array(list(mesh_data.values())[0])
             mesh_statistics = app().project.model.mesh.get_mesh_quality_statistics(mesh_quality_parameters)
 

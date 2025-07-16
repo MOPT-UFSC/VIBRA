@@ -270,7 +270,7 @@ class ProjectFile:
         except Exception as error_log:
             # from traceback import print_exception
             # print_exception(error_log)
-            return 
+            return None
         
         return mesh_quality_data
 
