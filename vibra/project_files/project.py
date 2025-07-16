@@ -1,25 +1,24 @@
 
-from vibra import app
+import logging
+from pathlib import Path
+from shutil import copy
+from time import sleep, time
+
+from vibra import TEMP_PROJECT_FILE, app
 from vibra.engine import AnalysisID
-from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
+from vibra.engine.model import Model
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
-from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
-from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
-
-from vibra import TEMP_PROJECT_FILE
+from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project_file import ProjectFile
-
-from vibra.interface.process_analysis import ProcessAnalysis
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
-from vibra.interface.loading_window import LoadingWindow
-
-import logging
-from time import sleep, time
 
 
 class Project:
@@ -27,7 +26,6 @@ class Project:
         self.reset_variables()
 
     def reset_variables(self):
-
         self.name = "Project"
         self.fluid_list_path = ""
         self.material_list_path = ""
@@ -75,6 +73,20 @@ class Project:
     def initialize_file_and_loader(self):   
         self.file = ProjectFile(self, TEMP_PROJECT_FILE) 
         self.loader = LoadProject(self)
+
+    def save_project(self, path: Path | str):
+        self.save_path = Path(path)
+        self.name = self.save_path.stem
+        logging.info("Saving project data... [10/100]")
+
+        self.file.write_thumbnail()
+        self.file.project_data_modified = False
+        logging.info("Saving project data... [30/100]")
+
+        # All the data already exists in a temporary folder
+        # so we just need to copy it to the final location
+        copy(TEMP_PROJECT_FILE, self.save_path)
+        logging.info("The project data has been saved. [100/100]")
 
     def load_project_without_process_mesh(self, path: str, geometry_file: bool):
         self.model.set_geometry_path(path)
