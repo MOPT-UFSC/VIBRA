@@ -460,14 +460,13 @@ class MeshSetupInputs(MesherSetup_UI):
 
     def config_control_quality_table(self):
         mesh_statistics = app().project.model.mesh.mesh_quality_statistics
-        
+
         if not mesh_statistics.all():
             return
-        
+
         worst_values = mesh_statistics[:, 0]
         avgs = mesh_statistics[:, 1]
         stdevs = mesh_statistics[:, 2]
-
 
         self.quality_bins = {
             "gamma": (0.7, 0.2),
@@ -540,8 +539,9 @@ class MeshSetupInputs(MesherSetup_UI):
             2: "minSJ",
             3: "aspectRatio",
         }
-        mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx, :]['val']
-
+        mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx, :][
+            "val"
+        ]
 
         bins = np.linspace(min(mesh_quality_vals), max(mesh_quality_vals), 30)
         hist, bin_edges = np.histogram(mesh_quality_vals, bins=bins)
@@ -577,10 +577,18 @@ class MeshSetupInputs(MesherSetup_UI):
         percentile_5 = np.percentile(mesh_quality_vals, 5)
         percentile_95 = np.percentile(mesh_quality_vals, 95)
         plt.axvline(
-            percentile_5, color="grey", linestyle="--", linewidth=2, label="5% percentile"
+            percentile_5,
+            color="grey",
+            linestyle="--",
+            linewidth=2,
+            label="5% percentile",
         )
         plt.axvline(
-            percentile_95, color="black", linestyle="--", linewidth=2, label="95% percentile"
+            percentile_95,
+            color="black",
+            linestyle="--",
+            linewidth=2,
+            label="95% percentile",
         )
         plt.legend()
 
@@ -617,7 +625,13 @@ class MeshSetupInputs(MesherSetup_UI):
                 bad_elements.append(element)
 
         if not bad_elements:
-            PrintMessageInput(['Warning', 'No elements to plot', 'There are no elements that compromise the mesh according to this parameter.'])
+            PrintMessageInput(
+                [
+                    "Warning",
+                    "No elements to plot",
+                    "There are no elements that compromise the mesh according to this parameter.",
+                ]
+            )
 
         app().main_window.distinguish_mesh_solids(bad_elements)
 
