@@ -1,5 +1,4 @@
 
-from vibra import app
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties

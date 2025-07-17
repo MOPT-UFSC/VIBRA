@@ -774,6 +774,12 @@ class MainWindow(MainWindow_UI):
             self.status_bar.setVisible(True)
             self.action_front_view_callback()
             self.update_mesh_information()
+            self.update_geometry_information()
+
+            self.renderer_toolbar.setDisabled(False)
+            self.analysis_toolbar.setDisabled(False)
+            self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+            self.analysis_toolbar.update_analysis_combo_boxes()
 
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()

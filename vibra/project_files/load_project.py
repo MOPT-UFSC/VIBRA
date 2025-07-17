@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.project_files.project import Project
 
-from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.element_type import (
@@ -24,6 +23,7 @@ class LoadProject:
         self.project = project
 
     def load(self):
+        self.reset_current_project()
         self.load_geometry_setup()
         self.load_geometry()
         self.load_geometry_data()
@@ -35,6 +35,10 @@ class LoadProject:
         self.load_analysis_setup()
         self.load_analysis_results()
 
+    def reset_current_project(self):
+        self.project.reset_solutions()
+        self.project.model.properties._reset_variables()
+
     def load_geometry_setup(self):
         length_unit, geometry_qf = self.project.file.read_geometry_setup_from_file()
         self.project.model.set_length_unit(length_unit=length_unit)
@@ -42,7 +46,14 @@ class LoadProject:
 
     def load_geometry(self):
         geometry_path = self.project.file.read_geometry_from_file()
-        app().main_window.import_geometry_or_mesh(geometry_path, update_render=False)
+
+        self.project.model.set_geometry_path(geometry_path)
+        self.project.model.initialize_mesh()
+        self.project.model.mesh.geometry_imported = True
+        self.project.generated_mesh = bool(geometry_path)
+
+        if not self.project.file.read_mesh_data_from_file():
+            self.project.model.process_visual_geometry_mesh(geometry_path)
 
     def load_project_libraries(self):
         self.load_fluid_library()
@@ -225,8 +236,6 @@ class LoadProject:
         logging.info("Loading geometry data... [95/100]")
         self.project.model.mesh.process_upwards_adjacencies_from_entities()
 
-        app().main_window.update_geometry_information()
-
     def load_mesh_data_from_file(self, mesh_data: dict):
 
         logging.info("Loading mesh... [20/100]")
@@ -340,14 +349,6 @@ class LoadProject:
         if mesh_data:
             self.load_mesh_data_from_file(mesh_data)
 
-    def update_render(self):
-
-        logging.info("Updating render... [20/100]")
-        app().main_window.update_mesh_information()
-
-        logging.info("Updating render... [90/100]")
-        app().main_window.update_plots()
-
     def load_imported_table_data_from_file(self):
 
         imported_tables = self.project.file.read_imported_table_data_from_file()
@@ -450,7 +451,7 @@ class LoadProject:
 
                 elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None:
                     project.acoustic_harmonic_solver.solution = data.get("solution")
-                    app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                    # app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
                 elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
                     project.structural_harmonic_solver.solution = data.get("solution")
