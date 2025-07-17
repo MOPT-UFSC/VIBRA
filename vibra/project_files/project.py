@@ -254,12 +254,10 @@ class Project:
         self.acoustic_modal_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
-        app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
-        app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self):
         self.model.reset_dissipation_model_properties()
@@ -271,7 +269,6 @@ class Project:
         self.acoustic_harmonic_solver.solve()
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
-        app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
         self.structural_assembler.process_assemble()

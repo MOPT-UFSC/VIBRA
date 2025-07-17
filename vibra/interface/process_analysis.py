@@ -11,6 +11,7 @@ class ProcessAnalysis:
     def process_acoustic_modal_analysis(self):
         try:
             self.project.solve_acoustic_modal_analysis()
+            app().main_window.disable_advanced_acoustic_plots_buttons(True)
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
@@ -19,6 +20,7 @@ class ProcessAnalysis:
     def process_structural_modal_analysis(self):
         try:
             self.project.solve_structural_modal_analysis()
+            app().main_window.disable_advanced_acousstic_plots_buttons(True)
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
@@ -27,6 +29,7 @@ class ProcessAnalysis:
     def process_acoustic_harmonic_analysis(self):
         try:
             self.project.solve_acoustic_harmonic_analysis()
+            app().main_window.disable_advanced_acoustic_plots_buttons(False)
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
