@@ -287,7 +287,7 @@ class Project:
             raise ValueError("Invalid analysis setup.")
 
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        checker = AnalysisRequirementsChecker()
+        checker = AnalysisRequirementsChecker(self)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,

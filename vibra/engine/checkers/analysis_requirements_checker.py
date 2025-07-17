@@ -1,7 +1,10 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vibra.project_files.project import Project
 
 from vibra import app
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
 import numpy as np
@@ -11,10 +14,22 @@ window_title_2 = "Warning"
 
 
 class AnalysisRequirementsChecker:
-    def __init__(self):
+    '''
+    This class should be a simple validator.
+    It should not be used to update the interface.
 
-        self.model = app().project.model
-        self.properties = app().project.model.properties
+    I will handle this by raising errors and warnings if the model is not valid,
+    and catch these errors latter in the interface.
+    
+    But for now I am workarrounding it by just ignoring the checker outside of
+    the interface because I have other stuff to worry about.
+    '''
+
+    def __init__(self, project: "Project"):
+
+        self.project = project
+        self.model = self.project.model
+        self.properties = self.project.model.properties
 
         self.surface_ids = self.model.mesh.geometry_information["surfaces"]
         self.volume_ids = self.model.mesh.geometry_information["volumes"]
@@ -39,6 +54,11 @@ class AnalysisRequirementsChecker:
                 title = "Invalid model setup"
                 message = f"You should assign one material for volumes {volumes_without_material} "
                 message += "to proceed with the analysis solution."
+
+                # Workaround
+                if app() is None:
+                    raise ValueError(message)
+
                 app().main_window.action_model_workspace_callback()
                 app().main_window.set_geometry_selection(volumes=volumes_without_material)
                 PrintMessageInput([window_title_1, title, message])
@@ -53,6 +73,11 @@ class AnalysisRequirementsChecker:
                     message = f"You should assign one material to some surfaces "
                 message += "to proceed with the analysis solution."
                 # app().main_window.set_geometry_selection(surfaces=shell_without_material)
+
+                # Workaround
+                if app() is None:
+                    raise ValueError(message)
+
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
@@ -62,8 +87,15 @@ class AnalysisRequirementsChecker:
                     message = f"You should assign at least one material and thickness for one surface "
                 else:
                     message = f"You should assign a thickness for the already assigned surface materials "
-                    app().main_window.set_geometry_selection(surfaces=shell_without_thickness)
                 message += "to proceed with the analysis solution."
+
+                # Workaround
+                if app() is None:
+                    raise ValueError(message)
+                
+                if len(shell_without_thickness) != len(self.surface_ids):
+                    app().main_window.set_geometry_selection(surfaces=shell_without_thickness)
+
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
@@ -89,6 +121,11 @@ class AnalysisRequirementsChecker:
                 title = "Invalid model setup"
                 message = f"You should assign one fluid for volumes {volumes_without_fluid} "
                 message += "to proceed with the analysis solution."
+
+                # Workaround
+                if app() is None:
+                    raise ValueError(message)
+                
                 app().main_window.action_model_workspace_callback()
                 app().main_window.set_geometry_selection(volumes=volumes_without_fluid)
                 PrintMessageInput([window_title_1, title, message])
@@ -99,6 +136,11 @@ class AnalysisRequirementsChecker:
                     title = "Invalid model setup"
                     message = f"You should assign one fluid for surfaces {surfaces_without_fluid} "
                     message += "to proceed with the analysis solution."
+                    
+                    # Workaround
+                    if app() is None:
+                        raise ValueError(message)
+
                     app().main_window.action_model_workspace_callback()
                     app().main_window.set_geometry_selection(surfaces=surfaces_without_fluid)
                     PrintMessageInput([window_title_1, title, message])
