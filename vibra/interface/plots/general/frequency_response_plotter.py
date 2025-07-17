@@ -253,11 +253,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         toolbar = self.findChild(CustomNavigationToolbar)
         if toolbar is None:
             return
-
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if app().config.user_preferences.interface_theme == "dark":
-            color = QColor("#5f9af4")
+            color = DARK_ICON_COLOR.to_qt()
         else:
-            color = QColor("#1a73e8")
+            color = LIGHT_ICON_COLOR.to_qt()
 
         icons.change_icon_color_for_widgets(toolbar.findChildren(QToolButton), color)
 

@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from vibra import app, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS
+from vibra import app, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -220,10 +220,11 @@ class MainWindow(MainWindow_UI):
         app().config.user_preferences.interface_theme = theme
         stylesheets.set_theme(theme)
 
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets_type = [QAction, QAbstractButton]
         widgets = list()
@@ -356,7 +357,7 @@ class MainWindow(MainWindow_UI):
         self.selection_changed.emit()
 
     def create_recents_menu(self):
-        color = QColor("#448cff") 
+        color = LIGHT_ICON_COLOR.to_qt()
         self.recent_icon = load_icon(":/icons/recent.png", color)
 
         self.recents_menu = QMenu("Recent projects", self)
@@ -400,7 +401,7 @@ class MainWindow(MainWindow_UI):
             self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
-        color = QColor("#448cff")
+        color = LIGHT_ICON_COLOR.to_qt()
 
         self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
         self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
