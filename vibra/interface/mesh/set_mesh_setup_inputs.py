@@ -462,8 +462,12 @@ class MeshSetupInputs(MesherSetup_UI):
         mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
 
         if mesh_quality_parameters:
-            mesh_quality_parameters = np.array(list(mesh_quality_parameters.values())[0])
-            mesh_statistics = app().project.model.mesh.get_mesh_quality_statistics(mesh_quality_parameters)
+            mesh_quality_parameters = np.array(
+                list(mesh_quality_parameters.values())[0]
+            )
+            mesh_statistics = app().project.model.mesh.get_mesh_quality_statistics(
+                mesh_quality_parameters
+            )
 
         else:
             mesh_statistics = app().project.model.mesh.mesh_quality_statistics
@@ -476,7 +480,7 @@ class MeshSetupInputs(MesherSetup_UI):
         stdevs = mesh_statistics[:, 2]
 
         self.quality_bins = {
-            "gamma": (0.7, 0.1),
+            "gamma": (0.7, 0.15),
             "volume": (1e-5, 0),
             "minSJ": (0.3, 0.1),
             "aspectRatio": (4, 1.5),
@@ -550,11 +554,14 @@ class MeshSetupInputs(MesherSetup_UI):
         mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
 
         if mesh_quality_parameters:
-            mesh_quality_vals = np.array(list(mesh_quality_parameters.values())[0])[parameter_idx]['val']
+            mesh_quality_vals = np.array(list(mesh_quality_parameters.values())[0])[
+                parameter_idx
+            ]["val"]
 
         else:
-            mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx]['val']
-
+            mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx][
+                "val"
+            ]
 
         bins = np.linspace(min(mesh_quality_vals), max(mesh_quality_vals), 30)
         hist, bin_edges = np.histogram(mesh_quality_vals, bins=bins)
@@ -565,17 +572,16 @@ class MeshSetupInputs(MesherSetup_UI):
 
         if parameter[parameter_idx] == "aspectRatio":
             cmap = mcolors.LinearSegmentedColormap.from_list(
-                "qualidade", [(0, "green"), (bin_med, "gold"), (1, "red")]
+                "qualidade", [(0, "green"), (bin_med / bin_max, "gold"), (1, "red")]
             )
-
         else:
             cmap = mcolors.LinearSegmentedColormap.from_list(
                 "qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")]
             )
-            norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
-            colors = cmap(norm(bin_centers))
-
+        norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
+        colors = cmap(norm(bin_centers))
         plt.figure(figsize=(10, 5))
+
         for i in range(len(hist)):
             plt.bar(
                 bin_edges[i],
@@ -631,7 +637,9 @@ class MeshSetupInputs(MesherSetup_UI):
         mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
 
         if mesh_quality_parameters:
-            mesh_quality = np.array(list(mesh_quality_parameters.values())[0])[parameter_idx]
+            mesh_quality = np.array(list(mesh_quality_parameters.values())[0])[
+                parameter_idx
+            ]
 
         else:
             mesh_quality = app().project.model.mesh.mesh_quality[parameter_idx]
