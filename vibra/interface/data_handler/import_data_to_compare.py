@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from pathlib import Path
 
 import os
 import numpy as np
+import platform
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
@@ -18,6 +19,7 @@ window_title_2 = "Warning"
 
 
 class ImportDataToCompare(ImportDataToCompare_UI):
+
     def __init__(self, plotter: 'FrequencyResponsePlotter', *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -86,20 +88,27 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         else:
             folder_path = path
 
-        imported_path, check = QFileDialog.getOpenFileName( None, 
+        kwargs = dict()
+        if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        imported_paths, check = QFileDialog.getOpenFileNames( None, 
                                                             'Open file', 
                                                             folder_path, 
-                                                            'Files (*.csv *.dat *.txt *.xlsx *.xls)' )
-
+                                                            'Files (*.csv *.dat *.txt *.xlsx *.xls)',
+                                                             **kwargs )
+        
         if not check:
             return
 
-        app().config.write_last_folder_path_in_file("imported_data_folder", imported_path)
+        app().config.write_last_folder_path_in_file("imported_data_folder", imported_paths)
 
-        self.import_name = os.path.basename(imported_path)
-        self.lineEdit_import_results_path.setText(imported_path)
+        for imported_path in imported_paths:
+            self.import_name = os.path.basename(imported_path)
+            self.lineEdit_import_results_path.setText(imported_path)
 
-        self.import_results(imported_path)
+            self.import_results(imported_path)
+
         self.update_treeWidget_info()
 
     def import_results(self, imported_path):
@@ -126,6 +135,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                         loaded_data = np.loadtxt(imported_path, 
                                                  delimiter = ",", 
                                                  skiprows = skiprows)
+
                         key = self.get_data_index()
                         self.imported_results[key] = {  "data" : loaded_data,
                                                         "filename" : filename,
@@ -135,6 +145,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                         wb = load_workbook(imported_path)
                         sheetnames = wb.sheetnames
                         for sheetname in sheetnames:
+
 
                             try:
                                 sheet_data = read_excel(
@@ -150,7 +161,14 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                                                         header = skiprows, 
                                                         usecols = [0,1]
                                                         ).to_numpy()
-
+                            
+                                                            
+                            for i in range(len(sheet_data)):
+                                if isinstance(sheet_data[i][0], str):
+                                    sheet_data = np.delete(sheet_data, i)
+                                else:
+                                    break
+                            
                             key = self.get_data_index()
                             self.imported_results[key] = {  "data" : sheet_data,
                                                             "filename" : filename,
@@ -277,6 +295,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.treeWidget_import_sheet_files.clear()
         self.treeWidget_import_text_files.clear()
         self._initialize()
+        self.plotter.reset_imported_results_data_to_plot()
 
     def add_imported_data_to_plot(self):
         self.join_imported_data()
