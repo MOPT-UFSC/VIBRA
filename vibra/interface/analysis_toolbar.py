@@ -5,6 +5,8 @@ from PySide6.QtCore import Qt, QSize, Signal
 
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
@@ -199,10 +201,27 @@ class AnalysisToolbar(QToolBar):
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
-
         self.update_analysis_combo_boxes()
-        if app().project.run_analysis():
+
+        if not app().project.model.generated_mesh:
+            obj = MeshSetupInputs(close_after_generate=True)
+            if obj.complete:
+                app().main_window.update_plots()
+            else:
+                return
+        
+        try:
+            LoadingWindow(app().project.run_analysis).run()
+        except (ValueError, NotImplementedError):
             return
+        finally:
+            analysis = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+            app().main_window.disable_advanced_acoustic_plots_buttons(
+                analysis in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]
+            )
+
+            app().main_window.results_viewer_widget.results_viewer_items.update_items()
+            app().main_window.configure_results_render_widget()
 
         self.set_pushbutton_reset_solution_enabled()
 

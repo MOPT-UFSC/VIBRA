@@ -4,7 +4,7 @@ from pathlib import Path
 from shutil import copy
 from time import sleep, time
 
-from vibra import TEMP_PROJECT_FILE, app
+from vibra import TEMP_PROJECT_FILE
 from vibra.engine import AnalysisID
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
@@ -14,8 +14,6 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project_file import ProjectFile
@@ -282,20 +280,13 @@ class Project:
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
 
     def run_analysis(self):
-
         if not self.model.generated_mesh:
-            obj = MeshSetupInputs(close_after_generate=True)
-            if obj.complete:
-                app().main_window.update_plots()
-            else:
-                return
+            raise ValueError("Incomplete mesh setup. Please generate a mesh.")
 
         if len(self.analysis_setup) == 0:
-            return
+            raise ValueError("Invalid analysis setup.")
 
-        analysis = ProcessAnalysis()
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-
         checker = AnalysisRequirementsChecker()
 
         if analysis_id in [
@@ -303,28 +294,26 @@ class Project:
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
         ]:
             if checker.check_structural_harmonic_analysis():
-                return True
-            LoadingWindow(analysis.process_structural_harmonic_analysis).run()
+                raise ValueError("Invalid Structural Harmonic Analysis setup.")
+            self.solve_structural_harmonic_analysis()
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             if checker.check_structural_modal_analysis():
-                return True
-            LoadingWindow(analysis.process_structural_modal_analysis).run()
+                raise ValueError("Invalid Structural Modal Analysis setup.")
+            self.solve_structural_modal_analysis()
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
-                return True
-            LoadingWindow(analysis.process_acoustic_harmonic_analysis).run()
+                raise ValueError("Invalid Acoustic Harmonic Analysis setup.")
+            self.solve_acoustic_harmonic_analysis()
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
-                return True
-            LoadingWindow(analysis.process_acoustic_modal_analysis).run()
+                raise ValueError("Invalid Acoustic Modal Analysis setup.")
+            self.solve_acoustic_modal_analysis()
 
         else:
             raise NotImplementedError("Not implemented analysis")
-
-        app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
     def is_there_a_valid_solution(self):
 
