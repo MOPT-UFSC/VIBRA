@@ -1,17 +1,28 @@
+
+import numpy as np
+
 from vibra.project_files.project import Project
-from shutil import copy
 
 
 def test_loading_acoustic_modal_analysis():
-    # This loading procedure is terrible
-    # we need to simplify it as soon as possible
-
     project = Project()
-    project.initialize_file_and_loader()
+    project.load_project("tests/general/acoustic_modal.vibra")
 
-    copy("/home/andre/Documents/VIBRA/vibra/interface/data/examples/vibra_files/cilinder.vibra", project.file.path)
+    project.run_analysis()
 
-    project.reset_variables()
-    project.reset_solutions()
-    project.loader.initialize()
-    project.loader.load()
+    expected_natural_frequencies = [
+        6.5752246855921055e-06,
+        85.86710557336141,
+        171.85636214948076,
+        258.09255638993875,
+        344.7124407831859,
+        404.81352711694717,
+        404.8233840786405,
+        414.0021704248314,
+        414.00957786634365,
+        431.7379704579161,
+    ]
+
+    assert np.allclose(
+        expected_natural_frequencies, project.acoustic_modal_solver.natural_frequencies
+    )
