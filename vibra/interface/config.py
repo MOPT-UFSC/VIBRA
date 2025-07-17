@@ -1,6 +1,5 @@
 from pathlib import Path
 from dataclasses import fields
-from typing import List
 import json
 
 from vibra.interface.user_preferences import UserPreferences
@@ -88,15 +87,9 @@ class Config:
 
         self.write_data_in_file(data)
 
-    def write_last_folder_path_in_file(self, label: str, file_path: str|List[str]):
+    def write_last_folder_path_in_file(self, label: str, file_path: str):
         data = self.get_config_data()
-
-        path = str()
-        if isinstance(file_path, list):
-            position_of_last_file = len(file_path) -1
-            path = str(Path(file_path[position_of_last_file]).parent)
-        else:
-            path = str(Path(file_path).parent)
+        path = str(Path(file_path).parent)
 
         key = f"last_{label}"
         if "last_paths" in data.keys():

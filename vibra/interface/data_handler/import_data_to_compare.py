@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from pathlib import Path
 
 import os
@@ -101,7 +101,8 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         if not check:
             return
 
-        app().config.write_last_folder_path_in_file("imported_data_folder", imported_paths)
+        position_of_last_file = len(imported_paths) -1
+        app().config.write_last_folder_path_in_file("imported_data_folder", imported_paths[position_of_last_file])
 
         for imported_path in imported_paths:
             self.import_name = os.path.basename(imported_path)
@@ -161,7 +162,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                                                         header = skiprows, 
                                                         usecols = [0,1]
                                                         ).to_numpy()
-                            
                                                             
                             for i in range(len(sheet_data)):
                                 if isinstance(sheet_data[i][0], str):
