@@ -221,8 +221,7 @@ def load_external_mesh_and_solve(mesh_size: str = "200mm", interior_impedance: b
 
     t0 = time()
 
-    element_3d, _ = assembler.get_element()
-    element_3d.reorder_connect()
+    element_3d = model.acoustic_element_3d
 
     list_nodes = list()
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():

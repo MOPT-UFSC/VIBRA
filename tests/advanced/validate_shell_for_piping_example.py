@@ -163,7 +163,6 @@ def load_external_mesh_and_solve():
 
     model.set_analysis_setup(analysis_setup)
 
-    # model.set_structural_element(assembler.get_element())
     # harmonic_solver = StructuralHarmonicSolver(assembler)
     # # Define the analysis setup
     # analysis_setup = {
@@ -180,7 +179,6 @@ def load_external_mesh_and_solve():
     assembler.process_assemble()
 
     # Initialize the solver
-    model.set_structural_element(assembler.get_element())
     # modal_solver = StructuralModalSolver(assembler)
     harmonic_solver = StructuralHarmonicSolver(assembler)
 
@@ -209,10 +207,6 @@ def load_external_mesh_and_solve():
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
     solution = harmonic_solver.solution
-    dofs_per_node = model.surface_structural_element.DOFS_PER_NODE
-
-    top_right_face_nodes = mesh.nodes_from_surfaces[5]
-    branch2_top_face_nodes = mesh.nodes_from_surfaces[7]
 
     dofs_index = {
                   "ux" : 0,
@@ -223,6 +217,11 @@ def load_external_mesh_and_solve():
                   "rz" : 5
                   }
 
+    element_2d = model.structural_element_2d
+    if element_2d is None:
+        return
+
+    dofs_per_node = element_2d.DOFS_PER_NODE
     gdofs = dofs_per_node * top_right_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 
     ux_rows = gdofs[:, dofs_index["ux"]]
@@ -230,6 +229,9 @@ def load_external_mesh_and_solve():
 
     top_right_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
     top_right_face_response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
+
+    top_right_face_nodes = mesh.nodes_from_surfaces[5]
+    branch2_top_face_nodes = mesh.nodes_from_surfaces[7]
 
     gdofs = dofs_per_node * branch2_top_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 

@@ -157,7 +157,6 @@ def load_external_mesh_and_solve():
 
     model.set_analysis_setup(analysis_setup)
 
-    # model.set_structural_element(assembler.get_element())
     # harmonic_solver = StructuralHarmonicSolver(assembler)
     # # Define the analysis setup
     # analysis_setup = {
@@ -174,7 +173,6 @@ def load_external_mesh_and_solve():
     assembler.process_assemble()
 
     # Initialize the solver
-    model.set_structural_element(assembler.get_element())
     # modal_solver = StructuralModalSolver(assembler)
     harmonic_solver = StructuralHarmonicSolver(assembler)
 
@@ -212,8 +210,12 @@ def load_external_mesh_and_solve():
                   "ry" : 4,
                   "rz" : 5
                   }
+    
+    element_2d = model.structural_element_2d
+    if element_2d is None:
+        return
 
-    dofs_per_node = model.surface_structural_element.DOFS_PER_NODE
+    dofs_per_node = element_2d.DOFS_PER_NODE
     gdofs = dofs_per_node * selected_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 
     ux_rows = gdofs[:, dofs_index["ux"]]

@@ -311,8 +311,7 @@ class AcousticHarmonicSolver:
         """
 
         frequencies = self.assembler.model.frequencies
-        element_3d, _ = self.assembler.get_element()
-        element_3d.reorder_connect()
+        element_3d = self.assembler.model.acoustic_element_3d
 
         data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id)
@@ -678,7 +677,7 @@ class AcousticHarmonicSolver:
         if len(particle_velocities.shape) == 1:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
-        _, element_2d = self.assembler.get_element()
+        element_2d = self.assembler.element_2d
 
         sound_power = 0.
         for i, e_connect in enumerate(connectivities):
@@ -727,7 +726,7 @@ class AcousticHarmonicSolver:
         if len(sound_intensities.shape) == 1:
             sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
 
-        _, element_2d = self.assembler.get_element()
+        element_2d = self.assembler.element_2d
 
         sound_power = 0.
         for i, e_connect in enumerate(connectivities):
