@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 
 
-class Element2D:
+class Element1D:
     """
     This determines the attributes and methods
     that need to exist in EVERY element.
