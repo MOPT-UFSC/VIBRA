@@ -521,9 +521,27 @@ class MeshSetupInputs(MesherSetup_UI):
         }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
+        # This should be done in the done in the ui file 
+        # but it kept going like this so I'm leaving it here.
+        tooltips = ["The Gamma quality metric is the ratio between the radius of the inscribed sphere and\n" + 
+                    "the radius of the circumscribed sphere of an element. It ranges from 0 to 1, \n" + 
+                    "where values closer to 1 indicate more regular, well-shaped elements.\n",
+
+                    "The Volume metric is simply the calculated volume of the elements. \n" + 
+                    "Very small volumes possibly indicate collapsed elements, wich are a problem.\n",
+
+                    "Scaled Jacobian is the ratio between the minimum and maximum Jacobian determinant inside the element.\n" +
+                    "Values close to 1 indicate good shape; values ≤ 0 mean inverted or invalid elements.",
+
+                    "The Aspect Ratio measures how stretched a tetrahedral element is, defined as the ratio between the longest edge \n" +
+                    "and the shortest edge. Values close to 1 indicate well-shaped elements; higher values mean the element is elongated or distorted.\n"
+        ] 
 
         for i, (key, (label, color_fn)) in enumerate(param_map.items()):
-            self.tableWidget_mesh_quality.setItem(i, 0, QTableWidgetItem(label))
+            name_item = QTableWidgetItem(label)
+            name_item.setToolTip(tooltips[i])
+
+            self.tableWidget_mesh_quality.setItem(i, 0, name_item)
 
             worst_value_item = QTableWidgetItem(str(round(worst_values[key], 3)))
             avg_item = QTableWidgetItem(str(round(avgs[key], 3)))
