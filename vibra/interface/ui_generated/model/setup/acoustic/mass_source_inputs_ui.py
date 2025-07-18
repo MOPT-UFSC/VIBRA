@@ -490,6 +490,7 @@ class Ui_Dialog(object):
         self.comboBox_attribution_type.addItem("")
         self.comboBox_attribution_type.addItem("")
         self.comboBox_attribution_type.addItem("")
+        self.comboBox_attribution_type.addItem("")
         self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
         self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
         self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
@@ -603,7 +604,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.comboBox_attribution_type.setCurrentIndex(1)
+        self.comboBox_attribution_type.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -649,8 +650,9 @@ class Ui_Dialog(object):
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected nodes", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected points", None))
-        self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected faces", None))
-        self.comboBox_attribution_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected volumes", None))
+        self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected lines", None))
+        self.comboBox_attribution_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected faces", None))
+        self.comboBox_attribution_type.setItemText(4, QCoreApplication.translate("Dialog", u"Selected volumes", None))
 
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Inherit fluid from:", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Mass source setup", None))

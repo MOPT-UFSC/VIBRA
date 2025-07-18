@@ -320,6 +320,7 @@ class AcousticAssembler:
             data: dict
 
             volume_id = data.get("volume_id")
+            print(volume_id)
             fluid_properties = self.fluid_properties_from_volume.get(volume_id)
 
             mu_0 = fluid_properties.get("mu_0")

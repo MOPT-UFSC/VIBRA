@@ -22,8 +22,7 @@ class MassSourceInputs(MassSourceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
         self.project = app().project
         self.model = app().project.model
@@ -53,8 +52,9 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.selection_type = {
                                0 : "nodes",
                                1 : "points",
-                               2 : "surfaces",
-                               3 : "volumes"
+                               2 : "lines",
+                               3 : "surfaces",
+                               4 : "volumes"
                                }
 
     def _configure_qt_variables(self):
@@ -104,13 +104,17 @@ class MassSourceInputs(MassSourceInputs_UI):
             text = ", ".join([str(i) for i in points])
             self.comboBox_attribution_type.setCurrentIndex(1)
 
+        elif lines:
+            text = ", ".join([str(i) for i in lines])
+            self.comboBox_attribution_type.setCurrentIndex(2)
+
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
-            self.comboBox_attribution_type.setCurrentIndex(3)
+            self.comboBox_attribution_type.setCurrentIndex(4)
 
         elif surfaces:
             text = ", ".join([str(i) for i in surfaces])
-            self.comboBox_attribution_type.setCurrentIndex(2)
+            self.comboBox_attribution_type.setCurrentIndex(3)
 
         if text != "":
             self.lineEdit_selection_id.setText(text)
@@ -122,6 +126,10 @@ class MassSourceInputs(MassSourceInputs_UI):
         elif len(points) == 1:
             point_id = list(points)[0]
             self.load_property_data(point_id, "points")
+
+        elif len(lines) == 1:
+            line_id = list(lines)[0]
+            self.load_property_data(line_id, "lines")
 
         elif len(surfaces) == 1:
             surface_id = list(surfaces)[0]
@@ -135,7 +143,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.comboBox_inherit_fluid_from.clear()
             self.comboBox_inherit_fluid_from.addItem("Each volume")
 
-        elif len(nodes) + len(points) + len(surfaces):
+        elif len(nodes) + len(points) + len(lines) + len(surfaces):
             self.check_fluid_inheritance()
 
     def load_property_data(self, selection_id: int, selection_type: str):
@@ -174,6 +182,10 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.label_mass_source_unit.setText("[kg/s]")
 
         elif attribution_type == 2:
+            self.comboBox_inherit_fluid_from.setEnabled(True)
+            self.label_mass_source_unit.setText("[kg/m.s]")
+
+        elif attribution_type == 3:
             self.comboBox_inherit_fluid_from.setEnabled(True)
             self.label_mass_source_unit.setText("[kg/m².s]")
 
@@ -225,6 +237,24 @@ class MassSourceInputs(MassSourceInputs_UI):
                             volumes_from_points[point_id].append(vol_id)
 
         return volumes_from_points
+
+    def get_volumes_from_selected_lines(self, selected_lines: list | np.ndarray):
+        volumes_from_lines = defaultdict(list)
+        for surf_id, lines_from_surface in self.mesh.lines_from_surface.items():
+            if not np.isin(lines_from_surface, selected_lines).any():
+                continue
+
+            for vol_id in self.mesh.volumes_from_surface.get(surf_id):
+                # for vol_id in self.mesh.volumes_from_surface.get(surf_id):
+                for line_id in selected_lines:
+                    if line_id not in lines_from_surface:
+                        continue
+
+                    vol_ids = volumes_from_lines.get(line_id)
+                    if vol_ids is None or vol_id not in vol_ids:
+                        volumes_from_lines[line_id].append(vol_id)
+
+        return volumes_from_lines
 
     def get_volumes_from_selected_surfaces(self, selected_surfaces: list | np.ndarray):
         volumes_from_surfaces = defaultdict(list)
@@ -350,6 +380,10 @@ class MassSourceInputs(MassSourceInputs_UI):
         elif selection_type == "nodes":
             volumes_from_nodes = self.get_volumes_from_selected_nodes(selection_ids)
             return self.update_inheritance_combo_box_data(volumes_from_nodes, print_message)
+
+        elif selection_type == "lines":
+            volumes_from_lines = self.get_volumes_from_selected_lines(selection_ids)
+            return self.update_inheritance_combo_box_data(volumes_from_lines, print_message)
 
         elif selection_type == "surfaces":
             volumes_from_surfaces = self.get_volumes_from_selected_surfaces(selection_ids)
@@ -527,7 +561,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             real_values = [np.real(mass_source)]
             imag_values = [np.imag(mass_source)]
             
-            if selection_type in ["points", "nodes", "surfaces"]:
+            if selection_type in ["points", "nodes", "lines", "surfaces"]:
                 current_text = self.comboBox_inherit_fluid_from.currentText()
                 vol_id = int(current_text.split(" - ")[1])
                 data = {
@@ -547,6 +581,8 @@ class MassSourceInputs(MassSourceInputs_UI):
                     self.properties._set_property("mass_source", data, point=selection_id)
                 elif selection_type == "nodes":
                     self.properties._set_property("mass_source", data, node=selection_id)
+                elif selection_type == "lines":
+                    self.properties._set_property("mass_source", data, line=selection_id)
                 elif selection_type == "surfaces":
                     self.properties._set_property("mass_source", data, surface=selection_id)
                 else:
@@ -690,7 +726,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
-                if selection_type in ["points", "nodes", "surfaces"]:
+                if selection_type in ["points", "nodes", "lines", "surfaces"]:
                     current_text = self.comboBox_inherit_fluid_from.currentText()
                     vol_id = int(current_text.split(" - ")[1])
                     data = {
@@ -711,6 +747,8 @@ class MassSourceInputs(MassSourceInputs_UI):
                     self.properties._set_property("mass_source", data, point=selection_id)
                 elif selection_type == "nodes":
                     self.properties._set_property("mass_source", data, node=selection_id)
+                elif selection_type == "lines":
+                    self.properties._set_property("mass_source", data, line=selection_id)
                 elif selection_type == "surfaces":
                     self.properties._set_property("mass_source", data, surface=selection_id)
                 else:
@@ -743,6 +781,8 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.properties._remove_nodal_property(label, selection_id)
             elif selection_type == "points":
                 self.properties._remove_point_property(label, selection_id)
+            elif selection_type == "lines":
+                self.properties._remove_line_property(label, selection_id)
             elif selection_type == "surfaces":
                 self.properties._remove_surface_property(label, selection_id)
             elif selection_type == "volumes":
@@ -769,6 +809,10 @@ class MassSourceInputs(MassSourceInputs_UI):
             elif attribution_type == 1:
                 self.remove_table_files_from_selection(selection_id, "points")
                 self.properties._remove_point_property("mass_source", selection_id)
+
+            elif attribution_type == 2:
+                self.remove_table_files_from_selection(selection_id, "lines")
+                self.properties._remove_line_property("mass_source", selection_id)
 
             elif attribution_type == 2:
                 self.remove_table_files_from_selection(selection_id, "surfaces")
@@ -798,8 +842,9 @@ class MassSourceInputs(MassSourceInputs_UI):
             properties_to_reset = { 
                                    "nodes" : self.properties.nodal_properties,
                                    "points" : self.properties.point_properties,
+                                   "lines" : self.properties.line_properties,
                                    "surfaces" : self.properties.surface_properties,
-                                   "volumes" : self.properties.volume_properties
+                                   "volumes" : self.properties.volume_properties,
                                    }
 
             for selection_type, _properties in properties_to_reset.items():
@@ -821,7 +866,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         self.comboBox_inherit_fluid_from.clear()
-        self.main_window.update_info_text()
+        app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.set_mesh_selection()
@@ -877,6 +922,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         properties = [
                       self.properties.nodal_properties,
                       self.properties.point_properties,
+                      self.properties.line_properties,
                       self.properties.surface_properties,
                       self.properties.volume_properties,
                       ]
@@ -898,20 +944,26 @@ class MassSourceInputs(MassSourceInputs_UI):
             selection_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
 
-            if item.text(1)== "node":
+            selection_label = item.text(1)
+
+            if selection_label == "node":
                 self.comboBox_attribution_type.setCurrentIndex(0)
                 app().main_window.set_mesh_selection(nodes=[selection_id])
 
-            elif item.text(1)== "point":
+            elif selection_label == "point":
                 self.comboBox_attribution_type.setCurrentIndex(1)
                 app().main_window.set_geometry_selection(points=[selection_id])
 
-            elif item.text(1)== "surface":
+            elif selection_label == "line":
                 self.comboBox_attribution_type.setCurrentIndex(2)
+                app().main_window.set_geometry_selection(lines=[selection_id])
+
+            elif selection_label == "surface":
+                self.comboBox_attribution_type.setCurrentIndex(3)
                 app().main_window.set_geometry_selection(surfaces=[selection_id])
 
-            elif item.text(1)== "volume":
-                self.comboBox_attribution_type.setCurrentIndex(3)
+            elif selection_label == "volume":
+                self.comboBox_attribution_type.setCurrentIndex(4)
                 app().main_window.set_geometry_selection(volumes=[selection_id])
 
     def on_doubleclick_item(self, item):
