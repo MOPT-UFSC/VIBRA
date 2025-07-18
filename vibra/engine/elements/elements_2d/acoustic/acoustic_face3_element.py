@@ -14,12 +14,12 @@ def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
 
     """
     This function returns the shape functions and its derivatives.
-    
+
     Parameters
     ----------
     ssx: np.ndarray
         The x coordinates of the integration points.
-    
+
     ttx: np.ndarray
         The y coordinates of the integration points.
 
@@ -153,10 +153,11 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     y1 = 0.
     y2 = np.dot(vec21,unit_y_axis)
     y3 = np.dot(vec31,unit_y_axis)
-    #
+
     coord_loc = np.array([[x1, y1],
                           [x2, y2],
                           [x3, y3]], dtype=float)
+
     return coord_loc
 
 
@@ -321,7 +322,6 @@ class ACT_FACE_3(Element2D):
 
         local_coords = self.get_stacked_local_coordinates()
         JAC_3d = (self.dphi * aux_ones) @ local_coords
-        # det_jacs = get_stacked_jacobian_determinant(JAC_3d)
 
         det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_3d)
         dphi_t = inv_jacs @ (aux_ones * self.dphi)
@@ -333,10 +333,10 @@ class ACT_FACE_3(Element2D):
         B = dphi_t
         B_t = np.transpose(B, axes=(0, 2, 1))
 
-        int2d_Nt_N = - (1/2) * N.T @ N * (det_jacs * self.wps)
-        int2d_Bt_B = - (1/2) * B_t @ B * (det_jacs * self.wps)
+        int2d_NtN = - (1/2) * N.T @ N * (det_jacs * self.wps)
+        int2d_BtB = - (1/2) * B_t @ B * (det_jacs * self.wps)
 
-        return int2d_Nt_N, int2d_Bt_B
+        return int2d_NtN, int2d_BtB
 
 
     def damping_matrix_Ce(self, el_index: int, rho: float = 1.0, impedance: float = 1.0) -> np.ndarray:

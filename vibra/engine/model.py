@@ -16,6 +16,9 @@ from vibra.engine.elements.elements_3d.acoustic.acoustic_tet10_element import AC
 from vibra.engine.elements.elements_2d.acoustic.acoustic_face3_element import ACT_FACE_3
 from vibra.engine.elements.elements_2d.acoustic.acoustic_face4_element import ACT_FACE_4
 
+#1d elements - acoustic
+from vibra.engine.elements.elements_1d.acoustic_line2_element import ACT_LINE_2
+
 # 3D elements - structural
 from vibra.engine.elements.elements_3d.structural.structural_hex8_element import STRUCT_HEXAHEDRON_8
 from vibra.engine.elements.elements_3d.structural.structural_hex20_element import STRUCT_HEXAHEDRON_20
@@ -294,7 +297,7 @@ class Model:
         element_type = self.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self), ACT_FACE_3(self), None
+            return ACT_TETRAHEDRON_4C(self), ACT_FACE_3(self), ACT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
             return ACT_TETRAHEDRON_10C(self), None, None

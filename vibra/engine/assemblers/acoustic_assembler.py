@@ -294,6 +294,59 @@ class AcousticAssembler:
         return integration_data
 
 
+    def get_mass_source_data_for_1d_element_integration(self) -> dict:
+        """ 
+        This method processes the mass source data for element line
+        integration.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 1d elements.
+        """
+
+        factor_Qms1 = dict()
+        factor_Qms2 = dict()
+        aux_connect = dict()
+        integration_data = dict()
+
+        for key, data in self.properties.line_properties.items():
+
+            prop, line_id = key
+            if prop != "mass_source":
+                continue
+
+            data: dict
+
+            volume_id = data.get("volume_id")
+            fluid_properties = self.fluid_properties_from_volume.get(volume_id)
+
+            mu_0 = fluid_properties.get("mu_0")
+            rho_f = fluid_properties.get("rho_f")
+            _rho_f = self.get_value_in_array_form(rho_f, flatten=True)
+
+            _factor_Qms1 = 1 / _rho_f
+            _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
+
+            line_elements = list(self.model.mesh.elements_from_line[line_id])
+            line_connect = self.model.mesh.connectivity_from_lines[line_id]   
+
+            for i, el in enumerate(line_elements):
+                aux_connect[el] = line_connect[i]
+                factor_Qms1[el] = _factor_Qms1
+                factor_Qms2[el] = _factor_Qms2
+
+        if aux_connect:
+            integration_data = {
+                                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                                "factor_Qms1" : np.array(list(factor_Qms1.values())),
+                                "factor_Qms2" : np.array(list(factor_Qms2.values())),
+                                }
+
+        return integration_data
+
+
     def get_mass_source_data_for_2d_element_integration(self) -> dict:
         """ 
         This method processes the mass source data for element face
@@ -594,6 +647,7 @@ class AcousticAssembler:
         This method processes the nodal mass source vector data.
         """
         self.mass_source_vector_points = np.array([])
+        self.mass_source_vector_lines = np.array([])
         self.mass_source_vector_surfaces = np.array([])
         self.mass_source_vector_volumes = np.array([])
 
@@ -628,6 +682,26 @@ class AcousticAssembler:
 
         if self.mass_source_vector_points.any():
             self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_indexes, :]
+
+
+        for (property, *args), data in self.properties.line_properties.items():
+
+            if property != "mass_source":
+                continue
+
+            if not self.mass_source_vector_lines.any():
+                self.mass_source_vector_lines = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+
+            if "values" in data.keys():
+                _complex_values = data.get("values")[0]
+
+            node_ids = self.model.mesh.nodes_from_lines.get(args[0])
+            aux_ones = np.ones((node_ids.size, 1), dtype=float)
+
+            self.mass_source_vector_lines[node_ids, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+
+        if self.mass_source_vector_lines.any():
+            self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_indexes, :]
 
 
         for (property, *args), data in self.properties.surface_properties.items():
@@ -682,30 +756,36 @@ class AcousticAssembler:
 
         self.process_nodal_mass_source_data()
 
-        if not self.mass_source_vector_surfaces.any():
-            return
-
-        self.data_Qmsf = dict()
-        self.ind_rows_Qmsf = np.array([], dtype=int)
-        self.ind_cols_Qmsf = np.array([], dtype=int)
-
-        dofs = self.element_2d.DOFS_PER_ELEMENT
-        self.total_dofs_2d = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
-
-        self.integration_data_Qms = self.get_mass_source_data_for_2d_element_integration()
-        if not self.integration_data_Qms:
-            return
+        if self.mass_source_vector_lines.any():
         
-        logging.info(f"Processing the mass source data to assemble matrices... [1/2]")
-        connectivities = self.integration_data_Qms.get("connectivities")
+            self.ind_rows_Qmsf_1d = np.array([], dtype=int)
+            self.ind_cols_Qmsf_1d = np.array([], dtype=int)
 
-        nel = connectivities.shape[0]
-        for j in range(self.number_frequencies):
-            self.data_Qmsf[j] = np.zeros((nel, dofs, dofs), dtype=complex)
+            self.integration_data_Qms_1d = self.get_mass_source_data_for_1d_element_integration()
 
-        logging.info(f"Processing the mass source data to assemble matrices... [2/2]")
-        self.ind_rows_Qmsf, self.ind_cols_Qmsf = self.element_2d.generate_ind_rows_cols(connectivities)
-        self.int2d_NtN, self.int2d_BtB = self.element_2d.stacked_matrices_NtN_and_BtB()
+            if self.integration_data_Qms_1d:
+
+                logging.info(f"Processing the mass source data to assemble matrices (1d elements)... [1/2]")
+                connectivities = self.integration_data_Qms_1d.get("connectivities")
+
+                logging.info(f"Processing the mass source data to assemble matrices (1d elements)... [2/2]")
+                self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d = self.element_1d.generate_ind_rows_cols(connectivities)
+                self.int1d_NtN, self.int1d_BtB = self.element_1d.stacked_matrices_NtN_and_BtB()
+
+        if self.mass_source_vector_surfaces.any():
+
+            self.ind_rows_Qmsf_2d = np.array([], dtype=int)
+            self.ind_cols_Qmsf_2d = np.array([], dtype=int)
+
+            self.integration_data_Qms_2d = self.get_mass_source_data_for_2d_element_integration()
+            if self.integration_data_Qms_2d:
+
+                logging.info(f"Processing the mass source data to assemble matrices (2d elements)... [1/2]")
+                connectivities = self.integration_data_Qms_2d.get("connectivities")
+
+                logging.info(f"Processing the mass source data to assemble matrices (2d elements)... [2/2]")
+                self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d = self.element_2d.generate_ind_rows_cols(connectivities)
+                self.int2d_NtN, self.int2d_BtB = self.element_2d.stacked_matrices_NtN_and_BtB()
 
 
     def process_fluid_properties_from_volumes(self):
@@ -869,6 +949,33 @@ class AcousticAssembler:
         return factor_Qms1.reshape(-1, 1, 1), factor_Qms2.reshape(-1, 1, 1)
 
 
+    def assemble_mass_source_matrices_from_lines(self, index: int = 0):
+        """
+        This method assembles the mass source matrices Q_ms1 and Q_ms2
+        due to line assignment.
+
+        Parameters
+        ----------
+        index: int, optional
+            The frequency index.
+        """
+
+        if not self.mass_source_vector_lines.any():
+            return
+
+        factor_Qms1 = self.integration_data_Qms_1d.get("factor_Qms1")
+        factor_Qms2 = self.integration_data_Qms_1d.get("factor_Qms2")
+
+        data_Qms1 = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int1d_NtN
+        Q_ms1 = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.gm_shape)
+
+        data_Qms2 = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int1d_BtB
+        Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.gm_shape)
+
+        self.Qms1_1d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Qms2_1d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+
+
     def assemble_mass_source_matrices_from_surfaces(self, index: int = 0):
         """
         This method assembles the mass source matrices Q_ms1 and Q_ms2
@@ -883,14 +990,14 @@ class AcousticAssembler:
         if not self.mass_source_vector_surfaces.any():
             return
 
-        factor_Qms1 = self.integration_data_Qms.get("factor_Qms1")
-        factor_Qms2 = self.integration_data_Qms.get("factor_Qms2")
+        factor_Qms1 = self.integration_data_Qms_2d.get("factor_Qms1")
+        factor_Qms2 = self.integration_data_Qms_2d.get("factor_Qms2")
 
         data_Qms1 = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int2d_NtN
-        Q_ms1 = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf, self.ind_cols_Qmsf)), shape=self.gm_shape)
+        Q_ms1 = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.gm_shape)
 
         data_Qms2 = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int2d_BtB
-        Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf, self.ind_cols_Qmsf)), shape=self.gm_shape)
+        Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.gm_shape)
 
         self.Qms1_2d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qms2_2d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
@@ -944,6 +1051,10 @@ class AcousticAssembler:
         if self.mass_source_vector_points.any():
             mass_source_p = self.mass_source_vector_points[:, index]
             Q_ms += 1j * omega * mass_source_p
+
+        if self.mass_source_vector_lines.any():
+            mass_source_l = self.mass_source_vector_lines[:, index]
+            Q_ms += (1j * omega * self.Qms1_1d + self.Qms2_1d) @ mass_source_l
 
         if self.mass_source_vector_surfaces.any():
             mass_source_s = self.mass_source_vector_surfaces[:, index]
@@ -1623,6 +1734,7 @@ class AcousticAssembler:
 
         logging.info("Processing nodal related loads... [90/100]")
         self.process_mass_source_data_to_assemble_matrices()
+        self.assemble_mass_source_matrices_from_lines()
         self.assemble_mass_source_matrices_from_surfaces()
         self.assemble_mass_source_matrices_from_volumes()
 

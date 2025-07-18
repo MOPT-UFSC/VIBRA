@@ -76,6 +76,15 @@ def load_external_mesh_and_solve(assignment_type: str):
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
+    # line information
+    line_id = 1
+    mesh.nodes_from_lines[line_id] = np.array([86, 116, 115, 114, 28], dtype=int) - 1
+    mesh.elements_from_line[line_id] = np.array([1, 2, 3, 4], dtype=int) - 1
+    mesh.connectivity_from_lines[line_id] = np.array([[ 86, 116],
+                                                      [116, 115],
+                                                      [115, 114],
+                                                      [114,  28]], dtype=int) - 1
+
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
             mesh.volumes_from_surface[surf_id] = [vol_id]
@@ -105,11 +114,6 @@ def load_external_mesh_and_solve(assignment_type: str):
                     specific_heat_Cp = Cp,
                     dynamic_viscosity = mu,
                     molar_mass = molar_mass  )
-    
-    # Load the external data
-    path = f"data/validation/mass_source/results/{assignment_type}"
-
-    ext_data = LoadExternalData(path, rho_0)
 
     ## assign the created fluid
     model = Model()
@@ -140,6 +144,9 @@ def load_external_mesh_and_solve(assignment_type: str):
     if assignment_type == "points":
         for node_id in [8, 86]:
             model.properties._set_property("mass_source", data_ms, node=node_id-1)
+
+    elif assignment_type == "line":
+        model.properties._set_property("mass_source", data_ms, line=1)
 
     elif assignment_type == "surface":
         model.properties._set_property("mass_source", data_ms, surface=1)
@@ -267,6 +274,10 @@ def load_external_mesh_and_solve(assignment_type: str):
             node_in = 607
             node_out = 214
 
+        elif assignment_type == "line":
+            node_in = 598
+            node_out = 216
+
         elif assignment_type == "surface":
             node_in = 608
             node_out = 222
@@ -279,9 +290,15 @@ def load_external_mesh_and_solve(assignment_type: str):
             node_in = 608
             node_out = 222
 
+        # Load the external data
+        path = f"data/validation/mass_source/results/{assignment_type}"
+        if not os.path.exists(path):
+            return
+
+        ext_data = LoadExternalData(path, rho_0)
+
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
-        # WB_nodal_area_data = load_nodal_area()
 
         freq_WB, _, input_velocities_WB = WB_particle_velocities_data["Vx", "input_face"]
         input_Vx_WB = np.average(list(input_velocities_WB.values()), axis=0)
