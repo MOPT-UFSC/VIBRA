@@ -196,10 +196,6 @@ class Project:
             else:
                 raise NotImplementedError("Not implemented solver")
 
-    def set_element_formulation(self, element):
-        self.acoustic_assembler.set_element_formulation(element)
-        self.structural_assembler.set_element_formulation(element)
-
     def solve_acoustic_modal_analysis(self):
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()

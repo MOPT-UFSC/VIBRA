@@ -16,8 +16,6 @@ class StructuralAssembler:
         self.properties = model.properties
 
         self.reset()
-        self.model.set_structural_elements()
-        self.define_structural_elements()
 
     def reset(self):
         self.stiffness_matrix = None
@@ -30,11 +28,9 @@ class StructuralAssembler:
         self.unprescribed_dofs_indexes = np.array([])
 
     def define_structural_elements(self):
+        self.model.set_structural_elements()
         self.element_2d = self.model.structural_element_2d
         self.element_3d = self.model.structural_element_3d
-
-    def set_element_formulation(self, element):
-        self.element = element
 
     def update_number_of_frequencies(self):
         self.frequencies = self.model.frequencies
@@ -474,6 +470,7 @@ class StructuralAssembler:
 
     def process_assemble(self):
 
+        self.define_structural_elements()
         self.update_number_of_frequencies()
         self.model.process_surface_thickness()
 

@@ -17,8 +17,6 @@ class AcousticAssembler:
         self.properties = model.properties
 
         self.reset()
-        self.model.set_acoustic_elements()
-        self.define_acoustic_elements()
 
 
     def reset(self):
@@ -35,13 +33,10 @@ class AcousticAssembler:
 
 
     def define_acoustic_elements(self):
+        self.model.set_acoustic_elements()
         self.element_1d = self.model.acoustic_element_1d
         self.element_2d = self.model.acoustic_element_2d
         self.element_3d = self.model.acoustic_element_3d
-
-
-    def set_element_formulation(self, element):
-        self.element = element
 
 
     def update_number_of_frequencies(self):
@@ -1580,6 +1575,7 @@ class AcousticAssembler:
 
     def process_assemble(self):
 
+        self.define_acoustic_elements()
         self.update_number_of_frequencies()
 
         logging.info("Gathering data to assemble global matrices... [10/100]")

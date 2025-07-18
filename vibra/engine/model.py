@@ -320,14 +320,27 @@ class Model:
         self.acoustic_element_2d = element_2d
         self.acoustic_element_3d = element_3d
 
-    def get_acoustic_global_dofs_from_nodes(self, nodes: np.ndarray):
+    def get_acoustic_global_dofs_from_nodes(self, node_ids: np.ndarray):
         """
-        """
-        _dofs_per_node = self.structural_element_3d.DOFS_PER_NODE
-        _nodes = nodes.reshape(-1, 1)
-        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
+        This method returns the global dofs for the entered nodes.
 
-        return np.array(global_dofs.flatten(), dtype=int)
+        Parameter
+        ---------
+        node_ids: np.ndarray
+            The vector with the node indexes.
+
+        Return
+        ------
+        global_dofs: np.array
+            An array containing the global dofs from input nodes.
+        """
+        _nodes = node_ids.reshape(-1, 1)
+        _dofs_per_node = self.structural_element_3d.DOFS_PER_NODE
+
+        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
+        global_dofs = np.array(global_dofs.flatten(), dtype=int)
+
+        return global_dofs
 
     def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
 
