@@ -234,8 +234,8 @@ class ProjectFile:
 
         dtype = tuple(structured_array)
         
-        with self.filebox.open(self.mesh_data_filename, "a") as internal_file:
-            with h5py.File(internal_file, "a") as f:
+        with self.filebox.open(self.mesh_quality_parameters_filename, "w") as internal_file:
+            with h5py.File(internal_file, "w") as f:
                 f.create_dataset("mesh_quality/mesh_quality_matrix", 
                             data=mesh_quality
                 )
