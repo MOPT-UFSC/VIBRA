@@ -171,10 +171,13 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def attribution_type_callback(self):
+
         attribution_type = self.comboBox_attribution_type.currentIndex()
         if attribution_type == 0:
             app().main_window.action_mesh_workspace_callback()
+
         else:
+            app().main_window.set_mesh_selection()
             app().main_window.action_model_workspace_callback()
 
         if attribution_type in [0, 1]:
@@ -774,21 +777,26 @@ class MassSourceInputs(MassSourceInputs_UI):
         if isinstance(selection_ids, int):
             selection_ids = [selection_ids]
 
-        label = "mass_source"
-        for selection_id in selection_ids:
-            table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
-            if selection_type == "nodes":
-                self.properties._remove_nodal_property(label, selection_id)
-            elif selection_type == "points":
-                self.properties._remove_point_property(label, selection_id)
-            elif selection_type == "lines":
-                self.properties._remove_line_property(label, selection_id)
-            elif selection_type == "surfaces":
-                self.properties._remove_surface_property(label, selection_id)
-            elif selection_type == "volumes":
-                self.properties._remove_volume_property(label, selection_id)
+        labels = [
+                  "acoustic_pressure",
+                  "mass_source",
+                  ]
 
-            self.process_table_file_removal(table_names)
+        for label in labels:
+            for selection_id in selection_ids:
+                table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
+                if selection_type == "nodes":
+                    self.properties._remove_nodal_property(label, selection_id)
+                elif selection_type == "points":
+                    self.properties._remove_point_property(label, selection_id)
+                elif selection_type == "lines":
+                    self.properties._remove_line_property(label, selection_id)
+                elif selection_type == "surfaces":
+                    self.properties._remove_surface_property(label, selection_id)
+                elif selection_type == "volumes":
+                    self.properties._remove_volume_property(label, selection_id)
+
+                self.process_table_file_removal(table_names)
 
     def remove_table_files_from_selection(self, selection_id : list, selection_type: str):
         table_names = self.properties.get_property_related_table_names("mass_source", selection_id, selection_type)

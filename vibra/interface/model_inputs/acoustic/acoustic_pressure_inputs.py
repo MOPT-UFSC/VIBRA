@@ -363,6 +363,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                   "mass_flow_rate",
                   "reciprocating_compressor_excitation",
                   "reciprocating_pump_excitation",
+                  "mass_source",
                   ]
 
         for surface_id in surface_ids:

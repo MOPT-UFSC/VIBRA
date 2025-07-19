@@ -604,7 +604,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.comboBox_attribution_type.setCurrentIndex(0)
+        self.comboBox_attribution_type.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Dialog)
