@@ -595,7 +595,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["incident_plane_wave"]
         labels = [
                   "acoustic_pressure",
                   "surface_velocity",

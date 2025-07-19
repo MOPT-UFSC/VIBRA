@@ -33,7 +33,7 @@ def get_shape_functions_and_derivatives(ksi: np.ndarray):
     phi = np.array([(1 - ksi)/2, (1 + ksi)/2], dtype=float).T
 
     # shape functions derivatives
-    dphi = np.array([-0.5, 0.5], dtype=float).reshape(1, -1)
+    dphi = np.array([[-0.5, 0.5]], dtype=float)
 
     return phi, dphi
 
@@ -250,15 +250,6 @@ class ACT_LINE_2(Element1D):
         det_jacs = (self.dphi * aux_ones) @ local_coords
 
         inv_jacs = 1 / det_jacs
-        
-        # coords_start = self.nodal_coordinates[self.connect_line[:, 0], 1:4]
-        # coords_end = self.nodal_coordinates[self.connect_line[:, 1], 1:4]
-        # lengths = np.linalg.norm(coords_end - coords_start)
-
-        # # Determinant of Jacobian (linear 1D trasform)
-        # det_jacs = lengths.reshape(-1, 1, 1) / 2
-        # inv_jacs = 1 / det_jacs
-
         dphi_t = inv_jacs @ (aux_ones * self.dphi)
 
         # shape functions
@@ -268,8 +259,8 @@ class ACT_LINE_2(Element1D):
         B = dphi_t
         B_t = np.transpose(B, axes=(0, 2, 1))
 
-        int1d_NtN = (1) * N.T @ N * (det_jacs * self.wps)
-        int1d_BtB = (1) * B_t @ B * (det_jacs * self.wps)
+        int1d_NtN = N.T @ N * (det_jacs * self.wps)
+        int1d_BtB = B_t @ B * (det_jacs * self.wps)
 
         return int1d_NtN, int1d_BtB
 
