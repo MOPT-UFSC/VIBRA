@@ -7,7 +7,7 @@ from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui imp
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.user_info.loading_window import LoadingWindow
+from vibra.interface.message.loading_window import LoadingWindow
 
 import logging
 

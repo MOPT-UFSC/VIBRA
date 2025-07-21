@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QSize, Signal
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
-from vibra.interface.user_info.loading_window import LoadingWindow
+from vibra.interface.message.loading_window import LoadingWindow
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput

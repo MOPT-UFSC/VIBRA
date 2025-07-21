@@ -12,7 +12,7 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.user_info.loading_window import LoadingWindow
+from vibra.interface.message.loading_window import LoadingWindow
 
 from copy import deepcopy
 

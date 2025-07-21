@@ -22,16 +22,12 @@ def custom_exception_hooks(exc_type, exc_value, exc_traceback):
     logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
 
     try:
-        from vibra.interface.general.print_message_input import PrintMessageInput
+        from vibra.interface.message.exception_message import ExceptionMessage
 
-        window_title = "Unhandled error"
-        title = str(exc_type.__name__)
-        message = str(exc_value) + "\n\n" + "\n".join(format_tb(exc_traceback, limit=-1))
-
-        if isinstance(error_message, PrintMessageInput):
+        if isinstance(error_message, ExceptionMessage):
             error_message.close()
 
-        error_message = PrintMessageInput([window_title, title, message], exec=False)
+        error_message = ExceptionMessage(exc_value, stack_trace=exc_traceback)
         error_message.show()
 
     except Exception as e:

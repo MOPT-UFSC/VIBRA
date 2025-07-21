@@ -1,5 +1,5 @@
 from vibra import app
-from vibra.interface.user_info.exception_message import NotImplementedError
+from vibra.interface.message.exception_message import NotImplementedError
 
 class ProcessAnalysis:
     def __init__(self):

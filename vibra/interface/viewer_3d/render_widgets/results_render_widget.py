@@ -17,7 +17,7 @@ from vibra.engine.postprocessing import (
     compute_structural_harmonic_field,
     compute_structural_modal_field,
 )
-from vibra.interface.user_info.loading_window import LoadingWindow
+from vibra.interface.message.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
 
 from ..actors import (

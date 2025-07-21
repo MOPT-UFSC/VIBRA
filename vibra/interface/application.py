@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QApplication
 from vibra import TEMP_PROJECT_FILE
 from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
-from vibra.interface.user_info.splash_screen import SplashScreen
+from vibra.interface.message.splash_screen import SplashScreen
 from vibra.project_files.project import Project
 
 

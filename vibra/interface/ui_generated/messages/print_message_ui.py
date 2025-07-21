@@ -30,49 +30,20 @@ class Ui_Dialog(object):
         self.gridLayout_3.setSpacing(4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
-        self.frame_button = QFrame(Dialog)
-        self.frame_button.setObjectName(u"frame_button")
-        self.frame_button.setMinimumSize(QSize(0, 48))
-        self.frame_button.setMaximumSize(QSize(650, 48))
-        self.frame_button.setFrameShape(QFrame.NoFrame)
-        self.frame_button.setFrameShadow(QFrame.Raised)
-        self.gridLayout_2 = QGridLayout(self.frame_button)
-        self.gridLayout_2.setSpacing(2)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_close = QPushButton(self.frame_button)
-        self.pushButton_close.setObjectName(u"pushButton_close")
-        self.pushButton_close.setMinimumSize(QSize(80, 28))
-        self.pushButton_close.setMaximumSize(QSize(80, 28))
-        self.pushButton_close.setSizeIncrement(QSize(0, 0))
-        font = QFont()
-        font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(10)
-        font.setBold(False)
-        font.setItalic(False)
-        self.pushButton_close.setFont(font)
-        self.pushButton_close.setStyleSheet(u"")
-        self.pushButton_close.setFlat(False)
-
-        self.gridLayout_2.addWidget(self.pushButton_close, 0, 0, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_button, 2, 0, 1, 1)
-
         self.frame_message = QFrame(Dialog)
         self.frame_message.setObjectName(u"frame_message")
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.frame_message.setFont(font1)
-        self.frame_message.setFrameShape(QFrame.Box)
-        self.frame_message.setFrameShadow(QFrame.Raised)
+        font = QFont()
+        font.setPointSize(10)
+        self.frame_message.setFont(font)
+        self.frame_message.setFrameShape(QFrame.Shape.Box)
+        self.frame_message.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_message)
         self.gridLayout_4.setSpacing(0)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(2, 2, 2, 2)
         self.scrollArea = QScrollArea(self.frame_message)
         self.scrollArea.setObjectName(u"scrollArea")
-        self.scrollArea.setFrameShape(QFrame.NoFrame)
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
@@ -84,13 +55,13 @@ class Ui_Dialog(object):
         self.label_message.setObjectName(u"label_message")
         self.label_message.setMinimumSize(QSize(0, 0))
         self.label_message.setMaximumSize(QSize(650, 1200))
-        font2 = QFont()
-        font2.setPointSize(11)
-        self.label_message.setFont(font2)
-        self.label_message.setFrameShape(QFrame.NoFrame)
-        self.label_message.setFrameShadow(QFrame.Raised)
-        self.label_message.setTextFormat(Qt.AutoText)
-        self.label_message.setAlignment(Qt.AlignCenter)
+        font1 = QFont()
+        font1.setPointSize(11)
+        self.label_message.setFont(font1)
+        self.label_message.setFrameShape(QFrame.Shape.NoFrame)
+        self.label_message.setFrameShadow(QFrame.Shadow.Raised)
+        self.label_message.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_message.setWordWrap(True)
         self.label_message.setMargin(2)
         self.label_message.setIndent(-1)
@@ -104,12 +75,41 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.frame_message, 1, 0, 1, 1)
 
+        self.frame_button = QFrame(Dialog)
+        self.frame_button.setObjectName(u"frame_button")
+        self.frame_button.setMinimumSize(QSize(0, 48))
+        self.frame_button.setMaximumSize(QSize(650, 48))
+        self.frame_button.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_button.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_2 = QGridLayout(self.frame_button)
+        self.gridLayout_2.setSpacing(2)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.pushButton_close = QPushButton(self.frame_button)
+        self.pushButton_close.setObjectName(u"pushButton_close")
+        self.pushButton_close.setMinimumSize(QSize(80, 28))
+        self.pushButton_close.setMaximumSize(QSize(80, 28))
+        self.pushButton_close.setSizeIncrement(QSize(0, 0))
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.pushButton_close.setFont(font2)
+        self.pushButton_close.setStyleSheet(u"")
+        self.pushButton_close.setFlat(False)
+
+        self.gridLayout_2.addWidget(self.pushButton_close, 0, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_button, 2, 0, 1, 1)
+
         self.frame_title = QFrame(Dialog)
         self.frame_title.setObjectName(u"frame_title")
         self.frame_title.setMinimumSize(QSize(0, 42))
         self.frame_title.setMaximumSize(QSize(650, 42))
-        self.frame_title.setFrameShape(QFrame.Box)
-        self.frame_title.setFrameShadow(QFrame.Raised)
+        self.frame_title.setFrameShape(QFrame.Shape.Box)
+        self.frame_title.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout = QGridLayout(self.frame_title)
         self.gridLayout.setSpacing(2)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -125,10 +125,10 @@ class Ui_Dialog(object):
         font3.setItalic(False)
         self.label_title.setFont(font3)
         self.label_title.setStyleSheet(u"")
-        self.label_title.setFrameShape(QFrame.NoFrame)
-        self.label_title.setFrameShadow(QFrame.Raised)
-        self.label_title.setTextFormat(Qt.AutoText)
-        self.label_title.setAlignment(Qt.AlignCenter)
+        self.label_title.setFrameShape(QFrame.Shape.NoFrame)
+        self.label_title.setFrameShadow(QFrame.Shadow.Raised)
+        self.label_title.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_title.setMargin(6)
 
         self.gridLayout.addWidget(self.label_title, 0, 0, 1, 1)
@@ -140,8 +140,8 @@ class Ui_Dialog(object):
         self.frame_progress_bar.setObjectName(u"frame_progress_bar")
         self.frame_progress_bar.setMinimumSize(QSize(0, 40))
         self.frame_progress_bar.setMaximumSize(QSize(650, 40))
-        self.frame_progress_bar.setFrameShape(QFrame.NoFrame)
-        self.frame_progress_bar.setFrameShadow(QFrame.Raised)
+        self.frame_progress_bar.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_progress_bar.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_6 = QGridLayout(self.frame_progress_bar)
         self.gridLayout_6.setSpacing(2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
@@ -170,8 +170,8 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.pushButton_close.setText(QCoreApplication.translate("Dialog", u"Close", None))
         self.label_message.setText(QCoreApplication.translate("Dialog", u"< message >", None))
+        self.pushButton_close.setText(QCoreApplication.translate("Dialog", u"Close", None))
         self.label_title.setText(QCoreApplication.translate("Dialog", u"Title", None))
     # retranslateUi
 
@@ -182,15 +182,15 @@ class PrintMessage_UI(QDialog, Ui_Dialog):
     Component Hierarchy:
     - Dialog: QDialog
         - (Layout): QGridLayout
-                - frame_button: QFrame
-                    - (Layout): QGridLayout
-                            - pushButton_close: QPushButton
                 - frame_message: QFrame
                     - (Layout): QGridLayout
                             - scrollArea: QScrollArea
                                 - scrollAreaWidgetContents: QWidget
                                     - (Layout): QGridLayout
                                             - label_message: QLabel
+                - frame_button: QFrame
+                    - (Layout): QGridLayout
+                            - pushButton_close: QPushButton
                 - frame_title: QFrame
                     - (Layout): QGridLayout
                             - label_title: QLabel
