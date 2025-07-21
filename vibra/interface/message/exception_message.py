@@ -19,6 +19,7 @@ class ExceptionMessage(ExceptionMessage_UI):
             self.setWindowIcon(get_error_icon(QColor(255, 0, 0, 200)))
             self.setWindowTitle("Error")
 
+
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
         else:
@@ -32,5 +33,8 @@ class ExceptionMessage(ExceptionMessage_UI):
 
         title = pascal_to_spaced_case(exception.__class__.__name__)
         self.title_label.setText(title)
-        self.error_message.setText(str(exception))
+
+        message = " ".join(exception.args)
+        self.error_message.setText(message)
+        
         self.ok_button.clicked.connect(self.close)

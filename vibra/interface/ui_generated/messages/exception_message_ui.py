@@ -17,13 +17,14 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QHBoxLayout,
     QLabel, QPushButton, QSizePolicy, QSpacerItem,
-    QTextBrowser, QVBoxLayout, QWidget)
+    QTextBrowser, QTextEdit, QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(400, 239)
+        Dialog.resize(313, 240)
+        Dialog.setMaximumSize(QSize(600, 600))
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.title_label = QLabel(Dialog)
@@ -33,17 +34,21 @@ class Ui_Dialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.title_label.sizePolicy().hasHeightForWidth())
         self.title_label.setSizePolicy(sizePolicy)
+        self.title_label.setMaximumSize(QSize(16777215, 50))
         self.title_label.setBaseSize(QSize(0, 50))
         font = QFont()
-        font.setPointSize(12)
+        font.setPointSize(11)
         font.setBold(True)
         self.title_label.setFont(font)
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignBottom|Qt.AlignmentFlag.AlignHCenter)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout.addWidget(self.title_label)
 
         self.frame = QFrame(Dialog)
         self.frame.setObjectName(u"frame")
+        font1 = QFont()
+        font1.setPointSize(9)
+        self.frame.setFont(font1)
         self.frame.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.frame)
@@ -52,8 +57,12 @@ class Ui_Dialog(object):
         self.error_message.setObjectName(u"error_message")
         sizePolicy.setHeightForWidth(self.error_message.sizePolicy().hasHeightForWidth())
         self.error_message.setSizePolicy(sizePolicy)
+        font2 = QFont()
+        font2.setPointSize(10)
+        self.error_message.setFont(font2)
         self.error_message.setTextFormat(Qt.TextFormat.PlainText)
         self.error_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.error_message.setWordWrap(True)
 
         self.verticalLayout_2.addWidget(self.error_message)
 
@@ -63,11 +72,18 @@ class Ui_Dialog(object):
         self.stack_trace_text_browser = QTextBrowser(Dialog)
         self.stack_trace_text_browser.setObjectName(u"stack_trace_text_browser")
         self.stack_trace_text_browser.setEnabled(True)
-        font1 = QFont()
-        font1.setFamilies([u"Courier"])
-        font1.setKerning(True)
-        self.stack_trace_text_browser.setFont(font1)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.stack_trace_text_browser.sizePolicy().hasHeightForWidth())
+        self.stack_trace_text_browser.setSizePolicy(sizePolicy1)
+        font3 = QFont()
+        font3.setFamilies([u"Courier"])
+        font3.setPointSize(10)
+        font3.setKerning(True)
+        self.stack_trace_text_browser.setFont(font3)
         self.stack_trace_text_browser.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.stack_trace_text_browser.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
 
         self.verticalLayout.addWidget(self.stack_trace_text_browser)
 
@@ -107,25 +123,8 @@ class Ui_Dialog(object):
 "hr { height: 1px; border-width: 0; }\n"
 "li.unchecked::marker { content: \"\\2610\"; }\n"
 "li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Courier'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Cascadia Code';\">Stack trace containing only the last few calls asdfh ausdhf asdfuahsudfh asufdhasda</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">as</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">df</p>\n"
-""
-                        "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">a</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">sd</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">fa</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">sd</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">fa</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">sdf</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">as</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0;"
-                        " text-indent:0px;\">df</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">asd</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">f</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">as</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">df</p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">asdf</p></body></html>", None))
+"</style></head><body style=\" font-family:'Courier'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Cascadia Code'; font-size:9pt;\">Stack trace containing only the last few calls</span></p></body></html>", None))
         self.ok_button.setText(QCoreApplication.translate("Dialog", u"OK", None))
     # retranslateUi
 
