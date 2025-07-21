@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from vibra.project_files.project import Project
 
 from vibra import app
+from vibra.errors import InvalidModelSetupError, InvalidGeometryForAcousticAnalysisError, InvalidModelExcitationError
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.engine.properties.material import Material
 
@@ -51,55 +52,36 @@ class AnalysisRequirementsChecker:
         surfaces_without_material, _, shell_without_thickness = self.check_material_and_surface_thickness()
         if volumes_without_material:
             if len(volumes_without_material) != len(self.volume_ids):
-                title = "Invalid model setup"
-                message = f"You should assign one material for volumes {volumes_without_material} "
-                message += "to proceed with the analysis solution."
-
-                # Workaround
-                if app() is None:
-                    raise ValueError(message)
-
-                app().main_window.action_model_workspace_callback()
-                app().main_window.set_geometry_selection(volumes=volumes_without_material)
-                PrintMessageInput([window_title_1, title, message])
-                return True
+                raise InvalidModelSetupError(
+                    f"You should assign one material for volumes {volumes_without_material}",
+                    "to proceed with the analysis solution.",
+                )
 
         if len(volumes_without_material) == len(self.volume_ids):
             if len(surfaces_without_material) == len(self.surface_ids):
-                title = "Invalid model setup"
                 if len(self.volume_ids):
-                    message = f"You should assign one material for all volumes or some surfaces "
+                    raise InvalidModelSetupError(
+                        "You should assign a material for all volumes or some surfaces",
+                        "to proceed with the analysis solution.",
+                    )
                 else:
-                    message = f"You should assign one material to some surfaces "
-                message += "to proceed with the analysis solution."
-                # app().main_window.set_geometry_selection(surfaces=shell_without_material)
-
-                # Workaround
-                if app() is None:
-                    raise ValueError(message)
-
-                PrintMessageInput([window_title_1, title, message])
-                return True
+                    raise InvalidModelSetupError(
+                        "You should assign a material to some surfaces",
+                        "to proceed with the analysis solution.",
+                    )
 
             if shell_without_thickness:
-                title = "Invalid model setup"
                 if len(shell_without_thickness) == len(self.surface_ids):
-                    message = f"You should assign at least one material and thickness for one surface "
+                    raise InvalidModelSetupError(
+                        "You should assign at least one material and thickness for one surface",
+                        "to proceed with the analysis solution.",
+                    )
                 else:
-                    message = f"You should assign a thickness for the already assigned surface materials "
-                message += "to proceed with the analysis solution."
-
-                # Workaround
-                if app() is None:
-                    raise ValueError(message)
-                
-                if len(shell_without_thickness) != len(self.surface_ids):
-                    app().main_window.set_geometry_selection(surfaces=shell_without_thickness)
-
-                PrintMessageInput([window_title_1, title, message])
-                return True
-
-        return False
+                    raise InvalidModelSetupError(
+                        "You should assign a thickness for the already assigned surface materials",
+                        "to proceed with the analysis solution.",
+                        surfaces=shell_without_thickness
+                    )
 
     def check_fluids(self):
 
@@ -116,44 +98,25 @@ class AnalysisRequirementsChecker:
                 surfaces_without_fluid.append(surface_id)
 
         if self.volume_ids:
-
             if volumes_without_fluid:
-                title = "Invalid model setup"
-                message = f"You should assign one fluid for volumes {volumes_without_fluid} "
-                message += "to proceed with the analysis solution."
+                raise InvalidModelSetupError(
+                    f"You should assign one fluid for volume(s) {volumes_without_fluid}",
+                    "to proceed with the analysis solution.",
+                    volumes=volumes_without_fluid,
+                )
 
-                # Workaround
-                if app() is None:
-                    raise ValueError(message)
-                
-                app().main_window.action_model_workspace_callback()
-                app().main_window.set_geometry_selection(volumes=volumes_without_fluid)
-                PrintMessageInput([window_title_1, title, message])
-                return True
-
-            else:
-                if surfaces_without_fluid:
-                    title = "Invalid model setup"
-                    message = f"You should assign one fluid for surfaces {surfaces_without_fluid} "
-                    message += "to proceed with the analysis solution."
-                    
-                    # Workaround
-                    if app() is None:
-                        raise ValueError(message)
-
-                    app().main_window.action_model_workspace_callback()
-                    app().main_window.set_geometry_selection(surfaces=surfaces_without_fluid)
-                    PrintMessageInput([window_title_1, title, message])
-                    return True
-
-                return False
+            elif surfaces_without_fluid:
+                raise InvalidModelSetupError(
+                    f"You should assign one fluid for surface(s) {surfaces_without_fluid}",
+                    "to proceed with the analysis solution.",
+                    surfaces=surfaces_without_fluid,
+                )
 
         else:
-            title = "Invalid geometry for acoustic analysis"
-            message = f"The selected geometry file does not contain "
-            message += "volumes, therefore, it is invalid for acoustic analysis."
-            PrintMessageInput([window_title_1, title, message])
-            return True
+            raise InvalidGeometryForAcousticAnalysisError(
+                "The selected geometry file has no volumes,",
+                "therefore it is invalid for acoustic analysis.",
+            )
 
     def check_material_and_surface_thickness(self):
 
@@ -175,21 +138,21 @@ class AnalysisRequirementsChecker:
     def check_acoustic_harmonic_excitations(self):
 
         prop_labels = [
-                       "acoustic_pressure", 
-                       "surface_velocity",
-                       "mass_flow_rate",
-                       "incident_plane_wave",
-                       "compressor_excitation",
-                       "mass_source",
-                       ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "mass_flow_rate",
+            "incident_plane_wave",
+            "compressor_excitation",
+            "mass_source",
+        ]
 
         properties = [
-                      self.properties.volume_properties,
-                      self.properties.surface_properties,
-                      self.properties.line_properties,
-                      self.properties.point_properties,
-                      self.properties.nodal_properties,
-                      ]
+            self.properties.volume_properties,
+            self.properties.surface_properties,
+            self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
+        ]
 
         for property in properties:
             for (prop_label, *_), data in property.items():
@@ -197,28 +160,26 @@ class AnalysisRequirementsChecker:
                     if np.sum(data["values"]):
                         return False
 
-        title = "Invalid model excitation"    
-        message = "Enter a valid acoustic model excitation to proceed "
-        message += "with the acoustic harmonic analysis solution."
-        PrintMessageInput([window_title_1, title, message])
-
-        return True
+        raise InvalidModelExcitationError(
+            "Enter a valid acoustic model excitation to proceed",
+            "with the acoustic harmonic analysis solution.",
+        )
 
     def check_structural_harmonic_excitations(self):
 
         prop_labels = [
-                       "prescribed_dofs", 
-                       "nodal_loads", 
-                       "distributed_loads", 
-                       "normal_pressure_load",
-                       ]
+            "prescribed_dofs",
+            "nodal_loads",
+            "distributed_loads",
+            "normal_pressure_load",
+        ]
 
         properties = [
-                      self.properties.surface_properties, 
-                      self.properties.line_properties, 
-                      self.properties.point_properties, 
-                      self.properties.nodal_properties,
-                      ]
+            self.properties.surface_properties,
+            self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
+        ]
 
         for property in properties:
             for (prop_label, *_), data in property.items():
@@ -227,35 +188,21 @@ class AnalysisRequirementsChecker:
                     if np.sum(values):
                         return False
 
-        title = "Invalid model excitation"    
-        message = "Enter a valid structural model excitation to proceed "
-        message += "with the structural harmonic analysis solution."
-        PrintMessageInput([window_title_1, title, message])
-
-        return True
+        raise InvalidModelExcitationError(
+            "Enter a valid structural model excitation to proceed",
+            "with the structural harmonic analysis solution.",
+        )
 
     def check_acoustic_harmonic_analysis(self):
-
-        if self.check_fluids():
-            return True
-        
-        if self.check_acoustic_harmonic_excitations():
-            return True
+        self.check_fluids()
+        self.check_acoustic_harmonic_excitations()
 
     def check_structural_harmonic_analysis(self):
-
-        if self.check_materials():
-            return True
-        
-        if self.check_structural_harmonic_excitations():
-            return True
+        self.check_materials()
+        self.check_structural_harmonic_excitations()
 
     def check_acoustic_modal_analysis(self):
-
-        if self.check_fluids():
-            return True
+        self.check_fluids()
 
     def check_structural_modal_analysis(self):
-
-        if self.check_materials():
-            return True
+        self.check_materials()
