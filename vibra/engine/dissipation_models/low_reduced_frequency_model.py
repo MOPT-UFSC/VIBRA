@@ -1,5 +1,5 @@
 from vibra import app
-from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.user_info.loading_window import LoadingWindow
 
 import logging
 import numpy as np

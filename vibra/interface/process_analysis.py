@@ -1,5 +1,5 @@
 from vibra import app
-from vibra.interface.exception_message import ErrorMessage
+from vibra.interface.user_info.exception_message import NotImplementedError
 
 class ProcessAnalysis:
     def __init__(self):
@@ -13,7 +13,7 @@ class ProcessAnalysis:
             self.project.solve_acoustic_modal_analysis()
             app().main_window.disable_advanced_acoustic_plots_buttons(True)
         except NotImplementedError as e:
-            ErrorMessage(e)
+            NotImplementedError(e)
         else:
             self.main_window.configure_results_render_widget()
 
@@ -22,7 +22,7 @@ class ProcessAnalysis:
             self.project.solve_structural_modal_analysis()
             app().main_window.disable_advanced_acousstic_plots_buttons(True)
         except NotImplementedError as e:
-            ErrorMessage(e)
+            NotImplementedError(e)
         else:
             self.main_window.configure_results_render_widget()
 
@@ -31,7 +31,7 @@ class ProcessAnalysis:
             self.project.solve_acoustic_harmonic_analysis()
             app().main_window.disable_advanced_acoustic_plots_buttons(False)
         except NotImplementedError as e:
-            ErrorMessage(e)
+            NotImplementedError(e)
         else:
             self.main_window.configure_results_render_widget()
 
@@ -39,6 +39,6 @@ class ProcessAnalysis:
         try:
             self.project.solve_structural_harmonic_analysis()
         except NotImplementedError as e:
-            ErrorMessage(e)
+            NotImplementedError(e)
         else:
             self.main_window.configure_results_render_widget()

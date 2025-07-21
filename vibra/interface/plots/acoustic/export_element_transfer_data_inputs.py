@@ -7,7 +7,7 @@ from vibra import app
 from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import ExportElementTransferDataInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.user_info.loading_window import LoadingWindow
 
 import logging
 import numpy as np

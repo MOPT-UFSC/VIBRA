@@ -14,7 +14,6 @@ from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-from vibra.interface.process_analysis import ProcessAnalysis
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project_file import ProjectFile
 
