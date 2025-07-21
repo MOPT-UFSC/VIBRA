@@ -7,6 +7,7 @@ import platform
 from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
 from vibra import USER_PATH
+from vibra.errors import VibraException
 from vibra.interface.application import Application
 
 error_message = None
@@ -19,13 +20,17 @@ def custom_exception_hooks(exc_type, exc_value, exc_traceback):
         sys.exit()
 
     # Logs unhandled errors for future checks
-    logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
+    if not isinstance(exc_value, VibraException):
+        logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
 
     try:
         from vibra.interface.message.exception_message import ExceptionMessage
 
         if isinstance(error_message, ExceptionMessage):
             error_message.close()
+
+        if isinstance(exc_value, VibraException):
+            exc_traceback = None
 
         error_message = ExceptionMessage(exc_value, stack_trace=exc_traceback)
         error_message.show()
