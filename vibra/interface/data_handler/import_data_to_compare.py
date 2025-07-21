@@ -146,8 +146,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                                                             "filename" : filename,
                                                             "extension" : sufix  }
                             
-                            run = False
-
                         elif sufix in [".xls", ".xlsx"]:
                             wb = load_workbook(imported_path)
                             sheetnames = wb.sheetnames
@@ -182,8 +180,8 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                                                                 "sheetname" : sheetname,
                                                                 "extension" : sufix  }
 
-                            self.spinBox_skiprows.setValue(int(skiprows))
-                            run = False
+                        self.spinBox_skiprows.setValue(int(skiprows))
+                        run = False
 
                     except:
                         skiprows += 1
