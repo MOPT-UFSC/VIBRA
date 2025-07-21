@@ -3,9 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.project_files.project import Project
 
-from vibra import app
 from vibra.errors import InvalidModelSetupError, InvalidGeometryForAcousticAnalysisError, InvalidModelExcitationError
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.engine.properties.material import Material
 
 import numpy as np
