@@ -1,6 +1,6 @@
 # fmt: off
 
-from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog, QLineEdit, QPushButton, QRadioButton, QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -239,15 +239,17 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
             lineEdit.setText(imported_table_path)
             app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
 
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
+            imported_values = np.loadtxt(imported_table_path, delimiter=",")
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            return imported_file
+            mask = imported_values[:, 0] > 0
+
+            return imported_values[mask, :]
 
         except Exception as log_error:
             message = str(log_error)
@@ -257,9 +259,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        mask = imported_values[:, 0] > 0
-        _imported_values = imported_values[mask, :]
-        _frequencies = _imported_values[:, 0]
+        _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
@@ -273,8 +273,8 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
-        real_values = _imported_values[:, 1]
-        imag_values = _imported_values[:, 2]
+        real_values = imported_values[:, 1]
+        imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
 

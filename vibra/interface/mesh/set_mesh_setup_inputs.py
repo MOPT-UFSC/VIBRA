@@ -65,7 +65,7 @@ class MeshSetupInputs(MesherSetup_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(self.main_window.vibra_icon)
-        self.setWindowTitle("Mesher setup")
+        self.setWindowTitle("Vibra")
 
     def _config_widgets(self):
         self.lineEdit_selected_ids.setDisabled(True)

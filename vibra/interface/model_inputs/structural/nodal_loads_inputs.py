@@ -44,7 +44,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Structural external loads")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.keep_window_open = True

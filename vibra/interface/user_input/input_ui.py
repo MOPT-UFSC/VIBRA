@@ -4,6 +4,7 @@ from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 #
 from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
+from vibra.interface.model_inputs.acoustic.mass_source_inputs import MassSourceInputs
 from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.incident_plane_wave_inputs import IncidentPlaneWaveInputs
 from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
@@ -116,7 +117,11 @@ class InputUi:
     def set_mass_flow_rate(self):
         if not self.model_setup_items.item_child_mass_flow_rate.isDisabled():
             self.process_input(MassFlowRateInputs)
-        
+
+    def set_mass_source(self):
+        if not self.model_setup_items.item_child_mass_source.isDisabled():
+            self.process_input(MassSourceInputs)
+
     def set_surface_velocity(self):
         if not self.model_setup_items.item_child_surface_velocity.isDisabled():
             self.process_input(SurfaceVelocityInputs)

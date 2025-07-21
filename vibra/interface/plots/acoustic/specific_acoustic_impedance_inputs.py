@@ -156,9 +156,6 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
 
         component_label = "Vn"
 
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
-
         list_nodes = list()
         for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
             if self.comboBox_selector_filter.currentIndex() == 0:
@@ -189,9 +186,6 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
                     particle_velocity = self.particle_velocity[component_label][node_id]
                     pressure = self.solution[node_id, :]
                     return pressure / particle_velocity
-
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
 
         list_nodes = list()
         for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():

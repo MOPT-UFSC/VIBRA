@@ -186,7 +186,6 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # return
     
     # Define the analysis type and load setup
-    model.set_acoustic_element(assembler.get_element())
     harmonic_solver = AcousticHarmonicSolver(assembler)
 
     # Run harmonic analysis
@@ -228,8 +227,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
     t0 = time()
 
-    element_3d, _ = assembler.get_element()
-    element_3d.reorder_connect()
+    element_3d = assembler.element_3d
 
     list_nodes = list()
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():

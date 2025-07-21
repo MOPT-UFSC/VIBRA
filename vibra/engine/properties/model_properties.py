@@ -215,6 +215,7 @@ class ModelProperties:
         data_dicts = [
             self.nodal_properties,
             self.element_properties,
+            self.point_properties,
             self.line_properties,
             self.surface_properties,
             self.volume_properties,
@@ -334,6 +335,7 @@ class ModelProperties:
                            "reciprocating_compressor_excitation",
                            "reciprocating_pump_excitation",
                            "acoustic_transfer_element",
+                           "mass_source",
                            ]
 
         if property in acoustic_labels:

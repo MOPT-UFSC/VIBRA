@@ -390,6 +390,9 @@ class LoadProject:
                     elif key == "line_properties":
                         self.project.model.properties._set_property(property, prop_data, line=id)
 
+                    elif key == "point_properties":
+                        self.properties._set_property(property, prop_data, point=id)
+
                     elif key == "element_properties":
                         self.project.model.properties._set_property(property, prop_data, element=id)
 
