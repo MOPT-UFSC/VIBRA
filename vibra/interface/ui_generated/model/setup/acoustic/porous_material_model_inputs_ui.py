@@ -17,14 +17,15 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox,
     QFrame, QGridLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QSizePolicy, QSpacerItem,
-    QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget)
+    QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+    QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
+    QTreeWidget, QTreeWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(531, 659)
+        Dialog.resize(531, 446)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -115,130 +116,20 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.frame_6, 0, 0, 1, 1)
 
-        self.frame = QFrame(self.frame_main)
-        self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
-        self.gridLayout_18 = QGridLayout(self.frame)
-        self.gridLayout_18.setObjectName(u"gridLayout_18")
-        self.label_36 = QLabel(self.frame)
-        self.label_36.setObjectName(u"label_36")
-        self.label_36.setFont(font1)
-        self.label_36.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_36, 1, 1, 1, 1)
-
-        self.lineEdit_fluid_density = QLineEdit(self.frame)
-        self.lineEdit_fluid_density.setObjectName(u"lineEdit_fluid_density")
-        self.lineEdit_fluid_density.setEnabled(False)
-        self.lineEdit_fluid_density.setMinimumSize(QSize(100, 28))
-        self.lineEdit_fluid_density.setMaximumSize(QSize(100, 28))
-        self.lineEdit_fluid_density.setFont(font1)
-        self.lineEdit_fluid_density.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_fluid_density.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_18.addWidget(self.lineEdit_fluid_density, 1, 2, 1, 1)
-
-        self.label_17 = QLabel(self.frame)
-        self.label_17.setObjectName(u"label_17")
-        self.label_17.setFont(font1)
-        self.label_17.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_17, 3, 3, 1, 1)
-
-        self.pushButton_get_fluid = QPushButton(self.frame)
-        self.pushButton_get_fluid.setObjectName(u"pushButton_get_fluid")
-        self.pushButton_get_fluid.setMinimumSize(QSize(72, 0))
-        self.pushButton_get_fluid.setMaximumSize(QSize(72, 28))
-        self.pushButton_get_fluid.setFont(font1)
-
-        self.gridLayout_18.addWidget(self.pushButton_get_fluid, 0, 3, 1, 1)
-
-        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_18.addItem(self.horizontalSpacer_14, 3, 0, 1, 1)
-
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_18.addItem(self.horizontalSpacer_18, 3, 4, 1, 1)
-
-        self.doubleSpinBox_porous_material_depth = QDoubleSpinBox(self.frame)
-        self.doubleSpinBox_porous_material_depth.setObjectName(u"doubleSpinBox_porous_material_depth")
-        self.doubleSpinBox_porous_material_depth.setMinimumSize(QSize(100, 28))
-        self.doubleSpinBox_porous_material_depth.setMaximumSize(QSize(100, 28))
-        self.doubleSpinBox_porous_material_depth.setFont(font1)
-        self.doubleSpinBox_porous_material_depth.setAlignment(Qt.AlignCenter)
-        self.doubleSpinBox_porous_material_depth.setDecimals(4)
-        self.doubleSpinBox_porous_material_depth.setMinimum(0.001000000000000)
-        self.doubleSpinBox_porous_material_depth.setMaximum(100.000000000000000)
-        self.doubleSpinBox_porous_material_depth.setSingleStep(0.050000000000000)
-        self.doubleSpinBox_porous_material_depth.setValue(0.100000000000000)
-
-        self.gridLayout_18.addWidget(self.doubleSpinBox_porous_material_depth, 3, 2, 1, 1)
-
-        self.label_16 = QLabel(self.frame)
-        self.label_16.setObjectName(u"label_16")
-        self.label_16.setFont(font1)
-        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_16, 3, 1, 1, 1)
-
-        self.lineEdit_selected_fluid = QLineEdit(self.frame)
-        self.lineEdit_selected_fluid.setObjectName(u"lineEdit_selected_fluid")
-        self.lineEdit_selected_fluid.setEnabled(False)
-        self.lineEdit_selected_fluid.setMinimumSize(QSize(100, 28))
-        self.lineEdit_selected_fluid.setMaximumSize(QSize(100, 28))
-        self.lineEdit_selected_fluid.setFont(font1)
-        self.lineEdit_selected_fluid.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selected_fluid.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_18.addWidget(self.lineEdit_selected_fluid, 0, 2, 1, 1)
-
-        self.label_31 = QLabel(self.frame)
-        self.label_31.setObjectName(u"label_31")
-        self.label_31.setFont(font1)
-        self.label_31.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_31, 0, 1, 1, 1)
-
-        self.label_47 = QLabel(self.frame)
-        self.label_47.setObjectName(u"label_47")
-        self.label_47.setFont(font1)
-        self.label_47.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_47, 2, 1, 1, 1)
-
-        self.lineEdit_speed_of_sound = QLineEdit(self.frame)
-        self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
-        self.lineEdit_speed_of_sound.setEnabled(False)
-        self.lineEdit_speed_of_sound.setMinimumSize(QSize(100, 28))
-        self.lineEdit_speed_of_sound.setMaximumSize(QSize(100, 28))
-        self.lineEdit_speed_of_sound.setFont(font1)
-        self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_18.addWidget(self.lineEdit_speed_of_sound, 2, 2, 1, 1)
-
-        self.label_48 = QLabel(self.frame)
-        self.label_48.setObjectName(u"label_48")
-        self.label_48.setFont(font1)
-        self.label_48.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_48, 1, 3, 1, 1)
-
-        self.label_49 = QLabel(self.frame)
-        self.label_49.setObjectName(u"label_49")
-        self.label_49.setFont(font1)
-        self.label_49.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_49, 2, 3, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame, 2, 0, 1, 1)
-
-        self.tabWidget_main = QTabWidget(self.frame_main)
+        self.scrollArea = QScrollArea(self.frame_main)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.NoFrame)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 494, 500))
+        self.gridLayout_20 = QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_20.setObjectName(u"gridLayout_20")
+        self.tabWidget_main = QTabWidget(self.scrollAreaWidgetContents)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
+        self.tabWidget_main.setMinimumSize(QSize(0, 260))
         self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
+        self.tabWidget_main.setSizeIncrement(QSize(0, 0))
         self.tabWidget_main.setFont(font1)
         self.tab_Delany_Bazley = QWidget()
         self.tab_Delany_Bazley.setObjectName(u"tab_Delany_Bazley")
@@ -1000,33 +891,45 @@ class Ui_Dialog(object):
         self.gridLayout_14.addWidget(self.frame_10, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_JCAL, "")
+        self.tab = QWidget()
+        self.tab.setObjectName(u"tab")
+        self.gridLayout_21 = QGridLayout(self.tab)
+        self.gridLayout_21.setObjectName(u"gridLayout_21")
+        self.tableWidget_porous_materials = QTableWidget(self.tab)
+        if (self.tableWidget_porous_materials.rowCount() < 11):
+            self.tableWidget_porous_materials.setRowCount(11)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(4, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(5, __qtablewidgetitem5)
+        __qtablewidgetitem6 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(6, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(7, __qtablewidgetitem7)
+        __qtablewidgetitem8 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(8, __qtablewidgetitem8)
+        __qtablewidgetitem9 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(9, __qtablewidgetitem9)
+        __qtablewidgetitem10 = QTableWidgetItem()
+        self.tableWidget_porous_materials.setVerticalHeaderItem(10, __qtablewidgetitem10)
+        self.tableWidget_porous_materials.setObjectName(u"tableWidget_porous_materials")
+
+        self.gridLayout_21.addWidget(self.tableWidget_porous_materials, 0, 0, 1, 1)
+
+        self.tabWidget_main.addTab(self.tab, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_16 = QGridLayout(self.tab_list)
         self.gridLayout_16.setObjectName(u"gridLayout_16")
         self.gridLayout_16.setContentsMargins(9, -1, -1, -1)
-        self.treeWidget_porous_material_model = QTreeWidget(self.tab_list)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_porous_material_model.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_porous_material_model.setObjectName(u"treeWidget_porous_material_model")
-        self.treeWidget_porous_material_model.setMinimumSize(QSize(320, 100))
-        self.treeWidget_porous_material_model.setMaximumSize(QSize(16777215, 200))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setItalic(False)
-        self.treeWidget_porous_material_model.setFont(font3)
-        self.treeWidget_porous_material_model.setIndentation(1)
-        self.treeWidget_porous_material_model.setHeaderHidden(False)
-        self.treeWidget_porous_material_model.header().setHighlightSections(False)
-        self.treeWidget_porous_material_model.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_porous_material_model.header().setStretchLastSection(True)
-
-        self.gridLayout_16.addWidget(self.treeWidget_porous_material_model, 0, 0, 1, 1)
-
         self.frame_3 = QFrame(self.tab_list)
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(320, 40))
@@ -1041,12 +944,12 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(10)
-        font4.setBold(False)
-        font4.setItalic(False)
-        self.pushButton_reset.setFont(font4)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_reset.setFont(font3)
         self.pushButton_reset.setStyleSheet(u"")
 
         self.gridLayout_15.addWidget(self.pushButton_reset, 0, 0, 1, 1)
@@ -1055,7 +958,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setObjectName(u"pushButton_remove")
         self.pushButton_remove.setMinimumSize(QSize(100, 28))
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
-        self.pushButton_remove.setFont(font4)
+        self.pushButton_remove.setFont(font3)
         self.pushButton_remove.setStyleSheet(u"")
 
         self.gridLayout_15.addWidget(self.pushButton_remove, 0, 1, 1, 1)
@@ -1063,11 +966,154 @@ class Ui_Dialog(object):
 
         self.gridLayout_16.addWidget(self.frame_3, 1, 0, 1, 1)
 
+        self.treeWidget_porous_material_model = QTreeWidget(self.tab_list)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
+        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
+        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
+        self.treeWidget_porous_material_model.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_porous_material_model.setObjectName(u"treeWidget_porous_material_model")
+        self.treeWidget_porous_material_model.setMinimumSize(QSize(320, 100))
+        self.treeWidget_porous_material_model.setMaximumSize(QSize(16777215, 200))
+        font4 = QFont()
+        font4.setFamilies([u"MS Shell Dlg 2"])
+        font4.setPointSize(10)
+        font4.setItalic(False)
+        self.treeWidget_porous_material_model.setFont(font4)
+        self.treeWidget_porous_material_model.setIndentation(1)
+        self.treeWidget_porous_material_model.setHeaderHidden(False)
+        self.treeWidget_porous_material_model.header().setHighlightSections(False)
+        self.treeWidget_porous_material_model.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_porous_material_model.header().setStretchLastSection(True)
+
+        self.gridLayout_16.addWidget(self.treeWidget_porous_material_model, 0, 0, 1, 1)
+
         self.tabWidget_main.addTab(self.tab_list, "")
 
-        self.gridLayout_3.addWidget(self.tabWidget_main, 1, 0, 1, 1)
+        self.gridLayout_20.addWidget(self.tabWidget_main, 0, 0, 1, 1)
 
-        self.frame_plot_buttons = QFrame(self.frame_main)
+        self.frame = QFrame(self.scrollAreaWidgetContents)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.NoFrame)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.gridLayout_18 = QGridLayout(self.frame)
+        self.gridLayout_18.setObjectName(u"gridLayout_18")
+        self.label_36 = QLabel(self.frame)
+        self.label_36.setObjectName(u"label_36")
+        self.label_36.setFont(font1)
+        self.label_36.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_36, 1, 1, 1, 1)
+
+        self.lineEdit_fluid_density = QLineEdit(self.frame)
+        self.lineEdit_fluid_density.setObjectName(u"lineEdit_fluid_density")
+        self.lineEdit_fluid_density.setEnabled(False)
+        self.lineEdit_fluid_density.setMinimumSize(QSize(100, 28))
+        self.lineEdit_fluid_density.setMaximumSize(QSize(100, 28))
+        self.lineEdit_fluid_density.setFont(font1)
+        self.lineEdit_fluid_density.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_fluid_density.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_18.addWidget(self.lineEdit_fluid_density, 1, 2, 1, 1)
+
+        self.label_17 = QLabel(self.frame)
+        self.label_17.setObjectName(u"label_17")
+        self.label_17.setFont(font1)
+        self.label_17.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_17, 3, 3, 1, 1)
+
+        self.pushButton_get_fluid = QPushButton(self.frame)
+        self.pushButton_get_fluid.setObjectName(u"pushButton_get_fluid")
+        self.pushButton_get_fluid.setMinimumSize(QSize(72, 0))
+        self.pushButton_get_fluid.setMaximumSize(QSize(72, 28))
+        self.pushButton_get_fluid.setFont(font1)
+
+        self.gridLayout_18.addWidget(self.pushButton_get_fluid, 0, 3, 1, 1)
+
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_18.addItem(self.horizontalSpacer_14, 3, 0, 1, 1)
+
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_18.addItem(self.horizontalSpacer_18, 3, 4, 1, 1)
+
+        self.doubleSpinBox_porous_material_depth = QDoubleSpinBox(self.frame)
+        self.doubleSpinBox_porous_material_depth.setObjectName(u"doubleSpinBox_porous_material_depth")
+        self.doubleSpinBox_porous_material_depth.setMinimumSize(QSize(100, 28))
+        self.doubleSpinBox_porous_material_depth.setMaximumSize(QSize(100, 28))
+        self.doubleSpinBox_porous_material_depth.setFont(font1)
+        self.doubleSpinBox_porous_material_depth.setAlignment(Qt.AlignCenter)
+        self.doubleSpinBox_porous_material_depth.setDecimals(4)
+        self.doubleSpinBox_porous_material_depth.setMinimum(0.001000000000000)
+        self.doubleSpinBox_porous_material_depth.setMaximum(100.000000000000000)
+        self.doubleSpinBox_porous_material_depth.setSingleStep(0.050000000000000)
+        self.doubleSpinBox_porous_material_depth.setValue(0.100000000000000)
+
+        self.gridLayout_18.addWidget(self.doubleSpinBox_porous_material_depth, 3, 2, 1, 1)
+
+        self.label_16 = QLabel(self.frame)
+        self.label_16.setObjectName(u"label_16")
+        self.label_16.setFont(font1)
+        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_16, 3, 1, 1, 1)
+
+        self.lineEdit_selected_fluid = QLineEdit(self.frame)
+        self.lineEdit_selected_fluid.setObjectName(u"lineEdit_selected_fluid")
+        self.lineEdit_selected_fluid.setEnabled(False)
+        self.lineEdit_selected_fluid.setMinimumSize(QSize(100, 28))
+        self.lineEdit_selected_fluid.setMaximumSize(QSize(100, 28))
+        self.lineEdit_selected_fluid.setFont(font1)
+        self.lineEdit_selected_fluid.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selected_fluid.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_18.addWidget(self.lineEdit_selected_fluid, 0, 2, 1, 1)
+
+        self.label_31 = QLabel(self.frame)
+        self.label_31.setObjectName(u"label_31")
+        self.label_31.setFont(font1)
+        self.label_31.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_31, 0, 1, 1, 1)
+
+        self.label_47 = QLabel(self.frame)
+        self.label_47.setObjectName(u"label_47")
+        self.label_47.setFont(font1)
+        self.label_47.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_47, 2, 1, 1, 1)
+
+        self.lineEdit_speed_of_sound = QLineEdit(self.frame)
+        self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
+        self.lineEdit_speed_of_sound.setEnabled(False)
+        self.lineEdit_speed_of_sound.setMinimumSize(QSize(100, 28))
+        self.lineEdit_speed_of_sound.setMaximumSize(QSize(100, 28))
+        self.lineEdit_speed_of_sound.setFont(font1)
+        self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_18.addWidget(self.lineEdit_speed_of_sound, 2, 2, 1, 1)
+
+        self.label_48 = QLabel(self.frame)
+        self.label_48.setObjectName(u"label_48")
+        self.label_48.setFont(font1)
+        self.label_48.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_48, 1, 3, 1, 1)
+
+        self.label_49 = QLabel(self.frame)
+        self.label_49.setObjectName(u"label_49")
+        self.label_49.setFont(font1)
+        self.label_49.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_49, 2, 3, 1, 1)
+
+
+        self.gridLayout_20.addWidget(self.frame, 2, 0, 1, 1)
+
+        self.frame_plot_buttons = QFrame(self.scrollAreaWidgetContents)
         self.frame_plot_buttons.setObjectName(u"frame_plot_buttons")
         self.frame_plot_buttons.setMaximumSize(QSize(16777215, 48))
         self.frame_plot_buttons.setFrameShape(QFrame.NoFrame)
@@ -1112,7 +1158,18 @@ class Ui_Dialog(object):
         self.gridLayout_19.addItem(self.horizontalSpacer_20, 0, 0, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_plot_buttons, 3, 0, 1, 1)
+        self.gridLayout_20.addWidget(self.frame_plot_buttons, 3, 0, 1, 1)
+
+        self.frame_2 = QFrame(self.scrollAreaWidgetContents)
+        self.frame_2.setObjectName(u"frame_2")
+        self.frame_2.setFrameShape(QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QFrame.Raised)
+
+        self.gridLayout_20.addWidget(self.frame_2, 1, 0, 1, 1)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.gridLayout_3.addWidget(self.scrollArea, 1, 0, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_main, 1, 0, 1, 1)
@@ -1144,7 +1201,6 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.frame_bottom, 2, 0, 1, 1)
 
-        QWidget.setTabOrder(self.tabWidget_main, self.doubleSpinBox_C1_DB)
         QWidget.setTabOrder(self.doubleSpinBox_C1_DB, self.doubleSpinBox_C2_DB)
         QWidget.setTabOrder(self.doubleSpinBox_C2_DB, self.doubleSpinBox_C3_DB)
         QWidget.setTabOrder(self.doubleSpinBox_C3_DB, self.doubleSpinBox_C4_DB)
@@ -1201,17 +1257,6 @@ class Ui_Dialog(object):
 
         self.label_12.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
         self.lineEdit_selection_id.setText("")
-        self.label_36.setText(QCoreApplication.translate("Dialog", u"Fluid density", None))
-        self.lineEdit_fluid_density.setText("")
-        self.label_17.setText(QCoreApplication.translate("Dialog", u"[m]", None))
-        self.pushButton_get_fluid.setText(QCoreApplication.translate("Dialog", u"Get fluid", None))
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Porous material depth:", None))
-        self.lineEdit_selected_fluid.setText("")
-        self.label_31.setText(QCoreApplication.translate("Dialog", u"Selected the fluid:", None))
-        self.label_47.setText(QCoreApplication.translate("Dialog", u"Speed of sound:", None))
-        self.lineEdit_speed_of_sound.setText("")
-        self.label_48.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3]", None))
-        self.label_49.setText(QCoreApplication.translate("Dialog", u"[m/s]", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"C7:", None))
         self.label_7.setText(QCoreApplication.translate("Dialog", u"C6:", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"C2:", None))
@@ -1268,16 +1313,50 @@ class Ui_Dialog(object):
         self.lineEdit_viscous_characteristic_length_JCAL.setText(QCoreApplication.translate("Dialog", u"77e-6", None))
         self.label_32.setText(QCoreApplication.translate("Dialog", u"[m]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_JCAL), QCoreApplication.translate("Dialog", u"JCAL", None))
+        ___qtablewidgetitem = self.tableWidget_porous_materials.verticalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Identifier", None));
+        ___qtablewidgetitem1 = self.tableWidget_porous_materials.verticalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Model", None));
+        ___qtablewidgetitem2 = self.tableWidget_porous_materials.verticalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Param. 1", None));
+        ___qtablewidgetitem3 = self.tableWidget_porous_materials.verticalHeaderItem(3)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Param. 2", None));
+        ___qtablewidgetitem4 = self.tableWidget_porous_materials.verticalHeaderItem(4)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Param. 3", None));
+        ___qtablewidgetitem5 = self.tableWidget_porous_materials.verticalHeaderItem(5)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Param. 4", None));
+        ___qtablewidgetitem6 = self.tableWidget_porous_materials.verticalHeaderItem(6)
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Param. 5", None));
+        ___qtablewidgetitem7 = self.tableWidget_porous_materials.verticalHeaderItem(7)
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Param. 6", None));
+        ___qtablewidgetitem8 = self.tableWidget_porous_materials.verticalHeaderItem(8)
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"Param. 7", None));
+        ___qtablewidgetitem9 = self.tableWidget_porous_materials.verticalHeaderItem(9)
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"Param. 8", None));
+        ___qtablewidgetitem10 = self.tableWidget_porous_materials.verticalHeaderItem(10)
+        ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Param. 9", None));
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab), QCoreApplication.translate("Dialog", u"Edit", None))
+        self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
+        self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_porous_material_model.headerItem()
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Parameters", None));
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Identifier", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Model", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Volumes", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_porous_material_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
-        self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
+        self.label_36.setText(QCoreApplication.translate("Dialog", u"Fluid density", None))
+        self.lineEdit_fluid_density.setText("")
+        self.label_17.setText(QCoreApplication.translate("Dialog", u"[m]", None))
+        self.pushButton_get_fluid.setText(QCoreApplication.translate("Dialog", u"Get fluid", None))
+        self.label_16.setText(QCoreApplication.translate("Dialog", u"Porous material depth:", None))
+        self.lineEdit_selected_fluid.setText("")
+        self.label_31.setText(QCoreApplication.translate("Dialog", u"Selected the fluid:", None))
+        self.label_47.setText(QCoreApplication.translate("Dialog", u"Speed of sound:", None))
+        self.lineEdit_speed_of_sound.setText("")
+        self.label_48.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3]", None))
+        self.label_49.setText(QCoreApplication.translate("Dialog", u"[m/s]", None))
         self.label_50.setText(QCoreApplication.translate("Dialog", u"Plot selector:", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u" Fluid density", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u" Speed of sound", None))
@@ -1306,123 +1385,130 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                         - comboBox_attribution_type: QComboBox
                                         - label_12: QLabel
                                         - lineEdit_selection_id: QLineEdit
-                            - frame: QFrame
-                                - (Layout): QGridLayout
-                                        - label_36: QLabel
-                                        - lineEdit_fluid_density: QLineEdit
-                                        - label_17: QLabel
-                                        - pushButton_get_fluid: QPushButton
-                                        - doubleSpinBox_porous_material_depth: QDoubleSpinBox
-                                        - label_16: QLabel
-                                        - lineEdit_selected_fluid: QLineEdit
-                                        - label_31: QLabel
-                                        - label_47: QLabel
-                                        - lineEdit_speed_of_sound: QLineEdit
-                                        - label_48: QLabel
-                                        - label_49: QLabel
-                            - tabWidget_main: QTabWidget
-                                - tab_Delany_Bazley: QWidget
+                            - scrollArea: QScrollArea
+                                - scrollAreaWidgetContents: QWidget
                                     - (Layout): QGridLayout
-                                            - frame_4: QFrame
+                                            - tabWidget_main: QTabWidget
+                                                - tab_Delany_Bazley: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - frame_4: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - label_8: QLabel
+                                                                        - label_7: QLabel
+                                                                        - label_3: QLabel
+                                                                        - doubleSpinBox_C4_DB: QDoubleSpinBox
+                                                                        - label_6: QLabel
+                                                                        - doubleSpinBox_C5_DB: QDoubleSpinBox
+                                                                        - doubleSpinBox_C6_DB: QDoubleSpinBox
+                                                                        - doubleSpinBox_C7_DB: QDoubleSpinBox
+                                                                        - label_9: QLabel
+                                                                        - doubleSpinBox_C8_DB: QDoubleSpinBox
+                                                                        - label_5: QLabel
+                                                                        - label_4: QLabel
+                                                                        - doubleSpinBox_C3_DB: QDoubleSpinBox
+                                                                        - label_2: QLabel
+                                                                        - doubleSpinBox_C1_DB: QDoubleSpinBox
+                                                                        - doubleSpinBox_C2_DB: QDoubleSpinBox
+                                                                        - pushButton_DB_equations: QPushButton
+                                                            - frame_5: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - label_10: QLabel
+                                                                        - doubleSpinBox_flow_resistivity_DB: QDoubleSpinBox
+                                                                        - label_11: QLabel
+                                                - tab_Delany_Bazley_Miki: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - frame_8: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - doubleSpinBox_C4_DBM: QDoubleSpinBox
+                                                                        - doubleSpinBox_C5_DBM: QDoubleSpinBox
+                                                                        - label_39: QLabel
+                                                                        - doubleSpinBox_C7_DBM: QDoubleSpinBox
+                                                                        - label_40: QLabel
+                                                                        - doubleSpinBox_C8_DBM: QDoubleSpinBox
+                                                                        - doubleSpinBox_C3_DBM: QDoubleSpinBox
+                                                                        - label_41: QLabel
+                                                                        - label_42: QLabel
+                                                                        - label_43: QLabel
+                                                                        - doubleSpinBox_C1_DBM: QDoubleSpinBox
+                                                                        - doubleSpinBox_C2_DBM: QDoubleSpinBox
+                                                                        - label_44: QLabel
+                                                                        - label_19: QLabel
+                                                                        - label_20: QLabel
+                                                                        - doubleSpinBox_C6_DBM: QDoubleSpinBox
+                                                                        - pushButton_DBM_equations: QPushButton
+                                                            - frame_9: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - label_45: QLabel
+                                                                        - doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
+                                                                        - label_46: QLabel
+                                                - tab_JCA: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - frame_7: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - doubleSpinBox_tortuosity_JCA: QDoubleSpinBox
+                                                                        - label_30: QLabel
+                                                                        - label_34: QLabel
+                                                                        - label_29: QLabel
+                                                                        - label_23: QLabel
+                                                                        - label_14: QLabel
+                                                                        - doubleSpinBox_flow_resistivity_JCA: QDoubleSpinBox
+                                                                        - label_22: QLabel
+                                                                        - label_13: QLabel
+                                                                        - doubleSpinBox_porosity_JCA: QDoubleSpinBox
+                                                                        - label_21: QLabel
+                                                                        - lineEdit_thermal_characteristic_length_JCA: QLineEdit
+                                                                        - label_24: QLabel
+                                                                        - lineEdit_viscous_characteristic_length_JCA: QLineEdit
+                                                                        - label_33: QLabel
+                                                - tab_JCAL: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - frame_10: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - label_18: QLabel
+                                                                        - label_38: QLabel
+                                                                        - label_37: QLabel
+                                                                        - label_35: QLabel
+                                                                        - doubleSpinBox_porosity_JCAL: QDoubleSpinBox
+                                                                        - doubleSpinBox_tortuosity_JCAL: QDoubleSpinBox
+                                                                        - label_15: QLabel
+                                                                        - label_27: QLabel
+                                                                        - doubleSpinBox_flow_resistivity_JCAL: QDoubleSpinBox
+                                                                        - label_26: QLabel
+                                                                        - label_25: QLabel
+                                                                        - lineEdit_thermal_characteristic_length_JCAL: QLineEdit
+                                                                        - label_28: QLabel
+                                                                        - lineEdit_viscous_characteristic_length_JCAL: QLineEdit
+                                                                        - label_32: QLabel
+                                                - tab: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - tableWidget_porous_materials: QTableWidget
+                                                - tab_list: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - frame_3: QFrame
+                                                                - (Layout): QGridLayout
+                                                                        - pushButton_reset: QPushButton
+                                                                        - pushButton_remove: QPushButton
+                                                            - treeWidget_porous_material_model: QTreeWidget
+                                            - frame: QFrame
                                                 - (Layout): QGridLayout
-                                                        - label_8: QLabel
-                                                        - label_7: QLabel
-                                                        - label_3: QLabel
-                                                        - doubleSpinBox_C4_DB: QDoubleSpinBox
-                                                        - label_6: QLabel
-                                                        - doubleSpinBox_C5_DB: QDoubleSpinBox
-                                                        - doubleSpinBox_C6_DB: QDoubleSpinBox
-                                                        - doubleSpinBox_C7_DB: QDoubleSpinBox
-                                                        - label_9: QLabel
-                                                        - doubleSpinBox_C8_DB: QDoubleSpinBox
-                                                        - label_5: QLabel
-                                                        - label_4: QLabel
-                                                        - doubleSpinBox_C3_DB: QDoubleSpinBox
-                                                        - label_2: QLabel
-                                                        - doubleSpinBox_C1_DB: QDoubleSpinBox
-                                                        - doubleSpinBox_C2_DB: QDoubleSpinBox
-                                                        - pushButton_DB_equations: QPushButton
-                                            - frame_5: QFrame
+                                                        - label_36: QLabel
+                                                        - lineEdit_fluid_density: QLineEdit
+                                                        - label_17: QLabel
+                                                        - pushButton_get_fluid: QPushButton
+                                                        - doubleSpinBox_porous_material_depth: QDoubleSpinBox
+                                                        - label_16: QLabel
+                                                        - lineEdit_selected_fluid: QLineEdit
+                                                        - label_31: QLabel
+                                                        - label_47: QLabel
+                                                        - lineEdit_speed_of_sound: QLineEdit
+                                                        - label_48: QLabel
+                                                        - label_49: QLabel
+                                            - frame_plot_buttons: QFrame
                                                 - (Layout): QGridLayout
-                                                        - label_10: QLabel
-                                                        - doubleSpinBox_flow_resistivity_DB: QDoubleSpinBox
-                                                        - label_11: QLabel
-                                - tab_Delany_Bazley_Miki: QWidget
-                                    - (Layout): QGridLayout
-                                            - frame_8: QFrame
-                                                - (Layout): QGridLayout
-                                                        - doubleSpinBox_C4_DBM: QDoubleSpinBox
-                                                        - doubleSpinBox_C5_DBM: QDoubleSpinBox
-                                                        - label_39: QLabel
-                                                        - doubleSpinBox_C7_DBM: QDoubleSpinBox
-                                                        - label_40: QLabel
-                                                        - doubleSpinBox_C8_DBM: QDoubleSpinBox
-                                                        - doubleSpinBox_C3_DBM: QDoubleSpinBox
-                                                        - label_41: QLabel
-                                                        - label_42: QLabel
-                                                        - label_43: QLabel
-                                                        - doubleSpinBox_C1_DBM: QDoubleSpinBox
-                                                        - doubleSpinBox_C2_DBM: QDoubleSpinBox
-                                                        - label_44: QLabel
-                                                        - label_19: QLabel
-                                                        - label_20: QLabel
-                                                        - doubleSpinBox_C6_DBM: QDoubleSpinBox
-                                                        - pushButton_DBM_equations: QPushButton
-                                            - frame_9: QFrame
-                                                - (Layout): QGridLayout
-                                                        - label_45: QLabel
-                                                        - doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
-                                                        - label_46: QLabel
-                                - tab_JCA: QWidget
-                                    - (Layout): QGridLayout
-                                            - frame_7: QFrame
-                                                - (Layout): QGridLayout
-                                                        - doubleSpinBox_tortuosity_JCA: QDoubleSpinBox
-                                                        - label_30: QLabel
-                                                        - label_34: QLabel
-                                                        - label_29: QLabel
-                                                        - label_23: QLabel
-                                                        - label_14: QLabel
-                                                        - doubleSpinBox_flow_resistivity_JCA: QDoubleSpinBox
-                                                        - label_22: QLabel
-                                                        - label_13: QLabel
-                                                        - doubleSpinBox_porosity_JCA: QDoubleSpinBox
-                                                        - label_21: QLabel
-                                                        - lineEdit_thermal_characteristic_length_JCA: QLineEdit
-                                                        - label_24: QLabel
-                                                        - lineEdit_viscous_characteristic_length_JCA: QLineEdit
-                                                        - label_33: QLabel
-                                - tab_JCAL: QWidget
-                                    - (Layout): QGridLayout
-                                            - frame_10: QFrame
-                                                - (Layout): QGridLayout
-                                                        - label_18: QLabel
-                                                        - label_38: QLabel
-                                                        - label_37: QLabel
-                                                        - label_35: QLabel
-                                                        - doubleSpinBox_porosity_JCAL: QDoubleSpinBox
-                                                        - doubleSpinBox_tortuosity_JCAL: QDoubleSpinBox
-                                                        - label_15: QLabel
-                                                        - label_27: QLabel
-                                                        - doubleSpinBox_flow_resistivity_JCAL: QDoubleSpinBox
-                                                        - label_26: QLabel
-                                                        - label_25: QLabel
-                                                        - lineEdit_thermal_characteristic_length_JCAL: QLineEdit
-                                                        - label_28: QLabel
-                                                        - lineEdit_viscous_characteristic_length_JCAL: QLineEdit
-                                                        - label_32: QLabel
-                                - tab_list: QWidget
-                                    - (Layout): QGridLayout
-                                            - treeWidget_porous_material_model: QTreeWidget
-                                            - frame_3: QFrame
-                                                - (Layout): QGridLayout
-                                                        - pushButton_reset: QPushButton
-                                                        - pushButton_remove: QPushButton
-                            - frame_plot_buttons: QFrame
-                                - (Layout): QGridLayout
-                                        - label_50: QLabel
-                                        - comboBox_plot_type: QComboBox
-                                        - pushButton_plot_data: QPushButton
+                                                        - label_50: QLabel
+                                                        - comboBox_plot_type: QComboBox
+                                                        - pushButton_plot_data: QPushButton
+                                            - frame_2: QFrame
                 - frame_bottom: QFrame
                     - (Layout): QGridLayout
                             - pushButton_confirm: QPushButton

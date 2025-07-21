@@ -1,5 +1,5 @@
 # fmt: off
-from PySide6.QtWidgets import QDialog, QTreeWidgetItem
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QColor
 
@@ -18,6 +18,7 @@ from vibra.engine.dissipation_models.porous_materials_models import PorousMateri
 
 import warnings
 import numpy as np
+from collections import defaultdict
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -38,6 +39,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         self._initialize()
         self._config_window()
+        self._configure_widgets()
         self._create_connections()
         self._paint_icons()
         self.load_info()
@@ -50,7 +52,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Porous material model")
+        self.setWindowTitle("Vibra")
+
+    def _configure_widgets(self):
+        for i, width in enumerate([120, 160]):
+            self.treeWidget_porous_material_model.setColumnWidth(i, width)
 
     def _initialize(self):
         self.selected_fluid = None
@@ -74,6 +80,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_DBM_equations.clicked.connect(self.show_equations_for_DBM_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
+        #
+        self.tableWidget_porous_materials.cellChanged.connect(self.cell_changed_callback)
         #
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -254,6 +262,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
+    def cell_changed_callback(self, row, column):
+        for i in range(self.tableWidget_porous_materials.rowCount()):
+            item = self.tableWidget_porous_materials.item(i, column)
+            print(item.text())
+
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
@@ -277,31 +290,68 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         else:
             self.tabWidget_main.setTabVisible(4, False)
 
-    def load_info(self):
-
-        self.treeWidget_porous_material_model.clear()
-        self.treeWidget_porous_material_model.setColumnWidth(0, 80)
-        self.treeWidget_porous_material_model.setColumnWidth(1, 160)
-
+    def map_existing_porous_materials(self):
+        
+        aux = defaultdict(list)
         for key, data in self.properties.volume_properties.items():
-
             property, volume_id = key
 
-            if property == "porous_material_model":
+            if property != "porous_material_model":
+                continue
 
-                model = data["model"]
+            model_inputs = list()
+            for key, value in data.items():
+                if key == "values":
+                    continue
 
-                model_inputs = list()
-                for key, value in data.items():
-                    if key != "model":
-                        model_inputs.append(value)
+                if key == "model":
+                    model = value
+                else:
+                    model_inputs.append(value)
 
-                new = QTreeWidgetItem([str(volume_id), model, str(model_inputs)])
+            aux[model, tuple(model_inputs)].append(volume_id)
+
+        identifier = 0
+        self.porous_materials_mapping = dict()
+        for (model, model_inputs), volume_ids in aux.items():
+            identifier += 1
+            self.porous_materials_mapping[model, identifier, model_inputs] = volume_ids
+
+    def load_info(self):
+
+        self.map_existing_porous_materials()
+        self.treeWidget_porous_material_model.clear()
+
+        for key, volume_ids in self.porous_materials_mapping.items():
+            model, identifier, model_inputs = key
+            for volume_id in volume_ids:
+                new = QTreeWidgetItem([str(volume_id), model, str(identifier)])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_porous_material_model.addTopLevelItem(new)
 
+        self.tableWidget_porous_materials.clearContents()
+        self.tableWidget_porous_materials.blockSignals(True)
+        self.tableWidget_porous_materials.setRowCount(11)
+        self.tableWidget_porous_materials.setColumnCount(len(self.porous_materials_mapping))
+
+        for j, (model, identifier, model_inputs) in enumerate(self.porous_materials_mapping.keys()):
+
+            self.tableWidget_porous_materials.setItem(0, j, QTableWidgetItem(str(identifier)))
+            self.tableWidget_porous_materials.setItem(1, j, QTableWidgetItem(model))
+
+            for k, model_input in enumerate(model_inputs):
+                self.tableWidget_porous_materials.setItem(2+k, j, QTableWidgetItem(str(model_input)))
+
+        for i in range(self.tableWidget_porous_materials.rowCount()):
+            for j in range(self.tableWidget_porous_materials.columnCount()):
+                item = self.tableWidget_porous_materials.item(i, j)
+                if item is None:
+                    continue
+                item.setTextAlignment(Qt.AlignCenter)
+
+        self.tableWidget_porous_materials.blockSignals(False)
         self.update_tabs_visibility()
 
     # def check_selected_bodies(self):
