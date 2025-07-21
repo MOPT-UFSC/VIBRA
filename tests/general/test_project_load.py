@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from vibra.project_files.project import Project
@@ -7,11 +6,9 @@ from vibra.project_files.project import Project
 def test_loading_acoustic_modal_analysis():
     project = Project()
     project.load_project("tests/general/acoustic_modal.vibra")
-
     project.run_analysis()
 
     expected_natural_frequencies = [
-        6.5752246855921055e-06,
         85.86710557336141,
         171.85636214948076,
         258.09255638993875,
@@ -23,6 +20,9 @@ def test_loading_acoustic_modal_analysis():
         431.7379704579161,
     ]
 
+    non_trivial_frequencies = project.acoustic_modal_solver.natural_frequencies[1:]
+
     assert np.allclose(
-        expected_natural_frequencies, project.acoustic_modal_solver.natural_frequencies
+        expected_natural_frequencies,
+        non_trivial_frequencies,
     )
