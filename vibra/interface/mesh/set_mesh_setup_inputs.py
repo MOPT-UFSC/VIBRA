@@ -20,6 +20,7 @@ from vibra.engine.mesher.element_type import (
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
+from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
