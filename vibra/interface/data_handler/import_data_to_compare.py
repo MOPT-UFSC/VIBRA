@@ -96,7 +96,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                                                             'Open file', 
                                                             folder_path, 
                                                             'Files (*.csv *.dat *.txt *.xlsx *.xls)',
-                                                             **kwargs )
+                                                             **kwargs)
         
         if not check:
             return
@@ -116,84 +116,91 @@ class ImportDataToCompare(ImportDataToCompare_UI):
 
         from pandas import read_excel
         from openpyxl import load_workbook
+        import warnings
 
-        try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
 
-            message = ""
+            try:
 
-            run = True
-            if self.checkBox_skiprows.isChecked():
-                skiprows = self.spinBox_skiprows.value()
-            else:
-                skiprows = 0
-            maximum_lines_to_skip = 100
-            
-            while run:
-                try:
-                    sufix = Path(imported_path).suffix
-                    filename = os.path.basename(imported_path)
-                    if sufix in [".txt", ".dat", ".csv"]:
-                        loaded_data = np.loadtxt(imported_path, 
-                                                 delimiter = ",", 
-                                                 skiprows = skiprows)
+                message = ""
 
-                        key = self.get_data_index()
-                        self.imported_results[key] = {  "data" : loaded_data,
-                                                        "filename" : filename,
-                                                        "extension" : sufix  }
-
-                    elif sufix in [".xls", ".xlsx"]:
-                        wb = load_workbook(imported_path)
-                        sheetnames = wb.sheetnames
-                        for sheetname in sheetnames:
-
-
-                            try:
-                                sheet_data = read_excel(
-                                                        imported_path, 
-                                                        sheet_name = sheetname, 
-                                                        header = skiprows, 
-                                                        usecols = [0,1,2]
-                                                        ).to_numpy()
-                            except:
-                                sheet_data = read_excel(
-                                                        imported_path, 
-                                                        sheet_name = sheetname, 
-                                                        header = skiprows, 
-                                                        usecols = [0,1]
-                                                        ).to_numpy()
-                                                            
-                            for i in range(len(sheet_data)):
-                                if isinstance(sheet_data[i][0], str):
-                                    sheet_data = np.delete(sheet_data, i)
-                                else:
-                                    break
-                            
+                run = True
+                if self.checkBox_skiprows.isChecked():
+                    skiprows = self.spinBox_skiprows.value()
+                else:
+                    skiprows = 0
+                maximum_lines_to_skip = 100
+                
+                while run:
+                    try:
+                        sufix = Path(imported_path).suffix
+                        filename = os.path.basename(imported_path)
+                        if sufix in [".txt", ".dat", ".csv"]:
+                            loaded_data = np.loadtxt(imported_path, 
+                                                    delimiter = ",", 
+                                                    skiprows = skiprows)
+                        
                             key = self.get_data_index()
-                            self.imported_results[key] = {  "data" : sheet_data,
+                            self.imported_results[key] = {  "data" : loaded_data,
                                                             "filename" : filename,
-                                                            "sheetname" : sheetname,
                                                             "extension" : sufix  }
+                            
+                            run = False
 
-                    self.spinBox_skiprows.setValue(int(skiprows))
-                    run = False
+                        elif sufix in [".xls", ".xlsx"]:
+                            wb = load_workbook(imported_path)
+                            sheetnames = wb.sheetnames
 
-                except:
-                    skiprows += 1
-                    if skiprows >= maximum_lines_to_skip:
-                        run = False
-                        title = "Error while loading data from file"
-                        message = "The maximum number of rows to skip has been reached and no valid data has "
-                        message += "been found. Please, verify the data in the imported file to proceed."
-                        message += "Maximum number of header rows: 100"
+                            for sheetname in sheetnames:
+                                try:
+                                    sheet_data = read_excel(
+                                                            imported_path, 
+                                                            sheet_name = sheetname, 
+                                                            header = skiprows, 
+                                                            usecols = [0,1,2],
+                                                            engine="openpyxl"
+                                                            ).to_numpy()
+                                except:
+                                    sheet_data = read_excel(
+                                                            imported_path, 
+                                                            sheet_name = sheetname, 
+                                                            header = skiprows, 
+                                                            usecols = [0,1],
+                                                            engine="openpyxl"
+                                                            ).to_numpy()
 
-        except Exception as log_error:
-            title = "Error while loading data from file"
-            message = str(log_error)
-            return
-        
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
+                                for i in range(len(sheet_data)):
+                                    if isinstance(sheet_data[i][0], str):
+                                        sheet_data = np.delete(sheet_data, i)
+                                    else:
+                                        break
+
+                                key = self.get_data_index()
+                                self.imported_results[key] = {  "data" : sheet_data,
+                                                                "filename" : filename,
+                                                                "sheetname" : sheetname,
+                                                                "extension" : sufix  }
+
+                            self.spinBox_skiprows.setValue(int(skiprows))
+                            run = False
+
+                    except:
+                        skiprows += 1
+                        if skiprows >= maximum_lines_to_skip:
+                            run = False
+                            title = "Error while loading data from file"
+                            message = "The maximum number of rows to skip has been reached and no valid data has "
+                            message += "been found. Please, verify the data in the imported file to proceed."
+                            message += "Maximum number of header rows: 100"
+
+            except Exception as log_error:
+                title = "Error while loading data from file"
+                message = str(log_error)
+                return
+            
+            if message != "":
+                PrintMessageInput([window_title_1, title, message])
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
@@ -204,7 +211,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             for i, (id, data) in enumerate(self.imported_results.items()):
                 # Creates the QCheckButtons to control data to be plotted
                 self.ids_to_checkBox[id] = QCheckBox()
-                self.ids_to_checkBox[id].setStyleSheet("margin-left:40%; margin-right:50%;")
+
+                checkbox_conteiner = QWidget()
+                cointeiner_layout = QHBoxLayout(checkbox_conteiner)
+                cointeiner_layout.addStretch()
+                cointeiner_layout.addWidget(self.ids_to_checkBox[id])
+                cointeiner_layout.addStretch()
+                cointeiner_layout.setContentsMargins(0, 0, 0, 0)
 
                 if id in self.checkButtons_state.keys():
                     self.ids_to_checkBox[id].setChecked(self.checkButtons_state[id])
@@ -212,11 +225,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 if "sheetname" in data.keys():
                     _item = QTreeWidgetItem([str(data["filename"]), str(data["sheetname"])])
                     self.treeWidget_import_sheet_files.addTopLevelItem(_item)
-                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, self.ids_to_checkBox[id])
+                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, checkbox_conteiner)
+
+                    _item.setTextAlignment(2, Qt.AlignCenter)
                 else:
                     _item = QTreeWidgetItem([str(data["filename"])])
                     self.treeWidget_import_text_files.addTopLevelItem(_item)
-                    self.treeWidget_import_text_files.setItemWidget(_item, 1, self.ids_to_checkBox[id])                  
+                    self.treeWidget_import_text_files.setItemWidget(_item, 1, checkbox_conteiner)
 
                 for i in range(5):
                     _item.setTextAlignment(i, Qt.AlignCenter)
