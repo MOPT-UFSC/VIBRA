@@ -46,8 +46,14 @@ from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 
 class MainWindow(MainWindow_UI):
+    project_loaded = Signal(str)
+    project_saved = Signal(str)
+    file_imported = Signal(str)
+
+    render_update_requested = Signal()
+
     theme_changed = Signal(str)
-    visualization_changed = Signal()
+    visualization_filter_changed = Signal()
     render_widget_changed = Signal()
     selection_changed = Signal()
 
@@ -116,8 +122,8 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.welcome_widget)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
-        self.visualization_changed.connect(self.update_visualization_filter)
-        self.update_visualization_filter()
+        self.visualization_filter_changed.connect(self.visualization_filter_changed_callback)
+        self.visualization_filter_changed_callback()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
@@ -419,15 +425,15 @@ class MainWindow(MainWindow_UI):
     
     def action_show_materials_callback(self):
         self.visualization_filter.color_mode = ColorMode.MATERIAL
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
     def action_show_fluids_callback(self):
         self.visualization_filter.color_mode = ColorMode.FLUID
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
     def action_show_empty_callback(self):
         self.visualization_filter.color_mode = ColorMode.EMPTY
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
     def action_user_preferences_callback(self):
         self.close_dialogs()
@@ -671,23 +677,31 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_or_mesh_dialog()
 
     def save_project_dialog(self):
+        '''
+        Saves the project if a file already exists, otherwise 
+        it will prompt the user to select a project location 
+        to then save it.
+        '''
+
         if app().project.save_path is None:
             return self.save_project_as_dialog()
         else:
-            self.save_project_as(app().project.save_path)
-            return True
+            save_project = LoadingWindow(app().project.save_project)
+            save_project(app().project.save_path)
 
     def save_project_as_dialog(self):
+        '''
+        Prompts the user to select a location where the file
+        should be saved.
+        '''
+
         if not TEMP_PROJECT_FILE.exists():
             return
 
         obj = SaveProjectDataSelector()
         if obj.complete:
             last_path = app().config.get_last_folder_for("project_folder")
-            if last_path is None:
-                path = os.path.expanduser("~")
-            else:
-                path = last_path
+            path = last_path if (last_path is not None) else os.path.expanduser("~")
 
             kwargs = dict()
             if platform.system() == "Linux":
@@ -712,27 +726,28 @@ class MainWindow(MainWindow_UI):
 
             if not file_path.endswith(".vibra"):
                 file_path += ".vibra"
-            
-            self.save_project_as(file_path)
+
+            LoadingWindow(app().project.save_project).run(file_path)
+            self.project_saved.emit(str(file_path))
 
         return obj.complete
 
-    def save_project_as(self, path: str):
+    def project_saved_callback(self, path: str):
+        '''
+        After the project is saved this method is called so that it
+        can update the interface with the changes needed
+        '''
 
-        def save_data(path):
-            # TODO: this can be further simplified
-            app().project.save_project(path)
-            app().config.add_recent_file(path)
-            app().config.write_last_folder_path_in_file("project_folder", path)
-            self.update_recents_menu()
-            self.update_window_title(path)
+        if not path:
+            return
 
-        LoadingWindow(save_data).run(path)
+        app().config.add_recent_file(path)
+        app().config.write_last_folder_path_in_file("project_folder", path)
+        self.update_window_title(path)
+        self.update_recents_menu()
 
         from datetime import datetime
-
-        message = f"The project data has been saved: {datetime.now()}"
-        print(message)
+        logging.info(f"The project data has been saved: {datetime.now()}")
 
     def open_project_dialog(self):
         last_path = app().config.get_last_folder_for("project_folder")
@@ -974,21 +989,21 @@ class MainWindow(MainWindow_UI):
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
     def action_line_view_callback(self, clicked: bool):
         self.visualization_filter.lines = clicked
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
     def action_node_view_callback(self, clicked: bool):
         self.visualization_filter.points = clicked
-        self.visualization_changed.emit()
-    
+        self.visualization_filter_changed.emit()
+
     def action_ghost_view_callback(self, clicked: bool):
         self.visualization_filter.ghost = clicked
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
-    def update_visualization_filter(self):
+    def visualization_filter_changed_callback(self):
         self.blockSignals(True)
         self.action_node_view.setChecked(self.visualization_filter.points)
         self.action_line_view.setChecked(self.visualization_filter.lines)
@@ -1043,7 +1058,7 @@ class MainWindow(MainWindow_UI):
     def action_hide_show_symbols_callback(self, clicked: bool):
         self.visualization_filter.acoustic_symbols = clicked
         self.visualization_filter.structural_symbols = clicked
-        self.visualization_changed.emit()
+        self.visualization_filter_changed.emit()
 
     def close_app(self):
         self.minimize_dialogs()

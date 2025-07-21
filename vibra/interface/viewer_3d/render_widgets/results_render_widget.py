@@ -39,7 +39,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
-        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+        app().main_window.visualization_filter_changed.connect(self.visualization_changed_callback)
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()

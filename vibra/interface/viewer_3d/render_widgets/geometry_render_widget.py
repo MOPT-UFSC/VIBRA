@@ -45,7 +45,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.theme_changed.connect(self.update_theme)
-        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+        app().main_window.visualization_filter_changed.connect(self.visualization_changed_callback)
 
         self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
