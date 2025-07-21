@@ -6,27 +6,31 @@ from vibra.engine.mesher.element_type import (
     HEXAHEDRON_20,
 )
 
-# 3d elements - acoustic
-from vibra.engine.elements.elements_3d.acoustic.acoustic_hex8_element import ACT_HEXAHEDRON_8C
-from vibra.engine.elements.elements_3d.acoustic.acoustic_hex20_element import ACT_HEXAHEDRON_20C
-from vibra.engine.elements.elements_3d.acoustic.acoustic_tet4_element import ACT_TETRAHEDRON_4C
-from vibra.engine.elements.elements_3d.acoustic.acoustic_tet10_element import ACT_TETRAHEDRON_10C
+from vibra.engine.elements.elements_3d import (
+    # 3d elements - acoustic
+    ACT_HEXAHEDRON_8C,
+    ACT_HEXAHEDRON_20C,
+    ACT_TETRAHEDRON_4C,
+    ACT_TETRAHEDRON_10C,
 
-# 2d elements - acoustic
-from vibra.engine.elements.elements_2d.acoustic.acoustic_face3_element import ACT_FACE_3
-from vibra.engine.elements.elements_2d.acoustic.acoustic_face4_element import ACT_FACE_4
+    # 3d elements - structural
+    STRUCT_HEXAHEDRON_8,
+    STRUCT_HEXAHEDRON_20,
+    STRUCT_TETRAHEDRON_4S,
+    STRUCT_TETRAHEDRON_10S
+)
+
+from vibra.engine.elements.elements_2d import (
+    # 2d elements - acoustic
+    ACT_FACE_3,
+    ACT_FACE_4,
+
+    # 2D elements - structural
+    STRUCT_TRIANGULAR_3
+)
 
 #1d elements - acoustic
-from vibra.engine.elements.elements_1d.acoustic_line2_element import ACT_LINE_2
-
-# 3D elements - structural
-from vibra.engine.elements.elements_3d.structural.structural_hex8_element import STRUCT_HEXAHEDRON_8
-from vibra.engine.elements.elements_3d.structural.structural_hex20_element import STRUCT_HEXAHEDRON_20
-from vibra.engine.elements.elements_3d.structural.structural_tet4_element import STRUCT_TETRAHEDRON_4S
-from vibra.engine.elements.elements_3d.structural.structural_tet10_element import STRUCT_TETRAHEDRON_10S
-
-# 2D elements - structural
-from vibra.engine.elements.elements_2d.structural.structural_tria3_element import STRUCT_TRIANGULAR_3
+from vibra.engine.elements.elements_1d import ACT_LINE_2
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
