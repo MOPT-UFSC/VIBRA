@@ -278,23 +278,19 @@ class Project:
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
         ]:
-            if checker.check_structural_harmonic_analysis():
-                raise ValueError("Invalid Structural Harmonic Analysis setup.")
+            checker.check_structural_harmonic_analysis()
             self.solve_structural_harmonic_analysis()
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
-            if checker.check_structural_modal_analysis():
-                raise ValueError("Invalid Structural Modal Analysis setup.")
+            checker.check_structural_modal_analysis()
             self.solve_structural_modal_analysis()
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            if checker.check_acoustic_harmonic_analysis():
-                raise ValueError("Invalid Acoustic Harmonic Analysis setup.")
+            checker.check_acoustic_harmonic_analysis()
             self.solve_acoustic_harmonic_analysis()
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
-            if checker.check_acoustic_modal_analysis():
-                raise ValueError("Invalid Acoustic Modal Analysis setup.")
+            checker.check_acoustic_modal_analysis()
             self.solve_acoustic_modal_analysis()
 
         else:
