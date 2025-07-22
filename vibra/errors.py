@@ -31,8 +31,8 @@ class ModelException(VibraException):
     ):
         super().__init__(*args, **kwargs)
         self.points = points if (points is not None) else set()
-        self.surfaces = surfaces if (points is not None) else set()
-        self.volumes = volumes if (points is not None) else set()
+        self.surfaces = surfaces if (surfaces is not None) else set()
+        self.volumes = volumes if (volumes is not None) else set()
 
 
 class InvalidModelSetupError(ModelException):
