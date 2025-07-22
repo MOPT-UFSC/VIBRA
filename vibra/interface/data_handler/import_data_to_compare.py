@@ -168,11 +168,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                                                             engine="openpyxl"
                                                             ).to_numpy()
 
-                                for i in range(len(sheet_data)):
-                                    if isinstance(sheet_data[i][0], str):
-                                        sheet_data = np.delete(sheet_data, i)
-                                    else:
-                                        break
+                                sheet_data = self.remove_unnecessary_header(sheet_data)
 
                                 key = self.get_data_index()
                                 self.imported_results[key] = {  "data" : sheet_data,
@@ -199,6 +195,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             
             if message != "":
                 PrintMessageInput([window_title_1, title, message])
+    
+    def remove_unnecessary_header(self, data: np.ndarray):
+        for i in range(len(data)):
+            if isinstance(data[i][0], str):
+                data = np.delete(data, i)
+            else:
+                return data
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()

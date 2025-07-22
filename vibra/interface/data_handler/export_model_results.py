@@ -142,8 +142,11 @@ class ExportModelResults(QFileDialog):
             file_path = existing_path
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
- 
-        file_extension = file_extension[-5:-1]
+
+        if ".xlsx" in file_extension:
+            file_extension = ".xlsx"
+        else:
+            file_extension = file_extension[-5:-1]
 
         if file_extension not in file_path:
             file_path += file_extension
