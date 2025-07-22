@@ -53,6 +53,7 @@ class AnalysisRequirementsChecker:
                 raise InvalidModelSetupError(
                     f"You should assign one material for volumes {volumes_without_material}",
                     "to proceed with the analysis solution.",
+                    volumes=volumes_without_material,
                 )
 
         if len(volumes_without_material) == len(self.volume_ids):

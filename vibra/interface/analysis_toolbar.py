@@ -12,6 +12,8 @@ from vibra.interface.analysis.harmonic_analysis_method_selector_input import Str
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
 from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
+from vibra.interface.message.exception_message import ExceptionMessage
+from vibra.errors import ModelException
 
 from typing import Literal
 
@@ -212,14 +214,19 @@ class AnalysisToolbar(QToolBar):
         
         try:
             LoadingWindow(app().project.run_analysis).run()
-        except (ValueError, NotImplementedError):
-            return
-        finally:
-            analysis = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-            app().main_window.disable_advanced_acoustic_plots_buttons(
-                analysis in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]
+        
+        except ModelException as exception:
+            app().main_window.action_model_workspace_callback()
+            app().main_window.set_geometry_selection(
+                points = exception.points,
+                surfaces = exception.surfaces,
+                volumes = exception.volumes,
             )
-
+            ExceptionMessage(exception).exec()
+        
+        else:
+            analysis = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+            app().main_window.disable_advanced_acoustic_plots_buttons(AnalysisID.is_modal(analysis))
             app().main_window.results_viewer_widget.results_viewer_items.update_items()
             app().main_window.configure_results_render_widget()
 
