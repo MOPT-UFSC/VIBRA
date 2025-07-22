@@ -49,10 +49,7 @@ class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
             return
         
         if isinstance(analysis_setup, dict):
-            if analysis_setup["analysis_id"] in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
+            if AnalysisID.is_modal(analysis_setup["analysis_id"]):
                 modes = analysis_setup["modes"]
                 sigma = analysis_setup["sigma_factor"]
                 self.lineEdit_number_modes.setText(str(modes))

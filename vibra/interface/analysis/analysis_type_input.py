@@ -131,10 +131,7 @@ class AnalysisTypeInput(AnalysisTypeInput_UI):
         app().project.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
 
-        if self.analysis_setup["analysis_id"] in [
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        if AnalysisID.is_modal(self.analysis_setup["analysis_id"]):
             app().project.file.write_analysis_setup_in_file(self.analysis_setup)
 
         self.close()

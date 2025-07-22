@@ -1,7 +1,5 @@
 
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
-from vibra.engine import AnalysisID
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.assemblers.structural_assembler import StructuralAssembler

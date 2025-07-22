@@ -46,10 +46,7 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
 
         analysis_setup = app().project.file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
-            if analysis_setup.get("analysis_id") in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
+            if AnalysisID.is_modal(analysis_setup.get("analysis_id")):
                 modes = analysis_setup["modes"]
                 sigma = analysis_setup["sigma_factor"]
                 self.lineEdit_number_modes.setText(str(modes))

@@ -34,7 +34,7 @@ class Project:
         self.save_path = None
 
         self.analysis_setup = dict()
-        self.analysis_id = AnalysisID.NO_ANALYSIS
+        self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
 
         self.model = Model()
         self.acoustic_assembler = AcousticAssembler(self.model)
@@ -147,11 +147,9 @@ class Project:
         analysis_setup = self.file.read_analysis_setup_from_file()
         if isinstance(analysis_setup, dict):
             analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+            analysis_id = AnalysisID(analysis_id)
 
-            if analysis_id in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
+            if analysis_id.is_modal():
                 if "modes" in analysis_setup.keys():
                     if not isinstance(analysis_setup["modes"], int):
                         return False
@@ -166,11 +164,7 @@ class Project:
 
                 return True
 
-            elif analysis_id in [
-                AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                AnalysisID.ACOUSTIC_HARMONIC,
-            ]:
+            elif analysis_id.is_harmonic():
                 for f_type in ["f_min", "f_max", "f_step"]:    
                     if f_type in analysis_setup.keys():
                         if not isinstance(analysis_setup[f_type], int | float):
@@ -272,12 +266,10 @@ class Project:
             raise ValueError("Invalid analysis setup.")
 
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = AnalysisID(analysis_id)
         checker = AnalysisRequirementsChecker(self)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if analysis_id.is_structural() and analysis_id.is_harmonic():
             checker.check_structural_harmonic_analysis()
             self.solve_structural_harmonic_analysis()
 
@@ -306,12 +298,13 @@ class Project:
             return False
             
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = AnalysisID(analysis_id)
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
             if self.structural_harmonic_solver is None:
                 return
 
-            solution  = self.structural_harmonic_solver.solution
+            solution = self.structural_harmonic_solver.solution
             if solution is not None:
                 return True
 
@@ -319,7 +312,7 @@ class Project:
             if self.structural_modal_solver is None:
                 return
 
-            solution  = self.structural_modal_solver.solution
+            solution = self.structural_modal_solver.solution
             if solution is not None:
                 return True
 
@@ -327,7 +320,7 @@ class Project:
             if self.acoustic_modal_solver is None:
                 return
 
-            solution  = self.acoustic_modal_solver.solution
+            solution = self.acoustic_modal_solver.solution
             if solution is not None:
                 return True
 
@@ -335,7 +328,7 @@ class Project:
             if self.acoustic_harmonic_solver is None:
                 return
 
-            solution  = self.acoustic_harmonic_solver.solution
+            solution = self.acoustic_harmonic_solver.solution
             if solution is not None:
                 return True
 
@@ -348,38 +341,34 @@ class Project:
             return "", ""
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = AnalysisID(analysis_id)
+
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return "", ""
 
-        if analysis_id in [
-                           AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                           AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                           AnalysisID.ACOUSTIC_HARMONIC, 
-                           AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-                           AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
-                           ]:
+        if analysis_id.is_harmonic():
             analysis_type = "harmonic"
 
         elif analysis_id == AnalysisID.STATIC_ANALYSIS:
             analysis_type = "static"
 
-        else:
+        elif analysis_id.is_modal():
             analysis_type = "modal"
+        
+        else:
+            raise NotImplementedError(f'Not implemented analysis "{analysis_id}"')
 
-        if analysis_id in [
-                           AnalysisID.ACOUSTIC_HARMONIC, 
-                           AnalysisID.ACOUSTIC_MODAL
-                           ]:
+        if analysis_id.is_acoustic():
             physical_domain = "acoustic"
+        
+        elif analysis_id.is_structural():
+            physical_domain = "structural"
 
-        elif analysis_id in [
-                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
-                            ]:
+        elif analysis_id.is_coupled():
             physical_domain = "coupled"
 
         else:
-            physical_domain = "structural"
+            raise NotImplementedError(f'Not implemented analysis "{analysis_id}"')
 
         return analysis_type, physical_domain
 
@@ -390,31 +379,19 @@ class Project:
             return True
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = AnalysisID(analysis_id)
+
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return True
 
-        if analysis_id in [
-                            AnalysisID.ACOUSTIC_HARMONIC,
-                            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
-                            ]:
+        if analysis_id.is_harmonic():
             for key in ["f_min", "f_max", "f_step"]:
                 if key not in analysis_setup.keys():
                     return False
             return True
 
-        elif analysis_id in [
-                             AnalysisID.ACOUSTIC_MODAL, 
-                             AnalysisID.STRUCTURAL_MODAL
-                             ]:
+        elif analysis_id.is_modal():
             for key in ["modes", "sigma_factor"]:
                 if key not in analysis_setup.keys():
                     return False
             return True
-
-    def long_function(self):
-        for i in range(20):
-            logging.info(f"long_function [{i}/20]")
-            sleep(0.1)

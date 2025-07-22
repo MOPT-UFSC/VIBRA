@@ -77,13 +77,9 @@ class AnalysisSetupInput():
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
     def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
-        if sum(global_damping) and analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,            
-        ]:
+        analysis_id = AnalysisID(analysis_id)
 
+        if sum(global_damping) and analysis_id.is_harmonic() and analysis_id.features_structural():
             if global_damping[0]:
                 self.lineEdit_av.setText(str(global_damping[0]))
 
@@ -112,21 +108,13 @@ class AnalysisSetupInput():
         if analysis_setup is None:
             analysis_setup = dict()
 
+        self.analysis_id = AnalysisID(self.analysis_id)
         analysis_setup["analysis_id"] = self.analysis_id
 
         f_min = f_max = f_step = 0.
 
-        if self.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
-            if self.analysis_id in [
-                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-            ]:
+        if self.analysis_id.is_harmonic():
+            if self.analysis_id.is_mode_superposition():
                 number_of_modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
                 if self.stop:
                     self.lineEdit_modes.setFocus()
@@ -161,13 +149,8 @@ class AnalysisSetupInput():
             analysis_setup["f_step"] = f_step
 
         alpha_v = beta_v = alpha_h = beta_h = 0.0
-        
-        if self.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+
+        if self.analysis_id.features_structural() and self.analysis_id.is_harmonic():
             alpha_v = self.check_inputs(self.lineEdit_av, "'proportional viscous damping (alpha_v)'", zero_included=True, _float=True)
             if self.stop:
                 self.lineEdit_av.setFocus()
@@ -196,10 +179,7 @@ class AnalysisSetupInput():
         else:
             self.model.set_analysis_setup(analysis_setup)
 
-        if self.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if self.analysis_id.is_mode_superposition():
             analysis_setup["modes"] = number_of_modes
 
         app().project.file.write_analysis_setup_in_file(analysis_setup)

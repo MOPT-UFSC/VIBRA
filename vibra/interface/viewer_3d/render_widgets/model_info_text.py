@@ -691,20 +691,16 @@ def analysis_info_text(frequency_index: int):
         return ""
 
     display_name = {
-                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
-                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
-                    AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD : "Structural Harmonic Analysis",
-                    AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
-                    }
+        AnalysisID.STRUCTURAL_MODAL: "Structural Modal Analysis",
+        AnalysisID.ACOUSTIC_MODAL: "Acoustic Modal Analysis",
+        AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD: "Structural Harmonic Analysis",
+        AnalysisID.ACOUSTIC_HARMONIC: "Acoustic Harmonic Analysis",
+    }
 
     analysis_id = project.analysis_id
     tree = TreeInfo(display_name[analysis_id])
 
-    if project.analysis_id in [
-        AnalysisID.STRUCTURAL_MODAL,
-        AnalysisID.ACOUSTIC_MODAL,
-    ]:
-
+    if project.analysis_id.is_modal():
         frequencies = None
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
             frequencies = project.structural_modal_solver.natural_frequencies

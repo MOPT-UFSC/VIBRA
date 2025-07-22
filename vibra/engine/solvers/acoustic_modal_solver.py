@@ -1,5 +1,4 @@
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
-from vibra.engine import AnalysisID
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -10,7 +9,7 @@ import numpy as np
 
 from functools import cache
 from scipy.sparse import block_array
-from scipy.sparse.linalg import eigs, eigsh
+from scipy.sparse.linalg import eigs
 
 
 class AcousticModalSolver:

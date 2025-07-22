@@ -1,5 +1,4 @@
 
-from vibra.engine import AnalysisID
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 from vibra.engine.properties.fluid import Fluid
 
@@ -12,7 +11,7 @@ import numpy as np
 
 from functools import cache
 from scipy.sparse import triu
-from time import time
+
 
 class AcousticHarmonicSolver:
     def __init__(self, assembler: "AcousticAssembler", **kwargs):

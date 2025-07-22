@@ -235,10 +235,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self.min_value = min_value
                 self.max_value = max_value
 
-        elif analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        elif analysis_id.is_structural() and analysis_id.is_harmonic():
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
