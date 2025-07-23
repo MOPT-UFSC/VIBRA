@@ -66,8 +66,23 @@ class Mesh:
 
         self.geometry_information = defaultdict(list)
 
-        self.mesh_quality = None
-        self.mesh_quality_statistics = np.zeros((4, 3))
+        self.mesh_quality_parameters = [
+            "gamma",
+            "volume",
+            "minSJ",
+            "aspectRatio",
+        ]
+        self.quality_bins = {
+            "gamma": (0.7, 0.15),
+            "volume": (1e-3, 0),
+            "minSJ": (0.3, 0.1),
+            "aspectRatio": (4, 1.5),
+        }
+        self.mesh_quality = dict()
+        self.mesh_quality_statistics = dict()
+        self.mesh_bad_elements = dict()
+        self.mesh_quality_histograms_data = dict()
+        self.mesh_quality_temp = None
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -198,7 +213,10 @@ class Mesh:
             self.process_geometry_information()
             self.process_downwards_adjacencies_from_entities()
             self.process_upwards_adjacencies_from_entities()
-            self.get_mesh_quality_parameters()
+            self.calculate_mesh_quality_parameters()
+            self.calculate_mesh_quality_statistics()
+            self.calculate_mesh_bad_elements()
+            self.calculate_mesh_quality_histograms()
 
             gmsh.model.mesh.removeDuplicateNodes()
 
@@ -1659,56 +1677,89 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
-    def get_mesh_quality_parameters(self):
+    def calculate_mesh_quality_parameters(self):
         if not gmsh.model.mesh.getElements(3, -1)[1]:
             return
 
         parameters = [
-            "gamma",  # 0
-            "volume",  # 1
-            "minSJ",  # 2
+            "gamma",
+            "volume",
+            "minSJ",
         ]
 
         elements = gmsh.model.mesh.getElements(3, -1)[1][0]
-        num_elements = len(elements)
-        dtype = np.dtype([("el", int), ("val", float)])
-        self.mesh_quality = np.empty((len(parameters) + 1, num_elements), dtype=dtype)
 
-        for param_idx, param in enumerate(parameters):
-            qualities = gmsh.model.mesh.getElementQualities(elements, param)
-            self.mesh_quality[param_idx, :] = np.array(
-                list(zip(elements, qualities)), dtype=dtype
-            )
+        for parameter in parameters:
+            element_qualities_dict = dict()
+            qualities_array = np.array(gmsh.model.mesh.getElementQualities(elements, parameter))            
 
-        min_edge_quals = np.array(
-            gmsh.model.mesh.getElementQualities(elements, "minEdge")
-        )
-        max_edge_quals = np.array(
-            gmsh.model.mesh.getElementQualities(elements, "maxEdge")
-        )
-
+            for i, element in enumerate(elements):
+                element_qualities_dict[element] = qualities_array[i]
+            
+            self.mesh_quality[parameter] = element_qualities_dict
+        
+        element_qualities_dict = dict()    
+        min_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "minEdge"))
+        max_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "maxEdge"))
         aspect_ratio_quals = max_edge_quals / min_edge_quals
 
-        self.mesh_quality[3, :] = np.array(
-            list(zip(elements, aspect_ratio_quals)), dtype=dtype
-        )
-
-        self.get_mesh_quality_statistics(self.mesh_quality)
-
-        return self.mesh_quality
+        for i, element in enumerate(elements):
+            element_qualities_dict[element] = aspect_ratio_quals[i]
+        
+        self.mesh_quality["aspectRatio"] = element_qualities_dict
+        
     
-    def get_mesh_quality_statistics(self, mesh_quality_parameters):
-        # worst_value - average value - stdev
-        for i in range(3):
-            self.mesh_quality_statistics[i, 0] = np.amin(mesh_quality_parameters[i, :]["val"])
-            self.mesh_quality_statistics[i, 1] = np.mean(mesh_quality_parameters[i, :]["val"])
-            self.mesh_quality_statistics[i, 2] = np.std(mesh_quality_parameters[i, :]["val"])
+    def calculate_mesh_quality_statistics(self):
+        if not self.mesh_quality:
+            return
+        
+        for parameter in ["gamma", "volume", "minSJ", "aspectRatio"]:
+            qualities_array = list(self.mesh_quality[parameter].values())
 
-        self.mesh_quality_statistics[3, 0] = np.amax(mesh_quality_parameters[3, :]["val"])
-        self.mesh_quality_statistics[3, 1] = np.mean(mesh_quality_parameters[3, :]["val"])
-        self.mesh_quality_statistics[3, 2] = np.std(mesh_quality_parameters[3, :]["val"])
+            if parameter == "aspectRatio":
+                worst_value = np.amax(qualities_array)
+            else:
+                worst_value = np.amin(qualities_array)
 
-        return self.mesh_quality_statistics
+            statistics = [
+                worst_value,
+                np.mean(qualities_array),
+                np.std(qualities_array),
+            ]
+
+            self.mesh_quality_statistics[parameter] = statistics
+
+    def calculate_mesh_bad_elements(self):
+        if not self.mesh_quality:
+            return
+        
+        bad_elements = []
+        for parameter in self.mesh_quality_parameters:
+            for element in self.mesh_quality[parameter].keys():
+                quality = self.mesh_quality[parameter][element]
+
+                if parameter == "aspectRatio":
+                    if quality > self.quality_bins[parameter][0]:
+                        bad_elements.append(element)
+                elif quality < self.quality_bins[parameter][1]:
+                    bad_elements.append(element)
+
+            self.mesh_bad_elements[parameter] = bad_elements
+
+    def calculate_mesh_quality_histograms(self):
+        if not self.mesh_quality:
+            return
+        
+        for parameter in self.mesh_quality_parameters:
+            mesh_quality_vals = list(self.mesh_quality[parameter].values())
+
+            bins = np.linspace(min(mesh_quality_vals), max(mesh_quality_vals), 30)
+            hist, bin_edges = np.histogram(mesh_quality_vals, bins=bins)
+
+            percentile_5 = np.percentile(mesh_quality_vals, 5)
+            percentile_95 = np.percentile(mesh_quality_vals, 95)
+
+            self.mesh_quality_histograms_data[parameter] = [hist, bin_edges, percentile_5, percentile_95]
 
 
     def compute_initial_mesh_size(

@@ -7,7 +7,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from fileboxes import Filebox
 
 import os
-import io
+import json
 import h5py
 import numpy as np
 
@@ -40,7 +40,7 @@ class ProjectFile:
         self.geometry_data_filename = "geometry_data.hdf5"
         self.model_properties_filename = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
-        self.mesh_quality_parameters_filename = "mesh_qulity_parameters.hdf5"
+        self.mesh_quality_data_filename = "mesh_quality_data.json"
         self.imported_table_data_filename = "imported_tables_data.hdf5"
         self.results_data_filename = "results_data.hdf5"
         self.thumbnail_filename = "thumbnail.png"
@@ -225,54 +225,51 @@ class ProjectFile:
         self.filebox.write(self.project_setup_filename, project_setup)
         app().main_window.project_data_modified = True
 
-    def write_mesh_quality_parameters_in_file(self):
-        mesh_quality = app().project.model.mesh.mesh_quality
+    def write_mesh_quality_data_in_file(self):
+        mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
+        mesh_bad_elements = app().project.model.mesh.mesh_bad_elements
+        mesh_quality_histograms_data = app().project.model.mesh.mesh_quality_histograms_data
+        if mesh_quality_statistics is not None:
+            mesh_quality_data = dict()
+            mesh_quality_data["statistics"] = mesh_quality_statistics
+            mesh_quality_data["bad_elements"] = mesh_bad_elements
+            mesh_quality_data["histograms_data"] = mesh_quality_histograms_data
+        
+        def convert_ndarrays_to_lists(obj):
+            if isinstance(obj, dict):
+                return {k: convert_ndarrays_to_lists(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_ndarrays_to_lists(i) for i in obj]
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            else:
+                return obj
+        mesh_quality_data_json_ready = convert_ndarrays_to_lists(mesh_quality_data)
+        
+        self.filebox.write(self.mesh_quality_data_filename, mesh_quality_data_json_ready)
 
-        dtype = [("el", int), ("val", float)]
-        
-        structured_array = np.array(mesh_quality, dtype=dtype)
-
-        dtype = tuple(structured_array)
-        
-        with self.filebox.open(self.mesh_quality_parameters_filename, "w") as internal_file:
-            with h5py.File(internal_file, "w") as f:
-                f.create_dataset("mesh_quality/mesh_quality_matrix", 
-                            data=mesh_quality
-                )
-        
         app().main_window.project_data_modified = True    
 
-    def read_mesh_quality_parameters_from_file(self):
+    def read_mesh_quality_data_from_file(self):
         mesh_quality_data = dict()
         try:
             if not self.filebox.contains(self.mesh_data_filename):
-                return None
-             
-            with self.filebox.open(self.mesh_data_filename) as internal_file:
-                with h5py.File(internal_file, "r") as f:
-                    
-                    if "mesh_quality" in f:
-                        quality_group = f["mesh_quality"]
-                        
-                        for key, values in quality_group.items():
-                            try:
-                                if isinstance(values, h5py.Dataset):
-                                    mesh_quality_data[key] = np.array(values)
-                                else:
-                                    mesh_quality_data[key] = values[()]
-                                    
-                            except Exception as e:
-                                try:
-                                    mesh_quality_data[key] = tuple(values[()])
-                                except:
-                                    mesh_quality_data[key] = values[()]
-        
+                return None, None, None
+
+            else:        
+                mesh_quality_data = self.filebox.read(self.mesh_quality_data_filename)
+                mesh_quality_statistics = mesh_quality_data["statistics"]
+                mesh_bad_elements = mesh_quality_data["bad_elements"]
+                mesh_quality_histograms_data = mesh_quality_data["histograms_data"]
+                
+                return mesh_quality_statistics, mesh_bad_elements, mesh_quality_histograms_data
+
+
         except Exception as error_log:
-            # from traceback import print_exception
-            # print_exception(error_log)
-            return None
+            from traceback import print_exception
+            print_exception(error_log)
+            return None, None, None
         
-        return mesh_quality_data
 
     def read_mesh_setup_from_file(self):
 

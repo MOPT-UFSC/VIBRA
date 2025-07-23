@@ -361,7 +361,7 @@ class MeshSetupInputs(MesherSetup_UI):
         app().main_window.update_geometry_information()
 
         self.config_control_quality_table()
-        app().file.write_mesh_quality_parameters_in_file()
+        app().file.write_mesh_quality_data_in_file()
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
@@ -460,34 +460,18 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
-
-        if mesh_quality_parameters:
-            mesh_quality_parameters = np.array(
-                list(mesh_quality_parameters.values())[0]
-            )
-            mesh_statistics = app().project.model.mesh.get_mesh_quality_statistics(
-                mesh_quality_parameters
-            )
-
-        else:
-            mesh_statistics = app().project.model.mesh.mesh_quality_statistics
-
-        if not np.any(mesh_statistics):
+        mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
+        if mesh_quality_statistics is None or mesh_quality_statistics == app().project.model.mesh.mesh_quality_temp:
+            mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
+        
+        app().project.model.mesh.mesh_quality_temp = mesh_quality_statistics
+        if not mesh_quality_statistics:
             return
 
-        worst_values = mesh_statistics[:, 0]
-        avgs = mesh_statistics[:, 1]
-        stdevs = mesh_statistics[:, 2]
+        self.quality_bins = app().project.model.mesh.quality_bins
 
-        self.quality_bins = {
-            "gamma": (0.7, 0.15),
-            "volume": (1e-5, 0),
-            "minSJ": (0.3, 0.1),
-            "aspectRatio": (4, 1.5),
-        }
         param_map = {
-            0: (
+            0: ("gamma",
                 "Gamma",
                 lambda v: "green"
                 if v > self.quality_bins["gamma"][0]
@@ -495,15 +479,15 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["gamma"][1]
                 else "red",
             ),
-            1: (
-                "Volume",
+            1: ("volume",
+                "Volume (mm³)",
                 lambda v: "green"
                 if v > self.quality_bins["volume"][0]
                 else "yellow"
                 if v > self.quality_bins["volume"][1]
                 else "red",
             ),
-            2: (
+            2: ("minSJ",
                 "Scaled Jacobian",
                 lambda v: "green"
                 if v > self.quality_bins["minSJ"][0]
@@ -511,7 +495,7 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["minSJ"][1]
                 else "red",
             ),
-            3: (
+            3: ("aspectRatio",
                 "Aspect Ratio",
                 lambda v: "green"
                 if v < self.quality_bins["aspectRatio"][0]
@@ -538,20 +522,22 @@ class MeshSetupInputs(MesherSetup_UI):
                     "and the shortest edge. Values close to 1 indicate well-shaped elements; higher values mean the element is elongated or distorted.\n"
         ] 
 
-        for i, (key, (label, color_fn)) in enumerate(param_map.items()):
+        for i, (key, (gmsh_label, label, color_fn)) in enumerate(param_map.items()):
             name_item = QTableWidgetItem(label)
             name_item.setToolTip(tooltips[i])
 
             self.tableWidget_mesh_quality.setItem(i, 0, name_item)
+            print(gmsh_label)
+            print(mesh_quality_statistics[gmsh_label])
 
-            worst_value_item = QTableWidgetItem(str(round(worst_values[key], 3)))
-            avg_item = QTableWidgetItem(str(round(avgs[key], 3)))
-            stdev_item = QTableWidgetItem(str(round(stdevs[key], 3)))
+            worst_value_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][0], 3)))
+            avg_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][1], 3)))
+            stdev_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][2], 3)))
 
-            worst_value_color = color_fn(worst_values[key])
+            worst_value_color = color_fn(mesh_quality_statistics[gmsh_label][0])
             worst_value_item.setForeground(QBrush(QColor(worst_value_color)))
 
-            avg_color = color_fn(avgs[key])
+            avg_color = color_fn(mesh_quality_statistics[gmsh_label][1])
             avg_item.setForeground(QBrush(QColor(avg_color)))
 
             self.tableWidget_mesh_quality.setItem(i, 1, worst_value_item)
@@ -569,21 +555,13 @@ class MeshSetupInputs(MesherSetup_UI):
             2: "minSJ",
             3: "aspectRatio",
         }
-
-        mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
-
-        if mesh_quality_parameters:
-            mesh_quality_vals = np.array(list(mesh_quality_parameters.values())[0])[
-                parameter_idx
-            ]["val"]
-
+        mesh_quality_data = app().file.read_mesh_quality_data_from_file()[2]
+        if mesh_quality_data:
+            hist, bin_edges, percentile_5, percentile_95 = mesh_quality_data[parameter[parameter_idx]]
         else:
-            mesh_quality_vals = app().project.model.mesh.mesh_quality[parameter_idx][
-                "val"
-            ]
-
-        bins = np.linspace(min(mesh_quality_vals), max(mesh_quality_vals), 30)
-        hist, bin_edges = np.histogram(mesh_quality_vals, bins=bins)
+            hist, bin_edges, percentile_5, percentile_95 = app().project.model.mesh.mesh_quality_histograms_data[parameter[parameter_idx]]
+        
+        bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         bin_min = self.quality_bins[parameter[parameter_idx]][1]
         bin_max = self.quality_bins[parameter[parameter_idx]][0]
@@ -612,8 +590,6 @@ class MeshSetupInputs(MesherSetup_UI):
                 alpha=0.9,
             )
 
-        percentile_5 = np.percentile(mesh_quality_vals, 5)
-        percentile_95 = np.percentile(mesh_quality_vals, 95)
         plt.axvline(
             percentile_5,
             color="grey",
@@ -653,26 +629,13 @@ class MeshSetupInputs(MesherSetup_UI):
             3: "aspectRatio",
         }
 
-        mesh_quality_parameters = app().file.read_mesh_quality_parameters_from_file()
-
-        if mesh_quality_parameters:
-            mesh_quality = np.array(list(mesh_quality_parameters.values())[0])[
-                parameter_idx
-            ]
-
+        mesh_quality_data = app().file.read_mesh_quality_data_from_file()[1]
+        if mesh_quality_data:
+            mesh_bad_elements = mesh_quality_data[parameter[parameter_idx]]
         else:
-            mesh_quality = app().project.model.mesh.mesh_quality[parameter_idx]
+            mesh_bad_elements = app().project.model.mesh.mesh_bad_elements[parameter[parameter_idx]]
 
-        bad_elements = []
-
-        for element, quality in mesh_quality:
-            if parameter[parameter_idx] == "aspectRatio":
-                if quality > self.quality_bins[parameter[parameter_idx]][0]:
-                    bad_elements.append(element)
-            elif quality < self.quality_bins[parameter[parameter_idx]][1]:
-                bad_elements.append(element)
-
-        if not bad_elements:
+        if not mesh_bad_elements:
             PrintMessageInput(
                 [
                     "Warning",
@@ -681,7 +644,7 @@ class MeshSetupInputs(MesherSetup_UI):
                 ]
             )
 
-        app().main_window.distinguish_mesh_solids(bad_elements)
+        app().main_window.distinguish_mesh_solids(mesh_bad_elements)
 
     def update_gmsh_controls(self):
         element_type = self.get_element_type()
