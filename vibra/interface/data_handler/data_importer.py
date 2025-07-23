@@ -14,7 +14,7 @@ class DataImporter:
         self.imported_data = dict()
 
     
-    def _import_files(self, multiple_files: bool = False):
+    def __import_files(self, multiple_files: bool = False):
         path = app().config.get_last_folder_for("imported_data_folder")
         if path is None:
             folder_path = os.path.expanduser("~")
@@ -53,10 +53,10 @@ class DataImporter:
         return self.imported_data
 
     def import_multiple_files(self):
-        return self._import_files(True)
+        return self.__import_files(True)
     
     def import_single_file(self):
-        return self._import_files()
+        return self.__import_files()
     
     def _read_data_in_file(self, file_path: str):
         from pandas import read_excel
