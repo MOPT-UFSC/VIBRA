@@ -21,7 +21,6 @@ class Loaded:
         worker = Worker(self.function, *args, **kwargs)
         threadpool = QThreadPool()
         threadpool.start(worker)
-        worker.run()
 
         loading_window = LoadingWindow(self.allow_cancel)
         loading_window.canceled.connect(self.cancel_callback)
