@@ -16,7 +16,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QLabel, QProgressBar, QSizePolicy,
-    QSpacerItem, QVBoxLayout, QWidget)
+    QSpacerItem, QVBoxLayout, QWidget, QDialog)
 
 class Ui_loading_window(object):
     def setupUi(self, loading_window):
@@ -61,7 +61,7 @@ class Ui_loading_window(object):
 
 
 
-class LoadingWindow_UI(QWidget, Ui_loading_window):
+class LoadingWindow_UI(QDialog, Ui_loading_window):
     """
     Component Hierarchy:
     - loading_window: QWidget

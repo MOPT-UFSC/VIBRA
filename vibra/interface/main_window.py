@@ -25,6 +25,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.help_widget import HelpWidget
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
@@ -727,7 +728,7 @@ class MainWindow(MainWindow_UI):
             if not file_path.endswith(".vibra"):
                 file_path += ".vibra"
 
-            LoadingWindow(app().project.save_project).run(file_path)
+            Loaded(app().project.save_project).run(file_path)
             self.project_saved.emit(str(file_path))
 
         return obj.complete
