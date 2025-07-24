@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Callable
 
-from PySide6.QtCore import QEvent, QObject, QRunnable, Qt, QThreadPool, Signal
+from PySide6.QtCore import QEvent, QObject, QRunnable, Qt, QThreadPool, QThread, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra.interface.ui_generated.messages.loading_window_ui import LoadingWindow_UI
@@ -18,6 +18,11 @@ class Loaded:
         self.allow_cancel = allow_cancel
 
     def run(self, *args, **kwargs):
+        # If we are already in another thread, just run the function
+        # to avoid problems with the progress bar
+        if not self.on_main_thread():
+            return self.function(*args, **kwargs)
+
         worker = Worker(self.function, *args, **kwargs)
         threadpool = QThreadPool()
         threadpool.start(worker)
@@ -44,6 +49,9 @@ class Loaded:
         self.cancel_callback = callback
 
     def cancel_callback(self): ...
+
+    def on_main_thread(self):
+        return QThread.currentThread() == QApplication.instance().thread()
 
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
