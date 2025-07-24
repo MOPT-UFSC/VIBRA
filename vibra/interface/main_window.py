@@ -49,12 +49,6 @@ from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 
 class MainWindow(MainWindow_UI):
-    project_loaded = Signal(str)
-    project_saved = Signal(str)
-    file_imported = Signal(str)
-
-    render_update_requested = Signal()
-
     theme_changed = Signal(str)
     visualization_filter_changed = Signal()
     render_widget_changed = Signal()
@@ -108,10 +102,6 @@ class MainWindow(MainWindow_UI):
             function = getattr(self, function_name)
             if callable(function):
                 action.triggered.connect(function)
-        
-        self.project_loaded.connect(self.project_loaded_callback)
-        self.project_saved.connect(self.project_saved_callback)
-        # self.file_imported.connect(self.file_imported_callback)
 
     def _create_basic_layout(self):
         self.status_bar = StatusBar(self)
@@ -675,7 +665,7 @@ class MainWindow(MainWindow_UI):
         if app().project.save_path is None:
             return self.save_project_as_dialog()
         else:
-            save_project = LoadingWindow(app().project.save_project)
+            save_project = Loaded(app().project.save_project)
             save_project(app().project.save_path)
 
     def save_project_as_dialog(self):
@@ -716,19 +706,13 @@ class MainWindow(MainWindow_UI):
             if not file_path.endswith(".vibra"):
                 file_path += ".vibra"
 
-            Loaded(app().project.save_project).run(file_path)
             self.project_saved.emit(str(file_path))
+            self.save_project(file_path)
 
         return obj.complete
 
-    def project_saved_callback(self, path: str | Path | None = None):
-        '''
-        After the project is saved this method is called so that it
-        can update the interface with the changes needed
-        '''
-
-        if not path:
-            return
+    def save_project(self, path: Path | str):
+        Loaded(app().project.save_project).run(path)
 
         app().config.add_recent_file(path)
         app().config.write_last_folder_path_in_file("project_folder", path)
@@ -775,16 +759,17 @@ class MainWindow(MainWindow_UI):
             self.update_window_title(project_path)
 
         self.status_bar.setVisible(True)
+        self.status_bar.update_information()
         self.action_front_view_callback()
 
         self.renderer_toolbar.setDisabled(False)
+        self.analysis_toolbar.new_project_callback()
 
         self.mesh_widget.update_plot()
         self.geometry_widget.update_plot()
         self.model_setup_widget.model_setup_items.update_items_appearance()            
         self.action_results_workspace.setDisabled(True)
 
-        self.project_loaded.emit(project_path)
         self.action_model_workspace_callback()
 
         logging.info(f"The project data has been loaded: {datetime.now()}")
@@ -847,7 +832,7 @@ class MainWindow(MainWindow_UI):
             logging.info("Removing the results data from project file... [75/100]")
             app().project.file.remove_results_data_from_project_file()
 
-        LoadingWindow(remove_callback).run()
+        Loaded(remove_callback).run()
 
         _geometry_path = app().project.file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
@@ -865,11 +850,11 @@ class MainWindow(MainWindow_UI):
         else:
 
             if geometry_file:
-                if LoadingWindow(app().project.import_geometry).run(path) == -1:
+                if Loaded(app().project.import_geometry).run(path) == -1:
                     return
 
             else:
-                if LoadingWindow(app().project.import_mesh).run(path) == -1:
+                if Loaded(app().project.import_mesh).run(path) == -1:
                     return
 
                 self.update_mesh_information()
@@ -889,7 +874,7 @@ class MainWindow(MainWindow_UI):
             app().project.model.properties._reset_variables()
 
             if update_render:
-                LoadingWindow(self.update_plots).run()
+                self.update_plots()
 
             if geometry_file:
                 self.action_model_workspace_callback()

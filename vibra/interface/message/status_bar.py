@@ -13,8 +13,6 @@ class StatusBar(QStatusBar):
         self._config_widgets()
         self._config_sizes()
 
-        app().main_window.project_loaded.connect(self.update_information)
-
     def _create_qt_variables(self):
         self.selected_points_label = QLabel("Selected pooints:\t")
         self.selected_lines_label = QLabel("Selected lines:\t")

@@ -81,9 +81,6 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
-
-        app().main_window.project_loaded.connect(self.new_project_callback)
-        app().main_window.file_imported.connect(self.new_project_callback)
     
     # def _update_state(self):
     #     app().main_window.update_symbols()
