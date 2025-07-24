@@ -1,6 +1,3 @@
-from vibra import app
-from vibra.interface.message.loading_window import LoadingWindow
-
 import logging
 import numpy as np
 
@@ -38,7 +35,7 @@ class LowReducedFrequencyModel:
                 averaged = data["averaged"]
                 filter_type = data["filter_type"]
 
-                LoadingWindow(self.mesh.get_elements_and_nodes_from_sphere).run(
+                self.mesh.get_elements_and_nodes_from_sphere(
                     surface_ids,
                     selection_radius,
                     averaged=averaged,
