@@ -3,8 +3,10 @@ import os
 import sys
 from functools import partial
 from pathlib import Path
-from shutil import copy, rmtree
+from shutil import rmtree
 import platform
+from datetime import datetime
+
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
@@ -106,6 +108,10 @@ class MainWindow(MainWindow_UI):
             function = getattr(self, function_name)
             if callable(function):
                 action.triggered.connect(function)
+        
+        self.project_loaded.connect(self.project_loaded_callback)
+        self.project_saved.connect(self.project_saved_callback)
+        # self.file_imported.connect(self.file_imported_callback)
 
     def _create_basic_layout(self):
         self.status_bar = StatusBar(self)
@@ -733,7 +739,7 @@ class MainWindow(MainWindow_UI):
 
         return obj.complete
 
-    def project_saved_callback(self, path: str):
+    def project_saved_callback(self, path: str | Path | None = None):
         '''
         After the project is saved this method is called so that it
         can update the interface with the changes needed
@@ -747,7 +753,6 @@ class MainWindow(MainWindow_UI):
         self.update_window_title(path)
         self.update_recents_menu()
 
-        from datetime import datetime
         logging.info(f"The project data has been saved: {datetime.now()}")
 
     def open_project_dialog(self):
@@ -775,16 +780,24 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
+
+        if project_path is None:
+            Loaded(app().project.load_tmp_project).run()
+        else:
+            Loaded(app().project.load_project).run(project_path)
+        
+        
+
+
         try:
             if project_path is None:
-                LoadingWindow(app().project.load_tmp_project).run()
+                # Load from temporary folder
+                Loaded(app().project.load_tmp_project).run()
 
             else:
-                app().config.add_recent_file(project_path)
-                app().config.write_last_folder_path_in_file("project_folder", project_path)
-                self.update_recents_menu()
-                self.update_window_title(project_path)
-                LoadingWindow(app().project.load_project).run(project_path)
+                Loaded(app().project.load_project).run(project_path)
+            
+            self.project_loaded.emit(project_path)
 
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
@@ -797,8 +810,8 @@ class MainWindow(MainWindow_UI):
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
             self.analysis_toolbar.update_analysis_combo_boxes()
 
-            LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
+            self.mesh_widget.update_plot()
+            self.geometry_widget.update_plot()
             self.model_setup_widget.model_setup_items.update_items_appearance()            
 
             self.action_results_workspace.setDisabled(True)
@@ -815,6 +828,15 @@ class MainWindow(MainWindow_UI):
             app().config.remove_path_from_config_file(project_path)
             self.welcome_widget.update_recent_projects()
             self.update_recents_menu()
+
+    def project_loaded_callback(self, project_path: str | Path | None = None):
+        if project_path:
+            app().config.add_recent_file(project_path)
+            app().config.write_last_folder_path_in_file("project_folder", project_path)
+            self.update_recents_menu()
+            self.update_window_title(project_path)
+
+        logging.info(f"The project data has been loaded: {datetime.now()}")
 
     def import_geometry_or_mesh_dialog(self, caption: str | None = None, ext_filter: str | None = None):
         self.close_dialogs()
@@ -978,11 +1000,15 @@ class MainWindow(MainWindow_UI):
             with open(path, "wb") as file:
                 image.save(file)
 
-    def update_window_title(self, project_path: str | Path):
+    def update_window_title(self, project_path: str | Path | None = None):
+        if project_path is None:
+            self.setWindowTitle("Vibra")
+            return
+
         if isinstance(project_path, str):
             project_path = Path(project_path)
-        project_name = project_path.stem
-        self.setWindowTitle(f"{project_name}")
+
+        self.setWindowTitle(project_path.stem)
 
     def action_exit_callback(self):
         self.close_app()
