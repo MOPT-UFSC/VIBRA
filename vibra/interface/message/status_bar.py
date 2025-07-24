@@ -13,6 +13,8 @@ class StatusBar(QStatusBar):
         self._config_widgets()
         self._config_sizes()
 
+        app().main_window.project_loaded.connect(self.update_information)
+
     def _create_qt_variables(self):
         self.selected_points_label = QLabel("Selected pooints:\t")
         self.selected_lines_label = QLabel("Selected lines:\t")
@@ -108,6 +110,10 @@ class StatusBar(QStatusBar):
                 self.selected_volumes_label.setText(f"Selected volumes: [{len(n_volumes)}]")
         else:
             self.selected_volumes_label.setText(f"Selected volume: {str_volumes}")
+
+    def update_information(self):
+        self.update_mesh_information()
+        self.update_geometry_information()
 
     def update_mesh_information(self):
         nodes, surface_elements, solid_elements = app().project.model.mesh.get_mesh_info()

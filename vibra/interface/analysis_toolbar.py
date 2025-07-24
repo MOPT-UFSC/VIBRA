@@ -81,6 +81,9 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
+
+        app().main_window.project_loaded.connect(self.new_project_callback)
+        app().main_window.file_imported.connect(self.new_project_callback)
     
     # def _update_state(self):
     #     app().main_window.update_symbols()
@@ -198,9 +201,16 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setEnabled(True)
 
     def check_analysis_setup_callback(self):
-        app().main_window.update_symbols()
+        # I am guessing this commented function is useless
+        # if no one complained yet feel free to remove completely
+        # app().main_window.update_symbols()
         valid_setup = app().project.is_there_a_valid_analysis_setup()
-        self.set_pushbutton_run_analysis_enabled(valid_setup)
+        self.pushButton_run_analysis.setEnabled(valid_setup)
+    
+    def new_project_callback(self):
+        self.setDisabled(False)
+        self.set_pushbutton_run_analysis_enabled(False)
+        self.update_analysis_combo_boxes()
 
     def run_analysis(self):
         self.update_analysis_combo_boxes()
