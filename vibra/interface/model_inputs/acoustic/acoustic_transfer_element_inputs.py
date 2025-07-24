@@ -9,6 +9,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element
 from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 
 import logging
 import numpy as np
@@ -308,7 +309,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             sleep(0.5)
             logging.info("Exporting the admittance matrix data... [100/100]")
 
-        LoadingWindow(callback).run()
+        Loaded(callback, use_threads=False).run()
 
         app().main_window.menu_widget.update_items()
         self.print_final_message()
@@ -346,7 +347,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             logging.info("Processing area... [60/100]")
             self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
-        LoadingWindow(function_callback).run()
+        Loaded(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 
