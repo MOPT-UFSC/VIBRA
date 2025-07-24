@@ -10,6 +10,7 @@ from vibra import ICON_DIR, app
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 from vibra.utils.icons import load_icon
 
 window_title_1 = "Error"
@@ -32,7 +33,7 @@ class AnimationToolbar(QToolBar):
 
     def _initialize(self):
         self.animating = False
-        self.current_render_widget = None
+        self.current_render_widget: AnimatedRenderWidget | None = None
 
     def _load_icons(self):
         color = QColor("#448cff")
@@ -309,9 +310,11 @@ class AnimationToolbar(QToolBar):
 
         try:
             if file_path.suffix.lower() in [".gif", ".webp"]:
-                LoadingWindow(self.current_render_widget.save_animation).run(file_path)
+                save_fn = Loaded(self.current_render_widget.save_animation, use_threads=False)
             else:
-                LoadingWindow(self.current_render_widget.save_video).run(file_path)
+                save_fn = Loaded(self.current_render_widget.save_video, use_threads=False)
+
+            save_fn(file_path)
 
         except Exception as error_log:
             title = "Error while exporting animation"
