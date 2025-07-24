@@ -447,15 +447,8 @@ class MainWindow(MainWindow_UI):
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def configure_results_render_widget(self):
-        self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
+        self.action_results_workspace_callback()
         self.results_viewer_widget.hide_bottom_widget()
-        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
-        self.action_results_workspace.setEnabled(True)
-        self.action_results_workspace.setChecked(True)
-        self.action_mesh_workspace.setChecked(False)
-        self.action_model_workspace.setChecked(False)
-
         self.animation_toolbar.setEnabled(False)
 
     def show_geometry_render_widget(self):
@@ -769,52 +762,30 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
-        try:
-            if project_path is None:
-                # Load from temporary folder
-                Loaded(app().project.load_tmp_project).run()
 
-            else:
-                Loaded(app().project.load_project).run(project_path)
+        if project_path is None:
+            # Load from temporary folder
+            Loaded(app().project.load_tmp_project).run()
 
-            self.project_loaded.emit(project_path)
-
-            self.analysis_toolbar.check_analysis_setup_callback()
-            self.status_bar.setVisible(True)
-            self.action_front_view_callback()
-            self.update_mesh_information()
-            self.update_geometry_information()
-
-            self.renderer_toolbar.setDisabled(False)
-            self.analysis_toolbar.setDisabled(False)
-            self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
-            self.analysis_toolbar.update_analysis_combo_boxes()
-
-            self.mesh_widget.update_plot()
-            self.geometry_widget.update_plot()
-            self.model_setup_widget.model_setup_items.update_items_appearance()            
-
-            self.action_results_workspace.setDisabled(True)
-            self.action_model_workspace_callback()
-
-        except Exception as error_log:
-            from traceback import print_exception
-            print_exception(error_log)
-            window_title = "Error"
-            title = "Error while processing the 'open_project' method"
-            message = str(error_log)
-            PrintMessageInput([window_title, title, message])
-
-            app().config.remove_path_from_config_file(project_path)
-            self.welcome_widget.update_recent_projects()
-            self.update_recents_menu()
-
-    def project_loaded_callback(self, project_path: str | Path | None = None):
-        if project_path:
+        else:
+            Loaded(app().project.load_project).run(project_path)
             app().config.add_recent_file(project_path)
             app().config.write_last_folder_path_in_file("project_folder", project_path)
             self.update_recents_menu()
             self.update_window_title(project_path)
+
+        self.status_bar.setVisible(True)
+        self.action_front_view_callback()
+
+        self.renderer_toolbar.setDisabled(False)
+
+        self.mesh_widget.update_plot()
+        self.geometry_widget.update_plot()
+        self.model_setup_widget.model_setup_items.update_items_appearance()            
+        self.action_results_workspace.setDisabled(True)
+
+        self.project_loaded.emit(project_path)
+        self.action_model_workspace_callback()
 
         logging.info(f"The project data has been loaded: {datetime.now()}")
 
