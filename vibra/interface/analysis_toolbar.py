@@ -7,6 +7,7 @@ from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
@@ -220,7 +221,7 @@ class AnalysisToolbar(QToolBar):
                 return
         
         try:
-            LoadingWindow(app().project.run_analysis).run()
+            Loaded(app().project.run_analysis).run()
         
         except ModelException as exception:
             app().main_window.action_model_workspace_callback()
