@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Callable
 
-from PySide6.QtCore import QEvent, QObject, QRunnable, Qt, QThreadPool, QThread, Signal
+from PySide6.QtCore import QEvent, QObject, QRunnable, Qt, QThread, QThreadPool, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra.interface.ui_generated.messages.loading_window_ui import LoadingWindow_UI
@@ -12,30 +12,38 @@ PROGRESS_FRACTION_REGEX = re.compile(r"(?<=\[)\d+/\d+(?=\])")
 
 
 class Loaded:
-    def __init__(self, function: Callable, allow_cancel=False):
+    def __init__(self, function: Callable, *, allow_cancel=False, use_threads=True):
         super().__init__()
         self.function = function
         self.allow_cancel = allow_cancel
+        self.use_threads = use_threads
 
     def run(self, *args, **kwargs):
-        # If we are already in another thread, just run the function
-        # to avoid problems with the progress bar
+        # If it is already in another thread, just run the function
+        # without creating any window
         if not self.on_main_thread():
             return self.function(*args, **kwargs)
 
-        worker = Worker(self.function, *args, **kwargs)
-        threadpool = QThreadPool()
-        threadpool.start(worker)
-
         loading_window = LoadingWindow(self.allow_cancel)
         loading_window.canceled.connect(self.cancel_callback)
-        worker.signal.finished.connect(loading_window.close)
 
-        progress_log_handler = ProgressBarLogUpdater(logging.DEBUG, loading_window=loading_window)
+        progress_log_handler = ProgressBarLogUpdater(
+            logging.DEBUG, loading_window=loading_window
+        )
         logging.getLogger().addHandler(progress_log_handler)
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
-        loading_window.exec()
+        worker = Worker(self.function, *args, **kwargs)
+        worker.signal.finished.connect(loading_window.close)
+
+        if self.use_threads:
+            threadpool = QThreadPool()
+            threadpool.start(worker)
+            loading_window.exec()
+        else:
+            loading_window.show()
+            QApplication.processEvents()
+            worker.run()
 
         QApplication.restoreOverrideCursor()
         logging.getLogger().removeHandler(progress_log_handler)
