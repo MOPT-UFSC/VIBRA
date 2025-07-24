@@ -34,7 +34,7 @@ class ExceptionMessage(ExceptionMessage_UI):
         title = pascal_to_spaced_case(exception.__class__.__name__)
         self.title_label.setText(title)
 
-        message = " ".join(exception.args)
+        message = " ".join(str(i) for i in exception.args)
         self.error_message.setText(message)
         
         self.ok_button.clicked.connect(self.close)
