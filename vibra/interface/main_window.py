@@ -6,7 +6,7 @@ from pathlib import Path
 from shutil import rmtree
 import platform
 from datetime import datetime
-
+from typing import Literal
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
@@ -504,40 +504,22 @@ class MainWindow(MainWindow_UI):
                 widget.update_renderer_font_size()
 
     def action_model_workspace_callback(self):
-        self.action_node_view.setToolTip("Points view")
-        self.action_model_workspace.setChecked(True)
-        self.action_mesh_workspace.setChecked(False)
-        self.action_results_workspace.setChecked(False)
-
-        if app().project.is_there_a_valid_solution():
-            self.action_results_workspace.setEnabled(True)
-        else:
-            self.action_results_workspace.setEnabled(False)
-
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.update_workspace_controls("model")
 
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
     def action_mesh_workspace_callback(self):
-        self.action_node_view.setToolTip("Nodes view")
-        self.action_mesh_workspace.setChecked(True)
-        self.action_model_workspace.setChecked(False)
-        self.action_results_workspace.setChecked(False)
-
-        if app().project.is_there_a_valid_solution():
-            self.action_results_workspace.setEnabled(True)
-        else:
-            self.action_results_workspace.setEnabled(False)
-
         self.update_mesh_information()
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
         self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.update_workspace_controls("mesh")
 
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
@@ -545,16 +527,23 @@ class MainWindow(MainWindow_UI):
     def action_results_workspace_callback(self):
         if not app().project.is_there_a_valid_solution():
             return
-        
-        self.action_results_workspace.setEnabled(True)
-        self.action_results_workspace.setChecked(True)
-        self.action_model_workspace.setChecked(False)
-        self.action_mesh_workspace.setChecked(False)
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
+        self.update_workspace_controls("results")
+
+    def update_workspace_controls(self, workspace: Literal["model", "mesh", "results"]):
+        self.action_model_workspace.setChecked(workspace == "model")
+        self.action_mesh_workspace.setChecked(workspace == "mesh")
+        self.action_results_workspace.setChecked(workspace == "results")
+        self.action_results_workspace.setEnabled(app().project.is_there_a_valid_solution())
         self.analysis_toolbar.update_analysis_combo_boxes()
+
+        if workspace == "mesh":
+            self.action_node_view.setToolTip("Nodes view")
+        elif workspace == "model":
+            self.action_node_view.setToolTip("Points view")
 
     def action_new_project_callback(self):
         self.new_project_dialog()
@@ -780,15 +769,6 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
-
-        if project_path is None:
-            Loaded(app().project.load_tmp_project).run()
-        else:
-            Loaded(app().project.load_project).run(project_path)
-        
-        
-
-
         try:
             if project_path is None:
                 # Load from temporary folder
@@ -796,7 +776,7 @@ class MainWindow(MainWindow_UI):
 
             else:
                 Loaded(app().project.load_project).run(project_path)
-            
+
             self.project_loaded.emit(project_path)
 
             self.analysis_toolbar.check_analysis_setup_callback()
