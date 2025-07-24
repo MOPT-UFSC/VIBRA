@@ -765,8 +765,8 @@ class MainWindow(MainWindow_UI):
         self.renderer_toolbar.setDisabled(False)
         self.analysis_toolbar.new_project_callback()
 
-        self.mesh_widget.update_plot()
-        self.geometry_widget.update_plot()
+        Loaded(self.mesh_widget.update_plot, use_threads=False).run()
+        Loaded(self.geometry_widget.update_plot, use_threads=False).run()
         self.model_setup_widget.model_setup_items.update_items_appearance()            
         self.action_results_workspace.setDisabled(True)
 
