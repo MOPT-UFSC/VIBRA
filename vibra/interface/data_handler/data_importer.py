@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
+from vibra.interface.data_handler.imported_data import ImportedData
 
+from typing import List
 from pathlib import Path
 import numpy as np
 import platform
@@ -9,13 +11,10 @@ import os
 
 
 class DataImporter:
-
-    def __init__(self):
-        self.imported_data = dict()
-
-    
-    def __import_files(self, multiple_files: bool = False):
-        path = app().config.get_last_folder_for("imported_data_folder")
+  
+    @staticmethod
+    def __import_files(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
+        path = app().config.get_last_folder_for(last_folder)
         if path is None:
             folder_path = os.path.expanduser("~")
         else:
@@ -25,40 +24,56 @@ class DataImporter:
         if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
+        str_extensions = "Files ("
+        for extension in file_extensions:
+            str_extensions += "*."
+            str_extensions += extension
+            str_extensions += " "
+        
+        str_extensions = str_extensions.strip()
+        str_extensions += ")"
 
         imported_paths, file_extension = None, None
         if (multiple_files):
             imported_paths, file_extension = QFileDialog.getOpenFileNames( None, 
-                                                                'Open file', 
+                                                                caption, 
                                                                 folder_path, 
-                                                                'Files (*.csv *.dat *.txt *.xlsx *.xls)',
+                                                                str_extensions,
                                                                 **kwargs)
         else:
             imported_paths, file_extension = QFileDialog.getOpenFileName( None, 
-                                                                'Open file', 
+                                                                caption, 
                                                                 folder_path, 
-                                                                'Files (*.csv *.dat *.txt *.xlsx *.xls)',
+                                                                str_extensions,
                                                                 **kwargs)
-        
-        position_of_last_imported_file = len(imported_paths) - 1
         
         if not file_extension:
             return
-
-        app().config.write_last_folder_path_in_file("imported_data_folder", imported_paths[position_of_last_imported_file])
-
-        for imported_path in imported_paths:
-            self._read_data_in_file(imported_path)
         
-        return self.imported_data
+        last_imported_file = imported_paths
+        position_of_last_imported_file = len(imported_paths) - 1
+        if isinstance(imported_paths, list):
+            last_imported_file = imported_paths[position_of_last_imported_file]
+        
 
-    def import_multiple_files(self):
-        return self.__import_files(True)
+        app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
+
+        imported_data = list()
+        for imported_path in imported_paths:
+            imported_data.append(DataImporter.__read_data_in_file(imported_path))
+        
+        return imported_data
+
+    @staticmethod
+    def import_multiple_files(last_folder: str, file_extensions: List[str], caption: str = "Open file") -> List[ImportedData]:
+        return DataImporter.__import_files(caption, last_folder, file_extensions, True)
     
-    def import_single_file(self):
-        return self.__import_files()
+    @staticmethod
+    def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData:
+        return DataImporter.__import_files(caption, last_folder, file_extensions)[0]
     
-    def _read_data_in_file(self, file_path: str):
+    @staticmethod
+    def __read_data_in_file(file_path: str):
         from pandas import read_excel
         from openpyxl import load_workbook
         import warnings
@@ -69,17 +84,14 @@ class DataImporter:
             sufix = Path(file_path).suffix
             filename = os.path.basename(file_path)
 
-            key = len(self.imported_data)
             if sufix in [".txt", ".dat", ".csv"]:
                 loaded_data = np.loadtxt(file_path, 
                                         delimiter = ",", 
                                         )
                 
-                loaded_data = self._remove_unnecesary_header_in_data(loaded_data)
-            
-                self.imported_data[key] = {  "data" : loaded_data,
-                                                "filename" : filename,
-                                                "extension" : sufix  }
+                loaded_data = DataImporter._remove_unnecesary_header_in_data(loaded_data)
+
+                return ImportedData(loaded_data, filename, sufix)
                 
             elif sufix in [".xls", ".xlsx"]:
                 wb = load_workbook(file_path)
@@ -101,14 +113,12 @@ class DataImporter:
                                                 engine="openpyxl"
                                                 ).to_numpy()
 
-                    sheet_data = self._remove_unnecesary_header_in_data(sheet_data)
+                    sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
 
-                    self.imported_data[key] = {  "data" : sheet_data,
-                                                    "filename" : filename,
-                                                    "sheetname" : sheetname,
-                                                    "extension" : sufix  }
-                                        
-    def _remove_unnecesary_header_in_data(self, data: np.ndarray) -> np.ndarray:
+                    return ImportedData(sheet_data, filename, sufix, sheetname)
+
+    @staticmethod                      
+    def __remove_unnecesary_header_in_data(data: np.ndarray) -> np.ndarray:
         filtered_data = [row for row in data if not isinstance(row[0], str)]
         return np.array(filtered_data)
 

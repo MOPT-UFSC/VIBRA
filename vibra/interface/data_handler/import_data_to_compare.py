@@ -3,14 +3,14 @@ from PySide6.QtGui import *
 from PySide6.QtCore import Qt
 from pathlib import Path
 
-import os
 import numpy as np
-import platform
+from typing import List
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.data_handler.imported_data import ImportedData
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -25,7 +25,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         super().__init__(*args, **kwargs)
         
         self.plotter = plotter
-        self.data_importer = DataImporter()
 
         app().main_window.set_input_widget(self)
 
@@ -44,6 +43,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
     def _initialize(self):
         self.keep_window_open = True
 
+        self.imported_data = None
         self.imported_results = dict()
         self.ids_to_checkBox = dict()
         self.checkButtons_state = dict()
@@ -81,8 +81,28 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.spinBox_skiprows.setDisabled(not self.checkBox_skiprows.isChecked())
 
     def import_results(self):
-        self.imported_results = self.data_importer.import_multiple_files()
+        self.imported_data = DataImporter.import_multiple_files("imported_data_folder", 
+                                                                      ["csv", "txt", "dat", "xls", "xlsx"])
+        
+        if self.imported_data is None:
+            return
+        
+        self.generate_imported_results(self.imported_data)
         self.update_treeWidget_info()
+    
+    def generate_imported_results(self, imported_data: List[ImportedData]):        
+        for data in imported_data:
+            key = len(self.imported_results)
+
+            if data.sheetname == "":
+                self.imported_results[key] = {"data" : data.data,
+                                              "filename" : data.filename,
+                                              "extension" : data.extension}
+            else:
+                self.imported_results[key] = {"data" : data.data,
+                                              "filename" : data.filename,
+                                              "extension" : data.extension,
+                                              "sheetname" : data.sheetname}
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
