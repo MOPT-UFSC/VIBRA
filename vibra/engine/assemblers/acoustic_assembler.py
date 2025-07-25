@@ -647,10 +647,19 @@ class AcousticAssembler:
         """ 
         This method processes the nodal mass source vector data.
         """
+        self.process_nodal_mass_source_data_for_nodes_and_points()
+        self.process_nodal_mass_source_data_for_lines()
+        self.process_nodal_mass_source_data_for_surfaces()
+        self.process_nodal_mass_source_data_for_volumes()
+
+
+    def process_nodal_mass_source_data_for_nodes_and_points(self):
+        """ 
+        This method processes the nodal mass source vector data assigned 
+        to nodes and points.
+        """
+
         self.mass_source_vector_points = np.array([])
-        self.mass_source_vector_lines = np.array([])
-        self.mass_source_vector_surfaces = np.array([])
-        self.mass_source_vector_volumes = np.array([])
 
         model_properties = {
                             "point_properties" : self.properties.point_properties,
@@ -685,6 +694,14 @@ class AcousticAssembler:
             self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_indexes, :]
 
 
+    def process_nodal_mass_source_data_for_lines(self):
+        """ 
+        This method processes the nodal mass source vector data assigned 
+        to lines.
+        """
+
+        self.mass_source_vector_lines = np.array([])
+
         for (property, *args), data in self.properties.line_properties.items():
 
             if property != "mass_source":
@@ -697,13 +714,21 @@ class AcousticAssembler:
                 _complex_values = data.get("values")[0]
 
             node_ids = self.model.mesh.nodes_from_lines.get(args[0])
-            aux_ones = np.ones((node_ids.size, 1), dtype=float)
+            aux_ones = np.ones((len(node_ids), 1), dtype=float)
 
             self.mass_source_vector_lines[node_ids, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
 
         if self.mass_source_vector_lines.any():
             self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_indexes, :]
 
+
+    def process_nodal_mass_source_data_for_surfaces(self):
+        """ 
+        This method processes the nodal mass source vector data assigned 
+        to surfaces.
+        """
+
+        self.mass_source_vector_surfaces = np.array([])
 
         for (property, *args), data in self.properties.surface_properties.items():
 
@@ -725,6 +750,14 @@ class AcousticAssembler:
             self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.unprescribed_indexes, :]
 
 
+    def process_nodal_mass_source_data_for_volumes(self):
+        """ 
+        This method processes the nodal mass source vector data assigned 
+        to volumes.
+        """
+
+        self.mass_source_vector_volumes = np.array([])
+
         for (property, *args), data in self.properties.volume_properties.items():
 
             if property != "mass_source":
@@ -744,7 +777,7 @@ class AcousticAssembler:
         if self.mass_source_vector_volumes.any():
             self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.unprescribed_indexes, :]
 
-    
+
     def process_mass_source_data_to_assemble_matrices(self):
         """
         This method assembles the mass source matrices Q_ms1 and Q_ms2.
