@@ -8,6 +8,8 @@ from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
+
 
 from copy import deepcopy
 
@@ -809,7 +811,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             logging.info("Processing the post-assignment actions... [100/100]")
             app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
 
-        LoadingWindow(callback).run()
+        Loaded(callback, use_threads=False).run()
 
     def process_decoupling_actions(self):
 
@@ -836,7 +838,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
 
-        LoadingWindow(callback).run()
+        Loaded(callback, use_threads=False).run()
 
     def restore_mesh_data_modified_by_decoupling(self):
 

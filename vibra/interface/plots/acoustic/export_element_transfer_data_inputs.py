@@ -8,6 +8,7 @@ from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inpu
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 
 import logging
 import numpy as np
@@ -196,7 +197,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             logging.info("Processing area... [60/100]")
             self.mesh._process_face_elements_connected_to_nodes(surface_ids)
 
-        LoadingWindow(function_callback).run()
+        Loaded(function_callback).run()
 
     def get_response(self, surface_id: int):
 

@@ -8,6 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 
 import logging
 
@@ -241,14 +242,14 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     self.mesh.compute_nodal_areas()
 
                 x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(
-                                                                                             self.input_surface_id,
-                                                                                             self.output_surface_id,
-                                                                                             surface_integration = bool(integration_method),
-                                                                                             )
+                    self.input_surface_id,
+                    self.output_surface_id,
+                    surface_integration = bool(integration_method),
+                )
 
                 return x_data, y_data
 
-            x_data, y_data = LoadingWindow(transmission_loss_callback).run()
+            x_data, y_data = Loaded(transmission_loss_callback).run()
 
         else:
             plot_type = "Noise reduction"

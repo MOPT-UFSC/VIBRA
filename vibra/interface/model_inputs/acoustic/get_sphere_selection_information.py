@@ -6,6 +6,7 @@ from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadingWindow
+from vibra.interface.message.loading_window_2 import Loaded
 
 import numpy as np
 from pathlib import Path
@@ -49,7 +50,7 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
         self.lineEdit_selection_radius.setText(str(round(self.selection_radius, 6)))
 
     def get_selection_info(self):
-        LoadingWindow(self.mesh.get_elements_and_nodes_from_sphere).run(
+        Loaded(self.mesh.get_elements_and_nodes_from_sphere).run(
             self.selection_id,
             self.selection_radius,
             averaged=self.averaged,
