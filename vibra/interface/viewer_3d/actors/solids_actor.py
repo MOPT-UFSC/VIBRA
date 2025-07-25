@@ -20,6 +20,7 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
+from molde import Color
 from vibra.engine.mesher.element_type import (
     HEXAHEDRON_8,
     HEXAHEDRON_20,
@@ -149,19 +150,19 @@ class SolidsActor(vtkActor):
             return
 
         if self.has_distinguished_cells:
-            color = (255, 0, 0)
+            color = Color(255, 0, 0)
         else:
-            color = (255, 255, 255)
+            color = Color(255, 255, 255)
 
         self.set_color(color)
 
-    def set_color(self, color):
+    def set_color(self, color: Color):
         point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
 
         point_colors.Fill(255)
         cell_colors.Fill(255)
-
+        color = color.to_rgb()
         for component, value in enumerate(color):
             point_colors.FillComponent(component, value)
             cell_colors.FillComponent(component, value)
@@ -171,10 +172,11 @@ class SolidsActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_points(self, color, points):
+    def paint_points(self, color : Color, points):
         if self.data is None:
             return
 
+        color = color.to_rgb()
         point_colors = self.data.GetPointData().GetScalars()
         for i in points:
             if point_colors.GetNumberOfTuples() <= i:
@@ -185,7 +187,7 @@ class SolidsActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_solids(self, color: tuple[3], solids: tuple[int]):
+    def paint_solids(self, color: Color, solids: tuple[int]):
         cells = []
         for i in solids:
             visible_index = self.visible_indexes.get(i, -1)
@@ -193,13 +195,11 @@ class SolidsActor(vtkActor):
                 cells.append(visible_index)
         self.paint_cells(color, cells)
 
-    def paint_cells(self, color: tuple[3], cells: tuple[int]):
+    def paint_cells(self, color: Color, cells: tuple[int]):
         if self.data is None:
             return
-
-        if len(color) == 3:
-            color = *color, 255
-
+    
+        color = color.to_rgb()
         cell_colors = self.data.GetCellData().GetScalars()
         for cell in cells:
             cell_colors.SetTuple(cell, color)

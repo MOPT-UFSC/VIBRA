@@ -85,7 +85,7 @@ class LinesActor(vtkActor):
 
         # By default prints the decoupled lines as Transparent
         self.paint_cells(
-            (0, 0, 0, 0),  # Transparent
+            Color(0, 0, 0, 0),  # Transparent
             self._get_decoupled_line_cells(),
         )
 
@@ -117,7 +117,7 @@ class LinesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOn()
         self.GetMapper().Update()
 
-    def paint_lines(self, color: tuple[3], lines: tuple[int]):
+    def paint_lines(self, color: Color, lines: tuple[int]):
         number_of_lines = self.mesh.lines_connectivity.shape[0]
         number_of_vertices = number_of_lines * 2
 
@@ -134,13 +134,11 @@ class LinesActor(vtkActor):
 
         self.paint_cells(color, cells)
 
-    def paint_cells(self, color: tuple[3], cells: tuple[int]):
+    def paint_cells(self, color: Color, cells: tuple[int]):
         data = self.GetMapper().GetInput()
         cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
 
-        if len(color) == 3:
-            color = *color, 255
-
+        color = color.to_rgba()
         for i in cells:
             cell_colors.SetTuple(i, color)
 
