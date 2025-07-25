@@ -12,6 +12,18 @@ PROGRESS_FRACTION_REGEX = re.compile(r"(?<=\[)\d+/\d+(?=\])")
 
 
 class LoadTask:
+    """
+    Decorator to run a function while displaying a loading window.
+
+    The decorated functions runs in a secondary thread by default,
+    but if you pass use_threads=False it will run in the main thread.
+    To update functions that affect the interface you need to run it
+    in the main thread to avoid deadlocks.
+
+    The loading window label and progress bar will be updated according
+    to the logging messages that contains the text "[n/N]", representing
+    the fraction of the task that has already been completed.
+    """
     def __init__(self, function: Callable, *, allow_cancel=False, use_threads=True):
         super().__init__()
         self.function = function
@@ -19,18 +31,22 @@ class LoadTask:
         self.use_threads = use_threads
 
     def run(self, *args, **kwargs):
-        # If it is already in another thread, just run the function
-        # without creating any window
+        # If it is already running in another thread, just run 
+        # the function without creating any window
         if not self.on_main_thread():
             return self.function(*args, **kwargs)
 
         loading_window = LoadingWindow(self.allow_cancel)
         loading_window.canceled.connect(self.cancel_callback)
 
+        # Creates a handler to update progress_bar and progress_label
+        # every time a logging containing [n/N] appears
         progress_log_handler = ProgressBarLogUpdater(
             logging.DEBUG, loading_window=loading_window
         )
         logging.getLogger().addHandler(progress_log_handler)
+
+        # Starts using the wait cursor
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         worker = Worker(self.function, *args, **kwargs)
@@ -42,18 +58,24 @@ class LoadTask:
             loading_window.exec()
         else:
             loading_window.show()
-            QApplication.processEvents()
+            QApplication.processEvents()  # Flushes the event loop to avoid freezing
             worker.run()
 
+        # Restores the previous cursor
         QApplication.restoreOverrideCursor()
+
+        # Removes the logging handler as it is not necessary anymore
         logging.getLogger().removeHandler(progress_log_handler)
 
+        # If there was an exception in the loaded function, raise it
         if worker.exception is not None:
             raise worker.exception
 
+        # Otherwise just return the result
         return worker.result
 
     def set_cancel_callback(self, callback: Callable):
+        # Yes, python allows me to just override the method like this
         self.cancel_callback = callback
 
     def cancel_callback(self): ...
@@ -66,6 +88,10 @@ class LoadTask:
 
 
 class LoadingWindow(LoadingWindow_UI):
+    """
+    Loading window that shows a progress bar and a label
+    """
+
     canceled = Signal()
 
     def __init__(self, allow_cancel=False):
@@ -80,6 +106,7 @@ class LoadingWindow(LoadingWindow_UI):
             | Qt.WindowType.WindowMinimizeButtonHint
         )
 
+        # Controls if the X button to close the window is enabled
         if allow_cancel:
             self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, on=True)
 
@@ -87,7 +114,7 @@ class LoadingWindow(LoadingWindow_UI):
 
     def update_position(self):
         """
-        Place the window on the center of the screen.
+        Position the window on the center of the screen.
         """
         desktop_geometry = QApplication.primaryScreen().size()
         pos_x = int((desktop_geometry.width() - self.width()) / 2)
@@ -100,12 +127,18 @@ class LoadingWindow(LoadingWindow_UI):
             self.canceled.emit()
 
 
+# QRunnable is not a QObject, so I need this
+# workaround to be able to emit signals
 class WorkerSignal(QObject):
     finished = Signal()
     error = Signal(Exception)
 
 
 class Worker(QRunnable):
+    """
+    Class needed to run a function using QThreadPool
+    """
+
     def __init__(self, function: Callable, *args, **kwargs):
         super().__init__()
         self.function = function
