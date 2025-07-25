@@ -9,7 +9,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import logging
@@ -165,7 +165,7 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
 
             return particle_velocity
 
-        return Loaded(function_callback, use_threads=False).run()
+        return LoadTask(function_callback, use_threads=False).run()
 
     def get_surface_particle_velocity(self, surface_id : int):
 

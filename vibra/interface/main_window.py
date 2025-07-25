@@ -27,7 +27,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.help_widget import HelpWidget
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
@@ -665,7 +665,7 @@ class MainWindow(MainWindow_UI):
         if app().project.save_path is None:
             return self.save_project_as_dialog()
         else:
-            save_project = Loaded(app().project.save_project)
+            save_project = LoadTask(app().project.save_project)
             save_project(app().project.save_path)
 
     def save_project_as_dialog(self):
@@ -712,7 +712,7 @@ class MainWindow(MainWindow_UI):
         return obj.complete
 
     def save_project(self, path: Path | str):
-        Loaded(app().project.save_project).run(path)
+        LoadTask(app().project.save_project).run(path)
 
         app().config.add_recent_file(path)
         app().config.write_last_folder_path_in_file("project_folder", path)
@@ -749,10 +749,10 @@ class MainWindow(MainWindow_UI):
 
         if project_path is None:
             # Load from temporary folder
-            Loaded(app().project.load_tmp_project).run()
+            LoadTask(app().project.load_tmp_project).run()
 
         else:
-            Loaded(app().project.load_project).run(project_path)
+            LoadTask(app().project.load_project).run(project_path)
             app().config.add_recent_file(project_path)
             app().config.write_last_folder_path_in_file("project_folder", project_path)
             self.update_recents_menu()
@@ -765,8 +765,8 @@ class MainWindow(MainWindow_UI):
         self.renderer_toolbar.setDisabled(False)
         self.analysis_toolbar.new_project_callback()
 
-        Loaded(self.mesh_widget.update_plot, use_threads=False).run()
-        Loaded(self.geometry_widget.update_plot, use_threads=False).run()
+        LoadTask(self.mesh_widget.update_plot, use_threads=False).run()
+        LoadTask(self.geometry_widget.update_plot, use_threads=False).run()
         self.model_setup_widget.model_setup_items.update_items_appearance()            
         self.action_results_workspace.setDisabled(True)
 
@@ -832,7 +832,7 @@ class MainWindow(MainWindow_UI):
             logging.info("Removing the results data from project file... [75/100]")
             app().project.file.remove_results_data_from_project_file()
 
-        Loaded(remove_callback).run()
+        LoadTask(remove_callback).run()
 
         _geometry_path = app().project.file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
@@ -850,11 +850,11 @@ class MainWindow(MainWindow_UI):
         else:
 
             if geometry_file:
-                if Loaded(app().project.import_geometry).run(path) == -1:
+                if LoadTask(app().project.import_geometry).run(path) == -1:
                     return
 
             else:
-                if Loaded(app().project.import_mesh).run(path) == -1:
+                if LoadTask(app().project.import_mesh).run(path) == -1:
                     return
 
                 self.update_mesh_information()

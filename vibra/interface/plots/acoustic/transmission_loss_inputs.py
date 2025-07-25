@@ -8,7 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 
 import logging
 
@@ -249,7 +249,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
                 return x_data, y_data
 
-            x_data, y_data = Loaded(transmission_loss_callback).run()
+            x_data, y_data = LoadTask(transmission_loss_callback).run()
 
         else:
             plot_type = "Noise reduction"

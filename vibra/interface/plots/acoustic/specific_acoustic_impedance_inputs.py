@@ -8,7 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import logging
@@ -151,7 +151,7 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
 
             return acoustic_impedance
 
-        return Loaded(function_callback).run()
+        return LoadTask(function_callback).run()
 
     def get_surface_specific_acoustic_impedance(self, surface_id : int):
 

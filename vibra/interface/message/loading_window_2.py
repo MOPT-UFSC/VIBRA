@@ -11,7 +11,7 @@ from vibra.interface.ui_generated.messages.loading_window_ui import LoadingWindo
 PROGRESS_FRACTION_REGEX = re.compile(r"(?<=\[)\d+/\d+(?=\])")
 
 
-class Loaded:
+class LoadTask:
     def __init__(self, function: Callable, *, allow_cancel=False, use_threads=True):
         super().__init__()
         self.function = function

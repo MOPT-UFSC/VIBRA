@@ -9,7 +9,7 @@ from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_type import TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8, HEXAHEDRON_20, ElementType
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 
 import logging
 from collections import defaultdict
@@ -317,7 +317,7 @@ class MeshSetupInputs(MesherSetup_UI):
             logging.info("Processing mesh... [40/100]")
             app().project.generate_mesh()
 
-        Loaded(generate_function).run()
+        LoadTask(generate_function).run()
 
         self.process_degress_of_freedom_if_necessary()
 
@@ -326,7 +326,7 @@ class MeshSetupInputs(MesherSetup_UI):
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
 
-        Loaded(self.actions_to_finalize, use_threads=False).run()
+        LoadTask(self.actions_to_finalize, use_threads=False).run()
         self.complete = True
 
     def process_degress_of_freedom_if_necessary(self):
@@ -338,7 +338,7 @@ class MeshSetupInputs(MesherSetup_UI):
             app().project.model.mesh.cache_mesh_information()
             app().project.model.process_degrees_of_freedom_decoupling()
 
-        Loaded(process_decoupling).run()
+        LoadTask(process_decoupling).run()
  
     def actions_to_finalize(self):
 

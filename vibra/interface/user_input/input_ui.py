@@ -39,7 +39,7 @@ from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotSt
 from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
 #
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from vibra import app
@@ -77,7 +77,7 @@ class InputUi:
                 self.model_setup_items.modify_items_access_after_geometry_importing()
  
     def generate_mesh(self):
-        Loaded(app().project.generate_mesh).run()
+        LoadTask(app().project.generate_mesh).run()
         self.main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
         nodes = list(app().project.model.mesh.nodes_collapsed_elements)

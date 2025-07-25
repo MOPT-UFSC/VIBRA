@@ -10,7 +10,7 @@ from vibra import ICON_DIR, app
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import Loaded
+from vibra.interface.message.loading_window_2 import LoadTask
 from vibra.utils.icons import load_icon
 
 window_title_1 = "Error"
@@ -310,9 +310,9 @@ class AnimationToolbar(QToolBar):
 
         try:
             if file_path.suffix.lower() in [".gif", ".webp"]:
-                save_fn = Loaded(self.current_render_widget.save_animation, use_threads=False)
+                save_fn = LoadTask(self.current_render_widget.save_animation, use_threads=False)
             else:
-                save_fn = Loaded(self.current_render_widget.save_video, use_threads=False)
+                save_fn = LoadTask(self.current_render_widget.save_video, use_threads=False)
 
             save_fn(file_path)
 
