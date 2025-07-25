@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSlider, QSpinBo
 from vibra import ICON_DIR, app
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.message.loading_window import LoadingWindow
 from vibra.interface.message.loading_window_2 import LoadTask
 from vibra.utils.icons import load_icon
 

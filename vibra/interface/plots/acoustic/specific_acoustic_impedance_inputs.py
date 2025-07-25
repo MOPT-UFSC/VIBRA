@@ -7,9 +7,7 @@ from vibra.interface.ui_generated.plots.acoustic.specific_acoustic_impedance_inp
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.message.loading_window import LoadingWindow
 from vibra.interface.message.loading_window_2 import LoadTask
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 import logging
 import numpy as np

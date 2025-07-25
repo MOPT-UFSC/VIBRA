@@ -26,8 +26,7 @@ from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.help_widget import HelpWidget
-from vibra.interface.message.loading_window import LoadingWindow
-from vibra.interface.message.loading_window_2 import LoadTask
+from vibra.interface.message.loading_window_2 import LoadTask, LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
