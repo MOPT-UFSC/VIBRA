@@ -1,4 +1,3 @@
-from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
@@ -22,6 +21,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.interface_utils import ColorMode
+from molde import Color
 
 
 class FacesActor(vtkActor):
@@ -152,7 +152,7 @@ class FacesActor(vtkActor):
                     material = properties._get_property("material", volume=volume)
 
                 color = Color(*material.color) if (material is not None) else no_info_color
-                self.paint_cells(color.to_rgba(), face_elements)
+                self.paint_cells(color, face_elements)
 
         elif color_mode == ColorMode.FLUID:
             for surface, face_elements in mesh.elements_from_surface.items():
@@ -163,13 +163,13 @@ class FacesActor(vtkActor):
                     fluid = properties._get_property("fluid", volume=volume)
 
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color
-                self.paint_cells(color.to_rgba(), face_elements)
+                self.paint_cells(color, face_elements)
         
         elif color_mode == ColorMode.EMPTY:
             color = app().config.user_preferences.faces_color
-            self.set_color(color.to_rgba())
+            self.set_color(color)
 
-    def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+    def set_color(self, color: Color):
         # TODO: update these functions to work with the molde.Colors instead of tuples
 
         if self.data is None:
@@ -178,6 +178,7 @@ class FacesActor(vtkActor):
         cell_colors = self.data.GetCellData().GetScalars()
         cell_colors.Fill(255)
 
+        color = color.to_rgba()
         for component, value in enumerate(color):
             cell_colors.FillComponent(component, value)
 
@@ -186,10 +187,11 @@ class FacesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_points(self, color, points):
+    def paint_points(self, color : Color, points):
         if self.data is None:
             return
 
+        color = color.to_rgb()
         point_colors = self.data.GetPointData().GetScalars()
         for i in points:
             point_colors.SetTuple(i, color)
@@ -198,17 +200,11 @@ class FacesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(
-        self,
-        color: tuple[int, int, int] | tuple[int, int, int, int],
-        faces: tuple[int],
-    ):
+    def paint_cells(self, color: Color, faces: tuple[int]):
         if self.data is None:
             return
 
-        if len(color) == 3:
-            color = *color, 255
-
+        color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         for i in faces:
             visible_index = self.visible_indexes.get(i, -1)

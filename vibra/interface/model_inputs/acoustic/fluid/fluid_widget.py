@@ -15,7 +15,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
 from vibra.utils.utils import *
-
+from molde import Color
 from copy import deepcopy
 from itertools import count
 
@@ -110,11 +110,11 @@ class FluidWidget(FluidWidget_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_duplicate]
         change_icon_color_for_widgets(widgets, icon_color)
@@ -251,8 +251,8 @@ class FluidWidget(FluidWidget_UI):
                 self.tableWidget_fluid_data.setItem(10, j, QTableWidgetItem(str(fluid.molar_mass)))
 
                 item = QTableWidgetItem()
-                item.setBackground(QColor(*fluid.color))
-                item.setForeground(QColor(*fluid.color))
+                item.setBackground(Color(*fluid.color).to_qt())
+                item.setForeground(Color(*fluid.color).to_qt())
                 self.tableWidget_fluid_data.setItem(COLOR_ROW, j, item)
 
                 if fluid.name in self.fluid_name_to_refprop_data.keys():
@@ -639,8 +639,8 @@ class FluidWidget(FluidWidget_UI):
 
         picked_color = read.color
         item = QTableWidgetItem()
-        item.setBackground(QColor(*picked_color))
-        item.setForeground(QColor(*picked_color))
+        item.setBackground(Color(*picked_color).to_qt())
+        item.setForeground(Color(*picked_color).to_qt())
         self.tableWidget_fluid_data.setItem(row, col, item)
         self.tableWidget_fluid_data.item(row, 0).setSelected(True)
 
