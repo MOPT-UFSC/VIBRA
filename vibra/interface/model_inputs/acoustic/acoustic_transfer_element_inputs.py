@@ -315,8 +315,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def remove_model_excitations(self):
 
+        model_excitations = [
+                             "acoustic_pressure", 
+                             "surface_velocity", 
+                             "reciprocating_compressor_excitation", 
+                             "specific_impedance",
+                             ]
+
         properties_to_remove = defaultdict(list)
-        for property in ["acoustic_pressure", "surface_velocity", "compressor_excitation", "specific_impedance"]:
+        for property in model_excitations:
             for key in self.properties.surface_properties.keys():
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
