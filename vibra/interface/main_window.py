@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from vibra import TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, app
+from vibra import app, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -221,10 +221,11 @@ class MainWindow(MainWindow_UI):
         app().config.user_preferences.interface_theme = theme
         stylesheets.set_theme(theme)
 
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets_type = [QAction, QAbstractButton]
         widgets = list()
@@ -357,7 +358,7 @@ class MainWindow(MainWindow_UI):
         self.selection_changed.emit()
 
     def create_recents_menu(self):
-        color = QColor("#448cff") 
+        color = LIGHT_ICON_COLOR.to_qt()
         self.recent_icon = load_icon(":/icons/recent.png", color)
 
         self.recents_menu = QMenu("Recent projects", self)
@@ -401,7 +402,7 @@ class MainWindow(MainWindow_UI):
             self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
-        color = QColor("#448cff")
+        color = LIGHT_ICON_COLOR.to_qt()
 
         self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
         self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
@@ -578,12 +579,13 @@ class MainWindow(MainWindow_UI):
 
     def action_import_mesh_callback(self):
         caption = "Select a mesh file"
-        ext_filter = "Geometry Files (*.bdf *.BDF *.nas *.NAS)"
+        ext_filter = "Geometry Files (*.bdf *.BDF *.nas *.NAS);;All Files (*)"
         self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
     def action_import_geometry_callback(self):
         caption = "Select a geometry file"
-        ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES)"
+        extensions = " ".join(f"*.{ext}" for ext in SUPPORTED_GEOMETRY_EXTENSIONS)
+        ext_filter = f"Geometry Files ({extensions});;All Files (*)"
         self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
     def action_hide_selection_callback(self):
@@ -796,7 +798,14 @@ class MainWindow(MainWindow_UI):
             caption = "Select a geometry or mesh file"
 
         if ext_filter is None:
-            ext_filter = "Geometry Files (*.stp *.step *.STEP  *.STP *.igs *.iges *.IGS *.IGES *.bdf *.BDF *.nas *.NAS)"
+            geometry_extensions = " ".join(f"*.{ext}" for ext in SUPPORTED_GEOMETRY_EXTENSIONS)
+            mesh_extensions = " ".join(f"*.{ext}" for ext in SUPPORTED_MESH_EXTENSIONS)
+            ext_filter = (
+                f"All Accepted Files ({geometry_extensions} {mesh_extensions})"
+                f";;Geometry Files ({geometry_extensions})"
+                f";;Mesh Files ({mesh_extensions})"
+                ";;All Files (*)"
+            )
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -957,7 +966,7 @@ class MainWindow(MainWindow_UI):
             path = str(path)
 
         ext = path.split(".")[-1]
-        if ext in ["IGES", "iges", "IGS", "igs", "STEP", "step"]:
+        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
             return True
 
         return False

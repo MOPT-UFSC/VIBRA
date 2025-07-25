@@ -29,6 +29,14 @@ jobs:
         with:
           path: ./uploads/
 
+      - name: Zip linux
+        run: |
+          zip -r vibra-linux-x64.zip ./uploads/vibra-linux/vibra-linux-x64
+
+      - name: Zip Windows
+        run: |
+          zip -r vibra-windows-x64.zip ./uploads/vibra-windows/vibra-windows-x64
+
       - name: show path
         run: ls -r ./uploads/vibra-linux
 
@@ -39,8 +47,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./uploads/vibra-linux/vibra-linux-x64.so
-          asset_name: vibra-linux-x64.so
+          asset_path: vibra-linux-x64.zip
+          asset_name: vibra-linux-x64.zip
           asset_content_type: application/zip
 
       - name: upload release windows
@@ -50,12 +58,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./uploads/vibra-windows/vibra-windows-x64.exe
-          asset_name: vibra-windows-x64.exe
+          asset_path: vibra-windows-x64.zip
+          asset_name: vibra-windows-x64.zip
+          asset_content_type: application/zip                        
+
+      - name: upload release windows installer
+        id: upload-windows-installer
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./uploads/vibra-windows/vibra-windows-installer-x64.exe
+          asset_name: vibra-windows-installer-x64.exe
           asset_content_type: application/zip                        
 
   build-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -64,6 +83,9 @@ jobs:
         with:
           python-version: '3.11'
           architecture: 'x64'
+      # - name: Install InnoSetup
+      #   run: |
+      #     winget install -e --id JRSoftware.InnoSetup
       - name: Install Poetry
         run: |
           pip install poetry
@@ -76,13 +98,23 @@ jobs:
       - name: Run Pyinstaller
         run: |
           poetry run pyinstaller vibra.spec
+      # - name: Run InnoSetup
+      #   run: |
+      #     & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"dist" /F"vibra-setup-x64" "vibra.iss"
+      - name: Compile .iss to .exe Installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: vibra.iss
+          options: /O"dist" /F"vibra-windows-installer-x64"
+
       - name: Rename file
         run: |
-          mv dist/Vibra.exe dist/vibra-windows-x64.exe
+          mv dist/Vibra dist/vibra-windows-x64
+
       - uses: actions/upload-artifact@v4
         with:
           name: vibra-windows
-          path: dist/vibra-windows-x64.exe
+          path: dist/
 
   build-linux:
     runs-on: ubuntu-latest
@@ -108,8 +140,8 @@ jobs:
           poetry run pyinstaller vibra.spec
       - name: Rename file
         run: |
-          mv dist/Vibra dist/vibra-linux-x64.so
+          mv dist/Vibra dist/vibra-linux-x64
       - uses: actions/upload-artifact@v4
         with:
           name: vibra-linux
-          path: dist/vibra-linux-x64.so
+          path: dist/

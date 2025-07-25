@@ -10,8 +10,8 @@ def default_material_library():
         "identifier" : 1,
         "color" : "[170,170,170]",  # Light Gray
         "material_density" : 7850,
-        "elasticity_modulus" : 200,
-        "poisson" : 0.3,
+        "elasticity_modulus" : 200e9,
+        "poisson_ratio" : 0.3,
         "thermal_expansion_coefficient" : 1.2e-5,
     }
 
@@ -20,8 +20,8 @@ def default_material_library():
         "identifier" : 2,
         "color" : "[126,46,31]",  # Wood color
         "material_density" : 7750,
-        "elasticity_modulus" : 193,
-        "poisson" : 0.31,
+        "elasticity_modulus" : 193e9,
+        "poisson_ratio" : 0.31,
         "thermal_expansion_coefficient" : 1.7e-5,
     }
 
@@ -30,8 +30,8 @@ def default_material_library():
         "identifier" : 3,
         "color" : "[0,255,255]",  # Cyan
         "material_density" : 8220,
-        "elasticity_modulus" : 212,
-        "poisson" : 0.315,
+        "elasticity_modulus" : 212e9,
+        "poisson_ratio" : 0.315,
         "thermal_expansion_coefficient" : 1.2e-5,
     }
 
@@ -40,8 +40,8 @@ def default_material_library():
         "identifier" : 4,
         "color" : "[50,50,50]",  # Dark Grey
         "material_density" : 7200,
-        "elasticity_modulus" : 110,
-        "poisson" : 0.28,
+        "elasticity_modulus" : 110e9,
+        "poisson_ratio" : 0.28,
         "thermal_expansion_coefficient" : 1.1e-5,
     }
 
@@ -50,8 +50,8 @@ def default_material_library():
         "identifier" : 5,
         "color" : "[255,255,255]",  # White
         "material_density" : 2770,
-        "elasticity_modulus" : 71,
-        "poisson" : 0.333,
+        "elasticity_modulus" : 71e9,
+        "poisson_ratio" : 0.333,
         "thermal_expansion_coefficient" : 2.3e-5,
     }
 
@@ -60,8 +60,8 @@ def default_material_library():
         "identifier" : 6,
         "color" : "[181,166,66]",  # Brass color
         "material_density" : 8150,
-        "elasticity_modulus" : 96,
-        "poisson" : 0.345,
+        "elasticity_modulus" : 96e9,
+        "poisson_ratio" : 0.345,
         "thermal_expansion_coefficient" : 1.9e-5,
     }
 

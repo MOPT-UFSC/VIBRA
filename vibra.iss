@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Vibra"
-#define MyAppVersion "0.3.1"
+#define MyAppVersion "0.3.2"
 #define MyAppPublisher "Multidisciplinary Optimization Group"
 #define MyAppURL "https://mopt.paginas.ufsc.br/"
 #define MyAppExeName "vibra.exe"

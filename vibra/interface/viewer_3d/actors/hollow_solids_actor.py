@@ -31,7 +31,7 @@ class HollowSolidsActor(FacesActor):
     
     def clear_colors(self):
         color = app().config.user_preferences.faces_color
-        self.set_color(color.to_rgba())
+        self.set_color(color)
 
     def paint_solids(self, color: tuple[3], volumes: tuple[int]):
         cells = []

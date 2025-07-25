@@ -1,4 +1,5 @@
 from time import time
+from molde.colors import Color
 
 import numpy as np
 from vtkmodules.vtkCommonCore import (
@@ -74,14 +75,14 @@ class NodesActor(vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
-        color = app().config.user_preferences.nodes_points_color.to_rgba()
+        color = app().config.user_preferences.nodes_points_color
         self.set_color(color)
     
-    def set_color(self, color: tuple[int, int, int, int] | tuple[int, int, int]):
+    def set_color(self, color: Color):
         if self.data is None:
             return
 
-        r, g, b, a = color
+        r, g, b, a = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         cell_colors.FillComponent(0, r)
         cell_colors.FillComponent(1, g)
@@ -93,15 +94,11 @@ class NodesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(
-        self, color: tuple[int, int, int] | tuple[int, int, int, int], volumes: tuple[int]
-    ):
+    def paint_cells(self, color: Color, volumes: tuple[int]):
         if self.data is None:
             return
 
-        if len(color) == 3:
-            color = *color, 255
-
+        color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         for i in volumes:
             cell_colors.SetTuple(i, color)
