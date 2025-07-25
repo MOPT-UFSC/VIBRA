@@ -242,9 +242,13 @@ class ProjectFile:
                 return [convert_ndarrays_to_lists(i) for i in obj]
             elif isinstance(obj, np.ndarray):
                 return obj.tolist()
+            elif isinstance(obj, np.uint64):
+                return int(obj)
             else:
                 return obj
         mesh_quality_data_json_ready = convert_ndarrays_to_lists(mesh_quality_data)
+        from pprint import pprint
+        pprint(mesh_quality_data_json_ready)
         
         self.filebox.write(self.mesh_quality_data_filename, mesh_quality_data_json_ready)
 

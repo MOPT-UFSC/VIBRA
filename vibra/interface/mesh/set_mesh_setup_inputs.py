@@ -527,8 +527,6 @@ class MeshSetupInputs(MesherSetup_UI):
             name_item.setToolTip(tooltips[i])
 
             self.tableWidget_mesh_quality.setItem(i, 0, name_item)
-            print(gmsh_label)
-            print(mesh_quality_statistics[gmsh_label])
 
             worst_value_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][0], 3)))
             avg_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][1], 3)))
