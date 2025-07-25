@@ -323,8 +323,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.comboBox_inherit_fluid_from.setDisabled(True)
             self.comboBox_inherit_fluid_from.addItem("Invalid selection")
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.clear_selection()
 
             if print_message:
                 self.hide()
@@ -480,8 +479,7 @@ class MassSourceInputs(MassSourceInputs_UI):
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 3:
             self.comboBox_attribution_type.setDisabled(True)
-            app().main_window.set_mesh_selection()
-            app().main_window.set_geometry_selection()
+            app().main_window.clear_selection()
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
@@ -881,8 +879,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.set_mesh_selection()
-        app().main_window.set_geometry_selection()
+        app().main_window.clear_selection()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
