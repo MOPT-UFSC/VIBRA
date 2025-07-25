@@ -229,7 +229,12 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt"], "Choose a table to import the specific impedance")
+                                
+                if not imported_data:
+                    return
+
                 imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"

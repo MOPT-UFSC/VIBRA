@@ -8,3 +8,4 @@ class ImportedData:
     filename: str = str()
     extension: str = str()
     sheetname: str = str()
+    path: str = str()

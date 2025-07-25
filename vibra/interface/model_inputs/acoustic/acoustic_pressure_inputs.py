@@ -7,6 +7,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_inputs_
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.data_handler.data_importer import DataImporter
 
 import os
 import numpy as np
@@ -197,33 +198,23 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'acoustic pressure' table"
+        imported_file = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
+                lineEdit.setText(imported_table_path)
+                imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
-
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
-
-                caption = "Choose a table to import the acoustic pressure"
-                imported_table_path, check = QFileDialog.getOpenFileName(  None, 
-                                                                            caption, 
-                                                                            path, 
-                                                                            "Files (*.csv; *.dat; *.txt)"
-                                                                        )
-
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt"], "Choose a table to import the acoustic pressure")
+                
+                if not imported_data:
+                    return
+                
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"

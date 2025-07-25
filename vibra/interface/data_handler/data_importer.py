@@ -50,17 +50,18 @@ class DataImporter:
         if not file_extension:
             return
         
-        last_imported_file = imported_paths
-        position_of_last_imported_file = len(imported_paths) - 1
+        imported_data = None
+        last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
+
         if isinstance(imported_paths, list):
-            last_imported_file = imported_paths[position_of_last_imported_file]
+            imported_data = list()
+            for imported_path in imported_paths:
+                imported_data.append(DataImporter.__read_data_in_file(imported_path))
         
+        else:
+            imported_data = DataImporter.__read_data_in_file(imported_paths)
 
         app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
-
-        imported_data = list()
-        for imported_path in imported_paths:
-            imported_data.append(DataImporter.__read_data_in_file(imported_path))
         
         return imported_data
 
@@ -69,8 +70,8 @@ class DataImporter:
         return DataImporter.__import_files(caption, last_folder, file_extensions, True)
     
     @staticmethod
-    def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData:
-        return DataImporter.__import_files(caption, last_folder, file_extensions)[0]
+    def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData | None:
+        return DataImporter.__import_files(caption, last_folder, file_extensions)
     
     @staticmethod
     def __read_data_in_file(file_path: str):
@@ -89,9 +90,9 @@ class DataImporter:
                                         delimiter = ",", 
                                         )
                 
-                loaded_data = DataImporter._remove_unnecesary_header_in_data(loaded_data)
+                loaded_data = DataImporter.__remove_unnecesary_header_in_data(loaded_data)
 
-                return ImportedData(loaded_data, filename, sufix)
+                return ImportedData(loaded_data, filename, sufix, path=file_path)
                 
             elif sufix in [".xls", ".xlsx"]:
                 wb = load_workbook(file_path)
@@ -115,7 +116,7 @@ class DataImporter:
 
                     sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
 
-                    return ImportedData(sheet_data, filename, sufix, sheetname)
+                    return ImportedData(sheet_data, filename, sufix, sheetname, file_path)
 
     @staticmethod                      
     def __remove_unnecesary_header_in_data(data: np.ndarray) -> np.ndarray:
