@@ -8,7 +8,7 @@ from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
 from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_type import TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8, HEXAHEDRON_20, ElementType
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.message.loading_window_2 import LoadTask
+from vibra.interface.message.loading_window import LoadTask
 
 import logging
 from collections import defaultdict

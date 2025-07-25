@@ -5,7 +5,7 @@ from PySide6.QtGui import QIcon
 from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.message.loading_window_2 import LoadTask
+from vibra.interface.message.loading_window import LoadTask
 
 import numpy as np
 from pathlib import Path
