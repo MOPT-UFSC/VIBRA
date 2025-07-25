@@ -203,7 +203,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                lineEdit.setText(imported_table_path)
                 imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
