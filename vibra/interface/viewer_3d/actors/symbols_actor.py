@@ -33,42 +33,13 @@ from vibra.interface.viewer_3d.sources import (
     create_incident_plane_wave_source,
     create_outwards_incident_plane_wave_source,
     create_surface_velocity_source,
+    create_mass_load_first_layer_source,
+    create_mass_load_second_layer_source,
+    create_mass_load_third_layer_source,
+    create_mass_load_fourth_layer_source,
 )
 
 Triple = tuple[float, float, float]
-
-class Shape(Enum):
-    ARROW = "arrow"
-    LONG_ARROW = "long_arrow"
-    DOUBLE_ARROW = "double_arrow"
-    OUTWARDS_ARROW = "outwards_arrow"
-    CONE = "cone"
-    CUBE = "cube"
-    SPRING = "spring"
-    DAMPER = "damper"
-    MASS = "mass"
-    PERFORATED_PLATE_MODEL = "perforated_plate_model"
-    IMPEDANCE = "impedance"
-    TRANSFER_IMPEDANCE = "transfer_impedance"
-    INCIDENT_PLANE_WAVE = "incident_plane_wave"
-    OUTWARDS_INCIDENT_PLANE_WAVE = "outwards_incident_plane_wave"
-    ANECHOIC_TERMINATION = "anechoic_termination"
-    SURFACE_VELOCITY = "surface_velocity"
-    MASS_FLOW_RATE = "mass_flow_rate"
-    DISTRIBUTED_LOADS = "distributed_loads"
-    DISTRIBUTED_LOADS_OUTWARDS = "distributed_loads_outwards"
-    NORMAL_PRESSURE_LOAD = "normal_pressure_load"
-    OUTWARDS_NORMAL_PRESSURE_LOAD = "outwards_normal_pressure_load"
-    DEGREES_OF_FREEDOM_DECOUPLING = "degrees_of_freedom_decoupling"
-    ABSORPTION_SURFACE = "absorption_surface"
-    ACOUSTIC_PRESSURE = "acoustic_pressure"
-    RECIPROCATING_COMPRESSOR = "reciprocating_compressor"
-    DISSIPATION_MODEL = "dissipation_model"
-    ACOUSTIC_TRANSFER_ELEMENT_DATA = "acoustic_transfer_element_data"
-
-    @classmethod
-    def get_shapes(cls):
-        return [v.value for v in cls.__members__.values()]
 
 class SymbolsActor(CommonSymbolsActorVariableSize):
     def __init__(self, *args, **kwargs):
@@ -131,6 +102,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             
             elif property_name == "incident_plane_wave":
                 self._build_incident_plane_wave(property_name, surface_id)
+            
+            elif property_name == "mass_source":
+                self._build_mass_source(property_name, surface_id)
 
         super().build()
 
@@ -164,13 +138,13 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             return
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.SURFACE_VELOCITY, coords, normal, color=color_names.RED_6)
+        self.add_symbol_render("surface_velocity", coords, normal, color=color_names.RED_6)
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
         for node_id, normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
-            self.add_symbol_render(Shape.OUTWARDS_ARROW, coords, normal_vector, color=color_names.GRAY)
+            self.add_symbol_render("outwards_arrow", coords, normal_vector, color=color_names.GRAY)
 
     def _build_prescribed_dofs(self, property_name, surface_id):
         coords, _ = self._get_center_coords_and_normals(surface_id)
@@ -181,13 +155,13 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
         # alternate add_symbol function to a generic one
         if x is not None:
-            self.add_symbol_render(Shape.CONE, coords, (1, 0, 0), color=color_names.GREEN)
+            self.add_symbol_render("cone", coords, (1, 0, 0), color=color_names.GREEN)
 
         if y is not None:
-            self.add_symbol_render(Shape.CONE, coords, (0, 1, 0), color=color_names.GREEN)
+            self.add_symbol_render("cone", coords, (0, 1, 0), color=color_names.GREEN)
 
         if z is not None:
-            self.add_symbol_render(Shape.CONE, coords, (0, 0, 1), color=color_names.GREEN)
+            self.add_symbol_render("cone", coords, (0, 0, 1), color=color_names.GREEN)
 
     def _build_nodal_loads(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -197,7 +171,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
         orientation = np.real((x, y, z))
         is_pointing = np.dot(normal, orientation) < 0
-        shape = Shape.ARROW if is_pointing else Shape.OUTWARDS_ARROW
+        shape = "arrow" if is_pointing else "outwards_arrow"
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
             
     def _build_distributed_loads(self, property_name: str, surface_id: int):
@@ -208,7 +182,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
         orientation = np.real((x, y, z))
         is_pointing = np.dot(normal, orientation) < 0
-        shape = Shape.DISTRIBUTED_LOADS if is_pointing else Shape.DISTRIBUTED_LOADS_OUTWARDS
+        shape = "distributed_loads" if is_pointing else "distributed_loads_outwards"
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
     
     def _build_normal_pressure_load(self, property_name: str, surface_id: int):
@@ -217,7 +191,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
         x = property["values"]
-        shape = Shape.OUTWARDS_NORMAL_PRESSURE_LOAD if x[0].real > 0 else Shape.NORMAL_PRESSURE_LOAD
+        shape = "outwards_normal_pressure_load" if x[0].real > 0 else "normal_pressure_load"
         
         self.add_symbol_render(shape, coords, normal, color=color_names.RED_2)
     
@@ -226,20 +200,20 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         property = surface_properties[property_name, surface_id]
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        shape = Shape.ANECHOIC_TERMINATION if "anechoic_termination" in property.keys() else Shape.IMPEDANCE
+        shape = "anechoic_termination" if "anechoic_termination" in property.keys() else "impedance"
         self.add_symbol_render(shape, coords, normal, color=color_names.PURPLE_2)
    
     def _build_transfer_impedance(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.TRANSFER_IMPEDANCE, coords, normal, color=color_names.PURPLE_2)
+        self.add_symbol_render("transfer_impedance", coords, normal, color=color_names.PURPLE_2)
     
     def _build_perforated_plate_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.PERFORATED_PLATE_MODEL, coords, normal, color=color_names.RED)
+        self.add_symbol_render("perforated_plate_model", coords, normal, color=color_names.RED)
 
     def _build_mass_flow_rate(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.MASS_FLOW_RATE, coords, normal, color=color_names.PINK)
+        self.add_symbol_render("mass_flow_rate", coords, normal, color=color_names.PINK)
     
     def _build_dofs_decoupling(self, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -249,31 +223,31 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             return 
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.DEGREES_OF_FREEDOM_DECOUPLING, coords, normal, color=color_names.GREEN)
+        self.add_symbol_render("degrees_of_freedom_decoupling", coords, normal, color=color_names.GREEN)
     
     def _build_absorption_surface(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.ABSORPTION_SURFACE, coords, normal, color=color_names.GREEN)
+        self.add_symbol_render("absorption_surface", coords, normal, color=color_names.GREEN)
     
     def _build_acoustic_pressure(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.ACOUSTIC_PRESSURE, coords, normal, color=color_names.RED_2)
+        self.add_symbol_render("acoustic_pressure", coords, normal, color=color_names.RED_2)
     
     def _build_reciprocating_compressor(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.RECIPROCATING_COMPRESSOR, coords, normal, color=color_names.RED_2)
+        self.add_symbol_render("reciprocating_compressor", coords, normal, color=color_names.RED_2)
     
     def _build_dissipation_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.DISSIPATION_MODEL, coords, normal, color=color_names.BLUE)
+        self.add_symbol_render("dissipation_model", coords, normal, color=color_names.BLUE)
     
     def _build_viscous_thermal_loss_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.DISSIPATION_MODEL, coords, normal, color=color_names.ORANGE)
+        self.add_symbol_render("dissipation_model", coords, normal, color=color_names.ORANGE)
     
     def _build_acoustic_transfer_element_data(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render(Shape.ACOUSTIC_TRANSFER_ELEMENT_DATA, coords, normal, color=color_names.TURQUOISE)
+        self.add_symbol_render("acoustic_transfer_element_data", coords, normal, color=color_names.TURQUOISE)
     
     def _build_incident_plane_wave(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -282,12 +256,29 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         wave_vector = property.get("wave_vector")
         coords, _ = self._get_center_coords_and_normals(surface_id)
         
-        self.add_symbol_render(Shape.INCIDENT_PLANE_WAVE, coords, wave_vector, color=color_names.BLUE)
-
+        self.add_symbol_render("incident_plane_wave", coords, wave_vector, color=color_names.BLUE)
+    
+    def _build_mass_source(self, property_name: str, surface_id: int):
+        coords, normal = self._get_center_coords_and_normals(surface_id)
+        color_fir_sphere = color_names.RED.copy()
+        self.add_symbol_render("mass_source_first_layer", coords, normal, color=color_fir_sphere)
+        
+        color_sec_sphere = color_names.YELLOW.copy()
+        color_sec_sphere.a = 150
+        self.add_symbol_render("mass_source_second_layer", coords, normal, color=color_sec_sphere)
+        
+        color_third_sphere = color_names.GREEN.copy()
+        color_third_sphere.a = 100
+        self.add_symbol_render("mass_source_third_layer", coords, normal, color=color_third_sphere)
+        
+        color_fourth_sphere = color_names.BLUE.copy()
+        color_fourth_sphere.a = 50
+        self.add_symbol_render("mass_source_fourth_layer", coords, normal, color=color_fourth_sphere)
+        
     # Specifications on how each symbol should look like
-    def add_symbol_render(self, shape: Shape, position: Triple, orientation: Triple, color: Color, scale: float = 1):
+    def add_symbol_render(self, shape: str, position: Triple, orientation: Triple, color: Color, scale: float = 1):
         self.add_symbol(
-            shape_name=shape.value,
+            shape_name=shape,
             position=position,
             orientation=orientation,
             color=color,
@@ -323,3 +314,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("dissipation_model", create_dissipation_model_source())
         self.register_shape("acoustic_transfer_element_data", create_acoustic_transfer_element_data_source())
         self.register_shape("surface_velocity", create_surface_velocity_source())
+        self.register_shape("mass_source_first_layer", create_mass_load_first_layer_source())
+        self.register_shape("mass_source_second_layer", create_mass_load_second_layer_source())
+        self.register_shape("mass_source_third_layer", create_mass_load_third_layer_source())
+        self.register_shape("mass_source_fourth_layer", create_mass_load_fourth_layer_source())
