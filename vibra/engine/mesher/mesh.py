@@ -1760,7 +1760,9 @@ class Mesh:
                     bad_elements.append(element)
 
             self.mesh_bad_elements[parameter] = bad_elements
-
+            print("elementos ruins", [int(number) for number in self.mesh_bad_elements["gamma"]])
+            print("quantidade de elementos ruins:", len(self.mesh_bad_elements["gamma"]))
+            
     def calculate_mesh_quality_histograms(self):
         if not self.mesh_quality:
             return
