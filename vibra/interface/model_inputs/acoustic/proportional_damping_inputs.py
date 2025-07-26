@@ -39,10 +39,10 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle("Dissipation model")
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.keep_window_open = True

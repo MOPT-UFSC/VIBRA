@@ -1,5 +1,37 @@
 
-from vibra import app
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
+
+from vibra.engine.elements.elements_3d import (
+    # 3d elements - acoustic
+    ACT_HEXAHEDRON_8C,
+    ACT_HEXAHEDRON_20C,
+    ACT_TETRAHEDRON_4C,
+    ACT_TETRAHEDRON_10C,
+
+    # 3d elements - structural
+    STRUCT_HEXAHEDRON_8,
+    STRUCT_HEXAHEDRON_20,
+    STRUCT_TETRAHEDRON_4S,
+    STRUCT_TETRAHEDRON_10S
+)
+
+from vibra.engine.elements.elements_2d import (
+    # 2d elements - acoustic
+    ACT_FACE_3,
+    ACT_FACE_4,
+
+    # 2D elements - structural
+    STRUCT_TRIANGULAR_3
+)
+
+#1d elements - acoustic
+from vibra.engine.elements.elements_1d import ACT_LINE_2
+
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
@@ -50,8 +82,14 @@ class Model:
         self.analysis_setup = None
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
-        self.solid_structural_element = None
-        self.surface_structural_element = None
+
+        self.acoustic_element_1d = None
+        self.acoustic_element_2d = None
+        self.acoustic_element_3d = None
+
+        self.structural_element_1d = None
+        self.structural_element_2d = None
+        self.structural_element_3d = None
 
         self.properties = ModelProperties()
 
@@ -239,33 +277,95 @@ class Model:
                 # temporary solution to allow running external mesh file
                 volume = 1
         return volume
+    
+    def get_structural_elements(self):
 
-    def set_acoustic_element(self, element):
-        self.solid_acoustic_element, self.surface_acoustic_element = element
+        element_type = self.mesh.element_type
 
-    def set_structural_element(self, element):
-        self.solid_structural_element, self.surface_structural_element = element
+        if element_type == TETRAHEDRON_4:
+            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGULAR_3(self), None
 
-    def get_acoustic_global_dofs_from_nodes(self, nodes: np.ndarray):
-        if self.solid_acoustic_element is None:
-            return list()
-        _dofs_per_node = self.solid_acoustic_element.DOFS_PER_NODE
-        _nodes = nodes.reshape(-1, 1)
+        elif element_type == TETRAHEDRON_10:
+            return STRUCT_TETRAHEDRON_10S(self), None, None
+
+        elif element_type == HEXAHEDRON_8:
+            return STRUCT_HEXAHEDRON_8(self), None, None
+
+        elif element_type == HEXAHEDRON_20:
+            return STRUCT_HEXAHEDRON_20(self), None, None
+
+        else:
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
+
+    def get_acoustic_elements(self):
+        element_type = self.mesh.element_type
+
+        if element_type == TETRAHEDRON_4:
+            return ACT_TETRAHEDRON_4C(self), ACT_FACE_3(self), ACT_LINE_2(self)
+
+        elif element_type == TETRAHEDRON_10:
+            return ACT_TETRAHEDRON_10C(self), None, None
+
+        elif element_type == HEXAHEDRON_8:
+            return ACT_HEXAHEDRON_8C(self), ACT_FACE_4(self), None
+
+        elif element_type == HEXAHEDRON_20:
+            return ACT_HEXAHEDRON_20C(self), None, None
+
+        else:
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
+
+    def set_structural_elements(self):
+        element_3d, element_2d, element_1d = self.get_structural_elements()
+        self.structural_element_1d = element_1d
+        self.structural_element_2d = element_2d
+        self.structural_element_3d = element_3d
+
+    def set_acoustic_elements(self):
+        element_3d, element_2d, element_1d = self.get_acoustic_elements()
+        self.acoustic_element_1d = element_1d
+        self.acoustic_element_2d = element_2d
+        self.acoustic_element_3d = element_3d
+
+    def get_acoustic_global_dofs_from_nodes(self, node_ids: np.ndarray):
+        """
+        This method returns the global dofs for the entered nodes.
+
+        Parameter
+        ---------
+        node_ids: np.ndarray
+            The vector with the node indexes.
+
+        Return
+        ------
+        global_dofs: np.array
+            An array containing the global dofs from input nodes.
+        """
+        _nodes = node_ids.reshape(-1, 1)
+        _dofs_per_node = self.structural_element_3d.DOFS_PER_NODE
+
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
-        return np.array(global_dofs.flatten(), dtype=int)
+        global_dofs = np.array(global_dofs.flatten(), dtype=int)
+
+        return global_dofs
 
     def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
 
         output_data = dict()
         if data["element_type"] == "2d_element":
-            if self.surface_structural_element is None:
+            element_2d = self.structural_element_2d
+            if element_2d is None:
                 return output_data
-            dofs_per_node = self.surface_structural_element.DOFS_PER_NODE
+
+            dofs_per_node = element_2d.DOFS_PER_NODE
 
         else:
-            if self.solid_structural_element is None:
+            
+            element_3d = self.structural_element_3d
+            if element_3d is None:
                 return output_data
-            dofs_per_node = self.solid_structural_element.DOFS_PER_NODE
+
+            dofs_per_node = element_3d.DOFS_PER_NODE
 
         local_dofs = np.arange(dofs_per_node, dtype=int)
         global_dofs = dofs_per_node * nodes.reshape(-1, 1) + local_dofs

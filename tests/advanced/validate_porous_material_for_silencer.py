@@ -148,11 +148,10 @@ def load_external_mesh_and_solve():
 
     model.process_porous_material_properties(frequencies)
 
+    # Define and process the assemble
     assembler = AcousticAssembler(model)
-
-    # Set the analysis frequency setup
     assembler.process_assemble()
-    
+
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
@@ -175,8 +174,7 @@ def load_external_mesh_and_solve():
 
     t0 = time()
 
-    element_3d, _ = assembler.get_element()
-    element_3d.reorder_connect()
+    element_3d = model.acoustic_element_3d
 
     list_nodes = list()
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():

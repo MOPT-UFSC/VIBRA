@@ -55,7 +55,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Set fluid")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.keep_window_open = True
