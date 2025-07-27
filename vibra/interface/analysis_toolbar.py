@@ -266,11 +266,13 @@ class AnalysisToolbar(QToolBar):
         if not read._continue:
             return
 
-        self.reset_solution()
+        self.reset_solution(True)
 
-    def reset_solution(self):
+    def reset_solution(self, force_delete_harmonic = False):
         app().project.reset_solutions()
         app().file.remove_results_data_from_project_file()
+        if force_delete_harmonic:
+            app().file.delete_harmonic_solution()
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
         self.pushButton_reset_solution.setDisabled(True)
