@@ -74,7 +74,7 @@ class AnalysisToolbar(QToolBar):
         #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
-        self.pushButton_reset_solution.clicked.connect(self.reset_solution)
+        self.pushButton_reset_solution.clicked.connect(lambda: self.reset_solution(True))
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
     
@@ -219,9 +219,11 @@ class AnalysisToolbar(QToolBar):
         app().file.write_model_properties_in_file()
         app().file.write_results_data_in_file()
 
-    def reset_solution(self):
+    def reset_solution(self, force_delete_harmonic = False):
         app().project.reset_solutions()
         app().file.remove_results_data_from_project_file()
+        if force_delete_harmonic:
+            app().file.delete_harmonic_solution()
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
         self.pushButton_reset_solution.setDisabled(True)

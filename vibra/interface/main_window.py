@@ -725,6 +725,7 @@ class MainWindow(MainWindow_UI):
                 return
 
             if obj.ignore_results_data:
+                app().file.delete_harmonic_solution()
                 app().file.remove_results_data_from_project_file()
 
             if obj.ignore_mesh_data:
@@ -754,6 +755,7 @@ class MainWindow(MainWindow_UI):
             self.update_recents_menu()
             logging.info("Saving project data... [75/100]")
 
+            app().file.save_harmonic_solution_results()
             copy(TEMP_PROJECT_FILE, path)
             self.update_window_title(path)
             self.project_data_modified = False
