@@ -17,9 +17,12 @@ from vibra.interface.loading_window import LoadingWindow
 import logging
 from time import sleep, time
 
+from vibra.project_files.project_file import ProjectFile
+
 
 class Project:
-    def __init__(self):
+    def __init__(self, project_file: ProjectFile | None = None):
+        self.project_file = project_file
         self.reset_variables()
 
     def reset_variables(self):
@@ -170,7 +173,7 @@ class Project:
 
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler)
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, self.project_file)
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
 
             # acoustic modal analysis

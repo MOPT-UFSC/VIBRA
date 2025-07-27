@@ -29,7 +29,7 @@ class Application(QApplication):
         self.config = Config()
 
         self.file = ProjectFile(TEMP_PROJECT_FILE)
-        self.project = Project()
+        self.project = Project(self.file)
         self.load_project = LoadProject()
 
         # gui

@@ -1,5 +1,6 @@
+import zipfile
 
-from vibra import app
+from vibra import TEMP_PROJECT_FILE, app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -7,12 +8,13 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from fileboxes import Filebox
 
 import os
-import json
 import h5py
 import numpy as np
 
 from copy import deepcopy
 from pathlib import Path
+
+from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -26,12 +28,15 @@ class ProjectFile:
         self.path = path
         self.filebox = Filebox(Path(path), override=override)
 
-        self._initialize()
         self._default_filenames()
-        self._default_foldernames()
 
-    def _initialize(self):
-        self.project_folder_path = Path(os.path.dirname(self.path))
+    @property
+    def project_folder_path(self):
+        return Path(os.path.dirname(self.path))
+
+    @property
+    def harmonic_solution_filepath(self):
+        return self.project_folder_path / self.solution_freq_filename
 
     def _default_filenames(self):
         self.project_setup_filename = "project_setup.json"
@@ -44,9 +49,7 @@ class ProjectFile:
         self.imported_table_data_filename = "imported_tables_data.hdf5"
         self.results_data_filename = "results_data.hdf5"
         self.thumbnail_filename = "thumbnail.png"
-
-    def _default_foldernames(self):
-        pass
+        self.solution_freq_filename = "solution_freq.hdf5"
 
     def write_geometry_in_file(self, path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
 
@@ -622,7 +625,7 @@ class ProjectFile:
                         f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
                 acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
-                if acoustic_harmonic_solver is not None:
+                if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
                     if acoustic_harmonic_solver.solution is not None:
                         frequencies = app().project.model.frequencies
                         solution = acoustic_harmonic_solver.solution
@@ -640,6 +643,43 @@ class ProjectFile:
                         f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
                 app().main_window.project_data_modified = True
+
+    def handling_harmonic_solution_results(self):
+        if self.filebox.contains(self.results_data_filename):
+            with self.filebox.open(self.results_data_filename, "r") as internal_file:
+                with h5py.File(internal_file, "r") as f_src:
+                    # Converting Acoustic Harmonic solution in the old form.
+                    analysis = f_src.get("harmonic_acoustic")
+                    if analysis:
+                        frequencies = analysis.get("frequencies")
+                        if frequencies:
+                            solution_dset = analysis["solution"]
+                            if solution_dset.chunks is None:
+                                solution = solution_dset[()]
+                                writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
+                                for i, freq in enumerate(frequencies):
+                                    writer[:, i] = solution[:, i]
+        if self.filebox.contains(self.solution_freq_filename):
+            with zipfile.ZipFile(self.path, 'r') as zip_ref:
+                zip_ref.extract(member=self.solution_freq_filename, path=self.project_folder_path)
+
+    def get_solution_writer(self, num_rows, columns, dtype):
+        return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype)
+
+    def get_solution_loader(self):
+        return LazyHDF5MatrixLoader(self.harmonic_solution_filepath)
+
+    def delete_harmonic_solution(self):
+        if self.harmonic_solution_filepath.exists():
+            os.remove(self.harmonic_solution_filepath)
+
+    def save_harmonic_solution_results(self):
+        if self.harmonic_solution_filepath.exists():
+            with zipfile.ZipFile(TEMP_PROJECT_FILE, 'a', zipfile.ZIP_DEFLATED) as zipf:
+                internal_path = self.solution_freq_filename
+                solution_path = self.harmonic_solution_filepath
+                if internal_path not in zipf.namelist():
+                    zipf.write(solution_path, arcname=internal_path)
 
     def read_results_data_from_file(self):
         
@@ -678,6 +718,7 @@ class ProjectFile:
 
     def remove_results_data_from_project_file(self):
         self.filebox.remove(self.results_data_filename)
+
 
 def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float):
     """ This function converts a numeric dictionary into an equivalent 
