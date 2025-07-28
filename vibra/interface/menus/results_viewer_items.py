@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.menus.common_menu_items import CommonMenuItems
-
+from molde import Color
 
 class ResultsViewerItems(CommonMenuItems):
     """Menu Items
@@ -200,11 +200,11 @@ class ResultsViewerItems(CommonMenuItems):
     def set_theme(self, theme : str):
 
         if theme == "dark":
-            self.line_color = QColor(26,115,232,150)
-            self.background_color = QColor(60,60,70)
+            self.line_color = Color(26,115,232,150).to_qt()
+            self.background_color = Color(60,60,70).to_qt()
         else:
-            self.line_color = QColor(26,115,232,150)
-            self.background_color = QColor(225,230,230)
+            self.line_color = Color(26,115,232,150).to_qt()
+            self.background_color = Color(225,230,230).to_qt()
     
         border_role = Qt.UserRole + 1
         border_pen = QPen(self.line_color)

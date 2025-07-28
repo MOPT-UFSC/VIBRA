@@ -13,6 +13,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
 
+from molde import Color
 from copy import deepcopy
 from itertools import count
 
@@ -95,11 +96,11 @@ class MaterialWidget(MaterialWidget_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_duplicate]
         change_icon_color_for_widgets(widgets, icon_color)
@@ -158,8 +159,8 @@ class MaterialWidget(MaterialWidget_UI):
                 self.tableWidget_material_data.setItem(5, j, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
 
                 item = QTableWidgetItem()
-                item.setBackground(QColor(*material.color))
-                item.setForeground(QColor(*material.color))
+                item.setBackground(Color(*material.color).to_qt())
+                item.setForeground(Color(*material.color).to_qt())
                 item.setSizeHint(QSize(80, 30))
                 self.tableWidget_material_data.setItem(6, j, item)
 
@@ -498,8 +499,8 @@ class MaterialWidget(MaterialWidget_UI):
 
         picked_color = read.color
         item = QTableWidgetItem()
-        item.setBackground(QColor(*picked_color))
-        item.setForeground(QColor(*picked_color))
+        item.setBackground(Color(*picked_color).to_qt())
+        item.setForeground(Color(*picked_color).to_qt())
         self.tableWidget_material_data.setItem(row, col, item)
         self.tableWidget_material_data.item(row, 0).setSelected(True)
 

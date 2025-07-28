@@ -2,9 +2,9 @@ from PySide6.QtGui import QPen, QColor
 from PySide6.QtCore import Qt
 
 from vibra import app
-
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
+from molde import Color
 
 class ModelSetupItems(CommonMenuItems):
     """Menu Items
@@ -348,12 +348,12 @@ class ModelSetupItems(CommonMenuItems):
 
     def set_theme(self, theme: str):
         if theme == "dark":
-            self.line_color = QColor(107, 137, 185)
-            self.background_color = QColor(60, 60, 70)
+            self.line_color = Color(107, 137, 185).to_qt()
+            self.background_color = Color(60, 60, 70).to_qt()
 
         else:
-            self.line_color = QColor(107, 137, 185)
-            self.background_color = QColor(230, 230, 230)
+            self.line_color = Color(107, 137, 185).to_qt()
+            self.background_color = Color(230, 230, 230).to_qt()
 
         border_role = Qt.UserRole + 1
         border_pen = QPen(self.line_color)

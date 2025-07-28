@@ -6,7 +6,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
 
-from vibra import ICON_DIR, app
+from vibra import ICON_DIR, app, LIGHT_ICON_COLOR
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.message.loading_window import LoadTask
@@ -35,7 +35,7 @@ class AnimationToolbar(QToolBar):
         self.current_render_widget: AnimatedRenderWidget | None = None
 
     def _load_icons(self):
-        color = QColor("#448cff")
+        color = LIGHT_ICON_COLOR.to_qt()
 
         self.play_icon = load_icon(ICON_DIR / "play.png", color)
         self.pause_icon = load_icon(ICON_DIR / "pause.png", color)
@@ -251,10 +251,11 @@ class AnimationToolbar(QToolBar):
 
         theme = app().config.user_preferences.interface_theme
 
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = self.findChildren((QPushButton))
         icons.change_icon_color_for_widgets(widgets, icon_color)

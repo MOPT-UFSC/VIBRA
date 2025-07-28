@@ -121,11 +121,11 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_reset_entries]
         change_icon_color_for_widgets(widgets, icon_color)
@@ -424,18 +424,20 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_surface_id(self, lineEdit: QLineEdit):
 
         input_ids = lineEdit.text()
-        surface_id = self.model.mesh.check_selected_ids(
-                                                        input_ids, 
-                                                        selection = "surfaces", 
-                                                        single_id = True
-                                                        )
-
-        if surface_id is None:
-            lineEdit.setFocus()
-            lineEdit.selectAll()
+        surface_id, error_data = self.model.mesh.check_selected_ids(
+                                                                    input_ids, 
+                                                                    selection = "surfaces", 
+                                                                    single_id = True
+                                                                    )
+            
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            self.lineEdit_selection_id.selectAll()
+            PrintMessageInput(error_data)
             return None
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
 
         if len(volumes_from_surface) == 1:
             return surface_id

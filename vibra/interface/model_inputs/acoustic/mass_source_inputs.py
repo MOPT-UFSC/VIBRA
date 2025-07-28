@@ -96,28 +96,30 @@ class MassSourceInputs(MassSourceInputs_UI):
         nodes = app().main_window.selected_mesh_nodes
 
         text = ""
-        if nodes:
-            text = ", ".join([str(i) for i in nodes])
-            self.comboBox_attribution_type.setCurrentIndex(0)
-
-        elif points:
+        if points:
             text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(1)
 
         elif lines:
             text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(2)
 
         elif volumes:
             text = ", ".join([str(i) for i in volumes])
+            self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(4)
 
         elif surfaces:
             text = ", ".join([str(i) for i in surfaces])
+            self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(3)
 
-        if text != "":
+        elif nodes:
+            text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(0)
 
         if len(nodes) == 1:
             node_id = list(nodes)[0]
@@ -153,6 +155,8 @@ class MassSourceInputs(MassSourceInputs_UI):
         
         if selection_type == "points":
             data = self.model.properties._get_property("mass_source", point=selection_id)
+        elif selection_type == "lines":
+            data = self.model.properties._get_property("mass_source", line=selection_id)
         elif selection_type == "surfaces":
             data = self.model.properties._get_property("mass_source", surface=selection_id)
         elif selection_type == "volumes":
@@ -177,7 +181,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             app().main_window.action_mesh_workspace_callback()
 
         else:
-            app().main_window.set_mesh_selection()
             app().main_window.action_model_workspace_callback()
 
         if attribution_type in [0, 1]:
@@ -199,6 +202,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.label_mass_source_unit.setText("[kg/m³.s]")
 
         selection_data = self.check_selection_data(False)
+
         if selection_data is None:
             self.comboBox_inherit_fluid_from.clear()
             self.comboBox_inherit_fluid_from.setDisabled(True)
@@ -319,8 +323,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.comboBox_inherit_fluid_from.setDisabled(True)
             self.comboBox_inherit_fluid_from.addItem("Invalid selection")
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.clear_selection()
 
             if print_message:
                 self.hide()
@@ -476,8 +479,7 @@ class MassSourceInputs(MassSourceInputs_UI):
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 3:
             self.comboBox_attribution_type.setDisabled(True)
-            app().main_window.set_mesh_selection()
-            app().main_window.set_geometry_selection()
+            app().main_window.clear_selection()
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
@@ -494,7 +496,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.check_table_values()
 
     def check_selection_data(self, print_message: bool = True):
-        
+
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection_type = self.selection_type.get(attribution_type)
 
@@ -877,8 +879,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.set_mesh_selection()
-        app().main_window.set_geometry_selection()
+        app().main_window.clear_selection()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -1022,4 +1023,5 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
