@@ -113,8 +113,8 @@ class Ui_Dialog(object):
 
         self.label_selection_A = QLabel(self.frame_6)
         self.label_selection_A.setObjectName(u"label_selection_A")
-        self.label_selection_A.setMinimumSize(QSize(100, 28))
-        self.label_selection_A.setMaximumSize(QSize(120, 28))
+        self.label_selection_A.setMinimumSize(QSize(132, 28))
+        self.label_selection_A.setMaximumSize(QSize(132, 28))
         self.label_selection_A.setFont(font1)
         self.label_selection_A.setTextFormat(Qt.AutoText)
         self.label_selection_A.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -123,8 +123,8 @@ class Ui_Dialog(object):
 
         self.label_selection_B = QLabel(self.frame_6)
         self.label_selection_B.setObjectName(u"label_selection_B")
-        self.label_selection_B.setMinimumSize(QSize(100, 28))
-        self.label_selection_B.setMaximumSize(QSize(120, 28))
+        self.label_selection_B.setMinimumSize(QSize(132, 28))
+        self.label_selection_B.setMaximumSize(QSize(132, 28))
         self.label_selection_B.setFont(font1)
         self.label_selection_B.setTextFormat(Qt.AutoText)
         self.label_selection_B.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -171,7 +171,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, -236, 571, 568))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, -236, 578, 568))
         self.gridLayout_12 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.frame_fluid_info = QFrame(self.scrollAreaWidgetContents)
@@ -416,8 +416,8 @@ class Ui_Dialog(object):
 
         self.label_11 = QLabel(self.frame_2)
         self.label_11.setObjectName(u"label_11")
-        self.label_11.setMinimumSize(QSize(200, 0))
-        self.label_11.setMaximumSize(QSize(200, 16777215))
+        self.label_11.setMinimumSize(QSize(210, 0))
+        self.label_11.setMaximumSize(QSize(210, 16777215))
         self.label_11.setFont(font2)
         self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
@@ -434,8 +434,8 @@ class Ui_Dialog(object):
 
         self.label_17 = QLabel(self.frame_2)
         self.label_17.setObjectName(u"label_17")
-        self.label_17.setMinimumSize(QSize(200, 28))
-        self.label_17.setMaximumSize(QSize(200, 28))
+        self.label_17.setMinimumSize(QSize(215, 28))
+        self.label_17.setMaximumSize(QSize(215, 28))
         self.label_17.setFont(font2)
         self.label_17.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
