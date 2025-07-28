@@ -342,7 +342,7 @@ class Model:
             An array containing the global dofs from input nodes.
         """
         _nodes = node_ids.reshape(-1, 1)
-        _dofs_per_node = self.structural_element_3d.DOFS_PER_NODE
+        _dofs_per_node = self.acoustic_element_3d.DOFS_PER_NODE
 
         global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
         global_dofs = np.array(global_dofs.flatten(), dtype=int)
