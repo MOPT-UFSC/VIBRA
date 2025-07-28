@@ -82,19 +82,26 @@ def create_absorption_surface_source():
     )
 
 def create_acoustic_pressure_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol3.stl")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
         scale=(.03, .03, .03),
     )
 
-def create_reciprocating_compressor_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_symbol2.stl")
+def create_compressor_discharge_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_discharge.stl")
     return transform_polydata(
         polydata,
-        scale=(.2, .2, .2),
+        scale=(1, 1, 1),
     )
+
+def create_compressor_suction_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "stl_files/compressor_suction.obj")
+    return transform_polydata(
+        polydata,
+        scale=(1, 1, 1),
+    )   
 
 def create_dissipation_model_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.stl")

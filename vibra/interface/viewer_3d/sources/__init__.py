@@ -33,7 +33,8 @@ from .complex_shapes import (
     create_degrees_of_freedom_decoupling_source,
     create_absorption_surface_source,
     create_acoustic_pressure_source,
-    create_reciprocating_compressor_source,
+    create_compressor_discharge_source,
+    create_compressor_suction_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
 )

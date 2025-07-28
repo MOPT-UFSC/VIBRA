@@ -27,7 +27,8 @@ from vibra.interface.viewer_3d.sources import (
     create_degrees_of_freedom_decoupling_source,
     create_absorption_surface_source,
     create_acoustic_pressure_source,
-    create_reciprocating_compressor_source,
+    create_compressor_discharge_source,
+    create_compressor_suction_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
     create_incident_plane_wave_source,
@@ -55,6 +56,23 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     def build(self):
         self.clear_symbols()
         self._build_nodal_normals()
+        
+        # line_properties = app().project.model.properties.line_properties
+        # for (property_name, line_id) in line_properties.keys():
+        #     if property_name == "nodal_loads":
+        #         property = line_properties[property_name, line_id]
+        #         print(property)
+        #         print('=====================================')
+        #         coord = self._get_center_coords_and_normals_line(line_id)
+        #         print()
+        #         self.add_symbol_render("arrow", coord, (0, 0, 0), color=color_names.RED_2)
+        #         # coords, normal = self._get_center_coords_and_normals(surface_id)
+                
+        #         # x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+        #         # orientation = np.real((x, y, z))
+        #         # is_pointing = np.dot(normal, orientation) < 0
+        #         # shape = "arrow" if is_pointing else "outwards_arrow"
+        #         # self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
         
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id) in surface_properties.keys():
@@ -91,8 +109,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             elif property_name == "acoustic_pressure":
                 self._build_acoustic_pressure(surface_id)
             
-            elif property_name == "reciprocating_compressor":
-                self._build_reciprocating_compressor(surface_id)
+            elif property_name == "reciprocating_compressor_excitation":
+                self._build_reciprocating_compressor(property_name, surface_id)
             
             elif property_name == "dissipation_model":
                 self._build_dissipation_model(surface_id)
@@ -133,6 +151,35 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
 
         return center_coords, avg_normal
 
+    # def _get_center_coords_and_normals_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
+    #     mesh = app().project.model.mesh
+    #     line_nodes = mesh.nodes_from_lines.get(line_id)
+    #     print(line_nodes)
+    #     line_coordinates = mesh.nodal_coordinates[line_nodes, 1:]
+    #     print('===================================')
+    #     print(line_coordinates)
+
+    #     # surface_normals = mesh.normals_surface.get(surface_id)
+    #     # if surface_normals is None:
+    #     #     eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
+    #     #     avg_normal = np.average(eface_normals, axis=0).flatten()
+
+    #     # else:
+    #     #     avg_normal = np.average(surface_normals, axis=0).round(6)
+
+    #     # curvatures_surface = mesh.curvatures_surface.get(surface_id)
+    #     # contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
+    #     center_coords = np.average(line_coordinates, axis=0)
+    #     return center_coords
+
+    #     # if contains_curvature:
+    #     #     # Finds the node that is closest to the center coords
+    #     #     dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
+    #     #     index = np.argmin(dist)
+    #     #     return surface_coordinates[index, :], surface_normals[index, :]
+
+    #     # return center_coords, avg_normal
+
     def _build_surface_velocity(self, surface_id: int):
         if surface_id is None:
             return
@@ -163,7 +210,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         if z is not None:
             self.add_symbol_render("cone", coords, (0, 0, 1), color=color_names.GREEN)
 
-    def _build_nodal_loads(self, property_name: str, surface_id: int):
+    def _build_nodal_loads(self, property_name: str, surface_id):
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
         coords, normal = self._get_center_coords_and_normals(surface_id)
@@ -233,9 +280,17 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol_render("acoustic_pressure", coords, normal, color=color_names.RED_2)
     
-    def _build_reciprocating_compressor(self, surface_id: int):
+    def _build_reciprocating_compressor(self, property_name: str, surface_id: int):
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+        
+        if property["connection_type"] == "discharge":
+            shape = "compressor_discharge"
+        elif property["connection_type"] == "suction":
+            shape = "compressor_suction"
+        
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol_render("reciprocating_compressor", coords, normal, color=color_names.RED_2)
+        self.add_symbol_render(shape, coords, normal, color=color_names.RED_2)
     
     def _build_dissipation_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)
@@ -310,7 +365,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.register_shape("degrees_of_freedom_decoupling", create_degrees_of_freedom_decoupling_source())
         self.register_shape("absorption_surface", create_absorption_surface_source())
         self.register_shape("acoustic_pressure", create_acoustic_pressure_source())
-        self.register_shape("reciprocating_compressor", create_reciprocating_compressor_source())
+        self.register_shape("compressor_discharge", create_compressor_discharge_source())
+        self.register_shape("compressor_suction", create_compressor_suction_source())
         self.register_shape("dissipation_model", create_dissipation_model_source())
         self.register_shape("acoustic_transfer_element_data", create_acoustic_transfer_element_data_source())
         self.register_shape("surface_velocity", create_surface_velocity_source())
