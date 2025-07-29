@@ -9,6 +9,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.absorption_surface_inputs
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.data_handler.data_importer import DataImporter
 
 import os
 import numpy as np
@@ -213,28 +214,17 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
+                imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt"], "Choose a table to import the absorption surface")
+                
+                if not imported_data:
+                    return
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
-
-                caption = "Choose a table to import the absorption surface"
-                imported_table_path, check = QFileDialog.getOpenFileName( 
-                                                                        None, 
-                                                                        caption, 
-                                                                        path, 
-                                                                        "Files (*.csv; *.dat; *.txt)"
-                                                                        )
-
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
             if imported_file.shape[1] < 2:
                 message = "The imported table has insufficient number of columns. The absorption coefficient"

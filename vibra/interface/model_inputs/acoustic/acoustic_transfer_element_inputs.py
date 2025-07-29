@@ -141,11 +141,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls)"
 
         path, check = QFileDialog.getSaveFileName( 
-                                                  self, 
-                                                  caption, 
-                                                  last_path, 
-                                                  filter = _filter
-                                                  )
+            self, 
+            caption, 
+            last_path, 
+            filter = _filter
+        )
 
         if not check:
             return True

@@ -8,6 +8,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.data_handler.data_importer import DataImporter
 
 from copy import deepcopy
 
@@ -352,32 +353,21 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'specific impedance' table"
+        imported_file = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-
+                imported_file = np.loadtxt(imported_table_path, delimiter=",")
             else:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt"], "Choose a table to import the specific impedance")
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
+                if not imported_data:
+                    return
 
-                caption = "Choose a table to import the specific impedance"
-                imported_table_path, check = QFileDialog.getOpenFileName( 
-                                                                        None, 
-                                                                        caption, 
-                                                                        path, 
-                                                                        "Files (*.csv; *.dat; *.txt)"
-                                                                        )
-
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
@@ -503,11 +493,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id_A.setText("")
             self.lineEdit_selection_id_B.setText("")
             self.lineEdit_selection_id_A.setDisabled(True)
-
         else:
 
             if ("(" or ")") in self.lineEdit_selection_id_A.text():
@@ -601,52 +590,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_main.setTabVisible(2, False)
-
-    def load_table(self, lineEdit : QLineEdit, direct_load: bool=False):
-
-        title = "Error reached while loading 'acoustic pressure' table"
-
-        try:
-            if direct_load:
-                imported_table_path = lineEdit.text()
-
-            else:
-
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
-
-                caption = "Choose a table to import the user-defined transfer impedance"
-                imported_table_path, check = QFileDialog.getOpenFileName(  None, 
-                                                                            caption, 
-                                                                            path, 
-                                                                            "Files (*.csv; *.dat; *.txt)"
-                                                                        )
-
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            lineEdit.setToolTip(f"User-defined normalized transfer impedance table path: {imported_table_path}")
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-
-            if imported_file.shape[1] < 3:
-                message = "The imported table has insufficient number of columns. The spectrum"
-                message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
-                return None
-
-            return imported_file
-
-        except Exception as log_error:
-            message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
-            lineEdit.setFocus()
-            return None
 
     def load_user_defined_transfer_impedance(self):
         self.imported_values = self.load_table(self.lineEdit_user_defined_transfer_impedance_path)
