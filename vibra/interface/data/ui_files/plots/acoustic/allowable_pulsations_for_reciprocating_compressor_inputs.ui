@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>444</width>
-    <height>508</height>
+    <width>464</width>
+    <height>516</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -485,7 +485,7 @@
         </widget>
         <widget class="QWidget" name="tab_filtered_criteria">
          <attribute name="title">
-          <string>Atand beyond line-side of PSD</string>
+          <string>At and beyond line-side of PSD</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_10">
           <property name="leftMargin">

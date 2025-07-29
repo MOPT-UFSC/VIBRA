@@ -58,7 +58,11 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.keep_window_open = True
 
         self.aquisition_parameters_processed = False
-        self.not_update_event = False  
+        self.not_update_event = False
+
+        self.cache_rod_diameter = None
+        self.cache_clearance_CE = None
+        self.cache_clearance_HE = None
 
     def _config_widget(self):
         self.treeWidget_compressor_excitation.setColumnWidth(0, 100)
@@ -197,6 +201,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_volume_head_end_angle.setDisabled(False)
         self.pushButton_plot_volume_crank_end_angle.setDisabled(False)
 
+        clearance_HE = self.cache_clearance_HE
+        if self.cache_clearance_HE is None:
+            clearance_HE = 15.80
+
+        clearance_CE = self.cache_clearance_CE
+        if self.cache_clearance_HE is None:
+            clearance_CE = 18.39
+
+        rod_diameter = self.cache_rod_diameter
+        if self.cache_rod_diameter is None:
+            rod_diameter = 0.135
+
         if self.comboBox_cylinder_acting.currentIndex() == 1:
 
             self.lineEdit_rod_diameter.setText("")
@@ -205,7 +221,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.lineEdit_clearance_crank_end.setText("")
             self.lineEdit_clearance_crank_end.setDisabled(True)
             if self.lineEdit_clearance_head_end.text() == "":
-                self.lineEdit_clearance_head_end.setText("15.80")
+                self.lineEdit_clearance_head_end.setText(f"{clearance_HE}")
 
             self.pushButton_plot_PV_diagram_crank_end.setDisabled(True)
             self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
@@ -215,12 +231,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         elif self.comboBox_cylinder_acting.currentIndex() == 2:
 
             if self.lineEdit_rod_diameter.text() == "":
-                self.lineEdit_rod_diameter.setText("0.135")
+                self.lineEdit_rod_diameter.setText(f"{rod_diameter}")
 
             self.lineEdit_clearance_head_end.setText("")
             self.lineEdit_clearance_head_end.setDisabled(True)
             if self.lineEdit_clearance_crank_end.text() == "":
-                self.lineEdit_clearance_crank_end.setText("18.39")
+                self.lineEdit_clearance_crank_end.setText(f"{clearance_CE}")
 
             self.pushButton_plot_PV_diagram_head_end.setDisabled(True)
             self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
@@ -230,13 +246,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         else:
 
             if self.lineEdit_rod_diameter.text() == "":
-                self.lineEdit_rod_diameter.setText("0.135")
+                self.lineEdit_rod_diameter.setText(f"{rod_diameter}")
 
             if self.lineEdit_clearance_head_end.text() == "":
-                self.lineEdit_clearance_head_end.setText("15.80")
+                self.lineEdit_clearance_head_end.setText(f"{clearance_HE}")
 
             if self.lineEdit_clearance_crank_end.text() == "":
-                self.lineEdit_clearance_crank_end.setText("18.39")
+                self.lineEdit_clearance_crank_end.setText(f"{clearance_CE}")
 
     def get_state_properties(self, check_all_entries: bool):
 
@@ -330,15 +346,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if "rod_diameter" in parameters.keys():
             self.lineEdit_rod_diameter.setText(str(parameters["rod_diameter"]))
+            self.cache_rod_diameter = parameters.get("rod_diameter")
 
         if "pressure_ratio" in parameters.keys():
             self.lineEdit_pressure_ratio.setText(str(parameters["pressure_ratio"]))
 
         if "clearance_HE" in parameters.keys():
             self.lineEdit_clearance_head_end.setText(str(parameters["clearance_HE"]))
+            self.cache_clearance_HE = parameters.get("clearance_HE")
 
         if "clearance_CE" in parameters.keys():
             self.lineEdit_clearance_crank_end.setText(str(parameters["clearance_CE"]))
+            self.cache_clearance_CE = parameters.get("clearance_CE")
 
         if "TDC_crank_angle_1" in parameters.keys():
             self.spinBox_tdc1_crank_angle.setValue(int(parameters["TDC_crank_angle_1"]))
@@ -374,7 +393,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                     self.comboBox_temperature_units.setCurrentIndex(i)
 
         if "acting_label" in parameters.keys():
-            acting_labels = ["both_ends", "crank_end", "head_end"]
+            acting_labels = ["both_ends", "head_end", "crank_end"]
             acting_key = acting_labels.index(parameters["acting_label"])
             self.comboBox_cylinder_acting.setCurrentIndex(acting_key)
 
@@ -500,7 +519,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
         return False
 
-    def check_all_parameters(self, check_all_entries=True):
+    def check_all_parameters(self, check_all_entries: bool = True):
 
         self.parameters = dict()
 
@@ -534,18 +553,20 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
         else:
             self.parameters['pressure_ratio'] = self.value
-    
-        if self.check_input_parameters(self.lineEdit_clearance_head_end, "HE clearance"):
-            self.lineEdit_clearance_head_end.setFocus()
-            return True
-        else:
-            self.parameters['clearance_HE'] = self.value
         
-        if self.check_input_parameters(self.lineEdit_clearance_crank_end, "CE clearance"):
-            self.lineEdit_clearance_crank_end.setFocus()
-            return True
-        else:
-            self.parameters['clearance_CE'] = self.value
+        if self.comboBox_cylinder_acting.currentIndex() in [0, 1]:
+            if self.check_input_parameters(self.lineEdit_clearance_head_end, "HE clearance"):
+                self.lineEdit_clearance_head_end.setFocus()
+                return True
+            else:
+                self.parameters['clearance_HE'] = self.value
+
+        if self.comboBox_cylinder_acting.currentIndex() in [0, 2]:
+            if self.check_input_parameters(self.lineEdit_clearance_crank_end, "CE clearance"):
+                self.lineEdit_clearance_crank_end.setFocus()
+                return True
+            else:
+                self.parameters['clearance_CE'] = self.value
 
         self.parameters['TDC_crank_angle_1'] = self.spinBox_tdc1_crank_angle.value()
 
@@ -594,7 +615,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.parameters['compression_stage'] = self.compression_stage_index
         self.parameters['number_of_cylinders'] = self.number_of_cylinders
 
-        acting_labels = ["both_ends", "crank_end", "head_end"]
+        acting_labels = ["both_ends", "head_end", "crank_end"]
         self.parameters['acting_label'] = acting_labels[self.comboBox_cylinder_acting.currentIndex()]
 
         if self.number_of_cylinders > 1:
@@ -802,6 +823,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
             surface_velocity = flow_rate / surface_area
 
+            # remove the zero frequency component
             _freq = freq[1:]
             _surface_velocity = surface_velocity[1:]
 

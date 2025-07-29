@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>783</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -424,7 +424,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -485,7 +485,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -636,7 +636,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -667,7 +667,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -847,7 +847,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -909,7 +909,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -940,7 +940,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -1155,7 +1155,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -1343,7 +1343,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -1374,7 +1374,7 @@
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -1729,7 +1729,7 @@
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="../../../../icons/resources.qrc">
                         <normaloff>:/icons/broom.png</normaloff>:/icons/broom.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -1759,20 +1759,20 @@
                      <widget class="QLabel" name="label_suction_temperature_unit">
                       <property name="minimumSize">
                        <size>
-                        <width>72</width>
+                        <width>80</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>72</width>
+                        <width>86</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -2346,20 +2346,20 @@
                      <widget class="QLabel" name="label_suction_pressure_unit">
                       <property name="minimumSize">
                        <size>
-                        <width>72</width>
+                        <width>80</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>72</width>
+                        <width>86</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -2438,20 +2438,20 @@
                      <widget class="QLabel" name="label_molar_mass_unit">
                       <property name="minimumSize">
                        <size>
-                        <width>72</width>
+                        <width>80</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>72</width>
+                        <width>86</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -2469,20 +2469,20 @@
                      <widget class="QLabel" name="label_discharge_pressure_unit">
                       <property name="minimumSize">
                        <size>
-                        <width>72</width>
+                        <width>80</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>72</width>
+                        <width>86</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -2563,20 +2563,20 @@
                      <widget class="QLabel" name="label_discharge_temperature_unit">
                       <property name="minimumSize">
                        <size>
-                        <width>72</width>
+                        <width>80</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>72</width>
+                        <width>86</width>
                         <height>28</height>
                        </size>
                       </property>
                       <property name="font">
                        <font>
                         <family>MS Shell Dlg 2</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                         <weight>50</weight>
                         <italic>false</italic>
                         <bold>false</bold>
@@ -2709,8 +2709,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>448</width>
-                  <height>512</height>
+                  <width>460</width>
+                  <height>566</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_18">
@@ -4345,6 +4345,8 @@ at suction</string>
   <tabstop>pushButton_reset</tabstop>
   <tabstop>pushButton_remove</tabstop>
  </tabstops>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
