@@ -469,10 +469,7 @@ class MeshSetupInputs(MesherSetup_UI):
 
     def config_control_quality_table(self):
         mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
-        if (
-            mesh_quality_statistics is None
-            or mesh_quality_statistics == app().project.model.mesh.mesh_quality_temp
-        ):
+        if mesh_quality_statistics is None:
             mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
 
         app().project.model.mesh.mesh_quality_temp = mesh_quality_statistics
