@@ -49,3 +49,7 @@ class InvalidGeometryForAcousticAnalysisError(ModelException):
 
 class IncompleteSetupError(ModelException):
     pass
+
+
+class AnalysisCanceledException(VibraException):
+    pass

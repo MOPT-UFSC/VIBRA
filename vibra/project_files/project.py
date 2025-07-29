@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 from shutil import copy
-from time import sleep, time
+from time import time
 
 from vibra import TEMP_PROJECT_FILE
 from vibra.engine import AnalysisID
@@ -287,6 +287,12 @@ class Project:
 
         else:
             raise NotImplementedError("Not implemented analysis")
+
+    def cancel_analysis(self):
+        if self.structural_harmonic_solver is not None:
+            self.structural_harmonic_solver.cancel_analysis()
+        if self.acoustic_harmonic_solver is not None:
+            self.acoustic_harmonic_solver.cancel_analysis()
 
     def is_there_a_valid_solution(self):
 

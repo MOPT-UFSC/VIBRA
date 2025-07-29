@@ -1,5 +1,7 @@
 
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
+from vibra.errors import AnalysisCanceledException
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.assemblers.structural_assembler import StructuralAssembler
@@ -21,8 +23,11 @@ class StructuralHarmonicSolver:
         self.disp_dofs = None
         self.solution = None
         self.loads = None
-
+        self.canceled = False
         self.analysis_type = "structural"
+
+    def cancel_analysis(self):
+        self.canceled = True
 
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str):
@@ -86,6 +91,8 @@ class StructuralHarmonicSolver:
     def solve_direct_method(self, print_log=False):
         """ This method solves the structural harmonic analysis for both damped and undamped problems.
         """
+        self.canceled = False
+
         frequencies = self.assembler.model.frequencies
         self.get_max_min_values_of_displacements.cache_clear()
 
@@ -106,6 +113,9 @@ class StructuralHarmonicSolver:
         logging.info(f"Solving harmonic analysis... [0/{len(frequencies)}]")
 
         for i, freq in enumerate(frequencies):
+            if self.canceled:
+                raise AnalysisCanceledException("Structural harmonic analysis was cancelled by the user.")
+
             logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{len(frequencies)}]")
 
             if print_log:

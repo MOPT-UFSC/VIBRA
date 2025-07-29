@@ -1,6 +1,7 @@
 
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 from vibra.engine.properties.fluid import Fluid
+from vibra.errors import AnalysisCanceledException
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -23,8 +24,11 @@ class AcousticHarmonicSolver:
         self.loads = None
         self.solution = None
         self.dissipation_model = None
+        self.canceled = False
         self.analysis_type = "acoustic"
 
+    def cancel_analysis(self):
+        self.canceled = True
 
     def load_dissipation_model(self, data):
         self.dissipation_model = data
@@ -101,6 +105,7 @@ class AcousticHarmonicSolver:
         print_log: bool, optional
             This argument controls the printing of the solution steps to the terminal.
         """
+        self.canceled = False
 
         logging.info(f"Solving harmonic analysis (direct method)... [10/100]")
 
@@ -133,6 +138,8 @@ class AcousticHarmonicSolver:
         frequency_dependent = self.assembler.frequency_dependent
 
         for i, freq in enumerate(frequencies):
+            if self.canceled:
+                raise AnalysisCanceledException("Acoustic harmonic analysis was cancelled by the user.")
 
             logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i+1}/{len(frequencies)}]")
 

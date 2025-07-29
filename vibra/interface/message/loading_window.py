@@ -1,5 +1,6 @@
 import logging
 import re
+from time import sleep
 from typing import Callable
 
 from PySide6.QtCore import QEvent, QObject, QRunnable, Qt, QThread, QThreadPool, Signal
@@ -61,6 +62,11 @@ class LoadTask:
             QApplication.processEvents()  # Flushes the event loop to avoid freezing
             worker.run()
 
+        # Waits for the worker to finish if it is still running with the window closed
+        while worker.running:
+            QApplication.processEvents()
+            sleep(0.1)
+
         # Restores the previous cursor
         QApplication.restoreOverrideCursor()
 
@@ -76,6 +82,7 @@ class LoadTask:
 
     def set_cancel_callback(self, callback: Callable):
         # Yes, python allows me to just override the method like this
+        self.allow_cancel = True
         self.cancel_callback = callback
 
     def cancel_callback(self): ...
@@ -146,15 +153,18 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.result = None
         self.exception = None
+        self.running = False
         self.signal = WorkerSignal()
 
     def run(self):
         try:
+            self.running = True
             self.result = self.function(*self.args, **self.kwargs)
         except Exception as e:
             self.exception = e
             self.signal.error.emit(e)
         finally:
+            self.running = False
             self.signal.finished.emit()
 
 

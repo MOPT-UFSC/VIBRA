@@ -13,7 +13,7 @@ from vibra.interface.analysis.structural_modal_analysis_input import StructuralM
 from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
 from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
 from vibra.interface.message.exception_message import ExceptionMessage
-from vibra.errors import ModelException
+from vibra.errors import ModelException, AnalysisCanceledException
 
 from typing import Literal
 
@@ -220,7 +220,10 @@ class AnalysisToolbar(QToolBar):
                 return
         
         try:
-            LoadTask(app().project.run_analysis).run()
+            task = LoadTask(app().project.run_analysis)
+            if app().project.analysis_id.is_harmonic():
+                task.set_cancel_callback(app().project.cancel_analysis)
+            task.run()
         
         except ModelException as exception:
             app().main_window.action_model_workspace_callback()
@@ -231,11 +234,15 @@ class AnalysisToolbar(QToolBar):
             )
             ExceptionMessage(exception).exec()
         
+        except AnalysisCanceledException:
+            return
+
         else:
             analysis = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
             app().main_window.disable_advanced_acoustic_plots_buttons(AnalysisID.is_modal(analysis))
             app().main_window.results_viewer_widget.results_viewer_items.update_items()
             app().main_window.configure_results_render_widget()
+            app().main_window.update_symbols()
 
         self.set_pushbutton_reset_solution_enabled()
 
@@ -291,7 +298,6 @@ class AnalysisToolbar(QToolBar):
 
         if harmonic.solve_analysis:
             self.run_analysis()
-            app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
         analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
