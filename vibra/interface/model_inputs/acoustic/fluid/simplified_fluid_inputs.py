@@ -22,9 +22,13 @@ class SimplifiedFluidInputs(SimplifiedFluidInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
+        self.update_workspace = kwargs.get("update_workspace", True)
+
         self.main_window = app().main_window
         self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+
+        if self.update_workspace:
+            self.main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
