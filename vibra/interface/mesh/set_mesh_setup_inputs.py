@@ -468,9 +468,9 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
-        mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
-        if mesh_quality_statistics is None:
-            mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
+        mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
+        if not mesh_quality_statistics:
+            mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
 
         app().project.model.mesh.mesh_quality_temp = mesh_quality_statistics
         if not mesh_quality_statistics:

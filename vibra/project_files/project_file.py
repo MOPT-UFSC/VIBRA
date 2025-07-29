@@ -258,8 +258,9 @@ class ProjectFile:
             if not self.filebox.contains(self.mesh_data_filename):
                 return None, None, None
 
-            elif mesh_quality_data:
-                mesh_quality_data = self.filebox.read(self.mesh_quality_data_filename)
+            mesh_quality_data = self.filebox.read(self.mesh_quality_data_filename)
+
+            if mesh_quality_data:
                 mesh_quality_statistics = mesh_quality_data["statistics"]
                 mesh_bad_elements = mesh_quality_data["bad_elements"]
                 mesh_quality_histograms_data = mesh_quality_data["histograms_data"]
