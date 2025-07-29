@@ -6,7 +6,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+
+
 
 from vibra import app
 from vibra.engine.mesher import gmsh_constants
@@ -575,10 +580,13 @@ class MeshSetupInputs(MesherSetup_UI):
             )
         norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
         colors = cmap(norm(bin_centers))
-        plt.figure(figsize=(10, 5))
+
+        fig = Figure(figsize=(10, 5))
+        canvas = FigureCanvas(fig)
+        ax = fig.add_subplot(111)
 
         for i in range(len(hist)):
-            plt.bar(
+            ax.bar(
                 bin_edges[i],
                 hist[i],
                 width=bin_edges[i + 1] - bin_edges[i],
@@ -588,21 +596,22 @@ class MeshSetupInputs(MesherSetup_UI):
                 alpha=0.9,
             )
 
-        plt.axvline(
+        ax.axvline(
             percentile_5,
             color="grey",
             linestyle="--",
             linewidth=2,
             label="5% percentile",
         )
-        plt.axvline(
+        ax.axvline(
             percentile_95,
             color="black",
             linestyle="--",
             linewidth=2,
             label="95% percentile",
         )
-        plt.legend()
+
+        ax.legend()
 
         title = {
             "gamma": "Gamma",
@@ -611,12 +620,22 @@ class MeshSetupInputs(MesherSetup_UI):
             "aspectRatio": "Aspect Ratio",
         }
 
-        plt.title(f"{title[parameter[parameter_idx]]} histogram")
-        plt.xlabel("Parameter value")
-        plt.ylabel("Number of elements")
-        plt.tight_layout()
-        plt.grid(True, linestyle=":", alpha=0.5)
-        plt.show()
+        ax.set_title(f"{title[parameter[parameter_idx]]} histogram")
+        ax.set_xlabel("Parameter value")
+        ax.set_ylabel("Number of elements")
+        ax.grid(True, linestyle=":", alpha=0.5)
+        fig.tight_layout()
+
+        # Insere no layout
+        layout = QVBoxLayout()
+        layout.addWidget(canvas)
+        plot_ui = MeshQualityHistogramPlot_UI()
+        plot_ui.widget_plot.setLayout(layout)
+
+        canvas.draw()
+        plot_ui.setWindowTitle("Mesh quality histogram plotter")
+        plot_ui.setWindowFlag(Qt.WindowStaysOnTopHint)
+        plot_ui.exec_()
 
     def show_bad_elements(self):
         parameter_idx = self.tableWidget_mesh_quality.currentIndex().row()

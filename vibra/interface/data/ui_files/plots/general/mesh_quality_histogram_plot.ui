@@ -146,7 +146,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Mesh qualilty histogram plotter</string>
+         <string>Mesh quality histogram plotter</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -162,8 +162,4 @@
   <include location="../../../icons/resources.qrc"/>
  </resources>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroup_cursor"/>
-  <buttongroup name="buttonGroup_y_data"/>
- </buttongroups>
 </ui>
