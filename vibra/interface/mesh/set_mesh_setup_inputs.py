@@ -2,16 +2,17 @@ import logging
 from collections import defaultdict
 
 import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
 import numpy as np
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
-
-
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QColor
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QHeaderView,
+    QTableWidgetItem,
+    QVBoxLayout,
+)
 
 from vibra import app
 from vibra.engine.mesher import gmsh_constants
@@ -25,7 +26,9 @@ from vibra.engine.mesher.element_type import (
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
-from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
+from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import (
+    MeshQualityHistogramPlot_UI,
+)
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -466,9 +469,12 @@ class MeshSetupInputs(MesherSetup_UI):
 
     def config_control_quality_table(self):
         mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
-        if mesh_quality_statistics is None or mesh_quality_statistics == app().project.model.mesh.mesh_quality_temp:
+        if (
+            mesh_quality_statistics is None
+            or mesh_quality_statistics == app().project.model.mesh.mesh_quality_temp
+        ):
             mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
-        
+
         app().project.model.mesh.mesh_quality_temp = mesh_quality_statistics
         if not mesh_quality_statistics:
             return
@@ -476,7 +482,8 @@ class MeshSetupInputs(MesherSetup_UI):
         self.quality_bins = app().project.model.mesh.quality_bins
 
         param_map = {
-            0: ("gamma",
+            0: (
+                "gamma",
                 "Gamma",
                 lambda v: "green"
                 if v > self.quality_bins["gamma"][0]
@@ -484,7 +491,8 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["gamma"][1]
                 else "red",
             ),
-            1: ("volume",
+            1: (
+                "volume",
                 "Volume (mm³)",
                 lambda v: "green"
                 if v > self.quality_bins["volume"][0]
@@ -492,7 +500,8 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["volume"][1]
                 else "red",
             ),
-            2: ("minSJ",
+            2: (
+                "minSJ",
                 "Scaled Jacobian",
                 lambda v: "green"
                 if v > self.quality_bins["minSJ"][0]
@@ -500,7 +509,8 @@ class MeshSetupInputs(MesherSetup_UI):
                 if v > self.quality_bins["minSJ"][1]
                 else "red",
             ),
-            3: ("aspectRatio",
+            3: (
+                "aspectRatio",
                 "Aspect Ratio",
                 lambda v: "green"
                 if v < self.quality_bins["aspectRatio"][0]
@@ -511,21 +521,19 @@ class MeshSetupInputs(MesherSetup_UI):
         }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
-        # This should be done in the done in the ui file 
+        # This should be done in the done in the ui file
         # but it kept going like this so I'm leaving it here.
-        tooltips = ["The Gamma quality metric is the ratio between the radius of the inscribed sphere and\n" + 
-                    "the radius of the circumscribed sphere of an element. It ranges from 0 to 1, \n" + 
-                    "where values closer to 1 indicate more regular, well-shaped elements.\n",
-
-                    "The Volume metric is simply the calculated volume of the elements. \n" + 
-                    "Very small volumes possibly indicate collapsed elements, wich are a problem.\n",
-
-                    "Scaled Jacobian is the ratio between the minimum and maximum Jacobian determinant inside the element.\n" +
-                    "Values close to 1 indicate good shape; values ≤ 0 mean inverted or invalid elements.",
-
-                    "The Aspect Ratio measures how stretched a tetrahedral element is, defined as the ratio between the longest edge \n" +
-                    "and the shortest edge. Values close to 1 indicate well-shaped elements; higher values mean the element is elongated or distorted.\n"
-        ] 
+        tooltips = [
+            "The Gamma quality metric is the ratio between the radius of the inscribed sphere and\n"
+            + "the radius of the circumscribed sphere of an element. It ranges from 0 to 1, \n"
+            + "where values closer to 1 indicate more regular, well-shaped elements.\n",
+            "The Volume metric is simply the calculated volume of the elements. \n"
+            + "Very small volumes possibly indicate collapsed elements, wich are a problem.\n",
+            "Scaled Jacobian is the ratio between the minimum and maximum Jacobian determinant inside the element.\n"
+            + "Values close to 1 indicate good shape; values ≤ 0 mean inverted or invalid elements.",
+            "The Aspect Ratio measures how stretched a tetrahedral element is, defined as the ratio between the longest edge \n"
+            + "and the shortest edge. Values close to 1 indicate well-shaped elements; higher values mean the element is elongated or distorted.\n",
+        ]
 
         for i, (key, (gmsh_label, label, color_fn)) in enumerate(param_map.items()):
             name_item = QTableWidgetItem(label)
@@ -533,9 +541,15 @@ class MeshSetupInputs(MesherSetup_UI):
 
             self.tableWidget_mesh_quality.setItem(i, 0, name_item)
 
-            worst_value_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][0], 3)))
-            avg_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][1], 3)))
-            stdev_item = QTableWidgetItem(str(round(mesh_quality_statistics[gmsh_label][2], 3)))
+            worst_value_item = QTableWidgetItem(
+                str(round(mesh_quality_statistics[gmsh_label][0], 3))
+            )
+            avg_item = QTableWidgetItem(
+                str(round(mesh_quality_statistics[gmsh_label][1], 3))
+            )
+            stdev_item = QTableWidgetItem(
+                str(round(mesh_quality_statistics[gmsh_label][2], 3))
+            )
 
             worst_value_color = color_fn(mesh_quality_statistics[gmsh_label][0])
             worst_value_item.setForeground(QBrush(QColor(worst_value_color)))
@@ -560,10 +574,16 @@ class MeshSetupInputs(MesherSetup_UI):
         }
         mesh_quality_data = app().file.read_mesh_quality_data_from_file()[2]
         if mesh_quality_data:
-            hist, bin_edges, percentile_5, percentile_95 = mesh_quality_data[parameter[parameter_idx]]
+            hist, bin_edges, percentile_5, percentile_95 = mesh_quality_data[
+                parameter[parameter_idx]
+            ]
         else:
-            hist, bin_edges, percentile_5, percentile_95 = app().project.model.mesh.mesh_quality_histograms_data[parameter[parameter_idx]]
-        
+            hist, bin_edges, percentile_5, percentile_95 = (
+                app().project.model.mesh.mesh_quality_histograms_data[
+                    parameter[parameter_idx]
+                ]
+            )
+
         bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         bin_min = self.quality_bins[parameter[parameter_idx]][1]
@@ -650,7 +670,9 @@ class MeshSetupInputs(MesherSetup_UI):
         if mesh_quality_data:
             mesh_bad_elements = mesh_quality_data[parameter[parameter_idx]]
         else:
-            mesh_bad_elements = app().project.model.mesh.mesh_bad_elements[parameter[parameter_idx]]
+            mesh_bad_elements = app().project.model.mesh.mesh_bad_elements[
+                parameter[parameter_idx]
+            ]
 
         if not mesh_bad_elements:
             PrintMessageInput(
