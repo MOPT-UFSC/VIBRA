@@ -6,10 +6,19 @@ class JCAData:
     model: str
     porosity: float
     tortuosity: float
-    viscous_characteristic_length: float
+    viscous_characteristic_length: float    
     thermal_characteristic_length: float
     flow_resistivity: float
 
     def get_data(self):
-        return [self.porosity, self.tortuosity, self.viscous_characteristic_length,
-                self.thermal_characteristic_length, self.flow_resistivity]
+        return {"porosity": self.porosity, "tortuosity": self.tortuosity, 
+                "viscous_characteristic_length": self.viscous_characteristic_length, 
+                "thermal_characteristic_length": self.thermal_characteristic_length, 
+                "flow_resistivity": self.flow_resistivity, "model": self.model}
+
+    @classmethod
+    def set_data(cls, data: dict) -> "JCAData":
+        if "values" in data.keys():
+            data.pop("values")
+
+        return JCAData(**data)

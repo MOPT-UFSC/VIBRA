@@ -48,7 +48,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self.map_model_id_to_volumes: Dict[str, List[str]] = dict()
+        self.map_model_id_to_volumes: Dict[str, List[str]] = defaultdict(list)
         self.map_model_id_to_model: Dict[str, DelanyBazleyData|JCAData] = dict()
 
         self._initialize()
@@ -149,27 +149,27 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if pm_model == "Delany-Bazley":
 
             self.tabWidget_main.setCurrentIndex(0)
-            self.doubleSpinBox_C1_DB.setValue(pm_data["C1"])
-            self.doubleSpinBox_C2_DB.setValue(pm_data["C2"])
-            self.doubleSpinBox_C3_DB.setValue(pm_data["C3"])
-            self.doubleSpinBox_C4_DB.setValue(pm_data["C4"])
-            self.doubleSpinBox_C5_DB.setValue(pm_data["C5"])
-            self.doubleSpinBox_C6_DB.setValue(pm_data["C6"])
-            self.doubleSpinBox_C7_DB.setValue(pm_data["C7"])
-            self.doubleSpinBox_C8_DB.setValue(pm_data["C8"])
+            self.doubleSpinBox_C1_DB.setValue(pm_data["c1"])
+            self.doubleSpinBox_C2_DB.setValue(pm_data["c2"])
+            self.doubleSpinBox_C3_DB.setValue(pm_data["c3"])
+            self.doubleSpinBox_C4_DB.setValue(pm_data["c4"])
+            self.doubleSpinBox_C5_DB.setValue(pm_data["c5"])
+            self.doubleSpinBox_C6_DB.setValue(pm_data["c6"])
+            self.doubleSpinBox_C7_DB.setValue(pm_data["c7"])
+            self.doubleSpinBox_C8_DB.setValue(pm_data["c8"])
             self.doubleSpinBox_flow_resistivity_DB.setValue(pm_data["flow_resistivity"])       
 
         elif pm_model == "Delany-Bazley-Miki":
 
             self.tabWidget_main.setCurrentIndex(1)
-            self.doubleSpinBox_C1_DBM.setValue(pm_data["C1"])
-            self.doubleSpinBox_C2_DBM.setValue(pm_data["C2"])
-            self.doubleSpinBox_C3_DBM.setValue(pm_data["C3"])
-            self.doubleSpinBox_C4_DBM.setValue(pm_data["C4"])
-            self.doubleSpinBox_C5_DBM.setValue(pm_data["C5"])
-            self.doubleSpinBox_C6_DBM.setValue(pm_data["C6"])
-            self.doubleSpinBox_C7_DBM.setValue(pm_data["C7"])
-            self.doubleSpinBox_C8_DBM.setValue(pm_data["C8"])
+            self.doubleSpinBox_C1_DBM.setValue(pm_data["c1"])
+            self.doubleSpinBox_C2_DBM.setValue(pm_data["c2"])
+            self.doubleSpinBox_C3_DBM.setValue(pm_data["c3"])
+            self.doubleSpinBox_C4_DBM.setValue(pm_data["c4"])
+            self.doubleSpinBox_C5_DBM.setValue(pm_data["c5"])
+            self.doubleSpinBox_C6_DBM.setValue(pm_data["c6"])
+            self.doubleSpinBox_C7_DBM.setValue(pm_data["c7"])
+            self.doubleSpinBox_C8_DBM.setValue(pm_data["c8"])
             self.doubleSpinBox_flow_resistivity_DB.setValue(pm_data["flow_resistivity"])
 
         elif pm_model in ["Jhonson-Champoux-Allard", ""]:
@@ -305,36 +305,30 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setTabVisible(4, False)
 
     def map_existing_porous_materials(self):
-        
-        aux = defaultdict(list)
+        models = list()
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
 
             if property != "porous_material_model":
                 continue
 
-            model_inputs = list()
-            for key, value in data.items():
-                if key == "values":
-                    continue
+            model = None
+            if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+                model = DelanyBazleyData.set_data(data)
+            else:
+                model = JCAData.set_data(data)
+            
+            if model not in models:
+                models.append(model)
 
-                if key == "model":
-                    model = value
-                else:
-                    model_inputs.append(value)
+            model_id = models.index(model) + 1
+            self.map_model_id_to_model[model_id] = model
 
-            aux[model, tuple(model_inputs)].append(volume_id)
-
-        identifier = 0
-        self.porous_materials_mapping = dict()
-        for (model, model_inputs), volume_ids in aux.items():
-            identifier += 1
-            self.porous_materials_mapping[model, identifier, model_inputs] = volume_ids
-        
-        print(self.porous_materials_mapping)
+            if volume_id not in self.map_model_id_to_volumes[model_id]:
+                self.map_model_id_to_volumes[model_id].append(volume_id)
 
     def load_info(self):
-        # self.map_existing_porous_materials()
+        self.map_existing_porous_materials()
         self.treeWidget_porous_material_model.clear()
 
         for model_id, volume_ids in self.map_model_id_to_volumes.items():
@@ -356,7 +350,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tableWidget_porous_materials.setItem(0, j, QTableWidgetItem(str(model_id)))
             self.tableWidget_porous_materials.setItem(1, j, QTableWidgetItem(model_data.model))
 
-            for k, model_input in enumerate(model_data.get_data()):
+            model_data_dict = model_data.get_data()
+            for k, model_input in enumerate(model_data_dict.values()):
                 self.tableWidget_porous_materials.setItem(2+k, j, QTableWidgetItem(str(model_input)))
 
         for i in range(self.tableWidget_porous_materials.rowCount()):
@@ -510,11 +505,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.map_model_id_to_volumes[model_id] = volume_ids
             self.map_model_id_to_model[model_id] = model_data
 
-            # for volume_id in volume_ids:
-            #     self.properties._set_property("porous_material_model", model_data, volume=volume_id)
+            for volume_id in volume_ids:
+                self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 
-            # app().file.write_model_properties_in_file()
-            # self.actions_to_finalize()
+            app().file.write_model_properties_in_file()
+            self.actions_to_finalize()
             self.load_info()
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
@@ -607,19 +602,19 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         tab_index = self.tabWidget_main.currentIndex()
 
-        if tab_index == 0:
+        if tab_index == PMModels.DELANY_BAZLEY:
             pm_data = self.get_Delany_Bazley_model_inputs()
             rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
 
-        elif tab_index == 1:
+        elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
             pm_data = self.get_Delany_Bazley_Miki_model_inputs()
             rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
 
-        elif tab_index == 2:
+        elif tab_index == PMModels.JCA:
             pm_data = self.get_Jhonson_Champoux_Allard_model_inputs()
             rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data)
 
-        elif tab_index == 3:
+        elif tab_index == PMModels.JCAL:
             pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_inputs()
             rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data)
 
@@ -629,13 +624,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_porous_material_model(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == PMModels.DELANY_BAZLEY:
             return "Delany-Bazley"
-        elif tab_index == 1:
+        elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
             return "Delany-Bazley-Miki"
-        elif tab_index == 2:
+        elif tab_index == PMModels.JCA:
             return "Jhonson-Champoux-Allard"
-        elif tab_index == 3:
+        elif tab_index == PMModels.JCAL:
             return "Jhonson-Champoux-Allard-Lafarge"
 
     def plot_data_callback(self):
