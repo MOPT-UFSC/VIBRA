@@ -215,10 +215,6 @@ class Mesh:
             self.process_geometry_information()
             self.process_downwards_adjacencies_from_entities()
             self.process_upwards_adjacencies_from_entities()
-            self.calculate_mesh_quality_parameters()
-            self.calculate_mesh_quality_statistics()
-            self.calculate_mesh_bad_elements()
-            self.calculate_mesh_quality_histograms()
 
             gmsh.model.mesh.removeDuplicateNodes()
 
@@ -228,6 +224,11 @@ class Mesh:
 
         logging.info("Post-processing mesh... [70/100]")
         self.post_process_mesh_data()
+        self.calculate_mesh_quality_parameters()
+        self.calculate_mesh_quality_statistics()
+        self.calculate_mesh_bad_elements()
+        self.calculate_mesh_quality_histograms()
+
 
         if gmsh_gui:
             gmsh.fltk.run()
@@ -1759,7 +1760,8 @@ class Mesh:
                 elif quality < self.quality_bins[parameter][1]:
                     bad_elements.append(element)
 
-            self.mesh_bad_elements[parameter] = bad_elements
+            bad_elements_vibra = [int(self.map_solid_elements[gmsh_tags]) for gmsh_tags in bad_elements]
+            self.mesh_bad_elements[parameter] = bad_elements_vibra
             
     def calculate_mesh_quality_histograms(self):
         if not self.mesh_quality:
