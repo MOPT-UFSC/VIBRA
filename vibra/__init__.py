@@ -17,6 +17,7 @@ VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
 
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
+TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
 UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
 EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
