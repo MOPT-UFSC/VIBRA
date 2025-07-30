@@ -152,7 +152,6 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
     def get_response(self, selection_type: str, selected_id: int, dof_index: int):
 
         surface_ids = list()
-        element_3d, element_2d = app().project.structural_harmonic_solver.assembler.get_element()
 
         if selection_type == "surface":
             surface_ids.append(selected_id)
@@ -183,8 +182,10 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
             surf_data = self.model.properties._get_property("surface_thickness", surface=surf_id)
             if isinstance(surf_data, dict):
+                element_2d = self.model.structural_element_2d
                 dofs_per_node = element_2d.DOFS_PER_NODE
             else:
+                element_3d = self.model.structural_element_2d
                 dofs_per_node = element_3d.DOFS_PER_NODE
 
             gdofs = dofs_per_node * nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)

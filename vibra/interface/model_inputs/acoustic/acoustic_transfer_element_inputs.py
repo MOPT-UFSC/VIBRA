@@ -49,7 +49,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Acoustic transfer element data")
+        self.setWindowTitle("Vibra")
 
     def _reset_variables(self):
         self.keep_window_open = True
@@ -315,8 +315,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def remove_model_excitations(self):
 
+        model_excitations = [
+                             "acoustic_pressure", 
+                             "surface_velocity", 
+                             "reciprocating_compressor_excitation", 
+                             "specific_impedance",
+                             ]
+
         properties_to_remove = defaultdict(list)
-        for property in ["acoustic_pressure", "surface_velocity", "compressor_excitation", "specific_impedance"]:
+        for property in model_excitations:
             for key in self.properties.surface_properties.keys():
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
@@ -349,9 +356,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
-
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
 
         surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
 

@@ -99,12 +99,6 @@ class Project:
     def set_mesh_setup(self, mesh_setup):
         self.model.set_mesh_setup(mesh_setup)
 
-    def set_acoustic_element_to_model(self):
-        self.model.set_acoustic_element(self.acoustic_assembler.get_element())
-
-    def set_structural_element_to_model(self):
-        self.model.set_structural_element(self.structural_assembler.get_element())
-
     def generate_mesh(self):
         if self.model is None:
             return
@@ -161,7 +155,6 @@ class Project:
 
             # structural harmonic analysis - direct method
             if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.set_structural_element_to_model()
                 self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler)
                 self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
@@ -172,19 +165,16 @@ class Project:
 
             # structural modal analysis
             elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
-                self.set_structural_element_to_model()
                 self.structural_modal_solver = StructuralModalSolver(self.structural_assembler)
                 self.analysis_id = AnalysisID.STRUCTURAL_MODAL
 
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.set_acoustic_element_to_model()
                 self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler)
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
 
             # acoustic modal analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
-                self.set_acoustic_element_to_model()
                 self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler)
                 self.analysis_id = AnalysisID.ACOUSTIC_MODAL
 
@@ -205,10 +195,6 @@ class Project:
 
             else:
                 raise NotImplementedError("Not implemented solver")
-
-    def set_element_formulation(self, element):
-        self.acoustic_assembler.set_element_formulation(element)
-        self.structural_assembler.set_element_formulation(element)
 
     def solve_acoustic_modal_analysis(self):
         self.model.reset_dissipation_model_properties()

@@ -125,14 +125,12 @@ def load_external_mesh_and_solve():
                 "averaged" : False }
 
     # Impedance data - constant value
-
-    Zo = fluid.impedance
     data_Z = {  
-              "real_values" : [Zo],
+              "real_values" : [fluid.impedance],
               "imag_values" : [0],
               }
 
-    # Impedance data - table of values
+    ## Impedance data - table of values
 
     # complex_fluid_data = get_complex_impedance_data()
     # impedance_data = complex_fluid_data["complex_impedance"]
@@ -176,7 +174,7 @@ def load_external_mesh_and_solve():
     assembler.process_assemble()
     
     # t0 = time()
-    # # Run modal analysis
+    ## Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
     # modal_solver.solve()
     # natural_frequencies = modal_solver.natural_frequencies
@@ -197,8 +195,7 @@ def load_external_mesh_and_solve():
 
     t0 = time()
 
-    element_3d, _ = assembler.get_element()
-    element_3d.reorder_connect()
+    element_3d = model.acoustic_element_3d
 
     list_nodes = list()
     for tag, surface_nodes in mesh.nodes_from_surfaces.items():
@@ -249,22 +246,7 @@ def load_external_mesh_and_solve():
     if solution is not None:
 
         imported_results = get_external_results()
-        
-        # pressure_at_input_face = imported_results["input_face_pressure"]
-        # pressure_at_output_face = imported_results["output_face_pressure"]
-        # velocity_at_input_face = imported_results["input_face_velocity"]
-        # velocity_at_output_face = imported_results["output_face_velocity"]
-        # pressure_at_node_6463 = imported_results["pressure_at_node_6463"]
-        # pressure_at_node_6531 = imported_results["pressure_at_node_6531"]
-        # velocity_at_node_6463 = imported_results["velocity_at_node_6463"]
-        # velocity_at_node_6531 = imported_results["velocity_at_node_6531"]
         TL_data = imported_results["transmission_loss"] # ports enabled
-
-        # freq_WB = pressure_at_input_face[:, 0]
-        # input_pressure_WB = pressure_at_input_face[:, 1] + 1j * pressure_at_input_face[:, 2]
-
-        # freq_WB = pressure_at_output_face[:, 0]
-        # output_pressure_WB = pressure_at_output_face[:, 1] + 1j * pressure_at_output_face[:, 2]
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
@@ -455,18 +437,6 @@ def load_external_mesh_and_solve():
         ax13.set_title(title)
         ax13.grid()
         ax13.legend()
-
-        # fig14, ax14 = plt.subplots()
-        # ax14.semilogy(freq_WB, abs_diff_input_face, 'b', label='ANSYS')
-        # ax14.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title=title)
-        # ax14.grid()
-        # ax14.legend()
-
-        # fig15, ax15 = plt.subplots()
-        # ax15.semilogy(freq_WB, abs_diff_output_face, 'b', label='ANSYS')
-        # ax15.set(xlabel='Frequency [Hz]', ylabel='Acoustic Pressure [Pa] - Absolute', title=title)
-        # ax15.grid()
-        # ax15.legend()
 
         plt.show()
 

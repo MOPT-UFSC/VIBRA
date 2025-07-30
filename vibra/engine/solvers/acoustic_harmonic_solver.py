@@ -116,10 +116,7 @@ class AcousticHarmonicSolver:
         C_visc = self.assembler.visc_damping_matrix
         
         # mass flow load vector
-        Q = self.assembler.mass_flow_vectors
-
-        # the viscous-related source term is temporary disabled
-        Q_visc = self.assembler.Qvisc_damping_matrix * 0
+        f_Q = self.assembler.mass_flow_vectors
 
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
@@ -148,11 +145,14 @@ class AcousticHarmonicSolver:
 
             if i == 0:
 
-                # compute the prescribed dofs-related load vector
-                F_eq = self.get_prescribed_pressure_model_excitation()
+                # compute the mass source load vector
+                f_Qms = self.assembler.compute_mass_source_load_vector(1)
 
-                # compute the load vector F for omega = 1
-                F = Q_visc @ Q[:, i] - 1j * Q[:, i] - F_eq
+                # compute the prescribed dofs-related load vector
+                f_eq = self.get_prescribed_pressure_model_excitation()
+
+                # compute the load vector f for omega = 1
+                f = f_Qms - 1j * f_Q[:, i] - f_eq
 
                 # compose the damping matrix [C]
                 C = C_imp + C_visc
@@ -161,12 +161,12 @@ class AcousticHarmonicSolver:
                 A = K - M + 1j * C
 
                 is_A_complex = np.any(np.imag(A.data))
-                is_F_complex = np.any(np.imag(F)) or np.any(np.imag(F_eq))
-                is_complex = is_A_complex or is_F_complex
+                is_f_complex = np.any(np.imag(f)) or np.any(np.imag(f_eq)) or np.any(np.imag(f_Qms))
+                is_complex = is_A_complex or is_f_complex
 
                 # initialize the solver based on data types
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
-                del A, F
+                del A, f
 
             else:
 
@@ -176,34 +176,43 @@ class AcousticHarmonicSolver:
                 C = C_imp + C_visc
 
                 if frequency_dependent:
+
                     # reassemble the global mass and stiffness matrices
                     factor_K, factor_M = self.assembler.compute_global_matrices_factors(index=i)
                     self.assembler.assemble_global_mass_matrix(factor_M)
                     self.assembler.assemble_global_stiffness_matrix(factor_K)
+
                     M = self.assembler.mass_matrix
                     K = self.assembler.stiffness_matrix
 
-                # update the prescribed dofs-related load vector for each frequency step
-                F_eq = self.get_prescribed_pressure_model_excitation(index=i)
+                    # reassemble the mass source matrices
+                    self.assembler.assemble_mass_source_matrices_from_surfaces(index=i)
+                    self.assembler.assemble_mass_source_matrices_from_volumes(index=i)
 
-            # define the linear system equation terms [A]{X} = {F}
+                # update the prescribed dofs-related load vector for each frequency step
+                f_eq = self.get_prescribed_pressure_model_excitation(index=i)
+
+            # compute the mass source load vector
+            f_Qms = self.assembler.compute_mass_source_load_vector(omega, index=i)
+
+            # define the linear system equation terms [A]{x} = {f}
             A = K - (omega**2) * M + 1j * omega * C
-            F = Q_visc @ Q[:, i] - 1j * omega * Q[:, i] - F_eq
+            f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
 
             if not is_complex:
                 A.data = np.real(A.data)
-                F = np.real(F)
+                f = np.real(f)
 
             # convert the symmetric matrix [A] into an upper triangular matrix to enhance the solver's
             # performance and reduce the amount of memory required to compute the solution
             A = triu(A, format="csr")
 
             # compute the solution for each frequency step
-            solution[:, i] = linear_solver.solve(A, F)
+            solution[:, i] = linear_solver.solve(A, f)
 
             # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
-            del A, F
+            del A, f
 
         logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
 
@@ -302,8 +311,7 @@ class AcousticHarmonicSolver:
         """
 
         frequencies = self.assembler.model.frequencies
-        element_3d, _ = self.assembler.get_element()
-        element_3d.reorder_connect()
+        element_3d = self.assembler.model.acoustic_element_3d
 
         data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id)
@@ -669,7 +677,7 @@ class AcousticHarmonicSolver:
         if len(particle_velocities.shape) == 1:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
-        _, element_2d = self.assembler.get_element()
+        element_2d = self.assembler.element_2d
 
         sound_power = 0.
         for i, e_connect in enumerate(connectivities):
@@ -718,7 +726,7 @@ class AcousticHarmonicSolver:
         if len(sound_intensities.shape) == 1:
             sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
 
-        _, element_2d = self.assembler.get_element()
+        element_2d = self.assembler.element_2d
 
         sound_power = 0.
         for i, e_connect in enumerate(connectivities):

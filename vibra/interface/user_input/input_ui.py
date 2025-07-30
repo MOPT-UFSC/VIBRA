@@ -4,6 +4,7 @@ from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 #
 from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
+from vibra.interface.model_inputs.acoustic.mass_source_inputs import MassSourceInputs
 from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.incident_plane_wave_inputs import IncidentPlaneWaveInputs
 from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
@@ -28,6 +29,7 @@ from vibra.interface.model_inputs.structural.distributed_loads_inputs import Dis
 from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
 from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs import AcousticPressureFrequencyResponseFunctionInputs
+from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
 from vibra.interface.plots.acoustic.specific_acoustic_impedance_inputs import SpecificAcousticImpedanceInputs
 from vibra.interface.plots.acoustic.particle_velocity_frequency_response_inputs import ParticleVelocityFrequencyResponseInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
@@ -116,7 +118,11 @@ class InputUi:
     def set_mass_flow_rate(self):
         if not self.model_setup_items.item_child_mass_flow_rate.isDisabled():
             self.process_input(MassFlowRateInputs)
-        
+
+    def set_mass_source(self):
+        if not self.model_setup_items.item_child_mass_source.isDisabled():
+            self.process_input(MassSourceInputs)
+
     def set_surface_velocity(self):
         if not self.model_setup_items.item_child_surface_velocity.isDisabled():
             self.process_input(SurfaceVelocityInputs)
@@ -219,21 +225,22 @@ class InputUi:
         if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AcousticPressureFrequencyResponseFunctionInputs)
 
-    def plot_acoustic_delta_pressures(self):
-        pass
+    def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
 
     def plot_TL_NR(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
            return self.process_input(TransmissionLossInputs)
-     
+
     def plot_particle_velocity(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
            return self.process_input(ParticleVelocityFrequencyResponseInputs)
-                   
+
     def plot_acoustic_specific_impedance_from_surface(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
            return self.process_input(SpecificAcousticImpedanceInputs)
-     
+
     def empty_project_action_message(self):
         title = 'EMPTY PROJECT'
         message = "Please, you should create a new project or load an already existing one before start to set up the model. "

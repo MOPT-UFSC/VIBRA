@@ -476,6 +476,7 @@ class ProjectFile:
                         volume_properties = normalize(properties.volume_properties),
                         surface_properties = normalize(properties.surface_properties),
                         line_properties = normalize(properties.line_properties),
+                        point_properties = normalize(properties.point_properties),
                         element_properties = normalize(properties.element_properties),
                         nodal_properties = normalize(properties.nodal_properties),
                         )
@@ -492,6 +493,9 @@ class ProjectFile:
     def read_model_properties_from_file(self):
 
         def denormalize(prop: dict):
+            if prop is None:
+                return dict()
+            
             new_prop = dict()
             for key, val in prop.items():
 
@@ -514,12 +518,13 @@ class ProjectFile:
             return dict()
 
         model_properties = dict(
-                                # global_properties = denormalize(data["global_properties"]),
-                                volume_properties = denormalize(data["volume_properties"]),
-                                surface_properties = denormalize(data["surface_properties"]),
-                                line_properties = denormalize(data["line_properties"]),
-                                element_properties = denormalize(data["element_properties"]),
-                                nodal_properties = denormalize(data["nodal_properties"])
+                                # global_properties = denormalize(data.get(""global_properties")),
+                                volume_properties = denormalize(data.get("volume_properties")),
+                                surface_properties = denormalize(data.get("surface_properties")),
+                                line_properties = denormalize(data.get("line_properties")),
+                                point_properties = denormalize(data.get("point_properties")),
+                                element_properties = denormalize(data.get("element_properties")),
+                                nodal_properties = denormalize(data.get("nodal_properties")),
                                 )
 
         return model_properties
