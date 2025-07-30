@@ -56,8 +56,8 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
-        self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
+        self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_input_clicked)
+        self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_output_clicked)
 
     def update_render_according_to_selector(self):
 
@@ -83,11 +83,30 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         widget.installEventFilter(filter)
         return filter.clicked
 
-    def lineEdit_1_clicked(self):
+    def lineEdit_input_clicked(self):
         self.current_lineEdit = self.lineEdit_input_selected_id
+        self.highlight_selected_line_edit()
 
-    def lineEdit_2_clicked(self):
+    def lineEdit_output_clicked(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
+        self.highlight_selected_line_edit()
+
+    def highlight_selected_line_edit(self):
+
+        if self.current_lineEdit == self.lineEdit_input_selected_id:
+            self.lineEdit_output_selected_id.setStyleSheet("")
+        else:
+            self.lineEdit_input_selected_id.setStyleSheet("")
+
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(200, 0, 0); border-width: 2px;""")
+
+    def alternate_selected_line_edit(self):
+        if self.current_lineEdit == self.lineEdit_input_selected_id:
+            self.lineEdit_output_clicked()
+            self.lineEdit_output_selected_id.setFocus()
+        else:
+            self.lineEdit_input_clicked()
+            self.lineEdit_input_selected_id.setFocus()
 
     def _load_analysis_setup_and_solution(self):
 
@@ -118,7 +137,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                 _surfaces = [str(i) for i in surfaces]
                 self.current_lineEdit.setText(_surfaces[0])
 
-        if lines and index == 1:
+        elif lines and index == 1:
 
             if len(lines) > 1:
                 return
@@ -127,7 +146,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                 _lines = [str(i) for i in lines]
                 self.current_lineEdit.setText(_lines[0])
 
-        if points and index == 2:
+        elif points and index == 2:
 
             if len(points) > 1:
                 return
@@ -136,7 +155,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                 _points = [str(i) for i in points]
                 self.current_lineEdit.setText(_points[0])
 
-        if nodes and index == 3:
+        elif nodes and index == 3:
             
             if len(nodes) > 1:
                 return
@@ -267,11 +286,18 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                                     "linestyle" : "-"
                                    }
 
-    def get_color(self, index):
-        colors = [  (0,0,1), (0,0,0), (1,0,0),
-                    (1,1,0), (1,0,1), (0,1,1),
-                    (0.25,0.25,0.25)  ]
-        
+    def get_color(self, index: int):
+
+        colors = [  
+                  (0, 0, 1), 
+                  (0, 0, 0), 
+                  (1, 0, 0),
+                  (1, 1, 0), 
+                  (1, 0, 1), 
+                  (0, 1, 1),
+                  (0.25, 0.25, 0.25)
+                  ]
+
         if index <= 6:
             return colors[index]
         else:
@@ -280,8 +306,8 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
+        elif event.key() == Qt.Key_Down or event.key() == Qt.Key_Up:
+            self.alternate_selected_line_edit()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

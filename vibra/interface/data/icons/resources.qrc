@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="icons">
+        <file>arrow_circle_down_blue.png</file>
         <file>azul cinza.png</file>
         <file>broom.png</file>
         <file>copy_icon.png</file>

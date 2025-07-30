@@ -59,8 +59,9 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.lineEdit_pressure_ratio.textChanged.connect(self.process_unfiltered_criteria)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
+        self.pushButton_get_internal_diameter_from_selection.clicked.connect(self.get_internal_diameter_from_selection)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
@@ -111,11 +112,21 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 self.lineEdit_pressure_ratio.setText(f"{pressure_ratio : .6f}")
 
     def process_unfiltered_criteria(self):
+
         str_pressure_ratio = self.lineEdit_pressure_ratio.text()
-        if str_pressure_ratio != "":
+        if str_pressure_ratio == "":
+            return
+
+        try:
             pressure_ratio = float(str_pressure_ratio)     
             unfiltered_criteria = min(3*pressure_ratio, 7)
-            self.lineEdit_unfiltered_criteria.setText(f"{unfiltered_criteria : .4f}")
+
+        except:
+            self.lineEdit_unfiltered_criteria.setFocus()
+            self.lineEdit_unfiltered_criteria.selectAll()
+            return
+
+        self.lineEdit_unfiltered_criteria.setText(f"{unfiltered_criteria : .6f}")
 
     def selection_filter_callback(self):
 
@@ -305,12 +316,17 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             # allowable peak-to-peak pulsation levels in bar(a) as percentage of the average mean line pressure
             pulsation_criteria = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
 
+            if self.checkBox_pre_study_analysis.isChecked():
+                factor = 0.7
+            else:
+                factor = 1.0
+
             key = ("filtered_criteria", (None))
             legend_label = "Pulsation criteria"
 
         self.model_results[key] = { 
                                    "x_data" : freq,
-                                   "y_data" : pulsation_criteria * (P_L / 100),
+                                   "y_data" : factor * pulsation_criteria * (P_L / 100),
                                    "x_label" : "Frequency [Hz]",
                                    "y_label" : "Acoustic pressure",
                                    "title" : title,
@@ -353,6 +369,19 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
             self.lineEdit_average_line_pressure.setText(f"{P_L : .6f}")
             self.lineEdit_speed_of_sound.setText(f"{C_0 : .6f}")
+
+    def get_internal_diameter_from_selection(self):
+
+        if self.lineEdit_selection_id.text() == "":
+            return
+
+        if self.check_selected_ids():
+            return
+
+        area = self.mesh.area_from_surfaces.get(self.selected_ids[0])
+        diameter = np.sqrt(4 * area / np.pi) * 1000
+
+        self.lineEdit_inside_diameter.setText(f"{diameter : .4f}")
 
     def showEvent(self, event):
         super().showEvent(event)
