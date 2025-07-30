@@ -133,7 +133,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_response(self, index, selected_id):
+    def get_response(self, selected_id: int):
+
+        index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
             rows = self.mesh.nodes_from_surfaces.get(selected_id)
@@ -157,16 +159,8 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
     def join_model_data(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection_type = "surface"
-        elif index == 1:
-            selection_type = "line"
-        elif index == 1:
-            selection_type = "point"
-        else:
-            selection_type = "node"
+        current_text = self.comboBox_selector_filter.currentText()
+        selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
         self.title = f"Acoustic pressure waveform - {self.analysis_method}"
@@ -176,7 +170,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
-            Xf = self.get_response(index, selected_id)
+            Xf = self.get_response(selected_id)
             time, y_data = self.process_ifft_from_signal(Xf)
 
             self.model_results[key] = { 
@@ -193,15 +187,18 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
                                       }
 
     def process_ifft_from_signal(self, Xf: np.ndarray):
-
         """
         If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
         """
 
+        # reinsert the DC component
         N = len(Xf) + 1
         Xf_ = np.zeros(N, dtype=complex)
+        
+        # adjust the one-sided spectrum scale
         Xf_[1:] = Xf / 2
 
+        # process the sampling frequency and time increment
         f_max = np.max(self.frequencies)
         f_s = 2 * f_max
         dt = 1 / f_s
