@@ -128,15 +128,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
     def check_selected_ids(self):
 
         index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-        elif index == 1:
-            selection = "lines"
-        elif index == 2:
-            selection = "points"
-        else:
-            selection = "nodes"
+        selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
         self.selected_ids, error_data = self.mesh.check_selected_ids(
