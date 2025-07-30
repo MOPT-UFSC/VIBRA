@@ -468,6 +468,9 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
+        if self.get_element_type() not in [TETRAHEDRON_4, TETRAHEDRON_10]:
+            return
+
         mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
         if not mesh_quality_statistics:
             mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
@@ -652,6 +655,7 @@ class MeshSetupInputs(MesherSetup_UI):
         canvas.draw()
         plot_ui.setWindowTitle("Mesh quality histogram plotter")
         plot_ui.setWindowFlag(Qt.WindowStaysOnTopHint)
+        plot_ui.setWindowIcon(self.main_window.vibra_icon)
         plot_ui.exec_()
 
     def show_bad_elements(self):
