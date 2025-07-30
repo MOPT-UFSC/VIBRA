@@ -1,9 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 
 @dataclass
 class DelanyBazleyData:
-    model: str 
     c1: float
     c2: float
     c3: float
@@ -13,13 +12,29 @@ class DelanyBazleyData:
     c7: float
     c8: float
     flow_resistivity: float
+    model: str 
 
     def get_data(self) -> dict:
-        return {"c1": self.c1, "c2": self.c2, 
-                "c3": self.c3, "c4": self.c4, "c5": self.c5,
-                "c6": self.c6, "c7": self.c7, 
-                "c8": self.c8, "flow_resistivity": self.flow_resistivity,
-                "model": self.model}
+        data = dict()
+        for attr, value in self.__dict__.items():
+            data[attr] = value
+        
+        return data
+
+    def get_parameters_position(self) -> dict:
+        parameters = dict()
+
+        for index, field in enumerate(fields(DelanyBazleyData)):
+            parameters[index] = field.name
+
+        return parameters
+    
+    def __str__(self) -> str:
+        string = ""
+        for attr, value in self.__dict__.items():
+           string += attr + ": " + str(value) + " "
+        
+        return string
     
     @classmethod
     def set_data(cls, data: dict) -> "DelanyBazleyData":
@@ -27,3 +42,5 @@ class DelanyBazleyData:
             data.pop("values")
         
         return DelanyBazleyData(**data)
+
+        

@@ -177,8 +177,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setCurrentIndex(2)
             self.doubleSpinBox_porosity_JCA.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCA.setValue(pm_data["tortuosity"])
-            self.lineEdit_thermal_characteristic_length_JCA.setText(pm_data["thermal_characteristic_length"])
-            self.lineEdit_viscous_characteristic_length_JCA.setText(pm_data["viscous_characteristic_length"])
+            self.lineEdit_thermal_characteristic_length_JCA.setText(str(pm_data["thermal_characteristic_length"]))
+            self.lineEdit_viscous_characteristic_length_JCA.setText(str(pm_data["viscous_characteristic_length"]))
             self.doubleSpinBox_flow_resistivity_JCA.setValue(pm_data["flow_resistivity"])
 
         elif pm_model == "Jhonson-Champoux-Allard-Lafarge":
@@ -186,8 +186,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setCurrentIndex(3)
             self.doubleSpinBox_porosity_JCAL.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCAL.setValue(pm_data["tortuosity"])
-            self.lineEdit_thermal_characteristic_length_JCAL.setText(pm_data["thermal_characteristic_length"])
-            self.lineEdit_viscous_characteristic_length_JCAL.setText(pm_data["viscous_characteristic_length"])
+            self.lineEdit_thermal_characteristic_length_JCAL.setText(str(pm_data["thermal_characteristic_length"]))
+            self.lineEdit_viscous_characteristic_length_JCAL.setText(str(pm_data["viscous_characteristic_length"]))
             self.doubleSpinBox_flow_resistivity_JCAL.setValue(pm_data["flow_resistivity"])
 
     def show_equations_for_DBM_callback(self):
@@ -277,10 +277,34 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.on_click_item(item)
 
     def cell_changed_callback(self, row, column):
-        for i in range(self.tableWidget_porous_materials.rowCount()):
-            item = self.tableWidget_porous_materials.item(i, column)
-            print(item.text())
+        item = self.tableWidget_porous_materials.item(row, column)
 
+        model_id = column + 1
+        parameter_position = row - 2
+
+        new_parameter_value = None
+        value_error = False
+        
+        try:
+            new_parameter_value = float(item.text())
+        except:
+            value_error = True
+        
+        parameters_position = self.map_model_id_to_model[model_id].get_parameters_position()
+        model = self.map_model_id_to_model[model_id]
+
+        if value_error:
+            new_parameter_value = getattr(model, parameters_position[parameter_position])
+            item.setText(str(new_parameter_value))
+        else:
+            setattr(model, parameters_position[parameter_position], new_parameter_value)
+
+            volumes = self.map_model_id_to_volumes[model_id]
+
+            for volume in volumes:
+                self.properties._set_property("porous_material_model", model.get_data(), volume=volume)
+
+                                                  
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
@@ -347,18 +371,33 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         for j, (model_id, model_data) in enumerate(self.map_model_id_to_model.items()):
 
-            self.tableWidget_porous_materials.setItem(0, j, QTableWidgetItem(str(model_id)))
-            self.tableWidget_porous_materials.setItem(1, j, QTableWidgetItem(model_data.model))
+            model_id_item = QTableWidgetItem(str(model_id))
+            model_item = QTableWidgetItem(model_data.model)
+
+            model_id_item.setFlags(Qt.ItemIsSelectable)
+            model_item.setFlags(Qt.ItemIsSelectable)
+
+            self.tableWidget_porous_materials.setItem(0, j, model_id_item)
+            self.tableWidget_porous_materials.setItem(1, j, model_item)
 
             model_data_dict = model_data.get_data()
+            print(model_data_dict)
             for k, model_input in enumerate(model_data_dict.values()):
+
+                if isinstance(model_input, str):
+                    continue
+
                 self.tableWidget_porous_materials.setItem(2+k, j, QTableWidgetItem(str(model_input)))
 
         for i in range(self.tableWidget_porous_materials.rowCount()):
             for j in range(self.tableWidget_porous_materials.columnCount()):
                 item = self.tableWidget_porous_materials.item(i, j)
+
                 if item is None:
-                    continue
+                    item = QTableWidgetItem()
+                    self.tableWidget_porous_materials.setItem(i, j, item)
+                    item.setFlags(Qt.ItemIsSelectable)
+
                 item.setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_porous_materials.blockSignals(False)
@@ -372,43 +411,20 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     #         return True
 
     def get_Delany_Bazley_model_inputs(self) -> DelanyBazleyData:
-        # material_model_data = {
-        #                         "model" : "Delany-Bazley",
-        #                         "C1" : self.doubleSpinBox_C1_DB.value(),
-        #                         "C2" : self.doubleSpinBox_C2_DB.value(),
-        #                         "C3" : self.doubleSpinBox_C3_DB.value(),
-        #                         "C4" : self.doubleSpinBox_C4_DB.value(),
-        #                         "C5" : self.doubleSpinBox_C5_DB.value(),
-        #                         "C6" : self.doubleSpinBox_C6_DB.value(),
-        #                         "C7" : self.doubleSpinBox_C7_DB.value(),
-        #                         "C8" : self.doubleSpinBox_C8_DB.value(),
-        #                         "flow_resistivity" : self.doubleSpinBox_flow_resistivity_DB.value()
-        #                        }
-
-        return DelanyBazleyData("Delany-Bazley", self.doubleSpinBox_C1_DB.value(), 
+        return DelanyBazleyData(self.doubleSpinBox_C1_DB.value(), 
                                 self.doubleSpinBox_C2_DB.value(), self.doubleSpinBox_C3_DB.value(), 
                                 self.doubleSpinBox_C4_DB.value(), self.doubleSpinBox_C5_DB.value(), 
                                 self.doubleSpinBox_C6_DB.value(), self.doubleSpinBox_C7_DB.value(), 
-                                self.doubleSpinBox_C8_DB.value(), self.doubleSpinBox_flow_resistivity_DB.value())
+                                self.doubleSpinBox_C8_DB.value(), self.doubleSpinBox_flow_resistivity_DB.value(), 
+                                "Delany-Bazley",)
 
     def get_Delany_Bazley_Miki_model_inputs(self) -> DelanyBazleyData:
-        # material_model_data = {
-        #                         "model" : "Delany-Bazley-Miki",
-        #                         "C1" : self.doubleSpinBox_C1_DBM.value(),
-        #                         "C2" : self.doubleSpinBox_C2_DBM.value(),
-        #                         "C3" : self.doubleSpinBox_C3_DBM.value(),
-        #                         "C4" : self.doubleSpinBox_C4_DBM.value(),
-        #                         "C5" : self.doubleSpinBox_C5_DBM.value(),
-        #                         "C6" : self.doubleSpinBox_C6_DBM.value(),
-        #                         "C7" : self.doubleSpinBox_C7_DBM.value(),
-        #                         "C8" : self.doubleSpinBox_C8_DBM.value(),
-        #                         "flow_resistivity" : self.doubleSpinBox_flow_resistivity_DBM.value()
-                            #    }
-        return DelanyBazleyData("Delany-Bazley-Miki", self.doubleSpinBox_C1_DBM.value(), 
+        return DelanyBazleyData(self.doubleSpinBox_C1_DBM.value(), 
                                 self.doubleSpinBox_C2_DBM.value(), self.doubleSpinBox_C3_DBM.value(), 
                                 self.doubleSpinBox_C4_DBM.value(), self.doubleSpinBox_C5_DBM.value(), 
                                 self.doubleSpinBox_C6_DBM.value(), self.doubleSpinBox_C7_DBM.value(), 
-                                self.doubleSpinBox_C8_DBM.value(), self.doubleSpinBox_flow_resistivity_DBM.value())
+                                self.doubleSpinBox_C8_DBM.value(), self.doubleSpinBox_flow_resistivity_DBM.value(),
+                                "Delany-Bazley-Miki")
 
     def get_Jhonson_Champoux_Allard_model_inputs(self) -> JCAData:
 
@@ -424,18 +440,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             lineEdit.setFocus()
             return dict()
 
-        # material_model_data = {
-        #                         "model" : "Jhonson-Champoux-Allard",
-        #                         "porosity" : self.doubleSpinBox_porosity_JCA.value(),
-        #                         "tortuosity" : self.doubleSpinBox_tortuosity_JCA.value(),
-        #                         "thermal_characteristic_length" : tcl,
-        #                         "viscous_characteristic_length" : vcl,
-        #                         "flow_resistivity" : self.doubleSpinBox_flow_resistivity_JCA.value()
-        #                        }
-
-        return JCAData("Jhonson-Champoux-Allard", self.doubleSpinBox_porosity_JCA.value(),
+        return JCAData(self.doubleSpinBox_porosity_JCA.value(),
                       self.doubleSpinBox_tortuosity_JCA.value(), vcl,
-                      tcl, self.doubleSpinBox_flow_resistivity_JCA.value())
+                      tcl, self.doubleSpinBox_flow_resistivity_JCA.value(),
+                      "Jhonson-Champoux-Allard")
 
     def get_Jhonson_Champoux_Allard_Lafarge_model_inputs(self) -> JCAData:
 
@@ -451,18 +459,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             lineEdit.setFocus()
             return dict()
 
-        # material_model_data = {
-        #                         "model" : "Jhonson-Champoux-Allard-Lafarge",
-        #                         "porosity" : self.doubleSpinBox_porosity_JCAL.value(),
-        #                         "tortuosity" : self.doubleSpinBox_tortuosity_JCAL.value(),
-        #                         "thermal_characteristic_length" : tcl,
-        #                         "viscous_characteristic_length" : vcl,
-        #                         "flow_resistivity" : self.doubleSpinBox_flow_resistivity_JCAL.value()
-        #                        }
-
-        return JCAData("Jhonson-Champoux-Allard-Lafarge", self.doubleSpinBox_porosity_JCAL.value(),
+        return JCAData(self.doubleSpinBox_porosity_JCAL.value(),
                       self.doubleSpinBox_tortuosity_JCAL.value(), vcl,
-                      tcl, self.doubleSpinBox_flow_resistivity_JCAL.value())
+                      tcl, self.doubleSpinBox_flow_resistivity_JCAL.value(),
+                      "Jhonson-Champoux-Allard-Lafarge")
 
     def attribute_callback(self):
 
@@ -500,11 +500,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
-                
-            model_id = len(self.map_model_id_to_volumes) + 1
-            self.map_model_id_to_volumes[model_id] = volume_ids
-            self.map_model_id_to_model[model_id] = model_data
-
+            
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 

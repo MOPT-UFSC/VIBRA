@@ -1,20 +1,36 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 
 @dataclass
 class JCAData:
-    model: str
     porosity: float
     tortuosity: float
     viscous_characteristic_length: float    
     thermal_characteristic_length: float
     flow_resistivity: float
+    model: str
 
-    def get_data(self):
-        return {"porosity": self.porosity, "tortuosity": self.tortuosity, 
-                "viscous_characteristic_length": self.viscous_characteristic_length, 
-                "thermal_characteristic_length": self.thermal_characteristic_length, 
-                "flow_resistivity": self.flow_resistivity, "model": self.model}
+    def get_data(self) -> dict:
+        data = dict()
+        for attr, value in self.__dict__.items():
+            data[attr] = value
+        
+        return data
+
+    def get_parameters_position(self) -> dict:
+        parameters = dict()
+
+        for index, field in enumerate(fields(JCAData)):
+            parameters[index] = field.name
+
+        return parameters
+
+    def __str__(self) -> str:
+        string = ""
+        for attr, value in self.__dict__.items():
+           string += attr + ": " + str(value) + " "
+        
+        return string
 
     @classmethod
     def set_data(cls, data: dict) -> "JCAData":
