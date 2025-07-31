@@ -85,6 +85,10 @@ class Mesh:
         self.mesh_quality_histograms_data = dict()
         self.mesh_quality_temp = None
 
+        self.collapsed_solids = set()
+        self.collapsed_faces = set()
+        self.collapsed_lines = set()
+
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
         self.nodes_from_lines = dict()
@@ -228,7 +232,6 @@ class Mesh:
         self.calculate_mesh_quality_statistics()
         self.calculate_mesh_bad_elements()
         self.calculate_mesh_quality_histograms()
-
 
         if gmsh_gui:
             gmsh.fltk.run()
@@ -1065,8 +1068,9 @@ class Mesh:
             self._get_connectivity_array(connectivity_dim3)
         )
 
-        self.process_mesh_related_mappings()
-        # self.looking_for_collapsed_elements()
+        self.collapsed_solids, self.collapsed_faces, self.collapsed_lines = (
+            self.get_collapsed_elements()
+        )
 
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
@@ -1406,44 +1410,29 @@ class Mesh:
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
 
-    def loooking_for_colapsed_elements(self):
-        """
-        This method loops through all the elements' connectivities, searching for collapsed elements.
-        A message will be printed whether some problematic connectivity has been detected.
-        """
+    def get_collapsed_elements(self):
+        mask = self._repeated_mask(self.solids_connectivity[:, 4:])
+        collapsed_solids = self.solids_connectivity[mask]
+        solids_set = set(collapsed_solids[:, 0].tolist()) if collapsed_solids.size else set()
 
-        t0 = time()
-        self.nodes_collapsed_elements = set()
-        # solid elements
-        for els_id, vol_id, _, ns_nodes, *s_connect in self.solids_connectivity:
-            if np.unique(s_connect).size < ns_nodes:
-                print(f"The solid element {els_id} from volume {vol_id} is collapsed -> connectivity: {s_connect}")
-                self.nodes_collapsed_elements |= set(s_connect)
+        mask = self._repeated_mask(self.faces_connectivity[:, 4:])
+        collapsed_faces = self.faces_connectivity[mask]
+        faces_set = set(collapsed_faces[:, 0].tolist()) if collapsed_faces.size else set()
 
-        dt = time() - t0
-        print(f"Elapsed time - 3d elements: {dt : .8f} s")
+        mask = self._repeated_mask(self.lines_connectivity[:, 4:])
+        collapsed_lines = self.lines_connectivity[mask]
+        lines_set = set(collapsed_lines[:, 0].tolist()) if collapsed_lines.size else set()
 
-        t0 = time()
-        # face elements
-        for elf_id, surf_id, _, nf_nodes, *f_connect in self.faces_connectivity:
-            if np.unique(f_connect).size < nf_nodes:
-                print(f"The face element {elf_id} from surface {surf_id} is collapsed -> connectivity: {f_connect}")
-                self.nodes_collapsed_elements |= set(f_connect)
+        return solids_set, faces_set, lines_set
 
-        dt = time() - t0
-        print(f"Elapsed time - 2d elements: {dt : .8f} s")
-
-        t0 = time()
-        # line elements
-        for ell_id, line_id, _, nl_nodes, *l_connect in self.lines_connectivity:
-            if np.unique(l_connect).size < nl_nodes:
-                print(f"The line element {ell_id} from line {line_id} is collapsed -> connectivity: {l_connect}")
-                self.nodes_collapsed_elements |= set(l_connect)
-
-        dt = time() - t0
-        print(f"Elapsed time - 1d elements: {dt : .8f} s")
-
-        # print(self.nodes_collapsed_elements)
+    def _repeated_mask(self, data: np.ndarray[int]) -> np.ndarray[bool]:
+        sorted_data = data.copy()
+        sorted_data.sort(axis=1)
+        mask = np.any(
+            sorted_data[:, :-1] == sorted_data[:, 1:],
+            axis=1,
+        )
+        return mask
 
     def get_face_elements_connected_to_nodes(
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None
@@ -1707,28 +1696,33 @@ class Mesh:
 
         for parameter in parameters:
             element_qualities_dict = dict()
-            qualities_array = np.array(gmsh.model.mesh.getElementQualities(elements, parameter))            
+            qualities_array = np.array(
+                gmsh.model.mesh.getElementQualities(elements, parameter)
+            )
 
             for i, element in enumerate(elements):
                 element_qualities_dict[element] = qualities_array[i]
-            
+
             self.mesh_quality[parameter] = element_qualities_dict
-        
-        element_qualities_dict = dict()    
-        min_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "minEdge"))
-        max_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "maxEdge"))
+
+        element_qualities_dict = dict()
+        min_edge_quals = np.array(
+            gmsh.model.mesh.getElementQualities(elements, "minEdge")
+        )
+        max_edge_quals = np.array(
+            gmsh.model.mesh.getElementQualities(elements, "maxEdge")
+        )
         aspect_ratio_quals = max_edge_quals / min_edge_quals
 
         for i, element in enumerate(elements):
             element_qualities_dict[element] = aspect_ratio_quals[i]
-        
+
         self.mesh_quality["aspectRatio"] = element_qualities_dict
-        
-    
+
     def calculate_mesh_quality_statistics(self):
         if not self.mesh_quality:
             return
-        
+
         for parameter in ["gamma", "volume", "minSJ", "aspectRatio"]:
             qualities_array = list(self.mesh_quality[parameter].values())
 
@@ -1748,7 +1742,7 @@ class Mesh:
     def calculate_mesh_bad_elements(self):
         if not self.mesh_quality:
             return
-        
+
         bad_elements = []
         for parameter in self.mesh_quality_parameters:
             for element in self.mesh_quality[parameter].keys():
@@ -1760,13 +1754,15 @@ class Mesh:
                 elif quality < self.quality_bins[parameter][1]:
                     bad_elements.append(element)
 
-            bad_elements_vibra = [int(self.map_solid_elements[gmsh_tags]) for gmsh_tags in bad_elements]
+            bad_elements_vibra = [
+                int(self.map_solid_elements[gmsh_tags]) for gmsh_tags in bad_elements
+            ]
             self.mesh_bad_elements[parameter] = bad_elements_vibra
-            
+
     def calculate_mesh_quality_histograms(self):
         if not self.mesh_quality:
             return
-        
+
         for parameter in self.mesh_quality_parameters:
             mesh_quality_vals = list(self.mesh_quality[parameter].values())
 
@@ -1776,8 +1772,12 @@ class Mesh:
             percentile_5 = np.percentile(mesh_quality_vals, 5)
             percentile_95 = np.percentile(mesh_quality_vals, 95)
 
-            self.mesh_quality_histograms_data[parameter] = [hist, bin_edges, percentile_5, percentile_95]
-
+            self.mesh_quality_histograms_data[parameter] = [
+                hist,
+                bin_edges,
+                percentile_5,
+                percentile_95,
+            ]
 
     def compute_initial_mesh_size(
         self, path, geometry_tolerance: float = 1e-10, threads: int = 0
@@ -2303,13 +2303,14 @@ class Mesh:
         if not self.nodal_coordinates.any():
             return None, None
 
-        diff = self.nodal_coordinates[: , 1:] - point_coords
+        diff = self.nodal_coordinates[:, 1:] - point_coords
         indexes = np.argsort(np.linalg.norm(diff, axis=1))
 
         nearest_node = int(self.nodal_coordinates[indexes[0], 0])
         nearest_coords = self.nodal_coordinates[indexes[0], 1:]
 
         return nearest_node, nearest_coords
+
 
 if __name__ == "__main__":
     # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Paralelepipedo.STEP"
