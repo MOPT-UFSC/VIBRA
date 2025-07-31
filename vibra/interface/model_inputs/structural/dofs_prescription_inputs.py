@@ -209,16 +209,18 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         if "table_paths" in data.keys():
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
+                if data["element_type"] == "3d_element" and index >= 3:
+                    continue
+
                 table_path = table_paths[index]
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
 
         else:
             for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
-
                 if data["element_type"] == "3d_element" and index >= 3:
                     continue
-                
+
                 elif index <= 5 and values[index] is not None:
                     lineEdit_real.setText(str(np.real(values[index])))
                     lineEdit_imag.setText(str(np.imag(values[index])))
