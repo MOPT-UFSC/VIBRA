@@ -182,7 +182,7 @@ class AnalysisRequirementsChecker:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
                     values = [0 if value is None else value for value in data["values"]]
-                    if np.sum(values):
+                    if np.array(sum(values)).any():
                         return False
 
         title = "Invalid model excitation"    
