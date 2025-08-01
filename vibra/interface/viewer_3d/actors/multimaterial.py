@@ -56,13 +56,6 @@ def read_texture(filename: str):
 
 
 class MultimaterialGeometryActor(vtkPropAssembly):
-    NODES_TO_VTK_CELL = {
-        3: VTK_TRIANGLE,
-        6: VTK_QUADRATIC_TRIANGLE,
-        4: VTK_QUAD,
-        8: VTK_QUADRATIC_QUAD,
-    }
-
     def __init__(self, mesh: Mesh | None = None):
         self.mesh = mesh
         if self.mesh is None:
@@ -105,6 +98,19 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data.SetPoints(points)
             data.SetPolys(cells)
 
+            surface_indexes = vtkIntArray()
+            surface_indexes.SetName("surface_indexes")
+            surface_indexes.SetNumberOfTuples(data.GetNumberOfCells())
+            surface_indexes.Fill(surface)
+
+            volume_indexes = vtkIntArray()
+            volume_indexes.SetName("volume_indexes")
+            volume_indexes.SetNumberOfTuples(data.GetNumberOfCells())
+            volume_indexes.Fill(self.mesh.volumes_from_surface[surface][0])
+
+            data.GetCellData().AddArray(surface_indexes)
+            data.GetCellData().AddArray(volume_indexes)
+
             # Every surface have its own plane defining
             # how to project the texture coordinates
             add_tcoords = vtk.vtkTextureMapToPlane()
@@ -123,7 +129,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         add_tangents.SetInputData(add_normals.GetOutput())
         add_tangents.Update()
 
-        self.surfaces_data = add_tangents.GetOutput()
+        self.data = add_tangents.GetOutput()
 
     def _reduce_connectivity(
         self,
@@ -144,7 +150,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         number_of_face_elements = len(self.mesh.faces_connectivity)
 
         self.material_extractor = vtkExtractCells()
-        self.surfaces_data >> self.material_extractor
+        self.data >> self.material_extractor
         self.material_extractor.cell_list = create_vtk_id_list(
             np.arange(0, number_of_face_elements // 2)
         )
@@ -170,7 +176,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         number_of_face_elements = len(self.mesh.faces_connectivity)
 
         self.fluid_extractor = vtkExtractCells()
-        self.surfaces_data >> self.fluid_extractor
+        self.data >> self.fluid_extractor
         self.fluid_extractor.cell_list = create_vtk_id_list(
             np.arange(number_of_face_elements // 2, number_of_face_elements)
         )
@@ -195,7 +201,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         number_of_face_elements = len(self.mesh.faces_connectivity)
 
         self.porous_extractor = vtkExtractCells()
-        self.surfaces_data >> self.porous_extractor
+        self.data >> self.porous_extractor
         self.porous_extractor.cell_list = create_vtk_id_list(
             np.arange(0, number_of_face_elements // 2)
         )
