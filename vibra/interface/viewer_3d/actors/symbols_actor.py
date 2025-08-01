@@ -15,6 +15,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         super().__init__(*args, **kwargs)
         self.configure_appearance()
         self.build()
+        self.set_zbuffer_offsets(1, -6600)
 
     def configure_appearance(self):
         self.GetProperty().SetAmbient(0.5)
@@ -27,19 +28,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         line_properties = app().project.model.properties.line_properties
         for (property_name, line_id) in line_properties.keys():
             if property_name == "nodal_loads":
-                property = line_properties[property_name, line_id]
-                print(property)
-                print('=====================================')
-                coord = self._get_center_coords_and_normals_line(line_id)
-                print()
-                self.add_symbol("arrow", coord, (0, 0, 0), color=color_names.RED_2)
-                # coords, normal = self._get_center_coords_and_normals(surface_id)
-                
-                # x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
-                # orientation = np.real((x, y, z))
-                # is_pointing = np.dot(normal, orientation) < 0
-                # shape = "arrow" if is_pointing else "outwards_arrow"
-                # self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
+                self._build_nodal_loads(property_name, line_id=line_id)
         
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id) in surface_properties.keys():
@@ -50,7 +39,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
                 self._build_prescribed_dofs(property_name, surface_id)
             
             elif property_name == "nodal_loads":
-                self._build_nodal_loads(property_name, surface_id)
+                self._build_nodal_loads(property_name, surface_id=surface_id)
             
             elif property_name == "distributed_loads":
                 self._build_distributed_loads(property_name, surface_id)
@@ -121,31 +110,12 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
     def _get_center_coords_and_normals_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
         line_nodes = mesh.nodes_from_lines.get(line_id)
-        print(line_nodes)
         line_coordinates = mesh.nodal_coordinates[line_nodes, 1:]
-        print('===================================')
-        print(line_coordinates)
-
-        # surface_normals = mesh.normals_surface.get(surface_id)
-        # if surface_normals is None:
-        #     eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
-        #     avg_normal = np.average(eface_normals, axis=0).flatten()
-
-        # else:
-        #     avg_normal = np.average(surface_normals, axis=0).round(6)
-
-        # curvatures_surface = mesh.curvatures_surface.get(surface_id)
-        # contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
         center_coords = np.average(line_coordinates, axis=0)
-        return center_coords
-
-        # if contains_curvature:
-        #     # Finds the node that is closest to the center coords
-        #     dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-        #     index = np.argmin(dist)
-        #     return surface_coordinates[index, :], surface_normals[index, :]
-
-        # return center_coords, avg_normal
+        dist = np.linalg.norm(line_coordinates - center_coords, axis=1)
+        index = np.argmin(dist)
+        
+        return line_coordinates[index, :]
 
     def _build_surface_velocity(self, surface_id: int):
         if surface_id is None:
@@ -177,16 +147,26 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         if z is not None:
             self.add_symbol(sources.create_cone_source, coords, (0, 0, 1), color=color_names.GREEN)
 
-    def _build_nodal_loads(self, property_name: str, surface_id):
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
-        coords, normal = self._get_center_coords_and_normals(surface_id)
+    def _build_nodal_loads(self, property_name: str, surface_id = -1, line_id = -1):
+        if surface_id != -1:
+            surface_properties = app().project.model.properties.surface_properties
+            property = surface_properties[property_name, surface_id]
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            
+            x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+            orientation = np.real((x, y, z))
+            is_pointing = np.dot(normal, orientation) < 0
+            shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
+            self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
         
-        x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
-        orientation = np.real((x, y, z))
-        is_pointing = np.dot(normal, orientation) < 0
-        shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
-        self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
+        if line_id != -1:
+            line_properties = app().project.model.properties.line_properties
+            property = line_properties[property_name, line_id]
+            x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+            orientation = np.real((x, y, z))
+            coord = self._get_center_coords_and_normals_line(line_id)
+            
+            self.add_symbol(sources.create_arrow_source, coord, orientation, color=color_names.RED_2)
             
     def _build_distributed_loads(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
