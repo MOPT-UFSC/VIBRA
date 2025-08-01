@@ -80,63 +80,71 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         # self._create_porous_actor()
 
     def _create_data(self):
-        number_of_face_elements = len(self.mesh.faces_connectivity)
-        nodes_per_face_element = len(self.mesh.faces_connectivity[0, 4:])
-        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        self._create_surfaces()
+        return
 
-        points = vtkPoints()
-        points.SetData(numpy_to_vtk(coordinates))
+    def _create_surfaces(self):
+        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
 
-        helper = np.insert(
-            self.mesh.faces_connectivity[:, 4:],
-            0,  # index
-            nodes_per_face_element,
-            axis=1,
-        ).flatten()
-        cells = vtk.vtkCellArray()
-        cells.SetCells(number_of_face_elements, numpy_to_vtkIdTypeArray(helper))
+        combined_surfaces = vtk.vtkAppendPolyData()
+        for surface, elements in self.mesh.elements_from_surface.items():
+            coords, connect = self._reduce_connectivity(
+                self.mesh.nodal_coordinates[:, 1:],
+                self.mesh.faces_connectivity[elements, 4:],
+            )
 
-        material_colors = vtkUnsignedCharArray()
-        material_colors.SetName("material_colors")
-        material_colors.SetNumberOfComponents(4)
-        material_colors.SetNumberOfTuples(number_of_face_elements)
-        material_colors.Fill(0)
+            points = vtkPoints()
+            points.SetData(numpy_to_vtk(coords))
 
-        fluid_colors = vtkUnsignedCharArray()
-        fluid_colors.SetName("fluid_colors")
-        fluid_colors.SetNumberOfComponents(4)
-        fluid_colors.SetNumberOfTuples(number_of_face_elements)
-        fluid_colors.Fill(255)
+            cells = vtk.vtkCellArray()
+            helper = np.insert(connect, 0, nodes_per_element, axis=1)
+            vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+            cells.SetCells(len(connect), vtk_id_array)
 
-        data = vtkPolyData()
-        data.SetPoints(points)
-        data.SetPolys(cells)
-        data.GetCellData().AddArray(material_colors)
-        data.GetCellData().AddArray(fluid_colors)
+            data = vtkPolyData()
+            data.SetPoints(points)
+            data.SetPolys(cells)
+
+            # Every surface have its own plane defining
+            # how to project the texture coordinates
+            add_tcoords = vtk.vtkTextureMapToPlane()
+            add_tcoords.SetInputData(data)
+            add_tcoords.Update()
+
+            combined_surfaces.AddInputData(add_tcoords.GetOutput())
+
+        combined_surfaces.Update()
 
         add_normals = vtkPolyDataNormals()
-        add_normals.SetInputData(data)
+        add_normals.SetInputData(combined_surfaces.GetOutput())
         add_normals.Update()
 
-        add_tcoords = vtk.vtkTextureMapToCylinder()
-        add_tcoords.SetInputData(add_normals.GetOutput())
-        add_tcoords.PreventSeamOn()
-        add_tcoords.Update()
-
         add_tangents = vtk.vtkPolyDataTangents()
-        add_tangents.SetInputData(add_tcoords.GetOutput())
+        add_tangents.SetInputData(add_normals.GetOutput())
         add_tangents.Update()
 
-        self.data = add_tangents.GetOutput()
+        self.surfaces_data = add_tangents.GetOutput()
 
-        # self.data = vtkUnstructuredGrid()
-        # self.data.DeepCopy(tangents.GetOutput())
+    def _reduce_connectivity(
+        self,
+        coords: np.ndarray,
+        connectivity: np.ndarray,
+        mapping: np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        old_indexes = np.unique(connectivity)
+        new_indexes = np.arange(len(old_indexes))
+
+        if mapping is None:
+            mapping = np.zeros(np.max(connectivity) + 1, dtype=int)
+        mapping[old_indexes] = new_indexes
+
+        return coords[old_indexes], mapping[connectivity]
 
     def _create_material_actor(self):
         number_of_face_elements = len(self.mesh.faces_connectivity)
 
         self.material_extractor = vtkExtractCells()
-        self.data >> self.material_extractor
+        self.surfaces_data >> self.material_extractor
         self.material_extractor.cell_list = create_vtk_id_list(
             np.arange(0, number_of_face_elements // 2)
         )
@@ -148,20 +156,21 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.AddPart(self.material_actor)
 
         actor_property = self.material_actor.GetProperty()
-        actor_property.SetInterpolationToPBR()
-
-        actor_property.color = (1, 1, 1)
-        actor_property.metallic = 0.5
-        actor_property.roughness = 0.8
-        actor_property.SetEmissiveFactor(1, 0, 0)
-        # actor_property.normal_scale = 2
-        # actor_property.normal_texture = self.material_normal_texture
+        actor_property.SetInterpolationToPhong()
+        actor_property.color = (0.9, 0.7, 0.3)
+        # actor_property.opacity = 0.9
+        actor_property.specular_color = (1, 1, 1)
+        actor_property.specular_power = 80
+        actor_property.specular = 1.5
+        actor_property.diffuse = 0.6
+        actor_property.normal_scale = 0.5
+        actor_property.normal_texture = self.material_normal_texture
 
     def _create_fluid_actor(self):
         number_of_face_elements = len(self.mesh.faces_connectivity)
 
         self.fluid_extractor = vtkExtractCells()
-        self.data >> self.fluid_extractor
+        self.surfaces_data >> self.fluid_extractor
         self.fluid_extractor.cell_list = create_vtk_id_list(
             np.arange(number_of_face_elements // 2, number_of_face_elements)
         )
@@ -173,21 +182,22 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.AddPart(self.fluid_actor)
 
         actor_property = self.fluid_actor.GetProperty()
-        actor_property.SetInterpolationToPBR()
 
-        actor_property.color = (1, 0.2, 0.2)
-        actor_property.opacity = 0.99
-        actor_property.metallic = 0.6
-        actor_property.roughness = 0.3
+        actor_property.color = Color(190, 190, 255).to_rgb_f()
+        # actor_property.opacity = 0.8
+        actor_property.specular_color = (1, 1, 1)
+        actor_property.specular_power = 40
+        actor_property.specular = 0.7
+        actor_property.normal_scale = 2
         actor_property.normal_texture = self.fluid_normal_texture
-    
+
     def _create_porous_actor(self):
         number_of_face_elements = len(self.mesh.faces_connectivity)
 
         self.porous_extractor = vtkExtractCells()
-        self.data >> self.porous_extractor
+        self.surfaces_data >> self.porous_extractor
         self.porous_extractor.cell_list = create_vtk_id_list(
-            np.arange(number_of_face_elements // 2, number_of_face_elements)
+            np.arange(0, number_of_face_elements // 2)
         )
 
         porous_mapper = vtkDataSetMapper()
@@ -207,6 +217,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         actor_property.normal_scale = 5
 
     def _create_textures(self):
-        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "water_normal.jpg")
+        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "perlin_normal.jpg")
         self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
         self.porous_normal_texture = read_texture(TEXTURE_DIR / "foam_normal.jpg")
