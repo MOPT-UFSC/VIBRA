@@ -10,6 +10,8 @@ from vtkmodules.vtkRenderingCore import (
 from vibra.utils.interface_utils import screen_to_world_coords
 from vibra.utils.math_functions import points_in_between
 
+DEFAULT_RETURN_VALUE = (-1, float("inf"))
+
 
 def pick_actor_cell_info(
     x,
@@ -28,19 +30,32 @@ def pick_actor_cell_info(
     cell_id = cell_picker.GetCellId()
     position = cell_picker.GetPickPosition()
 
+    entities = [
+        cell_picker.GetActor(),
+        cell_picker.GetProp3D(),
+        cell_picker.GetAssembly(),
+        cell_picker.GetPropAssembly(),
+    ]
+
+    if all((entity is None) or (entity != target_actor) for entity in entities):
+        return DEFAULT_RETURN_VALUE
+
     camera_position = np.array(renderer.GetActiveCamera().GetPosition())
-    camera_distance = np.linalg.norm(camera_position - position) if cell_id >= 0 else float("inf")
+    camera_distance = (
+        np.linalg.norm(camera_position - position) 
+        if cell_id >= 0 else float("inf")
+    )  # fmt: skip
 
     if cell_id < 0:
-        return -1, float("inf")
+        return DEFAULT_RETURN_VALUE
 
     data: vtkPolyData = target_actor.GetMapper().GetInput()
     if not data:
-        return -1, float("inf")
+        return DEFAULT_RETURN_VALUE
 
     cell_info_array: vtkIntArray = data.GetCellData().GetArray(indexes_array)
     if not cell_info_array:
-        return -1, float("inf")
+        return DEFAULT_RETURN_VALUE
 
     cell_info = cell_info_array.GetValue(cell_id)
     return cell_info, camera_distance
