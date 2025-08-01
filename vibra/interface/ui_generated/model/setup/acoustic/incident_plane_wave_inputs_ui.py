@@ -172,28 +172,12 @@ class Ui_Dialog(object):
         self.frame_9.setFrameShape(QFrame.NoFrame)
         self.frame_9.setFrameShadow(QFrame.Raised)
         self.gridLayout_2 = QGridLayout(self.frame_9)
+        self.gridLayout_2.setSpacing(6)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setHorizontalSpacing(4)
-        self.gridLayout_2.setVerticalSpacing(6)
         self.gridLayout_2.setContentsMargins(0, 4, 0, 0)
         self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer_8, 1, 0, 1, 1)
-
-        self.pushButton_load_table = QPushButton(self.frame_9)
-        self.pushButton_load_table.setObjectName(u"pushButton_load_table")
-        self.pushButton_load_table.setEnabled(True)
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
-        self.pushButton_load_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_table.setMinimumSize(QSize(40, 28))
-        self.pushButton_load_table.setMaximumSize(QSize(40, 28))
-        self.pushButton_load_table.setFont(font3)
-        self.pushButton_load_table.setStyleSheet(u"")
-
-        self.gridLayout_2.addWidget(self.pushButton_load_table, 1, 2, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer_8, 2, 0, 1, 1)
 
         self.lineEdit_table_path = QLineEdit(self.frame_9)
         self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
@@ -207,22 +191,49 @@ class Ui_Dialog(object):
         self.lineEdit_table_path.setStyleSheet(u"")
         self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.lineEdit_table_path, 1, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.lineEdit_table_path, 2, 1, 1, 1)
 
         self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer_9, 1, 4, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer_9, 2, 4, 1, 1)
 
-        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.pushButton_load_table = QPushButton(self.frame_9)
+        self.pushButton_load_table.setObjectName(u"pushButton_load_table")
+        self.pushButton_load_table.setEnabled(True)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
+        self.pushButton_load_table.setSizePolicy(sizePolicy1)
+        self.pushButton_load_table.setMinimumSize(QSize(40, 28))
+        self.pushButton_load_table.setMaximumSize(QSize(40, 28))
+        self.pushButton_load_table.setFont(font3)
+        self.pushButton_load_table.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_load_table.setIcon(icon)
+        self.pushButton_load_table.setIconSize(QSize(20, 20))
 
-        self.gridLayout_2.addItem(self.verticalSpacer_4, 0, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_load_table, 2, 2, 1, 1)
+
+        self.label_3 = QLabel(self.frame_9)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setMinimumSize(QSize(0, 28))
+        self.label_3.setMaximumSize(QSize(16777215, 28))
+        self.label_3.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_3, 1, 1, 1, 1)
 
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addItem(self.verticalSpacer_3, 2, 1, 1, 1)
+        self.gridLayout_2.addItem(self.verticalSpacer_3, 3, 1, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_9, 1, 0, 1, 1)
+
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_3.addItem(self.verticalSpacer_4, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
@@ -570,6 +581,7 @@ class Ui_Dialog(object):
         self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.pushButton_load_table.setText("")
+        self.label_3.setText(QCoreApplication.translate("Dialog", u"Choose a table file to import the data", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -620,8 +632,9 @@ class IncidentPlaneWaveInputs_UI(QDialog, Ui_Dialog):
                                     - (Layout): QGridLayout
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout
-                                                        - pushButton_load_table: QPushButton
                                                         - lineEdit_table_path: QLineEdit
+                                                        - pushButton_load_table: QPushButton
+                                                        - label_3: QLabel
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame
