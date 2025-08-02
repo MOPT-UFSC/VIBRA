@@ -286,6 +286,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                                        "linestyle" : "-" 
                                        }
 
+        factor = 1.0
+
         if self.tabWidget_main.currentIndex() == 0:
 
             # inside diameter in millimiters
@@ -318,8 +320,6 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
             if self.checkBox_pre_study_analysis.isChecked():
                 factor = 0.7
-            else:
-                factor = 1.0
 
             key = ("filtered_criteria", (None))
             legend_label = "Pulsation criteria"
