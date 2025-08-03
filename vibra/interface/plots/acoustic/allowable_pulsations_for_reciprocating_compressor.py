@@ -290,7 +290,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         if self.tabWidget_main.currentIndex() == 0:
 
-            # inside diameter in millimiters
+            # inside diameter in millimeters
             pressure_ratio = self.check_inputs(self.lineEdit_pressure_ratio, "Pressure ratio")
             if pressure_ratio is None:
                 return True
@@ -310,7 +310,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             if C_0 is None:
                 return True
 
-            # inside diameter in millimiters
+            # inside diameter in millimeters
             inside_diameter = self.check_inputs(self.lineEdit_inside_diameter, "Inside diameter")
             if inside_diameter is None:
                 return True
