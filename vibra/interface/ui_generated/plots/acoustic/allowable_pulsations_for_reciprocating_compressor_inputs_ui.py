@@ -396,28 +396,6 @@ class Ui_Form(object):
         self.gridLayout_10 = QGridLayout(self.tab_filtered_criteria)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
-        self.frame_14 = QFrame(self.tab_filtered_criteria)
-        self.frame_14.setObjectName(u"frame_14")
-        self.frame_14.setFrameShape(QFrame.NoFrame)
-        self.frame_14.setFrameShadow(QFrame.Raised)
-        self.gridLayout_16 = QGridLayout(self.frame_14)
-        self.gridLayout_16.setObjectName(u"gridLayout_16")
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_18, 0, 2, 1, 1)
-
-        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_17, 0, 0, 1, 1)
-
-        self.checkBox_pre_study_analysis = QCheckBox(self.frame_14)
-        self.checkBox_pre_study_analysis.setObjectName(u"checkBox_pre_study_analysis")
-
-        self.gridLayout_16.addWidget(self.checkBox_pre_study_analysis, 0, 1, 1, 1)
-
-
-        self.gridLayout_10.addWidget(self.frame_14, 1, 0, 1, 1)
-
         self.frame_8 = QFrame(self.tab_filtered_criteria)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setFrameShape(QFrame.NoFrame)
@@ -467,6 +445,54 @@ class Ui_Form(object):
 
 
         self.gridLayout_10.addWidget(self.frame_8, 2, 0, 1, 1)
+
+        self.frame_10 = QFrame(self.tab_filtered_criteria)
+        self.frame_10.setObjectName(u"frame_10")
+        self.frame_10.setFrameShape(QFrame.NoFrame)
+        self.frame_10.setFrameShadow(QFrame.Raised)
+        self.gridLayout_9 = QGridLayout(self.frame_10)
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.gridLayout_9.setContentsMargins(0, 0, 0, 0)
+        self.label_34 = QLabel(self.frame_10)
+        self.label_34.setObjectName(u"label_34")
+        self.label_34.setMinimumSize(QSize(140, 0))
+        self.label_34.setMaximumSize(QSize(140, 16777215))
+        self.label_34.setFont(font1)
+        self.label_34.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_9.addWidget(self.label_34, 0, 1, 1, 1)
+
+        self.label_5 = QLabel(self.frame_10)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMinimumSize(QSize(60, 0))
+        self.label_5.setMaximumSize(QSize(60, 16777215))
+        self.label_5.setFont(font1)
+        self.label_5.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_9.addWidget(self.label_5, 0, 3, 1, 1)
+
+        self.lineEdit_speed_of_sound = QLineEdit(self.frame_10)
+        self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
+        self.lineEdit_speed_of_sound.setEnabled(False)
+        self.lineEdit_speed_of_sound.setMinimumSize(QSize(90, 28))
+        self.lineEdit_speed_of_sound.setMaximumSize(QSize(100, 28))
+        self.lineEdit_speed_of_sound.setFont(font5)
+        self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_9.addWidget(self.lineEdit_speed_of_sound, 0, 2, 1, 1)
+
+        self.frame_15 = QFrame(self.frame_10)
+        self.frame_15.setObjectName(u"frame_15")
+        self.frame_15.setMinimumSize(QSize(32, 28))
+        self.frame_15.setMaximumSize(QSize(32, 28))
+        self.frame_15.setFrameShape(QFrame.NoFrame)
+        self.frame_15.setFrameShadow(QFrame.Raised)
+
+        self.gridLayout_9.addWidget(self.frame_15, 0, 0, 1, 1)
+
+
+        self.gridLayout_10.addWidget(self.frame_10, 3, 0, 1, 1)
 
         self.frame_9 = QFrame(self.tab_filtered_criteria)
         self.frame_9.setObjectName(u"frame_9")
@@ -518,54 +544,6 @@ class Ui_Form(object):
 
         self.gridLayout_10.addWidget(self.frame_9, 6, 0, 1, 1)
 
-        self.frame_10 = QFrame(self.tab_filtered_criteria)
-        self.frame_10.setObjectName(u"frame_10")
-        self.frame_10.setFrameShape(QFrame.NoFrame)
-        self.frame_10.setFrameShadow(QFrame.Raised)
-        self.gridLayout_9 = QGridLayout(self.frame_10)
-        self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.gridLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.label_34 = QLabel(self.frame_10)
-        self.label_34.setObjectName(u"label_34")
-        self.label_34.setMinimumSize(QSize(140, 0))
-        self.label_34.setMaximumSize(QSize(140, 16777215))
-        self.label_34.setFont(font1)
-        self.label_34.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_9.addWidget(self.label_34, 0, 1, 1, 1)
-
-        self.label_5 = QLabel(self.frame_10)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(60, 0))
-        self.label_5.setMaximumSize(QSize(60, 16777215))
-        self.label_5.setFont(font1)
-        self.label_5.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
-
-        self.gridLayout_9.addWidget(self.label_5, 0, 3, 1, 1)
-
-        self.lineEdit_speed_of_sound = QLineEdit(self.frame_10)
-        self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
-        self.lineEdit_speed_of_sound.setEnabled(False)
-        self.lineEdit_speed_of_sound.setMinimumSize(QSize(90, 28))
-        self.lineEdit_speed_of_sound.setMaximumSize(QSize(100, 28))
-        self.lineEdit_speed_of_sound.setFont(font5)
-        self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_9.addWidget(self.lineEdit_speed_of_sound, 0, 2, 1, 1)
-
-        self.frame_15 = QFrame(self.frame_10)
-        self.frame_15.setObjectName(u"frame_15")
-        self.frame_15.setMinimumSize(QSize(32, 28))
-        self.frame_15.setMaximumSize(QSize(32, 28))
-        self.frame_15.setFrameShape(QFrame.NoFrame)
-        self.frame_15.setFrameShadow(QFrame.Raised)
-
-        self.gridLayout_9.addWidget(self.frame_15, 0, 0, 1, 1)
-
-
-        self.gridLayout_10.addWidget(self.frame_10, 3, 0, 1, 1)
-
         self.frame_16 = QFrame(self.tab_filtered_criteria)
         self.frame_16.setObjectName(u"frame_16")
         self.frame_16.setMinimumSize(QSize(0, 40))
@@ -589,6 +567,28 @@ class Ui_Form(object):
 
         self.gridLayout_10.addWidget(self.frame_16, 0, 0, 1, 1)
 
+        self.frame_14 = QFrame(self.tab_filtered_criteria)
+        self.frame_14.setObjectName(u"frame_14")
+        self.frame_14.setFrameShape(QFrame.NoFrame)
+        self.frame_14.setFrameShadow(QFrame.Raised)
+        self.gridLayout_16 = QGridLayout(self.frame_14)
+        self.gridLayout_16.setObjectName(u"gridLayout_16")
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_16.addItem(self.horizontalSpacer_18, 0, 2, 1, 1)
+
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_16.addItem(self.horizontalSpacer_17, 0, 0, 1, 1)
+
+        self.checkBox_pre_study_analysis = QCheckBox(self.frame_14)
+        self.checkBox_pre_study_analysis.setObjectName(u"checkBox_pre_study_analysis")
+
+        self.gridLayout_16.addWidget(self.checkBox_pre_study_analysis, 0, 1, 1, 1)
+
+
+        self.gridLayout_10.addWidget(self.frame_14, 7, 0, 1, 1)
+
         self.tabWidget_main.addTab(self.tab_filtered_criteria, "")
 
         self.gridLayout_3.addWidget(self.tabWidget_main, 4, 0, 2, 1)
@@ -600,7 +600,7 @@ class Ui_Form(object):
         self.retranslateUi(Form)
 
         self.comboBox_selector_filter.setCurrentIndex(0)
-        self.tabWidget_main.setCurrentIndex(1)
+        self.tabWidget_main.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -636,10 +636,12 @@ class Ui_Form(object):
         self.lineEdit_unfiltered_criteria.setText("")
         self.label_7.setText(QCoreApplication.translate("Form", u"[%]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_unfiltered_criteria), QCoreApplication.translate("Form", u"At cylinder flanges", None))
-        self.checkBox_pre_study_analysis.setText(QCoreApplication.translate("Form", u"Pre-study analysis", None))
         self.label_32.setText(QCoreApplication.translate("Form", u"<html><head/><body><p align=\"right\">Avg. line pressure P<span style=\" vertical-align:sub;\">L</span>:</p></body></html>", None))
         self.lineEdit_average_line_pressure.setText("")
         self.label_3.setText(QCoreApplication.translate("Form", u"[bar (a)]", None))
+        self.label_34.setText(QCoreApplication.translate("Form", u"<html><head/><body><p align=\"right\">Speed of sound C<span style=\" vertical-align:sub;\">0</span>:</p></body></html>", None))
+        self.label_5.setText(QCoreApplication.translate("Form", u"[m/s]", None))
+        self.lineEdit_speed_of_sound.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_get_internal_diameter_from_selection.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Get the internal diameter from selected surface</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -647,10 +649,8 @@ class Ui_Form(object):
         self.lineEdit_inside_diameter.setText("")
         self.label_4.setText(QCoreApplication.translate("Form", u"[mm]", None))
         self.label_33.setText(QCoreApplication.translate("Form", u"<html><head/><body><p align=\"right\">Inside diameter D<span style=\" vertical-align:sub;\">in</span>:</p></body></html>", None))
-        self.label_34.setText(QCoreApplication.translate("Form", u"<html><head/><body><p align=\"right\">Speed of sound C<span style=\" vertical-align:sub;\">0</span>:</p></body></html>", None))
-        self.label_5.setText(QCoreApplication.translate("Form", u"[m/s]", None))
-        self.lineEdit_speed_of_sound.setText("")
         self.label_12.setText(QCoreApplication.translate("Form", u"<html><head/><body><p>P<span style=\" vertical-align:sub;\">1</span> = (400 * C<span style=\" vertical-align:sub;\">0</span><span style=\" vertical-align:super;\">\u00bd</span>) / (350 * P<span style=\" vertical-align:sub;\">L </span>* D<span style=\" vertical-align:sub;\">in</span> * F<span style=\" vertical-align:sub;\">n</span>)<span style=\" vertical-align:super;\">\u00bd</span></p></body></html>", None))
+        self.checkBox_pre_study_analysis.setText(QCoreApplication.translate("Form", u"Pre-study analysis", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_filtered_criteria), QCoreApplication.translate("Form", u"At and beyond line-side of PSD", None))
     # retranslateUi
 
@@ -702,30 +702,30 @@ class AllowablePulsationsForReciprocatingCompressorInputs_UI(QWidget, Ui_Form):
                                                         - label_7: QLabel
                                 - tab_filtered_criteria: QWidget
                                     - (Layout): QGridLayout
-                                            - frame_14: QFrame
-                                                - (Layout): QGridLayout
-                                                        - checkBox_pre_study_analysis: QCheckBox
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
                                                         - label_32: QLabel
                                                         - lineEdit_average_line_pressure: QLineEdit
                                                         - label_3: QLabel
                                                         - frame_17: QFrame
-                                            - frame_9: QFrame
-                                                - (Layout): QGridLayout
-                                                        - pushButton_get_internal_diameter_from_selection: QPushButton
-                                                        - lineEdit_inside_diameter: QLineEdit
-                                                        - label_4: QLabel
-                                                        - label_33: QLabel
                                             - frame_10: QFrame
                                                 - (Layout): QGridLayout
                                                         - label_34: QLabel
                                                         - label_5: QLabel
                                                         - lineEdit_speed_of_sound: QLineEdit
                                                         - frame_15: QFrame
+                                            - frame_9: QFrame
+                                                - (Layout): QGridLayout
+                                                        - pushButton_get_internal_diameter_from_selection: QPushButton
+                                                        - lineEdit_inside_diameter: QLineEdit
+                                                        - label_4: QLabel
+                                                        - label_33: QLabel
                                             - frame_16: QFrame
                                                 - (Layout): QGridLayout
                                                         - label_12: QLabel
+                                            - frame_14: QFrame
+                                                - (Layout): QGridLayout
+                                                        - checkBox_pre_study_analysis: QCheckBox
     """
 
     def __init__(self, *args, **kwargs):
