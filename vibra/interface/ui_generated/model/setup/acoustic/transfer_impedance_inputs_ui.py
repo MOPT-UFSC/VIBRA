@@ -199,37 +199,21 @@ class Ui_Dialog(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
         self.pushButton_load_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_table.setMinimumSize(QSize(40, 30))
-        self.pushButton_load_table.setMaximumSize(QSize(40, 30))
+        self.pushButton_load_table.setMinimumSize(QSize(40, 28))
+        self.pushButton_load_table.setMaximumSize(QSize(40, 28))
         self.pushButton_load_table.setFont(font3)
         self.pushButton_load_table.setStyleSheet(u"")
         icon = QIcon()
-        icon.addFile(u"../../../../icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_load_table.setIcon(icon)
-        self.pushButton_load_table.setIconSize(QSize(18, 18))
+        self.pushButton_load_table.setIconSize(QSize(20, 20))
 
         self.gridLayout_2.addWidget(self.pushButton_load_table, 2, 2, 1, 1)
-
-        self.pushButton_change_frequency_setup = QPushButton(self.frame_9)
-        self.pushButton_change_frequency_setup.setObjectName(u"pushButton_change_frequency_setup")
-        self.pushButton_change_frequency_setup.setEnabled(True)
-        sizePolicy1.setHeightForWidth(self.pushButton_change_frequency_setup.sizePolicy().hasHeightForWidth())
-        self.pushButton_change_frequency_setup.setSizePolicy(sizePolicy1)
-        self.pushButton_change_frequency_setup.setMinimumSize(QSize(40, 30))
-        self.pushButton_change_frequency_setup.setMaximumSize(QSize(40, 30))
-        self.pushButton_change_frequency_setup.setFont(font3)
-        self.pushButton_change_frequency_setup.setStyleSheet(u"")
-        icon1 = QIcon()
-        icon1.addFile(u"../../../../icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_change_frequency_setup.setIcon(icon1)
-        self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
-
-        self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 2, 3, 1, 1)
 
         self.lineEdit_table_path = QLineEdit(self.frame_9)
         self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
         self.lineEdit_table_path.setEnabled(True)
-        self.lineEdit_table_path.setMinimumSize(QSize(240, 26))
+        self.lineEdit_table_path.setMinimumSize(QSize(280, 26))
         self.lineEdit_table_path.setMaximumSize(QSize(280, 26))
         font4 = QFont()
         font4.setPointSize(9)
@@ -246,7 +230,23 @@ class Ui_Dialog(object):
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addItem(self.verticalSpacer_4, 3, 1, 1, 1)
+        self.gridLayout_2.addItem(self.verticalSpacer_4, 4, 1, 1, 1)
+
+        self.pushButton_change_frequency_setup = QPushButton(self.frame_9)
+        self.pushButton_change_frequency_setup.setObjectName(u"pushButton_change_frequency_setup")
+        self.pushButton_change_frequency_setup.setEnabled(True)
+        sizePolicy1.setHeightForWidth(self.pushButton_change_frequency_setup.sizePolicy().hasHeightForWidth())
+        self.pushButton_change_frequency_setup.setSizePolicy(sizePolicy1)
+        self.pushButton_change_frequency_setup.setMinimumSize(QSize(40, 28))
+        self.pushButton_change_frequency_setup.setMaximumSize(QSize(40, 28))
+        self.pushButton_change_frequency_setup.setFont(font3)
+        self.pushButton_change_frequency_setup.setStyleSheet(u"")
+        icon1 = QIcon()
+        icon1.addFile(u"../../../../icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_change_frequency_setup.setIcon(icon1)
+        self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
+
+        self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 3, 2, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
@@ -539,8 +539,8 @@ class TransferImpedanceInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - label_2: QLabel
                                                         - pushButton_load_table: QPushButton
-                                                        - pushButton_change_frequency_setup: QPushButton
                                                         - lineEdit_table_path: QLineEdit
+                                                        - pushButton_change_frequency_setup: QPushButton
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame

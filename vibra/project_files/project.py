@@ -369,11 +369,11 @@ class Project:
 
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
-            return True
+            return False
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         if analysis_id == AnalysisID.NO_ANALYSIS:
-            return True
+            return False
 
         if analysis_id in [
                             AnalysisID.ACOUSTIC_HARMONIC,

@@ -154,6 +154,10 @@ class Ui_Dialog(object):
         self.gridLayout_3.setSpacing(2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(2, 6, 2, 6)
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_3.addItem(self.verticalSpacer_4, 3, 0, 1, 1)
+
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_3.addItem(self.verticalSpacer_3, 0, 0, 1, 1)
@@ -169,24 +173,6 @@ class Ui_Dialog(object):
         self.gridLayout_2.setHorizontalSpacing(6)
         self.gridLayout_2.setVerticalSpacing(2)
         self.gridLayout_2.setContentsMargins(0, 4, 0, 0)
-        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer_12, 0, 4, 1, 1)
-
-        self.lineEdit_table_path = QLineEdit(self.frame_9)
-        self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
-        self.lineEdit_table_path.setEnabled(True)
-        self.lineEdit_table_path.setMinimumSize(QSize(240, 26))
-        self.lineEdit_table_path.setMaximumSize(QSize(260, 26))
-        font3 = QFont()
-        font3.setPointSize(9)
-        font3.setBold(False)
-        self.lineEdit_table_path.setFont(font3)
-        self.lineEdit_table_path.setStyleSheet(u"")
-        self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_2.addWidget(self.lineEdit_table_path, 0, 1, 1, 1)
-
         self.pushButton_load_table = QPushButton(self.frame_9)
         self.pushButton_load_table.setObjectName(u"pushButton_load_table")
         self.pushButton_load_table.setEnabled(True)
@@ -195,16 +181,46 @@ class Ui_Dialog(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
         self.pushButton_load_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_table.setMinimumSize(QSize(62, 26))
-        self.pushButton_load_table.setMaximumSize(QSize(62, 26))
+        self.pushButton_load_table.setMinimumSize(QSize(40, 26))
+        self.pushButton_load_table.setMaximumSize(QSize(40, 26))
         self.pushButton_load_table.setFont(font2)
         self.pushButton_load_table.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_load_table.setIcon(icon)
+        self.pushButton_load_table.setIconSize(QSize(20, 20))
 
-        self.gridLayout_2.addWidget(self.pushButton_load_table, 0, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_load_table, 1, 2, 1, 1)
 
         self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer_11, 0, 0, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer_11, 1, 0, 1, 1)
+
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer_12, 1, 4, 1, 1)
+
+        self.lineEdit_table_path = QLineEdit(self.frame_9)
+        self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
+        self.lineEdit_table_path.setEnabled(True)
+        self.lineEdit_table_path.setMinimumSize(QSize(280, 26))
+        self.lineEdit_table_path.setMaximumSize(QSize(280, 26))
+        font3 = QFont()
+        font3.setPointSize(9)
+        font3.setBold(False)
+        self.lineEdit_table_path.setFont(font3)
+        self.lineEdit_table_path.setStyleSheet(u"")
+        self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.lineEdit_table_path, 1, 1, 1, 1)
+
+        self.label_11 = QLabel(self.frame_9)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMinimumSize(QSize(0, 28))
+        self.label_11.setMaximumSize(QSize(16777215, 28))
+        self.label_11.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_11, 0, 1, 1, 1)
 
         self.pushButton_change_frequency_setup = QPushButton(self.frame_9)
         self.pushButton_change_frequency_setup.setObjectName(u"pushButton_change_frequency_setup")
@@ -215,19 +231,15 @@ class Ui_Dialog(object):
         self.pushButton_change_frequency_setup.setMaximumSize(QSize(40, 28))
         self.pushButton_change_frequency_setup.setFont(font2)
         self.pushButton_change_frequency_setup.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_change_frequency_setup.setIcon(icon)
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_change_frequency_setup.setIcon(icon1)
         self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
 
-        self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 0, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 2, 2, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_9, 1, 0, 1, 1)
-
-        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_3.addItem(self.verticalSpacer_4, 2, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_advanced_search = QWidget()
@@ -620,7 +632,8 @@ class Ui_Dialog(object):
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.label_20.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
-        self.pushButton_load_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
+        self.pushButton_load_table.setText("")
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"Choose a table file to import the data", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Filter the frequency range of interest</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -684,8 +697,9 @@ class MassSourceInputs_UI(QDialog, Ui_Dialog):
                                     - (Layout): QGridLayout
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout
-                                                        - lineEdit_table_path: QLineEdit
                                                         - pushButton_load_table: QPushButton
+                                                        - lineEdit_table_path: QLineEdit
+                                                        - label_11: QLabel
                                                         - pushButton_change_frequency_setup: QPushButton
                                 - tab_advanced_search: QWidget
                                     - (Layout): QGridLayout
