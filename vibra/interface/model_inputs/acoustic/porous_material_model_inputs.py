@@ -95,7 +95,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
         #
-        self.tableWidget_porous_materials.cellChanged.connect(self.cell_changed_callback)
+        self.tableWidget_delany.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="delany"))
+        self.tableWidget_jca.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="jca"))
         #
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -276,8 +277,12 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def cell_changed_callback(self, row, column):
-        item = self.tableWidget_porous_materials.item(row, column)
+    def cell_changed_callback(self, row, column, model):
+        item = None
+        if model == "delany":
+            item = self.tableWidget_delany.item(row, column)
+        else:
+            item = self.tableWidget_jca.item(row, column)
 
         model_id = column + 1
         parameter_position = row - 2
@@ -303,7 +308,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
             for volume in volumes:
                 self.properties._set_property("porous_material_model", model.get_data(), volume=volume)
-
                                                   
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
@@ -353,8 +357,62 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def load_info(self):
         self.map_existing_porous_materials()
-        self.treeWidget_porous_material_model.clear()
 
+        self.treeWidget_porous_material_model.clear()
+        self.update_treeWidget_porous_materials()
+
+        self.configure_tableWidgets()
+
+        delany_counter = 0
+        jca_counter = 0
+
+        for _, (model_id, model_data) in enumerate(self.map_model_id_to_model.items()):
+            model = model_data.model
+            model_data_dict = model_data.get_data()
+
+            model_id_item = QTableWidgetItem(str(model_id))
+            model_item = QTableWidgetItem(self.addapt_model_name(model))
+            model_id_item.setFlags(Qt.ItemIsSelectable)
+            model_item.setFlags(Qt.ItemIsSelectable)
+        
+            if model in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+                self.tabWidget_models.setTabEnabled(0, True)
+                self.tabWidget_models.setCurrentIndex(0)
+
+                self.tableWidget_delany.setItem(0, delany_counter, model_id_item)
+                self.tableWidget_delany.setItem(1, delany_counter, model_item)
+
+                for k, model_input in enumerate(model_data_dict.values()):
+
+                    if isinstance(model_input, str):
+                        continue
+
+                    self.tableWidget_delany.setItem(2+k, delany_counter, QTableWidgetItem(str(model_input)))
+
+                delany_counter += 1
+
+            else:
+                self.tabWidget_models.setTabEnabled(1, True)
+                self.tabWidget_models.setCurrentIndex(1)
+
+                self.tableWidget_jca.setItem(0, jca_counter, model_id_item)
+                self.tableWidget_jca.setItem(1, jca_counter, model_item)
+
+                for k, model_input in enumerate(model_data_dict.values()):
+
+                    if isinstance(model_input, str):
+                        continue
+
+                    self.tableWidget_jca.setItem(2+k, jca_counter, QTableWidgetItem(str(model_input)))
+
+                jca_counter += 1
+
+        self.update_tableWidget_delany_items()
+        self.update_tableWidget_jca_items()
+
+        self.update_tabs_visibility()
+    
+    def update_treeWidget_porous_materials(self):
         for model_id, volume_ids in self.map_model_id_to_volumes.items():
             model_data = self.map_model_id_to_model[model_id]
             for volume_id in volume_ids:
@@ -362,46 +420,68 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_porous_material_model.addTopLevelItem(new)
+            self.treeWidget_porous_material_model.addTopLevelItem(new)
+        
+    def configure_tableWidgets(self):
+        delany_count = 0
+        jca_count = 0
 
-        self.tableWidget_porous_materials.clearContents()
-        self.tableWidget_porous_materials.blockSignals(True)
-        self.tableWidget_porous_materials.setRowCount(11)
-        self.tableWidget_porous_materials.setColumnCount(len(self.map_model_id_to_volumes))
+        for model in self.map_model_id_to_model.values():
+            if isinstance(model, DelanyBazleyData):
+                delany_count += 1
+            else:
+                jca_count += 1
 
-        for j, (model_id, model_data) in enumerate(self.map_model_id_to_model.items()):
+        self.tableWidget_delany.clearContents()
+        self.tableWidget_delany.blockSignals(True)
+        self.tableWidget_delany.setRowCount(11)
+        self.tableWidget_delany.setColumnCount(delany_count)
 
-            model_id_item = QTableWidgetItem(str(model_id))
-            model_item = QTableWidgetItem(model_data.model)
+        self.tableWidget_jca.clearContents()
+        self.tableWidget_jca.blockSignals(True)
+        self.tableWidget_jca.setRowCount(7)
+        self.tableWidget_jca.setColumnCount(jca_count)
 
-            model_id_item.setFlags(Qt.ItemIsSelectable)
-            model_item.setFlags(Qt.ItemIsSelectable)
-
-            self.tableWidget_porous_materials.setItem(0, j, model_id_item)
-            self.tableWidget_porous_materials.setItem(1, j, model_item)
-
-            model_data_dict = model_data.get_data()
-            print(model_data_dict)
-            for k, model_input in enumerate(model_data_dict.values()):
-
-                if isinstance(model_input, str):
-                    continue
-
-                self.tableWidget_porous_materials.setItem(2+k, j, QTableWidgetItem(str(model_input)))
-
-        for i in range(self.tableWidget_porous_materials.rowCount()):
-            for j in range(self.tableWidget_porous_materials.columnCount()):
-                item = self.tableWidget_porous_materials.item(i, j)
+        self.tabWidget_models.setTabEnabled(0, False)
+        self.tabWidget_models.setTabEnabled(1, False)
+    
+    def update_tableWidget_delany_items(self):
+        for i in range(self.tableWidget_delany.rowCount()):
+            for j in range(self.tableWidget_delany.columnCount()):
+                item = self.tableWidget_delany.item(i, j)
 
                 if item is None:
                     item = QTableWidgetItem()
-                    self.tableWidget_porous_materials.setItem(i, j, item)
+                    self.tableWidget_delany.setItem(i, j, item)
+                    item.setFlags(Qt.ItemIsSelectable)
+
+                item.setTextAlignment(Qt.AlignCenter)
+        
+        self.tableWidget_delany.blockSignals(False)
+    
+    def update_tableWidget_jca_items(self):
+        for i in range(self.tableWidget_jca.rowCount()):
+            for j in range(self.tableWidget_jca.columnCount()):
+                item = self.tableWidget_jca.item(i, j)
+
+                if item is None:
+                    item = QTableWidgetItem()
+                    self.tableWidget_jca.setItem(i, j, item)
                     item.setFlags(Qt.ItemIsSelectable)
 
                 item.setTextAlignment(Qt.AlignCenter)
 
-        self.tableWidget_porous_materials.blockSignals(False)
-        self.update_tabs_visibility()
+        self.tableWidget_jca.blockSignals(False)
+    
+    def addapt_model_name(self, model:str) -> str:
+        if model == "Delany-Bazley":
+            return "DB"
+        elif model == "Delany-Bazley-Miki":
+            return "DB-Miki"
+        elif model == "Jhonson-Champoux-Allard":
+            return "JCA"
+        
+        return "JCAL"
 
     # def check_selected_bodies(self):
     #     str_selection_ids = self.lineEdit_selection_id.text()

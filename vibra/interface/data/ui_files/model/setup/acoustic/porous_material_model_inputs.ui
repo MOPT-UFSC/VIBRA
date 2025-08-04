@@ -267,7 +267,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>494</width>
+           <width>497</width>
            <height>500</height>
           </rect>
          </property>
@@ -298,7 +298,7 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>4</number>
             </property>
             <widget class="QWidget" name="tab_Delany_Bazley">
              <attribute name="title">
@@ -2222,68 +2222,200 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="tab">
+            <widget class="QWidget" name="frame_11">
              <attribute name="title">
               <string>Edit</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_21">
-              <item row="0" column="0">
-               <widget class="QTableWidget" name="tableWidget_porous_materials">
-                <row>
-                 <property name="text">
-                  <string>Identifier</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Model</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 1</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 2</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 3</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 4</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 5</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 6</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 7</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 8</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>Param. 9</string>
-                 </property>
-                </row>
+              <item row="0" column="0" rowspan="2">
+               <widget class="QTabWidget" name="tabWidget_models">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="currentIndex">
+                 <number>0</number>
+                </property>
+                <property name="tabsClosable">
+                 <bool>false</bool>
+                </property>
+                <property name="tabBarAutoHide">
+                 <bool>false</bool>
+                </property>
+                <widget class="QWidget" name="tab_2">
+                 <attribute name="title">
+                  <string>Delany-Bazley</string>
+                 </attribute>
+                 <layout class="QGridLayout" name="gridLayout_22">
+                  <item row="0" column="0">
+                   <widget class="QTableWidget" name="tableWidget_delany">
+                    <attribute name="horizontalHeaderVisible">
+                     <bool>false</bool>
+                    </attribute>
+                    <row>
+                     <property name="text">
+                      <string>Identifier</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Model</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C1</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C2</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C3</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C4</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C5</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C6</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C7</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>C8</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Flow Resistivity</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_3">
+                 <attribute name="title">
+                  <string>Jhonson Champoux Allard</string>
+                 </attribute>
+                 <layout class="QGridLayout" name="gridLayout_23">
+                  <item row="0" column="0">
+                   <widget class="QTableWidget" name="tableWidget_jca">
+                    <attribute name="horizontalHeaderVisible">
+                     <bool>false</bool>
+                    </attribute>
+                    <attribute name="verticalHeaderVisible">
+                     <bool>true</bool>
+                    </attribute>
+                    <row>
+                     <property name="text">
+                      <string>Identifier</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Model</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Porosity</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Tortuosity</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Viscous Char. Length</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Thermal Char. Length</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Flow Resistivity</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
               </item>
              </layout>
