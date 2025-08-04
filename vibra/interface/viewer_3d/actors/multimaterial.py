@@ -70,20 +70,18 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_surfaces()
         self._create_textures()
         self._create_material_actor()
-        # self._create_fluid_actor()
+        self._create_fluid_actor()
         # self._create_porous_actor()
 
     def clear_colors(self):
-        self.set_color(Color(255, 0, 0))
+        self.set_color(Color(255, 255, 255))
 
     def set_color(self, color: Color):
         for i, c in enumerate(color.to_rgba()):
             self.cell_colors.FillComponent(i, c)
 
     def paint_surfaces(self, color: Color, surfaces: Sequence[int]):
-        array = vtk_to_numpy(self.data.GetCellData().GetArray("surface_indexes"))
-        mask = np.isin(array, list(surfaces))
-        cells = np.where(mask)[0]
+        cells = self._surfaces_to_cells(surfaces)
         self.paint_cells(color, cells)
 
     def paint_cells(self, color: Color, cells: Sequence[int]):
@@ -100,6 +98,26 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             actor.GetMapper().ScalarVisibilityOff()  # Just to force color updates
             actor.GetMapper().ScalarVisibilityOn()
 
+    def configure_composition(self, constitution: str, surfaces: Sequence[int]):
+        cells = self._surfaces_to_cells(surfaces)
+
+        if constitution == "material":
+            self.material_extractor.SetCellIds(cells, len(cells))
+        elif constitution == "fluid":
+            self.fluid_extractor.SetCellIds(cells, len(cells))
+        elif constitution == "porous":
+            self.fluid_extractor.SetCellIds(cells, len(cells))
+
+    def clear_constitution(self):
+        self.material_extractor.SetCellIds([], 0)
+        self.fluid_extractor.SetCellIds([], 0)
+        self.porous_extractor.SetCellIds([], 0)
+
+    def _surfaces_to_cells(self, surfaces: Sequence[int]) -> np.ndarray:
+        array = vtk_to_numpy(self.data.GetCellData().GetArray("surface_indexes"))
+        mask = np.isin(array, list(surfaces))
+        return np.where(mask)[0]
+
     def _create_surfaces(self):
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
 
@@ -113,6 +131,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             points = vtkPoints()
             points.SetData(numpy_to_vtk(coords + (1, 0, 0)))
 
+            # The format here is [n, p0, p1, ..., pn, n, p0, p1, ..., pn]
+            # Therefore I add a "n" column at the start and then flatten it
             cells = vtk.vtkCellArray()
             helper = np.insert(connect, 0, nodes_per_element, axis=1)
             vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
@@ -168,7 +188,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_material_actor(self):
         self.material_extractor = vtkExtractCells()
-        self.material_extractor.ExtractAllCellsOn()
+        # self.material_extractor.ExtractAllCellsOn()
         
         material_mapper = vtkDataSetMapper()
         material_mapper.SetScalarModeToUseCellData()
@@ -188,7 +208,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_fluid_actor(self):
         self.fluid_extractor = vtkExtractCells()
-        self.fluid_extractor.ExtractAllCellsOn()
+        # self.fluid_extractor.ExtractAllCellsOn()
 
         fluid_mapper = vtkDataSetMapper()
         fluid_mapper.SetScalarModeToUseCellData()
@@ -208,7 +228,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_porous_actor(self):
         self.porous_extractor = vtkExtractCells()
-        self.porous_extractor.ExtractAllCellsOn()
+        # self.porous_extractor.ExtractAllCellsOn()
 
         porous_mapper = vtkDataSetMapper()
         porous_mapper.SetScalarModeToUseCellData()
