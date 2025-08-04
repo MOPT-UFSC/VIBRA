@@ -103,8 +103,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             # how to project the texture coordinates
             add_tcoords = vtk.vtkTextureMapToPlane()
             add_tcoords.SetInputData(data)
-            add_tcoords.SetSRange(0, 10)
-            add_tcoords.SetTRange(0, 10)
+            add_tcoords.SetSRange(0, 5)
+            add_tcoords.SetTRange(0, 5)
             add_tcoords.Update()
 
             combined_surfaces.AddInputData(add_tcoords.GetOutput())
@@ -121,8 +121,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         self.data: vtkPolyData = add_tangents.GetOutput()
 
-        fill_array(self.data, "material_color", (255, 255, 0, 255))
-        fill_array(self.data, "fluid_color", (0, 255, 0, 255))
+        color = fill_array(self.data, "color", (255, 255, 255, 255))
+        self.data.GetCellData().SetScalars(color)
 
     def _reduce_connectivity(
         self,
@@ -140,18 +140,19 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return coords[old_indexes], mapping[connectivity]
 
     def _create_material_actor(self):
-        material_mapper = vtkPolyDataMapper()
-        self.data >> material_mapper
-        material_mapper.SetScalarModeToUseCellFieldData()
-        material_mapper.SetColorModeToDirectScalars()
-        material_mapper.SelectColorArray("fluid_color")
+        self.material_extractor = vtkExtractCells()
+        self.material_extractor.ExtractAllCellsOn()
+        
+        material_mapper = vtkDataSetMapper()
+        material_mapper.SetScalarModeToUseCellData()
         material_mapper.ScalarVisibilityOn()
+
+        self.data >> self.material_extractor >> material_mapper
 
         self.material_actor = vtkActor(mapper=material_mapper)
         self.AddPart(self.material_actor)
 
         actor_property = self.material_actor.GetProperty()
-        actor_property.SetInterpolationToPhong()
         actor_property.specular_power = 80
         actor_property.specular = 1.5
         actor_property.diffuse = 0.6
@@ -159,47 +160,43 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         actor_property.normal_texture = self.material_normal_texture
 
     def _create_fluid_actor(self):
+        self.fluid_extractor = vtkExtractCells()
+        self.fluid_extractor.ExtractAllCellsOn()
+
         fluid_mapper = vtkDataSetMapper()
-        self.data >> fluid_mapper
-        fluid_mapper.SetScalarModeToUseCellFieldData()
-        fluid_mapper.SelectColorArray("fluid_color")
+        fluid_mapper.SetScalarModeToUseCellData()
         fluid_mapper.ScalarVisibilityOn()
+
+        self.data >> self.fluid_extractor >> fluid_mapper
 
         self.fluid_actor = vtkActor(mapper=fluid_mapper)
         self.AddPart(self.fluid_actor)
 
         actor_property = self.fluid_actor.GetProperty()
-        actor_property.color = Color(190, 190, 255).to_rgb_f()
-        actor_property.specular_color = (1, 1, 1)
+        actor_property.opacity = 0.8
         actor_property.specular_power = 40
         actor_property.specular = 0.7
-        actor_property.normal_scale = 2
-        actor_property.normal_texture = self.fluid_normal_texture
+        actor_property.normal_scale = 1
+        # actor_property.normal_texture = self.fluid_normal_texture
 
     def _create_porous_actor(self):
-        number_of_face_elements = len(self.mesh.faces_connectivity)
-
         self.porous_extractor = vtkExtractCells()
-        self.data >> self.porous_extractor
-        self.porous_extractor.cell_list = create_vtk_id_list(
-            np.arange(0, number_of_face_elements // 2)
-        )
+        self.porous_extractor.ExtractAllCellsOn()
 
         porous_mapper = vtkDataSetMapper()
-        self.porous_extractor >> porous_mapper
+        porous_mapper.SetScalarModeToUseCellData()
+        porous_mapper.ScalarVisibilityOn()
+
+        self.data >> self.porous_extractor >> porous_mapper
 
         self.porous_actor = vtkActor(mapper=porous_mapper)
         self.AddPart(self.porous_actor)
 
         actor_property = self.porous_actor.GetProperty()
-        actor_property.SetInterpolationToPBR()
-
-        actor_property.color = (0.03, 0.03, 0.03)
-        actor_property.opacity = 1
-        actor_property.metallic = 0.2
-        actor_property.roughness = 0.9
+        actor_property.specular = 0
+        actor_property.diffuse = 0.5
         actor_property.normal_texture = self.porous_normal_texture
-        actor_property.normal_scale = 5
+        actor_property.normal_scale = 1
 
     def _create_textures(self):
         self.fluid_normal_texture = read_texture(TEXTURE_DIR / "perlin_normal.jpg")
