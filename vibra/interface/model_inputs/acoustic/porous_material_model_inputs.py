@@ -210,13 +210,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             selected_item = selected_items[0]
 
             volume_id = int(selected_item.text(0))
-            model_id = int(selected_item.text(2))
 
             self.properties._remove_volume_property("porous_material_model", volume_id)
             app().file.write_model_properties_in_file()
-
-            self.map_model_id_to_model.pop(model_id)
-            self.map_model_id_to_volumes.pop(model_id)
 
             self.load_info()
             self.actions_to_finalize()
