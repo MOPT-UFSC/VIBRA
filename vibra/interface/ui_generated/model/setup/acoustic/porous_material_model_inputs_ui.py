@@ -1304,7 +1304,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(4)
-        self.tabWidget_models.setCurrentIndex(0)
+        self.tabWidget_models.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -1411,7 +1411,7 @@ class Ui_Dialog(object):
         ___qtablewidgetitem16.setText(QCoreApplication.translate("Dialog", u"Thermal Char. Length", None));
         ___qtablewidgetitem17 = self.tableWidget_jca.verticalHeaderItem(6)
         ___qtablewidgetitem17.setText(QCoreApplication.translate("Dialog", u"Flow Resistivity", None));
-        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_3), QCoreApplication.translate("Dialog", u"Jhonson Champoux Allard", None))
+        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_3), QCoreApplication.translate("Dialog", u"Jhonson-Champoux-Allard", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.frame_11), QCoreApplication.translate("Dialog", u"Edit", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))

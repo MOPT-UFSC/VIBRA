@@ -2233,7 +2233,7 @@
                  <bool>true</bool>
                 </property>
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <property name="tabsClosable">
                  <bool>false</bool>
@@ -2345,7 +2345,7 @@
                 </widget>
                 <widget class="QWidget" name="tab_3">
                  <attribute name="title">
-                  <string>Jhonson Champoux Allard</string>
+                  <string>Jhonson-Champoux-Allard</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_23">
                   <item row="0" column="0">
