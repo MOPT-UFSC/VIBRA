@@ -61,7 +61,9 @@ def compute_structural_harmonic_field(
     amplitudes = np.abs(results_complex)
     phases = np.angle(results_complex)
 
-    results_real = amplitudes * np.cos(phases + phase_rad)
+    delta = -phases[np.argmax(amplitudes)]
+
+    results_real = amplitudes * np.cos(phases + phase_rad + delta)
     current_solution = results_real.reshape(-1, 3).copy()
 
     if displacement_type == "u_sum":
