@@ -31,6 +31,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.interface_utils import ColorMode
+from vibra.utils.polydata_utils import fill_array
 from molde import Color
 import vtk
 
@@ -66,15 +67,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         if self.mesh.nodal_coordinates.size == 0:
             return
 
-        self._create_data()
+        self._create_surfaces()
         self._create_textures()
         self._create_material_actor()
-        self._create_fluid_actor()
+        # self._create_fluid_actor()
         # self._create_porous_actor()
-
-    def _create_data(self):
-        self._create_surfaces()
-        return
 
     def _create_surfaces(self):
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
@@ -98,18 +95,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data.SetPoints(points)
             data.SetPolys(cells)
 
-            surface_indexes = vtkIntArray()
-            surface_indexes.SetName("surface_indexes")
-            surface_indexes.SetNumberOfTuples(data.GetNumberOfCells())
-            surface_indexes.Fill(surface)
-
-            volume_indexes = vtkIntArray()
-            volume_indexes.SetName("volume_indexes")
-            volume_indexes.SetNumberOfTuples(data.GetNumberOfCells())
-            volume_indexes.Fill(self.mesh.volumes_from_surface[surface][0])
-
-            data.GetCellData().AddArray(surface_indexes)
-            data.GetCellData().AddArray(volume_indexes)
+            volume = self.mesh.volumes_from_surface[surface][0]
+            fill_array(data, "surface_indexes", surface)
+            fill_array(data, "volume_indexes", volume)
 
             # Every surface have its own plane defining
             # how to project the texture coordinates
@@ -129,7 +117,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         add_tangents.SetInputData(add_normals.GetOutput())
         add_tangents.Update()
 
-        self.data = add_tangents.GetOutput()
+        self.data: vtkPolyData = add_tangents.GetOutput()
+
+        fill_array(self.data, "material_color", (255, 255, 0, 255))
+        fill_array(self.data, "fluid_color", (0, 255, 0, 255))
 
     def _reduce_connectivity(
         self,
@@ -147,25 +138,18 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return coords[old_indexes], mapping[connectivity]
 
     def _create_material_actor(self):
-        number_of_face_elements = len(self.mesh.faces_connectivity)
-
-        self.material_extractor = vtkExtractCells()
-        self.data >> self.material_extractor
-        self.material_extractor.cell_list = create_vtk_id_list(
-            np.arange(0, number_of_face_elements // 2)
-        )
-
-        material_mapper = vtkDataSetMapper()
-        self.material_extractor >> material_mapper
+        material_mapper = vtkPolyDataMapper()
+        self.data >> material_mapper
+        material_mapper.SetScalarModeToUseCellFieldData()
+        material_mapper.SetColorModeToDirectScalars()
+        material_mapper.SelectColorArray("fluid_color")
+        material_mapper.ScalarVisibilityOn()
 
         self.material_actor = vtkActor(mapper=material_mapper)
         self.AddPart(self.material_actor)
 
         actor_property = self.material_actor.GetProperty()
         actor_property.SetInterpolationToPhong()
-        actor_property.color = (0.9, 0.7, 0.3)
-        # actor_property.opacity = 0.9
-        actor_property.specular_color = (1, 1, 1)
         actor_property.specular_power = 80
         actor_property.specular = 1.5
         actor_property.diffuse = 0.6
@@ -173,24 +157,17 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         actor_property.normal_texture = self.material_normal_texture
 
     def _create_fluid_actor(self):
-        number_of_face_elements = len(self.mesh.faces_connectivity)
-
-        self.fluid_extractor = vtkExtractCells()
-        self.data >> self.fluid_extractor
-        self.fluid_extractor.cell_list = create_vtk_id_list(
-            np.arange(number_of_face_elements // 2, number_of_face_elements)
-        )
-
         fluid_mapper = vtkDataSetMapper()
-        self.fluid_extractor >> fluid_mapper
+        self.data >> fluid_mapper
+        fluid_mapper.SetScalarModeToUseCellFieldData()
+        fluid_mapper.SelectColorArray("fluid_color")
+        fluid_mapper.ScalarVisibilityOn()
 
         self.fluid_actor = vtkActor(mapper=fluid_mapper)
         self.AddPart(self.fluid_actor)
 
         actor_property = self.fluid_actor.GetProperty()
-
         actor_property.color = Color(190, 190, 255).to_rgb_f()
-        # actor_property.opacity = 0.8
         actor_property.specular_color = (1, 1, 1)
         actor_property.specular_power = 40
         actor_property.specular = 0.7

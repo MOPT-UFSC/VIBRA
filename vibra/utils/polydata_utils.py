@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from vtkmodules.vtkCommonCore import vtkUnsignedCharArray, vtkIntArray, vtkFloatArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
@@ -38,3 +39,33 @@ def transform_polydata(
     transformation.SetInputData(polydata)
     transformation.Update()
     return transformation.GetOutput()
+
+
+def fill_array(data: vtkPolyData, name: str, value: int | float | tuple[int]):
+    n_cells = data.GetNumberOfCells()
+
+    if isinstance(value, int):
+        array = vtkIntArray()
+        array.SetName(name)
+        array.SetNumberOfTuples(n_cells)
+        array.Fill(value)
+
+    elif isinstance(value, float):
+        array = vtkFloatArray()
+        array.SetName(name)
+        array.SetNumberOfTuples(n_cells)
+        array.Fill(value)
+
+    elif isinstance(value, tuple):
+        array = vtkUnsignedCharArray()
+        array.SetName(name)
+        array.SetNumberOfComponents(len(value))
+        array.SetNumberOfTuples(n_cells)
+        for i, val in enumerate(value):
+            array.FillComponent(i, val)
+
+    else:
+        raise ValueError("Invalid data")
+
+    data.GetCellData().AddArray(array)    
+    return array
