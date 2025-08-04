@@ -11,6 +11,11 @@ class ColorMode(IntEnum):
     EMPTY = auto()
     MATERIAL = auto()
     FLUID = auto()
+    MESH_QUALITY_VOLUME = auto()
+    MESH_QUALITY_GAMMA = auto()
+    MESH_QUALITY_MINSJ = auto()
+    MESH_QUALITY_MINSIGE = auto()
+    MESH_QUALITY_MINSICN = auto()
 
 
 @dataclass

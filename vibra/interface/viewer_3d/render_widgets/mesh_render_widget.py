@@ -19,7 +19,7 @@ from .model_info_text import (
     nodes_info_text,
     mesh_faces_info_text,
     mesh_solids_info_text,
-    mesh_structural_boundary_conditions_info_text, 
+    mesh_structural_boundary_conditions_info_text,
 )
 
 import logging
@@ -37,7 +37,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
         app().main_window.theme_changed.connect(self.update_theme)
-        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+        app().main_window.visualization_changed.connect(
+            self.visualization_changed_callback
+        )
         app().main_window.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -75,8 +77,12 @@ class MeshRenderWidget(CommonRenderWidget):
             self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
 
         if hasattr(self, "scale_bar_actor"):
-            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
-            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(
+                font_color.to_rgb_f()
+            )
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(
+                font_color.to_rgb_f()
+            )
 
         self.update_selection()
 
@@ -123,10 +129,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = SelectionSpheres()
 
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
         self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -156,22 +160,27 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             return
 
-        visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-
         # Nodes actor are always visible.
         # We hide them painting the cells as transparent.
         self.nodes_actor.SetVisibility(True)
 
+        visualization = app().main_window.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
         self.solids_actor.SetVisibility(visualization.solids)
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
+
+        if app().main_window.distinguished_solids:
+            self.switch_to_solids_actor()
+
+        if isinstance(self.solids_actor, SolidsActor):
+            self.solids_actor.distinguish_solids(
+                app().main_window.distinguished_solids
+            )
 
         self.update_selection()
         self.update()
-    
+
     def update_hidden_plot(self):
         self.update_plot(reset_camera=False)
 
@@ -184,11 +193,15 @@ class MeshRenderWidget(CommonRenderWidget):
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
-            xyz = self.plane_actor.calculate_xyz_position(section_plane_widget.get_position())
-            normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
+            xyz = self.plane_actor.calculate_xyz_position(
+                section_plane_widget.get_position()
+            )
+            normal = self.plane_actor.calculate_normal_vector(
+                section_plane_widget.get_rotation()
+            )
             if section_plane_widget.get_inverted():
                 normal = -normal
-            self.mesh_selection.set_section_plane(xyz, normal)            
+            self.mesh_selection.set_section_plane(xyz, normal)
         else:
             self.mesh_selection.clear_section_plane()
 
@@ -196,7 +209,9 @@ class MeshRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(
+                x0, y0, x, y
+            )
         else:
             picked_nodes, picked_faces, picked_solids = self.mesh_selection.pick(x, y)
 
@@ -235,13 +250,15 @@ class MeshRenderWidget(CommonRenderWidget):
         nodes = app().main_window.selected_mesh_nodes
         faces = app().main_window.selected_mesh_faces
         solids = app().main_window.selected_mesh_solids
-    
+
         selection_faces_color = app().config.user_preferences.selection_faces_color
-        selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
+        selection_nodes_points_color = (
+            app().config.user_preferences.selection_nodes_points_color
+        )
 
         self.nodes_actor.paint_cells(selection_nodes_points_color, nodes)
         self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4), faces)
-        self.solids_actor.paint_cells(selection_faces_color, solids)
+        self.solids_actor.paint_solids(selection_faces_color, solids)
         self.edges_actor.configure_appearance()
         self.update()
 
@@ -274,6 +291,22 @@ class MeshRenderWidget(CommonRenderWidget):
     def _get_info_tab(self):
         pass
 
+    def switch_to_solids_actor(self):
+        if not isinstance(self.solids_actor, HollowSolidsActor):
+            return
+
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        if mesh.solids_connectivity.size <= 0:
+            return
+
+        self.remove_actors(self.solids_actor, self.edges_actor)
+        self.solids_actor = SolidsActor(mesh)
+        self.edges_actor = EdgesActor(self.solids_actor.data)
+        self.add_actors(self.solids_actor, self.edges_actor)
+
     def update_section_plane(self):
         if not self.actors_exists():
             return
@@ -299,17 +332,7 @@ class MeshRenderWidget(CommonRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
-        if isinstance(self.solids_actor, HollowSolidsActor):
-            mesh = app().project.model.mesh
-            if mesh is None:
-                return
-
-            if mesh.solids_connectivity.size > 0:
-                self.remove_actors(self.solids_actor, self.edges_actor)
-                self.solids_actor = SolidsActor(mesh)
-                self.edges_actor = EdgesActor(self.solids_actor.data)
-                self.add_actors(self.solids_actor, self.edges_actor)
-
+        self.switch_to_solids_actor()
         self.plane_actor.configure_section_plane(position, rotation)
         xyz = self.plane_actor.calculate_xyz_position(position)
         normal = self.plane_actor.calculate_normal_vector(rotation)
@@ -330,9 +353,7 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
         self.nodes_actor.disable_cut()
@@ -350,4 +371,3 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-

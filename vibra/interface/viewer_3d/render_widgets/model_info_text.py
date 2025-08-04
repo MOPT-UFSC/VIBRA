@@ -536,6 +536,7 @@ def mesh_faces_info_text():
 
 def mesh_solids_info_text():
     solids_elem_ids = list(app().main_window.selected_mesh_solids)
+    # print("\n\nelementos selecionados:\n", solids_elem_ids, "\n\n")
     text = ""
 
     if len(solids_elem_ids) > 1:
