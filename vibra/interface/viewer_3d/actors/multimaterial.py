@@ -1,4 +1,4 @@
-from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
@@ -73,6 +73,33 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         # self._create_fluid_actor()
         # self._create_porous_actor()
 
+    def clear_colors(self):
+        self.set_color(Color(255, 0, 0))
+
+    def set_color(self, color: Color):
+        for i, c in enumerate(color.to_rgba()):
+            self.cell_colors.FillComponent(i, c)
+
+    def paint_surfaces(self, color: Color, surfaces: Sequence[int]):
+        array = vtk_to_numpy(self.data.GetCellData().GetArray("surface_indexes"))
+        mask = np.isin(array, list(surfaces))
+        cells = np.where(mask)[0]
+        self.paint_cells(color, cells)
+
+    def paint_cells(self, color: Color, cells: Sequence[int]):
+        color_fmt = color.to_rgba()
+        array = vtk_to_numpy(self.cell_colors)
+        array[cells] = color_fmt
+        self.data.Modified()
+
+        collection = vtk.vtkActorCollection()
+        self.GetActors(collection)
+        for actor in collection:
+            actor: vtkActor
+            actor.GetMapper().SetScalarModeToUseCellData()
+            actor.GetMapper().ScalarVisibilityOff()  # Just to force color updates
+            actor.GetMapper().ScalarVisibilityOn()
+
     def _create_surfaces(self):
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
 
@@ -84,7 +111,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             )
 
             points = vtkPoints()
-            points.SetData(numpy_to_vtk(coords))
+            points.SetData(numpy_to_vtk(coords + (1, 0, 0)))
 
             cells = vtk.vtkCellArray()
             helper = np.insert(connect, 0, nodes_per_element, axis=1)
@@ -121,8 +148,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         self.data: vtkPolyData = add_tangents.GetOutput()
 
-        color = fill_array(self.data, "color", (255, 255, 255, 255))
-        self.data.GetCellData().SetScalars(color)
+        self.cell_colors = fill_array(self.data, "color", (255, 255, 255, 255))
+        self.data.GetCellData().SetScalars(self.cell_colors)
 
     def _reduce_connectivity(
         self,
