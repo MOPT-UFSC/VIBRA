@@ -48,9 +48,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self.map_model_id_to_volumes: Dict[int, List[str]] = defaultdict(list)
-        self.map_model_id_to_model: Dict[int, DelanyBazleyData|JCAData] = dict()
-
         self._initialize()
         self._config_window()
         self._configure_widgets()
@@ -345,6 +342,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setTabVisible(4, False)
 
     def map_existing_porous_materials(self):
+        self.map_model_id_to_volumes: Dict[int, List[str]] = defaultdict(list)
+        self.map_model_id_to_model: Dict[int, DelanyBazleyData|JCAData] = dict()
+
         models = list()
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
