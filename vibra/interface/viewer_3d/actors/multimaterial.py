@@ -103,6 +103,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             # how to project the texture coordinates
             add_tcoords = vtk.vtkTextureMapToPlane()
             add_tcoords.SetInputData(data)
+            add_tcoords.SetSRange(0, 10)
+            add_tcoords.SetTRange(0, 10)
             add_tcoords.Update()
 
             combined_surfaces.AddInputData(add_tcoords.GetOutput())
