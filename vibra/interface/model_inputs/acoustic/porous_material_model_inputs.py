@@ -313,6 +313,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
             for volume in volumes:
                 self.properties._set_property("porous_material_model", model.get_data(), volume=volume)
+            
+            app().file.write_model_properties_in_file()
                                                   
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
