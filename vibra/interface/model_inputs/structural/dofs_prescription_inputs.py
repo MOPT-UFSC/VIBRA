@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.dofs_prescription_inputs_ui import DofsPrescriptionInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -460,6 +461,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
         title = "Error while loading table"
+        imported_file = None
 
         try:
             if direct_load:
@@ -467,31 +469,18 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
+                imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
-
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = str(Path().home())
-                else:
-                    path = last_path
-
-                caption = f"Choose a table to import the {dof_label} data"
-                imported_table_path, check = QFileDialog.getOpenFileName(  
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
-
-                if not check:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt"], f"Choose a table to import the {dof_label} data")
+                
+                if not imported_data:
                     return None, None
 
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            imported_filename = basename(imported_table_path)
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
+                imported_table_path = imported_data.path
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -663,13 +652,13 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         for selected_id in selected_ids:
             
             if self.ux_table_values is not None:
-                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, self.ux_table_path, linear = True)
+                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, linear = True)
 
             if self.uy_table_values is not None:
-                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, self.uy_table_path, linear = True)
+                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, linear = True)
 
             if self.uz_table_values is not None:
-                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values, self.uz_table_path, linear = True)
+                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values,  linear = True)
 
             table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
