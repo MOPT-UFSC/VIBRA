@@ -3,14 +3,14 @@ from dataclasses import dataclass, fields
 
 @dataclass
 class DelanyBazleyData:
-    c1: float
-    c2: float
-    c3: float
-    c4: float
-    c5: float
-    c6: float
-    c7: float
-    c8: float
+    C1: float
+    C2: float
+    C3: float
+    C4: float
+    C5: float
+    C6: float
+    C7: float
+    C8: float
     flow_resistivity: float
     model: str 
 

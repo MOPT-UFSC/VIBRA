@@ -131,6 +131,7 @@ class Ui_Dialog(object):
         self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
         self.tabWidget_main.setSizeIncrement(QSize(0, 0))
         self.tabWidget_main.setFont(font1)
+        self.tabWidget_main.setTabBarAutoHide(False)
         self.tab_Delany_Bazley = QWidget()
         self.tab_Delany_Bazley.setObjectName(u"tab_Delany_Bazley")
         self.gridLayout_5 = QGridLayout(self.tab_Delany_Bazley)
@@ -1303,8 +1304,8 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(4)
-        self.tabWidget_models.setCurrentIndex(1)
+        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_models.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)

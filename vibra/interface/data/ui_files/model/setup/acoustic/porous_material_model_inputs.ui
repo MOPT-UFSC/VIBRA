@@ -298,7 +298,10 @@
              </font>
             </property>
             <property name="currentIndex">
-             <number>4</number>
+             <number>0</number>
+            </property>
+            <property name="tabBarAutoHide">
+             <bool>false</bool>
             </property>
             <widget class="QWidget" name="tab_Delany_Bazley">
              <attribute name="title">
@@ -2233,7 +2236,7 @@
                  <bool>true</bool>
                 </property>
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <property name="tabsClosable">
                  <bool>false</bool>

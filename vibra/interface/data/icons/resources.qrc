@@ -58,6 +58,8 @@
         <file>views/bottom.png</file>
         <file>views/left.png</file>
         <file>views/back.png</file>
+        <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
+        <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file>model_setup_items/prescribed_dofs.png</file>
         <file>model_setup_items/acoustic_transfer_element_setup.png</file>
         <file>model_setup_items/damping.png</file>
