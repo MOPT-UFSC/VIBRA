@@ -38,7 +38,7 @@ from vibra.utils.interface_utils import ColorMode
 from vibra.utils.polydata_utils import fill_array
 from molde import Color
 import vtk
-
+from pathlib import Path
 
 def create_vtk_id_list(id_list: Sequence[int]) -> vtkIdList:
     vtk_id_list = vtkIdList()
@@ -47,13 +47,25 @@ def create_vtk_id_list(id_list: Sequence[int]) -> vtkIdList:
     return vtk_id_list
 
 
-def read_texture(filename: str):
-    reader = vtk.vtkJPEGReader()
-    reader.SetFileName(filename)
+def read_texture(path: str | Path | None):
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f'Texture file "{path}" not found')
+
+    if path.suffix == ".png":
+        reader = vtk.vtkPNGReader()
+    elif path.suffix == ".jpg":
+        reader = vtk.vtkJPEGReader()
+    else:
+        raise ValueError(f'Unsupported image format {path.suffix}')
+
+    reader.SetFileName(path)
     reader.Update()
 
     texture = vtk.vtkTexture()
     texture.InterpolateOn()
+    texture.RepeatOn()
     texture.SetInputData(reader.GetOutput())
     texture.Update
 
