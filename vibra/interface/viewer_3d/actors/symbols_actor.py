@@ -230,13 +230,17 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
         
+        color = None
         if property["connection_type"] == "discharge":
             shape = sources.create_compressor_discharge_source
+            # vermelho, seta entra é azul
+            color = color_names.RED_3
         elif property["connection_type"] == "suction":
             shape = sources.create_compressor_suction_source
+            color = color_names.BLUE_3
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol(shape, coords, normal, color=color_names.RED_2)
+        self.add_symbol(shape, coords, normal, color=color)
     
     def _build_dissipation_model(self, surface_id: int):
         coords, normal = self._get_center_coords_and_normals(surface_id)

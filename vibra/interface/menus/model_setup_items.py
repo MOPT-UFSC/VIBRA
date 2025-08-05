@@ -1,7 +1,7 @@
 from PySide6.QtGui import QPen, QColor
 from PySide6.QtCore import Qt
 
-from vibra import app
+from vibra import app, change_prod_dev
 
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
@@ -23,7 +23,11 @@ class ModelSetupItems(CommonMenuItems):
         self._create_connections()
         self._initial_configuration()
         self.update_items_appearance()
-
+    
+    def change_visibility_structural_setup(self):
+        production = change_prod_dev()
+        self.item_top_structural_model_setup.setHidden(production)
+    
     def _create_items(self):
         """Creates all TreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
@@ -334,7 +338,7 @@ class ModelSetupItems(CommonMenuItems):
         self.modify_structural_model_setup_items_acces(False)
 
         self.item_top_general_settings.setHidden(False)
-        self.item_top_structural_model_setup.setHidden(False)
+        # self.item_top_structural_model_setup.setHidden(False)
         self.item_top_acoustic_model_setup.setHidden(False)
 
         self.expandItem(self.item_top_general_settings)
