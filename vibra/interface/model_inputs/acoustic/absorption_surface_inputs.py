@@ -210,6 +210,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'absorption surface' table"
+        imported_file = None
 
         try:
             if direct_load:
@@ -242,9 +243,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        mask = imported_values[:, 0] > 0
-        _imported_values = imported_values[mask, :]
-        _frequencies = _imported_values[:, 0]
+        _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
@@ -258,8 +257,8 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
-        real_values = _imported_values[:, 1]
-        # imag_values = _imported_values[:, 2]
+        real_values = imported_values[:, 1]
+        # imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values], dtype=float).T
         # data = np.array([_frequencies, real_values, imag_values], dtype=float).T
@@ -371,9 +370,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        print("remove_table_files...")
         table_names = self.properties.get_property_related_table_names("absorption_surface", surface_id, "surfaces")
-        print(table_names)
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):

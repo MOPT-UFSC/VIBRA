@@ -435,8 +435,8 @@
                  <property name="geometry">
                   <rect>
                    <x>0</x>
-                   <y>-236</y>
-                   <width>578</width>
+                   <y>0</y>
+                   <width>571</width>
                    <height>568</height>
                   </rect>
                  </property>
@@ -935,7 +935,7 @@
                        </property>
                        <property name="icon">
                         <iconset resource="../../../../icons/resources.qrc">
-                         <normaloff>:/icons/import.png</normaloff>:/icons/import.png</iconset>
+                         <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                        </property>
                        <property name="iconSize">
                         <size>

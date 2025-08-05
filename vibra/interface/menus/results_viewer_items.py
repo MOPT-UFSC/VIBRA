@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.menus.common_menu_items import CommonMenuItems
-
+from molde import Color
 
 class ResultsViewerItems(CommonMenuItems):
     """Menu Items
@@ -40,6 +40,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_field = self.add_item("Acoustic Pressure Field")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
         self.item_child_acoustic_pressure_frequency_response_function = self.add_item("Acoustic Presssure Frequency Response Function")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable pulsation (Reciprocating Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
         self.item_child_acoustic_specific_impedance = self.add_item("Acoustic Specific Impedance")
@@ -95,9 +96,10 @@ class ResultsViewerItems(CommonMenuItems):
     def modify_acoustic_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_acoustic.setHidden(key)
         self.item_child_acoustic_mode_shapes.setDisabled(key)
+        self.item_child_acoustic_pressure_field.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response_function.setDisabled(key)
-        self.item_child_acoustic_pressure_field.setDisabled(key)
+        self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_specific_impedance.setDisabled(key)
@@ -188,9 +190,10 @@ class ResultsViewerItems(CommonMenuItems):
                 # self.item_child_stress_frequency_response.setDisabled(False)
                 # self.item_child_reaction_frequency_response.setDisabled(False)
 
+            self.item_child_acoustic_pressure_field.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response_function.setDisabled(False)
-            self.item_child_acoustic_pressure_field.setDisabled(False)
+            self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
             self.item_child_TL_NR.setDisabled(False)
             self.item_child_particle_velocity.setDisabled(False)
             self.item_child_acoustic_specific_impedance.setDisabled(False)
@@ -226,11 +229,11 @@ class ResultsViewerItems(CommonMenuItems):
     def set_theme(self, theme : str):
 
         if theme == "dark":
-            self.line_color = QColor(26,115,232,150)
-            self.background_color = QColor(60,60,70)
+            self.line_color = Color(26,115,232,150).to_qt()
+            self.background_color = Color(60,60,70).to_qt()
         else:
-            self.line_color = QColor(26,115,232,150)
-            self.background_color = QColor(225,230,230)
+            self.line_color = Color(26,115,232,150).to_qt()
+            self.background_color = Color(225,230,230).to_qt()
     
         border_role = Qt.UserRole + 1
         border_pen = QPen(self.line_color)

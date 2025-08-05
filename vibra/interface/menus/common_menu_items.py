@@ -8,6 +8,7 @@ from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 from vibra import ICON_DIR
 from vibra.interface.menus.tool_tip import ToolTip
 
+from molde import Color
 from molde.colors import color_names
 
 import re
@@ -157,7 +158,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             font = QFont()
             font.setBold(True)
             self.setFont(0, font)
-            self.setForeground(0, QColor(*color_names.YELLOW.to_rgb()))
+            self.setForeground(0, Color(*color_names.YELLOW.to_rgb()).to_qt())
             warning_icon = QIcon(str(Path(ICON_DIR / "model_setup_items" / str("warning_yellow.png"))))
             self.setIcon(0, warning_icon)
         else:

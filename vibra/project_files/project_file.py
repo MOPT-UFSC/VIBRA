@@ -7,7 +7,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from fileboxes import Filebox
 
 import os
-import io
+import json
 import h5py
 import numpy as np
 
@@ -40,6 +40,7 @@ class ProjectFile:
         self.geometry_data_filename = "geometry_data.hdf5"
         self.model_properties_filename = "model_properties.json"
         self.mesh_data_filename = "mesh_data.hdf5"
+        self.mesh_quality_data_filename = "mesh_quality_data.json"
         self.imported_table_data_filename = "imported_tables_data.hdf5"
         self.results_data_filename = "results_data.hdf5"
         self.thumbnail_filename = "thumbnail.png"
@@ -223,7 +224,59 @@ class ProjectFile:
         project_setup["mesh_setup"] = mesh_setup           
         self.filebox.write(self.project_setup_filename, project_setup)
         app().main_window.project_data_modified = True
-    
+
+    def write_mesh_quality_data_in_file(self):
+        mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
+        mesh_bad_elements = app().project.model.mesh.mesh_bad_elements
+        mesh_quality_histograms_data = app().project.model.mesh.mesh_quality_histograms_data
+        if mesh_quality_statistics is not None:
+            mesh_quality_data = dict()
+            mesh_quality_data["statistics"] = mesh_quality_statistics
+            mesh_quality_data["bad_elements"] = mesh_bad_elements
+            mesh_quality_data["histograms_data"] = mesh_quality_histograms_data
+        
+        def convert_ndarrays_to_lists(obj):
+            if isinstance(obj, dict):
+                return {k: convert_ndarrays_to_lists(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_ndarrays_to_lists(i) for i in obj]
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, np.uint64):
+                return int(obj)
+            else:
+                return obj
+        mesh_quality_data_json_ready = convert_ndarrays_to_lists(mesh_quality_data)
+        
+        self.filebox.write(self.mesh_quality_data_filename, mesh_quality_data_json_ready)
+
+        app().main_window.project_data_modified = True    
+
+    def read_mesh_quality_data_from_file(self):
+        mesh_quality_data = dict()
+        try:
+            if not self.filebox.contains(self.mesh_data_filename):
+                return None, None, None
+
+            mesh_quality_data = self.filebox.read(self.mesh_quality_data_filename)
+
+            if mesh_quality_data:
+                mesh_quality_statistics = mesh_quality_data["statistics"]
+                mesh_bad_elements = mesh_quality_data["bad_elements"]
+                mesh_quality_histograms_data = mesh_quality_data["histograms_data"]
+                
+                return mesh_quality_statistics, mesh_bad_elements, mesh_quality_histograms_data
+
+            else: 
+                return None, None, None
+
+
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            return None, None, None
+        
+
     def read_mesh_setup_from_file(self):
 
         project_setup = self.filebox.read(self.project_setup_filename)
@@ -423,6 +476,7 @@ class ProjectFile:
                         volume_properties = normalize(properties.volume_properties),
                         surface_properties = normalize(properties.surface_properties),
                         line_properties = normalize(properties.line_properties),
+                        point_properties = normalize(properties.point_properties),
                         element_properties = normalize(properties.element_properties),
                         nodal_properties = normalize(properties.nodal_properties),
                         )
@@ -439,6 +493,9 @@ class ProjectFile:
     def read_model_properties_from_file(self):
 
         def denormalize(prop: dict):
+            if prop is None:
+                return dict()
+            
             new_prop = dict()
             for key, val in prop.items():
 
@@ -461,12 +518,13 @@ class ProjectFile:
             return dict()
 
         model_properties = dict(
-                                # global_properties = denormalize(data["global_properties"]),
-                                volume_properties = denormalize(data["volume_properties"]),
-                                surface_properties = denormalize(data["surface_properties"]),
-                                line_properties = denormalize(data["line_properties"]),
-                                element_properties = denormalize(data["element_properties"]),
-                                nodal_properties = denormalize(data["nodal_properties"])
+                                # global_properties = denormalize(data.get(""global_properties")),
+                                volume_properties = denormalize(data.get("volume_properties")),
+                                surface_properties = denormalize(data.get("surface_properties")),
+                                line_properties = denormalize(data.get("line_properties")),
+                                point_properties = denormalize(data.get("point_properties")),
+                                element_properties = denormalize(data.get("element_properties")),
+                                nodal_properties = denormalize(data.get("nodal_properties")),
                                 )
 
         return model_properties

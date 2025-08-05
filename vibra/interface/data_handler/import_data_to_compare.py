@@ -37,7 +37,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Import data to compare")
+        self.setWindowTitle("Vibra")
         self.lineEdit_import_results_path.setDisabled(True)
 
     def _initialize(self):

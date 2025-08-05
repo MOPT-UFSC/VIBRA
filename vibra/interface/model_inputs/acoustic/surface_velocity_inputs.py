@@ -272,9 +272,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        mask = imported_values[:, 0] > 0
-        _imported_values = imported_values[mask, :]
-        _frequencies = _imported_values[:, 0]
+        _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
@@ -288,8 +286,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
-        real_values = _imported_values[:, 1]
-        imag_values = _imported_values[:, 2]
+        real_values = imported_values[:, 1]
+        imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
 

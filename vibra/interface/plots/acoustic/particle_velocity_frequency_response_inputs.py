@@ -170,9 +170,6 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
 
         component_label = self.get_component_label()
 
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
-
         list_nodes = list()
         for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
             if self.comboBox_selector_filter.currentIndex() == 0:
@@ -196,9 +193,6 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
             if component_label in self.particle_velocity.keys():
                 if node_id in self.particle_velocity[component_label].keys():
                     return self.particle_velocity[component_label][node_id]
-
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
 
         list_nodes = list()
         for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():

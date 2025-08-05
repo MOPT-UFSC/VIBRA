@@ -763,11 +763,8 @@
                 <property name="bottomMargin">
                  <number>2</number>
                 </property>
-                <property name="horizontalSpacing">
-                 <number>4</number>
-                </property>
-                <property name="verticalSpacing">
-                 <number>7</number>
+                <property name="spacing">
+                 <number>6</number>
                 </property>
                 <item row="0" column="1">
                  <widget class="QLabel" name="label_table">
@@ -806,13 +803,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>240</width>
+                    <width>280</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>240</width>
+                    <width>280</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -837,13 +834,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>62</width>
+                    <width>40</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>62</width>
+                    <width>40</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -856,7 +853,20 @@
                    <string notr="true"/>
                   </property>
                   <property name="text">
-                   <string>Search</string>
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="../../../../icons/resources.qrc">
+                    <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>20</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -1220,7 +1230,7 @@
          <bool>false</bool>
         </property>
         <property name="default">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>

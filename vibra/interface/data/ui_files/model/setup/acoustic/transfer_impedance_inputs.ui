@@ -279,13 +279,13 @@
               <widget class="QLabel" name="label_18">
                <property name="minimumSize">
                 <size>
-                 <width>134</width>
+                 <width>120</width>
                  <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>134</width>
+                 <width>120</width>
                  <height>28</height>
                 </size>
                </property>
@@ -538,13 +538,13 @@
                <property name="minimumSize">
                 <size>
                  <width>40</width>
-                 <height>30</height>
+                 <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>40</width>
-                 <height>30</height>
+                 <height>28</height>
                 </size>
                </property>
                <property name="font">
@@ -564,60 +564,7 @@
                </property>
                <property name="icon">
                 <iconset resource="../../../../icons/resources.qrc">
-                 <normaloff>:/icons/import.png</normaloff>:/icons/import.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>18</width>
-                 <height>18</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="3">
-              <widget class="QPushButton" name="pushButton_change_frequency_setup">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>40</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>40</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter the frequency range of interest&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>../../../../icons/recent.png</normaloff>../../../../icons/recent.png</iconset>
+                 <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -634,7 +581,7 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>240</width>
+                 <width>280</width>
                  <height>26</height>
                 </size>
                </property>
@@ -672,7 +619,7 @@
                </property>
               </spacer>
              </item>
-             <item row="3" column="1">
+             <item row="4" column="1">
               <spacer name="verticalSpacer_4">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>
@@ -684,6 +631,59 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="3" column="2">
+              <widget class="QPushButton" name="pushButton_change_frequency_setup">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter the frequency range of interest&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="../../../../icons/resources.qrc">
+                 <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>20</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1047,13 +1047,13 @@
           <widget class="QLabel" name="label_selection_A">
            <property name="minimumSize">
             <size>
-             <width>134</width>
+             <width>100</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>134</width>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>
@@ -1080,13 +1080,13 @@
           <widget class="QLabel" name="label_selection_B">
            <property name="minimumSize">
             <size>
-             <width>135</width>
+             <width>100</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>134</width>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>

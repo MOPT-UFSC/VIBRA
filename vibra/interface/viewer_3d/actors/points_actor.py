@@ -3,7 +3,7 @@ from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra import app
-
+from molde import Color
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -55,12 +55,12 @@ class PointsActor(vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
-        rgba = app().config.user_preferences.nodes_points_color.to_rgb()
+        rgba = app().config.user_preferences.nodes_points_color
         self.set_color(rgba)
 
         # By default prints the decoupled points as Transparent
         self.paint_points(
-            (0, 0, 0, 0),  # transparent
+            Color(0, 0, 0, 0),  # transparent
             self._get_decoupled_points(),
         )
 
@@ -75,17 +75,8 @@ class PointsActor(vtkActor):
             if node in range(original_number_of_nodes, current_number_of_nodes):
                 yield point
 
-    def set_color(self, color: tuple):
-        if len(color) == 3:
-            r, g, b = color
-            a = 255
-
-        elif len(color) == 4:
-            r, g, b, a = color
-
-        else:
-            raise ValueError("Color must have 3 or 4 elements")
-
+    def set_color(self, color: Color):
+        r, g, b, a = color.to_rgba()
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
 
@@ -98,7 +89,7 @@ class PointsActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_points(self, color: tuple, points: tuple[int]):
+    def paint_points(self, color: Color, points: tuple[int]):
         cells = []
         for point in points:
             cell = self.point_to_cell.get(point)
@@ -107,12 +98,11 @@ class PointsActor(vtkActor):
             cells.append(cell)
         self.paint_cells(color, cells)
 
-    def paint_cells(self, color: tuple, cells: tuple[int]):
+    def paint_cells(self, color: Color, cells: tuple[int]):
         data = self.GetMapper().GetInput()
         cell_colors = data.GetCellData().GetScalars()
 
-        if len(color) == 3:
-            color = *color, 255
+        color = color.to_rgba()
 
         for i in cells:
             cell_colors.SetTuple(i, color)

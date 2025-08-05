@@ -31,6 +31,7 @@ dependencies = [
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
 pytest = "^8.3.5"
+pytest-datadir = "^1.7.2"
 pyinstaller = "^6.13.0"
 tuna = "^0.5.11"
 invoke = "^2.2.0"

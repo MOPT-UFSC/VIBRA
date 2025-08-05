@@ -31,14 +31,14 @@ class HollowSolidsActor(FacesActor):
     
     def clear_colors(self):
         color = app().config.user_preferences.faces_color
-        self.set_color(color.to_rgba())
+        self.set_color(color)
 
-    def paint_cells(self, color, solids: list[int]):
-        faces = []
-        for solid in solids:
+    def paint_solids(self, color: tuple[3], volumes: tuple[int]):
+        cells = []
+        for solid in volumes:
             face_elements = self.mesh.solid_to_face_elements.get(solid, [])
-            faces.extend(face_elements)
-        return super().paint_cells(color, faces)
+            cells.extend(face_elements)
+        return self.paint_cells(color, cells)
 
     def configure_appearance(self):
         super().configure_appearance()
