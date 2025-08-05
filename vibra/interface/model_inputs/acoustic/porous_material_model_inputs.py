@@ -206,16 +206,21 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def remove_callback(self):
         selected_items = self.treeWidget_porous_material_model.selectedItems()
 
-        if selected_items:
-            selected_item = selected_items[0]
+        if not selected_items:
+            return
+        
+        selected_item = selected_items[0]
 
-            volume_id = int(selected_item.text(0))
+        volume_id = int(selected_item.text(0))
 
-            self.properties._remove_volume_property("porous_material_model", volume_id)
-            app().file.write_model_properties_in_file()
+        self.properties._remove_volume_property("porous_material_model", volume_id)
+        app().file.write_model_properties_in_file()
 
-            self.load_info()
-            self.actions_to_finalize()
+        self.load_info()
+        self.actions_to_finalize()
+
+        if len(self.map_model_id_to_model) > 0:
+            self.tabWidget_main.setCurrentIndex(5)
 
     def reset_callback(self):
 
