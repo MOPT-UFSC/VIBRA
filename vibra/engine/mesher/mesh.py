@@ -1068,6 +1068,7 @@ class Mesh:
             self._get_connectivity_array(connectivity_dim3)
         )
 
+        self.process_mesh_related_mappings()
         self.collapsed_solids, self.collapsed_faces, self.collapsed_lines = (
             self.get_collapsed_elements()
         )
