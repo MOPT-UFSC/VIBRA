@@ -17,13 +17,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().project.model
         self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
 
         self._reset_variables()
         self._create_connections()
@@ -37,13 +33,13 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
+        analysis_setup = app().project.analysis_setup
         if "analysis_id" in analysis_setup.keys():
             if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().project.acoustic_harmonic_solver.solution
 
     def _reset_variables(self):
         self.exporter = None
@@ -58,14 +54,14 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
 
-        surfaces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        points = self.main_window.selected_geometry_points
-        nodes = self.main_window.selected_mesh_nodes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if surfaces and index == 0:
@@ -92,9 +88,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 3:
-            self.main_window.show_mesh_render_widget()
+            app().main_window.show_mesh_render_widget()
         else:
-            self.main_window.show_geometry_render_widget()
+            app().main_window.show_geometry_render_widget()
 
     def check_selected_ids(self):
 
