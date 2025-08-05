@@ -73,6 +73,7 @@ class MainWindow(MainWindow_UI):
         self.show_menu_items = True
         self.last_render_index = None
         
+        # Connect shortcut to toggle development/production mode
         self.shortcut = QShortcut(QKeySequence("Alt+D"), self)
         self.shortcut.activated.connect(self.connect_shortcuts_development_production)
 
@@ -82,11 +83,6 @@ class MainWindow(MainWindow_UI):
         self.dialog = None
         self.project_data_modified = False
         self.user_path = Path().home()
-        
-    # def _config_shortcut_to_switch_development_production(self):
-    #     # Connect shortcut to toggle development/production mode
-    #     self.shortcut = QShortcut(QKeySequence("Alt+D"), self)
-    #     self.shortcut.activated.connect(self.connect_shortcuts_development_production)
 
     def connect_shortcuts_development_production(self):
         self.model_setup_widget.model_setup_items.change_visibility_structural_setup()
