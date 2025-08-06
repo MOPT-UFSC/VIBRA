@@ -267,7 +267,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>497</width>
+           <width>494</width>
            <height>500</height>
           </rect>
          </property>
@@ -2357,7 +2357,7 @@
                      <bool>false</bool>
                     </attribute>
                     <attribute name="verticalHeaderVisible">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </attribute>
                     <row>
                      <property name="text">
@@ -2602,7 +2602,7 @@
            </widget>
           </item>
           <item row="2" column="0">
-           <widget class="QFrame" name="frame">
+           <widget class="QFrame" name="frame_plot_setup">
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>

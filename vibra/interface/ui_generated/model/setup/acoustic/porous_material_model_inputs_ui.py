@@ -122,7 +122,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 497, 500))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 494, 500))
         self.gridLayout_20 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_20.setObjectName(u"gridLayout_20")
         self.tabWidget_main = QTabWidget(self.scrollAreaWidgetContents)
@@ -977,7 +977,7 @@ class Ui_Dialog(object):
         self.tableWidget_jca.setVerticalHeaderItem(6, __qtablewidgetitem17)
         self.tableWidget_jca.setObjectName(u"tableWidget_jca")
         self.tableWidget_jca.horizontalHeader().setVisible(False)
-        self.tableWidget_jca.verticalHeader().setVisible(True)
+        self.tableWidget_jca.verticalHeader().setVisible(False)
 
         self.gridLayout_23.addWidget(self.tableWidget_jca, 0, 0, 1, 1)
 
@@ -1053,20 +1053,20 @@ class Ui_Dialog(object):
 
         self.gridLayout_20.addWidget(self.tabWidget_main, 0, 0, 1, 1)
 
-        self.frame = QFrame(self.scrollAreaWidgetContents)
-        self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.NoFrame)
-        self.frame.setFrameShadow(QFrame.Raised)
-        self.gridLayout_18 = QGridLayout(self.frame)
+        self.frame_plot_setup = QFrame(self.scrollAreaWidgetContents)
+        self.frame_plot_setup.setObjectName(u"frame_plot_setup")
+        self.frame_plot_setup.setFrameShape(QFrame.NoFrame)
+        self.frame_plot_setup.setFrameShadow(QFrame.Raised)
+        self.gridLayout_18 = QGridLayout(self.frame_plot_setup)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
-        self.label_36 = QLabel(self.frame)
+        self.label_36 = QLabel(self.frame_plot_setup)
         self.label_36.setObjectName(u"label_36")
         self.label_36.setFont(font1)
         self.label_36.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_18.addWidget(self.label_36, 1, 1, 1, 1)
 
-        self.lineEdit_fluid_density = QLineEdit(self.frame)
+        self.lineEdit_fluid_density = QLineEdit(self.frame_plot_setup)
         self.lineEdit_fluid_density.setObjectName(u"lineEdit_fluid_density")
         self.lineEdit_fluid_density.setEnabled(False)
         self.lineEdit_fluid_density.setMinimumSize(QSize(100, 28))
@@ -1077,14 +1077,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addWidget(self.lineEdit_fluid_density, 1, 2, 1, 1)
 
-        self.label_17 = QLabel(self.frame)
+        self.label_17 = QLabel(self.frame_plot_setup)
         self.label_17.setObjectName(u"label_17")
         self.label_17.setFont(font1)
         self.label_17.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
         self.gridLayout_18.addWidget(self.label_17, 3, 3, 1, 1)
 
-        self.pushButton_get_fluid = QPushButton(self.frame)
+        self.pushButton_get_fluid = QPushButton(self.frame_plot_setup)
         self.pushButton_get_fluid.setObjectName(u"pushButton_get_fluid")
         self.pushButton_get_fluid.setMinimumSize(QSize(72, 0))
         self.pushButton_get_fluid.setMaximumSize(QSize(72, 28))
@@ -1100,7 +1100,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addItem(self.horizontalSpacer_18, 3, 4, 1, 1)
 
-        self.doubleSpinBox_porous_material_depth = QDoubleSpinBox(self.frame)
+        self.doubleSpinBox_porous_material_depth = QDoubleSpinBox(self.frame_plot_setup)
         self.doubleSpinBox_porous_material_depth.setObjectName(u"doubleSpinBox_porous_material_depth")
         self.doubleSpinBox_porous_material_depth.setMinimumSize(QSize(100, 28))
         self.doubleSpinBox_porous_material_depth.setMaximumSize(QSize(100, 28))
@@ -1114,14 +1114,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addWidget(self.doubleSpinBox_porous_material_depth, 3, 2, 1, 1)
 
-        self.label_16 = QLabel(self.frame)
+        self.label_16 = QLabel(self.frame_plot_setup)
         self.label_16.setObjectName(u"label_16")
         self.label_16.setFont(font1)
         self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_18.addWidget(self.label_16, 3, 1, 1, 1)
 
-        self.lineEdit_selected_fluid = QLineEdit(self.frame)
+        self.lineEdit_selected_fluid = QLineEdit(self.frame_plot_setup)
         self.lineEdit_selected_fluid.setObjectName(u"lineEdit_selected_fluid")
         self.lineEdit_selected_fluid.setEnabled(False)
         self.lineEdit_selected_fluid.setMinimumSize(QSize(100, 28))
@@ -1132,21 +1132,21 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addWidget(self.lineEdit_selected_fluid, 0, 2, 1, 1)
 
-        self.label_31 = QLabel(self.frame)
+        self.label_31 = QLabel(self.frame_plot_setup)
         self.label_31.setObjectName(u"label_31")
         self.label_31.setFont(font1)
         self.label_31.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_18.addWidget(self.label_31, 0, 1, 1, 1)
 
-        self.label_47 = QLabel(self.frame)
+        self.label_47 = QLabel(self.frame_plot_setup)
         self.label_47.setObjectName(u"label_47")
         self.label_47.setFont(font1)
         self.label_47.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_18.addWidget(self.label_47, 2, 1, 1, 1)
 
-        self.lineEdit_speed_of_sound = QLineEdit(self.frame)
+        self.lineEdit_speed_of_sound = QLineEdit(self.frame_plot_setup)
         self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
         self.lineEdit_speed_of_sound.setEnabled(False)
         self.lineEdit_speed_of_sound.setMinimumSize(QSize(100, 28))
@@ -1157,14 +1157,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addWidget(self.lineEdit_speed_of_sound, 2, 2, 1, 1)
 
-        self.label_48 = QLabel(self.frame)
+        self.label_48 = QLabel(self.frame_plot_setup)
         self.label_48.setObjectName(u"label_48")
         self.label_48.setFont(font1)
         self.label_48.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
         self.gridLayout_18.addWidget(self.label_48, 1, 3, 1, 1)
 
-        self.label_49 = QLabel(self.frame)
+        self.label_49 = QLabel(self.frame_plot_setup)
         self.label_49.setObjectName(u"label_49")
         self.label_49.setFont(font1)
         self.label_49.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
@@ -1172,7 +1172,7 @@ class Ui_Dialog(object):
         self.gridLayout_18.addWidget(self.label_49, 2, 3, 1, 1)
 
 
-        self.gridLayout_20.addWidget(self.frame, 2, 0, 1, 1)
+        self.gridLayout_20.addWidget(self.frame_plot_setup, 2, 0, 1, 1)
 
         self.frame_plot_buttons = QFrame(self.scrollAreaWidgetContents)
         self.frame_plot_buttons.setObjectName(u"frame_plot_buttons")
@@ -1573,7 +1573,7 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                                         - pushButton_reset: QPushButton
                                                                         - pushButton_remove: QPushButton
                                                             - treeWidget_porous_material_model: QTreeWidget
-                                            - frame: QFrame
+                                            - frame_plot_setup: QFrame
                                                 - (Layout): QGridLayout
                                                         - label_36: QLabel
                                                         - lineEdit_fluid_density: QLineEdit

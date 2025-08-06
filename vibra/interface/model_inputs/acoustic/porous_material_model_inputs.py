@@ -88,7 +88,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_DB_equations.clicked.connect(self.show_equations_for_DBM_callback)
         self.pushButton_DBM_equations.clicked.connect(self.show_equations_for_DBM_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_porous_material_model)
         #
         self.tableWidget_delany.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="delany"))
         self.tableWidget_jca.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="jca"))
@@ -250,22 +250,24 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 self.actions_to_finalize()
                 self.close()
 
-    def tabEvent_porous_material_model(self):
+    def tab_event_porous_material_model(self):
 
-        tab_index = self.tabWidget_main.currentIndex()
+        pm_tab = self.tabWidget_main.currentIndex() <= 3
 
-        if tab_index == 4:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.comboBox_attribution_type.setDisabled(True)
+        self.frame_plot_setup.setVisible(pm_tab)
+        self.frame_plot_buttons.setVisible(pm_tab)
 
-        else:
-
+        if pm_tab:
             self.comboBox_attribution_type.setDisabled(False)
             if self.comboBox_attribution_type.currentIndex() == 0:
                 return
 
             self.lineEdit_selection_id.setDisabled(False)
+
+        else:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            self.comboBox_attribution_type.setDisabled(True)
 
     def on_click_item(self, item):
 
@@ -700,19 +702,22 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if tab_index == PMModels.DELANY_BAZLEY:
             pm_data = self.get_Delany_Bazley_model_data()
-            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
+            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
         elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
             pm_data = self.get_Delany_Bazley_Miki_model_data()
-            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
+            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
         elif tab_index == PMModels.JCA:
             pm_data = self.get_Jhonson_Champoux_Allard_model_data()
-            rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data)
+            rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data.get_data())
 
         elif tab_index == PMModels.JCAL:
             pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
-            rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data)
+            rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data.get_data())
+
+        else:
+            return None, None
 
         k_cr = omega / C_eff
 
