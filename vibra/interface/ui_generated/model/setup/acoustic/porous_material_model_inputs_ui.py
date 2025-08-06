@@ -901,87 +901,87 @@ class Ui_Dialog(object):
         self.tabWidget_models.setEnabled(True)
         self.tabWidget_models.setTabsClosable(False)
         self.tabWidget_models.setTabBarAutoHide(False)
-        self.tab_2 = QWidget()
-        self.tab_2.setObjectName(u"tab_2")
-        self.gridLayout_22 = QGridLayout(self.tab_2)
+        self.tab_DB_and_DBM_parameters = QWidget()
+        self.tab_DB_and_DBM_parameters.setObjectName(u"tab_DB_and_DBM_parameters")
+        self.gridLayout_22 = QGridLayout(self.tab_DB_and_DBM_parameters)
         self.gridLayout_22.setObjectName(u"gridLayout_22")
-        self.tableWidget_delany = QTableWidget(self.tab_2)
-        if (self.tableWidget_delany.rowCount() < 11):
-            self.tableWidget_delany.setRowCount(11)
+        self.tableWidget_DBM = QTableWidget(self.tab_DB_and_DBM_parameters)
+        if (self.tableWidget_DBM.rowCount() < 11):
+            self.tableWidget_DBM.setRowCount(11)
         __qtablewidgetitem = QTableWidgetItem()
         __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(0, __qtablewidgetitem)
+        self.tableWidget_DBM.setVerticalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
         __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(1, __qtablewidgetitem1)
+        self.tableWidget_DBM.setVerticalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
         __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(2, __qtablewidgetitem2)
+        self.tableWidget_DBM.setVerticalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
         __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(3, __qtablewidgetitem3)
+        self.tableWidget_DBM.setVerticalHeaderItem(3, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
         __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(4, __qtablewidgetitem4)
+        self.tableWidget_DBM.setVerticalHeaderItem(4, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
         __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(5, __qtablewidgetitem5)
+        self.tableWidget_DBM.setVerticalHeaderItem(5, __qtablewidgetitem5)
         __qtablewidgetitem6 = QTableWidgetItem()
         __qtablewidgetitem6.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(6, __qtablewidgetitem6)
+        self.tableWidget_DBM.setVerticalHeaderItem(6, __qtablewidgetitem6)
         __qtablewidgetitem7 = QTableWidgetItem()
         __qtablewidgetitem7.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(7, __qtablewidgetitem7)
+        self.tableWidget_DBM.setVerticalHeaderItem(7, __qtablewidgetitem7)
         __qtablewidgetitem8 = QTableWidgetItem()
         __qtablewidgetitem8.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(8, __qtablewidgetitem8)
+        self.tableWidget_DBM.setVerticalHeaderItem(8, __qtablewidgetitem8)
         __qtablewidgetitem9 = QTableWidgetItem()
         __qtablewidgetitem9.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(9, __qtablewidgetitem9)
+        self.tableWidget_DBM.setVerticalHeaderItem(9, __qtablewidgetitem9)
         __qtablewidgetitem10 = QTableWidgetItem()
         __qtablewidgetitem10.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_delany.setVerticalHeaderItem(10, __qtablewidgetitem10)
-        self.tableWidget_delany.setObjectName(u"tableWidget_delany")
-        self.tableWidget_delany.horizontalHeader().setVisible(False)
+        self.tableWidget_DBM.setVerticalHeaderItem(10, __qtablewidgetitem10)
+        self.tableWidget_DBM.setObjectName(u"tableWidget_DBM")
+        self.tableWidget_DBM.horizontalHeader().setVisible(False)
 
-        self.gridLayout_22.addWidget(self.tableWidget_delany, 0, 0, 1, 1)
+        self.gridLayout_22.addWidget(self.tableWidget_DBM, 0, 0, 1, 1)
 
-        self.tabWidget_models.addTab(self.tab_2, "")
-        self.tab_3 = QWidget()
-        self.tab_3.setObjectName(u"tab_3")
-        self.gridLayout_23 = QGridLayout(self.tab_3)
+        self.tabWidget_models.addTab(self.tab_DB_and_DBM_parameters, "")
+        self.tab_JCA_and_JCAL_parameters = QWidget()
+        self.tab_JCA_and_JCAL_parameters.setObjectName(u"tab_JCA_and_JCAL_parameters")
+        self.gridLayout_23 = QGridLayout(self.tab_JCA_and_JCAL_parameters)
         self.gridLayout_23.setObjectName(u"gridLayout_23")
-        self.tableWidget_jca = QTableWidget(self.tab_3)
-        if (self.tableWidget_jca.rowCount() < 7):
-            self.tableWidget_jca.setRowCount(7)
+        self.tableWidget_JCAL = QTableWidget(self.tab_JCA_and_JCAL_parameters)
+        if (self.tableWidget_JCAL.rowCount() < 7):
+            self.tableWidget_JCAL.setRowCount(7)
         __qtablewidgetitem11 = QTableWidgetItem()
         __qtablewidgetitem11.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(0, __qtablewidgetitem11)
+        self.tableWidget_JCAL.setVerticalHeaderItem(0, __qtablewidgetitem11)
         __qtablewidgetitem12 = QTableWidgetItem()
         __qtablewidgetitem12.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(1, __qtablewidgetitem12)
+        self.tableWidget_JCAL.setVerticalHeaderItem(1, __qtablewidgetitem12)
         __qtablewidgetitem13 = QTableWidgetItem()
         __qtablewidgetitem13.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(2, __qtablewidgetitem13)
+        self.tableWidget_JCAL.setVerticalHeaderItem(2, __qtablewidgetitem13)
         __qtablewidgetitem14 = QTableWidgetItem()
         __qtablewidgetitem14.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(3, __qtablewidgetitem14)
+        self.tableWidget_JCAL.setVerticalHeaderItem(3, __qtablewidgetitem14)
         __qtablewidgetitem15 = QTableWidgetItem()
         __qtablewidgetitem15.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(4, __qtablewidgetitem15)
+        self.tableWidget_JCAL.setVerticalHeaderItem(4, __qtablewidgetitem15)
         __qtablewidgetitem16 = QTableWidgetItem()
         __qtablewidgetitem16.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(5, __qtablewidgetitem16)
+        self.tableWidget_JCAL.setVerticalHeaderItem(5, __qtablewidgetitem16)
         __qtablewidgetitem17 = QTableWidgetItem()
         __qtablewidgetitem17.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget_jca.setVerticalHeaderItem(6, __qtablewidgetitem17)
-        self.tableWidget_jca.setObjectName(u"tableWidget_jca")
-        self.tableWidget_jca.horizontalHeader().setVisible(False)
-        self.tableWidget_jca.verticalHeader().setVisible(False)
+        self.tableWidget_JCAL.setVerticalHeaderItem(6, __qtablewidgetitem17)
+        self.tableWidget_JCAL.setObjectName(u"tableWidget_JCAL")
+        self.tableWidget_JCAL.horizontalHeader().setVisible(False)
+        self.tableWidget_JCAL.verticalHeader().setVisible(False)
 
-        self.gridLayout_23.addWidget(self.tableWidget_jca, 0, 0, 1, 1)
+        self.gridLayout_23.addWidget(self.tableWidget_JCAL, 0, 0, 1, 1)
 
-        self.tabWidget_models.addTab(self.tab_3, "")
+        self.tabWidget_models.addTab(self.tab_JCA_and_JCAL_parameters, "")
 
         self.gridLayout_21.addWidget(self.tabWidget_models, 0, 0, 2, 1)
 
@@ -1375,44 +1375,44 @@ class Ui_Dialog(object):
         self.lineEdit_viscous_characteristic_length_JCAL.setText(QCoreApplication.translate("Dialog", u"77e-6", None))
         self.label_32.setText(QCoreApplication.translate("Dialog", u"[m]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_JCAL), QCoreApplication.translate("Dialog", u"JCAL", None))
-        ___qtablewidgetitem = self.tableWidget_delany.verticalHeaderItem(0)
+        ___qtablewidgetitem = self.tableWidget_DBM.verticalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Identifier", None));
-        ___qtablewidgetitem1 = self.tableWidget_delany.verticalHeaderItem(1)
+        ___qtablewidgetitem1 = self.tableWidget_DBM.verticalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Model", None));
-        ___qtablewidgetitem2 = self.tableWidget_delany.verticalHeaderItem(2)
+        ___qtablewidgetitem2 = self.tableWidget_DBM.verticalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"C1", None));
-        ___qtablewidgetitem3 = self.tableWidget_delany.verticalHeaderItem(3)
+        ___qtablewidgetitem3 = self.tableWidget_DBM.verticalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"C2", None));
-        ___qtablewidgetitem4 = self.tableWidget_delany.verticalHeaderItem(4)
+        ___qtablewidgetitem4 = self.tableWidget_DBM.verticalHeaderItem(4)
         ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"C3", None));
-        ___qtablewidgetitem5 = self.tableWidget_delany.verticalHeaderItem(5)
+        ___qtablewidgetitem5 = self.tableWidget_DBM.verticalHeaderItem(5)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"C4", None));
-        ___qtablewidgetitem6 = self.tableWidget_delany.verticalHeaderItem(6)
+        ___qtablewidgetitem6 = self.tableWidget_DBM.verticalHeaderItem(6)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"C5", None));
-        ___qtablewidgetitem7 = self.tableWidget_delany.verticalHeaderItem(7)
+        ___qtablewidgetitem7 = self.tableWidget_DBM.verticalHeaderItem(7)
         ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"C6", None));
-        ___qtablewidgetitem8 = self.tableWidget_delany.verticalHeaderItem(8)
+        ___qtablewidgetitem8 = self.tableWidget_DBM.verticalHeaderItem(8)
         ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"C7", None));
-        ___qtablewidgetitem9 = self.tableWidget_delany.verticalHeaderItem(9)
+        ___qtablewidgetitem9 = self.tableWidget_DBM.verticalHeaderItem(9)
         ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"C8", None));
-        ___qtablewidgetitem10 = self.tableWidget_delany.verticalHeaderItem(10)
+        ___qtablewidgetitem10 = self.tableWidget_DBM.verticalHeaderItem(10)
         ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Flow Resistivity", None));
-        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_2), QCoreApplication.translate("Dialog", u"Delany-Bazley", None))
-        ___qtablewidgetitem11 = self.tableWidget_jca.verticalHeaderItem(0)
+        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_DB_and_DBM_parameters), QCoreApplication.translate("Dialog", u"DB / DBM", None))
+        ___qtablewidgetitem11 = self.tableWidget_JCAL.verticalHeaderItem(0)
         ___qtablewidgetitem11.setText(QCoreApplication.translate("Dialog", u"Identifier", None));
-        ___qtablewidgetitem12 = self.tableWidget_jca.verticalHeaderItem(1)
+        ___qtablewidgetitem12 = self.tableWidget_JCAL.verticalHeaderItem(1)
         ___qtablewidgetitem12.setText(QCoreApplication.translate("Dialog", u"Model", None));
-        ___qtablewidgetitem13 = self.tableWidget_jca.verticalHeaderItem(2)
+        ___qtablewidgetitem13 = self.tableWidget_JCAL.verticalHeaderItem(2)
         ___qtablewidgetitem13.setText(QCoreApplication.translate("Dialog", u"Porosity", None));
-        ___qtablewidgetitem14 = self.tableWidget_jca.verticalHeaderItem(3)
+        ___qtablewidgetitem14 = self.tableWidget_JCAL.verticalHeaderItem(3)
         ___qtablewidgetitem14.setText(QCoreApplication.translate("Dialog", u"Tortuosity", None));
-        ___qtablewidgetitem15 = self.tableWidget_jca.verticalHeaderItem(4)
+        ___qtablewidgetitem15 = self.tableWidget_JCAL.verticalHeaderItem(4)
         ___qtablewidgetitem15.setText(QCoreApplication.translate("Dialog", u"Viscous Char. Length", None));
-        ___qtablewidgetitem16 = self.tableWidget_jca.verticalHeaderItem(5)
+        ___qtablewidgetitem16 = self.tableWidget_JCAL.verticalHeaderItem(5)
         ___qtablewidgetitem16.setText(QCoreApplication.translate("Dialog", u"Thermal Char. Length", None));
-        ___qtablewidgetitem17 = self.tableWidget_jca.verticalHeaderItem(6)
+        ___qtablewidgetitem17 = self.tableWidget_JCAL.verticalHeaderItem(6)
         ___qtablewidgetitem17.setText(QCoreApplication.translate("Dialog", u"Flow Resistivity", None));
-        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_3), QCoreApplication.translate("Dialog", u"Jhonson-Champoux-Allard", None))
+        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_JCA_and_JCAL_parameters), QCoreApplication.translate("Dialog", u"JCA / JCAL", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.frame_11), QCoreApplication.translate("Dialog", u"Edit", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -1560,12 +1560,12 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                 - frame_11: QWidget
                                                     - (Layout): QGridLayout
                                                             - tabWidget_models: QTabWidget
-                                                                - tab_2: QWidget
+                                                                - tab_DB_and_DBM_parameters: QWidget
                                                                     - (Layout): QGridLayout
-                                                                            - tableWidget_delany: QTableWidget
-                                                                - tab_3: QWidget
+                                                                            - tableWidget_DBM: QTableWidget
+                                                                - tab_JCA_and_JCAL_parameters: QWidget
                                                                     - (Layout): QGridLayout
-                                                                            - tableWidget_jca: QTableWidget
+                                                                            - tableWidget_JCAL: QTableWidget
                                                 - tab_list: QWidget
                                                     - (Layout): QGridLayout
                                                             - frame_3: QFrame

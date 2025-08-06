@@ -64,8 +64,12 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _configure_widgets(self):
+        #
         for i, width in enumerate([120, 160]):
             self.treeWidget_porous_material_model.setColumnWidth(i, width)
+        #
+        self.tableWidget_DBM.verticalHeader().setVisible(True)
+        self.tableWidget_JCAL.verticalHeader().setVisible(True)
 
     def _initialize(self):
         self.selected_fluid = None
@@ -90,8 +94,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_porous_material_model)
         #
-        self.tableWidget_delany.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="delany"))
-        self.tableWidget_jca.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="jca"))
+        self.tableWidget_DBM.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="delany"))
+        self.tableWidget_JCAL.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="jca"))
         #
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -256,6 +260,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         self.frame_plot_setup.setVisible(pm_tab)
         self.frame_plot_buttons.setVisible(pm_tab)
+        self.pushButton_confirm.setEnabled(pm_tab)
 
         if pm_tab:
             self.comboBox_attribution_type.setDisabled(False)
@@ -291,11 +296,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         parameter_position = row - 2
 
         if model == "delany":
-            item = self.tableWidget_delany.item(row, column)
-            model_id = int(self.tableWidget_delany.item(0, column).text())
+            item = self.tableWidget_DBM.item(row, column)
+            model_id = int(self.tableWidget_DBM.item(0, column).text())
         else:
-            item = self.tableWidget_jca.item(row, column)
-            model_id = int(self.tableWidget_jca.item(0, column).text())
+            item = self.tableWidget_JCAL.item(row, column)
+            model_id = int(self.tableWidget_JCAL.item(0, column).text())
 
         new_parameter_value = None
         value_error = False
@@ -396,30 +401,30 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             if model in ["Delany-Bazley", "Delany-Bazley-Miki"]:
                 there_is_delany_model = True
 
-                self.tableWidget_delany.setItem(0, delany_counter, model_id_item)
-                self.tableWidget_delany.setItem(1, delany_counter, model_item)
+                self.tableWidget_DBM.setItem(0, delany_counter, model_id_item)
+                self.tableWidget_DBM.setItem(1, delany_counter, model_item)
 
                 for k, model_input in enumerate(model_data_dict.values()):
 
                     if isinstance(model_input, str):
                         continue
 
-                    self.tableWidget_delany.setItem(2+k, delany_counter, QTableWidgetItem(str(model_input)))
+                    self.tableWidget_DBM.setItem(2+k, delany_counter, QTableWidgetItem(str(model_input)))
 
                 delany_counter += 1
 
             else:
                 there_is_jca_model = True
 
-                self.tableWidget_jca.setItem(0, jca_counter, model_id_item)
-                self.tableWidget_jca.setItem(1, jca_counter, model_item)
+                self.tableWidget_JCAL.setItem(0, jca_counter, model_id_item)
+                self.tableWidget_JCAL.setItem(1, jca_counter, model_item)
 
                 for k, model_input in enumerate(model_data_dict.values()):
 
                     if isinstance(model_input, str):
                         continue
 
-                    self.tableWidget_jca.setItem(2+k, jca_counter, QTableWidgetItem(str(model_input)))
+                    self.tableWidget_JCAL.setItem(2+k, jca_counter, QTableWidgetItem(str(model_input)))
 
                 jca_counter += 1
 
@@ -435,8 +440,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setTabVisible(5, True)
             self.tabWidget_main.setCurrentIndex(4)
         
-        self.update_tableWidget_delany_items()
-        self.update_tableWidget_jca_items()
+        self.update_tableWidget_DBM_items()
+        self.update_tableWidget_JCAL_items()
     
     def update_treeWidget_porous_materials(self):
         for model_id, volume_ids in self.map_model_id_to_volumes.items():
@@ -459,15 +464,15 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             else:
                 jca_count += 1
 
-        self.tableWidget_delany.clearContents()
-        self.tableWidget_delany.blockSignals(True)
-        self.tableWidget_delany.setRowCount(11)
-        self.tableWidget_delany.setColumnCount(delany_count)
+        self.tableWidget_DBM.clearContents()
+        self.tableWidget_DBM.blockSignals(True)
+        self.tableWidget_DBM.setRowCount(11)
+        self.tableWidget_DBM.setColumnCount(delany_count)
 
-        self.tableWidget_jca.clearContents()
-        self.tableWidget_jca.blockSignals(True)
-        self.tableWidget_jca.setRowCount(7)
-        self.tableWidget_jca.setColumnCount(jca_count)
+        self.tableWidget_JCAL.clearContents()
+        self.tableWidget_JCAL.blockSignals(True)
+        self.tableWidget_JCAL.setRowCount(7)
+        self.tableWidget_JCAL.setColumnCount(jca_count)
 
         self.tabWidget_models.setTabVisible(0, False)
         self.tabWidget_models.setTabVisible(1, False)
@@ -475,33 +480,33 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.tabWidget_main.setTabVisible(4, False)
         self.tabWidget_main.setTabVisible(5, False)
     
-    def update_tableWidget_delany_items(self):
-        for i in range(self.tableWidget_delany.rowCount()):
-            for j in range(self.tableWidget_delany.columnCount()):
-                item = self.tableWidget_delany.item(i, j)
+    def update_tableWidget_DBM_items(self):
+        for i in range(self.tableWidget_DBM.rowCount()):
+            for j in range(self.tableWidget_DBM.columnCount()):
+                item = self.tableWidget_DBM.item(i, j)
 
                 if item is None:
                     item = QTableWidgetItem()
-                    self.tableWidget_delany.setItem(i, j, item)
+                    self.tableWidget_DBM.setItem(i, j, item)
                     item.setFlags(Qt.ItemIsSelectable)
 
                 item.setTextAlignment(Qt.AlignCenter)
         
-        self.tableWidget_delany.blockSignals(False)
+        self.tableWidget_DBM.blockSignals(False)
     
-    def update_tableWidget_jca_items(self):
-        for i in range(self.tableWidget_jca.rowCount()):
-            for j in range(self.tableWidget_jca.columnCount()):
-                item = self.tableWidget_jca.item(i, j)
+    def update_tableWidget_JCAL_items(self):
+        for i in range(self.tableWidget_JCAL.rowCount()):
+            for j in range(self.tableWidget_JCAL.columnCount()):
+                item = self.tableWidget_JCAL.item(i, j)
 
                 if item is None:
                     item = QTableWidgetItem()
-                    self.tableWidget_jca.setItem(i, j, item)
+                    self.tableWidget_JCAL.setItem(i, j, item)
                     item.setFlags(Qt.ItemIsSelectable)
 
                 item.setTextAlignment(Qt.AlignCenter)
 
-        self.tableWidget_jca.blockSignals(False)
+        self.tableWidget_JCAL.blockSignals(False)
     
     def addapt_model_name(self, model:str) -> str:
         if model == "Delany-Bazley":

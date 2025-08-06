@@ -2244,13 +2244,13 @@
                 <property name="tabBarAutoHide">
                  <bool>false</bool>
                 </property>
-                <widget class="QWidget" name="tab_2">
+                <widget class="QWidget" name="tab_DB_and_DBM_parameters">
                  <attribute name="title">
-                  <string>Delany-Bazley</string>
+                  <string>DB / DBM</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_22">
                   <item row="0" column="0">
-                   <widget class="QTableWidget" name="tableWidget_delany">
+                   <widget class="QTableWidget" name="tableWidget_DBM">
                     <attribute name="horizontalHeaderVisible">
                      <bool>false</bool>
                     </attribute>
@@ -2346,13 +2346,13 @@
                   </item>
                  </layout>
                 </widget>
-                <widget class="QWidget" name="tab_3">
+                <widget class="QWidget" name="tab_JCA_and_JCAL_parameters">
                  <attribute name="title">
-                  <string>Jhonson-Champoux-Allard</string>
+                  <string>JCA / JCAL</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_23">
                   <item row="0" column="0">
-                   <widget class="QTableWidget" name="tableWidget_jca">
+                   <widget class="QTableWidget" name="tableWidget_JCAL">
                     <attribute name="horizontalHeaderVisible">
                      <bool>false</bool>
                     </attribute>
