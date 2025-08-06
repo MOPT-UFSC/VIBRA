@@ -340,21 +340,29 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
             if property != "porous_material_model":
                 continue
+        
+                
+            try:
+                model = None
+                if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+                    model = DelanyBazleyData.set_data(data)
+                else:
+                    model = JCAData.set_data(data)
+                
+                if model not in models:
+                    models.append(model)
 
-            model = None
-            if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
-                model = DelanyBazleyData.set_data(data)
-            else:
-                model = JCAData.set_data(data)
+                model_id = models.index(model) + 1
+                self.map_model_id_to_model[model_id] = model
+
+                if volume_id not in self.map_model_id_to_volumes[model_id]:
+                    self.map_model_id_to_volumes[model_id].append(volume_id)
             
-            if model not in models:
-                models.append(model)
-
-            model_id = models.index(model) + 1
-            self.map_model_id_to_model[model_id] = model
-
-            if volume_id not in self.map_model_id_to_volumes[model_id]:
-                self.map_model_id_to_volumes[model_id].append(volume_id)
+            except:
+                    message = "An error occurred while trying to open the porous material model from the project. The porous material model will be deleted."
+                    PrintMessageInput(["Error", "Porous Material Model Error", message])
+                    self.properties._reset_property("porous_material_model")
+                    return
 
     def load_info(self):
         self.map_existing_porous_materials()
