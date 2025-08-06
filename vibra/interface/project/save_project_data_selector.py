@@ -1,8 +1,10 @@
 # fmt: off
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, TEMP_PROJECT_FILE
+from vibra import app, TEMP_PROJECT_DIR
 from vibra.interface.ui_generated.project.save_project_data_selector_ui import SaveProjectDataSelector_UI
 
 import os
@@ -49,8 +51,8 @@ class SaveProjectDataSelector(SaveProjectDataSelector_UI):
         self.pushButton_proceed.clicked.connect(self.proceed_callback)
 
     def get_required_memory(self):
-        if TEMP_PROJECT_FILE.exists():
-            size_of_file = TEMP_PROJECT_FILE.stat().st_size / 1e6
+        if TEMP_PROJECT_DIR.exists():
+            size_of_file = get_folder_size(TEMP_PROJECT_DIR) / 1e6
             self.lineEdit_required_memory.setText(f"{size_of_file:.4}")
 
     def remove_solution_data(self):
@@ -76,5 +78,15 @@ class SaveProjectDataSelector(SaveProjectDataSelector_UI):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
+    
+
+def get_folder_size(path: Path):
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.isfile(fp):
+                total += os.path.getsize(fp)
+    return total
 
 # fmt: on
