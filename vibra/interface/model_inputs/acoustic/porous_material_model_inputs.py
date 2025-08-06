@@ -423,10 +423,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
                 jca_counter += 1
 
-        if there_is_jca_model or there_is_delany_model:
-            self.tabWidget_main.setTabVisible(4, True)
-            self.tabWidget_main.setTabVisible(5, True)
-        
         if there_is_jca_model:
             self.tabWidget_models.setTabVisible(1, True)
         
@@ -434,6 +430,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_models.setTabVisible(0, True)
             self.tabWidget_models.setCurrentIndex(0)
 
+        if there_is_jca_model or there_is_delany_model:
+            self.tabWidget_main.setTabVisible(4, True)
+            self.tabWidget_main.setTabVisible(5, True)
+            self.tabWidget_main.setCurrentIndex(4)
+        
         self.update_tableWidget_delany_items()
         self.update_tableWidget_jca_items()
     
