@@ -20,6 +20,7 @@ from vtkmodules.vtkCommonDataModel import (
     vtkPolyData,
     vtkUnstructuredGrid,
 )
+
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkExtractCells
@@ -190,12 +191,15 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             fill_array(data, "surface_indexes", surface)
             fill_array(data, "volume_indexes", volume)
 
-            # Every surface have its own plane defining
-            # how to project the texture coordinates
-            add_tcoords = vtk.vtkTextureMapToPlane()
+            # Every surface have its own plane or cylinder defining
+            # how to project the texture coordinates on it
+            surface_is_curved = np.any(self.mesh.curvatures_surface.get(surface))
+            if surface_is_curved:
+                add_tcoords = vtk.vtkTextureMapToCylinder()
+            else:
+                add_tcoords = vtk.vtkTextureMapToPlane()
+
             add_tcoords.SetInputData(data)
-            add_tcoords.SetSRange(0, 5)
-            add_tcoords.SetTRange(0, 5)
             add_tcoords.Update()
 
             combined_surfaces.AddInputData(add_tcoords.GetOutput())
@@ -267,8 +271,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         actor_property.opacity = 0.7
         actor_property.specular_power = 40
         actor_property.specular = 0.7
-        actor_property.normal_scale = 1
-        actor_property.normal_texture = self.fluid_normal_texture
+        actor_property.normal_texture = self.wave_texture
+        actor_property.normal_scale = 2
+        # actor_property.normal_texture = self.fluid_normal_texture
 
     def _create_porous_actor(self):
         self.porous_extractor = vtkExtractCells()
@@ -293,3 +298,4 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.fluid_normal_texture = read_texture(TEXTURE_DIR / "perlin_normal.jpg")
         self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
         self.porous_normal_texture = read_texture(TEXTURE_DIR / "foam_normal.jpg")
+        self.wave_texture = read_texture(TEXTURE_DIR / "wave_normal.png")

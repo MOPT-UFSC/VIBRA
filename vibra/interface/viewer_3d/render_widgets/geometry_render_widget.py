@@ -1,6 +1,8 @@
+import logging
+
+from molde import Color
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
-from molde import Color
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
@@ -10,6 +12,7 @@ from vibra.utils.image_functions import removes_image_background
 from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
+from ..actors.multimaterial import MultimaterialGeometryActor
 from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
@@ -17,10 +20,21 @@ from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
-
-from .model_info_text import *
-
-import logging
+from .model_info_text import (
+    acoustic_boundary_conditions_info_text,
+    faces_info_text,
+    fluid_info_text,
+    lines_info_text,
+    mass_source_info_text,
+    material_info_text,
+    perforated_plate_info_text,
+    points_info_text,
+    porous_material_info_text,
+    proportional_damping_info_text,
+    structural_boundary_conditions_info_text,
+    viscous_thermal_info_text,
+    volumes_info_text,
+)
 
 
 class GeometryRenderWidget(CommonRenderWidget):
@@ -45,6 +59,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
+
+        # dont't remove, transparency depends on it
+        self.renderer.SetUseDepthPeeling(True)
 
         self.remove_all_actors()
         self.create_axes()
@@ -117,7 +134,14 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
+
+        from time import perf_counter
+        
+        s = perf_counter()
         self.faces_actor = FacesActor(mesh)
+        e = perf_counter()
+        print("Faces", e - s)
+        
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
@@ -129,11 +153,17 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
+        s = perf_counter()
+        self.multimaterial = MultimaterialGeometryActor(mesh)
+        e = perf_counter()
+        print("Multimaterial", e - s)
+
         logging.info("Updating the mesh render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
             self.faces_actor,
+            self.multimaterial,
             self.selection_spheres_actor,
             self.ghost_actor,
             self.plane_actor,
@@ -317,6 +347,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.faces_actor.clear_colors()
+        self.multimaterial.clear_colors()
 
         points = app().main_window.selected_geometry_points
         lines = app().main_window.selected_geometry_lines
@@ -341,7 +372,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
         self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
-        
+        self.multimaterial.paint_surfaces(self.selection_faces_color, faces)
+
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
