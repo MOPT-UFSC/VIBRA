@@ -92,7 +92,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Plot acoustic pressure frequency response</string>
+         <string>Plot acoustic pressure waveform</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
@@ -472,7 +472,7 @@
            </item>
            <item>
             <property name="text">
-             <string>Lines</string>
+             <string>Line</string>
             </property>
            </item>
            <item>

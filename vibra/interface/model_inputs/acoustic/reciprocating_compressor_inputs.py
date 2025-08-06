@@ -2,18 +2,21 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import Qt
 
-from vibra import app
+from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCompressorModel
 
 import numpy as np
+from os.path import dirname
+from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -64,6 +67,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.cache_clearance_CE = None
         self.cache_clearance_HE = None
 
+        self.exporter = None
+
     def _config_widget(self):
         self.treeWidget_compressor_excitation.setColumnWidth(0, 100)
         # self.treeWidget_compressor_excitation.setColumnWidth(1, 140)
@@ -71,6 +76,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.treeWidget_compressor_excitation.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
+        #
+        self.checkBox_export_data.stateChanged.connect(self.export_data_checkbox_callback)
         #
         self.comboBox_cylinder_acting.currentIndexChanged.connect(self.update_compressing_cylinders_setup)
         self.comboBox_fluid_data_source.currentIndexChanged.connect(self.fluid_data_source_callback)
@@ -99,6 +106,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_pressure_crank_end_angle.clicked.connect(self.plot_pressure_crank_end_angle)
         self.pushButton_plot_volume_crank_end_angle.clicked.connect(self.plot_volume_crank_end_angle)
         self.pushButton_process_aquisition_parameters.clicked.connect(self.process_aquisition_parameters)
+        self.pushButton_export_path.clicked.connect(self.export_path_callback)
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
@@ -118,6 +126,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.comboBox_event_stage()
+        self.export_data_checkbox_callback()
         self.update_compressing_cylinders_setup()
         self.spinBox_event_number_of_cylinders()
         self.update_state_properties_at_discharge()
@@ -133,6 +142,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         widgets = [self.pushButton_reset_entries]
         change_icon_color_for_widgets(widgets, icon_color)
+
+    def export_data_checkbox_callback(self):
+        is_checked = self.checkBox_export_data.isChecked()
+        self.comboBox_output_data_type.setEnabled(is_checked)
+        self.label_data_type.setEnabled(is_checked)
+        self.label_export_path.setEnabled(is_checked)
+        self.lineEdit_export_path.setEnabled(is_checked)
+        self.pushButton_export_path.setEnabled(is_checked)
 
     def fluid_data_source_callback(self):
 
@@ -829,6 +846,17 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
             table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
+            if self.checkBox_export_data.isChecked():
+                output_data_type = self.comboBox_output_data_type.currentText()
+                if output_data_type == "Surface velocity [m/s]":
+                    unit = "m/s"
+                    output_data = _surface_velocity
+                else:
+                    unit = "m³/s"
+                    output_data = flow_rate[1:]
+
+                self.export_reciprocating_compressor_data_excitation(surface_id, _freq, output_data, unit)
+
             data = {
                     "connection_type" : connection_type,
                     "table_names" : [table_name],
@@ -1104,6 +1132,83 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.compressor.number_points = N
         self.compressor.plot_crank_end_volume_vs_angle()
         return
+
+    def export_path_callback(self):
+
+        path = app().config.get_last_folder_for("exported_data_folder")
+        if path is None:
+            directory_path = USER_PATH
+        else:
+            directory_path = path
+
+        caption = "Enter a filename to export the reciprocating compressor excitation data"
+        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xls);; Spreadsheet (*.xlsx)"
+
+        if self.exporter is None:
+            self.exporter = ExportModelResults()
+
+        self.hide()
+        file_path, check = self.exporter.getSaveFileName(
+                                                         app().main_window, 
+                                                         caption, 
+                                                         directory_path, 
+                                                         filter = ext_filter
+                                                         )
+
+        if not check:
+            return
+
+        self.checkBox_export_data.setChecked(True)
+        self.lineEdit_export_path.setText(file_path)
+
+        app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
+
+    def export_reciprocating_compressor_data_excitation(
+                                                        self, 
+                                                        surface_id: int, 
+                                                        frequencies: np.ndarray, 
+                                                        excitation_data: np.ndarray,
+                                                        unit: str
+                                                        ):
+
+        recip_excitation_data = dict()
+        title = "Reciprocating compressor excitation"
+
+        if unit == "m/s":
+            key = ("surface_velocity_at", surface_id)
+        else:
+            key = ("flow_rate_at", surface_id)
+
+        legend_label = f"Reciprocating compressor excitation at surface [{surface_id}]"
+
+        recip_excitation_data[key] = {
+                                        "x_data" : frequencies,
+                                        "y_data" : excitation_data,
+                                        "x_label" : "Frequency [Hz]",
+                                        "y_label" : "Compressor excitation",
+                                        "title" : title,
+                                        "data_type" : "compressor excitation",
+                                        "legend" : legend_label,
+                                        "unit" : unit,
+                                        "color" : [0, 0, 1],
+                                        "linestyle" : "-"  
+                                        }
+
+        if self.exporter is None:
+            self.exporter = ExportModelResults()
+
+        file_path = self.lineEdit_export_path.text()
+        if not self.is_file_path_valid(file_path):
+            file_path = ""
+
+        self.exporter._set_data_to_export(recip_excitation_data, existing_path=file_path)
+
+    def is_file_path_valid(self, file_path: str):
+        if Path(dirname(file_path)).exists():
+            ext = file_path.split(".")[-1]
+            if ext in SUPPORTED_OUTPUT_DATA_EXTENSIONS:
+                return True
+        return False
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
