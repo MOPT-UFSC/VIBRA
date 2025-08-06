@@ -40,6 +40,9 @@ from vibra.utils.polydata_utils import fill_array
 from molde import Color
 import vtk
 from pathlib import Path
+from time import perf_counter
+from collections import defaultdict
+
 
 def create_vtk_id_list(id_list: Sequence[int]) -> vtkIdList:
     vtk_id_list = vtkIdList()
@@ -59,7 +62,7 @@ def read_texture(path: str | Path | None):
     elif path.suffix == ".jpg":
         reader = vtk.vtkJPEGReader()
     else:
-        raise ValueError(f'Unsupported image format {path.suffix}')
+        raise ValueError(f"Unsupported image format {path.suffix}")
 
     reader.SetFileName(path)
     reader.Update()
@@ -84,42 +87,56 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         if self.mesh.nodal_coordinates.size == 0:
             return
 
+        t0 = perf_counter()
         self._create_surfaces()
+        t1 = perf_counter()
         self._create_textures()
+        t2 = perf_counter()
         self._create_empty_actor()
+        t3 = perf_counter()
         self._create_material_actor()
+        t4 = perf_counter()
         self._create_fluid_actor()
+        t5 = perf_counter()
         self._create_porous_actor()
+        t6 = perf_counter()
         self.clear_colors()
+        t7 = perf_counter()
         self.reload_composition()
+        t8 = perf_counter()
+
+        print("Multimaterial times:")
+        print(t1 - t0)
+        print(t2 - t1)
+        print(t3 - t2)
+        print(t4 - t3)
+        print(t5 - t4)
+        print(t6 - t5)
+        print(t7 - t6)
+        print(t8 - t7)
+        print()
 
     def clear_colors(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
+        color_to_surfaces = defaultdict(list)
 
         for surface, volumes in mesh.volumes_from_surface.items():
             volume = volumes[0]
-
-            fluid = properties._get_property(
-                "fluid",
-                surface=surface,
-                volume=volume,
-            )
-
-            material = properties._get_property(
-                "material",
-                surface=surface,
-                volume=volume,
-            )
+            fluid = properties._get_property("fluid", surface=surface, volume=volume)
+            material = properties._get_property("material", surface=surface, volume=volume)
 
             if material is not None:
-                self.paint_surfaces(Color(*material.color), [surface])
-
+                color = tuple(material.color)
             elif fluid is not None:
-                self.paint_surfaces(Color(*fluid.color), [surface])
-            
+                color = tuple(fluid.color)
             else:
-                self.paint_surfaces(Color(255, 255, 255), [surface])
+                color = (255, 255, 255)
+
+            color_to_surfaces[color].append(surface)
+
+        for color, surfaces in color_to_surfaces.items():
+            self.paint_surfaces(Color(*color), surfaces)
 
         # This is pretty slow, need to find a better way to update
         self.reload_composition()
@@ -127,31 +144,25 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def reload_composition(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
-        self.clear_composition()
+        composition_to_surfaces = defaultdict(list)
 
         for surface, volumes in mesh.volumes_from_surface.items():
             volume = volumes[0]
-
-            fluid = properties._get_property(
-                "fluid",
-                surface=surface,
-                volume=volume,
-            )
-
-            material = properties._get_property(
-                "material",
-                surface=surface,
-                volume=volume,
-            )
+            fluid = properties._get_property("fluid", surface=surface, volume=volume)
+            material = properties._get_property("material", surface=surface, volume=volume)
 
             if material is not None:
-                self.configure_composition("material", [surface])
-
+                composition = "material"
             elif fluid is not None:
-                self.configure_composition("fluid", [surface])
-            
+                composition = "fluid"
             else:
-                self.configure_composition("empty", [surface])
+                composition = "empty"
+
+            composition_to_surfaces[composition].append(surface)
+
+        self.clear_composition()
+        for composition, surfaces in composition_to_surfaces.items():
+            self.configure_composition(composition, surfaces)
 
     def set_color(self, color: Color):
         for i, c in enumerate(color.to_rgba()):
