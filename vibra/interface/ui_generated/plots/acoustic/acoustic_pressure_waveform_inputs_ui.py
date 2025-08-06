@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'acoustic_pressure_frequency_response_inputs.ui'
+## Form generated from reading UI file 'acoustic_pressure_waveform_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.1
 ##
@@ -222,7 +222,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Plot acoustic pressure frequency response", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Plot acoustic pressure waveform", None))
         self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
         self.lineEdit_selection_id.setText("")
 #if QT_CONFIG(tooltip)
@@ -232,7 +232,7 @@ class Ui_Form(object):
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
         self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
-        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Lines", None))
+        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Line", None))
         self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Form", u"Points", None))
         self.comboBox_selector_filter.setItemText(3, QCoreApplication.translate("Form", u"Nodes", None))
 
@@ -240,7 +240,7 @@ class Ui_Form(object):
 
 
 
-class AcousticPressureFrequencyResponseInputs_UI(QWidget, Ui_Form):
+class AcousticPressureWaveformInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

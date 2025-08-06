@@ -43,6 +43,14 @@ SUPPORTED_MESH_EXTENSIONS = [
     "NAS",
 ]
 
+SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
+                                    "dat",
+                                    "txt", 
+                                    "csv", 
+                                    "xls", 
+                                    "xlsx",
+                                    ]
+
 LIGHT_ICON_COLOR = Color("#1a73e8")
 DARK_ICON_COLOR = Color("#5F9AF4")
 

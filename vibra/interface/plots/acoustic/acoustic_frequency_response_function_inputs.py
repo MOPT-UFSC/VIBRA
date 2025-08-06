@@ -41,6 +41,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self.exporter = None
         self.plotter = None
         self.unit_label = "Pa/Pa"
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
@@ -55,18 +56,17 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
-        self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
+        self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_input_clicked)
+        self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_output_clicked)
 
     def update_render_according_to_selector(self):
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() in [0, 1]:
-            self.main_window.show_geometry_render_widget()
-
-        else:
+        if self.comboBox_selector_filter.currentIndex() == 3:
             self.main_window.show_mesh_render_widget()
+        else:
+            self.main_window.show_geometry_render_widget()
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -83,11 +83,30 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         widget.installEventFilter(filter)
         return filter.clicked
 
-    def lineEdit_1_clicked(self):
+    def lineEdit_input_clicked(self):
         self.current_lineEdit = self.lineEdit_input_selected_id
+        self.highlight_selected_line_edit()
 
-    def lineEdit_2_clicked(self):
+    def lineEdit_output_clicked(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
+        self.highlight_selected_line_edit()
+
+    def highlight_selected_line_edit(self):
+
+        if self.current_lineEdit == self.lineEdit_input_selected_id:
+            self.lineEdit_output_selected_id.setStyleSheet("")
+        else:
+            self.lineEdit_input_selected_id.setStyleSheet("")
+
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(200, 0, 0); border-width: 2px;""")
+
+    def alternate_selected_line_edit(self):
+        if self.current_lineEdit == self.lineEdit_input_selected_id:
+            self.lineEdit_output_clicked()
+            self.lineEdit_output_selected_id.setFocus()
+        else:
+            self.lineEdit_input_clicked()
+            self.lineEdit_input_selected_id.setFocus()
 
     def _load_analysis_setup_and_solution(self):
 
@@ -103,21 +122,22 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
     def geometry_selection_callback(self):
         
-        faces = self.main_window.selected_geometry_surfaces
+        surfaces = self.main_window.selected_geometry_surfaces
         lines = self.main_window.selected_geometry_lines
+        points = self.main_window.selected_geometry_points
         nodes = self.main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
-        if faces and index == 0:
+        if surfaces and index == 0:
 
-            if len(faces) > 1:
+            if len(surfaces) > 1:
                 return
 
             else:
-                _faces = [str(i) for i in faces]
-                self.current_lineEdit.setText(_faces[0])
+                _surfaces = [str(i) for i in surfaces]
+                self.current_lineEdit.setText(_surfaces[0])
 
-        if lines and index == 1:
+        elif lines and index == 1:
 
             if len(lines) > 1:
                 return
@@ -126,7 +146,16 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                 _lines = [str(i) for i in lines]
                 self.current_lineEdit.setText(_lines[0])
 
-        if nodes and index == 2:
+        elif points and index == 2:
+
+            if len(points) > 1:
+                return
+
+            else:
+                _points = [str(i) for i in points]
+                self.current_lineEdit.setText(_points[0])
+
+        elif nodes and index == 3:
             
             if len(nodes) > 1:
                 return
@@ -135,7 +164,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                 _nodes = [str(i) for i in nodes]
                 self.current_lineEdit.setText(_nodes[0])
 
-        elif not any([nodes, lines, nodes]):
+        elif not any([nodes, lines, points, nodes]):
             return
             self.current_lineEdit.setText("")
 
@@ -166,15 +195,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
     def check_inputs(self):
 
         index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        elif index == 1:
-            selection = "lines"
-
-        else:
-            selection = "nodes"
+        selection = self.selection_types[index]
  
         selected_input_id = self.lineEdit_input_selected_id.text()
         self.input_selection_id, error_data = self.mesh.check_selected_ids(   
@@ -205,13 +226,14 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
-            rows_num = self.project.model.mesh.nodes_from_surfaces[self.output_selection_id]
-            rows_den = self.project.model.mesh.nodes_from_surfaces[self.input_selection_id]
-
+            rows_num = self.project.model.mesh.nodes_from_surfaces.get(self.output_selection_id)
+            rows_den = self.project.model.mesh.nodes_from_surfaces.get(self.input_selection_id)
         elif index == 1:
-            rows_num = self.project.model.mesh.nodes_from_lines[self.output_selection_id]
-            rows_den = self.project.model.mesh.nodes_from_lines[self.input_selection_id]
-
+            rows_num = self.project.model.mesh.nodes_from_lines.get(self.output_selection_id)
+            rows_den = self.project.model.mesh.nodes_from_lines.get(self.input_selection_id)
+        elif index == 2:
+            rows_num = self.project.model.mesh.nodes_from_points.get(self.output_selection_id)
+            rows_den = self.project.model.mesh.nodes_from_points.get(self.input_selection_id)
         else:
             rows_num = self.output_selection_id
             rows_den = self.input_selection_id
@@ -236,16 +258,8 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
     def join_model_data(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection_type = "surface"
-
-        elif index == 1:
-            selection_type = "line"
-
-        else:
-            selection_type = "node"
+        current_text = self.comboBox_selector_filter.currentText()
+        selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
         y_data = self.get_response()
@@ -272,11 +286,18 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
                                     "linestyle" : "-"
                                    }
 
-    def get_color(self, index):
-        colors = [  (0,0,1), (0,0,0), (1,0,0),
-                    (1,1,0), (1,0,1), (0,1,1),
-                    (0.25,0.25,0.25)  ]
-        
+    def get_color(self, index: int):
+
+        colors = [  
+                  (0, 0, 1), 
+                  (0, 0, 0), 
+                  (1, 0, 0),
+                  (1, 1, 0), 
+                  (1, 0, 1), 
+                  (0, 1, 1),
+                  (0.25, 0.25, 0.25)
+                  ]
+
         if index <= 6:
             return colors[index]
         else:
@@ -285,8 +306,8 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        elif event.key() == Qt.Key_Escape:
-            self.close()
+        elif event.key() == Qt.Key_Down or event.key() == Qt.Key_Up:
+            self.alternate_selected_line_edit()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

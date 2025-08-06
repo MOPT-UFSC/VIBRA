@@ -30,6 +30,8 @@ from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import Acoust
 from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
 from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs import AcousticPressureFrequencyResponseFunctionInputs
 from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_waveform_inputs import AcousticPressureWaveformInputs
+#
 from vibra.interface.plots.acoustic.specific_acoustic_impedance_inputs import SpecificAcousticImpedanceInputs
 from vibra.interface.plots.acoustic.particle_velocity_frequency_response_inputs import ParticleVelocityFrequencyResponseInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
@@ -228,6 +230,10 @@ class InputUi:
     def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
+
+    def plot_acoustic_pressure_waveform(self):
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AcousticPressureWaveformInputs)
 
     def plot_TL_NR(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:

@@ -3,7 +3,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import AcousticPressureFrequencyResponseInputs_UI
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -13,17 +13,13 @@ import numpy as np
 window_title1 = "Error"
 window_title2 = "Warning"
 
-class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseInputs_UI):
+class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().project.model
         self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
 
         self._reset_variables()
         self._create_connections()
@@ -37,13 +33,13 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
+        analysis_setup = app().project.analysis_setup
         if "analysis_id" in analysis_setup.keys():
             if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().project.acoustic_harmonic_solver.solution
 
     def _reset_variables(self):
         self.exporter = None
@@ -58,14 +54,14 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
 
-        surfaces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        points = self.main_window.selected_geometry_points
-        nodes = self.main_window.selected_mesh_nodes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if surfaces and index == 0:
@@ -92,11 +88,11 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 3:
-            self.main_window.show_mesh_render_widget()
+            app().main_window.show_mesh_render_widget()
         else:
-            self.main_window.show_geometry_render_widget()
+            app().main_window.show_geometry_render_widget()
 
-    def check_inputs(self):
+    def check_selected_ids(self):
 
         index = self.comboBox_selector_filter.currentIndex()
         selection = self.selection_types[index]
@@ -115,16 +111,18 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def plot_data_callback(self):
 
-        if self.check_inputs():
+        if self.check_selected_ids():
             return
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.plotter.radioButton_real.setChecked(True)
+        self.plotter._update_comboBox()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
         
-        if self.check_inputs():
+        if self.check_selected_ids():
             return
 
         self.join_model_data()
@@ -161,19 +159,20 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
-        self.title = f"Acoustic frequency response - {self.analysis_method}"
+        self.title = f"Acoustic pressure waveform - {self.analysis_method}"
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
-            y_data = self.get_response(selected_id)
+            Xf = self.get_response(selected_id)
+            time, y_data = self.process_ifft_from_signal(Xf)
 
             self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
+                                        "x_data" : time,
                                         "y_data" : y_data,
-                                        "x_label" : "Frequency [Hz]",
+                                        "x_label" : "Time [s]",
                                         "y_label" : "Acoustic pressure",
                                         "title" : self.title,
                                         "data_type" : "acoustic pressure",
@@ -183,12 +182,43 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
                                         "linestyle" : "-"  
                                       }
 
+    def process_ifft_from_signal(self, Xf: np.ndarray):
+        """
+        If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
+        """
+
+        # reinsert the DC component
+        N = len(Xf) + 1
+        Xf_ = np.zeros(N, dtype=complex)
+        
+        # adjust the one-sided spectrum scale
+        Xf_[1:] = Xf / 2
+
+        # process the sampling frequency and time increment
+        f_max = np.max(self.frequencies)
+        f_s = 2 * f_max
+        dt = 1 / f_s
+
+        # process the ifft from signal Xf
+        x_t = np.fft.irfft(Xf_) * (2*(N-1))
+
+        # create the time vector
+        time = np.arange(len(x_t), dtype=float) * dt
+
+        return time, x_t
+
     def get_color(self, index):
 
-        colors = [  (0,0,1), (0,0,0), (1,0,0),
-                    (0,1,1), (1,0,1), (1,1,0),
-                    (0.25,0.25,0.25)  ]
-        
+        colors = [  
+                  (0,0,1), 
+                  (0,0,0), 
+                  (1,0,0),
+                  (0,1,1), 
+                  (1,0,1), 
+                  (1,1,0),
+                  (0.25,0.25,0.25)
+                  ]
+
         if index <= 6:
             return colors[index]
         else:

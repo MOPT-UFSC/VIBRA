@@ -100,6 +100,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.frame_vertical_lines.setDisabled(True)
 
     def _update_comboBox(self):
+
         self.cache_plot_type = self.comboBox_plot_type.currentText()
         aux_real = self.radioButton_real.isChecked()
         aux_imag = self.radioButton_imaginary.isChecked()
@@ -115,10 +116,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         
         if self.plot_type == self.cache_plot_type:
             self.plot_data_in_freq_domain()
-        
+
     def _update_plot_type(self):
-        # if self.not_update:
-        #     return
         self.plot_type = self.comboBox_plot_type.currentText()
         self.plot_data_in_freq_domain()
 
