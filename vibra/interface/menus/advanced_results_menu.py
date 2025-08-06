@@ -6,7 +6,7 @@ from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import E
 from molde.render_widgets import CommonRenderWidget
 
 
-from vibra import app, ICON_DIR
+from vibra import app, ICON_DIR, LIGHT_ICON_COLOR
 from vibra.utils.icons import load_icon
 
 
@@ -21,7 +21,7 @@ class AdvancedResultsMenu(QMenu):
 
     def create_actions(self):
 
-        color = QColor("#448cff")
+        color = LIGHT_ICON_COLOR.to_qt()
         self.plot_icon = load_icon(ICON_DIR / "image-plus.png", color)
         self.export_icon = load_icon(ICON_DIR / "exit.png", color)
 

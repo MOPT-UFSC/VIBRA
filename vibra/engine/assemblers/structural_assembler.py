@@ -1,34 +1,23 @@
+
 from vibra.engine.model import Model
-
-from vibra.engine.elements.structural_hex8_element import STRUCT_HEXAHEDRON_8
-from vibra.engine.elements.structural_hex20_element import STRUCT_HEXAHEDRON_20
-from vibra.engine.elements.structural_tet4_element import STRUCT_TETRAHEDRON_4S
-from vibra.engine.elements.structural_tet10_element import STRUCT_TETRAHEDRON_10S
-from vibra.engine.elements.structural_tria3_element import STRUCT_TRIANGULAR_3
-
-from vibra.engine.mesher.element_type import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-)
-
-from collections import defaultdict
-from time import time
 
 import logging
 import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix
+
+from collections import defaultdict
+from scipy.sparse import csr_matrix
+from time import time
 
 
 class StructuralAssembler:
     def __init__(self, model : Model):
+
         self.model = model
         self.properties = model.properties
+
         self.reset()
 
     def reset(self):
-
         self.stiffness_matrix = None
         self.mass_matrix = None
         self.frequencies = None
@@ -38,27 +27,10 @@ class StructuralAssembler:
         self.prescribed_dofs_indexes = np.array([])
         self.unprescribed_dofs_indexes = np.array([])
 
-    def get_element(self):
-
-        element_type = self.model.mesh.element_type
-
-        if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self.model), STRUCT_TRIANGULAR_3(self.model)
-
-        elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self.model), None
-
-        elif element_type == HEXAHEDRON_8:
-            return STRUCT_HEXAHEDRON_8(self.model), None
-
-        elif element_type == HEXAHEDRON_20:
-            return STRUCT_HEXAHEDRON_20(self.model), None
-
-        else:
-            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
-
-    def set_element_formulation(self, element):
-        self.element = element
+    def define_structural_elements(self):
+        self.model.set_structural_elements()
+        self.element_2d = self.model.structural_element_2d
+        self.element_3d = self.model.structural_element_3d
 
     def update_number_of_frequencies(self):
         self.frequencies = self.model.frequencies
@@ -239,7 +211,7 @@ class StructuralAssembler:
                     continue
 
                 for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
-                    g_dofs, F_elem = self.element_2D.process_forces_for_distributed_load_over_area(connect, surface_load)
+                    g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_area(connect, surface_load)
                     output[g_dofs, :] += F_elem
 
             elif property == "normal_pressure_load":
@@ -248,7 +220,7 @@ class StructuralAssembler:
                     continue
 
                 for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
-                    g_dofs, F_elem = self.element_2D.process_forces_for_normal_pressure_load(connect, normal_pressure)
+                    g_dofs, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
                     output[g_dofs, :] += F_elem
 
         for (property, line_id), data in self.properties.line_properties.items():
@@ -264,7 +236,7 @@ class StructuralAssembler:
 
                     for connect_2d in connectivities[mask, :]:
                         active_nodes = [1 if node_id in nodes_from_line else 0 for node_id in connect_2d]
-                        g_dofs, F_elem = self.element_2D.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
+                        g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dofs, :] += F_elem
 
         if self.prescribed_dofs_indexes:
@@ -366,16 +338,15 @@ class StructuralAssembler:
         self.ind_cols = np.array([], dtype=int)
         self.ind_rows = np.array([], dtype=int)
 
-        self.element_3D, self.element_2D = self.get_element()
-        self.active_2d_element_dofs, self.n_dofs, shift_index = self.process_face_elements_with_thickness(self.element_2D, self.element_3D)
+        self.active_2d_element_dofs, self.n_dofs, shift_index = self.process_face_elements_with_thickness(self.element_2d, self.element_3d)
 
-        self.element_3D.reorder_connect()
-        # rows_se, cols_se = self.element_3D.generate_ind_rows_cols()
+        self.element_3d.reorder_connect()
+        # rows_se, cols_se = self.element_3d.generate_ind_rows_cols()
         # self.ind_rows = np.append(self.ind_rows, rows_se)
         # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        dofs = self.element_3D.DOFS_PER_ELEMENT
-        nel = len(self.element_3D.connectivity)
+        dofs = self.element_3d.DOFS_PER_ELEMENT
+        nel = len(self.element_3d.connectivity)
 
         ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
         ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
@@ -397,11 +368,11 @@ class StructuralAssembler:
             if material is None:
                 continue
 
-            rows, cols = self.element_3D.get_rows_and_cols_indexes(el_index, shift_index)
+            rows, cols = self.element_3d.get_rows_and_cols_indexes(el_index, shift_index)
             ind_rows[el_index, :, :] = rows
             ind_cols[el_index, :, :] = cols
 
-            Ke, Me = self.element_3D.elementary_matrices(el_index, material)
+            Ke, Me = self.element_3d.elementary_matrices(el_index, material)
             data_K_se[el_index, :, :] = Ke
             data_M_se[el_index, :, :] = Me
 
@@ -417,10 +388,10 @@ class StructuralAssembler:
 
         if len(self.active_2d_element_dofs):
 
-            rows_fe, cols_fe = self.element_2D.generate_ind_rows_cols()
+            rows_fe, cols_fe = self.element_2d.generate_ind_rows_cols()
 
-            dofs = self.element_2D.DOFS_PER_ELEMENT
-            nel = len(self.element_2D.connectivity)
+            dofs = self.element_2d.DOFS_PER_ELEMENT
+            nel = len(self.element_2d.connectivity)
 
             self.ind_rows = np.append(self.ind_rows, rows_fe)
             self.ind_cols = np.append(self.ind_cols, cols_fe)
@@ -450,7 +421,7 @@ class StructuralAssembler:
 
                 t = surface_data["surface_thickness"]
  
-                Ke, Me = self.element_2D.elementary_matrices(el_index, material, t)
+                Ke, Me = self.element_2d.elementary_matrices(el_index, material, t)
 
                 if np.sum(Ke) == 0.:
 
@@ -499,6 +470,7 @@ class StructuralAssembler:
 
     def process_assemble(self):
 
+        self.define_structural_elements()
         self.update_number_of_frequencies()
         self.model.process_surface_thickness()
 

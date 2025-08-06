@@ -145,8 +145,7 @@ def load_external_mesh_and_solve():
 
     print(f"\nNatural frequencies: \n {natural_frequencies}")
 
-    # element_3d, _ = assembler.get_element()
-    # element_3d.reorder_connect()
+    # element_3d = model.acoustic_element_3d
 
     # mesh._process_face_elements_connected_to_nodes([1, 2])
     # mesh.compute_nodal_areas()

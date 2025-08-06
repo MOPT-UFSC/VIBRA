@@ -137,10 +137,17 @@ class AnalysisRequirementsChecker:
                        "surface_velocity",
                        "mass_flow_rate",
                        "incident_plane_wave",
-                       "compressor_excitation",
+                       "reciprocating_compressor_excitation",
+                       "mass_source",
                        ]
 
-        properties = [self.properties.surface_properties]
+        properties = [
+                      self.properties.volume_properties,
+                      self.properties.surface_properties,
+                      self.properties.line_properties,
+                      self.properties.point_properties,
+                      self.properties.nodal_properties,
+                      ]
 
         for property in properties:
             for (prop_label, *_), data in property.items():
@@ -175,7 +182,7 @@ class AnalysisRequirementsChecker:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
                     values = [0 if value is None else value for value in data["values"]]
-                    if np.sum(values):
+                    if np.array(sum(values)).any():
                         return False
 
         title = "Invalid model excitation"    

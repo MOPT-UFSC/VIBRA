@@ -39,7 +39,7 @@ class ExportMeshData(ExportMesh_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Export mesh data")
+        self.setWindowTitle("Vibra")
 
         self.checkBox_nodal_coordinates.setChecked(True)
         self.checkBox_face_elements_connectivity.setChecked(True)
@@ -123,10 +123,11 @@ class ExportMeshData(ExportMesh_UI):
     
     def update_icons_color(self):
         theme = app().config.user_preferences.interface_theme
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = self.findChildren(QPushButton)
         change_icon_color_for_widgets(widgets, icon_color)

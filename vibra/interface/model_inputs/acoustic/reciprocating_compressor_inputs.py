@@ -2,18 +2,21 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtGui import QCloseEvent, QColor
 from PySide6.QtCore import Qt
 
-from vibra import app
+from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCompressorModel
 
 import numpy as np
+from os.path import dirname
+from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -50,7 +53,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Reciprocating compressor")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
 
@@ -58,7 +61,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.keep_window_open = True
 
         self.aquisition_parameters_processed = False
-        self.not_update_event = False  
+        self.not_update_event = False
+
+        self.cache_rod_diameter = None
+        self.cache_clearance_CE = None
+        self.cache_clearance_HE = None
+
+        self.exporter = None
 
     def _config_widget(self):
         self.treeWidget_compressor_excitation.setColumnWidth(0, 100)
@@ -67,6 +76,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.treeWidget_compressor_excitation.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
+        #
+        self.checkBox_export_data.stateChanged.connect(self.export_data_checkbox_callback)
         #
         self.comboBox_cylinder_acting.currentIndexChanged.connect(self.update_compressing_cylinders_setup)
         self.comboBox_fluid_data_source.currentIndexChanged.connect(self.fluid_data_source_callback)
@@ -95,6 +106,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_pressure_crank_end_angle.clicked.connect(self.plot_pressure_crank_end_angle)
         self.pushButton_plot_volume_crank_end_angle.clicked.connect(self.plot_volume_crank_end_angle)
         self.pushButton_process_aquisition_parameters.clicked.connect(self.process_aquisition_parameters)
+        self.pushButton_export_path.clicked.connect(self.export_path_callback)
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
@@ -114,6 +126,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.comboBox_event_stage()
+        self.export_data_checkbox_callback()
         self.update_compressing_cylinders_setup()
         self.spinBox_event_number_of_cylinders()
         self.update_state_properties_at_discharge()
@@ -121,14 +134,22 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_reset_entries]
         change_icon_color_for_widgets(widgets, icon_color)
+
+    def export_data_checkbox_callback(self):
+        is_checked = self.checkBox_export_data.isChecked()
+        self.comboBox_output_data_type.setEnabled(is_checked)
+        self.label_data_type.setEnabled(is_checked)
+        self.label_export_path.setEnabled(is_checked)
+        self.lineEdit_export_path.setEnabled(is_checked)
+        self.pushButton_export_path.setEnabled(is_checked)
 
     def fluid_data_source_callback(self):
 
@@ -197,6 +218,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_volume_head_end_angle.setDisabled(False)
         self.pushButton_plot_volume_crank_end_angle.setDisabled(False)
 
+        clearance_HE = self.cache_clearance_HE
+        if self.cache_clearance_HE is None:
+            clearance_HE = 15.80
+
+        clearance_CE = self.cache_clearance_CE
+        if self.cache_clearance_HE is None:
+            clearance_CE = 18.39
+
+        rod_diameter = self.cache_rod_diameter
+        if self.cache_rod_diameter is None:
+            rod_diameter = 0.135
+
         if self.comboBox_cylinder_acting.currentIndex() == 1:
 
             self.lineEdit_rod_diameter.setText("")
@@ -205,7 +238,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.lineEdit_clearance_crank_end.setText("")
             self.lineEdit_clearance_crank_end.setDisabled(True)
             if self.lineEdit_clearance_head_end.text() == "":
-                self.lineEdit_clearance_head_end.setText("15.80")
+                self.lineEdit_clearance_head_end.setText(f"{clearance_HE}")
 
             self.pushButton_plot_PV_diagram_crank_end.setDisabled(True)
             self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
@@ -215,12 +248,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         elif self.comboBox_cylinder_acting.currentIndex() == 2:
 
             if self.lineEdit_rod_diameter.text() == "":
-                self.lineEdit_rod_diameter.setText("0.135")
+                self.lineEdit_rod_diameter.setText(f"{rod_diameter}")
 
             self.lineEdit_clearance_head_end.setText("")
             self.lineEdit_clearance_head_end.setDisabled(True)
             if self.lineEdit_clearance_crank_end.text() == "":
-                self.lineEdit_clearance_crank_end.setText("18.39")
+                self.lineEdit_clearance_crank_end.setText(f"{clearance_CE}")
 
             self.pushButton_plot_PV_diagram_head_end.setDisabled(True)
             self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
@@ -230,13 +263,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         else:
 
             if self.lineEdit_rod_diameter.text() == "":
-                self.lineEdit_rod_diameter.setText("0.135")
+                self.lineEdit_rod_diameter.setText(f"{rod_diameter}")
 
             if self.lineEdit_clearance_head_end.text() == "":
-                self.lineEdit_clearance_head_end.setText("15.80")
+                self.lineEdit_clearance_head_end.setText(f"{clearance_HE}")
 
             if self.lineEdit_clearance_crank_end.text() == "":
-                self.lineEdit_clearance_crank_end.setText("18.39")
+                self.lineEdit_clearance_crank_end.setText(f"{clearance_CE}")
 
     def get_state_properties(self, check_all_entries: bool):
 
@@ -330,15 +363,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if "rod_diameter" in parameters.keys():
             self.lineEdit_rod_diameter.setText(str(parameters["rod_diameter"]))
+            self.cache_rod_diameter = parameters.get("rod_diameter")
 
         if "pressure_ratio" in parameters.keys():
             self.lineEdit_pressure_ratio.setText(str(parameters["pressure_ratio"]))
 
         if "clearance_HE" in parameters.keys():
             self.lineEdit_clearance_head_end.setText(str(parameters["clearance_HE"]))
+            self.cache_clearance_HE = parameters.get("clearance_HE")
 
         if "clearance_CE" in parameters.keys():
             self.lineEdit_clearance_crank_end.setText(str(parameters["clearance_CE"]))
+            self.cache_clearance_CE = parameters.get("clearance_CE")
 
         if "TDC_crank_angle_1" in parameters.keys():
             self.spinBox_tdc1_crank_angle.setValue(int(parameters["TDC_crank_angle_1"]))
@@ -374,7 +410,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                     self.comboBox_temperature_units.setCurrentIndex(i)
 
         if "acting_label" in parameters.keys():
-            acting_labels = ["both_ends", "crank_end", "head_end"]
+            acting_labels = ["both_ends", "head_end", "crank_end"]
             acting_key = acting_labels.index(parameters["acting_label"])
             self.comboBox_cylinder_acting.setCurrentIndex(acting_key)
 
@@ -424,18 +460,20 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_surface_id(self, lineEdit: QLineEdit):
 
         input_ids = lineEdit.text()
-        surface_id = self.model.mesh.check_selected_ids(
-                                                        input_ids, 
-                                                        selection = "surfaces", 
-                                                        single_id = True
-                                                        )
-
-        if surface_id is None:
-            lineEdit.setFocus()
-            lineEdit.selectAll()
+        surface_id, error_data = self.model.mesh.check_selected_ids(
+                                                                    input_ids, 
+                                                                    selection = "surfaces", 
+                                                                    single_id = True
+                                                                    )
+            
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            self.lineEdit_selection_id.selectAll()
+            PrintMessageInput(error_data)
             return None
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
 
         if len(volumes_from_surface) == 1:
             return surface_id
@@ -498,7 +536,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
         return False
 
-    def check_all_parameters(self, check_all_entries=True):
+    def check_all_parameters(self, check_all_entries: bool = True):
 
         self.parameters = dict()
 
@@ -532,18 +570,20 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
         else:
             self.parameters['pressure_ratio'] = self.value
-    
-        if self.check_input_parameters(self.lineEdit_clearance_head_end, "HE clearance"):
-            self.lineEdit_clearance_head_end.setFocus()
-            return True
-        else:
-            self.parameters['clearance_HE'] = self.value
         
-        if self.check_input_parameters(self.lineEdit_clearance_crank_end, "CE clearance"):
-            self.lineEdit_clearance_crank_end.setFocus()
-            return True
-        else:
-            self.parameters['clearance_CE'] = self.value
+        if self.comboBox_cylinder_acting.currentIndex() in [0, 1]:
+            if self.check_input_parameters(self.lineEdit_clearance_head_end, "HE clearance"):
+                self.lineEdit_clearance_head_end.setFocus()
+                return True
+            else:
+                self.parameters['clearance_HE'] = self.value
+
+        if self.comboBox_cylinder_acting.currentIndex() in [0, 2]:
+            if self.check_input_parameters(self.lineEdit_clearance_crank_end, "CE clearance"):
+                self.lineEdit_clearance_crank_end.setFocus()
+                return True
+            else:
+                self.parameters['clearance_CE'] = self.value
 
         self.parameters['TDC_crank_angle_1'] = self.spinBox_tdc1_crank_angle.value()
 
@@ -592,7 +632,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.parameters['compression_stage'] = self.compression_stage_index
         self.parameters['number_of_cylinders'] = self.number_of_cylinders
 
-        acting_labels = ["both_ends", "crank_end", "head_end"]
+        acting_labels = ["both_ends", "head_end", "crank_end"]
         self.parameters['acting_label'] = acting_labels[self.comboBox_cylinder_acting.currentIndex()]
 
         if self.number_of_cylinders > 1:
@@ -800,10 +840,22 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
             surface_velocity = flow_rate / surface_area
 
+            # remove the zero frequency component
             _freq = freq[1:]
             _surface_velocity = surface_velocity[1:]
 
             table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
+
+            if self.checkBox_export_data.isChecked():
+                output_data_type = self.comboBox_output_data_type.currentText()
+                if output_data_type == "Surface velocity [m/s]":
+                    unit = "m/s"
+                    output_data = _surface_velocity
+                else:
+                    unit = "m³/s"
+                    output_data = flow_rate[1:]
+
+                self.export_reciprocating_compressor_data_excitation(surface_id, _freq, output_data, unit)
 
             data = {
                     "connection_type" : connection_type,
@@ -1080,6 +1132,83 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.compressor.number_points = N
         self.compressor.plot_crank_end_volume_vs_angle()
         return
+
+    def export_path_callback(self):
+
+        path = app().config.get_last_folder_for("exported_data_folder")
+        if path is None:
+            directory_path = USER_PATH
+        else:
+            directory_path = path
+
+        caption = "Enter a filename to export the reciprocating compressor excitation data"
+        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xls);; Spreadsheet (*.xlsx)"
+
+        if self.exporter is None:
+            self.exporter = ExportModelResults()
+
+        self.hide()
+        file_path, check = self.exporter.getSaveFileName(
+                                                         app().main_window, 
+                                                         caption, 
+                                                         directory_path, 
+                                                         filter = ext_filter
+                                                         )
+
+        if not check:
+            return
+
+        self.checkBox_export_data.setChecked(True)
+        self.lineEdit_export_path.setText(file_path)
+
+        app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
+
+    def export_reciprocating_compressor_data_excitation(
+                                                        self, 
+                                                        surface_id: int, 
+                                                        frequencies: np.ndarray, 
+                                                        excitation_data: np.ndarray,
+                                                        unit: str
+                                                        ):
+
+        recip_excitation_data = dict()
+        title = "Reciprocating compressor excitation"
+
+        if unit == "m/s":
+            key = ("surface_velocity_at", surface_id)
+        else:
+            key = ("flow_rate_at", surface_id)
+
+        legend_label = f"Reciprocating compressor excitation at surface [{surface_id}]"
+
+        recip_excitation_data[key] = {
+                                        "x_data" : frequencies,
+                                        "y_data" : excitation_data,
+                                        "x_label" : "Frequency [Hz]",
+                                        "y_label" : "Compressor excitation",
+                                        "title" : title,
+                                        "data_type" : "compressor excitation",
+                                        "legend" : legend_label,
+                                        "unit" : unit,
+                                        "color" : [0, 0, 1],
+                                        "linestyle" : "-"  
+                                        }
+
+        if self.exporter is None:
+            self.exporter = ExportModelResults()
+
+        file_path = self.lineEdit_export_path.text()
+        if not self.is_file_path_valid(file_path):
+            file_path = ""
+
+        self.exporter._set_data_to_export(recip_excitation_data, existing_path=file_path)
+
+    def is_file_path_valid(self, file_path: str):
+        if Path(dirname(file_path)).exists():
+            ext = file_path.split(".")[-1]
+            if ext in SUPPORTED_OUTPUT_DATA_EXTENSIONS:
+                return True
+        return False
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

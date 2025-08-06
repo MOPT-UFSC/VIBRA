@@ -43,7 +43,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Normal pressure load")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.keep_window_open = True
@@ -389,7 +389,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         for surface_id in surface_ids:
             
             if self.pressure_table_values is not None:
-                self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values, self.pressure_table_path)
+                self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values)
                 if self.pressure_array is None:
                     return
 

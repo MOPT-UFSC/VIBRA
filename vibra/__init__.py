@@ -11,6 +11,7 @@ __release_date__ = "June 24th 2024"
 from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
+from molde import Color
 
 VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
@@ -42,6 +43,16 @@ SUPPORTED_MESH_EXTENSIONS = [
     "NAS",
 ]
 
+SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
+                                    "dat",
+                                    "txt", 
+                                    "csv", 
+                                    "xls", 
+                                    "xlsx",
+                                    ]
+
+LIGHT_ICON_COLOR = Color("#1a73e8")
+DARK_ICON_COLOR = Color("#5F9AF4")
 
 def app() -> "Application":
     return QApplication.instance()

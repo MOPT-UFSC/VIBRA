@@ -200,9 +200,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def get_response(self, surface_id: int):
 
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
-
         surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
 
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)

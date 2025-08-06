@@ -56,132 +56,121 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
     def update_renderer_background_color_1(self):
         read = PickColorInput(title="Pick the background color")
         if read.complete:
-            renderer_background_color_1 = tuple(read.color)
-            str_color = str(renderer_background_color_1)[1:-1]
-            self.lineEdit_renderer_background_color_1.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
-
-            self.tmp_user_preferences.renderer_background_color_1 = Color(*renderer_background_color_1)
+            bg_color = Color(*read.color)
+            self.lineEdit_renderer_background_color_1.setStyleSheet(f"background-color: {bg_color.to_hex()};\n color: {bg_color.to_hex()};")
+            self.tmp_user_preferences.renderer_background_color_1 = bg_color
 
     def update_line_edit_renderer_background_color_1(self):
-        str_color = str(self.tmp_user_preferences.renderer_background_color_1.to_rgb())[1:-1]
-        self.lineEdit_renderer_background_color_1.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        bg_color = self.tmp_user_preferences.renderer_background_color_1
+        self.lineEdit_renderer_background_color_1.setStyleSheet(f"background-color: {bg_color.to_hex()};\n color: {bg_color.to_hex()};")
 
     def update_renderer_background_color_2(self):
         read = PickColorInput(title="Pick the background color")
         if read.complete:
-            renderer_background_color_2 = tuple(read.color)
-            str_color = str(renderer_background_color_2)[1:-1]
-            self.lineEdit_renderer_background_color_2.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            bg_color = Color(*read.color)
+            self.lineEdit_renderer_background_color_2.setStyleSheet(f"background-color: {bg_color.to_hex()};\n color: {bg_color.to_hex()};")
+            self.tmp_user_preferences.renderer_background_color_2 = bg_color
 
-            self.tmp_user_preferences.renderer_background_color_2 = Color(*renderer_background_color_2)
 
     def update_line_edit_renderer_background_color_2(self):
-        str_color = str(self.tmp_user_preferences.renderer_background_color_2.to_rgb())[1:-1]
-        self.lineEdit_renderer_background_color_2.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        bg_color = self.tmp_user_preferences.renderer_background_color_2
+        self.lineEdit_renderer_background_color_2.setStyleSheet(f"background-color: {bg_color.to_hex()};\n color: {bg_color.to_hex()};")
     
     def update_renderer_font_color(self):
         read = PickColorInput(title="Pick the font color")
         if read.complete:
-            renderer_font_color = tuple(read.color)
-            str_color = str(renderer_font_color)[1:-1]
-            self.lineEdit_renderer_font_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            font_color = Color(*read.color)
+            self.lineEdit_renderer_font_color.setStyleSheet(f"background-color: {font_color.to_hex()};\n color: {font_color.to_hex()};")
+            self.tmp_user_preferences.renderer_font_color = font_color
 
-            self.tmp_user_preferences.renderer_font_color = Color(*renderer_font_color)
 
     def update_line_edit_renderer_font_color(self):
-        str_color = str(self.tmp_user_preferences.renderer_font_color.to_rgb())[1:-1]
-        self.lineEdit_renderer_font_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        font_color = self.tmp_user_preferences.renderer_font_color
+        self.lineEdit_renderer_font_color.setStyleSheet(f"background-color: {font_color.to_hex()};\n color: {font_color.to_hex()};")
 
     def update_nodes_points_color(self):
         read = PickColorInput(title="Pick the nodes color")
         if read.complete:
-            nodes_points_color = tuple(read.color)
-            str_color = str(nodes_points_color)[1:-1]
-            self.lineEdit_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            nodes_color = Color(*read.color)
+            self.lineEdit_nodes_points_color.setStyleSheet(f"background-color: {nodes_color.to_hex()};\n color: {nodes_color.to_hex()};")
 
-            self.tmp_user_preferences.nodes_points_color = Color(*nodes_points_color)
+            self.tmp_user_preferences.nodes_points_color = nodes_color
         
     def update_line_edit_nodes_points_color(self):
-        str_color = str(self.tmp_user_preferences.nodes_points_color.to_rgb())[1:-1]
-        self.lineEdit_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        nodes_color = self.tmp_user_preferences.nodes_points_color
+        self.lineEdit_nodes_points_color.setStyleSheet(f"background-color: {nodes_color.to_hex()};\n color: {nodes_color.to_hex()};")
         
     def update_lines_color(self):
         read = PickColorInput(title="Pick the lines color")
         if read.complete:
-            lines_color = tuple(read.color)
-            str_color = str(lines_color)[1:-1]
-            self.lineEdit_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            lines_color = Color(*read.color)
+            self.lineEdit_lines_color.setStyleSheet(f"background-color: {lines_color.to_hex()};\n color: {lines_color.to_hex()};")
 
-            self.tmp_user_preferences.lines_color = Color(*lines_color)
+            self.tmp_user_preferences.lines_color = lines_color
     
     def update_line_edit_lines_color(self):
-        str_color = str(self.tmp_user_preferences.lines_color.to_rgb())[1:-1]
-        self.lineEdit_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        lines_color = self.tmp_user_preferences.lines_color
+        self.lineEdit_lines_color.setStyleSheet(f"background-color: {lines_color.to_hex()};\n color: {lines_color.to_hex()};")
     
     def update_edges_color(self):
         read = PickColorInput(title="Pick the edges color")
         if read.complete:
-            edges_color = tuple(read.color)
-            str_color = str(edges_color)[1:-1]
-            self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            edges_color = Color(*read.color)
+            self.lineEdit_edges_color.setStyleSheet(f"background-color: {edges_color.to_hex()};\n color: {edges_color.to_hex()};")
 
-            self.tmp_user_preferences.edges_color = Color(*edges_color)
+            self.tmp_user_preferences.edges_color = edges_color
     
     def update_line_edit_edges_color(self):
-        str_color = str(self.tmp_user_preferences.edges_color.to_rgb())[1:-1]
-        self.lineEdit_edges_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        edges_color = self.tmp_user_preferences.edges_color
+        self.lineEdit_edges_color.setStyleSheet(f"background-color: {edges_color.to_hex()};\n color: {edges_color.to_hex()};")
 
     def update_faces_color(self):
         read = PickColorInput(title="Pick the faces color")
         if read.complete:
-            faces_color = tuple(read.color)
-            str_color = str(faces_color)[1:-1]
-            self.lineEdit_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            faces_color = Color(*read.color)
+            self.lineEdit_faces_color.setStyleSheet(f"background-color: {faces_color.to_hex()};\n color: {faces_color.to_hex()};")
            
-            self.tmp_user_preferences.faces_color = Color(*faces_color)
+            self.tmp_user_preferences.faces_color = faces_color
 
     def update_line_edit_faces_color(self):
-        str_color = str(self.tmp_user_preferences.faces_color.to_rgb())[1:-1]
-        self.lineEdit_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        faces_color = self.tmp_user_preferences.faces_color
+        self.lineEdit_faces_color.setStyleSheet(f"background-color: {faces_color.to_hex()};\n color: {faces_color.to_hex()};")
 
     def update_selection_faces_color(self):
         read = PickColorInput(title="Pick the selection faces color")
         if read.complete:
-            selection_faces_color = tuple(read.color)
-            str_color = str(selection_faces_color)[1:-1]
-            self.lineEdit_selection_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            selection_faces_color = Color(*read.color)
+            self.lineEdit_selection_faces_color.setStyleSheet(f"background-color: {selection_faces_color.to_hex()};\n color: {selection_faces_color.to_hex()};")
 
-            self.tmp_user_preferences.selection_faces_color = Color(*selection_faces_color)
+            self.tmp_user_preferences.selection_faces_color = selection_faces_color
 
     def update_line_edit_selection_faces_color(self):
-        str_color = str(self.tmp_user_preferences.selection_faces_color.to_rgb())[1:-1]
-        self.lineEdit_selection_faces_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        selection_faces_color = self.tmp_user_preferences.selection_faces_color
+        self.lineEdit_selection_faces_color.setStyleSheet(f"background-color: {selection_faces_color.to_hex()};\n color: {selection_faces_color.to_hex()};")
     
     def update_selection_nodes_points_color(self):
         read = PickColorInput(title="Pick the selection nodes/points color")
         if read.complete:
-            selection_nodes_points_color = tuple(read.color)
-            str_color = str(selection_nodes_points_color)[1:-1]
-            self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            selection_nodes_points_color = Color(*read.color)
+            self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: {selection_nodes_points_color.to_hex()};\n color: {selection_nodes_points_color.to_hex()};")
 
-            self.tmp_user_preferences.selection_nodes_points_color = Color(*selection_nodes_points_color)
+            self.tmp_user_preferences.selection_nodes_points_color = selection_nodes_points_color
 
     def update_line_edit_selection_nodes_points_color(self):
-        str_color = str(self.tmp_user_preferences.selection_nodes_points_color.to_rgb())[1:-1]
-        self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        selection_nodes_points_color = self.tmp_user_preferences.selection_nodes_points_color
+        self.lineEdit_selection_nodes_points_color.setStyleSheet(f"background-color: {selection_nodes_points_color.to_hex()};\n color: {selection_nodes_points_color.to_hex()};")
     
     def update_selection_lines_color(self):
         read = PickColorInput(title="Pick the selection nodes/points color")
         if read.complete:
-            selection_lines_color = tuple(read.color)
-            str_color = str(selection_lines_color)[1:-1]
-            self.lineEdit_selection_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+            selection_lines_color = Color(*read.color)
+            self.lineEdit_selection_lines_color.setStyleSheet(f"background-color: {selection_lines_color.to_hex()};\n color: {selection_lines_color.to_hex()};")
 
-            self.tmp_user_preferences.selection_lines_color = Color(*selection_lines_color)
+            self.tmp_user_preferences.selection_lines_color = selection_lines_color
 
     def update_line_edit_selection_lines_color(self):
-        str_color = str(self.tmp_user_preferences.selection_lines_color.to_rgb())[1:-1]
-        self.lineEdit_selection_lines_color.setStyleSheet(f"background-color: rgb({str_color});\n color: rgb({str_color});")
+        selection_lines_color = self.tmp_user_preferences.selection_lines_color
+        self.lineEdit_selection_lines_color.setStyleSheet(f"background-color: {selection_lines_color.to_hex()};\n color: {selection_lines_color.to_hex()};")
     
     def update_renderer_font_size(self):
         self.tmp_user_preferences.renderer_font_size = self.spinBox_renderer_font_size.value()

@@ -60,7 +60,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Vibra")
@@ -107,11 +106,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_DB_equations, self.pushButton_DBM_equations]
         change_icon_color_for_widgets(widgets, icon_color)

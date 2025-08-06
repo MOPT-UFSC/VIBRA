@@ -195,7 +195,24 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         
         x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
-        orientation = np.real((x, y, z))
+        
+        # temporary solution
+        if isinstance(x, np.ndarray):
+            x0 = x[0]
+        else:
+            x0 = x
+
+        if isinstance(y, np.ndarray):
+            y0 = y[0]
+        else:
+            y0 = y
+
+        if isinstance(z, np.ndarray):
+            z0 = z[0]
+        else:
+            z0 = z
+    
+        orientation = np.real((x0, y0, z0))
         is_pointing = np.dot(normal, orientation) < 0
         shape = Shape.ARROW if is_pointing else Shape.OUTWARDS_ARROW
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
@@ -206,7 +223,24 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
         x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
-        orientation = np.real((x, y, z))
+
+        # temporary solution
+        if isinstance(x, np.ndarray):
+            x0 = x[0]
+        else:
+            x0 = x
+
+        if isinstance(y, np.ndarray):
+            y0 = y[0]
+        else:
+            y0 = y
+
+        if isinstance(z, np.ndarray):
+            z0 = z[0]
+        else:
+            z0 = z
+
+        orientation = np.real((x0, y0, z0))
         is_pointing = np.dot(normal, orientation) < 0
         shape = Shape.DISTRIBUTED_LOADS if is_pointing else Shape.DISTRIBUTED_LOADS_OUTWARDS
         self.add_symbol_render(shape, coords, orientation, color=color_names.RED_2)
@@ -216,8 +250,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         property = surface_properties[property_name, surface_id]
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        x = property["values"]
-        shape = Shape.OUTWARDS_NORMAL_PRESSURE_LOAD if x[0].real > 0 else Shape.NORMAL_PRESSURE_LOAD
+        x = property["values"][0]
+
+        # temporary solution
+        if isinstance(x, np.ndarray):
+            x0 = x[0]
+        else:
+            x0 = x
+
+        shape = Shape.OUTWARDS_NORMAL_PRESSURE_LOAD if np.real(x0) > 0 else Shape.NORMAL_PRESSURE_LOAD
         
         self.add_symbol_render(shape, coords, normal, color=color_names.RED_2)
     
