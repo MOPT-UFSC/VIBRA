@@ -89,8 +89,35 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_material_actor()
         self._create_fluid_actor()
         self._create_porous_actor()
+        self.clear_colors()
+        self.reload_composition()
 
     def clear_colors(self):
+        mesh = app().project.model.mesh
+        properties = app().project.model.properties
+
+        for surface, volumes in mesh.volumes_from_surface.items():
+            volume = volumes[0]
+
+            fluid = properties._get_property(
+                "fluid",
+                surface=surface,
+                volume=volume,
+            )
+
+            material = properties._get_property(
+                "material",
+                surface=surface,
+                volume=volume,
+            )
+
+            if material is not None:
+                self.paint_surfaces(Color(*material.color), [surface])
+
+            elif fluid is not None:
+                self.paint_surfaces(Color(*fluid.color), [surface])
+
+    def reload_composition(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
         self.clear_composition()
@@ -111,11 +138,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             )
 
             if material is not None:
-                self.paint_surfaces(Color(*material.color), [surface])
                 self.configure_composition("material", [surface])
 
             elif fluid is not None:
-                self.paint_surfaces(Color(*fluid.color), [surface])
                 self.configure_composition("fluid", [surface])
 
     def set_color(self, color: Color):

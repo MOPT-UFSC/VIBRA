@@ -61,7 +61,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.RemoveAllLights()
 
         # dont't remove, transparency depends on it
-        self.renderer.SetUseDepthPeeling(True)
+        self.renderer.UseDepthPeelingOn()
 
         self.remove_all_actors()
         self.create_axes()
