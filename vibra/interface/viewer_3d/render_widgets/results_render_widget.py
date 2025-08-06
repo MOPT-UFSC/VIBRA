@@ -163,6 +163,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             point_position,
         )
 
+        mirrored_frame = self._animation_total_frames - frame - 1
+        self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
+
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
 
