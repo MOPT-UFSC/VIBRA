@@ -1,7 +1,7 @@
 # fmt: off
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
@@ -39,11 +39,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -62,6 +60,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _configure_widgets(self):
@@ -97,8 +96,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
-        self.main_window.theme_changed.connect(self._paint_icons)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
@@ -120,7 +119,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     
     def geometry_selection_callback(self):
 
-        volumes = self.main_window.selected_geometry_volumes
+        volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
 
@@ -357,11 +356,16 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
                 if volume_id not in self.map_model_id_to_volumes[model_id]:
                     self.map_model_id_to_volumes[model_id].append(volume_id)
-            
+
             except:
-                    message = "An error occurred while trying to open the porous material model from the project. The porous material model will be deleted."
-                    PrintMessageInput(["Error", "Porous Material Model Error", message])
+                    title = "Porous Material Model Error"
+                    message = "An error occurred while trying to load the porous material model data "
+                    message += "from the project file. The porous material model will be deleted."
+                    PrintMessageInput([window_title_1, title, message])
+
                     self.properties._reset_property("porous_material_model")
+                    app().main_window.update_symbols()
+
                     return
 
     def load_info(self):
@@ -505,13 +509,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return "JCA"
         
         return "JCAL"
-
-    # def check_selected_bodies(self):
-    #     str_selection_ids = self.lineEdit_selection_id.text()
-    #     volume_ids = self.mesh.check_selected_ids(str_selection_ids, selection="volumes")
-    #     if volume_ids is None:
-    #         self.lineEdit_selection_id.setFocus()
-    #         return True
 
     def get_Delany_Bazley_model_data(self) -> DelanyBazleyData:
         return DelanyBazleyData(self.doubleSpinBox_C1_DB.value(), 
@@ -664,7 +661,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()
