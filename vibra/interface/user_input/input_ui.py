@@ -98,7 +98,7 @@ class InputUi:
             self.process_input(SurfaceThicknessInputs)
         
     def prescribe_structural_dofs(self):
-        if not self.model_setup_items.item_child_prescribed_dofs.isDisabled():
+        if not self.model_setup_items.item_child_prescribed_dof.isDisabled():
             self.process_input(DofsPrescriptionInputs)
         
     def set_nodal_loads(self):

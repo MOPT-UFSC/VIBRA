@@ -50,7 +50,8 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-    
+        self.update_dof_combo_box_texts()
+
     def selection_type_callback(self):
         if self.comboBox_selector_filter.currentIndex() == 3:
             app().main_window.show_mesh_render_widget()
@@ -86,6 +87,26 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
         else:
             self.lineEdit_selection_id.setText("")
+
+    def update_dof_combo_box_texts(self):
+
+        dof_labels = [
+                      "Displacement Ux", 
+                      "Displacement Uy", 
+                      "Displacement Uz", 
+                      "Rotation Rx", 
+                      "Rotation Ry", 
+                      "Rotation Rz",
+                      ]
+
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        if volume_exists:
+            active_dof_labels = dof_labels[:3]
+        else:
+            active_dof_labels = dof_labels
+
+        self.comboBox_dof_selector.clear()
+        self.comboBox_dof_selector.addItems(active_dof_labels)
 
     def _load_analysis_setup_and_solution(self):
 

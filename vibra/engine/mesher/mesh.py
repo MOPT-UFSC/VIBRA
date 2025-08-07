@@ -1871,7 +1871,8 @@ class Mesh:
                 self.length_from_lines[tag] = value * (unit_factor**1)
 
     def process_downwards_adjacencies_from_entities(self):
-        """This method processes the downwards adjacencies
+        """
+        This method processes the downwards adjacencies
         from the geometric entities.
         """
 
@@ -1893,7 +1894,8 @@ class Mesh:
                 self.points_from_line[tag] = downwards
 
     def process_upwards_adjacencies_from_entities(self):
-        """This method processes the upwards adjacencies
+        """
+        This method processes the upwards adjacencies
         from the geometric entities.
         """
 
@@ -1913,10 +1915,17 @@ class Mesh:
             for point_id in point_ids:
                 self.lines_from_point[point_id].append(line_id)
 
+    def are_there_volumes_in_geometry(self) -> bool:
+        volumes = self.geometry_information.get("volumes")
+        if isinstance(volumes, list):
+            if volumes:
+                return True
+        return False
+
     def _get_connectivity_array(self, input_dict):
         """
         The returned value is an array where each line is a connectivity
-        and the collums follow this order:
+        and the colums follow this order:
 
         Element index || Line/Face/Solid tag || Element type || Nodes per element || Connectivity
         """

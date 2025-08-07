@@ -97,6 +97,7 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
+        self.update_selection_combo_box_texts()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
         self.selected_column = current_col
@@ -172,15 +173,25 @@ class MaterialInputs(SetMaterial_UI):
 
     def attribution_type_callback(self):
 
-        index = self.comboBox_attribution_type.currentIndex()
-        selection_texts = ["All bodies/faces", "All bodies", "All faces"]
-
-        if index in [0, 1, 2]:
-            self.lineEdit_selection_id.setEnabled(False)
-            self.lineEdit_selection_id.setText(selection_texts[index])
-        else:
-            self.lineEdit_selection_id.setEnabled(True)
+        if self.comboBox_attribution_type.currentIndex():
             self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setEnabled(True)
+
+        else:
+            current_text = self.comboBox_attribution_type.currentText()
+            self.lineEdit_selection_id.setText(current_text)
+            self.lineEdit_selection_id.setEnabled(False)
+
+    def update_selection_combo_box_texts(self):
+
+        volumes_exists = self.mesh.are_there_volumes_in_geometry()
+        if volumes_exists:
+            labels = ["All volumes", "Selected volumes"]
+        else:
+            labels = ["All surfaces", "Selected surfaces"]
+
+        self.comboBox_attribution_type.clear()
+        self.comboBox_attribution_type.addItems(labels)
 
     def attribute_callback(self):
 
@@ -193,65 +204,55 @@ class MaterialInputs(SetMaterial_UI):
             PrintMessageInput([window_title_1, self.title, self.message])
             return
 
-        attribution_type = self.comboBox_attribution_type.currentIndex()
+        current_text = self.comboBox_attribution_type.currentText()
 
-        if attribution_type in [0, 1, 2]:
+        if "surfaces" in current_text:
 
-            if attribution_type in [0, 1]:
-                volume_ids = list()
-                if "volumes" in self.mesh.geometry_information.keys():
-                    volume_ids = self.mesh.geometry_information["volumes"]
-
-                for volume_id in volume_ids:
-                    self.properties._set_property("material", selected_material, volume=volume_id)
-
-            if attribution_type in [0, 2]:
+            if "All" in current_text:
                 surface_ids = list()
                 if "surfaces" in self.mesh.geometry_information.keys():
                     surface_ids = self.mesh.geometry_information["surfaces"]
 
-                for surface_id in surface_ids:
-                    self.properties._set_property("material", selected_material, surface=surface_id)
+            else:
+                input_ids = self.lineEdit_selection_id.text()
+                surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids, 
+                                                                    selection = "surfaces", 
+                                                                    single_id = False
+                                                                    )
 
-        elif attribution_type in [3, 5]:
-
-            input_ids = self.lineEdit_selection_id.text()
-            volume_ids, error_data = self.mesh.check_selected_ids(
-                                                                  input_ids, 
-                                                                  selection = "volumes", 
-                                                                  single_id = False
-                                                                  )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return True
-
-            for volume_id in volume_ids:
-                self.properties._set_property("material", selected_material, volume=volume_id)
-
-                if attribution_type == 5:
-                    for surface_id in self.mesh.surfaces_from_volume[volume_id]:
-                        self.properties._set_property("material", selected_material, surface=surface_id)
-
-        elif attribution_type == 4:
-
-            input_ids = self.lineEdit_selection_id.text()
-            surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = "surfaces", 
-                                                                   single_id = False
-                                                                   )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return True
+                if error_data is not None:
+                    self.hide()
+                    self.lineEdit_selection_id.setFocus()
+                    PrintMessageInput(error_data)
+                    return True
 
             for surface_id in surface_ids:
                 self.properties._set_property("material", selected_material, surface=surface_id)
+
+        if "volumes" in current_text:
+
+            if "All" in current_text:
+                volume_ids = list()
+                if "volumes" in self.mesh.geometry_information.keys():
+                    volume_ids = self.mesh.geometry_information["volumes"]
+
+            else:
+                input_ids = self.lineEdit_selection_id.text()
+                volume_ids, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids, 
+                                                                    selection = "volumes", 
+                                                                    single_id = False
+                                                                    )
+
+                if error_data is not None:
+                    self.hide()
+                    self.lineEdit_selection_id.setFocus()
+                    PrintMessageInput(error_data)
+                    return True
+
+            for volume_id in volume_ids:
+                self.properties._set_property("material", selected_material, volume=volume_id)
 
         self.actions_to_finalize()
         self.close()

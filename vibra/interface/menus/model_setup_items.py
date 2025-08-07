@@ -30,11 +30,11 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
-        self.item_child_degrees_of_freedom_decoupling = self.add_item("DOFs Decoupling")
+        self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
 
         self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
-        self.item_child_prescribed_dofs = self.add_item("Prescribed DOFs")
+        self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
@@ -233,7 +233,7 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_surface_thickness_callback(self):
         app().main_window.input_ui.set_surface_thickness()
 
-    def item_child_prescribed_dofs_callback(self):
+    def item_child_prescribed_dof_callback(self):
         app().main_window.input_ui.prescribe_structural_dofs()
 
     def item_child_nodal_loads_callback(self):
@@ -304,7 +304,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_surface_thickness.setDisabled(key)
-        self.item_child_prescribed_dofs.setDisabled(key)
+        self.item_child_prescribed_dof.setDisabled(key)
         self.item_child_nodal_loads.setDisabled(key)
         self.item_child_normal_pressure_load.setDisabled(key)
         self.item_child_distributed_loads.setDisabled(key)
@@ -332,6 +332,7 @@ class ModelSetupItems(CommonMenuItems):
         self.modify_general_settings_items_access(False)
         self.modify_acoustic_model_setup_items_acces(False)
         self.modify_structural_model_setup_items_acces(False)
+        self.modify_structural_model_setup_items_visibility()
 
         self.item_top_general_settings.setHidden(False)
         self.item_top_structural_model_setup.setHidden(False)
@@ -340,6 +341,12 @@ class ModelSetupItems(CommonMenuItems):
         self.expandItem(self.item_top_general_settings)
         self.expandItem(self.item_top_structural_model_setup)
         self.expandItem(self.item_top_acoustic_model_setup)
+
+    def modify_structural_model_setup_items_visibility(self):
+        volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+        self.item_child_surface_thickness.setHidden(volume_exists)
+        self.item_child_distributed_loads.setHidden(volume_exists)
+        self.item_child_normal_pressure_load.setHidden(volume_exists)
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)

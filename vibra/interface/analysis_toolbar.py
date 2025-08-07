@@ -67,8 +67,6 @@ class AnalysisToolbar(QToolBar):
 
     def _create_connections(self):
         #
-        # self.combo_box_physical_domain.currentIndexChanged.connect(self._update_state)
-        # self.combo_box_analysis_type.currentIndexChanged.connect(self._update_state)
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
         #
@@ -77,9 +75,6 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.clicked.connect(self.reset_solution)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
-    
-    # def _update_state(self):
-    #     app().main_window.update_symbols()
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -187,15 +182,34 @@ class AnalysisToolbar(QToolBar):
         elif physical_domain == "coupled":
             self.combo_box_physical_domain.setCurrentIndex(2)
 
-    def set_pushbutton_run_analysis_enabled(self, enable=True):
+    def set_pushbutton_run_analysis_enabled(self, enable: bool = True):
         self.pushButton_run_analysis.setEnabled(enable)
 
     def set_pushbutton_reset_solution_enabled(self):
         self.pushButton_reset_solution.setEnabled(True)
 
+    def get_current_analysis_id(self):
+        analysis_type = self.combo_box_analysis_type.currentText()
+        physical_domain = self.combo_box_physical_domain.currentText()
+
+        if analysis_type == "Harmonic":
+            if physical_domain == "Structural":
+                return AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
+            else:
+                return AnalysisID.ACOUSTIC_HARMONIC
+
+        elif analysis_type == "Modal":
+            if physical_domain == "Structural":
+                return AnalysisID.STRUCTURAL_MODAL
+            else:
+                return AnalysisID.ACOUSTIC_MODAL
+
+        return AnalysisID.NO_ANALYSIS
+
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
-        valid_setup = app().project.is_there_a_valid_analysis_setup()
+        current_analysis_id = self.get_current_analysis_id()
+        valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
@@ -227,7 +241,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
 
     def configure_analysis(self):
-        # aqui
+
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
 
@@ -279,6 +293,7 @@ class AnalysisToolbar(QToolBar):
 
         if modal.setup_defined:
             self.update_analysis_setup(modal.analysis_setup)
+            self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:
@@ -292,6 +307,7 @@ class AnalysisToolbar(QToolBar):
 
         if modal.setup_defined:
             self.update_analysis_setup(modal.analysis_setup)
+            self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:

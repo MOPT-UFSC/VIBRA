@@ -48,6 +48,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def _initialize(self):
         self.keep_window_open = True
+        self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -55,6 +56,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.pressure_table_path = None
 
     def _config_widgets(self):
+        #
+        self.comboBox_element_type.setEnabled(False)
         #
         for i, w in enumerate([60, 100, 160]):
             self.treeWidget_normal_pressure_loads.setColumnWidth(i, w)
@@ -77,6 +80,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.treeWidget_normal_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
@@ -123,32 +127,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         app().main_window.action_model_workspace_callback()
 
     def element_type_callback(self):
+        return
 
-        key = self.comboBox_element_type.currentIndex() == 0
-
-        self.label_Mx_constant.setEnabled(key)
-        self.label_My_constant.setEnabled(key)
-        self.label_Mz_constant.setEnabled(key)
-
-        self.label_Mx_unit.setEnabled(key)
-        self.label_My_unit.setEnabled(key)
-        self.label_Mz_unit.setEnabled(key)
-
-        self.label_Mx_table.setEnabled(key)
-        self.label_My_table.setEnabled(key)
-        self.label_Mz_table.setEnabled(key)
-
-        self.lineEdit_real_Mx.setEnabled(key)
-        self.lineEdit_real_My.setEnabled(key)
-        self.lineEdit_real_Mz.setEnabled(key)
-
-        self.lineEdit_imag_Mx.setEnabled(key)
-        self.lineEdit_imag_My.setEnabled(key)
-        self.lineEdit_imag_Mz.setEnabled(key)
-
-        self.pushButton_load_Mx_table.setEnabled(key)
-        self.pushButton_load_My_table.setEnabled(key)
-        self.pushButton_load_Mz_table.setEnabled(key)
+    def update_element_type_based_on_geometry_information(self):
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -205,10 +188,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         stop, value = self.check_complex_entries(
                                                  self.lineEdit_real_value.text(), 
@@ -221,8 +202,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         pressure_load = [value]
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and pressure_load.count(None) == 1
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and pressure_load.count(None) == 1
+        condition_1 = element_type == "2d_element" and pressure_load.count(None) == 1
+        condition_2 = element_type == "3d_element" and pressure_load.count(None) == 1
 
         if condition_1 or condition_2:
             self.hide()
@@ -368,10 +349,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         if self.pressure_table_path is None:
             self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
@@ -387,8 +366,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             table_paths = [self.pressure_table_path]
             pressure_load = [self.pressure_table_values]
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 1
-            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 1
+            condition_1 = element_type == "2d_element" and table_names.count(None) == 1
+            condition_2 = element_type == "3d_element" and table_names.count(None) == 1
 
             if condition_1 or condition_2:
                 self.hide()
