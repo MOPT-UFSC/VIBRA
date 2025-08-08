@@ -15,10 +15,20 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 
 import warnings
 import numpy as np
+from typing import Dict, List, Tuple
+from enum import IntEnum
+from collections import defaultdict
 
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
+
+
+class SectionType(IntEnum):
+    RECTANGULAR = 0
+    QUADRANGULAR = 1
+    NARROW_SLIT = 2
+
 
 class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -108,7 +118,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         #
         self.lineEdit_center_coordinates.setDisabled(True)
         #
-        for i, w in enumerate([90, 60, 130, 120, 120]):
+        for i, w in enumerate([150, 150, 100]):
             self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
             self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -282,11 +292,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.pushButton_selection_info.setEnabled(True)
 
             self.call_sphere_plotter()
+    
+    def map_existing_viscous_thermal_loss_models(self):
+        self.map_model_id_to_models: Dict[int, Dict[Tuple[str, str], List[float]]] = defaultdict(dict)
+        self.map_model_id_to_volumes: Dict[int, List[int]] = defaultdict(list)
+        self.map_model_id_to_groups: Dict[int, List[int]] = defaultdict(list)
 
-    def load_info(self):
-
-        self.treeWidget_viscous_thermal_model.clear()
-
+        models = list()
         for key, data in self.properties.volume_properties.items():
 
             property, volume_id = key
@@ -301,15 +313,20 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                         section_type = data["section_type"]
                     elif key == "formulation":
                         formulation = data["formulation"]
+                    elif key == "values":
+                        continue
                     else:
                         model_inputs.append(value)
-
-                new = QTreeWidgetItem(["Volume", str(volume_id), section_type, formulation, str(model_inputs)])
-                for i in range(5):
-                    new.setTextAlignment(i, Qt.AlignCenter)
-
-                self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
-
+                
+                model = {(section_type, formulation): model_inputs}
+            
+                if model not in models:
+                    models.append(model)
+                    
+                model_id = models.index(model) + 1
+                self.map_model_id_to_models[model_id][section_type, formulation] = model_inputs
+                self.map_model_id_to_volumes[model_id].append(volume_id)
+        
         for key, data in self.properties.group_properties.items():
 
             property, group_id = key
@@ -326,12 +343,37 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                         formulation = data["formulation"]
                     else:
                         model_inputs.append(value)
+                
+                model = {(section_type, formulation): model_inputs}
 
-                new = QTreeWidgetItem(["Group", str(group_id), section_type, formulation, str(model_inputs)])
-                for i in range(5):
-                    new.setTextAlignment(i, Qt.AlignCenter)
+                if model not in models:
+                    models.append(model)
+                
+                model_id = models.index(model) + 1
+                self.map_model_id_to_models[model_id][section_type, formulation] = model_inputs
+                self.map_model_id_to_groups[model_id].append(group_id)
 
-                self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
+    def load_info(self):
+        self.map_existing_viscous_thermal_loss_models()
+
+        self.treeWidget_viscous_thermal_model.clear()
+
+        for model_id, volumes_ids in self.map_model_id_to_volumes.items():
+                for volume_id in volumes_ids:
+                    new = QTreeWidgetItem(["Volume", str(volume_id), str(model_id)])
+                    for i in range(3):
+                        new.setTextAlignment(i, Qt.AlignCenter)
+
+                    self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
+
+        for model_id, groups_ids in self.map_model_id_to_groups.items():
+                for group_id in groups_ids:
+                
+                    new = QTreeWidgetItem(["Group", str(group_id), str(model_id)])
+                    for i in range(3):
+                        new.setTextAlignment(i, Qt.AlignCenter)
+
+                    self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -506,7 +548,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         section_type = self.comboBox_section_type.currentIndex()
 
-        if section_type in [0, 1]:
+        if section_type in [SectionType.RECTANGULAR, SectionType.QUADRANGULAR]:
             lineEdit = self.lineEdit_width_rectangular
             width, stop = self.check_inputs(lineEdit, "Width (rectangular duct)")
             if stop:
@@ -521,7 +563,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         section_types = ["Rectangular duct", "Quadrangular duct", "Narrow slit duct"]
 
-        if section_type in [0, 1]:
+        if section_type in [SectionType.RECTANGULAR, SectionType.QUADRANGULAR]:
             model_data = {
                           "formulation" : "Stinson model",
                           "section_type" : section_types[section_type],
