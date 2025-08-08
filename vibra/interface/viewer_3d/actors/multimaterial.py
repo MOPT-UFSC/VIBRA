@@ -81,45 +81,30 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.mesh = mesh
         if self.mesh is None:
             self.mesh = app().project.model.mesh
+
+        self.extractors: dict[str, vtkExtractCells] = dict()
         self.create_geometry()
 
     def create_geometry(self):
         if self.mesh.nodal_coordinates.size == 0:
             return
 
-        t0 = perf_counter()
-        self._create_surfaces()
-        t1 = perf_counter()
+        self.extractors.clear()
         self._create_textures()
-        t2 = perf_counter()
-        self._create_empty_actor()
-        t3 = perf_counter()
-        self._create_material_actor()
-        t4 = perf_counter()
-        self._create_fluid_actor()
-        t5 = perf_counter()
-        self._create_porous_actor()
-        t6 = perf_counter()
-        self.clear_colors()
-        t7 = perf_counter()
-        self.reload_composition()
-        t8 = perf_counter()
+        self._create_surfaces()
 
-        print("Multimaterial times:")
-        print(t1 - t0)
-        print(t2 - t1)
-        print(t3 - t2)
-        print(t4 - t3)
-        print(t5 - t4)
-        print(t6 - t5)
-        print(t7 - t6)
-        print(t8 - t7)
-        print()
+        self._create_empty_actor()
+        self._create_material_actor()
+        self._create_fluid_actor()
+        self._create_porous_actor()
+
+        self.clear_colors()
 
     def clear_colors(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
         color_to_surfaces = defaultdict(list)
+        self.reload_composition()
 
         for surface, volumes in mesh.volumes_from_surface.items():
             volume = volumes[0]
@@ -137,9 +122,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         for color, surfaces in color_to_surfaces.items():
             self.paint_surfaces(Color(*color), surfaces)
-
-        # This is pretty slow, need to find a better way to update
-        self.reload_composition()
 
     def reload_composition(self):
         mesh = app().project.model.mesh
@@ -187,30 +169,28 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             actor.GetMapper().ScalarVisibilityOn()
 
     def configure_composition(self, constitution: str, surfaces: Sequence[int]):
-        if constitution == "empty":
-            extractor = self.empty_extractor
-        elif constitution == "material":
-            extractor = self.material_extractor
-        elif constitution == "fluid":
-            extractor = self.fluid_extractor
-        elif constitution == "porous":
-            extractor = self.porous_extractor
-        else:
-            raise ValueError(f'Unknown constitution: "{constitution}"')
+        extractor = self.extractors.get(constitution, None)
+        if extractor is None:
+            return
 
         cells = self._surfaces_to_cells(surfaces)
         extractor.AddCellIds(cells, len(cells))
 
     def clear_composition(self):
-        self.material_extractor.SetCellIds([], 0)
-        self.fluid_extractor.SetCellIds([], 0)
-        self.porous_extractor.SetCellIds([], 0)
-        self.empty_extractor.SetCellIds([], 0)
+        for extractor in self.extractors.values():
+            extractor.SetCellIds([], 0)
 
     def _surfaces_to_cells(self, surfaces: Sequence[int]) -> np.ndarray:
         array = vtk_to_numpy(self.data.GetCellData().GetArray("surface_indexes"))
         mask = np.isin(array, list(surfaces))
         return np.where(mask)[0]
+
+    def _create_textures(self):
+        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "perlin_normal.jpg")
+        self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
+        self.porous_normal_texture = read_texture(TEXTURE_DIR / "foam_normal.jpg")
+        self.wave_texture = read_texture(TEXTURE_DIR / "wave_normal.png")
+        self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
 
     def _create_surfaces(self):
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
@@ -296,79 +276,43 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return coords[old_indexes], mapping[connectivity]
 
     def _create_empty_actor(self):
-        self.empty_extractor = vtkExtractCells()
-
-        empty_mapper = vtkDataSetMapper()
-        empty_mapper.SetScalarModeToUseCellData()
-        empty_mapper.ScalarVisibilityOn()
-
-        self.data >> self.empty_extractor >> empty_mapper
-
-        self.empty_actor = vtkActor(mapper=empty_mapper)
-        self.AddPart(self.empty_actor)
-
-        self.empty_actor.texture = self.chess_texture
+        self.empty_actor = self._new_actor_extraction("empty")
+        self.empty_actor.SetTexture(self.chess_texture)
 
     def _create_material_actor(self):
-        self.material_extractor = vtkExtractCells()
-
-        material_mapper = vtkDataSetMapper()
-        material_mapper.SetScalarModeToUseCellData()
-        material_mapper.ScalarVisibilityOn()
-
-        self.data >> self.material_extractor >> material_mapper
-
-        self.material_actor = vtkActor(mapper=material_mapper)
-        self.AddPart(self.material_actor)
-
-        actor_property = self.material_actor.GetProperty()
-        actor_property.specular_power = 80
-        actor_property.specular = 1.5
-        actor_property.diffuse = 0.6
-        actor_property.normal_scale = 0.5
-        actor_property.normal_texture = self.material_normal_texture
+        self.material_actor = self._new_actor_extraction("material")
+        self.material_actor.GetProperty().SetSpecularPower(80)
+        self.material_actor.GetProperty().SetSpecular(1.5)
+        self.material_actor.GetProperty().SetDiffuse(0.6)
+        self.material_actor.GetProperty().SetNormalScale(0.5)
+        self.material_actor.GetProperty().SetNormalTexture(self.material_normal_texture)
 
     def _create_fluid_actor(self):
-        self.fluid_extractor = vtkExtractCells()
-
-        fluid_mapper = vtkDataSetMapper()
-        fluid_mapper.SetScalarModeToUseCellData()
-        fluid_mapper.ScalarVisibilityOn()
-
-        self.data >> self.fluid_extractor >> fluid_mapper
-
-        self.fluid_actor = vtkActor(mapper=fluid_mapper)
-        self.AddPart(self.fluid_actor)
-
-        actor_property = self.fluid_actor.GetProperty()
-        actor_property.opacity = 0.8
-        actor_property.specular_power = 40
-        actor_property.specular = 0.7
-        actor_property.diffuse = 1
-        actor_property.normal_scale = 1.5
-        actor_property.normal_texture = self.fluid_normal_texture
+        self.fluid_actor = self._new_actor_extraction("fluid")
+        self.fluid_actor.GetProperty().SetOpacity(0.8)
+        self.fluid_actor.GetProperty().SetSpecularPower(40)
+        self.fluid_actor.GetProperty().SetSpecular(0.7)
+        self.fluid_actor.GetProperty().SetDiffuse(1)
+        self.fluid_actor.GetProperty().SetNormalScale(1.5)
+        self.fluid_actor.GetProperty().SetNormalTexture(self.fluid_normal_texture)
 
     def _create_porous_actor(self):
-        self.porous_extractor = vtkExtractCells()
+        self.porous_actor = self._new_actor_extraction("porous")
+        self.porous_actor.GetProperty().SetSpecular(0)
+        self.porous_actor.GetProperty().SetDiffuse(0.5)
+        self.porous_actor.GetProperty().SetNormalTexture(self.porous_normal_texture)
 
-        porous_mapper = vtkDataSetMapper()
-        porous_mapper.SetScalarModeToUseCellData()
-        porous_mapper.ScalarVisibilityOn()
+    def _new_actor_extraction(self, name: str):
+        extractor = vtkExtractCells()
+        self.extractors[name] = extractor
 
-        self.data >> self.porous_extractor >> porous_mapper
+        mapper = vtkDataSetMapper()
+        mapper.SetScalarModeToUseCellData()
+        mapper.ScalarVisibilityOn()
 
-        self.porous_actor = vtkActor(mapper=porous_mapper)
-        self.AddPart(self.porous_actor)
+        self.data >> extractor >> mapper
 
-        actor_property = self.porous_actor.GetProperty()
-        actor_property.specular = 0
-        actor_property.diffuse = 0.5
-        actor_property.normal_texture = self.porous_normal_texture
-        actor_property.normal_scale = 1
+        self.actor = vtkActor(mapper=mapper)
+        self.AddPart(self.actor)
 
-    def _create_textures(self):
-        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "perlin_normal.jpg")
-        self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
-        self.porous_normal_texture = read_texture(TEXTURE_DIR / "foam_normal.jpg")
-        self.wave_texture = read_texture(TEXTURE_DIR / "wave_normal.png")
-        self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
+        return self.actor
