@@ -166,7 +166,22 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             self.setData(0, Qt.FontRole, None)  # reset color
             self.setData(0, Qt.ForegroundRole, None)  # reset color
             self.setData(0, Qt.DecorationRole, None)
-            
+
+    def set_error(self, cond: bool):
+        if cond:
+            font = QFont()
+            font.setBold(True)
+            self.setFont(0, font)
+            self.setForeground(0, Color(*color_names.RED.to_rgb()).to_qt())
+            #TODO: change the icon
+            error_icon = QIcon(str(Path(ICON_DIR / "model_setup_items" / str("warning_yellow.png"))))
+            self.setIcon(0, error_icon)
+        else:
+            # Resets data to default
+            self.setData(0, Qt.FontRole, None)  # reset color
+            self.setData(0, Qt.ForegroundRole, None)  # reset color
+            self.setData(0, Qt.DecorationRole, None)
+
     def set_icon(self, visible: bool = True):
         if visible:
             icon_name = str(self.property_name + ".png")

@@ -569,6 +569,20 @@ class Model:
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
 
+    def is_surface_thickness_properly_applied_in_model(self):
+
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        if volume_exists:
+            return None
+
+        surface_without_thickness = list()
+        for surface_id in self.mesh.geometry_information.get("surfaces", dict()):
+            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if st_data is None:
+                surface_without_thickness.append(surface_id)
+
+        return surface_without_thickness
+
     def process_degrees_of_freedom_decoupling(self):
         self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
         self.dofs_decoupling.process_degrees_of_freedom_decoupling()

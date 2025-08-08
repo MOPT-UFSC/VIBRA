@@ -122,10 +122,24 @@ class ModelSetupItems(CommonMenuItems):
             property.element_properties,
             property.nodal_properties,
             ]
-           
+
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
+            mesh = app().project.model.mesh
+            collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+            if collapsed:
+                return False
             return app().project.model.mesh_setup is not None
+
+        # verify if there are surface thickness in all surfaces before changing the icon
+        if property_name == "surface_thickness":
+            if app().project.model.mesh is not None:
+                st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
+                if isinstance(st_check, list) and st_check:
+                    if st_check:
+                        return False
+                    else:
+                        return True
 
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
@@ -142,7 +156,7 @@ class ModelSetupItems(CommonMenuItems):
                 if key[0] == "specific_impedance":
                     if "anechoic_termination" in data.keys():
                         return True
-        
+
         # test other properties
         for property_dict in property_dicts:
             for key in property_dict.keys():
@@ -153,27 +167,48 @@ class ModelSetupItems(CommonMenuItems):
                             continue
 
                     return True
-        
+
         return False
 
-    def _needs_property(self, property_name, analysis_type=None, physical_domain=None):
+    def _needs_property(self, property_name: str, analysis_type: str | None = None, physical_domain: str | None = None):
         if property_name == "mesh_setup":
             return True
-        
+
         if property_name == "material":
             return physical_domain == "structural"
-        
+
         if property_name == "fluid":
             return physical_domain == "acoustic"
-        
+
+        if property_name == "surface_thickness":
+            if physical_domain == "structural":
+                if app().project.model.mesh is not None:
+                    volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+                    if not volume_exists:
+                        return True
+
+                    st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
+                    if isinstance(st_check, list) and st_check:
+                        return True
+
         # if property_name == "nodal_loads":
         #     return analysis_type == "harmonic" and physical_domain == "structural"
-        
+
         # if property_name == "surface_velocity":
         #     return analysis_type == "harmonic" and physical_domain == "acoustic"
-        
+
         return False
     
+    def _are_there_collapsed_elements(self, item_child):
+        if item_child.property_name == "mesh_setup":
+            mesh = app().project.model.mesh
+            if mesh is not None:
+                collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+                item_child.set_error(bool(collapsed))
+                if collapsed:
+                    return True
+        return False
+
     def update_items_appearance(self):
         # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
@@ -201,7 +236,10 @@ class ModelSetupItems(CommonMenuItems):
                 
                 if item_child.isDisabled():
                     continue
-                
+
+                if self._are_there_collapsed_elements(item_child):
+                    continue
+
                 if self._contains_property(item_child.property_name):
                     item_child.set_icon()
                     

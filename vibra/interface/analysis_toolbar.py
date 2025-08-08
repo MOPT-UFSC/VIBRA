@@ -214,6 +214,12 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis(self):
 
+        # Do not solve models with collapsed elements!
+        mesh = app().project.model.mesh   
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        if collapsed:
+            return
+
         self.update_analysis_combo_boxes()
         if app().project.run_analysis():
             return
@@ -256,7 +262,12 @@ class AnalysisToolbar(QToolBar):
                 self.modal_structural()
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
-        
+
+        # disable run_analysis button if there are collapsed elements
+        mesh = app().project.model.mesh   
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        self.pushButton_run_analysis.setDisabled(bool(collapsed))
+
     def harmonic_structural(self):
 
         select = StructuralHarmonicAnalysisMethodSelecorInput()
