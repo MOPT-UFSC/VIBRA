@@ -362,15 +362,23 @@ class MeshSetupInputs(MesherSetup_UI):
         LoadingWindow(generate_function).run()
 
         mesh = app().project.model.mesh
-        collapsed = (mesh.collapsed_solids or mesh.collapsed_faces or mesh.collapsed_lines)
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 
         if collapsed:
             title = "The generated mesh contains collapsed elements"
-            message = "Collapsed solids: " + ", ".join(str(i) for i in mesh.collapsed_solids) + ".\n\n"
-            message += "Collapsed faces: " + ", ".join(str(i) for i in mesh.collapsed_faces) + ".\n\n"
-            message += "Collapsed lines: " + ", ".join(str(i) for i in mesh.collapsed_lines) + "."
+
+            message = ""
+            if mesh.collapsed_3d_elements:
+                message += "Collapsed 3d elements: " + ", ".join(str(i) for i in mesh.collapsed_3d_elements) + ".\n\n"
+
+            if mesh.collapsed_2d_elements:
+                message += "Collapsed 2d elements: " + ", ".join(str(i) for i in mesh.collapsed_2d_elements) + ".\n\n"
+
+            if mesh.collapsed_1d_elements:
+                message += "Collapsed 1d elements: " + ", ".join(str(i) for i in mesh.collapsed_1d_elements) + "."
+
             PrintMessageInput([window_title_1, title, message])
-        
+
         # We can further control the behaviour when the mesh has collapsed elements
 
         self.process_degress_of_freedom_if_necessary()

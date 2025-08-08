@@ -85,9 +85,9 @@ class Mesh:
         self.mesh_quality_histograms_data = dict()
         self.mesh_quality_temp = None
 
-        self.collapsed_solids = set()
-        self.collapsed_faces = set()
-        self.collapsed_lines = set()
+        self.collapsed_3d_elements = set()
+        self.collapsed_2d_elements = set()
+        self.collapsed_1d_elements = set()
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -1069,7 +1069,7 @@ class Mesh:
         )
 
         self.process_mesh_related_mappings()
-        self.collapsed_solids, self.collapsed_faces, self.collapsed_lines = (
+        self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = (
             self.get_collapsed_elements()
         )
 
