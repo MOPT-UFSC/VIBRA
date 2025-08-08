@@ -186,7 +186,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return np.where(mask)[0]
 
     def _create_textures(self):
-        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "perlin_normal.jpg")
+        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "noise_normal.jpg")
+        self.fluid_transparency_texture = read_texture(TEXTURE_DIR / "noise_transparency.png")
         self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
         self.porous_normal_texture = read_texture(TEXTURE_DIR / "foam_normal.jpg")
         self.wave_texture = read_texture(TEXTURE_DIR / "wave_normal.png")
@@ -289,12 +290,14 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_fluid_actor(self):
         self.fluid_actor = self._new_actor_extraction("fluid")
-        self.fluid_actor.GetProperty().SetOpacity(0.8)
-        self.fluid_actor.GetProperty().SetSpecularPower(40)
-        self.fluid_actor.GetProperty().SetSpecular(0.7)
-        self.fluid_actor.GetProperty().SetDiffuse(1)
+        # self.fluid_actor.GetProperty().SetOpacity(0.8)
+        self.fluid_actor.GetProperty().SetDiffuse(0.5)
+        self.fluid_actor.GetProperty().SetAmbient(0.5)
+        self.fluid_actor.GetProperty().SetSpecular(0.8)
+        self.fluid_actor.GetProperty().SetSpecularPower(100)
         self.fluid_actor.GetProperty().SetNormalScale(1.5)
         self.fluid_actor.GetProperty().SetNormalTexture(self.fluid_normal_texture)
+        self.fluid_actor.SetTexture(self.fluid_transparency_texture)
 
     def _create_porous_actor(self):
         self.porous_actor = self._new_actor_extraction("porous")
