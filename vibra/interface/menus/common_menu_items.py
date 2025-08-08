@@ -174,7 +174,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             self.setFont(0, font)
             self.setForeground(0, Color(*color_names.RED.to_rgb()).to_qt())
             #TODO: change the icon
-            error_icon = QIcon(str(Path(ICON_DIR / "model_setup_items" / str("warning_yellow.png"))))
+            error_icon = QIcon(str(Path(ICON_DIR / "model_setup_items" / str("error_red.png"))))
             self.setIcon(0, error_icon)
         else:
             # Resets data to default
