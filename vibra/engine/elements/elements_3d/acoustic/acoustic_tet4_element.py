@@ -161,11 +161,10 @@ class ACT_TETRAHEDRON_4C(Element3D):
     def initialize_variables(self):
         self.element_label = "acoustic_tetrahedron_4"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.connectivity = self.model.mesh.solids_connectivity
-        self.faces_connectivity = self.model.mesh.faces_connectivity
+        self.solids_connectivity = self.model.mesh.solids_connectivity
 
         self.number_of_nodes = len(self.nodal_coordinates)
-        self.number_of_elements = len(self.connectivity)
+        self.number_of_elements = len(self.solids_connectivity)
 
 
     def update_nodal_coordinates(self, nodal_coordinates: np.ndarray):
@@ -315,6 +314,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
             x, y, and z directions.
         """
 
+        omega = 2 * np.pi * frequencies
+
         node_ids = self.connectivity[element_id, 1:]
         Pe = nodal_pressures[node_ids, :]
 
@@ -322,8 +323,6 @@ class ACT_TETRAHEDRON_4C(Element3D):
                             [ 1, 0, 0 ],
                             [ 0, 1, 0 ],
                             [ 0, 0, 1 ] ], dtype=float)
-
-        omega = 2 * np.pi * frequencies
 
         for i, (ssx, ttx, rrx) in enumerate(p_calc):
             if node_ids[i] != node_id:
@@ -469,17 +468,17 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
-            self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
+        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+            self.connectivity = self.solids_connectivity[:, [0, 6, 4, 5, 7]]
 
 
-    def generate_ind_rows_cols(self, reorder=True):
+    def generate_ind_rows_cols(self, reorder: bool = True):
         """ This method processess the dofs indices (rows and columns) for assembly"""
 
         if reorder:
             self.reorder_connect()
         else:
-            self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7]]
+            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7]]
 
         dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
         ind_dofs = dofs * self.connectivity[:, 1:]
