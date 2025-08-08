@@ -71,7 +71,7 @@ def read_texture(path: str | Path | None):
     texture.InterpolateOn()
     texture.RepeatOn()
     texture.SetInputData(reader.GetOutput())
-    texture.Update
+    texture.Update()
 
     return texture
 
@@ -97,6 +97,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_material_actor()
         self._create_fluid_actor()
         self._create_porous_actor()
+        self._create_perforated_actor()
 
         self.clear_colors()
 
@@ -130,10 +131,23 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         for surface, volumes in mesh.volumes_from_surface.items():
             volume = volumes[0]
+
+            if surface in app().main_window.hidden_surfaces:
+                continue
+
+            if volume in app().main_window.hidden_volumes:
+                continue
+
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material = properties._get_property("material", surface=surface, volume=volume)
+            porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
+            perforated = properties._get_property("perforated_plate_model", surface=surface, volume=volume)
 
-            if material is not None:
+            if perforated is not None:
+                composition = "perforated"
+            elif porous is not None:
+                composition = "porous"
+            elif material is not None:
                 composition = "material"
             elif fluid is not None:
                 composition = "fluid"
@@ -185,14 +199,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         mask = np.isin(array, list(surfaces))
         return np.where(mask)[0]
 
-    def _create_textures(self):
-        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "noise_normal.jpg")
-        self.fluid_transparency_texture = read_texture(TEXTURE_DIR / "noise_transparency.png")
-        self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
-        self.porous_normal_texture = read_texture(TEXTURE_DIR / "foam_normal.jpg")
-        self.wave_texture = read_texture(TEXTURE_DIR / "wave_normal.png")
-        self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
-
     def _create_surfaces(self):
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
 
@@ -204,7 +210,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             )
 
             points = vtkPoints()
-            points.SetData(numpy_to_vtk(coords + (1, 0, 0)))
+            points.SetData(numpy_to_vtk(coords + (1, 1, 0)))
 
             # The format here is [n, p0, p1, ..., pn, n, p0, p1, ..., pn]
             # Therefore I add a "n" column at the start and then flatten it
@@ -237,7 +243,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             transform_texture = vtk.vtkTransformTextureCoords()
             transform_texture.SetInputData(data)
-            transform_texture.SetScale(10, 10, 10)
+            transform_texture.SetScale(8, 8, 8)
             transform_texture.Update()
             data = transform_texture.GetOutput()
 
@@ -290,20 +296,31 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_fluid_actor(self):
         self.fluid_actor = self._new_actor_extraction("fluid")
-        # self.fluid_actor.GetProperty().SetOpacity(0.8)
+        self.fluid_actor.GetProperty().SetOpacity(0.7)
         self.fluid_actor.GetProperty().SetDiffuse(0.5)
-        self.fluid_actor.GetProperty().SetAmbient(0.5)
+        self.fluid_actor.GetProperty().SetAmbient(0.6)
         self.fluid_actor.GetProperty().SetSpecular(0.8)
         self.fluid_actor.GetProperty().SetSpecularPower(100)
-        self.fluid_actor.GetProperty().SetNormalScale(1.5)
+        self.fluid_actor.GetProperty().SetNormalScale(1.2)
         self.fluid_actor.GetProperty().SetNormalTexture(self.fluid_normal_texture)
-        self.fluid_actor.SetTexture(self.fluid_transparency_texture)
 
     def _create_porous_actor(self):
         self.porous_actor = self._new_actor_extraction("porous")
         self.porous_actor.GetProperty().SetSpecular(0)
         self.porous_actor.GetProperty().SetDiffuse(0.5)
+        self.porous_actor.GetProperty().SetAmbient(0.1)
+        self.fluid_actor.GetProperty().SetNormalScale(3)
         self.porous_actor.GetProperty().SetNormalTexture(self.porous_normal_texture)
+
+    def _create_perforated_actor(self):
+        self.perforated_actor = self._new_actor_extraction("perforated")
+        self.perforated_actor.GetProperty().SetSpecularPower(80)
+        self.perforated_actor.GetProperty().SetSpecular(1.5)
+        self.perforated_actor.GetProperty().SetDiffuse(0.8)
+        self.perforated_actor.GetProperty().SetAmbient(0.5)
+        self.perforated_actor.GetProperty().SetNormalScale(3)
+        self.perforated_actor.GetProperty().SetNormalTexture(self.perforated_normal_texture)
+        self.perforated_actor.SetTexture(self.perforated_opacity_texture)
 
     def _new_actor_extraction(self, name: str):
         extractor = vtkExtractCells()
@@ -319,3 +336,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.AddPart(self.actor)
 
         return self.actor
+
+    def _create_textures(self):
+        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "fluid_normal.jpg")
+        self.porous_normal_texture = read_texture(TEXTURE_DIR / "porous_normal.jpg")
+        self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
+        self.perforated_opacity_texture = read_texture(TEXTURE_DIR / "perforated_opacity.png")
+        self.perforated_normal_texture = read_texture(TEXTURE_DIR / "perforated_normal.jpg")
+        self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
