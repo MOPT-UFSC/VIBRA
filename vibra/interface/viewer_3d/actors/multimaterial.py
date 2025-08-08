@@ -236,10 +236,12 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             normal = np.average(all_normals, axis=0) if (all_normals is not None) else (0, 0, 1)
             normal /= np.linalg.norm(normal)
             nx, ny, nz = normal * 0.1
+            p1 = np.array([-ny, nx, nz])
+            p2 = np.cross(p1, normal)
 
             add_tcoords.SetOrigin(0, 0, 0)
-            add_tcoords.SetPoint1(-ny, nx, nz)
-            add_tcoords.SetPoint2(nx, -nz, ny)
+            add_tcoords.SetPoint1(p1)
+            add_tcoords.SetPoint2(p2)
 
             add_tcoords.SetInputData(data)
             add_tcoords.Update()
