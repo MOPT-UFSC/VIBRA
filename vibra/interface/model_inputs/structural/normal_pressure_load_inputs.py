@@ -259,12 +259,12 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = np.loadtxt(imported_table_path, delimiter=",")
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
 
                 imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt"], f"Choose a table to import the {load_label} data")
+                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {load_label} data")
 
                 if not imported_data:
                     return None, None
