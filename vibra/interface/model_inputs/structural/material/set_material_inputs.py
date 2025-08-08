@@ -137,16 +137,23 @@ class MaterialInputs(SetMaterial_UI):
         volumes = app().main_window.selected_geometry_volumes
         surfaces = app().main_window.selected_geometry_surfaces
 
-        if volumes:
-            selected_ids = volumes
-            self.comboBox_attribution_type.setCurrentIndex(3)
-            
-        elif surfaces:
-            selected_ids = surfaces
-            self.comboBox_attribution_type.setCurrentIndex(4)
-        
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        index = self.comboBox_attribution_type.currentIndex()
+
+        selected_ids = set()
+        if volume_exists:
+            if volumes:
+                selected_ids = volumes
+                self.comboBox_attribution_type.setCurrentIndex(1)
+            elif surfaces and index == 1:
+                self.lineEdit_selection_id.setText("")
+
         else:
-            selected_ids = set()
+            if surfaces:
+                selected_ids = surfaces
+                self.comboBox_attribution_type.setCurrentIndex(1)
+            elif volumes and index == 1:
+                self.lineEdit_selection_id.setText("")
 
         if len(selected_ids):
             text = ", ".join([str(i) for i in selected_ids])
