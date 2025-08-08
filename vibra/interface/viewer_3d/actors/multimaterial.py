@@ -227,25 +227,23 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             # Every surface have its own plane or cylinder defining
             # how to project the texture coordinates on it
-            surface_is_curved = np.any(self.mesh.curvatures_surface.get(surface))
-            if surface_is_curved:
-                add_tcoords = vtk.vtkTextureMapToCylinder()
-                add_tcoords.AutomaticCylinderGenerationOn()
-                add_tcoords.PreventSeamOn()
-            else:
-                add_tcoords = vtk.vtkTextureMapToPlane()
-                add_tcoords.SetTRange(0, 0.5)
-                add_tcoords.SetSRange(0, 0.5)
+            add_tcoords = vtk.vtkTextureMapToPlane()
+            add_tcoords.AutomaticPlaneGenerationOff()
+
+            # This should have been calculated by the mesher
+            # or even better: by a geometry class
+            all_normals = self.mesh.normals_surface.get(surface)
+            normal = np.average(all_normals, axis=0) if (all_normals is not None) else (0, 0, 1)
+            normal /= np.linalg.norm(normal)
+            nx, ny, nz = normal * 0.1
+
+            add_tcoords.SetOrigin(0, 0, 0)
+            add_tcoords.SetPoint1(-ny, nx, nz)
+            add_tcoords.SetPoint2(nx, -nz, ny)
 
             add_tcoords.SetInputData(data)
             add_tcoords.Update()
             data = add_tcoords.GetOutput()
-
-            transform_texture = vtk.vtkTransformTextureCoords()
-            transform_texture.SetInputData(data)
-            transform_texture.SetScale(8, 8, 8)
-            transform_texture.Update()
-            data = transform_texture.GetOutput()
 
             fill_array(data, "surface_indexes", surface)
             fill_array(data, "volume_indexes", volume)
