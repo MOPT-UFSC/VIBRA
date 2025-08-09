@@ -8,8 +8,7 @@ from vibra.project_files.project_file import ProjectFile
 def test_regression_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model):
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
     assembler.process_assemble()
-    project_folder = Path(datadir)
-    project_file = ProjectFile(str(project_folder / "tmp.vibra"))
+    project_file = ProjectFile(str(datadir))
     harmonic_solver = AcousticHarmonicSolver(assembler, project_file)
 
     frequencies = viscous_thermal_acoustic_model.frequencies
