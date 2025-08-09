@@ -56,10 +56,10 @@ class DataImporter:
         if isinstance(imported_paths, list):
             imported_data = list()
             for imported_path in imported_paths:
-                imported_data.append(DataImporter.__read_data_in_file(imported_path))
+                imported_data.append(DataImporter.read_data_in_file(imported_path))
         
         else:
-            imported_data = DataImporter.__read_data_in_file(imported_paths)
+            imported_data = DataImporter.read_data_in_file(imported_paths)
 
         app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
         
@@ -74,7 +74,7 @@ class DataImporter:
         return DataImporter.__import_files(caption, last_folder, file_extensions)
     
     @staticmethod
-    def __read_data_in_file(file_path: str):
+    def read_data_in_file(file_path: str):
         from pandas import read_excel
         from openpyxl import load_workbook
         import warnings

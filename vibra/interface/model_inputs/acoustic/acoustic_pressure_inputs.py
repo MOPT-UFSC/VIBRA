@@ -203,11 +203,11 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = np.loadtxt(imported_table_path, delimiter=",")
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt"], "Choose a table to import the acoustic pressure")
+                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the acoustic pressure")
                 
                 if not imported_data:
                     return
