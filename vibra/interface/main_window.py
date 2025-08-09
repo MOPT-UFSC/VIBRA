@@ -234,6 +234,7 @@ class MainWindow(MainWindow_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
+
     def update_mesh_information(self):
         self.status_bar.update_mesh_information()
 
@@ -503,11 +504,11 @@ class MainWindow(MainWindow_UI):
         else:
             self.action_results_workspace.setEnabled(False)
 
-        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.model_setup_widget.model_setup_items.update_items_visibility_according_to_physical_domain()
 
+        self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
@@ -523,11 +524,11 @@ class MainWindow(MainWindow_UI):
             self.action_results_workspace.setEnabled(False)
 
         self.update_mesh_information()
-        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
         self.model_setup_widget.model_setup_items.update_items_visibility_according_to_physical_domain()
 
+        self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
@@ -889,11 +890,11 @@ class MainWindow(MainWindow_UI):
 
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()
-            self.model_setup_widget.model_setup_items.update_items_appearance()            
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            
+            self.model_setup_widget.model_setup_items.update_items_appearance()
+
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
@@ -906,7 +907,7 @@ class MainWindow(MainWindow_UI):
             self.welcome_widget.update_recent_projects()
             self.update_recents_menu()
 
-    def import_geometry_or_mesh(self, path: str, update_render: bool = True):
+    def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
 
         geometry_file = self.check_path_for_geometry_file(path)
 
@@ -942,10 +943,11 @@ class MainWindow(MainWindow_UI):
             if update_render:
                 LoadingWindow(self.update_plots).run()
 
-            if geometry_file:
-                self.action_model_workspace_callback()
-            else:
-                self.action_mesh_workspace_callback()
+            if not ignore_workspaces:
+                if geometry_file:
+                    self.action_model_workspace_callback()
+                else:
+                    self.action_mesh_workspace_callback()
 
         except Exception as error_log:
             from traceback import print_exception

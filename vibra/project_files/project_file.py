@@ -165,6 +165,9 @@ class ProjectFile:
                                  "volume_from_bodies",
                                  ]:
 
+                        if not input_data:
+                            continue
+
                         dtype = float
                         prefix = f"properties/{key}"
                         output_data = convert_numeric_dictionary_in_array(input_data, float)

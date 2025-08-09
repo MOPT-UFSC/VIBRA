@@ -164,7 +164,11 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.setCurrentText("Harmonic")
         self.combo_box_physical_domain.setCurrentText("Acoustic")
 
-    def update_analysis_combo_boxes(self):
+    def update_analysis_combo_boxes(self, block_signals: bool = False):
+
+        if block_signals:
+            self.combo_box_analysis_type.blockSignals(block_signals)
+            self.combo_box_physical_domain.blockSignals(block_signals)
 
         analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
 
@@ -181,6 +185,10 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_physical_domain.setCurrentIndex(1)
         elif physical_domain == "coupled":
             self.combo_box_physical_domain.setCurrentIndex(2)
+
+        if block_signals:
+            self.combo_box_analysis_type.blockSignals(False)
+            self.combo_box_physical_domain.blockSignals(False)
 
     def set_pushbutton_run_analysis_enabled(self, enable: bool = True):
         self.pushButton_run_analysis.setEnabled(enable)
