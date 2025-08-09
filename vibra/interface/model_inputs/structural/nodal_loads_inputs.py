@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -446,6 +447,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
         title = "Error while loading table"
+        imported_file = None
 
         try:
             if direct_load:
@@ -453,31 +455,21 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = str(Path().home())
-                else:
-                    path = last_path
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {load_label} data")
 
-                caption = f"Choose a table to import the {load_label} data"
-                imported_table_path, check = QFileDialog.getOpenFileName(  
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
-
-                if not check:
+                if not imported_data:
                     return None, None
 
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
+                imported_table_path = imported_data.path
 
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            imported_filename = basename(imported_table_path)
+                imported_filename = basename(imported_table_path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "

@@ -91,7 +91,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         elif self.importer is None:
             self.importer = ImportDataToCompare(self)
             self.importer.exec()
-            app().main_window.set_input_widget(self)
 
     def _initial_config(self):
         self.aux_bool = False
@@ -431,6 +430,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         if isinstance(data, dict):
             self.imported_results_data = data
             self.plot_data_in_freq_domain()
+        
+    def reset_imported_results_data_to_plot(self):
+        self.imported_results_data = dict()
+        self.plot_data_in_freq_domain()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

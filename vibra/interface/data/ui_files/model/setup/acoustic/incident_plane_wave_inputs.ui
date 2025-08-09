@@ -116,10 +116,12 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
          </font>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_constant_data">
          <attribute name="title">
@@ -158,6 +160,8 @@
             <property name="font">
              <font>
               <pointsize>11</pointsize>
+              <weight>50</weight>
+              <bold>false</bold>
              </font>
             </property>
             <property name="frameShape">
@@ -552,13 +556,13 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>40</width>
+                 <width>65</width>
                  <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>40</width>
+                 <width>65</width>
                  <height>28</height>
                 </size>
                </property>
@@ -575,7 +579,7 @@
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string/>
+                <string>Search</string>
                </property>
                <property name="icon">
                 <iconset resource="../../../../icons/resources.qrc">
@@ -781,7 +785,9 @@
              <font>
               <family>MS Shell Dlg 2</family>
               <pointsize>9</pointsize>
+              <weight>50</weight>
               <italic>false</italic>
+              <bold>false</bold>
              </font>
             </property>
             <property name="toolTip">
@@ -1317,6 +1323,8 @@
            <property name="font">
             <font>
              <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <property name="text">
@@ -1409,6 +1417,8 @@
            <property name="font">
             <font>
              <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <item>
