@@ -76,8 +76,8 @@ class InputUi:
             self.main_window.action_model_workspace_callback()
             obj = self.process_input(MeshSetupInputs)
             if obj.complete:
-                self.model_setup_items.modify_items_access_after_geometry_importing()
- 
+                self.model_setup_items.update_items_visibility_according_to_physical_domain()
+
     def generate_mesh(self):
         LoadingWindow(app().project.generate_mesh).run()
         self.main_window.action_mesh_workspace_callback()

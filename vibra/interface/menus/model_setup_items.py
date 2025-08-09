@@ -191,14 +191,68 @@ class ModelSetupItems(CommonMenuItems):
                     if isinstance(st_check, list) and st_check:
                         return True
 
-        # if property_name == "nodal_loads":
-        #     return analysis_type == "harmonic" and physical_domain == "structural"
-
-        # if property_name == "surface_velocity":
-        #     return analysis_type == "harmonic" and physical_domain == "acoustic"
-
         return False
     
+    def _filter_available_analyzes_according_to_geometry_information(self, current_physical_domain: str):
+        """
+        This method filters the available analyses and items according to the geometry information.
+        If there are no volumes in geometry, the physical domain comboBox will be switched and disabled 
+        in structural type because there is no implementation for 2D acoustic models.
+
+        Parameter:
+        ----------
+        current_physical_domain: str
+        It represents the current physical domain (structural or acoustic).  
+        
+        Return:
+        -------
+        physical_domain: str
+        It corresponds to the output physical domain.
+        """
+
+        mesh = app().project.model.mesh
+        physical_domain = current_physical_domain
+
+        if mesh is not None:
+            volume_exists = mesh.are_there_volumes_in_geometry()
+            self.item_child_surface_thickness.setHidden(volume_exists)
+            self.item_child_distributed_loads.setHidden(volume_exists)
+            self.item_child_normal_pressure_load.setHidden(volume_exists)
+            app().main_window.analysis_toolbar.combo_box_physical_domain.setEnabled(volume_exists)
+
+            if not volume_exists:
+                app().main_window.analysis_toolbar.combo_box_physical_domain.setCurrentIndex(0)
+                physical_domain = "structural"
+
+        return physical_domain
+            
+    def _filter_items_according_to_analysis(self, analysis_type: str, physical_domain: str):
+        """
+        This method filters the available items according to the analysis type and physical domain.
+
+        Parameters:
+        -----------
+        analysis_type: str
+        It represents the analysis type (harmonic or modal).  
+
+        physical_domain: str
+        It represents the physical domain (structural or acoustic).
+        """
+
+        self.item_top_general_settings.setHidden(False)
+
+        if physical_domain == "structural":
+            self.item_child_fluid.setHidden(True)
+            self.item_child_material.setHidden(False)
+            self.item_top_acoustic_model_setup.setHidden(True)
+            self.item_top_structural_model_setup.setHidden(False)
+
+        elif physical_domain == "acoustic":
+            self.item_child_fluid.setHidden(False)
+            self.item_child_material.setHidden(True)
+            self.item_top_acoustic_model_setup.setHidden(False)
+            self.item_top_structural_model_setup.setHidden(True)
+
     def _are_there_collapsed_elements(self, item_child):
         if item_child.property_name == "mesh_setup":
             mesh = app().project.model.mesh
@@ -210,16 +264,21 @@ class ModelSetupItems(CommonMenuItems):
         return False
 
     def update_items_appearance(self):
-        # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
+
+        # It may happen that the analysis toolbar has not been created yet. If so, 
+        # retrieve the analysis type and physical domain from the project
         try:
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
             analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
-        
+
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
-        
+
+        physical_domain = self._filter_available_analyzes_according_to_geometry_information(physical_domain)
+        self._filter_items_according_to_analysis(analysis_type, physical_domain)
+
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
                 item_child = top_level_items.child(index)
@@ -366,30 +425,28 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_acoustic_transfer_element_setup.setDisabled(key)
 
-    def modify_items_access_after_geometry_importing(self):
-        self.modify_general_settings_items_access(False)
-        self.modify_acoustic_model_setup_items_acces(False)
-        self.modify_structural_model_setup_items_acces(False)
-        self.modify_structural_model_setup_items_visibility()
-
-        self.item_top_general_settings.setHidden(False)
-        self.item_top_structural_model_setup.setHidden(False)
-        self.item_top_acoustic_model_setup.setHidden(False)
-
-        self.expandItem(self.item_top_general_settings)
-        self.expandItem(self.item_top_structural_model_setup)
-        self.expandItem(self.item_top_acoustic_model_setup)
-
-    def modify_structural_model_setup_items_visibility(self):
-        volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
-        self.item_child_surface_thickness.setHidden(volume_exists)
-        self.item_child_distributed_loads.setHidden(volume_exists)
-        self.item_child_normal_pressure_load.setHidden(volume_exists)
-
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)
         self.item_top_structural_model_setup.setHidden(True)
         self.item_top_acoustic_model_setup.setHidden(True)
+
+    def update_items_visibility_according_to_physical_domain(self):
+        self.modify_general_settings_items_access(False)
+        self.modify_acoustic_model_setup_items_acces(False)
+        self.modify_structural_model_setup_items_acces(False)
+
+        physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
+        physical_domain = physical_domain.lower()
+
+        self.item_top_general_settings.setHidden(False)
+        if physical_domain == "structural":
+            self.item_top_structural_model_setup.setHidden(False)
+        elif physical_domain == "acoustic":
+            self.item_top_acoustic_model_setup.setHidden(False)
+
+        self.expandItem(self.item_top_general_settings)
+        self.expandItem(self.item_top_structural_model_setup)
+        self.expandItem(self.item_top_acoustic_model_setup)
 
     def set_theme(self, theme: str):
         if theme == "dark":

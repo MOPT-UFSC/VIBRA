@@ -506,7 +506,7 @@ class MainWindow(MainWindow_UI):
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.update_items_visibility_according_to_physical_domain()
 
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
@@ -526,7 +526,7 @@ class MainWindow(MainWindow_UI):
         self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.update_items_visibility_according_to_physical_domain()
 
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
