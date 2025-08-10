@@ -844,11 +844,13 @@ class MainWindow(MainWindow_UI):
             logging.info("Removing the results data from project file... [75/100]")
             app().file.remove_results_data_from_project_file()
 
+        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
         LoadingWindow(remove_callback).run()
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
-        self.model_setup_widget.model_setup_items.update_items_appearance()            
+
+        self.model_setup_widget.model_setup_items.update_items_appearance()
         
         return True
 
@@ -864,6 +866,9 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
+
+        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
+
         try:
             if project_path is not None:
                 project_path = Path(project_path)
@@ -883,6 +888,7 @@ class MainWindow(MainWindow_UI):
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
 
+            self.update_toolbar_and_menu_items_after_load_project()
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
             self.action_front_view_callback()
@@ -893,7 +899,7 @@ class MainWindow(MainWindow_UI):
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            self.model_setup_widget.model_setup_items.update_items_appearance()
+            # self.model_setup_widget.model_setup_items.update_items_appearance()
 
         except Exception as error_log:
             from traceback import print_exception
@@ -930,12 +936,13 @@ class MainWindow(MainWindow_UI):
                 app().main_window.project_data_modified = False
 
             self.update_geometry_information()
+            self.update_toolbar_and_menu_items_after_load_project()
 
         try:
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
-            self.analysis_toolbar.update_analysis_combo_boxes()
+            self.analysis_toolbar.update_analysis_combo_boxes(block_signals=True)
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
@@ -943,11 +950,13 @@ class MainWindow(MainWindow_UI):
             if update_render:
                 LoadingWindow(self.update_plots).run()
 
-            if not ignore_workspaces:
-                if geometry_file:
-                    self.action_model_workspace_callback()
-                else:
-                    self.action_mesh_workspace_callback()
+            if ignore_workspaces:
+                return
+
+            if geometry_file:
+                self.action_model_workspace_callback()
+            else:
+                self.action_mesh_workspace_callback()
 
         except Exception as error_log:
             from traceback import print_exception
@@ -972,6 +981,9 @@ class MainWindow(MainWindow_UI):
             return True
 
         return False
+    
+    def update_toolbar_and_menu_items_after_load_project(self):
+        self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()

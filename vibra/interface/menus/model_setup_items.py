@@ -193,40 +193,34 @@ class ModelSetupItems(CommonMenuItems):
 
         return False
     
-    def _filter_available_analyzes_according_to_geometry_information(self, current_physical_domain: str):
+    def filter_available_items_and_analyzes_according_to_geometry_information(self):
         """
-        This method filters the available analyses and items according to the geometry information.
+        This method filters the available analyzes and items according to the geometry information.
         If there are no volumes in geometry, the physical domain comboBox will be switched and disabled 
         in structural type because there is no implementation for 2D acoustic models.
-
-        Parameter:
-        ----------
-        current_physical_domain: str
-        It represents the current physical domain (structural or acoustic).  
-        
-        Return:
-        -------
-        physical_domain: str
-        It corresponds to the output physical domain.
         """
 
+        volume_exists = None
         mesh = app().project.model.mesh
-        physical_domain = current_physical_domain
+        toolbar = app().main_window.analysis_toolbar
 
         if mesh is not None:
             volume_exists = mesh.are_there_volumes_in_geometry()
             self.item_child_surface_thickness.setHidden(volume_exists)
             self.item_child_distributed_loads.setHidden(volume_exists)
             self.item_child_normal_pressure_load.setHidden(volume_exists)
-            app().main_window.analysis_toolbar.combo_box_physical_domain.setEnabled(volume_exists)
 
+        if isinstance(volume_exists, bool):
+            toolbar.combo_box_physical_domain.setEnabled(volume_exists)
             if not volume_exists:
-                app().main_window.analysis_toolbar.combo_box_physical_domain.setCurrentIndex(0)
-                physical_domain = "structural"
+                toolbar.combo_box_physical_domain.setCurrentIndex(0)
+                return
 
-        return physical_domain
-            
-    def _filter_items_according_to_analysis(self, analysis_type: str, physical_domain: str):
+        _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+        if physical_domain == "":
+            toolbar.combo_box_physical_domain.setCurrentIndex(1)
+
+    def filter_items_according_to_analysis(self, analysis_type: str, physical_domain: str):
         """
         This method filters the available items according to the analysis type and physical domain.
 
@@ -275,9 +269,7 @@ class ModelSetupItems(CommonMenuItems):
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
-
-        physical_domain = self._filter_available_analyzes_according_to_geometry_information(physical_domain)
-        self._filter_items_according_to_analysis(analysis_type, physical_domain)
+        self.filter_items_according_to_analysis(analysis_type, physical_domain)
 
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
@@ -427,6 +419,9 @@ class ModelSetupItems(CommonMenuItems):
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)
+        self.hide_model_setup_top_items()
+
+    def hide_model_setup_top_items(self):
         self.item_top_structural_model_setup.setHidden(True)
         self.item_top_acoustic_model_setup.setHidden(True)
 
@@ -437,7 +432,7 @@ class ModelSetupItems(CommonMenuItems):
 
         analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
         if physical_domain != "":
-            self._filter_items_according_to_analysis(analysis_type, physical_domain)
+            self.filter_items_according_to_analysis(analysis_type, physical_domain)
 
         self.expandItem(self.item_top_general_settings)
         self.expandItem(self.item_top_structural_model_setup)
