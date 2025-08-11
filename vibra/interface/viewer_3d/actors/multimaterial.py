@@ -199,7 +199,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             )
 
             points = vtkPoints()
-            points.SetData(numpy_to_vtk(coords + (1, 1, 0)))
+            points.SetData(numpy_to_vtk(coords))
 
             # The format here is [n, p0, p1, ..., pn, n, p0, p1, ..., pn]
             # Therefore I add a "n" column at the start and then flatten it

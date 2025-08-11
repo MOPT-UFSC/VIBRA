@@ -124,7 +124,7 @@ class GeometrySelection:
         surface_id, surface_distance = pick_actor_cell_info(
             x,
             y,
-            self.geometry_render_widget.faces_actor,
+            self.geometry_render_widget.multimaterial,
             "surface_indexes",
             self.geometry_render_widget.renderer,
         )
@@ -137,7 +137,7 @@ class GeometrySelection:
         volume_id, volume_distance = pick_actor_cell_info(
             x,
             y,
-            self.geometry_render_widget.faces_actor,
+            self.geometry_render_widget.multimaterial,
             "volume_indexes",
             self.geometry_render_widget.renderer,
         )
