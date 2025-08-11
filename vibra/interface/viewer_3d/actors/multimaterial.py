@@ -1,47 +1,32 @@
+from collections import defaultdict
+from pathlib import Path
+from typing import Sequence
+
+import numpy as np
+import vtk
+from molde import Color
 from vtkmodules.util.numpy_support import (
     numpy_to_vtk,
     numpy_to_vtkIdTypeArray,
     vtk_to_numpy,
 )
 from vtkmodules.vtkCommonCore import (
-    vtkIntArray,
-    vtkPoints,
-    vtkUnsignedCharArray,
     vtkIdList,
+    vtkPoints,
 )
-from typing import Sequence
-import numpy as np
 from vtkmodules.vtkCommonDataModel import (
-    VTK_QUAD,
-    VTK_QUADRATIC_QUAD,
-    VTK_QUADRATIC_TRIANGLE,
-    VTK_TRIANGLE,
-    vtkPlane,
     vtkPolyData,
-    vtkUnstructuredGrid,
 )
-
-from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
-
-from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkExtractCells
+from vtkmodules.vtkFiltersCore import vtkExtractCells, vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
-    vtkPropAssembly,
-    vtkPolyDataMapper,
     vtkDataSetMapper,
+    vtkPropAssembly,
 )
 
-from vibra import app, TEXTURE_DIR
+from vibra import TEXTURE_DIR, app
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
-from vibra.utils.interface_utils import ColorMode
 from vibra.utils.polydata_utils import fill_array
-from molde import Color
-import vtk
-from pathlib import Path
-from time import perf_counter
-from collections import defaultdict
 
 
 def create_vtk_id_list(id_list: Sequence[int]) -> vtkIdList:
@@ -235,7 +220,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             all_normals = self.mesh.normals_surface.get(surface)
             normal = np.average(all_normals, axis=0) if (all_normals is not None) else (0, 0, 1)
             normal /= np.linalg.norm(normal)
-            nx, ny, nz = normal * 0.1
+            nx, ny, nz = normal * 0.08
             p1 = np.array([-ny, nx, nz])
             p2 = np.cross(p1, normal)
 
@@ -293,16 +278,17 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.material_actor.GetProperty().SetDiffuse(0.6)
         self.material_actor.GetProperty().SetNormalScale(0.5)
         self.material_actor.GetProperty().SetNormalTexture(self.material_normal_texture)
+        # self.material_actor.SetTexture(self.wall_texture)
 
     def _create_fluid_actor(self):
         self.fluid_actor = self._new_actor_extraction("fluid")
-        self.fluid_actor.GetProperty().SetOpacity(0.7)
+        self.fluid_actor.GetProperty().SetOpacity(0.8)
         self.fluid_actor.GetProperty().SetDiffuse(0.5)
         self.fluid_actor.GetProperty().SetAmbient(0.6)
         self.fluid_actor.GetProperty().SetSpecular(0.8)
         self.fluid_actor.GetProperty().SetSpecularPower(100)
         self.fluid_actor.GetProperty().SetNormalScale(1.2)
-        self.fluid_actor.GetProperty().SetNormalTexture(self.fluid_normal_texture)
+        self.fluid_actor.SetTexture(self.wave_texture)
 
     def _create_porous_actor(self):
         self.porous_actor = self._new_actor_extraction("porous")
@@ -338,9 +324,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return self.actor
 
     def _create_textures(self):
-        self.fluid_normal_texture = read_texture(TEXTURE_DIR / "fluid_normal.jpg")
         self.porous_normal_texture = read_texture(TEXTURE_DIR / "porous_normal.jpg")
         self.material_normal_texture = read_texture(TEXTURE_DIR / "metal_normal.jpg")
         self.perforated_opacity_texture = read_texture(TEXTURE_DIR / "perforated_opacity.png")
         self.perforated_normal_texture = read_texture(TEXTURE_DIR / "perforated_normal.jpg")
         self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
+        self.wave_texture = read_texture(TEXTURE_DIR / "wave_texture.png")
+        self.wall_texture = read_texture(TEXTURE_DIR / "wall_texture.png")
