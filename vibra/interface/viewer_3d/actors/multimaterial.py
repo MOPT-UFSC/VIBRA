@@ -79,7 +79,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_surfaces()
 
         self._create_empty_actor()
-        self._create_material_actor()
+        self._create_material_volume_actor()
+        self._create_material_wall_actor()
         self._create_fluid_actor()
         self._create_porous_actor()
         self._create_perforated_actor()
@@ -124,7 +125,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
                 continue
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
-            material = properties._get_property("material", surface=surface, volume=volume)
+            material_wall = properties._get_property("material", surface=surface)
+            material_volume = properties._get_property("material", volume=volume)
             porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
             perforated = properties._get_property("perforated_plate_model", surface=surface, volume=volume)
 
@@ -132,8 +134,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
                 composition = "perforated"
             elif porous is not None:
                 composition = "porous"
-            elif material is not None:
-                composition = "material"
+            elif material_volume is not None:
+                composition = "material_volume"
+            elif material_wall is not None:
+                composition = "material_wall"
             elif fluid is not None:
                 composition = "fluid"
             else:
@@ -271,14 +275,22 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.empty_actor = self._new_actor_extraction("empty")
         self.empty_actor.SetTexture(self.chess_texture)
 
-    def _create_material_actor(self):
-        self.material_actor = self._new_actor_extraction("material")
+    def _create_material_volume_actor(self):
+        self.material_actor = self._new_actor_extraction("material_volume")
         self.material_actor.GetProperty().SetSpecularPower(80)
         self.material_actor.GetProperty().SetSpecular(1.5)
         self.material_actor.GetProperty().SetDiffuse(0.6)
         self.material_actor.GetProperty().SetNormalScale(0.5)
         self.material_actor.GetProperty().SetNormalTexture(self.material_normal_texture)
-        # self.material_actor.SetTexture(self.wall_texture)
+
+    def _create_material_wall_actor(self):
+        self.material_actor = self._new_actor_extraction("material_wall")
+        self.material_actor.GetProperty().SetSpecularPower(80)
+        self.material_actor.GetProperty().SetSpecular(1.5)
+        self.material_actor.GetProperty().SetDiffuse(0.6)
+        self.material_actor.GetProperty().SetNormalScale(0.5)
+        self.material_actor.GetProperty().SetNormalTexture(self.material_normal_texture)
+        self.material_actor.SetTexture(self.wall_texture)
 
     def _create_fluid_actor(self):
         self.fluid_actor = self._new_actor_extraction("fluid")
