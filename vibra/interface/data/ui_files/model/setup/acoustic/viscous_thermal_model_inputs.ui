@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>559</width>
-    <height>510</height>
+    <height>506</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -105,8 +105,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>525</width>
-           <height>588</height>
+           <width>522</width>
+           <height>586</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
@@ -1950,25 +1950,113 @@
               <item row="0" column="0">
                <widget class="QTabWidget" name="tabWidget_models">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
-                <widget class="QWidget" name="tab_2">
+                <widget class="QWidget" name="rectangular_tab">
                  <attribute name="title">
                   <string>Rectangular</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_11">
                   <item row="0" column="0">
-                   <widget class="QTableWidget" name="tableWidget_rectangular"/>
+                   <widget class="QTableWidget" name="tableWidget_rectangular">
+                    <attribute name="horizontalHeaderVisible">
+                     <bool>false</bool>
+                    </attribute>
+                    <row>
+                     <property name="text">
+                      <string>ID</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Section type</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Formulation type</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Duct height</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Duct width</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Number of terms</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                   </widget>
                   </item>
                  </layout>
                 </widget>
-                <widget class="QWidget" name="tab_3">
+                <widget class="QWidget" name="circular_tab">
                  <attribute name="title">
                   <string>Circular</string>
                  </attribute>
                  <layout class="QGridLayout" name="gridLayout_12">
                   <item row="0" column="0">
-                   <widget class="QTableWidget" name="tableWidget_circular"/>
+                   <widget class="QTableWidget" name="tableWidget_circular">
+                    <attribute name="horizontalHeaderVisible">
+                     <bool>false</bool>
+                    </attribute>
+                    <row>
+                     <property name="text">
+                      <string>ID</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Section type</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Formulation type</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                    <row>
+                     <property name="text">
+                      <string>Duct diameter</string>
+                     </property>
+                     <property name="textAlignment">
+                      <set>AlignCenter</set>
+                     </property>
+                    </row>
+                   </widget>
                   </item>
                  </layout>
                 </widget>
