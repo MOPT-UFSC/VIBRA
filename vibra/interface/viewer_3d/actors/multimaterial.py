@@ -177,7 +177,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             return
 
         cells = self._surfaces_to_cells(surfaces)
-        extractor.AddCellIds(cells, len(cells))
+        extractor.SetCellIds(cells, len(cells))
 
     def clear_composition(self):
         for extractor in self.extractors.values():

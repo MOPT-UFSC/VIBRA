@@ -265,8 +265,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
+        self.update_selection()
         self.update_section_plane()
-        # self.update()
 
     def update_symbols(self):
         if not self.actors_exists():
