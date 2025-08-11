@@ -49,7 +49,10 @@ def pick_actor_cell_info(
     if cell_id < 0:
         return DEFAULT_RETURN_VALUE
 
-    data: vtkPolyData = target_actor.GetMapper().GetInput()
+    if not hasattr(target_actor, "data"):
+        return DEFAULT_RETURN_VALUE
+
+    data: vtkPolyData = target_actor.data
     if not data:
         return DEFAULT_RETURN_VALUE
 
