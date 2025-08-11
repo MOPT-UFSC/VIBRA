@@ -21,75 +21,72 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         self.GetProperty().SetAmbient(0.5)
         self.PickableOff()
 
+    def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
+        # build a dict to map prop name to fun 
+
+        if property_name == "surface_velocity":
+            self._build_surface_velocity(surface_id)
+        
+        elif property_name == "prescribed_dofs":
+            self._build_prescribed_dofs(property_name, surface_id=surface_id, line_id=line_id, point_id=point_id)
+        
+        elif property_name == "nodal_loads":
+            self._build_nodal_loads(property_name, surface_id=surface_id, line_id=line_id, point_id=point_id)
+        
+        elif property_name == "distributed_loads":
+            self._build_distributed_loads(property_name, surface_id=surface_id, line_id=line_id)
+        
+        elif property_name == "normal_pressure_load":
+            self._build_normal_pressure_load(property_name, surface_id=surface_id)
+        
+        elif property_name == "specific_impedance":
+            self._build_specific_impedance(property_name, surface_id=surface_id)
+            
+        elif property_name == "transfer_impedance":
+            self._build_transfer_impedance(surface_id=surface_id)
+        
+        elif property_name == "mass_flow_rate":
+            self._build_mass_flow_rate(surface_id=surface_id)
+        
+        elif property_name == "degrees_of_freedom_decoupling":
+            self._build_dofs_decoupling(surface_id=surface_id)
+        
+        elif property_name == "absorption_surface":    
+            self._build_absorption_surface(surface_id=surface_id)
+        
+        elif property_name == "acoustic_pressure":
+            self._build_acoustic_pressure(surface_id=surface_id)
+        
+        elif property_name == "reciprocating_compressor_excitation":
+            self._build_reciprocating_compressor(property_name, surface_id=surface_id)
+        
+        elif property_name == "dissipation_model":
+            self._build_dissipation_model(surface_id=surface_id)
+        
+        elif property_name == "acoustic_transfer_element_data":
+            self._build_acoustic_transfer_element_data(surface_id=surface_id)
+        
+        elif property_name == "incident_plane_wave":
+            self._build_incident_plane_wave(property_name, surface_id=surface_id)
+        
+        elif property_name == "mass_source":
+            self._build_mass_source(property_name, surface_id=surface_id, line_id=line_id, point_id=point_id)
+
     def build(self):
         self.clear_symbols()
         self._build_nodal_normals()
         
         point_properties = app().project.model.properties.point_properties
         for (property_name, point_id) in point_properties.keys():
-            if property_name == "nodal_loads":
-                self._build_nodal_loads(property_name, point_id=point_id)
-            
-            elif property_name == "prescribed_dofs":
-                self._build_prescribed_dofs(property_name, point_id=point_id)
+            self._call_build_functions(property_name, point_id=point_id)
         
         line_properties = app().project.model.properties.line_properties
         for (property_name, line_id) in line_properties.keys():
-            if property_name == "nodal_loads":
-                self._build_nodal_loads(property_name, line_id=line_id)
-            
-            elif property_name == "prescribed_dofs":
-                self._build_prescribed_dofs(property_name, line_id=line_id)
-        
+            self._call_build_functions(property_name, line_id=line_id)
+
         surface_properties = app().project.model.properties.surface_properties
         for (property_name, surface_id) in surface_properties.keys():
-            if property_name == "surface_velocity":
-                self._build_surface_velocity(surface_id)
-            
-            elif property_name == "prescribed_dofs":
-                self._build_prescribed_dofs(property_name, surface_id)
-            
-            elif property_name == "nodal_loads":
-                self._build_nodal_loads(property_name, surface_id=surface_id)
-            
-            elif property_name == "distributed_loads":
-                self._build_distributed_loads(property_name, surface_id)
-            
-            elif property_name == "normal_pressure_load":
-                self._build_normal_pressure_load(property_name, surface_id)
-            
-            elif property_name == "specific_impedance":
-                self._build_specific_impedance(property_name, surface_id)
-                
-            elif property_name == "transfer_impedance":
-                self._build_transfer_impedance(surface_id)
-            
-            elif property_name == "mass_flow_rate":
-                self._build_mass_flow_rate(surface_id)
-            
-            elif property_name == "degrees_of_freedom_decoupling":
-                self._build_dofs_decoupling(surface_id)
-            
-            elif property_name == "absorption_surface":    
-                self._build_absorption_surface(surface_id)
-            
-            elif property_name == "acoustic_pressure":
-                self._build_acoustic_pressure(surface_id)
-            
-            elif property_name == "reciprocating_compressor_excitation":
-                self._build_reciprocating_compressor(property_name, surface_id)
-            
-            elif property_name == "dissipation_model":
-                self._build_dissipation_model(surface_id)
-            
-            elif property_name == "acoustic_transfer_element_data":
-                self._build_acoustic_transfer_element_data(surface_id)
-            
-            elif property_name == "incident_plane_wave":
-                self._build_incident_plane_wave(property_name, surface_id)
-            
-            elif property_name == "mass_source":
-                self._build_mass_source(property_name, surface_id)
+            self._call_build_functions(property_name, surface_id=surface_id)
 
         super().build()
 
@@ -109,10 +106,6 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         curvatures_surface = mesh.curvatures_surface.get(surface_id)
         contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
         center_coords = np.average(surface_coordinates, axis=0)
-        
-        # import gmsh
-        # com = gmsh.model.occ.getCenterOfMass(2, surface_id)
-        # print(com)
 
         if contains_curvature:
             # Finds the node that is closest to the center coords
@@ -227,16 +220,26 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             if np.any(m_orientation):
                 self.add_symbol(sources.create_arrow_source, coord, m_orientation, color=color_names.BLUE_2)
             
-    def _build_distributed_loads(self, property_name: str, surface_id: int):
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
+    def _build_distributed_loads(self, property_name: str, surface_id = -1, line_id = -1):
+        if surface_id != -1:
+            surface_properties = app().project.model.properties.surface_properties
+            property = surface_properties[property_name, surface_id]
+            
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+            orientation = np.real((x, y, z))
+            is_pointing = np.dot(normal, orientation) < 0
+            shape = sources.create_triple_arrow_source if is_pointing else sources.create_outwards_arrow_source
+            self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
         
-        coords, normal = self._get_center_coords_and_normals(surface_id)
-        x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
-        orientation = np.real((x, y, z))
-        is_pointing = np.dot(normal, orientation) < 0
-        shape = sources.create_triple_arrow_source if is_pointing else sources.create_outwards_arrow_source
-        self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
+        if line_id != -1:
+            line_properties = app().project.model.properties.line_properties
+            property = line_properties[property_name, line_id]
+            
+            coords = self._get_center_coords_and_normals_line(line_id)
+            x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+            orientation = np.real((x, y, z))
+            self.add_symbol(sources.create_triple_arrow_source, coords, orientation, color=color_names.RED_2)
     
     def _build_normal_pressure_load(self, property_name: str, surface_id: int):
         surface_properties = app().project.model.properties.surface_properties
@@ -322,19 +325,27 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         
         self.add_symbol(sources.create_incident_plane_wave_source, coords, wave_vector, color=color_names.BLUE)
     
-    def _build_mass_source(self, property_name: str, surface_id: int):
-        coords, normal = self._get_center_coords_and_normals(surface_id)
+    def _build_mass_source(self, property_name: str, surface_id = -1, line_id = -1, point_id = -1):
+        orientation = (0, 0, 0)
+        
+        if surface_id != -1:
+            coords, _ = self._get_center_coords_and_normals(surface_id)
+        if line_id != -1:
+            coords = self._get_center_coords_and_normals_line(line_id)
+        if point_id != -1:
+            coords = self._get_center_coords_and_normals_point(point_id)
+        
         color_fir_sphere = color_names.RED.copy()
-        self.add_symbol(sources.create_mass_load_first_layer_source, coords, normal, color=color_fir_sphere)
+        self.add_symbol(sources.create_mass_load_first_layer_source, coords, orientation, color=color_fir_sphere)
         
         color_sec_sphere = color_names.YELLOW.copy()
         color_sec_sphere.a = 150
-        self.add_symbol(sources.create_mass_load_second_layer_source, coords, normal, color=color_sec_sphere)
+        self.add_symbol(sources.create_mass_load_second_layer_source, coords, orientation, color=color_sec_sphere)
         
         color_third_sphere = color_names.GREEN.copy()
         color_third_sphere.a = 100
-        self.add_symbol(sources.create_mass_load_third_layer_source, coords, normal, color=color_third_sphere)
+        self.add_symbol(sources.create_mass_load_third_layer_source, coords, orientation, color=color_third_sphere)
         
         color_fourth_sphere = color_names.BLUE.copy()
         color_fourth_sphere.a = 50
-        self.add_symbol(sources.create_mass_load_fourth_layer_source, coords, normal, color=color_fourth_sphere)
+        self.add_symbol(sources.create_mass_load_fourth_layer_source, coords, orientation, color=color_fourth_sphere)
