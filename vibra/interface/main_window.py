@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from vibra import app, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS
+from vibra import app, change_prod_dev, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -78,14 +78,16 @@ class MainWindow(MainWindow_UI):
         self.shortcut.activated.connect(self.connect_shortcuts_development_production)
 
         self._initialize()
-
+    
     def _initialize(self):
         self.dialog = None
         self.project_data_modified = False
         self.user_path = Path().home()
 
     def connect_shortcuts_development_production(self):
-        self.model_setup_widget.model_setup_items.change_visibility_structural_setup()
+        production = change_prod_dev()
+        self.model_setup_widget.model_setup_items.change_visibility_structural_setup(production=production)
+        self.analysis_toolbar.combo_box_physical_domain.model().item(0).setEnabled(not production)
 
     def _connect_actions(self):
         """

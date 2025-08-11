@@ -164,6 +164,9 @@ class AnalysisToolbar(QToolBar):
 
         for physical_domain in ["Structural", "Acoustic"]:
             self.combo_box_physical_domain.addItem(physical_domain)
+        
+        # This line prevents the use of the structural option in production
+        self.combo_box_physical_domain.model().item(0).setEnabled(False)
 
         # default setup
         self.combo_box_analysis_type.setCurrentText("Harmonic")

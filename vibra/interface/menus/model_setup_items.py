@@ -1,7 +1,7 @@
 from PySide6.QtGui import QPen, QColor
 from PySide6.QtCore import Qt
 
-from vibra import app, change_prod_dev
+from vibra import app
 
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
@@ -24,8 +24,7 @@ class ModelSetupItems(CommonMenuItems):
         self._initial_configuration()
         self.update_items_appearance()
     
-    def change_visibility_structural_setup(self):
-        production = change_prod_dev()
+    def change_visibility_structural_setup(self, production: bool):
         self.item_top_structural_model_setup.setHidden(production)
     
     def _create_items(self):
