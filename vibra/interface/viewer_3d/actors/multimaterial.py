@@ -100,16 +100,16 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             material = properties._get_property("material", surface=surface, volume=volume)
 
             if material is not None:
-                color = tuple(material.color)
+                color = Color(*material.color).with_brightness(100).with_saturation(100)
             elif fluid is not None:
-                color = tuple(fluid.color)
+                color = Color(*fluid.color).with_brightness(100).with_saturation(40)
             else:
-                color = (255, 255, 255)
+                color = Color(255, 255, 255)
 
             color_to_surfaces[color].append(surface)
 
         for color, surfaces in color_to_surfaces.items():
-            self.paint_surfaces(Color(*color), surfaces)
+            self.paint_surfaces(color, surfaces)
 
     def reload_composition(self):
         mesh = app().project.model.mesh
