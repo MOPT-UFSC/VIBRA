@@ -4,6 +4,7 @@ from .arrows import (
     create_double_arrow_source,
     create_outwards_arrow_source,
     create_triple_arrow_source,
+    create_quadruple_arrow_source,
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
     create_outwards_normal_pressure_load,

@@ -103,7 +103,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         dist = np.linalg.norm(line_coordinates - center_coords, axis=1)
         index = np.argmin(dist)
         
-        return line_coordinates[index, :]
+        # Returns the 3 points around the center (including it)
+        return (line_coordinates[index - 1, :], line_coordinates[index, :], line_coordinates[index + 1, :])
     
     def _get_center_coords_and_normals_point(self, point_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
@@ -136,7 +137,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             property = surface_properties[property_name, surface_id]
         
         if line_id != -1:
-            coords = self._get_center_coords_and_normals_line(line_id)
+            coords = self._get_center_coords_and_normals_line(line_id)[1]
             line_properties = app().project.model.properties.line_properties
             property = line_properties[property_name, line_id]
             
@@ -181,7 +182,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         coord = None
         
         if line_id != -1:
-            coord = self._get_center_coords_and_normals_line(line_id)
+            coord = self._get_center_coords_and_normals_line(line_id)[1]
             line_properties = app().project.model.properties.line_properties
             property = line_properties[property_name, line_id]
         
@@ -209,7 +210,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
             orientation = np.real((x, y, z))
             is_pointing = np.dot(normal, orientation) < 0
-            shape = sources.create_triple_arrow_source if is_pointing else sources.create_outwards_triple_arrow_source
+            shape = sources.create_quadruple_arrow_source if is_pointing else sources.create_outwards_triple_arrow_source
             self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
         
         if line_id != -1:
@@ -219,7 +220,9 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             coords = self._get_center_coords_and_normals_line(line_id)
             x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
             orientation = np.real((x, y, z))
-            self.add_symbol(sources.create_triple_arrow_source, coords, orientation, color=color_names.RED_2)
+            self.add_symbol(sources.create_arrow_source, coords[0], orientation, color=color_names.RED_2)
+            self.add_symbol(sources.create_arrow_source, coords[1], orientation, color=color_names.RED_2)
+            self.add_symbol(sources.create_arrow_source, coords[2], orientation, color=color_names.RED_2)
     
     def _build_normal_pressure_load(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         surface_properties = app().project.model.properties.surface_properties
@@ -311,7 +314,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         if surface_id != -1:
             coords, _ = self._get_center_coords_and_normals(surface_id)
         if line_id != -1:
-            coords = self._get_center_coords_and_normals_line(line_id)
+            coords = self._get_center_coords_and_normals_line(line_id)[1]
         if point_id != -1:
             coords = self._get_center_coords_and_normals_point(point_id)
         
