@@ -215,7 +215,7 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
             selection_type = "node"
 
         self.model_results = dict()
-        title = f"Specific acoustic impedance - {self.analysis_method}"
+        title = "Specific acoustic impedance"
 
         for i, selected_id in enumerate(self.selected_ids):
 

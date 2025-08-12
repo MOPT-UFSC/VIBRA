@@ -221,7 +221,7 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
         component_label = self.get_component_label()
 
         self.model_results = dict()
-        self.title = f"Particle velocity frequency response - {self.analysis_method}"
+        self.title = "Particle velocity frequency response"
 
         for i, selected_id in enumerate(self.selected_ids):
 

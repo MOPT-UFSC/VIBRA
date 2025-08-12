@@ -161,7 +161,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
-        self.title = f"Acoustic frequency response - {self.analysis_method}"
+        self.title = "Acoustic frequency response"
 
         for i, selected_id in enumerate(self.selected_ids):
 

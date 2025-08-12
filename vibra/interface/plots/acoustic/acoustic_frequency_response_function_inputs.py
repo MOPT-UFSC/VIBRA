@@ -266,7 +266,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         if y_data is None:
             return
 
-        title = "Acoustic frequency response function - {}".format(self.analysis_method)
+        title = "Acoustic frequency response function"
         legend_label = "Acoustic FRF between {}s [{}] and [{}]".format(  selection_type, 
                                                                     self.output_selection_id, 
                                                                     self.input_selection_id  )

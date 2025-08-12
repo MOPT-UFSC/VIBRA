@@ -283,7 +283,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.title = f"{plot_type} - {self.analysis_method}"
+        self.title = f"{plot_type}"
         legend_label = f"{plot_type} between surfaces [{self.input_surface_id}] and [{self.output_surface_id}]"
 
         key = ("surface", (self.input_surface_id, self.output_surface_id))
