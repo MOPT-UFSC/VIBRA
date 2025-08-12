@@ -149,21 +149,34 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_area_circular.setText("--")
 
     def remove_callback(self):
-        if self.lineEdit_selection_id.text() != "":
+        selected_items = self.treeWidget_viscous_thermal_model.selectedItems()
 
-            key = self.lineEdit_selection_id.text().split(" - ")
-            selection_type = key[0]
-            selection_id = int(key[1])
+        if not selected_items:
+            return
+        
+        selected_item = selected_items[0]
 
-            if selection_type == "Volume":
-                self.properties._remove_volume_property("viscous_thermal_model", selection_id)
-            else:
-                self.properties._remove_group_property("viscous_thermal_model", selection_id)
+        selection_type = selected_item.text(0)
+        selection_id = int(selected_item.text(1))
+        model_id = int(selected_item.text(2))
 
-            app().file.write_model_properties_in_file()
-            self.actions_to_finalize()
-            self.pushButton_remove.setDisabled(True)
-            self.load_info()
+        model = self.map_model_id_to_models[model_id]
+
+        if selection_type == "Volume":
+            self.properties._remove_volume_property("viscous_thermal_model", selection_id)
+        else:
+            self.properties._remove_group_property("viscous_thermal_model", selection_id)
+
+        app().file.write_model_properties_in_file()
+        self.actions_to_finalize()
+        self.pushButton_remove.setDisabled(True)
+        self.load_info()
+
+        if model not in self.map_model_id_to_models.values():
+            self.models.remove(model)
+
+        if self.map_model_id_to_volumes:
+            self.tabWidget_main.setCurrentIndex(3)
 
     def reset_callback(self):
 
@@ -314,21 +327,26 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
         new_parameter_value = None
         value_error = False
-        
-        try:
-            new_parameter_value = float(item.text())
-        except:
-            value_error = True
 
         model = self.map_model_id_to_models[model_id]
         parameters_positions = model.get_parameters_position()
         parameter_position = row - 1
+        parameter = parameters_positions[parameter_position]
+        
+        try:
+            if parameter == "number_of_terms":
+                new_parameter_value = int(float(item.text()))
+                item.setText(str(new_parameter_value))
+            else:
+                new_parameter_value = float(item.text())
+        except:
+            value_error = True
 
         if value_error:
-            new_parameter_value = getattr(model, parameters_positions[parameter_position])
+            new_parameter_value = getattr(model, parameter)
             item.setText(str(new_parameter_value))
         else:
-            setattr(model, parameters_positions[parameter_position], new_parameter_value)
+            setattr(model, parameter, new_parameter_value)
 
             volumes = self.map_model_id_to_volumes[model_id]
             model_data = model.get_data()
@@ -352,7 +370,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 model = None
                 section_type = data["section_type"]
 
-                if section_type == "Rectangular duct":
+                if section_type in ["Rectangular duct", "Quadrangular duct", "Narrow slit duct"]:
                     model = RectangularDuctData.set_data(data)
                 else:
                     model = CircularDuctData.set_data(data)
@@ -465,11 +483,17 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         is_there_rectangular_model = False
         is_there_circular_model = False
 
-        for model_id in range(1, len(self.map_model_id_to_models) + 1):
+        model_ids = list()
+        for model_id in self.map_model_id_to_models:
+            model_ids.append(model_id)
+        
+        model_ids.sort()
+
+        for model_id in model_ids:
 
             model_id_item = QTableWidgetItem(str(model_id))
             model_id_item.setFlags(Qt.ItemIsSelectable)
-        
+
             model = self.map_model_id_to_models[model_id]
             model_data = model.get_data()
 
@@ -477,6 +501,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.tableWidget_rectangular.setItem(0, rectangular_counter, model_id_item)
 
                 for i, data in enumerate(model_data.values()):
+                    if data is None:
+                        data = "---"
+
                     item = QTableWidgetItem(str(data))
                     if isinstance(data, str):
                         item.setFlags(Qt.ItemIsSelectable)
@@ -714,7 +741,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         else:
             model_data = RectangularDuctData(section_types[section_type], "Stinson model",
-                                            height)
+                                            height, None, None)
 
         return model_data
 
