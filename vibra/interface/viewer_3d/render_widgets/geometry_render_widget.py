@@ -150,13 +150,13 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
 
-        self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
-        self.plane_actor.VisibilityOff()
-
         s = perf_counter()
         self.multimaterial = MultimaterialGeometryActor(mesh)
         e = perf_counter()
         print("Multimaterial", e - s)
+
+        self.plane_actor = SectionPlaneActor(self.multimaterial.GetBounds())
+        self.plane_actor.VisibilityOff()
 
         logging.info("Updating the mesh render... [75/100]")
         self.add_actors(
@@ -194,7 +194,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         color = Color(247, 0, 255)
         self.renderer.SetBackground(color.to_rgb_f())
         self.renderer.SetBackground2(color.to_rgb_f())
-        self.faces_actor.set_color(Color(255, 255, 255))
+        # self.faces_actor.set_color(Color(255, 255, 255))
         self.lines_actor.set_color(Color(0, 0, 0))
 
         self.disable_scale_bar()
@@ -230,12 +230,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(visualization.faces)
+        self.multimaterial.SetVisibility(visualization.faces)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.points_actor.SetPickable(visualization.faces)
         self.lines_actor.SetPickable(visualization.faces)
-        self.faces_actor.SetPickable(visualization.faces)
+        self.multimaterial.SetPickable(visualization.faces)
 
         self.update_selection()
         self.update()
@@ -258,9 +258,9 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update_plot()
             return
 
-        self.remove_actors(self.faces_actor)
-        self.faces_actor = FacesActor(mesh)
-        self.add_actors(self.faces_actor)
+        # self.remove_actors(self.faces_actor)
+        # self.faces_actor = FacesActor(mesh)
+        # self.add_actors(self.faces_actor)
 
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
@@ -346,7 +346,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
-        self.faces_actor.clear_colors()
+        # self.faces_actor.clear_colors()
         self.multimaterial.clear_colors()
 
         points = app().main_window.selected_geometry_points
@@ -371,7 +371,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
-        self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
+        # self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
         self.multimaterial.paint_surfaces(self.selection_faces_color, faces)
 
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
@@ -423,7 +423,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()
-        self.faces_actor.disable_cut()
+        self.multimaterial.disable_cut()
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
@@ -434,7 +434,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             normal = -normal
 
         self.points_actor.apply_cut(xyz, normal)
-        self.faces_actor.apply_cut(xyz, normal)
+        self.multimaterial.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
         visualization = app().main_window.visualization_filter
@@ -449,7 +449,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.nodes_actor = None
         self.edges_actor = None
         self.faces_actor = None
-        self.solids_actor = None
+        self.multimaterial = None
         self.selection_spheres_actor = None
         self.plane_actor = None
         self.symbols_actor_structural = None

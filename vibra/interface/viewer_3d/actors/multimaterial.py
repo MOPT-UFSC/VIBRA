@@ -15,6 +15,7 @@ from vtkmodules.vtkCommonCore import (
     vtkPoints,
 )
 from vtkmodules.vtkCommonDataModel import (
+    vtkPlane,
     vtkPolyData,
 )
 from vtkmodules.vtkFiltersCore import vtkExtractCells, vtkPolyDataNormals
@@ -163,10 +164,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         array[cells] = color_fmt
         self.data.Modified()
 
-        collection = vtk.vtkActorCollection()
-        self.GetActors(collection)
-        for actor in collection:
-            actor: vtkActor
+        for actor in self.get_parts():
             actor.GetMapper().SetScalarModeToUseCellData()
             actor.GetMapper().ScalarVisibilityOff()  # Just to force color updates
             actor.GetMapper().ScalarVisibilityOn()
@@ -182,6 +180,24 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def clear_composition(self):
         for extractor in self.extractors.values():
             extractor.SetCellIds([], 0)
+
+    def disable_cut(self):
+        for actor in self.get_parts():
+            actor.GetMapper().RemoveAllClippingPlanes()
+
+    def apply_cut(self, origin, normal):
+        plane = vtkPlane()
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
+
+        for actor in self.get_parts():
+            actor.GetMapper().RemoveAllClippingPlanes()
+            actor.GetMapper().AddClippingPlane(plane)
+            actor.GetMapper().Modified()
+            actor.Modified()
+
+    def get_parts(self) -> list[vtkActor]:
+        return list(super().GetParts())
 
     def _surfaces_to_cells(self, surfaces: Sequence[int]) -> np.ndarray:
         array = vtk_to_numpy(self.data.GetCellData().GetArray("surface_indexes"))
@@ -214,7 +230,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             volume = self.mesh.volumes_from_surface[surface][0]
 
-            # Every surface have its own plane or cylinder defining
+            # Every surface have its own plane defining
             # how to project the texture coordinates on it
             add_tcoords = vtk.vtkTextureMapToPlane()
             add_tcoords.AutomaticPlaneGenerationOff()
