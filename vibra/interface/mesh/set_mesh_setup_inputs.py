@@ -488,6 +488,12 @@ class MeshSetupInputs(MesherSetup_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def config_control_quality_table(self):
+
+        volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+        self.tabWidget_main.setTabVisible(2, volume_exists)
+        if not volume_exists:
+            return
+
         if self.get_element_type() not in [TETRAHEDRON_4, TETRAHEDRON_10]:
             return
 
