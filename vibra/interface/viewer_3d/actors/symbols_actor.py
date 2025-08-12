@@ -194,8 +194,8 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
                 self.add_symbol(shape, coords, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
                 is_pointing = np.dot(normal, m_orientation) < 0
-                shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
-                self.add_symbol(shape, coords, m_orientation, color=color_names.BLUE_2)
+                shape = sources.create_double_arrow_source if is_pointing else sources.create_outwards_arrow_source
+                self.add_symbol(shape, coords, m_orientation, color=color_names.BLUE_3)
         
         property = None
         coord = None
@@ -218,7 +218,7 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             if np.any(force_orientation):
                 self.add_symbol(sources.create_arrow_source, coord, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
-                self.add_symbol(sources.create_arrow_source, coord, m_orientation, color=color_names.BLUE_2)
+                self.add_symbol(sources.create_double_arrow_source, coord, m_orientation, color=color_names.BLUE_3)
             
     def _build_distributed_loads(self, property_name: str, surface_id = -1, line_id = -1):
         if surface_id != -1:

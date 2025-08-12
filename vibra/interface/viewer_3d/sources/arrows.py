@@ -85,7 +85,8 @@ def create_double_arrow_source():
 
     return transform_polydata(
         source.GetOutput(),
-        position=(-1, 0, 0),
+        position=(-1.5, 0, 0),
+        scale=(1.5, 1.5, 1.5)
     )
 
 
