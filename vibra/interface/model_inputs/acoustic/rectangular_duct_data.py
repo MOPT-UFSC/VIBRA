@@ -15,6 +15,14 @@ class RectangularDuctData:
         
         return data
 
+    def get_parameters_position(self) -> dict:
+        parameters = dict()
+
+        for index, field in enumerate(fields(RectangularDuctData)):
+            parameters[index] = field.name
+
+        return parameters
+
     def __str__(self) -> str:
         string = ""
         for attr, value in self.__dict__.items():
@@ -27,5 +35,8 @@ class RectangularDuctData:
     def set_data(self, data: dict) -> "RectangularDuctData":
         if "values" in data:
             data.pop("values")
+        
+        if "model_id" in data:
+            data.pop("model_id")
 
         return RectangularDuctData(**data)

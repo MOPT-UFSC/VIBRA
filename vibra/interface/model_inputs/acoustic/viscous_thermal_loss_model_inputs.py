@@ -66,6 +66,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
+        self.models: List[RectangularDuctData|CircularDuctData] = list()
 
     def _configure_qt_variables(self):
         self.lineEdit_center_coordinates.setDisabled(True)
@@ -91,6 +92,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        #
+        self.tableWidget_rectangular.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, "rectangular"))
+        self.tableWidget_circular.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, "circular"))
         #
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -196,6 +200,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for group_id in group_ids:
                     self.properties._remove_group_property("viscous_thermal_model", group_id)
 
+                self.models = list()
                 app().file.write_model_properties_in_file()
                 self.load_info()
         self.actions_to_finalize()
@@ -295,12 +300,50 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             self.call_sphere_plotter()
     
+    def cell_changed_callback(self, row: int, column: int, section_type: str):
+        item = None
+        model_id = None
+
+        if section_type == "rectangular":
+            item = self.tableWidget_rectangular.item(row, column)
+            model_id = int(self.tableWidget_rectangular.item(0, column).text())
+        
+        else:
+            item = self.tableWidget_circular.item(row, column)
+            model_id = int(self.tableWidget_circular.item(0, column).text())
+        
+        new_parameter_value = None
+        value_error = False
+        
+        try:
+            new_parameter_value = float(item.text())
+        except:
+            value_error = True
+
+        model = self.map_model_id_to_models[model_id]
+        parameters_positions = model.get_parameters_position()
+        parameter_position = row - 1
+
+        if value_error:
+            new_parameter_value = getattr(model, parameters_positions[parameter_position])
+            item.setText(str(new_parameter_value))
+        else:
+            setattr(model, parameters_positions[parameter_position], new_parameter_value)
+
+            volumes = self.map_model_id_to_volumes[model_id]
+            model_data = model.get_data()
+            model_data["model_id"] = model_id
+
+            for volume in volumes:
+                self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
+            
+            app().file.write_model_properties_in_file()
+    
     def map_existing_viscous_thermal_loss_models(self):
         self.map_model_id_to_models: Dict[int, List[RectangularDuctData|CircularDuctData]] = defaultdict(list)
         self.map_model_id_to_volumes: Dict[int, List[int]] = defaultdict(list)
         self.map_model_id_to_groups: Dict[int, List[int]] = defaultdict(list)
 
-        models = list()
         for key, data in self.properties.volume_properties.items():
 
             property, volume_id = key
@@ -314,10 +357,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 else:
                     model = CircularDuctData.set_data(data)
 
-                if model not in models:
-                    models.append(model)
+                if model not in self.models:
+                    self.models.append(model)
                     
-                model_id = models.index(model) + 1
+                model_id = data["model_id"] if "model_id" in data else self.models.index(model) + 1
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
         
@@ -333,14 +376,14 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     model = RectangularDuctData.set_data(data)
                 else:
                     model = CircularDuctData.set_data(data)
-            
-                if model not in models:
-                    models.append(model)
                 
-                model_id = models.index(model) + 1
+                if model not in self.models:
+                    self.models.append(model)
+
+                model_id = data["model_id"] if "model_id" in data else self.models.index(model) + 1
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_groups[model_id].append(group_id)
-                        
+
     def update_viscous_thermall_loss_tree_widget(self):
         self.treeWidget_viscous_thermal_model.clear()
 
@@ -361,7 +404,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
                     self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
     
-    def configure_table_widgets(self):
+    def configure_tables_and_tabs_widgets(self):
         rectangular_duct_counter = 0
         circular_duct_counter = 0
 
@@ -380,6 +423,12 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.tableWidget_circular.blockSignals(True)
         self.tableWidget_circular.setRowCount(4)
         self.tableWidget_circular.setColumnCount(circular_duct_counter)
+
+        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setTabVisible(3, False)
+
+        self.tabWidget_models.setTabVisible(0, False)
+        self.tabWidget_models.setTabVisible(1, False)
     
     def update_tableWidget_rectangular_items(self):
         for i in range(self.tableWidget_rectangular.rowCount()):
@@ -408,18 +457,20 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 item.setTextAlignment(Qt.AlignCenter)
         
         self.tableWidget_circular.blockSignals(False)
-
-    def load_info(self):
-        self.map_existing_viscous_thermal_loss_models()
-        self.configure_table_widgets()
-
+    
+    def update_edit_tab_widget(self):
         rectangular_counter = 0
         circular_counter = 0
 
-        for model_id, model in self.map_model_id_to_models.items():
+        is_there_rectangular_model = False
+        is_there_circular_model = False
+
+        for model_id in range(1, len(self.map_model_id_to_models) + 1):
+
             model_id_item = QTableWidgetItem(str(model_id))
             model_id_item.setFlags(Qt.ItemIsSelectable)
         
+            model = self.map_model_id_to_models[model_id]
             model_data = model.get_data()
 
             if isinstance(model, RectangularDuctData):
@@ -433,6 +484,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     self.tableWidget_rectangular.setItem(i+1, rectangular_counter, item)
                 
                 rectangular_counter += 1
+                is_there_rectangular_model = True
                 
             else:
                 self.tableWidget_circular.setItem(0, circular_counter, model_id_item)
@@ -445,11 +497,28 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     self.tableWidget_circular.setItem(i+1, circular_counter, item)
 
                 circular_counter += 1
+                is_there_circular_model = True
+            
+            if is_there_rectangular_model or is_there_circular_model:
+                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(3, True)
+                self.tabWidget_main.setCurrentIndex(2)
+            
+            if is_there_rectangular_model:
+                self.tabWidget_models.setTabVisible(0, True)
+            
+            if is_there_circular_model:
+                self.tabWidget_models.setTabVisible(1, True)
+
+    def load_info(self):
+        self.map_existing_viscous_thermal_loss_models()
+
+        self.configure_tables_and_tabs_widgets()
+        self.update_edit_tab_widget()
 
         self.update_viscous_thermall_loss_tree_widget()
-
         self.update_tabs_visibility()
-        
+
         self.update_tableWidget_rectangular_items()
         self.update_tableWidget_circular_items()
 
@@ -701,8 +770,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     PrintMessageInput(error_data)
                     return
             
+            if model not in self.models:
+                self.models.append(model)
+            
+            model_id = self.models.index(model) + 1
+            model_data = model.get_data()
+            model_data["model_id"] = model_id
+            
             for volume_id in volume_ids:
-                self.properties._set_property("viscous_thermal_model", model.get_data(), volume=volume_id)
+                self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
         elif assignment_type in [2, 3]:
 
@@ -717,11 +793,16 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             surface_ids = self.main_window.selected_geometry_surfaces
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
+            if model not in self.models:
+                self.models.append(model)
+
+            model_id = self.models.index(model) + 1
             model_data = model.get_data()
             model_data["surface_ids"] = list(surface_ids)
             model_data["selection_radius"] = self.selection_radius
             model_data["averaged"] = averaged_selection
             model_data["filter_type"] = filter_type
+            model_data["model_id"] = model_id
 
             self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
