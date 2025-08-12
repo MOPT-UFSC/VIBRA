@@ -42,12 +42,5 @@ SUPPORTED_MESH_EXTENSIONS = [
     "NAS",
 ]
 
-production = True
-
-def change_prod_dev() -> bool:
-    global production
-    production = not production
-    return production
-
 def app() -> "Application":
     return QApplication.instance()
