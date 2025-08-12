@@ -942,7 +942,6 @@ class MainWindow(MainWindow_UI):
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
-            self.analysis_toolbar.update_analysis_combo_boxes(block_signals=True)
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()

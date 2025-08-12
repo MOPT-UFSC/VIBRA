@@ -219,6 +219,8 @@ class ModelSetupItems(CommonMenuItems):
         _, physical_domain = app().project.get_analysis_type_and_physical_domain()
         if physical_domain == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
+        else:
+            toolbar.update_analysis_combo_boxes(block_signals=True)
 
     def filter_items_according_to_analysis(self, analysis_type: str, physical_domain: str):
         """
