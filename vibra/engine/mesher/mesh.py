@@ -34,7 +34,6 @@ class Mesh:
         self.geometry_setup = None
         self.mesh_setup = None
         self.geometry_imported = True
-
         self.reset_variables()
 
     def reset_variables(self):
