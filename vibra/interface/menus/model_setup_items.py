@@ -427,14 +427,10 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_structural_model_setup.setHidden(True)
         self.item_top_acoustic_model_setup.setHidden(True)
 
-    def update_items_visibility_according_to_physical_domain(self):
+    def enable_and_expand_menu_items(self):
         self.modify_general_settings_items_access(False)
         self.modify_acoustic_model_setup_items_acces(False)
         self.modify_structural_model_setup_items_acces(False)
-
-        analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
-        if physical_domain != "":
-            self.filter_items_according_to_analysis(analysis_type, physical_domain)
 
         self.expandItem(self.item_top_general_settings)
         self.expandItem(self.item_top_structural_model_setup)

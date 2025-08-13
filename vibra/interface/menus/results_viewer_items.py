@@ -117,17 +117,14 @@ class ResultsViewerItems(CommonMenuItems):
     def update_structural_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(True)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_acoustic_analysis_visibility_items(self):
         self.item_top_results_viewer_acoustic.setHidden(False)
         self.item_top_results_viewer_structural.setHidden(True)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_coupled_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(False)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_items(self):
         """Enables and disables the Child Items on the menu after the solution is done."""

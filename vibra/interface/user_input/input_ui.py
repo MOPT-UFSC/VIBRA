@@ -76,7 +76,7 @@ class InputUi:
             self.main_window.action_model_workspace_callback()
             obj = self.process_input(MeshSetupInputs)
             if obj.complete:
-                self.model_setup_items.update_items_visibility_according_to_physical_domain()
+                self.model_setup_items.enable_and_expand_menu_items()
 
     def generate_mesh(self):
         LoadingWindow(app().project.generate_mesh).run()
