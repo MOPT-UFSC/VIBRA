@@ -159,7 +159,10 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
 
     def initialize_variables(self):
+
+        self.connectivity = None
         self.element_label = "acoustic_tetrahedron_4"
+
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
         self.solids_connectivity = self.model.mesh.solids_connectivity
 
@@ -315,6 +318,9 @@ class ACT_TETRAHEDRON_4C(Element3D):
         """
 
         omega = 2 * np.pi * frequencies
+
+        if self.connectivity is None:
+            self.reorder_connect()
 
         node_ids = self.connectivity[element_id, 1:]
         Pe = nodal_pressures[node_ids, :]
