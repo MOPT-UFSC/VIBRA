@@ -79,6 +79,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_textures()
         self._create_surfaces()
 
+        self._create_selection_actor()
         self._create_empty_actor()
         self._create_material_volume_actor()
         self._create_material_wall_actor()
@@ -290,6 +291,20 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def _create_empty_actor(self):
         self.empty_actor = self._new_actor_extraction("empty")
         self.empty_actor.SetTexture(self.chess_texture)
+    
+    def _create_selection_actor(self):
+        '''
+        This is the only pickable actor that extracts all cells.
+
+        It is used to enable selection whithout further modifications
+        and the performance does not degrade too much.
+    
+        The selection actor has opacity 0 so it is "rendered" but is not visible.        
+        '''
+        self.ghost_actor = self._new_actor_extraction("selection")
+        self.ghost_actor.GetProperty().SetOpacity(1e-12)
+        self.ghost_actor.PickableOn()
+        self.extractors["selection"].ExtractAllCellsOn()
 
     def _create_material_volume_actor(self):
         self.material_actor = self._new_actor_extraction("material_volume")
@@ -303,7 +318,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.material_actor = self._new_actor_extraction("material_wall")
         self.material_actor.GetProperty().SetSpecularPower(80)
         self.material_actor.GetProperty().SetSpecular(1.5)
-        self.material_actor.GetProperty().SetDiffuse(0.6)
+        self.material_actor.GetProperty().SetDiffuse(0.7)
         self.material_actor.GetProperty().SetNormalScale(0.5)
         self.material_actor.GetProperty().SetNormalTexture(self.material_normal_texture)
         self.material_actor.SetTexture(self.wall_texture)
@@ -316,7 +331,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.fluid_actor.GetProperty().SetSpecular(0.8)
         self.fluid_actor.GetProperty().SetSpecularPower(100)
         self.fluid_actor.GetProperty().SetNormalScale(1.2)
-        self.fluid_actor.SetTexture(self.wave_texture)
 
     def _create_porous_actor(self):
         self.porous_actor = self._new_actor_extraction("porous")
@@ -347,8 +361,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.data >> extractor >> mapper
 
         self.actor = vtkActor(mapper=mapper)
-        self.AddPart(self.actor)
+        self.actor.PickableOff()
 
+        self.AddPart(self.actor)
         return self.actor
 
     def _create_textures(self):
@@ -357,5 +372,4 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.perforated_opacity_texture = read_texture(TEXTURE_DIR / "perforated_opacity.png")
         self.perforated_normal_texture = read_texture(TEXTURE_DIR / "perforated_normal.jpg")
         self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
-        self.wave_texture = read_texture(TEXTURE_DIR / "wave_texture.png")
         self.wall_texture = read_texture(TEXTURE_DIR / "wall_texture.png")
