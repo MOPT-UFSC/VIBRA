@@ -20,7 +20,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model

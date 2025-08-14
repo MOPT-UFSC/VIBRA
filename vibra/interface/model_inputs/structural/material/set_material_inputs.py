@@ -26,9 +26,8 @@ class MaterialInputs(SetMaterial_UI):
 
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh

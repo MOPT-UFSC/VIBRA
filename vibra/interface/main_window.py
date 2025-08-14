@@ -493,6 +493,11 @@ class MainWindow(MainWindow_UI):
             if hasattr(widget, "update_renderer_font_size"):
                 widget.update_renderer_font_size()
 
+    def workspace_updating_for_model_setup(self):
+        mesh_workspace = app().main_window.action_mesh_workspace.isChecked()
+        if mesh_workspace:
+            app().main_window.action_model_workspace_callback()
+
     def action_model_workspace_callback(self):
         self.action_node_view.setToolTip("Points view")
         self.action_model_workspace.setChecked(True)

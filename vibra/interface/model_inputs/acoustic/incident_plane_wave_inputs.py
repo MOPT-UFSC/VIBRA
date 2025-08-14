@@ -22,15 +22,14 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
-
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+       
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -46,7 +45,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
@@ -68,7 +67,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.treeWidget_incident_plane_wave.itemClicked.connect(self.on_click_item)
         self.treeWidget_incident_plane_wave.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def _configure_qt_variables(self):
         #
@@ -121,7 +120,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def geometry_selection_callback(self):
 
-        surfaces = self.main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
 
         if surfaces:
             text = ", ".join([str(i) for i in surfaces])

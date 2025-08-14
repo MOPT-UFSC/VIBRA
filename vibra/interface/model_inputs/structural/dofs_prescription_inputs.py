@@ -23,14 +23,13 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -972,10 +971,10 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
-                self.main_window.action_mesh_workspace_callback()
+                app().main_window.action_mesh_workspace_callback()
 
             else:
-                self.main_window.action_model_workspace_callback()
+                app().main_window.action_model_workspace_callback()
 
             self.lineEdit_selection_id.setText(item.text(0))
 

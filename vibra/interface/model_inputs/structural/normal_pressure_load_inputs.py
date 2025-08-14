@@ -22,12 +22,12 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
-        app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()

@@ -28,15 +28,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
-
+        app().main_window.set_input_widget(self)
+ 
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
+        self.model_setup_workspace()
         self._initialize()
         self._config_window()
         self._config_widgets()
@@ -47,6 +46,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         while self.keep_window_open:
             self.exec()
+
+    def model_setup_workspace(self):
+        mesh_workspace = app().main_window.action_mesh_workspace.isChecked()
+        if mesh_workspace:
+            app().main_window.action_model_workspace_callback()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
