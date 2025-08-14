@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(559, 506)
+        Dialog.resize(559, 513)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -435,6 +435,7 @@ class Ui_Dialog(object):
 
         self.label_5 = QLabel(self.frame_4)
         self.label_5.setObjectName(u"label_5")
+        self.label_5.setEnabled(True)
         self.label_5.setMinimumSize(QSize(120, 0))
         self.label_5.setMaximumSize(QSize(132, 16777215))
         self.label_5.setFont(font1)
@@ -455,6 +456,7 @@ class Ui_Dialog(object):
 
         self.label_18 = QLabel(self.frame_4)
         self.label_18.setObjectName(u"label_18")
+        self.label_18.setEnabled(True)
         self.label_18.setMinimumSize(QSize(40, 0))
         self.label_18.setMaximumSize(QSize(40, 16777215))
         self.label_18.setFont(font1)
@@ -601,6 +603,7 @@ class Ui_Dialog(object):
 
         self.label_19 = QLabel(self.frame_5)
         self.label_19.setObjectName(u"label_19")
+        self.label_19.setEnabled(False)
         self.label_19.setMinimumSize(QSize(40, 0))
         self.label_19.setMaximumSize(QSize(40, 16777215))
         self.label_19.setFont(font1)
@@ -609,6 +612,7 @@ class Ui_Dialog(object):
 
         self.label_7 = QLabel(self.frame_5)
         self.label_7.setObjectName(u"label_7")
+        self.label_7.setEnabled(False)
         self.label_7.setMinimumSize(QSize(120, 0))
         self.label_7.setMaximumSize(QSize(132, 16777215))
         self.label_7.setFont(font1)
@@ -641,6 +645,7 @@ class Ui_Dialog(object):
 
         self.label_10 = QLabel(self.frame_5)
         self.label_10.setObjectName(u"label_10")
+        self.label_10.setEnabled(False)
         self.label_10.setMinimumSize(QSize(120, 0))
         self.label_10.setMaximumSize(QSize(132, 16777215))
         self.label_10.setFont(font1)
@@ -659,6 +664,7 @@ class Ui_Dialog(object):
 
         self.label_22 = QLabel(self.frame_5)
         self.label_22.setObjectName(u"label_22")
+        self.label_22.setEnabled(False)
         self.label_22.setMinimumSize(QSize(40, 0))
         self.label_22.setMaximumSize(QSize(40, 16777215))
         self.label_22.setFont(font1)

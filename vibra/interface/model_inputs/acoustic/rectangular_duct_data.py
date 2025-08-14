@@ -33,10 +33,13 @@ class RectangularDuctData:
 
     @classmethod
     def set_data(self, data: dict) -> "RectangularDuctData":
-        if "values" in data:
-            data.pop("values")
+        data_copy = data.copy()
+        fields_name = list()
+        for field in fields(RectangularDuctData):
+            fields_name.append(field.name)
         
-        if "model_id" in data:
-            data.pop("model_id")
+        for key in data:
+            if key not in fields_name:
+                data_copy.pop(key)
 
-        return RectangularDuctData(**data)
+        return RectangularDuctData(**data_copy)

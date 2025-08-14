@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>559</width>
-    <height>506</height>
+    <height>513</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1222,6 +1222,9 @@
                  </item>
                  <item row="4" column="1">
                   <widget class="QLabel" name="label_5">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>120</width>
@@ -1285,6 +1288,9 @@
                  </item>
                  <item row="4" column="5">
                   <widget class="QLabel" name="label_18">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>40</width>
@@ -1706,6 +1712,9 @@
                  </item>
                  <item row="3" column="5">
                   <widget class="QLabel" name="label_19">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>40</width>
@@ -1730,6 +1739,9 @@
                  </item>
                  <item row="3" column="1">
                   <widget class="QLabel" name="label_7">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>120</width>
@@ -1824,6 +1836,9 @@
                  </item>
                  <item row="2" column="1">
                   <widget class="QLabel" name="label_10">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>120</width>
@@ -1875,6 +1890,9 @@
                  </item>
                  <item row="2" column="5">
                   <widget class="QLabel" name="label_22">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>40</width>

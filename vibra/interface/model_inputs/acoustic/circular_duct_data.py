@@ -30,11 +30,14 @@ class CircularDuctData:
     
     @classmethod
     def set_data(self, data: dict) -> "CircularDuctData":
-        if "values" in data:
-            data.pop("values")
+        data_copy = data.copy()
+        fields_name = list()
+        for field in fields(CircularDuctData):
+            fields_name.append(field.name)
+        
+        for key in data:
+            if key not in fields_name:
+                data_copy.pop(key)
 
-        if "model_id" in data:
-            data.pop("model_id")
-
-        return CircularDuctData(**data)
+        return CircularDuctData(**data_copy)
 
