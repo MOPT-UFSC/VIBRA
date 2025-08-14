@@ -43,8 +43,8 @@ class ProjectFile:
         self.harmonic_solution_filepath = self.path / "harmonic_solution.hdf5"
         self.geometry_folder = self.path / "geometry_file"
 
-    def write_geometry_in_file(self, path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
-        basename = os.path.basename(path)
+    def write_geometry_in_file(self, path: Path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
+        basename = path.name
         internal_path = self.geometry_folder / basename
 
         shutil.rmtree(self.geometry_folder, ignore_errors=True)
@@ -608,19 +608,20 @@ class ProjectFile:
             app().main_window.project_data_modified = True
 
     def handling_harmonic_solution_results(self):
-        if self.results_data_filepath.exists():
-            with h5py.File(self.results_data_filepath, "r") as f_src:
-                # Converting Acoustic Harmonic solution in the old form.
-                analysis = f_src.get("harmonic_acoustic")
-                if analysis:
-                    frequencies = analysis.get("frequencies")
-                    if frequencies:
-                        solution_dset = analysis["solution"]
-                        if solution_dset.chunks is None:
-                            solution = solution_dset[()]
-                            writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
-                            for i, freq in enumerate(frequencies):
-                                writer[:, i] = solution[:, i]
+        if not self.results_data_filepath.exists():
+            return
+        with h5py.File(self.results_data_filepath, "r") as f_src:
+            # Converting Acoustic Harmonic solution in the old form.
+            analysis = f_src.get("harmonic_acoustic")
+            if analysis:
+                frequencies = analysis.get("frequencies")
+                if frequencies:
+                    solution_dset = analysis["solution"]
+                    if solution_dset.chunks is None:
+                        solution = solution_dset[()]
+                        writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
+                        for i, freq in enumerate(frequencies):
+                            writer[:, i] = solution[:, i]
 
     def get_solution_writer(self, num_rows, columns, dtype):
         return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype)
@@ -657,15 +658,13 @@ class ProjectFile:
         return results_data
 
     def remove_geometry_data_from_project_file(self):
-        os.remove(self.geometry_data_filepath)
+        self.geometry_data_filepath.unlink(missing_ok=True)
 
     def remove_model_properties_from_project_file(self):
-        if self.model_properties_filepath.exists():
-            os.remove(self.model_properties_filepath)
+        self.model_properties_filepath.unlink(missing_ok=True)
 
     def remove_mesh_data_from_project_file(self):
-        if self.mesh_data_filepath.exists():
-            os.remove(self.mesh_data_filepath)
+        self.mesh_data_filepath.unlink(missing_ok=True)
 
     def remove_results_data_from_project_file(self):
         if self.results_data_filepath.exists():
@@ -673,11 +672,10 @@ class ProjectFile:
 
     def archive_project(self, zip_path: Path):
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(self.path):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arcname = os.path.relpath(file_path, self.path)
-                    zipf.write(file_path, arcname)
+            for path in self.path.rglob("*"):
+                if path.is_file():
+                    arcname = path.relative_to(self.path)
+                    zipf.write(path, arcname)
 
     def extract_project(self, path: Path):
         with zipfile.ZipFile(path, 'r') as zipf:

@@ -833,7 +833,7 @@ class MainWindow(MainWindow_UI):
             return False
 
         app().file.write_geometry_in_file(
-            load_path,
+            Path(load_path),
             app().project.model.length_unit,
             app().project.model.geometry_qf,
         )
