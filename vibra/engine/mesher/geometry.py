@@ -4,13 +4,16 @@ import numpy as np
 from vibra.utils.bidict import bidict
 
 class Geometry:
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self.length_unit = kwargs.get("length_unit", "milimeter")
+        self.geometry_qf = kwargs.get("geometry_qf", 1.0)
+
         self.geometry_imported = True
         
         self.points_coords = dict()        
-        self.solids_to_surfaces = bidict() #3d -> 2d    
-        self.surfaces_to_curves = bidict() #2d -> 1d     
-        self.curves_to_points = bidict() #1d -> 0d
+        self.solids_to_surfaces = bidict()
+        self.surfaces_to_curves = bidict()     
+        self.curves_to_points = bidict()
 
         # centers
         self.solids_centers = dict()
@@ -32,6 +35,12 @@ class Geometry:
         self.straight_lines = dict()
         self.straight_curves = dict()
 
+        # About geometry information
+        self.points = list()
+        self.lines = list()
+        self.surfaces = list()
+        self.volumes = list()
+
     def read_file(self, file_path : str):
         gmsh.initialize()
         gmsh.open(file_path)
@@ -39,43 +48,19 @@ class Geometry:
         gmsh.model.occ.synchronize()
 
         self.process_geometry_information()
-        self.process_downwards_adjacencies_from_entities()
         gmsh.finalize()
 
-
-    def process_downwards_adjacencies_from_entities(self):
-        """This method processes the downwards adjacencies
-        from the geometric entities.
-        """
-
-        self.solids_to_surfaces.clear()
-        self.surfaces_to_curves.clear()
-        self.curves_to_points.clear()
-
-        for dim, tag in gmsh.model.getEntities():
-            _, downwards = gmsh.model.getAdjacencies(dim, tag)
-            downwards = [int(_id) for _id in downwards]
-
-            if dim == 3:
-                self.solids_to_surfaces[tag] = tuple(downwards)
-
-            elif dim == 2:
-                self.surfaces_to_curves[tag] = tuple(downwards)
-
-            elif dim == 1:
-                self.curves_to_points[tag] = tuple(downwards)
         
     def process_geometry_information(self):
         self.clear_geometry_data()
 
-        labels = ["points", "lines", "surfaces", "volumes"]
-
-        unit_factor = 1e-3
+        unit_factor = self.get_length_unit_factor()
         for dim, tag in gmsh.model.getEntities():
-            label = labels[dim]
-            self.geometry_information[label].append(tag)
+            _, downwards = gmsh.model.getAdjacencies(dim, tag)
+            downwards = [int(_id) for _id in downwards]
 
             if dim == 0:
+                self.points.append(tag)
                 continue
 
             value = 0.0
@@ -84,12 +69,18 @@ class Geometry:
 
             if dim == 3:
                 self.solids_volumes[tag] = value * (unit_factor**3)
+                self.solids_to_surfaces[tag] = tuple(downwards)
+                self.volumes.append(tag)
 
             elif dim == 2:
                 self.surfaces_areas[tag] = value * (unit_factor**2)
+                self.surfaces_to_curves[tag] = tuple(downwards)
+                self.surfaces.append(tag)
 
             elif dim == 1:
                 self.curves_lengths[tag] = value * (unit_factor**1)
+                self.curves_to_points[tag] = tuple(downwards)
+                self.lines.append(tag)
 
     def clear_geometry_data(self):
         self.points_coords.clear()
@@ -117,4 +108,15 @@ class Geometry:
         self.straight_lines.clear()
         self.straight_curves.clear()
 
-        self.geometry_information = defaultdict(list)
+
+
+    def set_length_unit(self, length_unit: str = "milimeter"):
+        self.length_unit = length_unit
+    
+    def get_length_unit_factor(self):
+        if self.length_unit == "milimeter":
+            return 1e-3
+        elif self.length_unit == "inch":
+            return 0.0254
+        else:
+            return 1
