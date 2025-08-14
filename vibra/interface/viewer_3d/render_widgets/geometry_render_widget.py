@@ -47,9 +47,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
-        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
-        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -130,10 +130,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor = SymbolsActor(self.renderer)
 
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
         self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(has_hidden_part)
+        self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
 
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -171,7 +169,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         color = Color(247, 0, 255)
         self.renderer.SetBackground(color.to_rgb_f())
         self.renderer.SetBackground2(color.to_rgb_f())
-        self.faces_actor.set_color((255, 255, 255))
+        self.faces_actor.set_color(Color(255, 255, 255))
         self.lines_actor.set_color(Color(0, 0, 0))
 
         self.disable_scale_bar()
@@ -189,16 +187,13 @@ class GeometryRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-
         self.symbols_actor.SetVisibility(
             visualization.acoustic_symbols | visualization.structural_symbols
         )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.points_actor.SetPickable(visualization.faces)
         self.lines_actor.SetPickable(visualization.faces)
@@ -229,10 +224,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.faces_actor = FacesActor(mesh)
         self.add_actors(self.faces_actor)
 
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
         visualization = app().main_window.visualization_filter
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.update_section_plane()
         # self.update()
@@ -338,9 +331,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
         self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
         
-        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color.to_rgb()
-        self.selection_faces_color = app().config.user_preferences.selection_faces_color.to_rgb()
-        self.selection_lines_color = app().config.user_preferences.selection_lines_color.to_rgb()
+        self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
+        self.selection_faces_color = app().config.user_preferences.selection_faces_color
+        self.selection_lines_color = app().config.user_preferences.selection_lines_color
 
         self.update_info_text()
 
@@ -383,9 +376,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
-        section_plane = app().main_window.section_plane
-        has_hidden_part = bool(app().main_window.hidden_surfaces) or section_plane.cutting
-        self.ghost_actor.SetVisibility(visualization.ghost and has_hidden_part)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()

@@ -13,6 +13,7 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.data_handler.data_importer import DataImporter
 
 from copy import deepcopy
 
@@ -228,11 +229,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_clean_inputs, self.pushButton_load_path]
         change_icon_color_for_widgets(widgets, icon_color)
@@ -412,44 +413,30 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load: bool=False):
 
         title = "Error reached while loading 'user-defined transfer impedance' table"
+        imported_file = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
+               imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the user-defined transfer impedance")
+               
+               if not imported_data:
+                return
+               
+               imported_file = imported_data.data
+               lineEdit.setText(imported_data.path)
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
-
-                caption = "Choose a table to import the user-defined transfer impedance"
-                imported_table_path, check = QFileDialog.getOpenFileName(  None, 
-                                                                            caption, 
-                                                                            path, 
-                                                                            "Files (*.csv; *.dat; *.txt)"
-                                                                        )
-
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            lineEdit.setToolTip(f"User-defined normalized transfer impedance table path: {imported_table_path}")
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_values = np.loadtxt(imported_table_path, delimiter=",")
-
-            if imported_values.shape[1] < 3:
+            if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            mask = imported_values[:, 0] > 0
-
-            return imported_values[mask, :]
+            return imported_file
 
         except Exception as log_error:
             message = str(log_error)

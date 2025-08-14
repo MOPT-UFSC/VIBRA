@@ -149,6 +149,11 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         if coords is not None and property is not None:
             x, y, z, *_ = property["values"]
 
+            # handle table attributed values
+            x = x[0] if isinstance(x, np.ndarray) else x
+            y = y[0] if isinstance(y, np.ndarray) else y
+            z = z[0] if isinstance(z, np.ndarray) else z
+
             # alternate add_symbol function to a generic one
             if x is not None:
                 self.add_symbol(sources.create_cone_source, coords, (1, 0, 0), color=color_names.GREEN)
@@ -208,6 +213,12 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
             
             coords, normal = self._get_center_coords_and_normals(surface_id)
             x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+
+            # handle table attributed values
+            x = x[0] if isinstance(x, np.ndarray) else x
+            y = y[0] if isinstance(y, np.ndarray) else y
+            z = z[0] if isinstance(z, np.ndarray) else z
+
             orientation = np.real((x, y, z))
             is_pointing = np.dot(normal, orientation) < 0
             shape = sources.create_quadruple_arrow_source if is_pointing else sources.create_outwards_triple_arrow_source
@@ -216,9 +227,15 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         if line_id != -1:
             line_properties = app().project.model.properties.line_properties
             property = line_properties[property_name, line_id]
-            
+
             coords = self._get_center_coords_and_normals_line(line_id)
             x, y, z, *_ = [(i if i is not None else 0) for i in property["values"]]
+
+            # handle table attributed values
+            x = x[0] if isinstance(x, np.ndarray) else x
+            y = y[0] if isinstance(y, np.ndarray) else y
+            z = z[0] if isinstance(z, np.ndarray) else z
+
             orientation = np.real((x, y, z))
             self.add_symbol(sources.create_arrow_source, coords[0], orientation, color=color_names.RED_2)
             self.add_symbol(sources.create_arrow_source, coords[1], orientation, color=color_names.RED_2)
@@ -229,8 +246,12 @@ class SymbolsActor(CommonSymbolsActorVariableSize):
         property = surface_properties[property_name, surface_id]
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        x = property["values"]
-        shape = sources.create_outwards_normal_pressure_load if x[0].real > 0 else sources.create_normal_pressure_load
+        x = property["values"][0]
+
+        # handle table attributed values
+        x = x[0] if isinstance(x, np.ndarray) else x
+
+        shape = sources.create_outwards_normal_pressure_load if np.real(x) > 0 else sources.create_normal_pressure_load
         self.add_symbol(shape, coords, normal, color=color_names.RED_2)
     
     def _build_specific_impedance(self, property_name: str, surface_id: int = -1, *args, **kwargs):

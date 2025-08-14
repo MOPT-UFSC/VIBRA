@@ -64,8 +64,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         #
         self.main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_1_clicked)
-        self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_2_clicked)
+        self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_input_clicked)
+        self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
 
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
@@ -86,11 +86,30 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         widget.installEventFilter(filter)
         return filter.clicked
 
-    def lineEdit_1_clicked(self):
+    def lineEdit_input_clicked(self):
         self.current_lineEdit = self.lineEdit_input_surface_id
+        self.highlight_selected_line_edit()
 
-    def lineEdit_2_clicked(self):
+    def lineEdit_output_clicked(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
+        self.highlight_selected_line_edit()
+
+    def highlight_selected_line_edit(self):
+
+        if self.current_lineEdit == self.lineEdit_input_surface_id:
+            self.lineEdit_output_surface_id.setStyleSheet("")
+        else:
+            self.lineEdit_input_surface_id.setStyleSheet("")
+
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(200, 0, 0); border-width: 2px;""")
+
+    def alternate_selected_line_edit(self):
+        if self.current_lineEdit == self.lineEdit_input_surface_id:
+            self.lineEdit_output_clicked()
+            self.lineEdit_output_surface_id.setFocus()
+        else:
+            self.lineEdit_input_clicked()
+            self.lineEdit_input_surface_id.setFocus()
     
     def geometry_selection_callback(self):
 
@@ -288,6 +307,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
+        elif event.key() == Qt.Key_Down or event.key() == Qt.Key_Up:
+            self.alternate_selected_line_edit()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

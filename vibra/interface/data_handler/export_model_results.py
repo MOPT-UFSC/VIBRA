@@ -8,6 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import os
 # import openpyxl
 import numpy as np
+import platform
 from pathlib import Path
 
 window_title_1 = "Error"
@@ -29,13 +30,10 @@ class ExportModelResults(QFileDialog):
         if data:
             self.call_file_dialog_and_export_data(**kwargs)
 
-    def export_data_in_text_format(self, export_path, delimiter=","):
+    def export_data_in_text_format(self, export_path: str, delimiter: str = ","):
 
-        for key, data in self.data.items():
+        for data in self.data.values():
 
-            # selection_type, selection_id = key
-            # suffix = f"{selection_type}_{selection_id}"
-            
             x_data = data["x_data"]
             y_data = data["y_data"]
             unit = data["unit"]
@@ -50,7 +48,7 @@ class ExportModelResults(QFileDialog):
 
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
-    def export_data_in_spreadsheet_format(self, export_path, **kwargs):
+    def export_data_in_spreadsheet_format(self, export_path: str, **kwargs):
 
         from openpyxl import load_workbook
         from pandas import ExcelWriter, DataFrame, read_excel
@@ -59,18 +57,18 @@ class ExportModelResults(QFileDialog):
         existing_path = kwargs.get("existing_path", "")
 
         if Path(existing_path).exists():
-            if Path(existing_path).suffix in [".xls", ".xlsx"]:
-
+            ext = existing_path.split(".")[-1]
+            if ext in ["xls", "xlsx"]:
                 wb = load_workbook(existing_path)
                 sheetnames = wb.sheetnames
 
                 for sheet_name in sheetnames:
                     existing_data_frames[sheet_name] = read_excel(
-                                                                  existing_path, 
-                                                                  sheet_name = sheet_name, 
-                                                                  header = 0, 
-                                                                  usecols = [0,1,2,3]
-                                                                  )
+                                                                    existing_path, 
+                                                                    sheet_name = sheet_name, 
+                                                                    header = 0, 
+                                                                    usecols = [0,1,2,3]
+                                                                    )
 
         with ExcelWriter(export_path) as writer:
 
@@ -125,12 +123,16 @@ class ExportModelResults(QFileDialog):
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 
-            file_path, check = self.getSaveFileName(self.main_window, 
+            kwargs = dict()
+            if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+            file_path, file_extension = self.getSaveFileName(self.main_window, 
                                                     caption, 
                                                     directory_path, 
-                                                    filter = _filter)
-
-            if not check:
+                                                    filter = _filter,
+                                                    **kwargs)
+            
+            if not file_extension:
                 return
 
         else:
@@ -138,8 +140,8 @@ class ExportModelResults(QFileDialog):
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
-        sufix = Path(file_path).suffix      
-        if sufix == ".xlsx":
+        ext = file_path.split(".")[-1]      
+        if ext in ["xls", "xlsx"]:
             self.export_data_in_spreadsheet_format(file_path, existing_path=existing_path)
         else:
             self.export_data_in_text_format(file_path)

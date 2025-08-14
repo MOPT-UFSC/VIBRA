@@ -1,7 +1,7 @@
 # fmt: off
-from PySide6.QtWidgets import QDialog, QTreeWidgetItem
+from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
@@ -9,6 +9,8 @@ from vibra.interface.ui_generated.model.setup.acoustic.porous_material_model_inp
 
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.show_porous_material_model_equations import ShowPorousMaterialModelEquations
+from vibra.interface.model_inputs.acoustic.delany_bazley_data import DelanyBazleyData
+from vibra.interface.model_inputs.acoustic.jca_data import JCAData
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -18,26 +20,35 @@ from vibra.engine.dissipation_models.porous_materials_models import PorousMateri
 
 import warnings
 import numpy as np
+from collections import defaultdict
+from enum import IntEnum
+from typing import Dict, List
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
+
+
+class PMModels(IntEnum):
+    DELANY_BAZLEY = 0
+    DELANY_BAZLEY_MIKI = 1
+    JCA = 2
+    JCAL = 3
 
 
 class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._initialize()
         self._config_window()
+        self._configure_widgets()
         self._create_connections()
         self._paint_icons()
         self.load_info()
@@ -51,6 +62,14 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+
+    def _configure_widgets(self):
+        #
+        for i, width in enumerate([120, 160]):
+            self.treeWidget_porous_material_model.setColumnWidth(i, width)
+        #
+        self.tableWidget_DBM.verticalHeader().setVisible(True)
+        self.tableWidget_JCAL.verticalHeader().setVisible(True)
 
     def _initialize(self):
         self.selected_fluid = None
@@ -73,13 +92,16 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_DB_equations.clicked.connect(self.show_equations_for_DBM_callback)
         self.pushButton_DBM_equations.clicked.connect(self.show_equations_for_DBM_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_porous_material_model)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_porous_material_model)
+        #
+        self.tableWidget_DBM.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="delany"))
+        self.tableWidget_JCAL.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="jca"))
         #
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
-        self.main_window.theme_changed.connect(self._paint_icons)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
@@ -87,11 +109,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_DB_equations, self.pushButton_DBM_equations]
         change_icon_color_for_widgets(widgets, icon_color)
@@ -101,7 +123,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     
     def geometry_selection_callback(self):
 
-        volumes = self.main_window.selected_geometry_volumes
+        volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
 
@@ -155,8 +177,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setCurrentIndex(2)
             self.doubleSpinBox_porosity_JCA.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCA.setValue(pm_data["tortuosity"])
-            self.lineEdit_thermal_characteristic_length_JCA.setText(pm_data["thermal_characteristic_length"])
-            self.lineEdit_viscous_characteristic_length_JCA.setText(pm_data["viscous_characteristic_length"])
+            self.lineEdit_thermal_characteristic_length_JCA.setText(str(pm_data["thermal_characteristic_length"]))
+            self.lineEdit_viscous_characteristic_length_JCA.setText(str(pm_data["viscous_characteristic_length"]))
             self.doubleSpinBox_flow_resistivity_JCA.setValue(pm_data["flow_resistivity"])
 
         elif pm_model == "Jhonson-Champoux-Allard-Lafarge":
@@ -164,8 +186,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.tabWidget_main.setCurrentIndex(3)
             self.doubleSpinBox_porosity_JCAL.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCAL.setValue(pm_data["tortuosity"])
-            self.lineEdit_thermal_characteristic_length_JCAL.setText(pm_data["thermal_characteristic_length"])
-            self.lineEdit_viscous_characteristic_length_JCAL.setText(pm_data["viscous_characteristic_length"])
+            self.lineEdit_thermal_characteristic_length_JCAL.setText(str(pm_data["thermal_characteristic_length"]))
+            self.lineEdit_viscous_characteristic_length_JCAL.setText(str(pm_data["viscous_characteristic_length"]))
             self.doubleSpinBox_flow_resistivity_JCAL.setValue(pm_data["flow_resistivity"])
 
     def show_equations_for_DBM_callback(self):
@@ -184,12 +206,23 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.doubleSpinBox_porous_material_depth.setDisabled(False)
 
     def remove_callback(self):
-        if self.lineEdit_selection_id.text() != "":
-            volume_id = int(self.lineEdit_selection_id.text())
-            self.properties._remove_volume_property("porous_material_model", volume_id)
-            app().file.write_model_properties_in_file()
-            self.load_info()
-            self.actions_to_finalize()
+        selected_items = self.treeWidget_porous_material_model.selectedItems()
+
+        if not selected_items:
+            return
+        
+        selected_item = selected_items[0]
+
+        volume_id = int(selected_item.text(0))
+
+        self.properties._remove_volume_property("porous_material_model", volume_id)
+        app().file.write_model_properties_in_file()
+
+        self.load_info()
+        self.actions_to_finalize()
+
+        if len(self.map_model_id_to_model) > 0:
+            self.tabWidget_main.setCurrentIndex(5)
 
     def reset_callback(self):
 
@@ -221,22 +254,25 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 self.actions_to_finalize()
                 self.close()
 
-    def tabEvent_porous_material_model(self):
+    def tab_event_porous_material_model(self):
 
-        tab_index = self.tabWidget_main.currentIndex()
+        pm_tab = self.tabWidget_main.currentIndex() <= 3
 
-        if tab_index == 4:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.comboBox_attribution_type.setDisabled(True)
+        self.frame_plot_setup.setVisible(pm_tab)
+        self.frame_plot_buttons.setVisible(pm_tab)
+        self.pushButton_confirm.setEnabled(pm_tab)
 
-        else:
-
+        if pm_tab:
             self.comboBox_attribution_type.setDisabled(False)
             if self.comboBox_attribution_type.currentIndex() == 0:
                 return
 
             self.lineEdit_selection_id.setDisabled(False)
+
+        else:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            self.comboBox_attribution_type.setDisabled(True)
 
     def on_click_item(self, item):
 
@@ -254,6 +290,42 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
+    def cell_changed_callback(self, row, column, model):        
+        item = None
+        model_id = None
+        parameter_position = row - 2
+
+        if model == "delany":
+            item = self.tableWidget_DBM.item(row, column)
+            model_id = int(self.tableWidget_DBM.item(0, column).text())
+        else:
+            item = self.tableWidget_JCAL.item(row, column)
+            model_id = int(self.tableWidget_JCAL.item(0, column).text())
+
+        new_parameter_value = None
+        value_error = False
+        
+        try:
+            new_parameter_value = float(item.text())
+        except:
+            value_error = True
+        
+        parameters_position = self.map_model_id_to_model[model_id].get_parameters_position()
+        model = self.map_model_id_to_model[model_id]
+
+        if value_error:
+            new_parameter_value = getattr(model, parameters_position[parameter_position])
+            item.setText(str(new_parameter_value))
+        else:
+            setattr(model, parameters_position[parameter_position], new_parameter_value)
+
+            volumes = self.map_model_id_to_volumes[model_id]
+
+            for volume in volumes:
+                self.properties._set_property("porous_material_model", model.get_data(), volume=volume)
+            
+            app().file.write_model_properties_in_file()
+                                                  
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
         if index == 0:
@@ -264,84 +336,205 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.lineEdit_selection_id.setEnabled(True)
         # self.comboBox_attribution_type.setCurrentIndex(index)
 
-    def update_tabs_visibility(self):
+    def map_existing_porous_materials(self):
+        self.map_model_id_to_volumes: Dict[int, List[str]] = defaultdict(list)
+        self.map_model_id_to_model: Dict[int, DelanyBazleyData|JCAData] = dict()
 
-        volume_with_porous_material_model = list()
+        models = list()
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
-            if property == "porous_material_model":
-                volume_with_porous_material_model.append(volume_id)
 
-        if volume_with_porous_material_model:
-            self.tabWidget_main.setTabVisible(4, True)
-        else:
-            self.tabWidget_main.setTabVisible(4, False)
+            if property != "porous_material_model":
+                continue
+        
+                
+            try:
+                model = None
+                if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+                    model = DelanyBazleyData.set_data(data)
+                else:
+                    model = JCAData.set_data(data)
+                
+                if model not in models:
+                    models.append(model)
+
+                model_id = models.index(model) + 1
+                self.map_model_id_to_model[model_id] = model
+
+                if volume_id not in self.map_model_id_to_volumes[model_id]:
+                    self.map_model_id_to_volumes[model_id].append(volume_id)
+
+            except:
+                    title = "Porous Material Model Error"
+                    message = "An error occurred while trying to load the porous material model data "
+                    message += "from the project file. The porous material model will be deleted."
+                    PrintMessageInput([window_title_1, title, message])
+
+                    self.properties._reset_property("porous_material_model")
+                    app().main_window.update_symbols()
+
+                    return
 
     def load_info(self):
+        self.map_existing_porous_materials()
 
         self.treeWidget_porous_material_model.clear()
-        self.treeWidget_porous_material_model.setColumnWidth(0, 80)
-        self.treeWidget_porous_material_model.setColumnWidth(1, 160)
+        self.update_treeWidget_porous_materials()
+        self.configure_tables_and_tabs_widgets()
 
-        for key, data in self.properties.volume_properties.items():
+        delany_counter = 0
+        jca_counter = 0
 
-            property, volume_id = key
+        there_is_delany_model = False
+        there_is_jca_model = False
 
-            if property == "porous_material_model":
+        for _, (model_id, model_data) in enumerate(self.map_model_id_to_model.items()):
+            model = model_data.model
+            model_data_dict = model_data.get_data()
 
-                model = data["model"]
+            model_id_item = QTableWidgetItem(str(model_id))
+            model_item = QTableWidgetItem(self.addapt_model_name(model))
+            model_id_item.setFlags(Qt.ItemIsSelectable)
+            model_item.setFlags(Qt.ItemIsSelectable)
+            model_item.setToolTip(model)
+        
+            if model in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+                there_is_delany_model = True
 
-                model_inputs = list()
-                for key, value in data.items():
-                    if key != "model":
-                        model_inputs.append(value)
+                self.tableWidget_DBM.setItem(0, delany_counter, model_id_item)
+                self.tableWidget_DBM.setItem(1, delany_counter, model_item)
 
-                new = QTreeWidgetItem([str(volume_id), model, str(model_inputs)])
+                for k, model_input in enumerate(model_data_dict.values()):
+
+                    if isinstance(model_input, str):
+                        continue
+
+                    self.tableWidget_DBM.setItem(2+k, delany_counter, QTableWidgetItem(str(model_input)))
+
+                delany_counter += 1
+
+            else:
+                there_is_jca_model = True
+
+                self.tableWidget_JCAL.setItem(0, jca_counter, model_id_item)
+                self.tableWidget_JCAL.setItem(1, jca_counter, model_item)
+
+                for k, model_input in enumerate(model_data_dict.values()):
+
+                    if isinstance(model_input, str):
+                        continue
+
+                    self.tableWidget_JCAL.setItem(2+k, jca_counter, QTableWidgetItem(str(model_input)))
+
+                jca_counter += 1
+
+        if there_is_jca_model:
+            self.tabWidget_models.setTabVisible(1, True)
+        
+        if there_is_delany_model:
+            self.tabWidget_models.setTabVisible(0, True)
+            self.tabWidget_models.setCurrentIndex(0)
+
+        if there_is_jca_model or there_is_delany_model:
+            self.tabWidget_main.setTabVisible(4, True)
+            self.tabWidget_main.setTabVisible(5, True)
+            self.tabWidget_main.setCurrentIndex(4)
+        
+        self.update_tableWidget_DBM_items()
+        self.update_tableWidget_JCAL_items()
+    
+    def update_treeWidget_porous_materials(self):
+        for model_id, volume_ids in self.map_model_id_to_volumes.items():
+            model_data = self.map_model_id_to_model[model_id]
+
+            for volume_id in volume_ids:
+                new = QTreeWidgetItem([str(volume_id), self.addapt_model_name(model_data.model), str(model_id)])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_porous_material_model.addTopLevelItem(new)
+        
+    def configure_tables_and_tabs_widgets(self):
+        delany_count = 0
+        jca_count = 0
 
-        self.update_tabs_visibility()
+        for model in self.map_model_id_to_model.values():
+            if isinstance(model, DelanyBazleyData):
+                delany_count += 1
+            else:
+                jca_count += 1
 
-    # def check_selected_bodies(self):
-    #     str_selection_ids = self.lineEdit_selection_id.text()
-    #     volume_ids = self.mesh.check_selected_ids(str_selection_ids, selection="volumes")
-    #     if volume_ids is None:
-    #         self.lineEdit_selection_id.setFocus()
-    #         return True
+        self.tableWidget_DBM.clearContents()
+        self.tableWidget_DBM.blockSignals(True)
+        self.tableWidget_DBM.setRowCount(11)
+        self.tableWidget_DBM.setColumnCount(delany_count)
 
-    def get_Delany_Bazley_model_inputs(self):
-        material_model_data = {
-                                "model" : "Delany-Bazley",
-                                "C1" : self.doubleSpinBox_C1_DB.value(),
-                                "C2" : self.doubleSpinBox_C2_DB.value(),
-                                "C3" : self.doubleSpinBox_C3_DB.value(),
-                                "C4" : self.doubleSpinBox_C4_DB.value(),
-                                "C5" : self.doubleSpinBox_C5_DB.value(),
-                                "C6" : self.doubleSpinBox_C6_DB.value(),
-                                "C7" : self.doubleSpinBox_C7_DB.value(),
-                                "C8" : self.doubleSpinBox_C8_DB.value(),
-                                "flow_resistivity" : self.doubleSpinBox_flow_resistivity_DB.value()
-                               }
-        return material_model_data
+        self.tableWidget_JCAL.clearContents()
+        self.tableWidget_JCAL.blockSignals(True)
+        self.tableWidget_JCAL.setRowCount(7)
+        self.tableWidget_JCAL.setColumnCount(jca_count)
 
-    def get_Delany_Bazley_Miki_model_inputs(self):
-        material_model_data = {
-                                "model" : "Delany-Bazley-Miki",
-                                "C1" : self.doubleSpinBox_C1_DBM.value(),
-                                "C2" : self.doubleSpinBox_C2_DBM.value(),
-                                "C3" : self.doubleSpinBox_C3_DBM.value(),
-                                "C4" : self.doubleSpinBox_C4_DBM.value(),
-                                "C5" : self.doubleSpinBox_C5_DBM.value(),
-                                "C6" : self.doubleSpinBox_C6_DBM.value(),
-                                "C7" : self.doubleSpinBox_C7_DBM.value(),
-                                "C8" : self.doubleSpinBox_C8_DBM.value(),
-                                "flow_resistivity" : self.doubleSpinBox_flow_resistivity_DBM.value()
-                               }
-        return material_model_data
+        self.tabWidget_models.setTabVisible(0, False)
+        self.tabWidget_models.setTabVisible(1, False)
 
-    def get_Jhonson_Champoux_Allard_model_inputs(self):
+        self.tabWidget_main.setTabVisible(4, False)
+        self.tabWidget_main.setTabVisible(5, False)
+    
+    def update_tableWidget_DBM_items(self):
+        for i in range(self.tableWidget_DBM.rowCount()):
+            for j in range(self.tableWidget_DBM.columnCount()):
+                item = self.tableWidget_DBM.item(i, j)
+
+                if item is None:
+                    item = QTableWidgetItem()
+                    self.tableWidget_DBM.setItem(i, j, item)
+                    item.setFlags(Qt.ItemIsSelectable)
+
+                item.setTextAlignment(Qt.AlignCenter)
+        
+        self.tableWidget_DBM.blockSignals(False)
+    
+    def update_tableWidget_JCAL_items(self):
+        for i in range(self.tableWidget_JCAL.rowCount()):
+            for j in range(self.tableWidget_JCAL.columnCount()):
+                item = self.tableWidget_JCAL.item(i, j)
+
+                if item is None:
+                    item = QTableWidgetItem()
+                    self.tableWidget_JCAL.setItem(i, j, item)
+                    item.setFlags(Qt.ItemIsSelectable)
+
+                item.setTextAlignment(Qt.AlignCenter)
+
+        self.tableWidget_JCAL.blockSignals(False)
+    
+    def addapt_model_name(self, model:str) -> str:
+        if model == "Delany-Bazley":
+            return "DB"
+        elif model == "Delany-Bazley-Miki":
+            return "DBM"
+        elif model == "Jhonson-Champoux-Allard":
+            return "JCA"
+        
+        return "JCAL"
+
+    def get_Delany_Bazley_model_data(self) -> DelanyBazleyData:
+        return DelanyBazleyData(self.doubleSpinBox_C1_DB.value(), 
+                                self.doubleSpinBox_C2_DB.value(), self.doubleSpinBox_C3_DB.value(), 
+                                self.doubleSpinBox_C4_DB.value(), self.doubleSpinBox_C5_DB.value(), 
+                                self.doubleSpinBox_C6_DB.value(), self.doubleSpinBox_C7_DB.value(), 
+                                self.doubleSpinBox_C8_DB.value(), self.doubleSpinBox_flow_resistivity_DB.value(), 
+                                "Delany-Bazley",)
+
+    def get_Delany_Bazley_Miki_model_data(self) -> DelanyBazleyData:
+        return DelanyBazleyData(self.doubleSpinBox_C1_DBM.value(), 
+                                self.doubleSpinBox_C2_DBM.value(), self.doubleSpinBox_C3_DBM.value(), 
+                                self.doubleSpinBox_C4_DBM.value(), self.doubleSpinBox_C5_DBM.value(), 
+                                self.doubleSpinBox_C6_DBM.value(), self.doubleSpinBox_C7_DBM.value(), 
+                                self.doubleSpinBox_C8_DBM.value(), self.doubleSpinBox_flow_resistivity_DBM.value(),
+                                "Delany-Bazley-Miki")
+
+    def get_Jhonson_Champoux_Allard_model_data(self) -> JCAData:
 
         lineEdit = self.lineEdit_viscous_characteristic_length_JCA
         vcl = self.check_inputs(lineEdit, "Viscous characteristic length", only_positive=True)
@@ -355,18 +548,12 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             lineEdit.setFocus()
             return dict()
 
-        material_model_data = {
-                                "model" : "Jhonson-Champoux-Allard",
-                                "porosity" : self.doubleSpinBox_porosity_JCA.value(),
-                                "tortuosity" : self.doubleSpinBox_tortuosity_JCA.value(),
-                                "thermal_characteristic_length" : tcl,
-                                "viscous_characteristic_length" : vcl,
-                                "flow_resistivity" : self.doubleSpinBox_flow_resistivity_JCA.value()
-                               }
+        return JCAData(self.doubleSpinBox_porosity_JCA.value(),
+                      self.doubleSpinBox_tortuosity_JCA.value(), vcl,
+                      tcl, self.doubleSpinBox_flow_resistivity_JCA.value(),
+                      "Jhonson-Champoux-Allard")
 
-        return material_model_data
-
-    def get_Jhonson_Champoux_Allard_Lafarge_model_inputs(self):
+    def get_Jhonson_Champoux_Allard_Lafarge_model_data(self) -> JCAData:
 
         lineEdit = self.lineEdit_viscous_characteristic_length_JCAL
         vcl = self.check_inputs(lineEdit, "Viscous characteristic length", only_positive=True)
@@ -380,28 +567,22 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             lineEdit.setFocus()
             return dict()
 
-        material_model_data = {
-                                "model" : "Jhonson-Champoux-Allard-Lafarge",
-                                "porosity" : self.doubleSpinBox_porosity_JCAL.value(),
-                                "tortuosity" : self.doubleSpinBox_tortuosity_JCAL.value(),
-                                "thermal_characteristic_length" : tcl,
-                                "viscous_characteristic_length" : vcl,
-                                "flow_resistivity" : self.doubleSpinBox_flow_resistivity_JCAL.value()
-                               }
-
-        return material_model_data
+        return JCAData(self.doubleSpinBox_porosity_JCAL.value(),
+                      self.doubleSpinBox_tortuosity_JCAL.value(), vcl,
+                      tcl, self.doubleSpinBox_flow_resistivity_JCAL.value(),
+                      "Jhonson-Champoux-Allard-Lafarge")
 
     def attribute_callback(self):
 
         index = self.tabWidget_main.currentIndex()
-        if index == 0:
-            model_data = self.get_Delany_Bazley_model_inputs()
-        elif index == 1:
-            model_data = self.get_Delany_Bazley_Miki_model_inputs()
-        elif index == 2:
-            model_data = self.get_Jhonson_Champoux_Allard_model_inputs()
-        elif index == 3:
-            model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_inputs()
+        if index == PMModels.DELANY_BAZLEY:
+            model_data = self.get_Delany_Bazley_model_data()
+        elif index == PMModels.DELANY_BAZLEY_MIKI:
+            model_data = self.get_Delany_Bazley_Miki_model_data()
+        elif index == PMModels.JCA:
+            model_data = self.get_Jhonson_Champoux_Allard_model_data()
+        elif index == PMModels.JCAL:
+            model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
         else:
             return
 
@@ -427,9 +608,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
-
+            
             for volume_id in volume_ids:
-                self.properties._set_property("porous_material_model", model_data, volume=volume_id)
+                self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 
             app().file.write_model_properties_in_file()
             self.actions_to_finalize()
@@ -488,7 +669,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()
@@ -525,21 +706,24 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         tab_index = self.tabWidget_main.currentIndex()
 
-        if tab_index == 0:
-            pm_data = self.get_Delany_Bazley_model_inputs()
-            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
+        if tab_index == PMModels.DELANY_BAZLEY:
+            pm_data = self.get_Delany_Bazley_model_data()
+            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == 1:
-            pm_data = self.get_Delany_Bazley_Miki_model_inputs()
-            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data)
+        elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
+            pm_data = self.get_Delany_Bazley_Miki_model_data()
+            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == 2:
-            pm_data = self.get_Jhonson_Champoux_Allard_model_inputs()
-            rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data)
+        elif tab_index == PMModels.JCA:
+            pm_data = self.get_Jhonson_Champoux_Allard_model_data()
+            rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == 3:
-            pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_inputs()
-            rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data)
+        elif tab_index == PMModels.JCAL:
+            pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
+            rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data.get_data())
+
+        else:
+            return None, None
 
         k_cr = omega / C_eff
 
@@ -547,13 +731,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_porous_material_model(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == PMModels.DELANY_BAZLEY:
             return "Delany-Bazley"
-        elif tab_index == 1:
+        elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
             return "Delany-Bazley-Miki"
-        elif tab_index == 2:
+        elif tab_index == PMModels.JCA:
             return "Jhonson-Champoux-Allard"
-        elif tab_index == 3:
+        elif tab_index == PMModels.JCAL:
             return "Jhonson-Champoux-Allard-Lafarge"
 
     def plot_data_callback(self):

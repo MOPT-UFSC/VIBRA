@@ -91,7 +91,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         elif self.importer is None:
             self.importer = ImportDataToCompare(self)
             self.importer.exec()
-            app().main_window.set_input_widget(self)
 
     def _initial_config(self):
         self.aux_bool = False
@@ -101,6 +100,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.frame_vertical_lines.setDisabled(True)
 
     def _update_comboBox(self):
+
         self.cache_plot_type = self.comboBox_plot_type.currentText()
         aux_real = self.radioButton_real.isChecked()
         aux_imag = self.radioButton_imaginary.isChecked()
@@ -116,10 +116,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         
         if self.plot_type == self.cache_plot_type:
             self.plot_data_in_freq_domain()
-        
+
     def _update_plot_type(self):
-        # if self.not_update:
-        #     return
         self.plot_type = self.comboBox_plot_type.currentText()
         self.plot_data_in_freq_domain()
 
@@ -253,11 +251,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         toolbar = self.findChild(CustomNavigationToolbar)
         if toolbar is None:
             return
-
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if app().config.user_preferences.interface_theme == "dark":
-            color = QColor("#5f9af4")
+            color = DARK_ICON_COLOR.to_qt()
         else:
-            color = QColor("#1a73e8")
+            color = LIGHT_ICON_COLOR.to_qt()
 
         icons.change_icon_color_for_widgets(toolbar.findChildren(QToolButton), color)
 
@@ -432,6 +430,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         if isinstance(data, dict):
             self.imported_results_data = data
             self.plot_data_in_freq_domain()
+        
+    def reset_imported_results_data_to_plot(self):
+        self.imported_results_data = dict()
+        self.plot_data_in_freq_domain()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.dofs_prescription_inputs_ui import DofsPrescriptionInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -209,16 +210,18 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         if "table_paths" in data.keys():
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
+                if data["element_type"] == "3d_element" and index >= 3:
+                    continue
+
                 table_path = table_paths[index]
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
 
         else:
             for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
-
                 if data["element_type"] == "3d_element" and index >= 3:
                     continue
-                
+
                 elif index <= 5 and values[index] is not None:
                     lineEdit_real.setText(str(np.real(values[index])))
                     lineEdit_imag.setText(str(np.imag(values[index])))
@@ -460,6 +463,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
         title = "Error while loading table"
+        imported_file = None
 
         try:
             if direct_load:
@@ -467,31 +471,16 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
             else:
-
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = str(Path().home())
-                else:
-                    path = last_path
-
-                caption = f"Choose a table to import the {dof_label} data"
-                imported_table_path, check = QFileDialog.getOpenFileName(  
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
-
-                if not check:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {dof_label} data")
+                if not imported_data:
                     return None, None
 
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            imported_filename = basename(imported_table_path)
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
+                imported_table_path = imported_data.path
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -581,7 +570,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
             self.hide()
-            lineEdit = self.table_lineEdits[dof_label]
+            lineEdit = self.table_lineEdits.get(dof_label)
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
 
@@ -663,13 +652,13 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         for selected_id in selected_ids:
             
             if self.ux_table_values is not None:
-                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, self.ux_table_path, linear = True)
+                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, linear = True)
 
             if self.uy_table_values is not None:
-                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, self.uy_table_path, linear = True)
+                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, linear = True)
 
             if self.uz_table_values is not None:
-                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values, self.uz_table_path, linear = True)
+                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values, linear = True)
 
             table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
@@ -678,13 +667,13 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
             if self.comboBox_element_type.currentIndex() == 0:
 
                 if self.rx_table_values is not None:
-                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values, self.rx_table_path, angular = True)
+                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values, angular = True)
 
                 if self.ry_table_values is not None:
-                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.ry_table_values, self.ry_table_path, angular = True)
+                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.ry_table_values, angular = True)
 
                 if self.rz_table_values is not None:
-                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, selection, self.rz_table_values, self.rz_table_path, angular = True)
+                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, selection, self.rz_table_values, angular = True)
 
                 table_names.extend([self.rx_table_name, self.ry_table_name, self.rz_table_name])
                 table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])

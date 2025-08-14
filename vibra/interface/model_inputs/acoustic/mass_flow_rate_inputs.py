@@ -9,6 +9,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.mass_flow_rate_inputs_ui 
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.data_handler.data_importer import DataImporter
 
 import os
 import numpy as np
@@ -213,43 +214,30 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'mass flow rate' table"
+        imported_file = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
+                imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt"], "Choose a table to import the mass flow rate")
+                                
+                if not imported_data:
+                    return
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
-                caption = "Choose a table to import the mass flow rate"
-                imported_table_path, check = QFileDialog.getOpenFileName(  None, 
-                                                                            caption, 
-                                                                            path, 
-                                                                            "Files (*.csv; *.dat; *.txt)"
-                                                                        )
-
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_values = np.loadtxt(imported_table_path, delimiter=",")
-
-            if imported_values.shape[1] < 3:
+            if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            mask = imported_values[:, 0] > 0
-
-            return imported_values[mask, :]
+            return imported_file
 
         except Exception as log_error:
             message = str(log_error)
