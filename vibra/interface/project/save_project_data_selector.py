@@ -81,12 +81,6 @@ class SaveProjectDataSelector(SaveProjectDataSelector_UI):
     
 
 def get_folder_size(path: Path):
-    total = 0
-    for dirpath, dirnames, filenames in os.walk(path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            if os.path.isfile(fp):
-                total += os.path.getsize(fp)
-    return total
+    return sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
 
 # fmt: on
