@@ -312,37 +312,23 @@ def acoustic_boundary_conditions_info_text():
 
     if len(selected_faces) != 1:
         return text
+    
+    properties = app().project.model.properties
 
-    acoustic_pressure = app().project.model.properties._get_property(
-        "acoustic_pressure",
-        surface=selected_faces[0],
-    )
-    surface_velocity = app().project.model.properties._get_property(
-        "surface_velocity",
-        surface=selected_faces[0],
-    )
-    incident_plane_wave = app().project.model.properties._get_property(
-    "incident_plane_wave",
-    surface=selected_faces[0],
-    )
-    mass_flow_rate = app().project.model.properties._get_property(
-        "mass_flow_rate",
-        surface=selected_faces[0],
-    )
-    absorption_surface = app().project.model.properties._get_property(
-        "absorption_surface",
-        surface=selected_faces[0],
-    )
-    specific_impedance = app().project.model.properties._get_property(
-        "specific_impedance",
-        surface=selected_faces[0],
-    )
+    acoustic_pressure = properties._get_property("acoustic_pressure", surface=selected_faces[0])
+    surface_velocity = properties._get_property("surface_velocity", surface=selected_faces[0])
+    incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
+    mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
+    mass_source = properties._get_property("mass_source", surface=selected_faces[0])
+    absorption_surface = properties._get_property("absorption_surface", surface=selected_faces[0])
+    specific_impedance = properties._get_property("specific_impedance", surface=selected_faces[0])
 
     boundary_conditions_list = [
                                 acoustic_pressure,
                                 surface_velocity,
                                 incident_plane_wave,
                                 mass_flow_rate,
+                                mass_source,
                                 absorption_surface,
                                 specific_impedance,
                                 ]
@@ -374,13 +360,17 @@ def acoustic_boundary_conditions_info_text():
         values = mass_flow_rate["values"][0]
         text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
 
+    if mass_source is not None:
+        values = mass_source["values"][0]
+        text += acoustic_format("Mass source", values, "Qm", "kg/m².s")
+
     if absorption_surface is not None:
         values = absorption_surface["values"][0]
         text += acoustic_format("Absorption surface", values, "alpha", "--")
 
     if specific_impedance is not None:
         if "anechoic_termination" in specific_impedance.keys():
-            fluid = app().project.model.properties._get_property("fluid", surface=selected_faces[0])
+            fluid = properties._get_property("fluid", surface=selected_faces[0])
             if isinstance(fluid, Fluid):
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
