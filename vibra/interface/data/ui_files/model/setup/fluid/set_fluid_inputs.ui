@@ -274,32 +274,12 @@
            </property>
            <item>
             <property name="text">
-             <string>All bodies/faces</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
              <string>All bodies</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>All faces</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
              <string>Selected bodies</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Selected faces</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Selected bodies/faces</string>
             </property>
            </item>
           </widget>
@@ -616,6 +596,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
