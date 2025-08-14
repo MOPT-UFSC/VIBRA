@@ -221,8 +221,8 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         self.actions_to_finalize()
 
-        # if attribution_type == 0:
-        #     self.close()
+        if attribution_type == 0:
+            self.close()
 
     def remove_callback(self):
 
