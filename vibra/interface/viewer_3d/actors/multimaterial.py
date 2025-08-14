@@ -123,9 +123,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             if surface in app().main_window.hidden_surfaces:
                 continue
 
-            if volume in app().main_window.hidden_volumes:
-                continue
-
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material_wall = properties._get_property("material", surface=surface)
             material_volume = properties._get_property("material", volume=volume)
