@@ -4,7 +4,7 @@ from typing import Sequence
 
 import numpy as np
 import vtk
-from molde import Color
+from molde.colors import Color, color_names
 from vtkmodules.util.numpy_support import (
     numpy_to_vtk,
     numpy_to_vtkIdTypeArray,
@@ -101,11 +101,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             material = properties._get_property("material", surface=surface, volume=volume)
 
             if material is not None:
-                color = Color(*material.color).with_brightness(100).with_saturation(100)
+                color = Color(*material.color).with_brightness(100).with_saturation(80)
             elif fluid is not None:
                 color = Color(*fluid.color).with_brightness(100).with_saturation(40)
             else:
-                color = Color(255, 255, 255)
+                color = color_names.WHITE
 
             color_to_surfaces[color].append(surface)
 
@@ -291,16 +291,16 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def _create_empty_actor(self):
         self.empty_actor = self._new_actor_extraction("empty")
         self.empty_actor.SetTexture(self.chess_texture)
-    
+
     def _create_selection_actor(self):
-        '''
+        """
         This is the only pickable actor that extracts all cells.
 
         It is used to enable selection whithout further modifications
         and the performance does not degrade too much.
-    
-        The selection actor has opacity 0 so it is "rendered" but is not visible.        
-        '''
+
+        The selection actor has opacity 0 so it is "rendered" but is not visible.
+        """
         self.ghost_actor = self._new_actor_extraction("selection")
         self.ghost_actor.GetProperty().SetOpacity(1e-12)
         self.ghost_actor.PickableOn()
@@ -328,9 +328,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.fluid_actor.GetProperty().SetOpacity(0.8)
         self.fluid_actor.GetProperty().SetDiffuse(0.5)
         self.fluid_actor.GetProperty().SetAmbient(0.6)
-        self.fluid_actor.GetProperty().SetSpecular(0.8)
-        self.fluid_actor.GetProperty().SetSpecularPower(100)
-        self.fluid_actor.GetProperty().SetNormalScale(1.2)
 
     def _create_porous_actor(self):
         self.porous_actor = self._new_actor_extraction("porous")
