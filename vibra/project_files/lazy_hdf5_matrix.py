@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 
 HDF5_SOLUTION_FREQ_KEY = 'solution'
-HDF5_COL_STATUS_KEY = 'col_filled'
+HDF5_SOLUTION_STATUS_KEY = 'solution_status'
 HDF5_FREQ_KEY = 'frequencies'
 
 COL_ERROR_MESSAGE_FORMAT = "Column '{0}' not filled."
@@ -24,7 +24,7 @@ class LazyHDF5MatrixWriter:
 
         if HDF5_SOLUTION_FREQ_KEY in self.file:
             self.solution = self.file[HDF5_SOLUTION_FREQ_KEY]
-            self.status = self.file[HDF5_COL_STATUS_KEY]
+            self.status = self.file[HDF5_SOLUTION_STATUS_KEY]
             self.frequencies = self.file[HDF5_FREQ_KEY]
         else:
             self.solution = self.file.create_dataset(
@@ -40,7 +40,7 @@ class LazyHDF5MatrixWriter:
                 data=cols
             )
             self.status = self.file.create_dataset(
-                HDF5_COL_STATUS_KEY,
+                HDF5_SOLUTION_STATUS_KEY,
                 shape=(num_cols,),
                 dtype=bool
             )
@@ -85,7 +85,7 @@ class LazyHDF5MatrixLoader:
     def __getitem__(self, key):
         with h5py.File(self.filepath, 'r') as f:
             solution = f[HDF5_SOLUTION_FREQ_KEY]
-            status = f[HDF5_COL_STATUS_KEY]
+            status = f[HDF5_SOLUTION_STATUS_KEY]
             shape = solution.shape
 
             def _get_column_data(col_idx):
@@ -118,6 +118,6 @@ class LazyHDF5MatrixLoader:
     
     def has_partial_solutions(self):
         with h5py.File(self.filepath, 'r') as f:
-            status = f[HDF5_COL_STATUS_KEY][()]
+            status = f[HDF5_SOLUTION_STATUS_KEY][()]
         
         return not all(status)
