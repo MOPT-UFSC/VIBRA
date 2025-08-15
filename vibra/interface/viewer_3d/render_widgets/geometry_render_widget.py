@@ -23,10 +23,12 @@ from .model_info_text import(
     volumes_info_text, 
     material_info_text, 
     fluid_info_text, 
-    porous_material_info_text, 
+    porous_material_info_text,
+    viscous_thermal_info_text,
     perforated_plate_info_text, 
-    acoustic_boundary_conditions_info_text, 
-    structural_boundary_conditions_info_text
+    acoustic_boundary_conditions_info_text,
+    mass_source_info_text,
+    structural_boundary_conditions_info_text,
 )
 
 import logging
@@ -425,8 +427,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += material_info_text()
         text += fluid_info_text()
         text += porous_material_info_text()
+        text += viscous_thermal_info_text()
         text += perforated_plate_info_text()
         text += acoustic_boundary_conditions_info_text()
+        text += mass_source_info_text()
         text += structural_boundary_conditions_info_text()
 
         self.set_info_text(text)

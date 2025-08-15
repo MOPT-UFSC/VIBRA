@@ -254,16 +254,35 @@ def porous_material_info_text():
     pm_model = app().project.model.properties._get_property(
         "porous_material_model", volume=volumes[0]
     )
-    if pm_model is None:
+    if not isinstance(pm_model, dict):
         return text
 
-    tree = TreeInfo("Porous material")
-    tree.add_item("Model", pm_model["model"])
-    tree.add_item("Flow resistivity", pm_model["flow_resistivity"], "kg/m³s")
+    tree = TreeInfo("Porous material model")
+    tree.add_item("Model", pm_model.get("model", ""))
+    tree.add_item("Flow resistivity", pm_model.get("flow_resistivity", ""), "kg/m³s")
 
     text += str(tree)
 
     return text
+
+def viscous_thermal_info_text():
+    volumes = list(app().main_window.selected_geometry_volumes)
+    text = ""
+
+    if len(volumes) != 1:
+        return text
+
+    vt_model = app().project.model.properties._get_property(
+        "viscous_thermal_model", volume=volumes[0]
+    )
+    if not isinstance(vt_model, dict):
+        return text
+
+    tree = TreeInfo("Viscous-thermal loss model")
+    tree.add_item("Formulation", vt_model.get("formulation", ""))
+    tree.add_item("Section type", vt_model.get("section_type"))
+
+    text += str(tree)
 
 def perforated_plate_info_text():
 
@@ -317,18 +336,18 @@ def acoustic_boundary_conditions_info_text():
 
     acoustic_pressure = properties._get_property("acoustic_pressure", surface=selected_faces[0])
     surface_velocity = properties._get_property("surface_velocity", surface=selected_faces[0])
+    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=selected_faces[0])
     incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
     mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
-    mass_source = properties._get_property("mass_source", surface=selected_faces[0])
     absorption_surface = properties._get_property("absorption_surface", surface=selected_faces[0])
     specific_impedance = properties._get_property("specific_impedance", surface=selected_faces[0])
 
     boundary_conditions_list = [
                                 acoustic_pressure,
                                 surface_velocity,
+                                recip_compressor_excitation,
                                 incident_plane_wave,
                                 mass_flow_rate,
-                                mass_source,
                                 absorption_surface,
                                 specific_impedance,
                                 ]
@@ -344,50 +363,139 @@ def acoustic_boundary_conditions_info_text():
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
-    if incident_plane_wave is not None:
-        value = incident_plane_wave["values"][0]
-        tree_pw = TreeInfo("Incident plane wave")
-        if isinstance(value, Number | str | float | complex):
-            tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
-        else:
-            tree_pw.add_item("P_inc", "Table of values")
+    if isinstance(recip_compressor_excitation, dict):
+        text += get_reciprocating_compressor_text(recip_compressor_excitation)
 
-        wave_vector = incident_plane_wave["wave_vector"]
-        tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
-        text += str(tree_pw)
+    if isinstance(incident_plane_wave, dict):
+        text += get_incident_plane_wave_text(incident_plane_wave)
 
     if mass_flow_rate is not None:
         values = mass_flow_rate["values"][0]
         text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
 
-    if mass_source is not None:
-        values = mass_source["values"][0]
-        text += acoustic_format("Mass source", values, "Qm", "kg/m².s")
-
     if absorption_surface is not None:
         values = absorption_surface["values"][0]
         text += acoustic_format("Absorption surface", values, "alpha", "--")
 
-    if specific_impedance is not None:
-        if "anechoic_termination" in specific_impedance.keys():
-            fluid = properties._get_property("fluid", surface=selected_faces[0])
-            if isinstance(fluid, Fluid):
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-                values = np.array([density * speed_of_sound], dtype=complex)
-                text += acoustic_format(
-                    "Specific impedance",
-                    values[0],
-                    "Zs",
-                    "kg/m².s",
-                    ("Impedance type", "anechoic (non-reflexive)"),
-                )
-
-        else:
-            values = specific_impedance["values"]
-            text += acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
+    if isinstance(specific_impedance, dict):
+        text += get_specific_and_anechoic_impedance_text(selected_faces[0], specific_impedance)
 
     return text
+
+def get_incident_plane_wave_text(ipw_data: dict):
+
+    if ipw_data is None:
+        return ""
+
+    value = ipw_data["values"][0]
+    tree_pw = TreeInfo("Incident plane wave")
+    if isinstance(value, Number | str | float | complex):
+        tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
+    else:
+        tree_pw.add_item("P_inc", "Table of values")
+
+    wave_vector = ipw_data["wave_vector"]
+    tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
+
+    return str(tree_pw)
+
+def get_reciprocating_compressor_text(rc_data: dict):
+
+    rc_parameters = rc_data.get("parameters", dict)
+    acting_label = rc_parameters.get("acting_label", "")
+    pressure_unit = rc_parameters.get("pressure_unit", "")
+    temperature_unit = rc_parameters.get("temperature_unit", "")
+
+    acting_label = acting_label.replace("_", " ")
+
+    tree_rc = TreeInfo("Reciprocating compressor")
+    tree_rc.add_item("Connection", rc_data.get("connection_type", ""))
+    tree_rc.add_item("Bore diameter", rc_parameters.get("bore_diameter", ""), "m")
+    tree_rc.add_item("Stroke", rc_parameters.get("stroke", ""), "m")
+    tree_rc.add_item("Connecting rod length", rc_parameters.get("connecting_rod_length", ""), "m")
+    tree_rc.add_item("Rod diameter", rc_parameters.get("rod_diameter", ""), "m")
+    tree_rc.add_item("TDC angle", rc_parameters.get("TDC_crank_angle_1", ""), "deg")
+    tree_rc.add_item("Capacity", rc_parameters.get("capacity", ""), "%")
+
+    tree_rc.add_item("Pressure at suction", rc_parameters.get("pressure_at_suction", ""), pressure_unit)
+    tree_rc.add_item("Temperature at suction", rc_parameters.get("temperature_at_suction", ""), temperature_unit)
+    tree_rc.add_item("Rotational speed", rc_parameters.get("rotational_speed", ""), "rpm")
+    tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""))
+    tree_rc.add_item("Acting setup", acting_label)
+
+    if acting_label in ["head end", "both ends"]:
+        tree_rc.add_item("HE clearance", rc_parameters.get("clearance_HE", ""), "%")
+
+    if acting_label in ["crank end", "both ends"]:
+        tree_rc.add_item("CE clearance", rc_parameters.get("clearance_CE", ""), "%")
+
+    return str(tree_rc)
+
+def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
+    text = ""
+    properties = app().project.model.properties
+    if "anechoic_termination" in si_data.keys():
+        fluid = properties._get_property("fluid", surface=surface)
+        if isinstance(fluid, Fluid):
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+            values = np.array([density * speed_of_sound], dtype=complex)
+            text = acoustic_format(
+                "Specific impedance",
+                values[0],
+                "Zs",
+                "kg/m².s",
+                ("Impedance type", "anechoic (non-reflexive)"),
+            )
+
+    else:
+        values = si_data["values"]
+        text = acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
+
+    return text
+
+def get_mass_source_text(**kwargs):
+    properties = app().project.model.properties
+    mass_source = properties._get_property("mass_source", **kwargs)
+    if mass_source is None:
+        return ""
+
+    if isinstance(kwargs.get("volume"), Number):
+        unit_label = "kg/m³.s"
+    elif isinstance(kwargs.get("surface"), Number):
+        unit_label = "kg/m².s"
+    elif isinstance(kwargs.get("line"), Number):
+        unit_label = "kg/m.s"
+    elif isinstance(kwargs.get("point"), Number):
+        unit_label = "kg/s"
+    elif isinstance(kwargs.get("node"), Number):
+        unit_label = "kg/s"
+    else:
+        return ""
+
+    values = mass_source.get("values")[0]
+    return acoustic_format("Mass source", values, "Qm", unit_label)
+
+def mass_source_info_text():
+    text = ""
+    selected_volumes = list(app().main_window.selected_geometry_volumes)
+    selected_surfaces = list(app().main_window.selected_geometry_surfaces)
+    selected_lines = list(app().main_window.selected_geometry_lines)
+    selected_points = list(app().main_window.selected_geometry_points)
+    selected_nodes = list(app().main_window.selected_mesh_nodes)
+
+    if len(selected_volumes) == 1:
+        return get_mass_source_text(volume=selected_volumes[0])
+    if len(selected_surfaces) == 1:
+        return get_mass_source_text(surface=selected_surfaces[0])
+    if len(selected_lines) == 1:
+        return get_mass_source_text(line=selected_lines[0])
+    if len(selected_points) == 1:
+        return get_mass_source_text(point=selected_points[0])
+    if len(selected_nodes) == 1:
+        return get_mass_source_text(node=selected_nodes[0])
+    else:
+        return text
 
 def structural_boundary_conditions_info_text():
     text = ""
@@ -525,10 +633,8 @@ def mesh_faces_info_text():
     return text
 
 def mesh_solids_info_text():
-    solids_elem_ids = list(app().main_window.selected_mesh_solids)
-    # print("\n\nelementos selecionados:\n", solids_elem_ids, "\n\n")
     text = ""
-
+    solids_elem_ids = list(app().main_window.selected_mesh_solids)
     if len(solids_elem_ids) > 1:
         text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
         text += f"{format_long_sequence(solids_elem_ids)}\n\n"
