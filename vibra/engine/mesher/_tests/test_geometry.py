@@ -1,14 +1,160 @@
 from data.data_test_helper import get_data_path
 
 from vibra.engine.mesher.geometry import Geometry
+import numpy as np
+import pytest
 
 
-def test_cilinder():
+@pytest.fixture(scope="module")
+def geometry() -> Geometry:
     path = get_data_path("examples/geometry_files/cylinder.step")
-
-    geometry = Geometry(path)
-
+    return Geometry(path)
 
 
-def test_cube():
-    pass
+def test_geometry_numbers(geometry: Geometry):
+    assert len(geometry.solids) == 1
+    assert len(geometry.surfaces) == 4
+    assert len(geometry.curves) == 6
+    assert len(geometry.points) == 4
+
+
+def test_geometry_measures(geometry: Geometry):
+    r = 0.25
+    height = 2
+    circumference = 2 * np.pi * r
+    circle_area = np.pi * r**2
+    volume = circle_area * height
+    surface_area = circle_area * 2 + circumference * height
+
+    assert np.allclose(height, geometry.arc_length(2))
+    assert np.allclose(height, geometry.arc_length(4))
+    assert np.allclose(circumference / 2, geometry.arc_length(1))
+    assert np.allclose(circumference / 2, geometry.arc_length(5))
+    assert np.allclose(circumference, geometry.arc_length(3, 6))
+
+    assert np.allclose(circle_area, geometry.surface_area(3))
+    assert np.allclose(circle_area, geometry.surface_area(4))
+    assert np.allclose(surface_area, geometry.surface_area(1, 2, 3, 4))
+
+    assert np.allclose(volume, geometry.volume(1))
+
+
+@pytest.mark.skip
+def test_geometry_straightness(geometry: Geometry):
+    assert not geometry.is_surface_straight(1)
+    assert not geometry.is_surface_straight(2)
+    assert geometry.is_surface_straight(3)
+    assert geometry.is_surface_straight(4)
+
+    assert not geometry.is_curve_straight(1)
+    assert geometry.is_curve_straight(2)
+    assert not geometry.is_curve_straight(3)
+    assert geometry.is_curve_straight(4)
+    assert not geometry.is_curve_straight(5)
+    assert not geometry.is_curve_straight(6)
+
+
+@pytest.mark.skip
+def test_geometry_centers(geometry: Geometry):
+    assert geometry.solid_center(1) == np.array([0, 1, 0])
+
+    assert geometry.surface_center(1) == np.array([0.25, 1, 0])
+    assert geometry.surface_center(2) == np.array([-0.25, 1, 0])
+    assert geometry.surface_center(3) == np.array([0, 2, 0])
+    assert geometry.surface_center(4) == np.array([0, 0, 0])
+
+    assert geometry.curve_center(1) == np.array([0.25, 2, 0])
+    assert geometry.curve_center(2) == np.array([0, 1, 0.25])
+    assert geometry.curve_center(3) == np.array([0.25, 0, 0])
+    assert geometry.curve_center(4) == np.array([0, 1, -0.25])
+    assert geometry.curve_center(5) == np.array([-0.25, 2, 0])
+    assert geometry.curve_center(6) == np.array([-0.25, 0, 0])
+
+    assert geometry.point_center(1) == np.array([0, 2, 0.25])
+    assert geometry.point_center(2) == np.array([0, 2, -0.25])
+    assert geometry.point_center(3) == np.array([0, 0, 0.25])
+    assert geometry.point_center(4) == np.array([0, 0, -0.25])
+
+
+@pytest.mark.skip
+def test_geometry_normals(geometry: Geometry):
+    assert geometry.surface_normal(1) == np.array([1, 0, 0])
+    assert geometry.surface_normal(2) == np.array([-1, 0, 0])
+    assert geometry.surface_normal(3) == np.array([0, 1, 0])
+    assert geometry.surface_normal(4) == np.array([0, -1, 0])
+
+    assert geometry.curve_normal(1) == np.array([1, 1, 0])
+    assert geometry.curve_normal(2) == np.array([0, 0, 1])
+    assert geometry.curve_normal(3) == np.array([1, -1, 0])
+    assert geometry.curve_normal(4) == np.array([0, 0, -1])
+    assert geometry.curve_normal(5) == np.array([-1, 1, 0])
+    assert geometry.curve_normal(6) == np.array([-1, -1, 0])
+
+    assert geometry.point_normal(1) == np.array([0, 1, 1])
+    assert geometry.point_normal(2) == np.array([0, 1, -1])
+    assert geometry.point_normal(3) == np.array([0, -1, 1])
+    assert geometry.point_normal(4) == np.array([0, -1, -1])
+
+
+@pytest.mark.skip
+def test_geometry_relations(geometry: Geometry):
+    # I hope this is correct
+
+    # Points
+    assert list(sorted(geometry.points_to_curves(1))) == [1, 2, 5]
+    assert list(sorted(geometry.points_to_curves(2))) == [1, 4, 5]
+    assert list(sorted(geometry.points_to_curves(3))) == [2, 3, 6]
+    assert list(sorted(geometry.points_to_curves(4))) == [3, 4, 6]
+
+    assert list(sorted(geometry.points_to_surfaces(1))) == [1, 2, 3]
+    assert list(sorted(geometry.points_to_surfaces(2))) == [1, 2, 3]
+    assert list(sorted(geometry.points_to_surfaces(3))) == [1, 2, 4]
+    assert list(sorted(geometry.points_to_surfaces(4))) == [1, 2, 4]
+
+    assert list(sorted(geometry.points_to_solids(1))) == [1]
+    assert list(sorted(geometry.points_to_solids(2))) == [1]
+    assert list(sorted(geometry.points_to_solids(3))) == [1]
+    assert list(sorted(geometry.points_to_solids(4))) == [1]
+
+    # Curves
+    assert list(sorted(geometry.curves_to_points(1))) == [1, 2]
+    assert list(sorted(geometry.curves_to_points(2))) == [1, 3]
+    assert list(sorted(geometry.curves_to_points(3))) == [3, 4]
+    assert list(sorted(geometry.curves_to_points(4))) == [2, 4]
+    assert list(sorted(geometry.curves_to_points(5))) == [1, 2]
+    assert list(sorted(geometry.curves_to_points(6))) == [3, 4]
+
+    assert list(sorted(geometry.curves_to_surfaces(1))) == [1, 3]
+    assert list(sorted(geometry.curves_to_surfaces(2))) == [1, 2]
+    assert list(sorted(geometry.curves_to_surfaces(3))) == [1, 4]
+    assert list(sorted(geometry.curves_to_surfaces(4))) == [1, 2]
+    assert list(sorted(geometry.curves_to_surfaces(5))) == [2, 3]
+    assert list(sorted(geometry.curves_to_surfaces(6))) == [2, 4]
+
+    assert list(sorted(geometry.curves_to_solids(1))) == [1]
+    assert list(sorted(geometry.curves_to_solids(2))) == [1]
+    assert list(sorted(geometry.curves_to_solids(3))) == [1]
+    assert list(sorted(geometry.curves_to_solids(4))) == [1]
+    assert list(sorted(geometry.curves_to_solids(5))) == [1]
+    assert list(sorted(geometry.curves_to_solids(6))) == [1]
+
+    # Surfaces
+    assert list(sorted(geometry.surfaces_to_points(1))) == [1, 2, 3, 4]
+    assert list(sorted(geometry.surfaces_to_points(2))) == [1, 2, 3, 4]
+    assert list(sorted(geometry.surfaces_to_points(3))) == [1, 2]
+    assert list(sorted(geometry.surfaces_to_points(4))) == [3, 4]
+
+    assert list(sorted(geometry.surfaces_to_curves(1))) == [1, 2, 3, 4]
+    assert list(sorted(geometry.surfaces_to_curves(2))) == [2, 4, 5, 6]
+    assert list(sorted(geometry.surfaces_to_curves(3))) == [1, 5]
+    assert list(sorted(geometry.surfaces_to_curves(4))) == [3, 6]
+
+    assert list(sorted(geometry.surfaces_to_solids(1))) == [1]
+    assert list(sorted(geometry.surfaces_to_solids(2))) == [1]
+    assert list(sorted(geometry.surfaces_to_solids(3))) == [1]
+    assert list(sorted(geometry.surfaces_to_solids(4))) == [1]
+
+    # Solids
+    assert list(sorted(geometry.solids_to_curves(1))) == [1, 2, 3, 4, 5, 6]
+    assert list(sorted(geometry.solids_to_points(1))) == [1, 2, 3, 4]
+    assert list(sorted(geometry.solids_to_surfaces(1))) == [1, 2, 3, 4]
