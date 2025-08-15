@@ -15,7 +15,6 @@ class Geometry:
         length_unit: LengthUnits = "milimeter",
     ):
         # connectivity
-        self._points_coords = dict()
         self._solids_to_surfaces = bidict()
         self._surfaces_to_curves = bidict()
         self._curves_to_points = bidict()
@@ -24,6 +23,7 @@ class Geometry:
         self._solids_centers = dict()
         self._surfaces_centers = dict()
         self._curves_centers = dict()
+        self._points_centers = dict()
 
         # normals
         self._surfaces_normals = dict()
@@ -59,7 +59,6 @@ class Geometry:
         gmsh.finalize()
 
     def clear(self):
-        self._points_coords.clear()
         self._solids_to_surfaces.clear()
         self._surfaces_to_curves.clear()
         self._curves_to_points.clear()
@@ -68,6 +67,7 @@ class Geometry:
         self._solids_centers.clear()
         self._surfaces_centers.clear()
         self._curves_centers.clear()
+        self._points_centers.clear()
 
         # normals
         self._surfaces_normals.clear()
@@ -93,10 +93,14 @@ class Geometry:
         self.clear()
 
     def points_to_curves(self, *point_ids: int) -> Iterator[int]:
-        pass
+        for point_id in point_ids:
+            for curve_id in self._curves_to_points.inverse.get(point_id, []):
+                yield curve_id
 
     def points_to_surfaces(self, *point_ids: int) -> Iterator[int]:
-        pass
+        for curve_in in self.points_to_curves(*point_ids):
+            for surface_id in self._surfaces_to_curves.inverse.get(curve_in, []):
+                yield surface_id
 
     def points_to_solids(self, *point_ids: int) -> Iterator[int]:
         pass
