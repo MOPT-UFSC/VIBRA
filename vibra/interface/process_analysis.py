@@ -24,9 +24,9 @@ class ProcessAnalysis:
         else:
             self.main_window.configure_results_render_widget()
 
-    def process_acoustic_harmonic_analysis(self):
+    def process_acoustic_harmonic_analysis(self, is_resume: bool = False):
         try:
-            self.project.solve_acoustic_harmonic_analysis()
+            self.project.solve_acoustic_harmonic_analysis(is_resume)
         except NotImplementedError as e:
             ErrorMessage(e)
         else:

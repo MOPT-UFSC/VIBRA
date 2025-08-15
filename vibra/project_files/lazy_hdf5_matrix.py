@@ -12,14 +12,15 @@ NUM_ROWS_ZERO_ERROR_MESSAGE = "Input 'num_rows' cannot be zero."
 
 
 class LazyHDF5MatrixWriter:
-    def __init__(self, filepath: Path, num_rows: int, cols: list, dtype):
+    def __init__(self, filepath: Path, num_rows: int, cols: list, dtype, is_resume: bool = False):
         if len(cols) == 0:
             raise ValueError(COLS_EMPTY_ERROR_MESSAGE)
         if num_rows == 0:
             raise ValueError(NUM_ROWS_ZERO_ERROR_MESSAGE)
         num_cols = len(cols)
         self.filepath = filepath
-        self.file = h5py.File(self.filepath, 'a')
+        file_mode = 'a' if is_resume else 'w'
+        self.file = h5py.File(self.filepath, file_mode)
         self.shape = (num_rows, num_cols)
 
         if HDF5_SOLUTION_FREQ_KEY in self.file:
@@ -117,6 +118,8 @@ class LazyHDF5MatrixLoader:
             return np.stack([_get_column_data(i)[row_idx] for i in cols], axis=-1)
     
     def has_partial_solutions(self):
+        if not self.filepath.exists():
+            return False
         with h5py.File(self.filepath, 'r') as f:
             status = f[HDF5_SOLUTION_STATUS_KEY][()]
         
