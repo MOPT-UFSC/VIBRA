@@ -2,17 +2,19 @@ from collections import defaultdict
 import gmsh
 import numpy as np
 from vibra.utils.bidict import bidict
+from typing import Literal
+
+LengthUnits = Literal["milimeter", "inch"]
+
 
 class Geometry:
-    def __init__(self, **kwargs):
-        self.length_unit = kwargs.get("length_unit", "milimeter")
-        self.geometry_qf = kwargs.get("geometry_qf", 1.0)
+    def __init__(self, length_unit: LengthUnits = "milimeter", **kwargs):
+        self.length_unit = length_unit
+        self.length_unit_factor = self._get_length_unit_factor(length_unit)
 
-        self.geometry_imported = True
-        
-        self.points_coords = dict()        
+        self.points_coords = dict()
         self.solids_to_surfaces = bidict()
-        self.surfaces_to_curves = bidict()     
+        self.surfaces_to_curves = bidict()
         self.curves_to_points = bidict()
 
         # centers
@@ -41,48 +43,16 @@ class Geometry:
         self.surfaces = list()
         self.volumes = list()
 
-    def read_file(self, file_path : str):
+    def read_file(self, file_path: str):
         gmsh.initialize()
         gmsh.open(file_path)
 
         gmsh.model.occ.synchronize()
 
-        self.process_geometry_information()
+        self._process_geometry_information()
         gmsh.finalize()
 
-        
-    def process_geometry_information(self):
-        self.clear_geometry_data()
-
-        unit_factor = self.get_length_unit_factor()
-        for dim, tag in gmsh.model.getEntities():
-            _, downwards = gmsh.model.getAdjacencies(dim, tag)
-            downwards = [int(_id) for _id in downwards]
-
-            if dim == 0:
-                self.points.append(tag)
-                continue
-
-            value = 0.0
-            if self.geometry_imported:
-                value = gmsh.model.occ.getMass(dim, tag)
-
-            if dim == 3:
-                self.solids_volumes[tag] = value * (unit_factor**3)
-                self.solids_to_surfaces[tag] = tuple(downwards)
-                self.volumes.append(tag)
-
-            elif dim == 2:
-                self.surfaces_areas[tag] = value * (unit_factor**2)
-                self.surfaces_to_curves[tag] = tuple(downwards)
-                self.surfaces.append(tag)
-
-            elif dim == 1:
-                self.curves_lengths[tag] = value * (unit_factor**1)
-                self.curves_to_points[tag] = tuple(downwards)
-                self.lines.append(tag)
-
-    def clear_geometry_data(self):
+    def clear(self):
         self.points_coords.clear()
         self.solids_to_surfaces.clear()
         self.surfaces_to_curves.clear()
@@ -108,15 +78,38 @@ class Geometry:
         self.straight_lines.clear()
         self.straight_curves.clear()
 
+    def _process_geometry_information(self):
+        self.clear()
 
+        for dim, tag in gmsh.model.getEntities():
+            _, downwards = gmsh.model.getAdjacencies(dim, tag)
+            downwards = [int(_id) for _id in downwards]
 
-    def set_length_unit(self, length_unit: str = "milimeter"):
-        self.length_unit = length_unit
-    
-    def get_length_unit_factor(self):
-        if self.length_unit == "milimeter":
+            if dim == 0:
+                self.points.append(tag)
+                continue
+
+            mass = gmsh.model.occ.getMass(dim, tag)
+
+            if dim == 3:
+                self.solids_volumes[tag] = mass * (self.length_unit_factor**3)
+                self.solids_to_surfaces[tag] = tuple(downwards)
+                self.volumes.append(tag)
+
+            elif dim == 2:
+                self.surfaces_areas[tag] = mass * (self.length_unit_factor**2)
+                self.surfaces_to_curves[tag] = tuple(downwards)
+                self.surfaces.append(tag)
+
+            elif dim == 1:
+                self.curves_lengths[tag] = mass * (self.length_unit_factor**1)
+                self.curves_to_points[tag] = tuple(downwards)
+                self.lines.append(tag)
+
+    def _get_length_unit_factor(self, length_unit: LengthUnits):
+        if length_unit == "milimeter":
             return 1e-3
-        elif self.length_unit == "inch":
+        elif length_unit == "inch":
             return 0.0254
         else:
-            return 1
+            raise ValueError(f'Invalid length unit "{length_unit}"')
