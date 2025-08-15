@@ -418,20 +418,42 @@ class GeometryRenderWidget(CommonRenderWidget):
     def actors_exists(self):
         return len(self._widget_actors) > 0
 
+    def get_analysis_type_and_physical_domain(self):
+        try:
+            analysis_toolbar = app().main_window.analysis_toolbar
+            analysis_type = analysis_toolbar.combo_box_analysis_type.currentText()
+            physical_domain = analysis_toolbar.combo_box_physical_domain.currentText()
+        except Exception:
+            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+
+        analysis_type = analysis_type.lower()
+        physical_domain = physical_domain.lower()
+
+        return analysis_type, physical_domain
+
     def update_info_text(self):
+
+        analysis_type, physical_domain = self.get_analysis_type_and_physical_domain()
+
         text = ""
         text += points_info_text()
         text += lines_info_text()
         text += faces_info_text()
         text += volumes_info_text()
-        text += material_info_text()
-        text += fluid_info_text()
-        text += porous_material_info_text()
-        text += viscous_thermal_info_text()
-        text += perforated_plate_info_text()
-        text += acoustic_boundary_conditions_info_text()
-        text += mass_source_info_text()
-        text += structural_boundary_conditions_info_text()
+
+        if physical_domain == "structural":
+            text += material_info_text()
+            text += structural_boundary_conditions_info_text()
+
+        elif physical_domain == "acoustic":
+            text += fluid_info_text()
+            text += porous_material_info_text()
+            text += viscous_thermal_info_text()
+            text += perforated_plate_info_text()
+            text += acoustic_boundary_conditions_info_text()
+            text += mass_source_info_text()
 
         self.set_info_text(text)
         self.update()
+
+
