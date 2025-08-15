@@ -9,8 +9,7 @@ LengthUnits = Literal["milimeter", "inch"]
 
 class Geometry:
     def __init__(self, length_unit: LengthUnits = "milimeter", **kwargs):
-        self.length_unit = length_unit
-        self.length_unit_factor = self._get_length_unit_factor(length_unit)
+        self.set_length_unit(length_unit)
 
         self.points_coords = dict()
         self.solids_to_surfaces = bidict()
@@ -77,6 +76,15 @@ class Geometry:
         self.straight_solids.clear()
         self.straight_lines.clear()
         self.straight_curves.clear()
+    
+    def set_length_unit(self, length_unit: LengthUnits):
+        self.length_unit = length_unit
+        self.length_unit_factor = self._get_length_unit_factor(length_unit)
+
+        # You should not modify the lenght unit after reading the geometry
+        # because it is misleading unless you correct all values.
+        # TODO: replace this clear by a function that converts all length units.
+        self.clear()
 
     def _process_geometry_information(self):
         self.clear()
@@ -106,7 +114,7 @@ class Geometry:
                 self.curves_to_points[tag] = tuple(downwards)
                 self.lines.append(tag)
 
-    def _get_length_unit_factor(self, length_unit: LengthUnits):
+    def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "milimeter":
             return 1e-3
         elif length_unit == "inch":
