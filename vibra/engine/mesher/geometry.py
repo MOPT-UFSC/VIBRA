@@ -36,11 +36,8 @@ class Geometry:
         self._solids_volumes = dict()
 
         # curvatures
-        # TODO: these variables could be sets that only stores 
-        # if the entities are straight or not 
-        self._straight_solids = dict()
-        self._straight_lines = dict()
-        self._straight_curves = dict()
+        self._straight_curves = set()
+        self._straight_surfaces = set()
 
         # About geometry information
         self.points = list()
@@ -83,9 +80,8 @@ class Geometry:
 
         self._solids_volumes.clear()
 
-        self._straight_solids.clear()
-        self._straight_lines.clear()
         self._straight_curves.clear()
+        self._straight_surfaces.clear()
 
     def set_length_unit(self, length_unit: LengthUnits):
         self.length_unit = length_unit
@@ -95,6 +91,48 @@ class Geometry:
         # because it is misleading unless you correct all values.
         # TODO: replace this clear by a function that converts all length units.
         self.clear()
+
+    def points_to_curves(self, *point_ids: int) -> Iterator[int]:
+        pass
+
+    def points_to_surfaces(self, *point_ids: int) -> Iterator[int]:
+        pass
+
+    def points_to_solids(self, *point_ids: int) -> Iterator[int]:
+        pass
+
+    def curves_to_points(self, *line_ids: int) -> Iterator[int]:
+        pass
+
+    def curves_to_surfaces(self, *line_ids: int) -> Iterator[int]:
+        pass
+
+    def curves_to_solids(self, *line_ids: int) -> Iterator[int]:
+        pass
+
+    def surfaces_to_points(self, *surface_ids: int) -> Iterator[int]:
+        pass
+
+    def surfaces_to_curves(self, *surface_ids: int) -> Iterator[int]:
+        pass
+
+    def surfaces_to_solids(self, *surface_ids: int) -> Iterator[int]:
+        pass
+
+    def solids_to_points(self, *volume_ids: int) -> Iterator[int]:
+        pass
+
+    def solids_to_curves(self, *volume_ids: int) -> Iterator[int]:
+        pass
+
+    def solids_to_surfaces(self, *volume_ids: int) -> Iterator[int]:
+        pass
+
+    def is_curve_straight(self, curve_id: int) -> bool:
+        return curve_id in self._straight_curves
+
+    def is_surface_straight(self, surface_id: int) -> bool:
+        return surface_id in self._straight_surfaces
 
     def _process_geometry_information(self):
         self.clear()
