@@ -15,7 +15,7 @@ class Geometry:
         path: str | Path | None = None,
         length_unit: LengthUnits = "milimeter",
     ):
-        # connectivity
+        # relations
         self._solids_to_surfaces = bidict()
         self._surfaces_to_curves = bidict()
         self._curves_to_points = bidict()
@@ -42,9 +42,9 @@ class Geometry:
 
         # About geometry information
         self.points = list()
-        self.lines = list()
+        self.curves = list()
         self.surfaces = list()
-        self.volumes = list()
+        self.solids = list()
 
         self.set_length_unit(length_unit)
         if path is not None:
@@ -160,6 +160,15 @@ class Geometry:
     def point_normal(self, point_id: int) -> np.ndarray | None:
         return self._points_normals.get(point_id)
 
+    def arc_length(self, *curve_ids: int) -> float:
+        return sum(self._curves_lengths[curve_id] for curve_id in curve_ids)
+
+    def surface_area(self, *surface_ids: int) -> float:
+        return sum(self._surfaces_areas[surface_id] for surface_id in surface_ids)
+
+    def volume(self, *volume_ids: int) -> float:
+        return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
+
     def _process_geometry_information(self):
         self.clear()
 
@@ -176,7 +185,7 @@ class Geometry:
             if dim == 3:
                 self._solids_volumes[tag] = mass * (self.length_unit_factor**3)
                 self._solids_to_surfaces[tag] = tuple(downwards)
-                self.volumes.append(tag)
+                self.solids.append(tag)
 
             elif dim == 2:
                 self._surfaces_areas[tag] = mass * (self.length_unit_factor**2)
@@ -186,7 +195,7 @@ class Geometry:
             elif dim == 1:
                 self._curves_lengths[tag] = mass * (self.length_unit_factor**1)
                 self._curves_to_points[tag] = tuple(downwards)
-                self.lines.append(tag)
+                self.curves.append(tag)
 
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "milimeter":
