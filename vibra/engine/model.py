@@ -1,3 +1,4 @@
+from typing import Optional, Callable
 
 from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
@@ -58,7 +59,8 @@ class ModelStatus:
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, disable_resume_callback:  Optional[Callable] = None):
+        self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
 
     def reset_variables(self):
@@ -91,7 +93,7 @@ class Model:
         self.structural_element_2d = None
         self.structural_element_3d = None
 
-        self.properties = ModelProperties()
+        self.properties = ModelProperties(self.disable_resume_callback)
 
         self.reset_dissipation_model_properties()
 
@@ -200,6 +202,8 @@ class Model:
         logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
+        if self.disable_resume_callback is not None:
+            self.disable_resume_callback()
 
         logging.info("Processing mesh... [90/100]")
         self.mesh.process_solid_elements_connected_to_nodes()

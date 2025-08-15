@@ -97,7 +97,7 @@ class AcousticHarmonicSolver:
         return p_min, p_max
 
 
-    def solve(self, print_log: bool = False):
+    def solve(self, print_log: bool = False, is_resume: bool = False):
         """ 
         This method solves the acoustic harmonic analysis using the
         direct method for both damped and undamped problems.
@@ -114,12 +114,12 @@ class AcousticHarmonicSolver:
 
         if self.project_file:
             num_rows = self.assembler.total_dofs
-            solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex)
+            solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
         else:
             num_rows = self.assembler.stiffness_matrix.shape[0]
             solution = np.zeros((num_rows, len(frequencies)), dtype=complex)
 
-        self.compute_frequency_sweep(solution, print_log)
+        self.compute_frequency_sweep(solution, print_log, is_resume)
 
         logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
         if isinstance(solution, LazyHDF5MatrixWriter):
@@ -131,7 +131,7 @@ class AcousticHarmonicSolver:
 
         return self.solution
 
-    def compute_frequency_sweep(self, solution, print_log):
+    def compute_frequency_sweep(self, solution, print_log, is_resume):
         self.get_min_max_values_of_pressures.cache_clear()
 
         # mass and stiffness matrices
@@ -156,7 +156,8 @@ class AcousticHarmonicSolver:
         frequency_dependent = self.assembler.frequency_dependent
         for i, freq in enumerate(frequencies):
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
-            if i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+            
+            if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
                 continue
 
             if print_log:
@@ -189,7 +190,7 @@ class AcousticHarmonicSolver:
                 # initialize the solver based on data types
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 del A, f
-                if isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+                if is_resume and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
                     continue
 
             else:

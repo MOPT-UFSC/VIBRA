@@ -946,6 +946,7 @@ class MainWindow(MainWindow_UI):
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+            self.analysis_toolbar.set_pushbutton_resume_analysis_enabled(app().project.can_resume_solution)
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()

@@ -623,8 +623,8 @@ class ProjectFile:
                         for i, freq in enumerate(frequencies):
                             writer[:, i] = solution[:, i]
 
-    def get_solution_writer(self, num_rows, columns, dtype):
-        return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype)
+    def get_solution_writer(self, num_rows, columns, dtype, is_resume):
+        return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype, is_resume)
 
     def get_solution_loader(self):
         return LazyHDF5MatrixLoader(self.harmonic_solution_filepath)

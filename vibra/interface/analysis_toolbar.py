@@ -47,6 +47,7 @@ class AnalysisToolbar(QToolBar):
     def _load_icons(self):
         self.settings_icon = QIcon(str(ICON_DIR / "settings.png"))
         self.solution_icon = QIcon(str(ICON_DIR / "go_next.png"))
+        self.resume_icon = QIcon(str(ICON_DIR / "forward-icon.png"))
         self.reset_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
 
     def _define_qt_variables(self):
@@ -63,6 +64,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis = QPushButton(self)
         self.pushButton_configure_analysis = QPushButton(self)
         self.pushButton_reset_solution = QPushButton(self)
+        self.pushButton_resume_analysis = QPushButton(self)
 
     def _create_connections(self):
         #
@@ -70,10 +72,13 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
         #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
+        self.pushButton_resume_analysis.clicked.connect(lambda: self.run_analysis(True))
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
         self.pushButton_reset_solution.clicked.connect(self.project_solution_data_reset_callback)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
+
+        app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -120,6 +125,8 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.get_spacer())
         self.addWidget(self.pushButton_run_analysis)
         self.addWidget(self.get_spacer())
+        self.addWidget(self.pushButton_resume_analysis)
+        self.addWidget(self.get_spacer())
         self.addWidget(self.pushButton_reset_solution)
         #
         self.adjustSize()
@@ -143,6 +150,13 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.setCursor(Qt.PointingHandCursor)
         self.pushButton_run_analysis.setToolTip("Run the analysis")
         self.pushButton_run_analysis.setDisabled(True)
+
+        self.pushButton_resume_analysis.setFixedSize(50, 30)
+        self.pushButton_resume_analysis.setIcon(self.resume_icon)
+        self.pushButton_resume_analysis.setIconSize(QSize(20, 20))
+        self.pushButton_resume_analysis.setCursor(Qt.PointingHandCursor)
+        self.pushButton_resume_analysis.setToolTip("Resume the analysis")
+        self.pushButton_resume_analysis.setDisabled(True)
 
         self.pushButton_reset_solution.setFixedSize(50, 30)
         self.pushButton_reset_solution.setIcon(self.reset_icon)
@@ -192,6 +206,12 @@ class AnalysisToolbar(QToolBar):
     def set_pushbutton_run_analysis_enabled(self, enable: bool = True):
         self.pushButton_run_analysis.setEnabled(enable)
 
+    def set_pushbutton_resume_analysis_enabled(self, enable=True):
+        self.pushButton_resume_analysis.setEnabled(enable)
+
+    def update_pushbutton_resume_analysis(self, can_resume_value: bool):
+        self.pushButton_resume_analysis.setEnabled(can_resume_value)
+
     def set_pushbutton_reset_solution_enabled(self):
         self.pushButton_reset_solution.setEnabled(True)
 
@@ -220,7 +240,7 @@ class AnalysisToolbar(QToolBar):
         valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
-    def run_analysis(self):
+    def run_analysis(self, is_resume: bool = False):
 
         # Do not solve models with collapsed elements!
         mesh = app().project.model.mesh   
@@ -229,8 +249,11 @@ class AnalysisToolbar(QToolBar):
             return
 
         self.update_analysis_combo_boxes()
-        if app().project.run_analysis():
+        if app().project.run_analysis(is_resume):
             return
+        
+        if is_resume:
+            app().project.can_resume_solution = False
 
         self.set_pushbutton_reset_solution_enabled()
 

@@ -483,7 +483,8 @@ class LoadProject:
             app().main_window.disable_advanced_acoustic_plots_buttons(False)
             if acoustic_harmonic_solver.solution.has_partial_solutions():
                 acoustic_harmonic_solver.solution = None
-                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records", "Run the analysis to solve remaining frequencies"])
+                project.can_resume_solution = True
+                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records", "Click on the 'Resume the analysis' button to solve remaining frequencies"])
 
 
 
