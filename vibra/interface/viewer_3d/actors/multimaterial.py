@@ -99,8 +99,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             volume = volumes[0]
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material = properties._get_property("material", surface=surface, volume=volume)
+            porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
 
-            if material is not None:
+            if porous is not None:
+                color = color_names.YELLOW_6
+            elif material is not None:
                 color = Color(*material.color).with_brightness(100).with_saturation(80)
             elif fluid is not None:
                 color = Color(*fluid.color).with_brightness(100).with_saturation(40)
@@ -330,9 +333,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def _create_porous_actor(self):
         self.porous_actor = self._new_actor_extraction("porous")
         self.porous_actor.GetProperty().SetSpecular(0)
-        self.porous_actor.GetProperty().SetDiffuse(0.5)
-        self.porous_actor.GetProperty().SetAmbient(0.1)
-        self.fluid_actor.GetProperty().SetNormalScale(3)
+        self.porous_actor.GetProperty().SetDiffuse(0.4)
+        self.porous_actor.GetProperty().SetAmbient(0.4)
+        self.fluid_actor.GetProperty().SetNormalScale(0.8)
         self.porous_actor.GetProperty().SetNormalTexture(self.porous_normal_texture)
 
     def _create_perforated_actor(self):
