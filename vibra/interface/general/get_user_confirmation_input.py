@@ -11,9 +11,8 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
     def __init__(self, title, message, *args, **kwargs):
         super().__init__(*args)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model

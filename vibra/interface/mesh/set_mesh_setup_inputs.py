@@ -59,8 +59,8 @@ class MeshSetupInputs(MesherSetup_UI):
 
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
+
         self._config_window()
         self._initialize()
         self._create_connections()
@@ -80,7 +80,7 @@ class MeshSetupInputs(MesherSetup_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _config_widgets(self):
@@ -131,11 +131,11 @@ class MeshSetupInputs(MesherSetup_UI):
             self.item_clicked_callback
         )
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
-        faces = self.main_window.selected_geometry_surfaces
-        volumes = self.main_window.selected_geometry_volumes
+        faces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
             selection = volumes
@@ -344,7 +344,7 @@ class MeshSetupInputs(MesherSetup_UI):
         if self.check_mesh_inputs():
             return
 
-        self.main_window.clear_selection()
+        app().main_window.clear_selection()
 
         self.hide()
 
@@ -681,7 +681,7 @@ class MeshSetupInputs(MesherSetup_UI):
         canvas.draw()
         plot_ui.setWindowTitle("Mesh quality histogram plotter")
         plot_ui.setWindowFlag(Qt.WindowStaysOnTopHint)
-        plot_ui.setWindowIcon(self.main_window.vibra_icon)
+        plot_ui.setWindowIcon(app().main_window.vibra_icon)
         plot_ui.exec_()
 
     def show_bad_elements(self):
@@ -785,7 +785,8 @@ class MeshSetupInputs(MesherSetup_UI):
             self.close()
 
     def closeEvent(self, a0):
-        app().main_window.distinguish_mesh_solids([])
+        if self.complete:
+            app().main_window.distinguish_mesh_solids([])
         self.keep_window_open = False
         return super().closeEvent(a0)
 

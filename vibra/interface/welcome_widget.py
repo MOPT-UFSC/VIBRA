@@ -20,7 +20,6 @@ class WelcomeWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = app().main_window
         self.widget_layout = QVBoxLayout(self)
         self.setLayout(self.widget_layout)
         self.setup_image(self.widget_layout)
@@ -83,7 +82,7 @@ class WelcomeWidget(QWidget):
                 image = QImage.fromData(QByteArray(bytes_data))
                 icon = QIcon(QPixmap.fromImage(image))
 
-            handler = partial(self.main_window.open_project, path)
+            handler = partial(app().main_window.open_project, path)
             item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
@@ -134,7 +133,7 @@ class WelcomeWidget(QWidget):
                 image = QImage.fromData(QByteArray(bytes_data))
                 icon = QIcon(QPixmap.fromImage(image))
 
-            handler = partial(self.main_window.open_project, path)
+            handler = partial(app().main_window.open_project, path)
             item = WelcomeItem(path.stem, icon, False)
             item.setToolTip(str(path))
             item.clicked.connect(handler)
@@ -152,10 +151,10 @@ class WelcomeWidget(QWidget):
            widget.setParent(None)
 
     def new_project(self):
-        self.main_window.new_project_dialog()
+        app().main_window.new_project_dialog()
 
     def open_project(self):
-        self.main_window.open_project_dialog()
+        app().main_window.open_project_dialog()
 
 
 class WelcomeItem(QWidget):

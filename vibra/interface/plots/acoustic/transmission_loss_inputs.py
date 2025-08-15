@@ -19,8 +19,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
@@ -40,7 +39,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     
     def showEvent(self, event):
         super().showEvent(event)
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
     def _load_analysis_setup(self):
         self.analysis_method = ""
@@ -62,7 +61,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_input_clicked)
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
@@ -113,7 +112,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        faces = app().main_window.selected_geometry_surfaces
 
         if faces:
 
