@@ -380,7 +380,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             
             else:
                 groups = self.map_model_id_to_groups[model_id]
-                
+
                 for group in groups:
                     self.properties._set_property("viscous_thermal_model", model_data, group=group)
             
@@ -883,9 +883,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     _, group_id = key
                     if surface in group_data["surface_ids"]:
                         self.properties._remove_group_property("viscous_thermal_model", group_id)
-
-                        if not self.models:
-                            continue
 
                         for model_id, group_ids in self.map_model_id_to_groups.items():
                             if group_id in group_ids and len(group_ids) == 1:
