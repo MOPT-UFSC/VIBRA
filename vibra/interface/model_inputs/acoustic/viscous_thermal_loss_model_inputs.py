@@ -370,12 +370,19 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         else:
             setattr(model, parameter, new_parameter_value)
 
-            volumes = self.map_model_id_to_volumes[model_id]
             model_data = model.get_data()
-            model_data["model_id"] = model_id
 
-            for volume in volumes:
-                self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
+            if model_id in self.map_model_id_to_volumes:
+                volumes = self.map_model_id_to_volumes[model_id]
+
+                for volume in volumes:
+                    self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
+            
+            else:
+                groups = self.map_model_id_to_groups[model_id]
+                
+                for group in groups:
+                    self.properties._set_property("viscous_thermal_model", model_data, group=group)
             
             app().file.write_model_properties_in_file()
     
@@ -400,7 +407,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 if model not in self.models:
                     self.models.append(model)
                     
-                model_id = data["model_id"] if "model_id" in data else self.models.index(model) + 1
+                model_id = self.models.index(model) + 1
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
         
@@ -420,10 +427,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 if model not in self.models:
                     self.models.append(model)
 
-                model_id = data["model_id"] if "model_id" in data else self.models.index(model) + 1
+                model_id = self.models.index(model) + 1
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_groups[model_id].append(group_id)
-
+            
     def update_viscous_thermall_loss_tree_widget(self):
         self.treeWidget_viscous_thermal_model.clear()
 
@@ -795,13 +802,16 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         if not model:
             return
+        
+
 
         assignment_type = self.comboBox_attribution_type.currentIndex()
 
         if assignment_type in [0, 1]:
-
             volume_ids = list()
             if assignment_type == 0:
+                self.models = list()
+
                 if "volumes" in self.mesh.geometry_information.keys():
                     volume_ids = self.mesh.geometry_information["volumes"]
 
@@ -824,7 +834,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             
             model_id = self.models.index(model) + 1
             model_data = model.get_data()
-            model_data["model_id"] = model_id
 
             self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
             
@@ -847,6 +856,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if model not in self.models:
                 self.models.append(model)
 
+            model_id = self.models.index(model) + 1
             model_data = model.get_data()
             model_data["surface_ids"] = list(surface_ids)
             model_data["selection_radius"] = self.selection_radius
@@ -873,7 +883,17 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     _, group_id = key
                     if surface in group_data["surface_ids"]:
                         self.properties._remove_group_property("viscous_thermal_model", group_id)
-            
+
+                        if not self.models:
+                            continue
+
+                        for model_id, group_ids in self.map_model_id_to_groups.items():
+                            if group_id in group_ids and len(group_ids) == 1:
+                                model = self.map_model_id_to_models[model_id]
+
+                                if model in self.models:
+                                    self.models.remove(model)
+
         else:
             volumes = set()
             for surface in model_data["surface_ids"]:
@@ -883,6 +903,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for mapped_volumes in self.map_model_id_to_volumes.values():
                     if volume in mapped_volumes:
                         self.properties._remove_volume_property("viscous_thermal_model", volume)
+                    
+                        for model_id, volumes in self.map_model_id_to_volumes.items():
+                            if volume in volumes and len(volumes) == 1:
+                                model = self.map_model_id_to_models[model_id]
+
+                                if model in self.models:
+                                    self.models.remove(model)
             
     def check_inputs(self, lineEdit, label, _float=True):
 
