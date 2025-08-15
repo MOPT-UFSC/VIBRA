@@ -122,6 +122,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             if surface in app().main_window.hidden_surfaces:
                 continue
+            else:
+                composition_to_surfaces["selection"].append(surface)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material_wall = properties._get_property("material", surface=surface)
@@ -301,7 +303,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.ghost_actor = self._new_actor_extraction("selection")
         self.ghost_actor.GetProperty().SetOpacity(1e-12)
         self.ghost_actor.PickableOn()
-        self.extractors["selection"].ExtractAllCellsOn()
 
     def _create_material_volume_actor(self):
         self.material_actor = self._new_actor_extraction("material_volume")
