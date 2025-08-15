@@ -1,9 +1,10 @@
-from collections import defaultdict
+from pathlib import Path
+from typing import Iterator, Literal
+
 import gmsh
 import numpy as np
+
 from vibra.utils.bidict import bidict
-from typing import Literal, Iterator
-from pathlib import Path
 
 LengthUnits = Literal["milimeter", "inch"]
 
@@ -137,6 +138,27 @@ class Geometry:
 
     def is_surface_straight(self, surface_id: int) -> bool:
         return surface_id in self._straight_surfaces
+
+    def solid_center(self, solid_id: int) -> np.ndarray | None:
+        return self._solids_centers.get(solid_id)
+
+    def surface_center(self, surface_id: int) -> np.ndarray | None:
+        return self._surfaces_centers.get(surface_id)
+
+    def curve_center(self, curve_id: int) -> np.ndarray | None:
+        return self._curves_centers.get(curve_id)
+
+    def point_center(self, point_id: int) -> np.ndarray | None:
+        return self._points_centers.get(point_id)
+
+    def surface_normal(self, surface_id: int) -> np.ndarray | None:
+        return self._surfaces_normals.get(surface_id)
+
+    def curve_normal(self, curve_id: int) -> np.ndarray | None:
+        return self._curves_normals.get(curve_id)
+
+    def point_normal(self, point_id: int) -> np.ndarray | None:
+        return self._points_normals.get(point_id)
 
     def _process_geometry_information(self):
         self.clear()
