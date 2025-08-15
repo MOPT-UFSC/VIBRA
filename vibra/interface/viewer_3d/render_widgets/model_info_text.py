@@ -402,32 +402,49 @@ def get_incident_plane_wave_text(ipw_data: dict):
 def get_reciprocating_compressor_text(rc_data: dict):
 
     rc_parameters = rc_data.get("parameters", dict)
-    acting_label = rc_parameters.get("acting_label", "")
+    acting_head = rc_parameters.get("acting_head", "")
     pressure_unit = rc_parameters.get("pressure_unit", "")
     temperature_unit = rc_parameters.get("temperature_unit", "")
 
-    acting_label = acting_label.replace("_", " ")
+    acting_head = acting_head.replace("_", " ")
+    compression_stage = rc_parameters.get("compression_stage")
+    if isinstance(compression_stage, int):
+        labels = ["1st stage", "2nd stage", "3rd stage"]
+        compression_stage = labels[compression_stage-1]
+    else:
+        compression_stage = compression_stage.lower()
+
+    if "TDC_crank_angle_1" in rc_parameters.keys():
+        tdc_crank_angle = rc_parameters.get("TDC_crank_angle_1")
+    else:
+        tdc_crank_angle = rc_parameters.get("TDC_crank_angle", "")
 
     tree_rc = TreeInfo("Reciprocating compressor")
     tree_rc.add_item("Connection", rc_data.get("connection_type", ""))
+    tree_rc.add_item("Compression stage", compression_stage)
+    tree_rc.add_item("Valves per head", rc_parameters.get("valves_per_head", "1"))
+    tree_rc.add_item("Acting head", acting_head)
+
+    if acting_head in ["head end", "both ends"]:
+        tree_rc.add_item("HE clearance", rc_parameters.get("clearance_HE", ""), "%")
+
+    if acting_head in ["crank end", "both ends"]:
+        tree_rc.add_item("CE clearance", rc_parameters.get("clearance_CE", ""), "%")
+
     tree_rc.add_item("Bore diameter", rc_parameters.get("bore_diameter", ""), "m")
     tree_rc.add_item("Stroke", rc_parameters.get("stroke", ""), "m")
     tree_rc.add_item("Connecting rod length", rc_parameters.get("connecting_rod_length", ""), "m")
-    tree_rc.add_item("Rod diameter", rc_parameters.get("rod_diameter", ""), "m")
-    tree_rc.add_item("TDC angle", rc_parameters.get("TDC_crank_angle_1", ""), "deg")
+
+    if acting_head in ["crank end", "both ends"]:
+        tree_rc.add_item("Rod diameter", rc_parameters.get("rod_diameter", ""), "m")
+
+    tree_rc.add_item("TDC angle", tdc_crank_angle, "deg")
     tree_rc.add_item("Capacity", rc_parameters.get("capacity", ""), "%")
 
-    tree_rc.add_item("Pressure at suction", rc_parameters.get("pressure_at_suction", ""), pressure_unit)
+    tree_rc.add_item("Pressure at suction", rc_parameters.get("pressure_at_suction", ""), pressure_unit.replace(" ", ""))
     tree_rc.add_item("Temperature at suction", rc_parameters.get("temperature_at_suction", ""), temperature_unit)
     tree_rc.add_item("Rotational speed", rc_parameters.get("rotational_speed", ""), "rpm")
-    tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""))
-    tree_rc.add_item("Acting setup", acting_label)
-
-    if acting_label in ["head end", "both ends"]:
-        tree_rc.add_item("HE clearance", rc_parameters.get("clearance_HE", ""), "%")
-
-    if acting_label in ["crank end", "both ends"]:
-        tree_rc.add_item("CE clearance", rc_parameters.get("clearance_CE", ""), "%")
+    tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""), "--")
 
     return str(tree_rc)
 
