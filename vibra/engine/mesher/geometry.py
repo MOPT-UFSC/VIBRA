@@ -2,7 +2,7 @@ from collections import defaultdict
 import gmsh
 import numpy as np
 from vibra.utils.bidict import bidict
-from typing import Literal
+from typing import Literal, Iterator
 from pathlib import Path
 
 LengthUnits = Literal["milimeter", "inch"]
@@ -15,29 +15,32 @@ class Geometry:
         length_unit: LengthUnits = "milimeter",
     ):
         # connectivity
-        self.points_coords = dict()
-        self.solids_to_surfaces = bidict()
-        self.surfaces_to_curves = bidict()
-        self.curves_to_points = bidict()
+        self._points_coords = dict()
+        self._solids_to_surfaces = bidict()
+        self._surfaces_to_curves = bidict()
+        self._curves_to_points = bidict()
 
         # centers
-        self.solids_centers = dict()
-        self.surfaces_centers = dict()
-        self.curves_centers = dict()
+        self._solids_centers = dict()
+        self._surfaces_centers = dict()
+        self._curves_centers = dict()
 
         # normals
-        self.surfaces_normals = dict()
-        self.curves_normals = dict()
-        self.points_normals = dict()
+        self._surfaces_normals = dict()
+        self._curves_normals = dict()
+        self._points_normals = dict()
 
         # areas
-        self.surfaces_areas = dict()
-        self.curves_lengths = dict()
-        self.solids_volumes = dict()
+        self._surfaces_areas = dict()
+        self._curves_lengths = dict()
+        self._solids_volumes = dict()
 
-        self.straight_solids = dict()
-        self.straight_lines = dict()
-        self.straight_curves = dict()
+        # curvatures
+        # TODO: these variables could be sets that only stores 
+        # if the entities are straight or not 
+        self._straight_solids = dict()
+        self._straight_lines = dict()
+        self._straight_curves = dict()
 
         # About geometry information
         self.points = list()
@@ -59,30 +62,30 @@ class Geometry:
         gmsh.finalize()
 
     def clear(self):
-        self.points_coords.clear()
-        self.solids_to_surfaces.clear()
-        self.surfaces_to_curves.clear()
-        self.curves_to_points.clear()
+        self._points_coords.clear()
+        self._solids_to_surfaces.clear()
+        self._surfaces_to_curves.clear()
+        self._curves_to_points.clear()
 
         # centers
-        self.solids_centers.clear()
-        self.surfaces_centers.clear()
-        self.curves_centers.clear()
+        self._solids_centers.clear()
+        self._surfaces_centers.clear()
+        self._curves_centers.clear()
 
         # normals
-        self.surfaces_normals.clear()
-        self.curves_normals.clear()
-        self.points_normals.clear()
+        self._surfaces_normals.clear()
+        self._curves_normals.clear()
+        self._points_normals.clear()
 
         # areas
-        self.surfaces_areas.clear()
-        self.curves_lengths.clear()
+        self._surfaces_areas.clear()
+        self._curves_lengths.clear()
 
-        self.solids_volumes.clear()
+        self._solids_volumes.clear()
 
-        self.straight_solids.clear()
-        self.straight_lines.clear()
-        self.straight_curves.clear()
+        self._straight_solids.clear()
+        self._straight_lines.clear()
+        self._straight_curves.clear()
 
     def set_length_unit(self, length_unit: LengthUnits):
         self.length_unit = length_unit
@@ -107,18 +110,18 @@ class Geometry:
             mass = gmsh.model.occ.getMass(dim, tag)
 
             if dim == 3:
-                self.solids_volumes[tag] = mass * (self.length_unit_factor**3)
-                self.solids_to_surfaces[tag] = tuple(downwards)
+                self._solids_volumes[tag] = mass * (self.length_unit_factor**3)
+                self._solids_to_surfaces[tag] = tuple(downwards)
                 self.volumes.append(tag)
 
             elif dim == 2:
-                self.surfaces_areas[tag] = mass * (self.length_unit_factor**2)
-                self.surfaces_to_curves[tag] = tuple(downwards)
+                self._surfaces_areas[tag] = mass * (self.length_unit_factor**2)
+                self._surfaces_to_curves[tag] = tuple(downwards)
                 self.surfaces.append(tag)
 
             elif dim == 1:
-                self.curves_lengths[tag] = mass * (self.length_unit_factor**1)
-                self.curves_to_points[tag] = tuple(downwards)
+                self._curves_lengths[tag] = mass * (self.length_unit_factor**1)
+                self._curves_to_points[tag] = tuple(downwards)
                 self.lines.append(tag)
 
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
