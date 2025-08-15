@@ -3,14 +3,18 @@ import gmsh
 import numpy as np
 from vibra.utils.bidict import bidict
 from typing import Literal
+from pathlib import Path
 
 LengthUnits = Literal["milimeter", "inch"]
 
 
 class Geometry:
-    def __init__(self, length_unit: LengthUnits = "milimeter", **kwargs):
-        self.set_length_unit(length_unit)
-
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        length_unit: LengthUnits = "milimeter",
+    ):
+        # connectivity
         self.points_coords = dict()
         self.solids_to_surfaces = bidict()
         self.surfaces_to_curves = bidict()
@@ -29,7 +33,6 @@ class Geometry:
         # areas
         self.surfaces_areas = dict()
         self.curves_lengths = dict()
-
         self.solids_volumes = dict()
 
         self.straight_solids = dict()
@@ -41,6 +44,10 @@ class Geometry:
         self.lines = list()
         self.surfaces = list()
         self.volumes = list()
+
+        self.set_length_unit(length_unit)
+        if path is not None:
+            self.read_file(path)
 
     def read_file(self, file_path: str):
         gmsh.initialize()
@@ -76,7 +83,7 @@ class Geometry:
         self.straight_solids.clear()
         self.straight_lines.clear()
         self.straight_curves.clear()
-    
+
     def set_length_unit(self, length_unit: LengthUnits):
         self.length_unit = length_unit
         self.length_unit_factor = self._get_length_unit_factor(length_unit)
