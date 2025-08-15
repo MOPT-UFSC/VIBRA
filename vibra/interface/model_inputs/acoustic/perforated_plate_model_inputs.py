@@ -29,6 +29,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
  
         self.project = app().project
         self.model = app().project.model
@@ -85,8 +86,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.treeWidget_perforated_plate_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
-        self.main_window.theme_changed.connect(self._paint_icons)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
         self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
@@ -133,7 +134,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if self.tabWidget_main.currentIndex() == 1:
             return
 
-        surfaces = self.main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
         if surfaces:
 
             if len(surfaces) == 1:
@@ -984,7 +985,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()

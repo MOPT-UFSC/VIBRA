@@ -21,8 +21,8 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -65,12 +65,12 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
-        nodes = self.main_window.selected_mesh_nodes
+        faces = app().main_window.selected_geometry_surfaces
+        nodes = app().main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if faces and index == 0:
@@ -89,9 +89,9 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 0:
-            self.main_window.action_model_workspace_callback()
+            app().main_window.action_model_workspace_callback()
         else:
-            self.main_window.action_mesh_workspace_callback()
+            app().main_window.action_mesh_workspace_callback()
 
     def check_inputs(self):
 
