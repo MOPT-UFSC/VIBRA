@@ -99,39 +99,61 @@ class Geometry:
                 yield curve_id
 
     def points_to_surfaces(self, *point_ids: int) -> Iterator[int]:
-        for curve_in in self.points_to_curves(*point_ids):
-            for surface_id in self._surfaces_to_curves.inverse.get(curve_in, []):
+        for curve_id in self.points_to_curves(*point_ids):
+            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
                 yield surface_id
 
     def points_to_solids(self, *point_ids: int) -> Iterator[int]:
-        pass
+        for curve_id in self.points_to_curves(*point_ids):
+            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
+                for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
+                    yield solid_id
 
-    def curves_to_points(self, *line_ids: int) -> Iterator[int]:
-        pass
+    def curves_to_points(self, *curve_ids: int) -> Iterator[int]:
+        for curve_id in curve_ids:
+            for point_id in self._curves_to_points.get(curve_id, []):
+                yield point_id
 
-    def curves_to_surfaces(self, *line_ids: int) -> Iterator[int]:
-        pass
+    def curves_to_surfaces(self, *curve_ids: int) -> Iterator[int]:
+        for curve_id in curve_ids:
+            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
+                yield surface_id
 
-    def curves_to_solids(self, *line_ids: int) -> Iterator[int]:
-        pass
-
-    def surfaces_to_points(self, *surface_ids: int) -> Iterator[int]:
-        pass
+    def curves_to_solids(self, *curve_ids: int) -> Iterator[int]:
+        for surface_id in self.curves_to_surfaces(*curve_ids):
+            for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
+                yield solid_id
 
     def surfaces_to_curves(self, *surface_ids: int) -> Iterator[int]:
-        pass
+        for surface_id in surface_ids:
+            for curve_id in self._surfaces_to_curves.get(surface_id, []):
+                yield curve_id
+
+    def surfaces_to_points(self, *surface_ids: int) -> Iterator[int]:
+        for curve_id in self.surfaces_to_curves(*surface_ids):
+            for point_id in self._curves_to_points.get(curve_id, []):
+                yield point_id
 
     def surfaces_to_solids(self, *surface_ids: int) -> Iterator[int]:
-        pass
+        for surface_id in surface_ids:
+            for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
+                yield solid_id
 
     def solids_to_points(self, *volume_ids: int) -> Iterator[int]:
-        pass
+        for surface_id in self.solids_to_surfaces(*volume_ids):
+            for curve_id in self._surfaces_to_curves.get(surface_id, []):
+                for point_id in self._curves_to_points.get(curve_id, []):
+                    yield point_id
 
     def solids_to_curves(self, *volume_ids: int) -> Iterator[int]:
-        pass
+        for surface_id in self.solids_to_surfaces(*volume_ids):
+            for curve_id in self._surfaces_to_curves.get(surface_id, []):
+                yield curve_id
 
     def solids_to_surfaces(self, *volume_ids: int) -> Iterator[int]:
-        pass
+        for volume_id in volume_ids:
+            for surface_id in self._solids_to_surfaces.get(volume_id, []):
+                yield surface_id
 
     def is_curve_straight(self, curve_id: int) -> bool:
         return curve_id in self._straight_curves
