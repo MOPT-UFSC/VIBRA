@@ -65,6 +65,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         #
         self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_input_clicked)
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id

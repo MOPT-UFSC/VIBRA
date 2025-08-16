@@ -57,6 +57,8 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_input_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_output_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def update_render_according_to_selector(self):
 

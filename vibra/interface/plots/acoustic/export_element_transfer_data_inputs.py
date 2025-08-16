@@ -76,6 +76,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def geometry_selection_callback(self):
 
