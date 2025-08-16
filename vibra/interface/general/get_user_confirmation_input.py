@@ -12,7 +12,6 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
         super().__init__(*args)
 
         app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = self.project.model
