@@ -583,6 +583,30 @@ class Model:
 
         return surface_without_thickness
 
+    def is_the_property_present_in_model(self, property_to_check: str, attribution_filter: str | None = None):
+        """
+        """
+        properties = {
+                        "volumes" : self.properties.volume_properties,
+                        "surfaces" : self.properties.surface_properties,
+                        "lines" : self.properties.line_properties,
+                        "points" : self.properties.point_properties,
+                        "nodes" : self.properties.nodal_properties,
+                        }
+
+        if attribution_filter is None:
+            for _property in properties.values():    
+                for (property_label, *args) in _property.keys():
+                    if property_label == property_to_check:
+                        return True
+
+        _property = properties.get(attribution_filter, dict())
+        for (property_label, *args) in _property.keys():
+            if property_label == property_to_check:
+                return True
+
+        return False
+
     def process_degrees_of_freedom_decoupling(self):
         self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
         self.dofs_decoupling.process_degrees_of_freedom_decoupling()

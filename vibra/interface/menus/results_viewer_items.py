@@ -126,7 +126,9 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_results_viewer_acoustic.setHidden(False)
 
     def update_items(self):
-        """Enables and disables the Child Items on the menu after the solution is done."""
+        """
+        Enables and disables the Child Items on the menu after the solution is done.
+        """
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
@@ -197,8 +199,15 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_particle_velocity.setDisabled(False)
             self.item_child_acoustic_specific_impedance.setDisabled(False)
 
+        self.update_allowable_pulsation_criteria_visibility(analysis_id)
         self.update_tree_visibility_after_solution()
-    
+
+    def update_allowable_pulsation_criteria_visibility(self, analysis_id: int):
+        compressor_exists = True
+        if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            compressor_exists = not app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(compressor_exists)
+
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.

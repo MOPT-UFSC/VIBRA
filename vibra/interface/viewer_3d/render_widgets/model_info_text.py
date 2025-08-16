@@ -403,10 +403,17 @@ def get_reciprocating_compressor_text(rc_data: dict):
 
     rc_parameters = rc_data.get("parameters", dict)
     acting_head = rc_parameters.get("acting_head", "")
+
+    # ensure the backwards compatibility
+    if acting_head == "":
+        acting_head = rc_parameters.get("acting_label", "")
+
+    if acting_head != "":
+        acting_head = acting_head.replace("_", " ")
+
     pressure_unit = rc_parameters.get("pressure_unit", "")
     temperature_unit = rc_parameters.get("temperature_unit", "")
 
-    acting_head = acting_head.replace("_", " ")
     compression_stage = rc_parameters.get("compression_stage")
     if isinstance(compression_stage, int):
         labels = ["1st stage", "2nd stage", "3rd stage"]
