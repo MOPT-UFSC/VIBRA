@@ -7,6 +7,7 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
@@ -424,6 +425,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.spinBox_valves_per_head.setValue(1)
         self.spinBox_capacity.setValue(100)
 
+    def generate_mesh(self):
+        if not app().project.model.generated_mesh:
+            mesher = MeshSetupInputs(close_after_generate=True)
+            if not mesher.complete:
+                return True
+
     def check_input_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
@@ -713,6 +720,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
 
     def attribute_callback(self):
+
+        if self.generate_mesh():
+            return
 
         surface_id = self.check_input_surfaces()
         if surface_id is None:

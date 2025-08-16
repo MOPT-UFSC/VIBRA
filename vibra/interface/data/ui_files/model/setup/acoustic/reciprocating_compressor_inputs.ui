@@ -351,8 +351,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>465</width>
-                  <height>1064</height>
+                  <width>475</width>
+                  <height>1038</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_11">
@@ -608,7 +608,7 @@
                        </font>
                       </property>
                       <property name="text">
-                       <string>0.78</string>
+                       <string>0.51435</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -638,7 +638,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>15.80</string>
+                       <string>24.5</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -916,7 +916,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>0.33</string>
+                       <string>0.3048</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -1070,7 +1070,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>0.135</string>
+                       <string>0.1397</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -1100,7 +1100,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>18.39</string>
+                       <string>24.5</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -1130,7 +1130,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>1.25</string>
+                       <string>1.20015</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -1392,7 +1392,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>1.90788804</string>
+                       <string>2.09001</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -1587,7 +1587,7 @@
                        <double>10.000000000000000</double>
                       </property>
                       <property name="value">
-                       <double>360.000000000000000</double>
+                       <double>400.000000000000000</double>
                       </property>
                      </widget>
                     </item>
@@ -2292,7 +2292,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>19.65</string>
+                       <string>29.33</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2477,7 +2477,7 @@
                        <enum>Qt::StrongFocus</enum>
                       </property>
                       <property name="text">
-                       <string>45</string>
+                       <string>40</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignCenter</set>
@@ -2971,8 +2971,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>486</width>
-                  <height>537</height>
+                  <width>492</width>
+                  <height>549</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_18">
@@ -3126,7 +3126,7 @@
                        <number>10</number>
                       </property>
                       <property name="value">
-                       <number>400</number>
+                       <number>300</number>
                       </property>
                      </widget>
                     </item>
@@ -4599,6 +4599,7 @@ at suction</string>
  <tabstops>
   <tabstop>tabWidget_main</tabstop>
   <tabstop>scrollArea</tabstop>
+  <tabstop>comboBox_connection_type</tabstop>
   <tabstop>comboBox_stage</tabstop>
   <tabstop>comboBox_acting_head</tabstop>
   <tabstop>spinBox_valves_per_head</tabstop>
@@ -4610,16 +4611,51 @@ at suction</string>
   <tabstop>lineEdit_clearance_head_end</tabstop>
   <tabstop>lineEdit_clearance_crank_end</tabstop>
   <tabstop>spinBox_tdc1_crank_angle</tabstop>
+  <tabstop>doubleSpinBox_rotational_speed</tabstop>
   <tabstop>spinBox_capacity</tabstop>
-  <tabstop>pushButton_exit</tabstop>
-  <tabstop>pushButton_confirm</tabstop>
+  <tabstop>pushButton_reset_entries</tabstop>
+  <tabstop>spinBox_number_of_points</tabstop>
   <tabstop>spinBox_max_frequency</tabstop>
   <tabstop>comboBox_frequency_resolution</tabstop>
   <tabstop>lineEdit_frequency_resolution</tabstop>
-  <tabstop>lineEdit_number_of_revolutions</tabstop>
-  <tabstop>treeWidget_compressor_excitation</tabstop>
-  <tabstop>pushButton_reset</tabstop>
+  <tabstop>pushButton_process_aquisition_parameters</tabstop>
   <tabstop>pushButton_remove</tabstop>
+  <tabstop>pushButton_confirm</tabstop>
+  <tabstop>treeWidget_compressor_excitation</tabstop>
+  <tabstop>pushButton_exit</tabstop>
+  <tabstop>comboBox_pressure_units</tabstop>
+  <tabstop>lineEdit_isentropic_exponent</tabstop>
+  <tabstop>lineEdit_selected_fluid</tabstop>
+  <tabstop>comboBox_fluid_data_source</tabstop>
+  <tabstop>comboBox_temperature_units</tabstop>
+  <tabstop>pushButton_get_fluid</tabstop>
+  <tabstop>lineEdit_molar_mass</tabstop>
+  <tabstop>lineEdit_pressure_at_suction</tabstop>
+  <tabstop>lineEdit_temperature_at_suction</tabstop>
+  <tabstop>lineEdit_pressure_at_discharge</tabstop>
+  <tabstop>lineEdit_temperature_at_discharge</tabstop>
+  <tabstop>checkBox_export_data</tabstop>
+  <tabstop>lineEdit_export_path</tabstop>
+  <tabstop>pushButton_export_path</tabstop>
+  <tabstop>comboBox_output_data_type</tabstop>
+  <tabstop>scrollArea_2</tabstop>
+  <tabstop>pushButton_reset</tabstop>
+  <tabstop>lineEdit_number_of_revolutions</tabstop>
+  <tabstop>tabWidget_plots_2</tabstop>
+  <tabstop>pushButton_plot_volumetric_flow_rate_at_discharge_time</tabstop>
+  <tabstop>pushButton_plot_volumetric_flow_rate_at_suction_time</tabstop>
+  <tabstop>pushButton_plot_piston_position_and_velocity_time</tabstop>
+  <tabstop>pushButton_plot_rod_pressure_load_time</tabstop>
+  <tabstop>pushButton_plot_pressure_head_end_angle</tabstop>
+  <tabstop>pushButton_plot_volume_head_end_angle</tabstop>
+  <tabstop>pushButton_plot_pressure_crank_end_angle</tabstop>
+  <tabstop>pushButton_plot_volume_crank_end_angle</tabstop>
+  <tabstop>pushButton_plot_volumetric_flow_rate_at_discharge_frequency</tabstop>
+  <tabstop>pushButton_plot_volumetric_flow_rate_at_suction_frequency</tabstop>
+  <tabstop>pushButton_plot_rod_pressure_load_frequency</tabstop>
+  <tabstop>pushButton_plot_PV_diagram_both_ends</tabstop>
+  <tabstop>pushButton_plot_PV_diagram_crank_end</tabstop>
+  <tabstop>pushButton_plot_PV_diagram_head_end</tabstop>
  </tabstops>
  <resources>
   <include location="../../../../icons/resources.qrc"/>
