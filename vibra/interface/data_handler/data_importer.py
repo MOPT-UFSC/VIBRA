@@ -136,14 +136,15 @@ class DataImporter:
     @staticmethod
     def __load_text_file_data(path: str):
 
+        output_data = list()
         if isinstance(path, str):
             path = Path(path)
 
-        output_data = list()
         with open(path, 'r') as file:
             for line in file.readlines():
                 try:
-                    line_values = [float(value) for value in line.strip().split(" ") if value != ""]
+                    modif_line = line.replace(",", " ").strip().split(" ")
+                    line_values = [float(value) for value in modif_line if value != ""]
                 except:
                     continue
 
