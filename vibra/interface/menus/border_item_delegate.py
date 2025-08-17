@@ -1,10 +1,6 @@
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QStyledItemDelegate, QStyleOptionViewItem, QStyle
-from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen, QPainter
-from PySide6.QtCore import Qt, QSize, QRect
-
-from molde.colors import color_names
-
-from vibra import app
+from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
+from PySide6.QtGui import QIcon, QPainter
+from PySide6.QtCore import Qt, QSize
 
 class BorderItemDelegate(QStyledItemDelegate):
     def __init__(self, parent, borderRole):
@@ -15,6 +11,9 @@ class BorderItemDelegate(QStyledItemDelegate):
         super(BorderItemDelegate, self).initStyleOption(option, index)
         option.decorationAlignment = Qt.AlignRight
         option.decorationPosition = QStyleOptionViewItem.Right
+
+        # clear the icon from view. We're drawing it later
+        option.icon = QIcon()
 
     def sizeHint(self, option, index):        
         size = super(BorderItemDelegate, self).sizeHint(option, index)
@@ -40,25 +39,20 @@ class BorderItemDelegate(QStyledItemDelegate):
         separator_size.setHeight(2)
         return item.setSizeHint(0, separator_size)
 
-    def paint(self, painter: QPainter, option, index):
-        pen = index.data(self.borderRole)
-        rect = QRect(option.rect)
-        
-        tree = index.model().parent()
-        item = tree.itemFromIndex(index) if hasattr(tree, 'itemFromIndex') else None
-        if item and item.parent():
-            # remove icon to not duplicate when super() is called
-            original_icon  = item.icon(0)
-            item.setIcon(0, QIcon())
-            super(BorderItemDelegate, self).paint(painter, option, index)
-            item.setIcon(0, original_icon)
-            
-            # draw icon
-            icon = index.data(Qt.DecorationRole)
-            if icon is not None:
-                icon_size = option.decorationSize.width() + 2
-                spacing = 5
-                icon_rect = QRect(option.rect.right() - icon_size - spacing, option.rect.top() + (option.rect.height() - icon_size)//2, icon_size, icon_size)
-                icon.paint(painter, icon_rect)
-        else:
-            super(BorderItemDelegate, self).paint(painter, option, index)
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index):
+        painter.save()
+
+        super().paint(painter, option, index)
+
+        original_icon = index.data(Qt.DecorationRole)
+        if original_icon and not original_icon.isNull():
+            new_icon_size = QSize(20, 20)
+            scaled_pixmap = original_icon.pixmap(new_icon_size, QIcon.Normal, QIcon.On)
+
+            x_offset = option.rect.left()
+            x_offset += option.rect.width() - 32
+            y_offset = option.rect.top() + (option.rect.height() - new_icon_size.height()) // 2
+
+            painter.drawPixmap(x_offset, y_offset, scaled_pixmap)
+
+        painter.restore()

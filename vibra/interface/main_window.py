@@ -8,7 +8,7 @@ import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
-from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtCore import QEvent, QTimer, Qt, Signal
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (
     QAbstractButton,
@@ -135,7 +135,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
-        self.splitter.widget(0).setMinimumWidth(360)
+        self.splitter.widget(0).setMinimumWidth(360)        
 
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -473,6 +473,7 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_symbols"):
                 widget.update_symbols()
+        QTimer.singleShot(4000, self.model_setup_widget.model_setup_items.show_warning_tooltip_structural)
 
     def update_info_text(self):
         for i in range(self.render_widgets_stack.count()):
@@ -1008,7 +1009,7 @@ class MainWindow(MainWindow_UI):
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed.emit() 
 
     def action_line_view_callback(self, clicked: bool):
         self.visualization_filter.lines = clicked

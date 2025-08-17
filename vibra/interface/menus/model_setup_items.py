@@ -1,5 +1,6 @@
 from PySide6.QtGui import QPen, QColor
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QTimer, Qt
+from PySide6.QtWidgets import QToolTip
 
 from vibra import app
 from vibra.interface.menus.common_menu_items import CommonMenuItems
@@ -24,6 +25,12 @@ class ModelSetupItems(CommonMenuItems):
         self._initial_configuration()
         self.update_items_appearance()
 
+    def show_warning_tooltip_structural(self):
+        tooltip_html = self.item_top_structural_model_setup.toolTip(0)
+        rect = self.visualItemRect(self.item_top_structural_model_setup)
+        pos = self.mapToGlobal(rect.center())
+        QToolTip.showText(pos, tooltip_html, self, rect, 5000)
+    
     def _create_items(self):
         """Creates all TreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
@@ -32,7 +39,17 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOFs Decoupling")
 
-        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
+        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
+
+        tooltip_html = '''
+                        <p><b>Structural Properties</b></p>
+                        <p><span style="color:red;">
+                        <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span> 
+                        While we are actively working to ensure complete accuracy, please be aware that simulation results may 
+                        exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
+                        '''
+        self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
+        
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
         self.item_child_prescribed_dofs = self.add_item("Prescribed DOFs")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
