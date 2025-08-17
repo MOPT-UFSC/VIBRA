@@ -251,11 +251,15 @@ class AnalysisToolbar(QToolBar):
 
         title = "Removal of project solution data"
         message = "Would you like to delete all solution data from this project? "
-        message += "\n\nBe aware, this process cannot be undone."
+        tool_tip = "Be aware, this process cannot be undone."
 
-        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Delete all"}
-        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        buttons_config = {
+                          "left_button_label": "Cancel", 
+                          "right_button_label": "Delete all",
+                          "right_toolTip" : tool_tip
+                          }
 
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
         if read._cancel:
             return
 
