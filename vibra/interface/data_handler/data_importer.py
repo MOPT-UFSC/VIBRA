@@ -71,7 +71,11 @@ class DataImporter:
 
     @staticmethod
     def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData | None:
-        return DataImporter.__import_files(caption, last_folder, file_extensions)[0]
+        imported_data = DataImporter.__import_files(caption, last_folder, file_extensions)
+        if isinstance(imported_data, list):
+            if imported_data:
+                return imported_data[0]
+        return None
 
     @staticmethod
     def read_data_in_file(file_path: str, use_first_sheet: bool = True):
@@ -105,7 +109,7 @@ class DataImporter:
                                                     file_path, 
                                                     sheet_name = sheetname,  
                                                     usecols = cols,
-                                                    engine = "openpyxl"
+                                                    engine = "openpyxl",
                                                     ).to_numpy()
                             break
                         except:
