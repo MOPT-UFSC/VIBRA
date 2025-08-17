@@ -91,7 +91,11 @@ class DataImporter:
             filename = os.path.basename(file_path)
 
             if sufix in [".txt", ".dat", ".csv"]:
-                loaded_data = np.loadtxt(file_path, delimiter = ",")
+                try:
+                    loaded_data = np.loadtxt(file_path, delimiter = ",")
+                except:
+                    loaded_data = DataImporter.__load_text_file_data(file_path)
+
                 loaded_data = DataImporter.__remove_unnecesary_header_in_data(loaded_data)
                 output_data.append(ImportedData(loaded_data, filename, sufix, path=file_path))
                 
@@ -129,3 +133,20 @@ class DataImporter:
         filtered_data = [row for row in data if not isinstance(row[0], str)]
         return np.array(filtered_data, dtype=float)
 
+    @staticmethod
+    def __load_text_file_data(path: str):
+
+        if isinstance(path, str):
+            path = Path(path)
+
+        output_data = list()
+        with open(path, 'r') as file:
+            for line in file.readlines():
+                try:
+                    line_values = [float(value) for value in line.strip().split(" ") if value != ""]
+                except:
+                    continue
+
+                output_data.append(line_values)
+
+        return np.array(output_data, dtype=float)
