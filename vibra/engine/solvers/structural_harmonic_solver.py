@@ -239,7 +239,7 @@ class StructuralHarmonicSolver:
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 del A, C
 
-            C = 1j * ((beta_h + omega * beta_v) * K + (alpha_h + omega * alpha_v) * M)
+            C = ((beta_h + omega * beta_v) * K + (alpha_h + omega * alpha_v) * M)
             A = K - (omega**2) * M + 1j * omega * C
 
             if not is_complex:
