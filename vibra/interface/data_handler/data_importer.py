@@ -56,10 +56,10 @@ class DataImporter:
         imported_data = list()
         if isinstance(imported_paths, list):
             for imported_path in imported_paths:
-                imported_data.extend(DataImporter.read_data_in_file(imported_path))
-        
+                imported_data.extend(DataImporter.read_data_in_file(imported_path, use_first_sheet=False))
+
         else:
-            imported_data.extend(DataImporter.read_data_in_file(imported_paths))
+            imported_data.extend(DataImporter.read_data_in_file(imported_paths, use_first_sheet=True))
 
         app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
         
@@ -68,13 +68,13 @@ class DataImporter:
     @staticmethod
     def import_multiple_files(last_folder: str, file_extensions: List[str], caption: str = "Open file") -> List[ImportedData]:
         return DataImporter.__import_files(caption, last_folder, file_extensions, True)
-    
+
     @staticmethod
     def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData | None:
         return DataImporter.__import_files(caption, last_folder, file_extensions)[0]
-    
+
     @staticmethod
-    def read_data_in_file(file_path: str):
+    def read_data_in_file(file_path: str, use_first_sheet: bool = True):
 
         import warnings
 
@@ -113,6 +113,9 @@ class DataImporter:
 
                     sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
                     output_data.append(ImportedData(sheet_data, filename, sufix, sheetname, file_path))
+                    if use_first_sheet:
+                        break
+
                     # return ImportedData(sheet_data, filename, sufix, sheetname, file_path)
 
             return output_data
