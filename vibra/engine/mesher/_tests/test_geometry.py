@@ -77,6 +77,24 @@ def test_geometry_centers(geometry: Geometry):
 
 
 @pytest.mark.skip
+def test_convert_all_length_units(geometry: Geometry):
+    geo = Geometry(length_unit="milimeter")
+
+    geo._curves_lengths = {1: 10.0}        # mm
+    geo._surfaces_areas = {1: 100.0}       # mm²
+    geo._solids_volumes = {1: 1000.0}      # mm³
+    geo._solids_centers = {1: np.array([5.0, 5.0, 5.0])}  # mm
+
+    geo.convert_all_length_units("inch")
+
+    # assert np.allclose(geo._curves_lengths[1], 0.393700787)
+    # assert np.allclose(geo._surfaces_areas[1], 0.393700787**2)
+    # assert np.allclose(geo._solids_volumes[1], 0.393700787**3)
+    # assert np.allclose(geo._solids_centers[1], np.array([0.19685039370078738, 0.19685039370078738, 0.19685039370078738]))
+
+
+
+@pytest.mark.skip
 def test_geometry_normals(geometry: Geometry):
     assert geometry.surface_normal(1) == np.array([1, 0, 0])
     assert geometry.surface_normal(2) == np.array([-1, 0, 0])

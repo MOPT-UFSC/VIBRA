@@ -46,6 +46,9 @@ class Geometry:
         self.surfaces = list()
         self.solids = list()
 
+        self.length_unit = length_unit
+        self.length_unit_factor = self._get_length_unit_factor
+
         self.set_length_unit(length_unit)
         if path is not None:
             self.read_file(path)
@@ -85,13 +88,32 @@ class Geometry:
         self._straight_surfaces.clear()
 
     def set_length_unit(self, length_unit: LengthUnits):
-        self.length_unit = length_unit
-        self.length_unit_factor = self._get_length_unit_factor(length_unit)
+        old_factor = self.length_unit_factor
+        new_factor = self._get_length_unit_factor(length_unit)
+        scale = old_factor / new_factor
 
-        # You should not modify the lenght unit after reading the geometry
-        # because it is misleading unless you correct all values.
-        # TODO: replace this clear by a function that converts all length units.
-        self.clear()
+        centers = [
+            self._solids_centers,
+            self._surfaces_centers,
+            self._curves_centers,
+            self._points_centers
+        ]
+
+        for center in centers:
+            for key, value in center.items():
+                center[key] = value * scale
+
+        for key, value in self._curves_lengths.items():
+            self._curves_lengths[key] = value * scale
+        
+        for key, value in self._surfaces_areas.items():
+            self._surfaces_areas[key] = value * (scale**2)
+
+        for key, value in self._solids_volumes.items():
+            self._solids_volumes[key] = value * (scale**3)
+
+        self.length_unit = length_unit 
+        self.length_unit_factor = new_factor
 
     def points_to_curves(self, *point_ids: int) -> Iterator[int]:
         for point_id in point_ids:
