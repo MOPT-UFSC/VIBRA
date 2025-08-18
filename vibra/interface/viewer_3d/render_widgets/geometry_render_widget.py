@@ -13,7 +13,8 @@ from ..actors.lines_actor import LinesActor
 from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
-from ..actors.symbols_actor import SymbolsActor
+from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
+from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
 
 from .model_info_text import( 
@@ -128,7 +129,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor = LinesActor(mesh)
         self.faces_actor = FacesActor(mesh)
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor = SymbolsActor(self.renderer)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
@@ -144,7 +146,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.selection_spheres_actor,
             self.ghost_actor,
             self.plane_actor,
-            self.symbols_actor,
+            self.symbols_actor_structural,
+            self.symbols_actor_acoustic,
         )
 
         with self.update_lock:
@@ -187,8 +190,18 @@ class GeometryRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        self.symbols_actor.SetVisibility(
-            visualization.acoustic_symbols | visualization.structural_symbols
+        
+        # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
+        try:
+            physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
+        except Exception:
+            _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+        
+        self.symbols_actor_structural.SetVisibility(
+            visualization.symbols and (physical_domain == "Structural") 
+        )
+        self.symbols_actor_acoustic.SetVisibility(
+            visualization.symbols and (physical_domain == "Acoustic")
         )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
@@ -237,9 +250,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(self.symbols_actor)
-        self.symbols_actor = SymbolsActor(self.renderer)
-        self.add_actors(self.symbols_actor)
+        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
+        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
+        self.visualization_changed_callback()
         self.update()
 
     #
@@ -409,7 +424,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.solids_actor = None
         self.selection_spheres_actor = None
         self.plane_actor = None
-        self.symbols_actor = None
+        self.symbols_actor_structural = None
+        self.symbols_actor_acoustic = None
         self.nodes_actor = None
         self.ghost_actor = None
 

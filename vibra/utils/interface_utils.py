@@ -24,8 +24,7 @@ class VisualizationFilter:
     lines: bool = False
     faces: bool = False
     solids: bool = False
-    acoustic_symbols: bool = False
-    structural_symbols: bool = False
+    symbols: bool = False
     ghost: bool = True
     color_mode: ColorMode = ColorMode.EMPTY
 
