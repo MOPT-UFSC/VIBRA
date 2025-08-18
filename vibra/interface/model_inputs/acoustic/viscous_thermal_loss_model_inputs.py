@@ -26,6 +26,20 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
+class TabType(IntEnum):
+    RECTANGULAR = 0
+    CIRCULAR = 1
+    EDIT = 2
+    LIST = 3
+
+
+class AttributionType(IntEnum):
+    ALL_BODIES = 0
+    SELECTED_BODIES = 1
+    SPHERE_MULT = 2
+    SPHERE_AVE = 3
+
+
 class SectionType(IntEnum):
     RECTANGULAR = 0
     QUADRANGULAR = 1
@@ -176,7 +190,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.models.remove(model)
 
         if self.map_model_id_to_volumes:
-            self.tabWidget_main.setCurrentIndex(3)
+            self.tabWidget_main.setCurrentIndex(TabType.LIST)
 
     def reset_callback(self):
 
@@ -221,7 +235,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def tab_event_callback(self):
 
         self.pushButton_remove.setDisabled(True)
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == TabType.EDIT:
             self.comboBox_attribution_type.setCurrentIndex(1)
             self.comboBox_attribution_type.setDisabled(True)
             self.lineEdit_selection_id.setText("")
@@ -608,15 +622,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
             self.lineEdit_center_coordinates.setText("---")
-            if self.comboBox_attribution_type.currentIndex() != 1:
-                self.comboBox_attribution_type.setCurrentIndex(1)
+            if self.comboBox_attribution_type.currentIndex() != AttributionType.SELECTED_BODIES:
+                self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
             self.hide_sphere()
 
         elif faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            if self.comboBox_attribution_type.currentIndex() in [0, 1]:
-                self.comboBox_attribution_type.setCurrentIndex(2)
+            if self.comboBox_attribution_type.currentIndex() in [AttributionType.ALL_BODIES, AttributionType.SELECTED_BODIES]:
+                self.comboBox_attribution_type.setCurrentIndex(AttributionType.SPHERE_MULT)
             else:
                 self.call_sphere_plotter()
 
@@ -641,14 +655,12 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
         selection_index = self.comboBox_attribution_type.currentIndex()
 
-        if not surface_ids or selection_index == 0:
+        if not surface_ids or selection_index == AttributionType.ALL_BODIES:
             self.lineEdit_center_coordinates.setText("")
             return list()
 
-        index = self.comboBox_attribution_type.currentIndex()
-        if index == 2:
-            averaged_selection = False
-        elif index == 3:
+        averaged_selection = False
+        if selection_index == AttributionType.SPHERE_AVE:
             averaged_selection = True
 
         center_coords = self.mesh.get_average_nodal_coordinates(surface_ids, averaged=averaged_selection)
@@ -678,7 +690,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if self.lineEdit_selection_id.text() == "":
             return
 
-        if self.comboBox_attribution_type.currentIndex() >= 2:
+        if self.comboBox_attribution_type.currentIndex() in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
 
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
             center_coords = self.get_center_coordinates()
@@ -715,13 +727,12 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             return
 
         index = self.comboBox_attribution_type.currentIndex()
-        if index >= 2:
+        if index in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
 
             selection_radius = self.doubleSpinBox_selection_radius.value()
             
-            if index == 2:
-                averaged_selection = False
-            elif index == 3:
+            averaged_selection = False
+            if index == AttributionType.SPHERE_AVE:
                 averaged_selection = True
 
             if self.generate_mesh():
@@ -791,31 +802,27 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def attribute_callback(self):
 
-        if self.tabWidget_main.currentIndex() == 0:
+        model = None
+        if self.tabWidget_main.currentIndex() == TabType.RECTANGULAR:
             model = self.get_rectangular_duct_inputs()
 
-        elif self.tabWidget_main.currentIndex() == 1:
+        elif self.tabWidget_main.currentIndex() == TabType.CIRCULAR:
             model = self.get_circular_duct_inputs()
-
-        else:
-            return
 
         if not model:
             return
-        
-
 
         assignment_type = self.comboBox_attribution_type.currentIndex()
 
-        if assignment_type in [0, 1]:
+        if assignment_type in [AttributionType.ALL_BODIES, AttributionType.SELECTED_BODIES]:
             volume_ids = list()
-            if assignment_type == 0:
+            if assignment_type == AttributionType.ALL_BODIES:
                 self.models = list()
 
                 if "volumes" in self.mesh.geometry_information.keys():
                     volume_ids = self.mesh.geometry_information["volumes"]
 
-            elif assignment_type == 1:
+            else:
                 input_ids = self.lineEdit_selection_id.text()
                 volume_ids, error_data = self.mesh.check_selected_ids(
                                                                       input_ids, 
@@ -832,7 +839,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if model not in self.models:
                 self.models.append(model)
             
-            model_id = self.models.index(model) + 1
             model_data = model.get_data()
 
             self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
@@ -840,11 +846,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
-        elif assignment_type in [2, 3]:
+        elif assignment_type in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
 
-            if assignment_type == 2:
-                averaged_selection = False
-            else:
+            averaged_selection = False
+            if assignment_type == AttributionType.SPHERE_AVE:
                 averaged_selection = True
 
             group_id = self.get_lrf_group_index()
@@ -856,7 +861,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if model not in self.models:
                 self.models.append(model)
 
-            model_id = self.models.index(model) + 1
             model_data = model.get_data()
             model_data["surface_ids"] = list(surface_ids)
             model_data["selection_radius"] = self.selection_radius
@@ -874,6 +878,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def verify_and_remove_model_conflicts_if_it_exists(self, model_data: dict, volume_ids: List[int]=None):
 
         if volume_ids:
+        
+            if not self.properties.group_properties:
+                return
+
             surfaces = set()
             for volume_id in volume_ids:
                 surfaces = surfaces.union(self.mesh.surfaces_from_volume[volume_id])
@@ -891,7 +899,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                                 if model in self.models:
                                     self.models.remove(model)
 
-        else:
+        elif self.map_model_id_to_volumes:
+
             volumes = set()
             for surface in model_data["surface_ids"]:
                 volumes = volumes.union(self.mesh.volumes_from_surface[surface])
@@ -1042,10 +1051,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         tab_index = self.tabWidget_main.currentIndex()
 
-        if tab_index == 0:
+        if tab_index == TabType.RECTANGULAR:
             tv_data = self.get_rectangular_duct_inputs()
 
-        elif tab_index == 1:
+        elif tab_index == TabType.CIRCULAR:
             tv_data = self.get_circular_duct_inputs()
 
         if tv_data:

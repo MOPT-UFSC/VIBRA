@@ -1713,7 +1713,7 @@
                  <item row="3" column="5">
                   <widget class="QLabel" name="label_19">
                    <property name="enabled">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                    <property name="minimumSize">
                     <size>
@@ -1740,7 +1740,7 @@
                  <item row="3" column="1">
                   <widget class="QLabel" name="label_7">
                    <property name="enabled">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                    <property name="minimumSize">
                     <size>
@@ -1837,7 +1837,7 @@
                  <item row="2" column="1">
                   <widget class="QLabel" name="label_10">
                    <property name="enabled">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                    <property name="minimumSize">
                     <size>
@@ -1891,7 +1891,7 @@
                  <item row="2" column="5">
                   <widget class="QLabel" name="label_22">
                    <property name="enabled">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                    <property name="minimumSize">
                     <size>

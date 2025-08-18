@@ -603,7 +603,7 @@ class Ui_Dialog(object):
 
         self.label_19 = QLabel(self.frame_5)
         self.label_19.setObjectName(u"label_19")
-        self.label_19.setEnabled(False)
+        self.label_19.setEnabled(True)
         self.label_19.setMinimumSize(QSize(40, 0))
         self.label_19.setMaximumSize(QSize(40, 16777215))
         self.label_19.setFont(font1)
@@ -612,7 +612,7 @@ class Ui_Dialog(object):
 
         self.label_7 = QLabel(self.frame_5)
         self.label_7.setObjectName(u"label_7")
-        self.label_7.setEnabled(False)
+        self.label_7.setEnabled(True)
         self.label_7.setMinimumSize(QSize(120, 0))
         self.label_7.setMaximumSize(QSize(132, 16777215))
         self.label_7.setFont(font1)
@@ -645,7 +645,7 @@ class Ui_Dialog(object):
 
         self.label_10 = QLabel(self.frame_5)
         self.label_10.setObjectName(u"label_10")
-        self.label_10.setEnabled(False)
+        self.label_10.setEnabled(True)
         self.label_10.setMinimumSize(QSize(120, 0))
         self.label_10.setMaximumSize(QSize(132, 16777215))
         self.label_10.setFont(font1)
@@ -664,7 +664,7 @@ class Ui_Dialog(object):
 
         self.label_22 = QLabel(self.frame_5)
         self.label_22.setObjectName(u"label_22")
-        self.label_22.setEnabled(False)
+        self.label_22.setEnabled(True)
         self.label_22.setMinimumSize(QSize(40, 0))
         self.label_22.setMaximumSize(QSize(40, 16777215))
         self.label_22.setFont(font1)
@@ -989,7 +989,7 @@ class Ui_Dialog(object):
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Volume/Group ID", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Attribution", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_viscous_thermal_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+        self.treeWidget_viscous_thermal_model.setToolTip(QCoreApplication.translate("Dialog", u"Select an element to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
