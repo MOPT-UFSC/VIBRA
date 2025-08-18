@@ -473,7 +473,8 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_symbols"):
                 widget.update_symbols()
-        QTimer.singleShot(4000, self.model_setup_widget.model_setup_items.show_warning_tooltip_structural)
+
+        QTimer.singleShot(1000, self.model_setup_widget.model_setup_items.show_warning_tooltip_structural)
 
     def update_info_text(self):
         for i in range(self.render_widgets_stack.count()):

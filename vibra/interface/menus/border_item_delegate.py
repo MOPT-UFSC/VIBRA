@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
-from PySide6.QtGui import QIcon, QPainter
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QPoint, QRect, Qt, QSize
 
 class BorderItemDelegate(QStyledItemDelegate):
     def __init__(self, parent, borderRole):
@@ -44,11 +44,11 @@ class BorderItemDelegate(QStyledItemDelegate):
 
         super().paint(painter, option, index)
 
-        original_icon = index.data(Qt.DecorationRole)
+        original_icon: QIcon = index.data(Qt.DecorationRole)
         if original_icon and not original_icon.isNull():
             new_icon_size = QSize(20, 20)
-            scaled_pixmap = original_icon.pixmap(new_icon_size, QIcon.Normal, QIcon.On)
-
+            scaled_pixmap: QPixmap = original_icon.pixmap(new_icon_size, QIcon.Normal, QIcon.On)
+            
             x_offset = option.rect.left()
             x_offset += option.rect.width() - 32
             y_offset = option.rect.top() + (option.rect.height() - new_icon_size.height()) // 2

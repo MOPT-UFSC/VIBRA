@@ -1,8 +1,9 @@
-from PySide6.QtGui import QPen, QColor
+from pathlib import Path
+from PySide6.QtGui import QIcon, QPen, QColor
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QToolTip
 
-from vibra import app
+from vibra import ICON_DIR, app
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
 from molde import Color
@@ -49,6 +50,8 @@ class ModelSetupItems(CommonMenuItems):
                         exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
                         '''
         self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
+        path_image = str(Path((ICON_DIR / "model_setup_items" / "structural_help.png")))
+        self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
         
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
         self.item_child_prescribed_dofs = self.add_item("Prescribed DOFs")
