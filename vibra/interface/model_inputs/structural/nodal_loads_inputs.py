@@ -22,12 +22,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
-        app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -49,6 +49,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def _initialize(self):
         self.keep_window_open = True
+        self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -103,6 +104,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def _config_widgets(self):
         #
+        self.comboBox_element_type.setEnabled(False)
+        #
         for i, w in enumerate([110, 150, 100]):
             self.treeWidget_nodal_loads.setColumnWidth(i, w)
             self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -129,6 +132,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
@@ -223,6 +227,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     lineEdit_imag.setText(str(np.imag(values[index])))
 
     def update_formulation_callback(self, **kwargs):
+        return
 
         surface_id = kwargs.get("surface_id", None)
         line_id = kwargs.get("line_id", None)
@@ -271,29 +276,37 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         key = self.comboBox_element_type.currentIndex() == 0
 
-        self.label_Mx_constant.setEnabled(key)
-        self.label_My_constant.setEnabled(key)
-        self.label_Mz_constant.setEnabled(key)
+        self.label_Mx_constant.setVisible(key)
+        self.label_My_constant.setVisible(key)
+        self.label_Mz_constant.setVisible(key)
 
-        self.label_Mx_unit.setEnabled(key)
-        self.label_My_unit.setEnabled(key)
-        self.label_Mz_unit.setEnabled(key)
+        self.label_Mx_unit.setVisible(key)
+        self.label_My_unit.setVisible(key)
+        self.label_Mz_unit.setVisible(key)
 
-        self.label_Mx_table.setEnabled(key)
-        self.label_My_table.setEnabled(key)
-        self.label_Mz_table.setEnabled(key)
+        self.label_Mx_table.setVisible(key)
+        self.label_My_table.setVisible(key)
+        self.label_Mz_table.setVisible(key)
 
-        self.lineEdit_real_Mx.setEnabled(key)
-        self.lineEdit_real_My.setEnabled(key)
-        self.lineEdit_real_Mz.setEnabled(key)
+        self.lineEdit_real_Mx.setVisible(key)
+        self.lineEdit_real_My.setVisible(key)
+        self.lineEdit_real_Mz.setVisible(key)
 
-        self.lineEdit_imag_Mx.setEnabled(key)
-        self.lineEdit_imag_My.setEnabled(key)
-        self.lineEdit_imag_Mz.setEnabled(key)
+        self.lineEdit_imag_Mx.setVisible(key)
+        self.lineEdit_imag_My.setVisible(key)
+        self.lineEdit_imag_Mz.setVisible(key)
 
-        self.pushButton_load_Mx_table.setEnabled(key)
-        self.pushButton_load_My_table.setEnabled(key)
-        self.pushButton_load_Mz_table.setEnabled(key)
+        self.pushButton_load_Mx_table.setVisible(key)
+        self.pushButton_load_My_table.setVisible(key)
+        self.pushButton_load_Mz_table.setVisible(key)
+
+        self.lineEdit_path_table_Mx.setVisible(key)
+        self.lineEdit_path_table_My.setVisible(key)
+        self.lineEdit_path_table_Mz.setVisible(key)
+
+    def update_element_type_based_on_geometry_information(self):
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -368,10 +381,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
@@ -387,7 +398,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         nodal_loads = [Fx, Fy, Fz]
 
-        if self.comboBox_element_type.currentIndex() == 0:
+        if element_type == "2d_element":
             
             stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
             if stop:
@@ -403,8 +414,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             nodal_loads.extend([rx, ry, Mz])
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and nodal_loads.count(None) == 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and nodal_loads.count(None) == 3
+        condition_1 = element_type == "2d_element" and nodal_loads.count(None) == 6
+        condition_2 = element_type == "3d_element" and nodal_loads.count(None) == 3
 
         if condition_1 or condition_2:
             self.hide()
@@ -631,10 +642,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         if self.Fx_table_path is None:
             self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
@@ -677,7 +686,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
             nodal_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
 
-            if self.comboBox_element_type.currentIndex() == 0:
+            if element_type == "2d_element":
 
                 if self.Mx_table_values is not None:
                     self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values)
@@ -698,8 +707,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
                 nodal_loads.extend([self.Mx_table_values, self.My_table_values, self.Mz_table_values])
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 6
-            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
+            condition_1 = element_type == "2d_element" and table_names.count(None) == 6
+            condition_2 = element_type == "3d_element" and table_names.count(None) == 3
 
             if condition_1 or condition_2:
                 self.hide()

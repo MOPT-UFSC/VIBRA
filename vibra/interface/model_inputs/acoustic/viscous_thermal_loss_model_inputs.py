@@ -24,9 +24,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -83,7 +82,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.attribution_type_callback()
@@ -261,7 +260,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.hide_sphere()
 
         elif attribution_type == 1:
-            volumes = self.main_window.selected_geometry_volumes
+            volumes = app().main_window.selected_geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
 
@@ -269,11 +268,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.hide_sphere()
 
         elif attribution_type in [2, 3]:
-            if self.main_window.selected_geometry_volumes:
+            if app().main_window.selected_geometry_volumes:
                 self.lineEdit_selection_id.setText("")
                 app().main_window.set_geometry_selection()
 
-            surfaces = self.main_window.selected_geometry_surfaces
+            surfaces = app().main_window.selected_geometry_surfaces
             if not surfaces or self.lineEdit_selection_id.text() == "All bodies":
                 self.lineEdit_selection_id.setText("")
 
@@ -353,13 +352,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
     def highlight_mesh_elements(self, elements):
-        mesh_widget = self.main_window.mesh_widget
+        mesh_widget = app().main_window.mesh_widget
         mesh_widget.select_multiple_volumes(elements)
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
-        volumes = self.main_window.selected_geometry_volumes
+        faces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -445,16 +444,16 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             if len(center_coords):
                 all_radius = [self.selection_radius for _ in center_coords]
-                geometry_widget = self.main_window.geometry_widget
+                geometry_widget = app().main_window.geometry_widget
                 geometry_widget.set_selection_spheres(center_coords, all_radius)
 
-                mesh_widget = self.main_window.mesh_widget
+                mesh_widget = app().main_window.mesh_widget
                 mesh_widget.set_selection_spheres(center_coords, all_radius)
 
     def hide_sphere(self):
-        geometry_widget = self.main_window.geometry_widget
+        geometry_widget = app().main_window.geometry_widget
         geometry_widget.clear_selection_spheres()
-        mesh_widget = self.main_window.mesh_widget
+        mesh_widget = app().main_window.mesh_widget
         mesh_widget.clear_selection_spheres()
 
     def get_selection_information(self):
@@ -492,8 +491,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                                             averaged_selection,
                                             filter_type  )
 
-            self.main_window.set_input_widget(self)
-            self.main_window.action_model_workspace_callback()
+            app().main_window.set_input_widget(self)
+            app().main_window.action_model_workspace_callback()
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
@@ -610,7 +609,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             group_id = self.get_lrf_group_index()
             filter_type = self.comboBox_filter_type.currentIndex()
 
-            surface_ids = self.main_window.selected_geometry_surfaces
+            surface_ids = app().main_window.selected_geometry_surfaces
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
             model_data["surface_ids"] = list(surface_ids)
@@ -691,8 +690,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                                             data["averaged"],
                                             data["filter_type"]  )
 
-            self.main_window.set_input_widget(self)
-            self.main_window.action_model_workspace_callback()
+            app().main_window.set_input_widget(self)
+            app().main_window.action_model_workspace_callback()
 
         group_properties = self.properties.group_properties.copy()
         for key, data in group_properties.items():
@@ -707,9 +706,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         #         return get_info()
 
     def hide_sphere(self):
-        geometry_widget = self.main_window.geometry_widget
+        geometry_widget = app().main_window.geometry_widget
         geometry_widget.clear_selection_spheres()
-        mesh_widget = self.main_window.mesh_widget
+        mesh_widget = app().main_window.mesh_widget
         mesh_widget.clear_selection_spheres()
 
     # Plot viscous_thermal effective properties
@@ -720,7 +719,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()

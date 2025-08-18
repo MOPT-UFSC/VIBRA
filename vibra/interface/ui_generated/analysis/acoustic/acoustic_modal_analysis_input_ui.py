@@ -198,6 +198,7 @@ class Ui_Dialog(object):
         font3.setItalic(False)
         self.pushButton_run_analysis.setFont(font3)
         self.pushButton_run_analysis.setStyleSheet(u"")
+        self.pushButton_run_analysis.setAutoDefault(False)
 
         self.gridLayout_11.addWidget(self.pushButton_run_analysis, 0, 1, 1, 1)
 
@@ -207,6 +208,7 @@ class Ui_Dialog(object):
         self.pushButton_enter_setup.setMaximumSize(QSize(100, 28))
         self.pushButton_enter_setup.setFont(font3)
         self.pushButton_enter_setup.setStyleSheet(u"")
+        self.pushButton_enter_setup.setAutoDefault(False)
 
         self.gridLayout_11.addWidget(self.pushButton_enter_setup, 0, 0, 1, 1)
 
