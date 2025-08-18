@@ -153,12 +153,12 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
             if np.any(force_orientation):
                 is_pointing = np.dot(normal, force_orientation) < 0
-                shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
-                self.add_symbol(shape, coords, force_orientation, color=color_names.RED_2)
+                # shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
+                self.add_symbol(sources.create_arrow_source, coords, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
                 is_pointing = np.dot(normal, m_orientation) < 0
-                shape = sources.create_double_arrow_source if is_pointing else sources.create_outwards_arrow_source
-                self.add_symbol(shape, coords, m_orientation, color=color_names.BLUE_3)
+                # shape = sources.create_double_arrow_source if is_pointing else sources.create_outwards_arrow_source
+                self.add_symbol(sources.create_double_arrow_source, coords, m_orientation, color=color_names.BLUE_3)
 
         property = None
         coord = None
