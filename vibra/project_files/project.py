@@ -365,7 +365,9 @@ class Project:
 
         return analysis_type, physical_domain
 
-    def is_there_a_valid_analysis_setup(self):
+    def is_there_a_valid_analysis_setup(self, **kwargs):
+
+        current_analysis_id = kwargs.get("current_analysis_id", None)
 
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
@@ -374,6 +376,10 @@ class Project:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return False
+
+        if isinstance(current_analysis_id, int):
+            if analysis_id != current_analysis_id:
+                return False
 
         if analysis_id in [
                             AnalysisID.ACOUSTIC_HARMONIC,

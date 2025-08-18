@@ -17,8 +17,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
@@ -49,6 +48,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.exporter = None
         self.plotter = None
         self.unit_label = "Pa"
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _create_connections(self):
         #
@@ -57,51 +57,48 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        nodes = self.main_window.selected_mesh_nodes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
-        if faces and index == 0:
-            text = ", ".join([str(i) for i in faces])
+        if surfaces and index == 0:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
 
-        if lines and index == 1:
+        elif lines and index == 1:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
 
-        if nodes and index == 2:
+        elif points and index == 2:
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+
+        elif nodes and index == 3:
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
 
-        elif not any([nodes, lines, faces]):
+        elif not any([nodes, points, lines, surfaces]):
             self.lineEdit_selection_id.setText("")
 
     def update_render_according_to_selector(self):
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() in [0, 1]:
-            self.main_window.show_geometry_render_widget()
+        if self.comboBox_selector_filter.currentIndex() == 3:
+            app().main_window.show_mesh_render_widget()
         else:
-            self.main_window.show_mesh_render_widget()
+            app().main_window.show_geometry_render_widget()
 
     def check_inputs(self):
 
         index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        elif index == 1:
-            selection = "lines"
-
-        else:
-            selection = "nodes"
+        selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
         self.selected_ids, error_data = self.mesh.check_selected_ids(
@@ -133,14 +130,16 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_response(self, index, selected_id):
+    def get_response(self, selected_id: int):
+
+        index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
-            rows = self.project.model.mesh.nodes_from_surfaces[selected_id]
-
+            rows = self.mesh.nodes_from_surfaces.get(selected_id)
         elif index == 1:
-            rows = self.project.model.mesh.nodes_from_lines[selected_id]
-
+            rows = self.mesh.nodes_from_lines.get(selected_id)
+        elif index == 2:
+            rows = self.mesh.nodes_from_points.get(selected_id)
         else:
             rows = selected_id
 
@@ -157,24 +156,18 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def join_model_data(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection_type = "surface"
-        elif index == 1:
-            selection_type = "line"
-        else:
-            selection_type = "node"
+        current_text = self.comboBox_selector_filter.currentText()
+        selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
-        self.title = f"Acoustic frequency response - {self.analysis_method}"
+        self.title = "Acoustic frequency response"
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
-            y_data = self.get_response(index, selected_id)
+            y_data = self.get_response(selected_id)
 
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,

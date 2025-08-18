@@ -15,8 +15,6 @@ class AnalysisTypeInput(AnalysisTypeInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-
         self._config_window()
         self._initialize()
         self._create_connections()

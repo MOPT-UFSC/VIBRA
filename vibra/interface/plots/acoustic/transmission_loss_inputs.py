@@ -19,8 +19,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
@@ -40,7 +39,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     
     def showEvent(self, event):
         super().showEvent(event)
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
     def _load_analysis_setup(self):
         self.analysis_method = ""
@@ -62,10 +61,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_1_clicked)
-        self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_2_clicked)
+        self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_input_clicked)
+        self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
@@ -86,15 +87,34 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         widget.installEventFilter(filter)
         return filter.clicked
 
-    def lineEdit_1_clicked(self):
+    def lineEdit_input_clicked(self):
         self.current_lineEdit = self.lineEdit_input_surface_id
+        self.highlight_selected_line_edit()
 
-    def lineEdit_2_clicked(self):
+    def lineEdit_output_clicked(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
+        self.highlight_selected_line_edit()
+
+    def highlight_selected_line_edit(self):
+
+        if self.current_lineEdit == self.lineEdit_input_surface_id:
+            self.lineEdit_output_surface_id.setStyleSheet("")
+        else:
+            self.lineEdit_input_surface_id.setStyleSheet("")
+
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(200, 0, 0); border-width: 2px;""")
+
+    def alternate_selected_line_edit(self):
+        if self.current_lineEdit == self.lineEdit_input_surface_id:
+            self.lineEdit_output_clicked()
+            self.lineEdit_output_surface_id.setFocus()
+        else:
+            self.lineEdit_input_clicked()
+            self.lineEdit_input_surface_id.setFocus()
     
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        faces = app().main_window.selected_geometry_surfaces
 
         if faces:
 
@@ -264,7 +284,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.title = f"{plot_type} - {self.analysis_method}"
+        self.title = f"{plot_type}"
         legend_label = f"{plot_type} between surfaces [{self.input_surface_id}] and [{self.output_surface_id}]"
 
         key = ("surface", (self.input_surface_id, self.output_surface_id))
@@ -288,6 +308,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
+        elif event.key() == Qt.Key_Down or event.key() == Qt.Key_Up:
+            self.alternate_selected_line_edit()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

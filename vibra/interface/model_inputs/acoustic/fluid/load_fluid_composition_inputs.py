@@ -14,8 +14,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
         self.file_path = kwargs.get("file_path", "")
        

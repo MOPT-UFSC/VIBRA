@@ -10,6 +10,7 @@ from vibra.interface.analysis.harmonic_analysis_method_selector_input import Str
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
 from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 
 from typing import Literal
 
@@ -32,8 +33,6 @@ class AnalysisToolbar(QToolBar):
 
     def __init__(self):
         super().__init__()
-
-        self.main_window = app().main_window
 
         self._load_icons()
         self._define_qt_variables()
@@ -67,19 +66,14 @@ class AnalysisToolbar(QToolBar):
 
     def _create_connections(self):
         #
-        # self.combo_box_physical_domain.currentIndexChanged.connect(self._update_state)
-        # self.combo_box_analysis_type.currentIndexChanged.connect(self._update_state)
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
         #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
-        self.pushButton_reset_solution.clicked.connect(self.reset_solution)
+        self.pushButton_reset_solution.clicked.connect(self.project_solution_data_reset_callback)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
-    
-    # def _update_state(self):
-    #     app().main_window.update_symbols()
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -169,7 +163,11 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.setCurrentText("Harmonic")
         self.combo_box_physical_domain.setCurrentText("Acoustic")
 
-    def update_analysis_combo_boxes(self):
+    def update_analysis_combo_boxes(self, block_signals: bool = False):
+
+        if block_signals:
+            self.combo_box_analysis_type.blockSignals(block_signals)
+            self.combo_box_physical_domain.blockSignals(block_signals)
 
         analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
 
@@ -187,18 +185,48 @@ class AnalysisToolbar(QToolBar):
         elif physical_domain == "coupled":
             self.combo_box_physical_domain.setCurrentIndex(2)
 
-    def set_pushbutton_run_analysis_enabled(self, enable=True):
+        if block_signals:
+            self.combo_box_analysis_type.blockSignals(False)
+            self.combo_box_physical_domain.blockSignals(False)
+
+    def set_pushbutton_run_analysis_enabled(self, enable: bool = True):
         self.pushButton_run_analysis.setEnabled(enable)
 
     def set_pushbutton_reset_solution_enabled(self):
         self.pushButton_reset_solution.setEnabled(True)
 
+    def get_current_analysis_id(self):
+        analysis_type = self.combo_box_analysis_type.currentText()
+        physical_domain = self.combo_box_physical_domain.currentText()
+
+        if analysis_type == "Harmonic":
+            if physical_domain == "Structural":
+                return AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
+            else:
+                return AnalysisID.ACOUSTIC_HARMONIC
+
+        elif analysis_type == "Modal":
+            if physical_domain == "Structural":
+                return AnalysisID.STRUCTURAL_MODAL
+            else:
+                return AnalysisID.ACOUSTIC_MODAL
+
+        return AnalysisID.NO_ANALYSIS
+
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
-        valid_setup = app().project.is_there_a_valid_analysis_setup()
+        app().main_window.update_info_text()
+        current_analysis_id = self.get_current_analysis_id()
+        valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self):
+
+        # Do not solve models with collapsed elements!
+        mesh = app().project.model.mesh   
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        if collapsed:
+            return
 
         self.update_analysis_combo_boxes()
         if app().project.run_analysis():
@@ -219,6 +247,27 @@ class AnalysisToolbar(QToolBar):
         app().file.write_model_properties_in_file()
         app().file.write_results_data_in_file()
 
+    def project_solution_data_reset_callback(self):
+
+        title = "Removal of project solution data"
+        message = "Would you like to delete all solution data from this project? "
+        tool_tip = "Be aware, this process cannot be undone."
+
+        buttons_config = {
+                          "left_button_label": "Cancel", 
+                          "right_button_label": "Delete all",
+                          "right_toolTip" : tool_tip
+                          }
+
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
+        if read._cancel:
+            return
+
+        if not read._continue:
+            return
+
+        self.reset_solution()
+
     def reset_solution(self):
         app().project.reset_solutions()
         app().file.remove_results_data_from_project_file()
@@ -227,7 +276,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
 
     def configure_analysis(self):
-        # aqui
+
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
 
@@ -242,7 +291,12 @@ class AnalysisToolbar(QToolBar):
                 self.modal_structural()
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
-        
+
+        # disable run_analysis button if there are collapsed elements
+        mesh = app().project.model.mesh   
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        self.pushButton_run_analysis.setDisabled(bool(collapsed))
+
     def harmonic_structural(self):
 
         select = StructuralHarmonicAnalysisMethodSelecorInput()
@@ -279,6 +333,7 @@ class AnalysisToolbar(QToolBar):
 
         if modal.setup_defined:
             self.update_analysis_setup(modal.analysis_setup)
+            self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:
@@ -292,6 +347,7 @@ class AnalysisToolbar(QToolBar):
 
         if modal.setup_defined:
             self.update_analysis_setup(modal.analysis_setup)
+            self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:

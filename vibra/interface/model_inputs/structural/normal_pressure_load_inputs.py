@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -21,12 +22,12 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
-        app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -47,6 +48,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def _initialize(self):
         self.keep_window_open = True
+        self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -54,6 +56,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.pressure_table_path = None
 
     def _config_widgets(self):
+        #
+        self.comboBox_element_type.setEnabled(False)
         #
         for i, w in enumerate([60, 100, 160]):
             self.treeWidget_normal_pressure_loads.setColumnWidth(i, w)
@@ -76,6 +80,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.treeWidget_normal_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
@@ -122,32 +127,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         app().main_window.action_model_workspace_callback()
 
     def element_type_callback(self):
+        return
 
-        key = self.comboBox_element_type.currentIndex() == 0
-
-        self.label_Mx_constant.setEnabled(key)
-        self.label_My_constant.setEnabled(key)
-        self.label_Mz_constant.setEnabled(key)
-
-        self.label_Mx_unit.setEnabled(key)
-        self.label_My_unit.setEnabled(key)
-        self.label_Mz_unit.setEnabled(key)
-
-        self.label_Mx_table.setEnabled(key)
-        self.label_My_table.setEnabled(key)
-        self.label_Mz_table.setEnabled(key)
-
-        self.lineEdit_real_Mx.setEnabled(key)
-        self.lineEdit_real_My.setEnabled(key)
-        self.lineEdit_real_Mz.setEnabled(key)
-
-        self.lineEdit_imag_Mx.setEnabled(key)
-        self.lineEdit_imag_My.setEnabled(key)
-        self.lineEdit_imag_Mz.setEnabled(key)
-
-        self.pushButton_load_Mx_table.setEnabled(key)
-        self.pushButton_load_My_table.setEnabled(key)
-        self.pushButton_load_Mz_table.setEnabled(key)
+    def update_element_type_based_on_geometry_information(self):
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -204,10 +188,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         stop, value = self.check_complex_entries(
                                                  self.lineEdit_real_value.text(), 
@@ -220,8 +202,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         pressure_load = [value]
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and pressure_load.count(None) == 1
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and pressure_load.count(None) == 1
+        condition_1 = element_type == "2d_element" and pressure_load.count(None) == 1
+        condition_2 = element_type == "3d_element" and pressure_load.count(None) == 1
 
         if condition_1 or condition_2:
             self.hide()
@@ -250,6 +232,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
         title = "Error while loading table"
+        imported_file = None
 
         try:
             if direct_load:
@@ -257,31 +240,19 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = str(Path().home())
-                else:
-                    path = last_path
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {load_label} data")
 
-                caption = f"Choose a table to import the {load_label} data"
-                imported_table_path, check = QFileDialog.getOpenFileName(  
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
-
-                if not check:
+                if not imported_data:
                     return None, None
 
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            imported_filename = basename(imported_table_path)
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
+                imported_table_path = imported_data.path
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -378,10 +349,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         if self.pressure_table_path is None:
             self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
@@ -397,8 +366,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             table_paths = [self.pressure_table_path]
             pressure_load = [self.pressure_table_values]
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 1
-            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 1
+            condition_1 = element_type == "2d_element" and table_names.count(None) == 1
+            condition_2 = element_type == "3d_element" and table_names.count(None) == 1
 
             if condition_1 or condition_2:
                 self.hide()

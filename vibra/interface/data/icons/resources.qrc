@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="icons">
+        <file>arrow_circle_down_blue.png</file>
         <file>azul cinza.png</file>
         <file>broom.png</file>
         <file>copy_icon.png</file>
@@ -35,6 +36,8 @@
         <file>settings.png</file>
         <file>sun_icon.png</file>
         <file>user_preferences_icon.png</file>
+        <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
+        <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
         <file>model_setup_items/absorption_surface.png</file>
         <file>model_setup_items/absorption_surface1.png</file>
         <file>model_setup_items/acoustic_pressure.png</file>
@@ -47,6 +50,7 @@
         <file>model_setup_items/distributed_loads.png</file>
         <file>model_setup_items/distributed_loads3.png</file>
         <file>model_setup_items/distributed_loads4.png</file>
+        <file>model_setup_items/error_red.png</file>
         <file>model_setup_items/fluid.png</file>
         <file>model_setup_items/incident_plane_wave.png</file>
         <file>model_setup_items/mass_flow_rate.png</file>

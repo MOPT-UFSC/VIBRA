@@ -1188,6 +1188,9 @@ viscous</string>
            <property name="text">
             <string>Enter setup</string>
            </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item row="0" column="1">
@@ -1219,6 +1222,9 @@ viscous</string>
            <property name="text">
             <string>Run analysis</string>
            </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -1242,6 +1248,8 @@ viscous</string>
   <tabstop>lineEdit_ah</tabstop>
   <tabstop>lineEdit_bh</tabstop>
  </tabstops>
- <resources><include location="../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

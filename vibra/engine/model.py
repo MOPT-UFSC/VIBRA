@@ -569,6 +569,44 @@ class Model:
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
 
+    def is_surface_thickness_properly_applied_in_model(self):
+
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        if volume_exists:
+            return None
+
+        surface_without_thickness = list()
+        for surface_id in self.mesh.geometry_information.get("surfaces", dict()):
+            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if st_data is None:
+                surface_without_thickness.append(surface_id)
+
+        return surface_without_thickness
+
+    def is_the_property_present_in_model(self, property_to_check: str, attribution_filter: str | None = None):
+        """
+        """
+        properties = {
+                        "volumes" : self.properties.volume_properties,
+                        "surfaces" : self.properties.surface_properties,
+                        "lines" : self.properties.line_properties,
+                        "points" : self.properties.point_properties,
+                        "nodes" : self.properties.nodal_properties,
+                        }
+
+        if attribution_filter is None:
+            for _property in properties.values():    
+                for (property_label, *args) in _property.keys():
+                    if property_label == property_to_check:
+                        return True
+
+        _property = properties.get(attribution_filter, dict())
+        for (property_label, *args) in _property.keys():
+            if property_label == property_to_check:
+                return True
+
+        return False
+
     def process_degrees_of_freedom_decoupling(self):
         self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
         self.dofs_decoupling.process_degrees_of_freedom_decoupling()

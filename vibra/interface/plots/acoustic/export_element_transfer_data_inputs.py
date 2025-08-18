@@ -21,9 +21,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
         self.project = app().project
         self.model = app().project.model
@@ -73,14 +72,16 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def geometry_selection_callback(self):
 
-        selected_faces = self.main_window.selected_geometry_surfaces
+        selected_faces = app().main_window.selected_geometry_surfaces
 
         if selected_faces:
 
@@ -105,7 +106,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def update_render_according_to_selector(self):
 
         self.geometry_selection_callback()
-        self.main_window.action_model_workspace_callback()
+        app().main_window.action_model_workspace_callback()
 
     def clickable(self, widget):
         class Filter(QObject):

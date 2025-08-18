@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.dofs_prescription_inputs_ui import DofsPrescriptionInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -22,14 +23,13 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -51,6 +51,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
 
     def _initialize(self):
         self.keep_window_open = True
+        self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -106,6 +107,8 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
 
     def _config_widgets(self):
         #
+        self.comboBox_element_type.setEnabled(False)
+        #
         for i, w in enumerate([110, 150, 100]):
             self.treeWidget_prescribed_dofs.setColumnWidth(i, w)
             self.treeWidget_prescribed_dofs.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -132,6 +135,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         self.treeWidget_prescribed_dofs.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
@@ -226,6 +230,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                     lineEdit_imag.setText(str(np.imag(values[index])))
 
     def update_formulation_callback(self, **kwargs):
+        return
 
         surface_id = kwargs.get("surface_id", None)
         line_id = kwargs.get("line_id", None)
@@ -274,32 +279,40 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
 
         key = self.comboBox_element_type.currentIndex() == 0
 
-        self.label_Rx_constant.setEnabled(key)
-        self.label_Ry_constant.setEnabled(key)
-        self.label_Rz_constant.setEnabled(key)
+        self.label_Rx_constant.setVisible(key)
+        self.label_Ry_constant.setVisible(key)
+        self.label_Rz_constant.setVisible(key)
 
-        self.label_Rx_unit.setEnabled(key)
-        self.label_Ry_unit.setEnabled(key)
-        self.label_Rz_unit.setEnabled(key)
+        self.label_Rx_unit.setVisible(key)
+        self.label_Ry_unit.setVisible(key)
+        self.label_Rz_unit.setVisible(key)
 
-        self.label_angular.setEnabled(key)
-        self.label_Rx_table.setEnabled(key)
-        self.label_Ry_table.setEnabled(key)
-        self.label_Rz_table.setEnabled(key)
+        self.label_angular.setVisible(key)
+        self.label_Rx_table.setVisible(key)
+        self.label_Ry_table.setVisible(key)
+        self.label_Rz_table.setVisible(key)
 
-        self.lineEdit_real_rx.setEnabled(key)
-        self.lineEdit_real_ry.setEnabled(key)
-        self.lineEdit_real_rz.setEnabled(key)
+        self.lineEdit_real_rx.setVisible(key)
+        self.lineEdit_real_ry.setVisible(key)
+        self.lineEdit_real_rz.setVisible(key)
 
-        self.lineEdit_imag_rx.setEnabled(key)
-        self.lineEdit_imag_ry.setEnabled(key)
-        self.lineEdit_imag_rz.setEnabled(key)
+        self.lineEdit_imag_rx.setVisible(key)
+        self.lineEdit_imag_ry.setVisible(key)
+        self.lineEdit_imag_rz.setVisible(key)
 
-        self.pushButton_load_rx_table.setEnabled(key)
-        self.pushButton_load_ry_table.setEnabled(key)
-        self.pushButton_load_rz_table.setEnabled(key)
+        self.pushButton_load_rx_table.setVisible(key)
+        self.pushButton_load_ry_table.setVisible(key)
+        self.pushButton_load_rz_table.setVisible(key)
 
-        self.comboBox_angular_data_type.setEnabled(key)
+        self.lineEdit_path_table_rx.setVisible(key)
+        self.lineEdit_path_table_ry.setVisible(key)
+        self.lineEdit_path_table_rz.setVisible(key)
+
+        self.comboBox_angular_data_type.setVisible(key)
+
+    def update_element_type_based_on_geometry_information(self):
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
@@ -339,10 +352,12 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
             values = _real + 1j * _imag
 
         if label == "all_dofs":
-            if self.comboBox_element_type.currentIndex() == 0:
+            index = self.comboBox_element_type.currentIndex()
+            if self.element_types[index] == "2d_element":
                 output = [values, values, values, values, values, values]
             else:
                 output = [values, values, values]
+
         else:
             output = values
 
@@ -380,13 +395,16 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         if self.lineEdit_real_alldofs.text() != "" or self.lineEdit_imag_alldofs.text() != "":
-            stop, prescribed_dofs = self.check_complex_entries(self.lineEdit_real_alldofs.text(), self.lineEdit_imag_alldofs.text(), "all_dofs")
+            stop, prescribed_dofs = self.check_complex_entries(
+                                                                self.lineEdit_real_alldofs.text(), 
+                                                                self.lineEdit_imag_alldofs.text(), 
+                                                                "all_dofs"
+                                                                )
+
             if stop:
                 return
 
@@ -406,7 +424,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
 
             prescribed_dofs = [ux, uy, uz]
 
-            if self.comboBox_element_type.currentIndex() == 0:
+            if element_type == "2d_element":
              
                 stop, rx= self.check_complex_entries(self.lineEdit_real_rx.text(), self.lineEdit_imag_rx.text(), "rx")
                 if stop:
@@ -422,8 +440,8 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
 
                 prescribed_dofs.extend([rx, ry, rz])
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and prescribed_dofs.count(None) == 6
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and prescribed_dofs.count(None) == 3
+        condition_1 = element_type == "2d_element" and prescribed_dofs.count(None) == 6
+        condition_2 = element_type == "3d_element" and prescribed_dofs.count(None) == 3
 
         if condition_1 or condition_2:
             self.hide()
@@ -462,6 +480,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
         title = "Error while loading table"
+        imported_file = None
 
         try:
             if direct_load:
@@ -469,31 +488,16 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
             else:
-
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = str(Path().home())
-                else:
-                    path = last_path
-
-                caption = f"Choose a table to import the {dof_label} data"
-                imported_table_path, check = QFileDialog.getOpenFileName(  
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
-
-                if not check:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {dof_label} data")
+                if not imported_data:
                     return None, None
 
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            imported_filename = basename(imported_table_path)
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
+                imported_table_path = imported_data.path
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -639,7 +643,8 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if self.comboBox_element_type.currentIndex() == 0:
+        element_type_index = self.comboBox_element_type.currentIndex()
+        if element_type_index == 0:
             element_type = "2d_element"
         else:
             element_type = "3d_element"
@@ -677,7 +682,7 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
             prescribed_dofs = [self.ux_table_values, self.uy_table_values, self.uz_table_values]
 
-            if self.comboBox_element_type.currentIndex() == 0:
+            if element_type_index == 0:
 
                 if self.rx_table_values is not None:
                     self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values, angular = True)
@@ -692,8 +697,8 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                 table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])
                 prescribed_dofs.extend([self.rx_table_values, self.ry_table_values, self.rz_table_values])
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 6
-            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
+            condition_1 = element_type_index == 0 and table_names.count(None) == 6
+            condition_2 = element_type_index == 1 and table_names.count(None) == 3
 
             if condition_1 or condition_2:
                 self.hide()
@@ -966,10 +971,10 @@ class DofsPrescriptionInputs(DofsPrescriptionInputs_UI):
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
-                self.main_window.action_mesh_workspace_callback()
+                app().main_window.action_mesh_workspace_callback()
 
             else:
-                self.main_window.action_model_workspace_callback()
+                app().main_window.action_model_workspace_callback()
 
             self.lineEdit_selection_id.setText(item.text(0))
 

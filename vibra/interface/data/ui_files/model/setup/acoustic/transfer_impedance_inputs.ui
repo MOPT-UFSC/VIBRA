@@ -101,10 +101,12 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
          </font>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_constant_data">
          <attribute name="title">
@@ -143,6 +145,8 @@
             <property name="font">
              <font>
               <pointsize>11</pointsize>
+              <weight>50</weight>
+              <bold>false</bold>
              </font>
             </property>
             <property name="frameShape">
@@ -670,8 +674,8 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
-                 <normaloff>../../../../icons/recent.png</normaloff>../../../../icons/recent.png</iconset>
+                <iconset resource="../../../../icons/resources.qrc">
+                 <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
                </property>
                <property name="iconSize">
                 <size>
@@ -825,7 +829,9 @@
              <font>
               <family>MS Shell Dlg 2</family>
               <pointsize>9</pointsize>
+              <weight>50</weight>
               <italic>false</italic>
+              <bold>false</bold>
              </font>
             </property>
             <property name="toolTip">
@@ -954,6 +960,8 @@
            <property name="font">
             <font>
              <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <property name="currentIndex">
@@ -1004,6 +1012,8 @@
            <property name="font">
             <font>
              <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <property name="focusPolicy">
@@ -1119,6 +1129,8 @@
            <property name="font">
             <font>
              <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <property name="focusPolicy">

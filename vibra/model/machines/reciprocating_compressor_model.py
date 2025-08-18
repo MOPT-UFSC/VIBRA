@@ -143,29 +143,25 @@ class ReciprocatingCompressorModel:
         self.D = parameters['bore_diameter']                                     # Cylinder bore diameter [m]
         self.r = parameters['stroke'] / 2                                        # Length of compressor full stroke [m]
         self.L = parameters['connecting_rod_length']                             # Connecting rod length [m]
-        self.rod_diam = parameters.get('rod_diameter', 0)                        # Rod diameter [m]
+        self.d_rod = parameters.get('rod_diameter', 0)                           # Rod diameter [m]
         
         self.p_ratio = parameters['pressure_ratio']                              # Compressor pressure ratio Pd/Ps
         self.c_HE = parameters.get('clearance_HE', 0) / 100                      # Clearance HE volume as percentage of full volume (%)
         self.c_CE = parameters.get('clearance_CE', 0) / 100                      # Clearance CE volume as percentage of full volume (%)
-        self.crank_angle_1 = parameters['TDC_crank_angle_1']                     # Crank angle (degrees) at which piston in the head end chamber is at top dead center
-        self.crank_angle_2 = parameters.get('TDC_crank_angle_2', None)           # Crank angle (degrees) at which piston in the head end chamber is at top dead center
+        self.crank_angle = parameters.get('TDC_crank_angle', 0)                  # Crank angle (degrees) at which piston in the head end chamber is at top dead center
         self.rpm = parameters['rotational_speed']                                # Compressor rotation speed (rpm)
         self.capacity = parameters['capacity'] / 100                             # Capacity of compression stage (%)
-        self.acting_label = parameters['acting_label']                           # Active cylinder(s) key (int)
-        self.number_of_cylinders = parameters.get('number_of_cylinders', 1)      # Number of cylinders
-        
+        self.acting_head = parameters.get('acting_head')                         # Active cylinder(s) key (int)
+        self.valves_per_head = parameters.get('valves_per_head', 1)              # Number of valves per head
+
         self.isentropic_exponent = parameters.get('isentropic_exponent', 1.4)    # Isontropic exponent (Cp/Cv)
         self.molar_mass = parameters.get('number_of_cylinders', 2.0158)          # Molar mass [kg/kmol]
 
         self.process_state_properties_in_SI_units(parameters)
 
         self.area_head_end = pi * (self.D**2) / 4
-        self.area_crank_end = pi * ((self.D**2) - (self.rod_diam**2)) / 4
-
-        self.tdc_1 = self.crank_angle_1 * pi / 180
-        if isinstance(self.crank_angle_2, (int | float)):
-            self.tdc_2 = self.tdc_2 * pi / 180
+        self.area_crank_end = pi * ((self.D**2) - (self.d_rod**2)) / 4
+        self.tdc_crank_angle = self.crank_angle * pi / 180
 
     def _initialize(self):
         self.cap = None
@@ -228,7 +224,7 @@ class ReciprocatingCompressorModel:
 
         N = self.number_points + 1
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         r = self.r
         l = self.L
@@ -252,7 +248,7 @@ class ReciprocatingCompressorModel:
 
         N = self.number_points + 1
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         r = self.r
         l = self.L
@@ -262,11 +258,11 @@ class ReciprocatingCompressorModel:
         v *= self.rpm*(2*pi/60)
         return v
 
-    def get_clearance_data(self, acting_label):
-        if acting_label == "HE":
+    def get_clearance_data(self, acting_head):
+        if acting_head == "HE":
             h_0 = self.c_HE*(2*self.r) # clearance height head end
             A = self.area_head_end
-        elif acting_label == "CE":
+        elif acting_head == "CE":
             h_0 = self.c_CE*(2*self.r) # clearance height crank end
             A = self.area_crank_end
         else:
@@ -274,11 +270,11 @@ class ReciprocatingCompressorModel:
         V_0 = h_0*A
         return V_0, A, h_0
 
-    def get_cycles_boundary_data(self, acting_label="HE", tdc=None):
+    def get_cycles_boundary_data(self, acting_head="HE", tdc=None):
         """ This method returns the boundary data for each cycle. 
         """
 
-        V0, A, h0 = self.get_clearance_data(acting_label)
+        V0, A, h0 = self.get_clearance_data(acting_head)
 
         V1 = V0
         V2 = V1*(self.p_ratio)**(1/self.k)
@@ -286,9 +282,9 @@ class ReciprocatingCompressorModel:
         V4 = V3*(1/self.p_ratio)**(1/self.k)
 
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
-        if acting_label == "HE":
+        if acting_head == "HE":
             v_piston = self.recip_v(tdc=tdc)
             theta, x_piston = self.recip_x(tdc=tdc)
             volumes = list((h0 - x_piston)*A)
@@ -334,7 +330,7 @@ class ReciprocatingCompressorModel:
                 else:
                     start_data[labels[j]] = [n_index, cache_Vi, cache_theta]
                     start = cache_ind
-                    # print(f"{acting_label}: {labels[j]} {start_data[labels[j]]}")
+                    # print(f"{acting_head}: {labels[j]} {start_data[labels[j]]}")
                     break
         # 
         for j, key in enumerate(["V2", "V3", "V4", "V1"]):
@@ -354,7 +350,7 @@ class ReciprocatingCompressorModel:
                                         "angles"  : [start_angle, end_angle],
                                         "volumes" : [start_volume, end_volume]}
 
-            # print(f"{acting_label}: {labels[j]} {boundary_data[labels[j]]}")
+            # print(f"{acting_head}: {labels[j]} {boundary_data[labels[j]]}")
 
         return boundary_data
 
@@ -374,7 +370,7 @@ class ReciprocatingCompressorModel:
         V3 = V3c = (2*self.r + h0)*A
         V4 = V4c= V3*(1/self.p_ratio)**(1/self.k)
 
-        angle_data = self.get_cycles_boundary_data(acting_label="HE", tdc=tdc)
+        angle_data = self.get_cycles_boundary_data(acting_head="HE", tdc=tdc)
         # [theta_3i, theta_3f] = angle_data["V3"]["angles"]
         # [theta_4i, theta_4f] = angle_data["V4"]["angles"]
 
@@ -386,7 +382,7 @@ class ReciprocatingCompressorModel:
         #     capacity = self.cap
 
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         v_piston = self.recip_v(tdc=tdc)
         theta, x_piston = self.recip_x(tdc=tdc)
@@ -509,8 +505,8 @@ class ReciprocatingCompressorModel:
 
         if export_data:
 
-            fname = f"temporary_data\\PV_diagram_head_end_crank_angle_{self.crank_angle_1}.dat"
-            fname_log = f"temporary_data\\log_info_head_end_{self.crank_angle_1}_cap_{capacity}.txt"
+            fname = f"temporary_data\\PV_diagram_head_end_crank_angle_{self.crank_angle}.dat"
+            fname_log = f"temporary_data\\log_info_head_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
                 os.mkdir("temporary_data")
@@ -548,7 +544,7 @@ class ReciprocatingCompressorModel:
         V3 = V3c = (2*self.r + h0)*A
         V4 = V4c= V3*(1/self.p_ratio)**(1/self.k)
         
-        angle_data = self.get_cycles_boundary_data(acting_label="CE", tdc=tdc)
+        angle_data = self.get_cycles_boundary_data(acting_head="CE", tdc=tdc)
         # [theta_3i, theta_3f] = angle_data["V3"]["angles"]
         # [theta_4i, theta_4f] = angle_data["V4"]["angles"]
 
@@ -560,7 +556,7 @@ class ReciprocatingCompressorModel:
         #     capacity = self.cap
 
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         v_piston = -self.recip_v(tdc=tdc)
         theta, x_piston = self.recip_x(tdc=tdc)
@@ -686,8 +682,8 @@ class ReciprocatingCompressorModel:
 
         if export_data:
 
-            fname = f"temporary_data\\PV_diagram_crank_end_crank_angle_{self.crank_angle_1}.dat"
-            fname_log = f"temporary_data\\log_info_crank_end_{self.crank_angle_1}_cap_{capacity}.txt"
+            fname = f"temporary_data\\PV_diagram_crank_end_crank_angle_{self.crank_angle}.dat"
+            fname_log = f"temporary_data\\log_info_crank_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
                 os.mkdir("temporary_data")
@@ -795,32 +791,15 @@ class ReciprocatingCompressorModel:
     def process_sum_of_volumetric_flow_rate(self, key: str, capacity=None, smooth_data=False):
         try:
 
-            if self.acting_label == 'both_ends':
+            if self.acting_head == 'both_ends':
+                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate += self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
 
-                if self.number_of_cylinders == 1:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                else:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_crank_end(tdc=self.tdc_2, capacity=capacity)[key] 
-                    flow_rate += self.flow_head_end(tdc=self.tdc_2, capacity=capacity)[key]
+            elif self.acting_head == 'head_end':
+                flow_rate = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
 
-            elif self.acting_label == 'head_end':
-
-                if self.number_of_cylinders == 1:
-                    flow_rate = self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                else:
-                    flow_rate = self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_head_end(tdc=self.tdc_2, capacity=capacity)[key]
-
-            elif self.acting_label == 'crank_end':
-
-                if self.number_of_cylinders == 1:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                else:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_crank_end(tdc=self.tdc_2, capacity=capacity)[key]
+            elif self.acting_head == 'crank_end':
+                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
 
         except Exception as error:
             print(str(error))
@@ -1393,7 +1372,7 @@ class ReciprocatingCompressorModel:
     #     # ang = np.linspace(0, 2*pi, N)
 
     #     if tdc is None:
-    #         tdc = self.tdc_1
+    #         tdc = self.tdc_crank_angle
                 
     #     if capacity is None:
     #         if self.cap is None:
@@ -1403,7 +1382,7 @@ class ReciprocatingCompressorModel:
     #     open_suc = [False]*N
     #     open_disch = [False]*N
 
-    #     if self.acting_label not in ['head_end', 'both_ends'] and not aux_process:
+    #     if self.acting_head not in ['head_end', 'both_ends'] and not aux_process:
     #         p = np.zeros(N) 
     #         print('Cylinder does not have head end pressure.')
     #     else:
@@ -1619,10 +1598,11 @@ if __name__ == "__main__":
                     'pressure_ratio' : 1.90788804,
                     'clearance_HE' : 15.8,
                     'clearance_CE' : 18.39,
-                    'TDC_crank_angle_1' : 0,
+                    'TDC_crank_angle' : 0,
                     'rotational_speed' : 360,
                     'capacity' : 100,
-                    'acting_label' : 0,
+                    'acting_head' : 0,
+                    'valves_per_head' : 1,
                     'pressure_at_suction' : 19.65,
                     'temperature_at_suction' : 45,
                     'pressure_unit' : "bar",

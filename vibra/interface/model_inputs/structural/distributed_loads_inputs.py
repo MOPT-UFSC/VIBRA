@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -21,12 +22,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
-        app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
 
         self._config_window()
         self._initialize()
@@ -48,6 +49,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def _initialize(self):
         self.keep_window_open = True
+        self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -83,6 +85,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def _config_widgets(self):
         #
+        self.comboBox_element_type.setEnabled(False)
+        #
         for i, w in enumerate([110, 150, 100]):
             self.treeWidget_distributed_loads.setColumnWidth(i, w)
             self.treeWidget_distributed_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -106,6 +110,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.treeWidget_distributed_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
@@ -211,6 +216,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def element_type_callback(self):
         return
 
+    def update_element_type_based_on_geometry_information(self):
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        self.comboBox_element_type.setCurrentIndex(int(volume_exists))
+
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
 
         _real = None
@@ -280,10 +289,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
@@ -299,8 +306,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         distributed_loads = [Fx, Fy, Fz]
 
-        condition_1 = self.comboBox_element_type.currentIndex() == 0 and distributed_loads.count(None) == 3
-        condition_2 = self.comboBox_element_type.currentIndex() == 1 and distributed_loads.count(None) == 3
+        condition_1 = element_type == "2d_element" and distributed_loads.count(None) == 3
+        condition_2 = element_type == "3d_element" and distributed_loads.count(None) == 3
 
         if condition_1 or condition_2:
             self.hide()
@@ -331,41 +338,28 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self.actions_to_finalize()
 
-    def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
+    def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
 
         title = "Error while loading table"
-
+        imported_file = None
         try:
             if direct_load:
                 if lineEdit.text() == "":
                     return None, None
 
                 imported_table_path = lineEdit.text()
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
-
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = str(Path().home())
-                else:
-                    path = last_path
-
-                caption = f"Choose a table to import the {load_label} data"
-                imported_table_path, check = QFileDialog.getOpenFileName(  
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
-
-                if not check:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {load_label} data")
+                
+                if not imported_data:
                     return None, None
 
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_file = np.loadtxt(imported_table_path, delimiter=",")
-            # imported_filename = basename(imported_table_path)
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
+                imported_table_path = imported_data.path
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -484,10 +478,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if self.comboBox_element_type.currentIndex() == 0:
-            element_type = "2d_element"
-        else:
-            element_type = "3d_element"
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
 
         if self.Fx_table_path is None:
             self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
@@ -519,8 +511,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
             distributed_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
 
-            condition_1 = self.comboBox_element_type.currentIndex() == 0 and table_names.count(None) == 3
-            condition_2 = self.comboBox_element_type.currentIndex() == 1 and table_names.count(None) == 3
+            condition_1 = element_type == "2d_element" and table_names.count(None) == 3
+            condition_2 = element_type == "3d_element" and table_names.count(None) == 3
 
             if condition_1 or condition_2:
                 self.hide()

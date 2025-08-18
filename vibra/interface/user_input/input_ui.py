@@ -30,6 +30,8 @@ from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import Acoust
 from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
 from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs import AcousticPressureFrequencyResponseFunctionInputs
 from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_waveform_inputs import AcousticPressureWaveformInputs
+#
 from vibra.interface.plots.acoustic.specific_acoustic_impedance_inputs import SpecificAcousticImpedanceInputs
 from vibra.interface.plots.acoustic.particle_velocity_frequency_response_inputs import ParticleVelocityFrequencyResponseInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
@@ -53,7 +55,6 @@ window_title_2 = "Warning"
 class InputUi:
     def __init__(self, parent=None):
 
-        self.main_window = app().main_window
         self.project = app().project
 
         self.model_setup_items = app().main_window.model_setup_widget.model_setup_items
@@ -71,14 +72,14 @@ class InputUi:
     
     def mesh_setup(self):
         if not self.model_setup_items.item_child_mesh_setup.isDisabled():
-            self.main_window.action_model_workspace_callback()
+            app().main_window.action_model_workspace_callback()
             obj = self.process_input(MeshSetupInputs)
             if obj.complete:
-                self.model_setup_items.modify_items_access_after_geometry_importing()
- 
+                self.model_setup_items.enable_and_expand_menu_items()
+
     def generate_mesh(self):
         LoadingWindow(app().project.generate_mesh).run()
-        self.main_window.action_mesh_workspace_callback()
+        app().main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
         nodes = list(app().project.model.mesh.nodes_collapsed_elements)
         app().main_window.set_mesh_selection(nodes=nodes)
@@ -96,7 +97,7 @@ class InputUi:
             self.process_input(SurfaceThicknessInputs)
         
     def prescribe_structural_dofs(self):
-        if not self.model_setup_items.item_child_prescribed_dofs.isDisabled():
+        if not self.model_setup_items.item_child_prescribed_dof.isDisabled():
             self.process_input(DofsPrescriptionInputs)
         
     def set_nodal_loads(self):
@@ -199,15 +200,15 @@ class InputUi:
 
     def plot_reaction_frequency_response(self):
         if self.projct:
-            self.main_window.show_geometry_render_widget()
+            app().main_window.show_geometry_render_widget()
 
     def plot_stress_field(self):
         if not self.results_viewer_items.item_child_stress_field.isDisabled():
-            self.main_window.configure_results_render_widget()
+            app().main_window.configure_results_render_widget()
 
     def plot_stress_frequency_response(self):
         if not self.results_viewer_items.item_child_stress_frequency_response.isDisabled():
-            self.main_window.show_geometry_render_widget() 
+            app().main_window.show_geometry_render_widget() 
 
     def plot_acoustic_mode_shapes(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_MODAL:
@@ -228,6 +229,10 @@ class InputUi:
     def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
+
+    def plot_acoustic_pressure_waveform(self):
+        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AcousticPressureWaveformInputs)
 
     def plot_TL_NR(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:

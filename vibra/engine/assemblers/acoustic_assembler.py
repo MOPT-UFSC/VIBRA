@@ -31,6 +31,10 @@ class AcousticAssembler:
         self.prescribed_indexes = list()
         self.unprescribed_indexes = list()
 
+        self.element_1d = None
+        self.element_2d = None
+        self.element_3d = None
+
 
     def define_acoustic_elements(self):
         self.model.set_acoustic_elements()

@@ -91,7 +91,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         elif self.importer is None:
             self.importer = ImportDataToCompare(self)
             self.importer.exec()
-            app().main_window.set_input_widget(self)
 
     def _initial_config(self):
         self.aux_bool = False
@@ -101,6 +100,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.frame_vertical_lines.setDisabled(True)
 
     def _update_comboBox(self):
+
         self.cache_plot_type = self.comboBox_plot_type.currentText()
         aux_real = self.radioButton_real.isChecked()
         aux_imag = self.radioButton_imaginary.isChecked()
@@ -116,10 +116,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         
         if self.plot_type == self.cache_plot_type:
             self.plot_data_in_freq_domain()
-        
+
     def _update_plot_type(self):
-        # if self.not_update:
-        #     return
         self.plot_type = self.comboBox_plot_type.currentText()
         self.plot_data_in_freq_domain()
 
@@ -157,29 +155,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data: dict):
-
-        if "x_data" in data.keys():
-            self.x_data = data["x_data"]
-        if "y_data" in data.keys():
-            self.y_data = self.get_y_axis_data(data["y_data"])
-        if "unit" in data.keys():
-            if data["unit"] != "":
-                self.unit = data["unit"]
-                # if self.unit == "dB":
-                #     self.imported_dB_data()
-        if "x_label" in data.keys():
-            self.x_label = data["x_label"]
-        if "y_label" in data.keys():
-            text = data["y_label"]
-            self.y_label = self.get_y_axis_label(text)
-        if "color" in data.keys():
-            self.color = data["color"]
-        if "linestyle" in data.keys():
-            self.linestyle = data["linestyle"]
-        if "legend" in data.keys():
-            self.legend = data["legend"]
-        if "title" in data.keys():
-            self.title = data["title"]
+        self.x_data = data.get("x_data")
+        self.y_data = self.get_y_axis_data(data.get("y_data"))
+        self.unit = data.get("unit")
+        self.x_label = data.get("x_label")
+        self.y_label = self.get_y_axis_label(data.get("y_label"))
+        self.color = data.get("color")
+        self.title = data.get("title")
+        self.legend = data.get("legend")
+        self.linestyle = data.get("linestyle")
 
     def get_scaled_data(self, data):
         if self.radioButton_decibel_scale.isChecked():
@@ -197,14 +181,20 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         else:
             return data
 
-    def get_y_axis_data(self, data):
+    def get_y_axis_data(self, data: np.ndarray | None):
+        if data is None:
+            return None
+
         dif_data = self.process_differentiation(data)
         if self.radioButton_real.isChecked():
             return np.real(dif_data)
+
         elif self.radioButton_imaginary.isChecked():
             return np.imag(dif_data)
+
         elif self.radioButton_absolute.isChecked():
             return np.abs(dif_data)
+
         else:
             return self.get_scaled_data(dif_data)
 
@@ -226,17 +216,19 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         else:
             return f"{label} - {type_label} [{unit}]"
 
-    def process_differentiation(self, data):
+    def process_differentiation(self, data: np.ndarray):
         frequencies = self.x_data
+
         index = self.comboBox_differentiate_data.currentIndex()
         if index == 0:
             output_data = data
         elif index == 1:
             output_data = data*(1j*2*np.pi)*frequencies
         else:
-            output_data = data*((1j*2*np.pi*frequencies)**2)           
+            output_data = data*((1j*2*np.pi*frequencies)**2)
+
         return output_data
-    
+
     def get_unit_considering_differentiation(self):
         index = self.comboBox_differentiate_data.currentIndex()
         if index == 0:
@@ -432,6 +424,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         if isinstance(data, dict):
             self.imported_results_data = data
             self.plot_data_in_freq_domain()
+        
+    def reset_imported_results_data_to_plot(self):
+        self.imported_results_data = dict()
+        self.plot_data_in_freq_domain()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

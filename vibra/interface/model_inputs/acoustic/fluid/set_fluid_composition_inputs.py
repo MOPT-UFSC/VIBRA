@@ -21,9 +21,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.selected_fluid_to_edit = kwargs.get("selected_fluid_to_edit", None)
         self.state_properties = kwargs.get("state_properties", dict())
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = self.project.model
@@ -998,7 +997,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.load_fluid_composition_info()
             self.update_remainig_composition()
 
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
