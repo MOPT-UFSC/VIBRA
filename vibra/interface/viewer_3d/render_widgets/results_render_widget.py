@@ -145,6 +145,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             with self._animation_cache_lock:
                 if self.timestamp != timestamp:
                     break
+                
+                if frame in self._animation_cached_data:
+                    continue
+
                 self.cache_frame(frame)
 
     def cache_frame(self, frame):
