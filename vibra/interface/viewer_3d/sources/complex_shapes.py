@@ -93,14 +93,18 @@ def create_compressor_discharge_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_discharge.stl")
     return transform_polydata(
         polydata,
+        rotation=(0, 0, 180),
         scale=(1, 1, 1),
+        position=(1, 0, 0),
     )
 
 def create_compressor_suction_source():
     polydata = read_obj_file(SYMBOLS_DIR / "stl_files/compressor_suction.obj")
     return transform_polydata(
         polydata,
+        rotation=(0, 0, 180),
         scale=(1, 1, 1),
+        position=(1, 0, 0)
     )   
 
 def create_dissipation_model_source():
