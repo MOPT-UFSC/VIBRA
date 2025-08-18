@@ -20,6 +20,7 @@ from .simple_shapes import (
     create_mass_load_second_layer_source,
     create_mass_load_third_layer_source,
     create_mass_load_fourth_layer_source,
+    create_double_cone_source,
 )
 
 from .complex_shapes import (

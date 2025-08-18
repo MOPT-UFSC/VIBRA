@@ -124,22 +124,34 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if coords is not None and property is not None:
-            x, y, z, *_ = property["values"]
+            Ux, Uy, Uz, Rx, Ry, Rz = property["values"]
 
             # handle table attributed values
-            x = x[0] if isinstance(x, np.ndarray) else x
-            y = y[0] if isinstance(y, np.ndarray) else y
-            z = z[0] if isinstance(z, np.ndarray) else z
+            Ux = Ux[0] if isinstance(Ux, np.ndarray) else Ux
+            Uy = Uy[0] if isinstance(Uy, np.ndarray) else Uy
+            Uz = Uz[0] if isinstance(Uz, np.ndarray) else Uz
+            Rx = Rx[0] if isinstance(Rx, np.ndarray) else Rx
+            Ry = Ry[0] if isinstance(Ry, np.ndarray) else Ry
+            Rz = Rz[0] if isinstance(Rz, np.ndarray) else Rz
 
             # alternate add_symbol function to a generic one
-            if x is not None:
+            if Ux is not None:
                 self.add_symbol(sources.create_cone_source, coords, (1, 0, 0), color=color_names.GREEN)
 
-            if y is not None:
+            if Uy is not None:
                 self.add_symbol(sources.create_cone_source, coords, (0, 1, 0), color=color_names.GREEN)
 
-            if z is not None:
+            if Uz is not None:
                 self.add_symbol(sources.create_cone_source, coords, (0, 0, 1), color=color_names.GREEN)
+            
+            if Rx is not None:
+                self.add_symbol(sources.create_double_cone_source, coords, (1, 0, 0), color=color_names.RED_5)
+
+            if Ry is not None:
+                self.add_symbol(sources.create_double_cone_source, coords, (0, 1, 0), color=color_names.RED_5)
+
+            if Rz is not None:
+                self.add_symbol(sources.create_double_cone_source, coords, (0, 0, 1), color=color_names.RED_5)
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
@@ -152,13 +164,13 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             m_orientation = np.real((Mx, My, Mz))
 
             if np.any(force_orientation):
-                is_pointing = np.dot(normal, force_orientation) < 0
+                # is_pointing = np.dot(normal, force_orientation) < 0
                 # shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
                 self.add_symbol(sources.create_arrow_source, coords, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
-                is_pointing = np.dot(normal, m_orientation) < 0
+                # is_pointing = np.dot(normal, m_orientation) < 0
                 # shape = sources.create_double_arrow_source if is_pointing else sources.create_outwards_arrow_source
-                self.add_symbol(sources.create_double_arrow_source, coords, m_orientation, color=color_names.BLUE_3)
+                self.add_symbol(sources.create_double_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
 
         property = None
         coord = None
@@ -181,7 +193,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             if np.any(force_orientation):
                 self.add_symbol(sources.create_arrow_source, coord, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
-                self.add_symbol(sources.create_double_arrow_source, coord, m_orientation, color=color_names.BLUE_3)
+                self.add_symbol(sources.create_double_arrow_source, coord, m_orientation, color=color_names.BLUE_5)
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
         if surface_id != -1:
