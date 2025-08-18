@@ -25,12 +25,6 @@ class ModelSetupItems(CommonMenuItems):
         self._create_connections()
         self._initial_configuration()
         self.update_items_appearance()
-
-    def show_warning_tooltip_structural(self):
-        tooltip_html = self.item_top_structural_model_setup.toolTip(0)
-        rect = self.visualItemRect(self.item_top_structural_model_setup)
-        pos = self.mapToGlobal(rect.center())
-        QToolTip.showText(pos, tooltip_html, self, rect, 5000)
     
     def _create_items(self):
         """Creates all TreeWidgetItems."""
