@@ -16,7 +16,6 @@ class ResultsViewerItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
-        self.main_window = app().main_window
         self.project = app().project
 
         self.setObjectName("results_viewer_items")
@@ -117,20 +116,19 @@ class ResultsViewerItems(CommonMenuItems):
     def update_structural_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(True)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_acoustic_analysis_visibility_items(self):
         self.item_top_results_viewer_acoustic.setHidden(False)
         self.item_top_results_viewer_structural.setHidden(True)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_coupled_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(False)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_items(self):
-        """Enables and disables the Child Items on the menu after the solution is done."""
+        """
+        Enables and disables the Child Items on the menu after the solution is done.
+        """
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
@@ -201,8 +199,15 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_particle_velocity.setDisabled(False)
             self.item_child_acoustic_specific_impedance.setDisabled(False)
 
+        self.update_allowable_pulsation_criteria_visibility(analysis_id)
         self.update_tree_visibility_after_solution()
-    
+
+    def update_allowable_pulsation_criteria_visibility(self, analysis_id: int):
+        compressor_exists = True
+        if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            compressor_exists = not app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(compressor_exists)
+
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.

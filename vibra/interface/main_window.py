@@ -234,6 +234,7 @@ class MainWindow(MainWindow_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
+
     def update_mesh_information(self):
         self.status_bar.update_mesh_information()
 
@@ -492,6 +493,11 @@ class MainWindow(MainWindow_UI):
             if hasattr(widget, "update_renderer_font_size"):
                 widget.update_renderer_font_size()
 
+    def workspace_updating_for_model_setup(self):
+        mesh_workspace = app().main_window.action_mesh_workspace.isChecked()
+        if mesh_workspace:
+            app().main_window.action_model_workspace_callback()
+
     def action_model_workspace_callback(self):
         self.action_node_view.setToolTip("Points view")
         self.action_model_workspace.setChecked(True)
@@ -503,11 +509,11 @@ class MainWindow(MainWindow_UI):
         else:
             self.action_results_workspace.setEnabled(False)
 
-        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
+        self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
@@ -523,11 +529,11 @@ class MainWindow(MainWindow_UI):
             self.action_results_workspace.setEnabled(False)
 
         self.update_mesh_information()
-        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
+        self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
@@ -636,8 +642,9 @@ class MainWindow(MainWindow_UI):
         )
 
     def distinguish_mesh_solids(self, solids):
-        if solids is None:
-            pass
+        if not solids:
+            return
+
         self.distinguished_solids = set(solids)
         self.show_mesh_render_widget()
         self.action_line_view_callback(False)
@@ -843,11 +850,13 @@ class MainWindow(MainWindow_UI):
             logging.info("Removing the results data from project file... [75/100]")
             app().file.remove_results_data_from_project_file()
 
+        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
         LoadingWindow(remove_callback).run()
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
-        self.model_setup_widget.model_setup_items.update_items_appearance()            
+
+        self.model_setup_widget.model_setup_items.update_items_appearance()
         
         return True
 
@@ -863,6 +872,9 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
+
+        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
+
         try:
             if project_path is not None:
                 project_path = Path(project_path)
@@ -882,6 +894,7 @@ class MainWindow(MainWindow_UI):
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
 
+            self.update_toolbar_and_menu_items_after_load_project()
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
             self.action_front_view_callback()
@@ -889,11 +902,11 @@ class MainWindow(MainWindow_UI):
 
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()
-            self.model_setup_widget.model_setup_items.update_items_appearance()            
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            
+            # self.model_setup_widget.model_setup_items.update_items_appearance()
+
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
@@ -906,7 +919,7 @@ class MainWindow(MainWindow_UI):
             self.welcome_widget.update_recent_projects()
             self.update_recents_menu()
 
-    def import_geometry_or_mesh(self, path: str, update_render: bool = True):
+    def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
 
         geometry_file = self.check_path_for_geometry_file(path)
 
@@ -929,18 +942,21 @@ class MainWindow(MainWindow_UI):
                 app().main_window.project_data_modified = False
 
             self.update_geometry_information()
+            self.update_toolbar_and_menu_items_after_load_project()
 
         try:
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
-            self.analysis_toolbar.update_analysis_combo_boxes()
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
 
             if update_render:
                 LoadingWindow(self.update_plots).run()
+
+            if ignore_workspaces:
+                return
 
             if geometry_file:
                 self.action_model_workspace_callback()
@@ -970,6 +986,9 @@ class MainWindow(MainWindow_UI):
             return True
 
         return False
+    
+    def update_toolbar_and_menu_items_after_load_project(self):
+        self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()

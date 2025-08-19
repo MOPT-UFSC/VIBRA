@@ -18,8 +18,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
@@ -54,19 +53,21 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_input_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_output_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def update_render_according_to_selector(self):
 
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 3:
-            self.main_window.show_mesh_render_widget()
+            app().main_window.show_mesh_render_widget()
         else:
-            self.main_window.show_geometry_render_widget()
+            app().main_window.show_geometry_render_widget()
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -122,10 +123,10 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
     def geometry_selection_callback(self):
         
-        surfaces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        points = self.main_window.selected_geometry_points
-        nodes = self.main_window.selected_mesh_nodes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if surfaces and index == 0:
@@ -266,7 +267,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         if y_data is None:
             return
 
-        title = "Acoustic frequency response function - {}".format(self.analysis_method)
+        title = "Acoustic frequency response function"
         legend_label = "Acoustic FRF between {}s [{}] and [{}]".format(  selection_type, 
                                                                     self.output_selection_id, 
                                                                     self.input_selection_id  )

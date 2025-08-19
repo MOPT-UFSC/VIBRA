@@ -39,6 +39,7 @@ class AnalysisSetupInput():
         self._create_connections()
 
         self.load_analysis_setup()
+        self.check_for_collapsed_elements()
 
         while self.keep_window_open:
             self.exec()
@@ -105,7 +106,20 @@ class AnalysisSetupInput():
 
         self.lineEdit_fmin.setDisabled(key)
         self.lineEdit_fmax.setDisabled(key)
-        self.lineEdit_fstep.setDisabled(key)        
+        self.lineEdit_fstep.setDisabled(key)
+
+    def check_for_collapsed_elements(self):
+        mesh = app().project.model.mesh   
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        self.pushButton_run_analysis.setDisabled(bool(collapsed))
+
+        text = ""
+        if collapsed:
+            text = "Collapsed elements have been detected during the mesh post-processing. \n"
+            text += "The model solution will stay deactivated until the collapsed-related \n"
+            text += "issues have been addressed."
+
+        self.pushButton_run_analysis.setToolTip(text)
 
     def enter_setup_callback(self):
         analysis_setup = app().file.read_analysis_setup_from_file()
