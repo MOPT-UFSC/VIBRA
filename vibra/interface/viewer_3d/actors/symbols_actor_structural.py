@@ -141,19 +141,21 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         if surface_id != -1:
             surface_properties = app().project.model.properties.surface_properties
             property = surface_properties[property_name, surface_id]
-            coords, normal = self._get_center_coords_and_normals(surface_id)
+            coords, _ = self._get_center_coords_and_normals(surface_id)
+            
+            F_M = [(i if i is not None else 0) for i in property["values"]]
+            if len(F_M) == 3:
+                Fx, Fy, Fz = F_M
+                Mx, My, Mz = 0, 0, 0
+            else:
+                Fx, Fy, Fz, Mx, My, Mz = F_M
 
-            Fx, Fy, Fz, Mx, My, Mz = [(i if i is not None else 0) for i in property["values"]]
             force_orientation = np.real((Fx, Fy, Fz))
             m_orientation = np.real((Mx, My, Mz))
 
             if np.any(force_orientation):
-                # is_pointing = np.dot(normal, force_orientation) < 0
-                # shape = sources.create_arrow_source if is_pointing else sources.create_outwards_arrow_source
                 self.add_symbol(sources.create_arrow_source, coords, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
-                # is_pointing = np.dot(normal, m_orientation) < 0
-                # shape = sources.create_double_arrow_source if is_pointing else sources.create_outwards_arrow_source
                 self.add_symbol(sources.create_double_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
 
         property = None
@@ -170,7 +172,13 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if property is not None and coord is not None:
-            Fx, Fy, Fz, Mx, My, Mz = [(i if i is not None else 0) for i in property["values"]]
+            F_M = [(i if i is not None else 0) for i in property["values"]]
+            if len(F_M) == 3:
+                Fx, Fy, Fz = F_M
+                Mx, My, Mz = 0, 0, 0
+            else:
+                Fx, Fy, Fz, Mx, My, Mz = F_M
+                
             force_orientation = np.real((Fx, Fy, Fz))
             m_orientation = np.real((Mx, My, Mz))
 
