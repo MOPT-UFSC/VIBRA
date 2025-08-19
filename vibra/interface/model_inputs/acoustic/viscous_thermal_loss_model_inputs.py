@@ -421,7 +421,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 if model not in self.models:
                     self.models.append(model)
                     
-                model_id = self.models.index(model) + 1
+                model_id = data["model_id"]
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
         
@@ -441,7 +441,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 if model not in self.models:
                     self.models.append(model)
 
-                model_id = self.models.index(model) + 1
+                model_id = data["model_id"]
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_groups[model_id].append(group_id)
             
@@ -840,6 +840,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.models.append(model)
             
             model_data = model.get_data()
+            model_data["model_id"] = len(self.models)
 
             self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
             
@@ -866,6 +867,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             model_data["selection_radius"] = self.selection_radius
             model_data["averaged"] = averaged_selection
             model_data["filter_type"] = filter_type
+            model_data["model_id"] = len(self.models)
 
             self.verify_and_remove_model_conflicts_if_it_exists(model_data)
 
