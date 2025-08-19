@@ -47,7 +47,7 @@ class AnalysisToolbar(QToolBar):
     def _load_icons(self):
         self.settings_icon = QIcon(str(ICON_DIR / "settings.png"))
         self.solution_icon = QIcon(str(ICON_DIR / "go_next.png"))
-        self.resume_icon = QIcon(str(ICON_DIR / "forward-icon.png"))
+        self.resume_icon = QIcon(str(ICON_DIR / "resume_icon.png"))
         self.reset_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
 
     def _define_qt_variables(self):
