@@ -20,6 +20,7 @@ import numpy as np
 from typing import Dict, List, Tuple
 from enum import IntEnum
 from collections import defaultdict
+from copy import deepcopy
 
 
 window_title_1 = "Error"
@@ -385,6 +386,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             setattr(model, parameter, new_parameter_value)
 
             model_data = model.get_data()
+            model_data["model_id"] = model_id
 
             if model_id in self.map_model_id_to_volumes:
                 volumes = self.map_model_id_to_volumes[model_id]
@@ -393,10 +395,19 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
             
             else:
-                groups = self.map_model_id_to_groups[model_id]
+                for key, data in self.properties.group_properties.copy().items():
+                    _, group_id = key
 
-                for group in groups:
-                    self.properties._set_property("viscous_thermal_model", model_data, group=group)
+                    if model_id != data["model_id"]:
+                        continue
+
+                    group_model_data = deepcopy(model_data)
+                    
+                    keys = ["surface_ids", "selection_radius", "averaged", "filter_type"]
+                    for _key in keys:
+                        group_model_data[_key] = data[_key]
+
+                    self.properties._set_property("viscous_thermal_model", group_model_data, group=group_id)
             
             app().file.write_model_properties_in_file()
     
@@ -420,7 +431,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
                 if model not in self.models:
                     self.models.append(model)
-                    
+                
                 model_id = data["model_id"]
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
