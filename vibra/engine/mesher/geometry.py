@@ -60,6 +60,7 @@ class Geometry:
         gmsh.model.occ.synchronize()
 
         self._process_geometry_information()
+        self._process_curves_normals()
         gmsh.finalize()
 
     def clear(self):
@@ -105,15 +106,15 @@ class Geometry:
                     center[key] = value * scale
 
         for key, value in self._curves_lengths.items():
-            if value.any():
+            if value:
                 self._curves_lengths[key] = value * scale
         
         for key, value in self._surfaces_areas.items():
-            if value.any():
+            if value:
                 self._surfaces_areas[key] = value * (scale**2)
 
         for key, value in self._solids_volumes.items():
-            if value.any():
+            if value:
                 self._solids_volumes[key] = value * (scale**3)
 
         self.length_unit = length_unit 
@@ -243,8 +244,15 @@ class Geometry:
                 self._surfaces_to_curves[tag] = tuple(downwards)
                 self.surfaces.append(tag)
 
-                center = self.process_center_element(dim, tag)
+                uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
+                uv_mid = (uv_min + uv_max) / 2
+                center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+
                 self._surfaces_centers[tag] = center
+
+                normal = gmsh.model.getNormal(tag, uv_mid).reshape(-1, 3)
+
+                self._surfaces_normals[tag] = normal
 
             elif dim == 1:
                 self._curves_lengths[tag] = mass * (self.length_unit_factor**1)
@@ -252,8 +260,26 @@ class Geometry:
                 self.curves.append(tag)
 
                 center = self.process_center_element(dim, tag)
-                self._curves_centers[tag] = center
+                self._curves_centers[tag] = center               
+    
+    def _process_curves_normals(self):
+        for curve in self.curves:
+            adjacent_surfaces = list()
+            for k, v in self._surfaces_to_curves.items():
+                if curve in v:
+                    adjacent_surfaces.append(k)
 
+            if not adjacent_surfaces:
+                self._curves_normals[curve] = np.zeros((1, 3))
+                continue
+
+            normals_sum = np.zeros((1, 3))
+            for surface in adjacent_surfaces:
+                normals_sum += self._surfaces_normals[surface]
+
+            normals_avg = normals_sum / len(adjacent_surfaces)
+
+            self._curves_normals[curve] = normals_avg
     def process_center_element(self, dim: int, tag: int) -> np.ndarray | None:
         """Process the center of an element based on its dimension."""
 
