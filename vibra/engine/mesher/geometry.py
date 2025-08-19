@@ -47,7 +47,7 @@ class Geometry:
         self.solids = list()
 
         self.length_unit = length_unit
-        self.length_unit_factor = self._get_length_unit_factor
+        self.length_unit_factor = self._get_length_unit_factor(length_unit)
 
         self.set_length_unit(length_unit)
         if path is not None:
@@ -101,16 +101,20 @@ class Geometry:
 
         for center in centers:
             for key, value in center.items():
-                center[key] = value * scale
+                if value.any():
+                    center[key] = value * scale
 
         for key, value in self._curves_lengths.items():
-            self._curves_lengths[key] = value * scale
+            if value.any():
+                self._curves_lengths[key] = value * scale
         
         for key, value in self._surfaces_areas.items():
-            self._surfaces_areas[key] = value * (scale**2)
+            if value.any():
+                self._surfaces_areas[key] = value * (scale**2)
 
         for key, value in self._solids_volumes.items():
-            self._solids_volumes[key] = value * (scale**3)
+            if value.any():
+                self._solids_volumes[key] = value * (scale**3)
 
         self.length_unit = length_unit 
         self.length_unit_factor = new_factor
@@ -231,16 +235,33 @@ class Geometry:
                 self._solids_to_surfaces[tag] = tuple(downwards)
                 self.solids.append(tag)
 
+                center = self.process_center_element(dim, tag)
+                self._solids_centers[tag] = center
+
             elif dim == 2:
                 self._surfaces_areas[tag] = mass * (self.length_unit_factor**2)
                 self._surfaces_to_curves[tag] = tuple(downwards)
                 self.surfaces.append(tag)
+
+                center = self.process_center_element(dim, tag)
+                self._surfaces_centers[tag] = center
 
             elif dim == 1:
                 self._curves_lengths[tag] = mass * (self.length_unit_factor**1)
                 self._curves_to_points[tag] = tuple(downwards)
                 self.curves.append(tag)
 
+                center = self.process_center_element(dim, tag)
+                self._curves_centers[tag] = center
+
+    def process_center_element(self, dim: int, tag: int) -> np.ndarray | None:
+        """Process the center of an element based on its dimension."""
+
+        uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
+        uv_mid = (uv_min + uv_max) / 2
+        center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+        return center
+    
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "milimeter":
             return 1e-3
