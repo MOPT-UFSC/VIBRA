@@ -124,34 +124,18 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if coords is not None and property is not None:
-            Ux, Uy, Uz, Rx, Ry, Rz = property["values"]
+            U_R = [(i if i is not None else 0) for i in property["values"]]
 
             # handle table attributed values
-            Ux = Ux[0] if isinstance(Ux, np.ndarray) else Ux
-            Uy = Uy[0] if isinstance(Uy, np.ndarray) else Uy
-            Uz = Uz[0] if isinstance(Uz, np.ndarray) else Uz
-            Rx = Rx[0] if isinstance(Rx, np.ndarray) else Rx
-            Ry = Ry[0] if isinstance(Ry, np.ndarray) else Ry
-            Rz = Rz[0] if isinstance(Rz, np.ndarray) else Rz
+            for index, i in enumerate(U_R):
+                U_R[index] = i[0] if isinstance(i, np.ndarray) else i
 
             # alternate add_symbol function to a generic one
-            if Ux is not None:
-                self.add_symbol(sources.create_cone_source, coords, (1, 0, 0), color=color_names.GREEN)
-
-            if Uy is not None:
-                self.add_symbol(sources.create_cone_source, coords, (0, 1, 0), color=color_names.GREEN)
-
-            if Uz is not None:
-                self.add_symbol(sources.create_cone_source, coords, (0, 0, 1), color=color_names.GREEN)
-            
-            if Rx is not None:
-                self.add_symbol(sources.create_double_cone_source, coords, (1, 0, 0), color=color_names.RED_5)
-
-            if Ry is not None:
-                self.add_symbol(sources.create_double_cone_source, coords, (0, 1, 0), color=color_names.RED_5)
-
-            if Rz is not None:
-                self.add_symbol(sources.create_double_cone_source, coords, (0, 0, 1), color=color_names.RED_5)
+            for index, v in enumerate(U_R):
+                if index < 3 and v != 0:
+                    self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN)
+                elif index >= 3 and v != 0:
+                    self.add_symbol(sources.create_double_cone_source, coords, (index==3, index==4, index==5), color=color_names.RED_5)    
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
