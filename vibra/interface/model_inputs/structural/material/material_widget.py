@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QHeaderView
-from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt
 
-from vibra import app, TEMP_PROJECT_FILE
+from vibra import app
 from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
 from vibra.interface.formatters.icons import *
 
@@ -106,11 +105,6 @@ class MaterialWidget(MaterialWidget_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def load_data_from_materials_library(self):
-
-        if not TEMP_PROJECT_FILE.exists():
-            self.reset_library_to_default()
-            return
-
         config = app().file.read_material_library_from_file()
         if config is None:
             self.reset_library_to_default()

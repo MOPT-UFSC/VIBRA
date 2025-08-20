@@ -261,9 +261,7 @@ def porous_material_info_text():
     tree.add_item("Model", pm_model.get("model", ""))
     tree.add_item("Flow resistivity", pm_model.get("flow_resistivity", ""), "kg/m³s")
 
-    text += str(tree)
-
-    return text
+    return str(tree)
 
 def viscous_thermal_info_text():
     volumes = list(app().main_window.selected_geometry_volumes)
@@ -282,7 +280,7 @@ def viscous_thermal_info_text():
     tree.add_item("Formulation", vt_model.get("formulation", ""))
     tree.add_item("Section type", vt_model.get("section_type"))
 
-    text += str(tree)
+    return str(tree)
 
 def perforated_plate_info_text():
 

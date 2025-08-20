@@ -3,13 +3,13 @@ import os
 import sys
 from functools import partial
 from pathlib import Path
-from shutil import copy, rmtree
+from shutil import rmtree
 import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QAction, QColor
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QAbstractButton,
     QFileDialog,
@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from vibra import app, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
+from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -705,9 +705,6 @@ class MainWindow(MainWindow_UI):
             return True
 
     def save_project_as_dialog(self):
-        if not TEMP_PROJECT_FILE.exists():
-            return
-
         obj = SaveProjectDataSelector()
         if obj.complete:
             last_path = app().config.get_last_folder_for("project_folder")
@@ -732,6 +729,7 @@ class MainWindow(MainWindow_UI):
                 return
 
             if obj.ignore_results_data:
+                app().file.delete_harmonic_solution()
                 app().file.remove_results_data_from_project_file()
 
             if obj.ignore_mesh_data:
@@ -761,7 +759,7 @@ class MainWindow(MainWindow_UI):
             self.update_recents_menu()
             logging.info("Saving project data... [75/100]")
 
-            copy(TEMP_PROJECT_FILE, path)
+            app().file.archive_project(path)
             self.update_window_title(path)
             self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
@@ -835,7 +833,7 @@ class MainWindow(MainWindow_UI):
             return False
 
         app().file.write_geometry_in_file(
-            load_path,
+            Path(load_path),
             app().project.model.length_unit,
             app().project.model.geometry_qf,
         )
@@ -881,7 +879,7 @@ class MainWindow(MainWindow_UI):
                 app().config.add_recent_file(project_path)
                 app().config.write_last_folder_path_in_file("project_folder", project_path)
                 self.update_recents_menu()
-                copy(project_path, TEMP_PROJECT_FILE)
+                app().file.extract_project(project_path)
                 self.update_window_title(project_path)
 
             app().project.reset_variables()
@@ -948,6 +946,7 @@ class MainWindow(MainWindow_UI):
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+            self.analysis_toolbar.set_pushbutton_resume_analysis_enabled(app().project.can_resume_solution)
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
@@ -1101,7 +1100,7 @@ class MainWindow(MainWindow_UI):
         self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
-        condition_2 = TEMP_PROJECT_FILE.exists()
+        condition_2 = any(os.scandir(TEMP_PROJECT_DIR)) # TEMP_PROJECT_DIR is not empty
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
