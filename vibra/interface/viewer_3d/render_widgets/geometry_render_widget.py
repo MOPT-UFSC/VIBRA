@@ -230,6 +230,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
+        # self.faces_actor.SetVisibility(visualization.faces)
         self.multimaterial.SetVisibility(visualization.faces)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
