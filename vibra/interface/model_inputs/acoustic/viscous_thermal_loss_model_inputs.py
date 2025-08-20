@@ -851,9 +851,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.models.append(model)
             
             model_data = model.get_data()
-            model_data["model_id"] = len(self.models)
-
+            
             self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
+
+            model_data["model_id"] = len(self.models)
             
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
@@ -878,15 +879,17 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             model_data["selection_radius"] = self.selection_radius
             model_data["averaged"] = averaged_selection
             model_data["filter_type"] = filter_type
-            model_data["model_id"] = len(self.models)
 
             self.verify_and_remove_model_conflicts_if_it_exists(model_data)
+            
+            model_data["model_id"] = len(self.models)
 
             self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.load_info()
+
     
     def verify_and_remove_model_conflicts_if_it_exists(self, model_data: dict, volume_ids: List[int]=None):
 
