@@ -23,7 +23,6 @@ EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 
 USER_PATH = Path().home()
 TEMP_PROJECT_DIR = USER_PATH / "temp_vibra"
-TEMP_PROJECT_FILE = TEMP_PROJECT_DIR / "tmp.vibra"
 
 SUPPORTED_GEOMETRY_EXTENSIONS = [
     "iges",
