@@ -865,10 +865,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if assignment_type == AttributionType.SPHERE_AVE:
                 averaged_selection = True
 
-            group_id = self.get_lrf_group_index()
             filter_type = self.comboBox_filter_type.currentIndex()
 
             surface_ids = self.main_window.selected_geometry_surfaces
+            group_id = self.get_lrf_group_index(surface_ids)
             self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
             if model not in self.models:
@@ -881,7 +881,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             model_data["filter_type"] = filter_type
 
             self.verify_and_remove_model_conflicts_if_it_exists(model_data)
-            
+
             model_data["model_id"] = len(self.models)
 
             self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
@@ -889,7 +889,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.load_info()
-
     
     def verify_and_remove_model_conflicts_if_it_exists(self, model_data: dict, volume_ids: List[int]=None):
 
@@ -968,12 +967,21 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         else:
             return out, False
 
-    def get_lrf_group_index(self):
-
+    def get_lrf_group_index(self, surface_ids):
         keys = list()
-        for key in self.properties.group_properties.keys():
+
+        for key, data in self.properties.group_properties.items():
             property, group_id = key
             if property == "viscous_thermal_model":
+
+                for surface_id in surface_ids:
+                    if surface_id in data["surface_ids"]:
+
+                        model = self.map_model_id_to_models[data["model_id"]]
+                        self.models.remove(model)
+                        
+                        return group_id
+                
                 if group_id not in keys:
                     keys.append(group_id)
 
