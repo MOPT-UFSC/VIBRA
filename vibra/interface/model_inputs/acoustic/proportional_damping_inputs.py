@@ -159,15 +159,17 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         elif attribute_type == 1:
             input_ids = self.lineEdit_selection_id.text()
-            volume_ids = self.mesh.check_selected_ids(
-                                                      input_ids, 
-                                                      selection = "volumes", 
-                                                      single_id = False
-                                                      )
+            volume_ids, error_data = self.mesh.check_selected_ids(
+                                                                    input_ids, 
+                                                                    selection = "volumes", 
+                                                                    single_id = False
+                                                                    )
 
-            if volume_ids is None:
+            if error_data is not None:
+                self.hide()
                 self.lineEdit_selection_id.setFocus()
-                return True
+                PrintMessageInput(error_data)
+                return
 
         lineEdit = self.lineEdit_speed_of_sound_complex_factor
         speed_of_sound_factor = self.check_inputs(lineEdit, "Speed of sound complex factor", only_positive=True)
