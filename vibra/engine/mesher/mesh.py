@@ -1746,6 +1746,7 @@ class Mesh:
 
         bad_elements = []
         for parameter in self.mesh_quality_parameters:
+            bad_elements = []
             for element in self.mesh_quality[parameter].keys():
                 quality = self.mesh_quality[parameter][element]
 
