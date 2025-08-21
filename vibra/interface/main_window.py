@@ -641,13 +641,15 @@ class MainWindow(MainWindow_UI):
             ]
         )
 
-    def distinguish_mesh_solids(self, solids):
-        if not solids:
-            return
+    def distinguish_mesh_solids(self, solid_elements):
 
-        self.distinguished_solids = set(solids)
-        self.show_mesh_render_widget()
-        self.action_line_view_callback(False)
+        self.distinguished_solids = set(solid_elements)
+        if solid_elements:
+            self.show_mesh_render_widget()
+        else:
+            self.show_geometry_render_widget()
+
+        self.action_line_view_callback(not solid_elements)
         self.update_visualization_filter()
         self.visualization_changed.emit()
 
