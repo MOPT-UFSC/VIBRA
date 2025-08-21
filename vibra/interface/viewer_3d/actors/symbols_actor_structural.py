@@ -225,6 +225,9 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             self.add_symbol(sources.create_arrow_source, coords[2], orientation, color=color_names.RED_2)
 
     def _build_normal_pressure_load(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+        if surface_id == -1:
+            return
+        
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
