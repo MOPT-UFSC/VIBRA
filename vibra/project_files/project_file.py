@@ -671,7 +671,7 @@ class ProjectFile:
             os.remove(self.results_data_filepath)
 
     def archive_project(self, zip_path: Path):
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:
             for path in self.path.rglob("*"):
                 if path.is_file():
                     arcname = path.relative_to(self.path)
