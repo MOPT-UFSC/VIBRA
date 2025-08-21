@@ -1,9 +1,6 @@
-from enum import Enum
 import numpy as np
-from molde.colors import color_names, Color
+from molde.colors import color_names
 from molde.actors import CommonSymbolsActorVariableSize
-
-from typing import Callable
 
 from vibra import app
 from vibra.interface.viewer_3d import sources
