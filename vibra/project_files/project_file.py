@@ -622,6 +622,7 @@ class ProjectFile:
                         writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
                         for i, freq in enumerate(frequencies):
                             writer[:, i] = solution[:, i]
+                        self.remove_results_data_from_project_file()
 
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
         return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype, is_resume)
