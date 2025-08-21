@@ -593,9 +593,12 @@ class MeshSetupInputs(MesherSetup_UI):
             stdev_item = QTableWidgetItem(
                 str(round(mesh_quality_statistics[gmsh_label][2], 3))
             )
-            bad_elements_count = QTableWidgetItem(
-                str(len(self.mesh.mesh_bad_elements[gmsh_label]))
-            )
+            if self.mesh.mesh_bad_elements:
+                bad_elements_count = QTableWidgetItem(
+                    str(len(self.mesh.mesh_bad_elements.get(gmsh_label)))
+                )
+            else:
+                bad_elements_count = QTableWidgetItem("")
 
             worst_value_color = color_fn(mesh_quality_statistics[gmsh_label][0])
             worst_value_item.setForeground(QBrush(QColor(worst_value_color)))
