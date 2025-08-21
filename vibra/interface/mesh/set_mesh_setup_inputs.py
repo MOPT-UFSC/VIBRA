@@ -495,7 +495,9 @@ class MeshSetupInputs(MesherSetup_UI):
     def config_control_quality_table(self):
 
         volume_exists = self.mesh.are_there_volumes_in_geometry()
-        self.tabWidget_main.setTabVisible(2, volume_exists)
+        self.tabWidget_main.setTabVisible(2, volume_exists)                
+        self.pushButton_plot_histogram.setDisabled(True)
+
         if not volume_exists:
             return
 
@@ -609,6 +611,7 @@ class MeshSetupInputs(MesherSetup_UI):
         bad_elements_data = self.mesh_quality_data.get("bad_elements")
         bad_elements = bad_elements_data[selected_parameter]
         self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
+        self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
