@@ -102,7 +102,6 @@ class MeshSetupInputs(MesherSetup_UI):
         self.comboBox_second_order_incomplete.setDisabled(True)
         self.comboBox_recombine_all.setDisabled(True)
         #
-        self.pushButton_plot_histogram.setDisabled(True)
         self.pushButton_show_bad_elements.setDisabled(True)
         #
         self.lineEdit_selected_ids.setDisabled(True)
@@ -510,6 +509,12 @@ class MeshSetupInputs(MesherSetup_UI):
         if not mesh_quality_statistics:
             mesh_quality_statistics = self.mesh_quality_data.get("statistics")
 
+        if not self.mesh_quality_data:
+            self.mesh_quality_data = {
+                "bad_elements": self.mesh.mesh_bad_elements,
+                "histograms_data": self.mesh.mesh_quality_histograms_data,
+            }
+
         self.mesh.mesh_quality_temp = mesh_quality_statistics
         if not mesh_quality_statistics:
             return
@@ -603,7 +608,6 @@ class MeshSetupInputs(MesherSetup_UI):
         selected_parameter = self.mesh_quality_parameters.get(item.row())
         bad_elements_data = self.mesh_quality_data.get("bad_elements")
         bad_elements = bad_elements_data[selected_parameter]
-        self.pushButton_plot_histogram.setEnabled(bool(bad_elements))
         self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
 
     def plot_mesh_parameter_histogram(self):
