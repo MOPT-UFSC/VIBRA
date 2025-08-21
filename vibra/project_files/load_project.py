@@ -8,13 +8,11 @@ from vibra.engine.mesher.element_type import (
     HEXAHEDRON_8,
     HEXAHEDRON_20,
 )
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.utils import get_color_rgb
 
 import logging
 import numpy as np
 
-from collections import defaultdict
 
 class LoadProject:
     def __init__(self):
@@ -484,8 +482,6 @@ class LoadProject:
             if acoustic_harmonic_solver.solution.has_partial_solutions():
                 acoustic_harmonic_solver.solution = None
                 project.can_resume_solution = True
-                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records", "Click on the 'Resume the analysis' button to solve remaining frequencies"])
-
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

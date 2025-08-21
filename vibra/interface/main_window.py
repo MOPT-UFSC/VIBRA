@@ -904,6 +904,10 @@ class MainWindow(MainWindow_UI):
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
             self.model_setup_widget.model_setup_items.update_items_appearance()
+            
+            if app().project.can_resume_solution:
+                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records",
+                               "Click on the 'Resume the analysis' button to solve remaining frequencies"])
 
         except Exception as error_log:
             from traceback import print_exception
