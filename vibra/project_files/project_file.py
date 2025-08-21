@@ -228,33 +228,22 @@ class ProjectFile:
         mesh_quality_data_json_ready = convert_ndarrays_to_lists(mesh_quality_data)
         
         write_json(self.mesh_quality_data_filepath, mesh_quality_data_json_ready)
-
         app().main_window.project_data_modified = True    
 
     def read_mesh_quality_data_from_file(self):
         mesh_quality_data = dict()
         try:
             if not self.mesh_data_filepath.exists():
-                return None, None, None
+                return mesh_quality_data
 
             mesh_quality_data = read_json(self.mesh_quality_data_filepath)
-
             if mesh_quality_data:
-                mesh_quality_statistics = mesh_quality_data["statistics"]
-                mesh_bad_elements = mesh_quality_data["bad_elements"]
-                mesh_quality_histograms_data = mesh_quality_data["histograms_data"]
-                
-                return mesh_quality_statistics, mesh_bad_elements, mesh_quality_histograms_data
-
-            else: 
-                return None, None, None
-
+                return mesh_quality_data
 
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
-            return None, None, None
-        
+            return mesh_quality_data
 
     def read_mesh_setup_from_file(self):
         project_setup = read_json(self.project_setup_filepath)

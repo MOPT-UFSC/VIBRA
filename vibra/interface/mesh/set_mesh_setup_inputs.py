@@ -61,6 +61,8 @@ class MeshSetupInputs(MesherSetup_UI):
 
         app().main_window.set_input_widget(self)
 
+        self.mesh = app().project.model.mesh
+
         self._config_window()
         self._initialize()
         self._create_connections()
@@ -75,7 +77,15 @@ class MeshSetupInputs(MesherSetup_UI):
     def _initialize(self):
         self.complete = False
         self.keep_window_open = True
+        self.bad_elements_showed = False
         self.mesh_refinement_data = defaultdict(list)
+
+        self.mesh_quality_parameters = {
+                                        0: "gamma",
+                                        1: "volume",
+                                        2: "minSJ",
+                                        3: "aspectRatio",
+                                    }
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -84,14 +94,19 @@ class MeshSetupInputs(MesherSetup_UI):
         self.setWindowTitle("Vibra")
 
     def _config_widgets(self):
-        self.lineEdit_selected_ids.setDisabled(True)
+        #
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_recombination_algorithm.setDisabled(True)
         self.comboBox_subdivision_algorithm.setDisabled(True)
         self.comboBox_second_order_incomplete.setDisabled(True)
         self.comboBox_recombine_all.setDisabled(True)
-
+        #
+        self.pushButton_plot_histogram.setDisabled(True)
+        self.pushButton_show_bad_elements.setDisabled(True)
+        #
+        self.lineEdit_selected_ids.setDisabled(True)
+        #
         widths = [160, 160]
         for i, width in enumerate(widths):
             self.tableWidget_refining_mesh_data.setColumnWidth(i, width)
@@ -111,25 +126,18 @@ class MeshSetupInputs(MesherSetup_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_shape_function.currentIndexChanged.connect(
-            self.update_gmsh_controls
-        )
-        self.comboBox_element_type.currentIndexChanged.connect(
-            self.update_gmsh_controls
-        )
+        self.comboBox_shape_function.currentIndexChanged.connect(self.update_gmsh_controls)
+        self.comboBox_element_type.currentIndexChanged.connect(self.update_gmsh_controls)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
-        self.pushButton_plot_histogram.clicked.connect(
-            self.plot_mesh_parameter_histogram
-        )
+        self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         #
-        self.tableWidget_refining_mesh_data.itemClicked.connect(
-            self.item_clicked_callback
-        )
+        self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
+        self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -164,10 +172,9 @@ class MeshSetupInputs(MesherSetup_UI):
                 app().main_window.set_geometry_selection(surfaces=selected_ids)
 
     def get_selected_ids(self):
-        if self.lineEdit_selected_ids.text() == "":
-            return list()
-
         selected_ids = list()
+        if self.lineEdit_selected_ids.text() == "":
+            return selected_ids
 
         try:
             str_selected_ids = self.lineEdit_selected_ids.text()
@@ -361,21 +368,20 @@ class MeshSetupInputs(MesherSetup_UI):
 
         LoadingWindow(generate_function).run()
 
-        mesh = app().project.model.mesh
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        collapsed = (self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
 
         if collapsed:
             title = "The generated mesh contains collapsed elements"
 
             message = ""
-            if mesh.collapsed_3d_elements:
-                message += "Collapsed 3d elements: " + ", ".join(str(i) for i in mesh.collapsed_3d_elements) + ".\n\n"
+            if self.mesh.collapsed_3d_elements:
+                message += "Collapsed 3d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_3d_elements) + ".\n\n"
 
-            if mesh.collapsed_2d_elements:
-                message += "Collapsed 2d elements: " + ", ".join(str(i) for i in mesh.collapsed_2d_elements) + ".\n\n"
+            if self.mesh.collapsed_2d_elements:
+                message += "Collapsed 2d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_2d_elements) + ".\n\n"
 
-            if mesh.collapsed_1d_elements:
-                message += "Collapsed 1d elements: " + ", ".join(str(i) for i in mesh.collapsed_1d_elements) + "."
+            if self.mesh.collapsed_1d_elements:
+                message += "Collapsed 1d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_1d_elements) + "."
 
             PrintMessageInput([window_title_1, title, message])
 
@@ -489,23 +495,26 @@ class MeshSetupInputs(MesherSetup_UI):
 
     def config_control_quality_table(self):
 
-        volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.tabWidget_main.setTabVisible(2, volume_exists)
         if not volume_exists:
             return
 
         if self.get_element_type() not in [TETRAHEDRON_4, TETRAHEDRON_10]:
+            self.tabWidget_main.setTabVisible(2, False)
+            return
+        
+        self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
+
+        mesh_quality_statistics = self.mesh.mesh_quality_statistics
+        if not mesh_quality_statistics:
+            mesh_quality_statistics = self.mesh_quality_data.get("statistics")
+
+        self.mesh.mesh_quality_temp = mesh_quality_statistics
+        if not mesh_quality_statistics:
             return
 
-        mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
-        if not mesh_quality_statistics:
-            mesh_quality_statistics = app().file.read_mesh_quality_data_from_file()[0]
-
-        app().project.model.mesh.mesh_quality_temp = mesh_quality_statistics
-        if not mesh_quality_statistics:
-            return
-
-        self.quality_bins = app().project.model.mesh.quality_bins
+        self.quality_bins = self.mesh.quality_bins
 
         param_map = {
             0: (
@@ -590,33 +599,32 @@ class MeshSetupInputs(MesherSetup_UI):
         if self.tableWidget_mesh_quality.rowCount() > 0:
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)
 
+    def mesh_quality_item_clicked(self, item):
+        selected_parameter = self.mesh_quality_parameters.get(item.row())
+        bad_elements_data = self.mesh_quality_data.get("bad_elements")
+        bad_elements = bad_elements_data[selected_parameter]
+        self.pushButton_plot_histogram.setEnabled(bool(bad_elements))
+        self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
+
     def plot_mesh_parameter_histogram(self):
-        parameter_idx = self.tableWidget_mesh_quality.currentIndex().row()
-        parameter = {
-            0: "gamma",
-            1: "volume",
-            2: "minSJ",
-            3: "aspectRatio",
-        }
-        mesh_quality_data = app().file.read_mesh_quality_data_from_file()[2]
-        if mesh_quality_data:
-            hist, bin_edges, percentile_5, percentile_95 = mesh_quality_data[
-                parameter[parameter_idx]
-            ]
+        current_index = self.tableWidget_mesh_quality.currentIndex().row()
+        selected_parameter = self.mesh_quality_parameters.get(current_index)
+
+        histograms_data = self.mesh_quality_data.get("histograms_data")
+        if histograms_data:
+            hist_data = histograms_data[selected_parameter]
         else:
-            hist, bin_edges, percentile_5, percentile_95 = (
-                app().project.model.mesh.mesh_quality_histograms_data[
-                    parameter[parameter_idx]
-                ]
-            )
+            hist_data = (self.mesh.mesh_quality_histograms_data[selected_parameter])
+
+        hist, bin_edges, percentile_5, percentile_95 = hist_data
 
         bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_min = self.quality_bins[parameter[parameter_idx]][1]
-        bin_max = self.quality_bins[parameter[parameter_idx]][0]
+        bin_min = self.quality_bins[selected_parameter][1]
+        bin_max = self.quality_bins[selected_parameter][0]
         bin_med = (bin_min + bin_max) / 2
 
-        if parameter[parameter_idx] == "aspectRatio":
+        if selected_parameter == "aspectRatio":
             cmap = mcolors.LinearSegmentedColormap.from_list(
                 "qualidade", [(0, "green"), (bin_med / bin_max, "gold"), (1, "red")]
             )
@@ -666,7 +674,7 @@ class MeshSetupInputs(MesherSetup_UI):
             "aspectRatio": "Aspect Ratio",
         }
 
-        ax.set_title(f"{title[parameter[parameter_idx]]} histogram")
+        ax.set_title(f"{title[selected_parameter]} histogram")
         ax.set_xlabel("Parameter value")
         ax.set_ylabel("Number of elements")
         ax.grid(True, linestyle=":", alpha=0.5)
@@ -685,32 +693,20 @@ class MeshSetupInputs(MesherSetup_UI):
         plot_ui.exec_()
 
     def show_bad_elements(self):
-        parameter_idx = self.tableWidget_mesh_quality.currentIndex().row()
-        parameter = {
-            0: "gamma",
-            1: "volume",
-            2: "minSJ",
-            3: "aspectRatio",
-        }
+        current_index = self.tableWidget_mesh_quality.currentIndex().row()
+        selected_parameter = self.mesh_quality_parameters.get(current_index)
 
-        mesh_quality_data = app().file.read_mesh_quality_data_from_file()[1]
-        if mesh_quality_data:
-            mesh_bad_elements = mesh_quality_data[parameter[parameter_idx]]
+        bad_elements_data = self.mesh_quality_data.get("bad_elements")
+        if bad_elements_data:
+            mesh_bad_elements = bad_elements_data[selected_parameter]
         else:
-            mesh_bad_elements = app().project.model.mesh.mesh_bad_elements[
-                parameter[parameter_idx]
-            ]
+            mesh_bad_elements = self.mesh.mesh_bad_elements[selected_parameter]
 
         if not mesh_bad_elements:
-            PrintMessageInput(
-                [
-                    "Warning",
-                    "No elements to plot",
-                    "There are no elements that compromise the mesh according to this parameter.",
-                ]
-            )
+            return
 
         app().main_window.distinguish_mesh_solids(mesh_bad_elements)
+        self.bad_elements_showed = True
 
     def update_gmsh_controls(self):
         element_type = self.get_element_type()
@@ -785,10 +781,9 @@ class MeshSetupInputs(MesherSetup_UI):
             self.close()
 
     def closeEvent(self, a0):
-        if self.complete:
-            app().main_window.distinguish_mesh_solids([])
         self.keep_window_open = False
+        if self.bad_elements_showed:
+            app().main_window.distinguish_mesh_solids([])
         return super().closeEvent(a0)
-
 
 # fmt: on
