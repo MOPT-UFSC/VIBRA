@@ -611,7 +611,7 @@ class MeshSetupInputs(MesherSetup_UI):
             self.tableWidget_mesh_quality.setItem(i, 3, stdev_item)
             self.tableWidget_mesh_quality.setItem(i, 4, bad_elements_count)
 
-        if self.mesh.mesh_bad_elements:
+        if any(self.mesh.mesh_bad_elements.values()):
             self.tabWidget_main.tabBar().setTabTextColor(2, QColor("orange"))
 
         if self.tableWidget_mesh_quality.rowCount() > 0:
