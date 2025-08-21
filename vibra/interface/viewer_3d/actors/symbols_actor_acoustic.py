@@ -27,7 +27,6 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "degrees_of_freedom_decoupling": self._build_dofs_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,
-            "reciprocating_compressor_excitation": self._build_reciprocating_compressor,
             "dissipation_model": self._build_dissipation_model,
             "acoustic_transfer_element_data": self._build_acoustic_transfer_element_data,
             "incident_plane_wave": self._build_incident_plane_wave,
@@ -190,25 +189,6 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(sources.create_acoustic_pressure_source, coords, normal, color=color_names.RED_2)
-
-    def _build_reciprocating_compressor(self, property_name: str, surface_id: int = -1, *args, **kwargs):
-        if surface_id == -1:
-            return
-        
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
-
-        color = None
-        if property["connection_type"] == "discharge":
-            shape = sources.create_compressor_discharge_source
-            # vermelho, seta entra é azul
-            color = color_names.RED_3
-        elif property["connection_type"] == "suction":
-            shape = sources.create_compressor_suction_source
-            color = color_names.BLUE_3
-
-        coords, normal = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol(shape, coords, normal, color=color)
 
     def _build_dissipation_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:

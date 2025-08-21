@@ -3,6 +3,7 @@ from molde.render_widgets import CommonRenderWidget
 from molde import Color
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
+from pandas import api
 
 from vibra import app
 from vibra.utils.image_functions import removes_image_background
@@ -14,6 +15,7 @@ from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
+from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
 
@@ -133,6 +135,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
+        self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
@@ -150,6 +153,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.plane_actor,
             self.symbols_actor_structural,
             self.symbols_actor_acoustic,
+            self.symbols_actor_acoustic_fixed_size,
         )
 
         with self.update_lock:
@@ -205,6 +209,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.symbols_actor_acoustic.SetVisibility(
             visualization.symbols and (physical_domain == "Acoustic")
         )
+        self.symbols_actor_acoustic_fixed_size.SetVisibility(
+            visualization.symbols and (physical_domain == "Acoustic")
+        )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces)
@@ -252,10 +259,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
+        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
-        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
+        self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
+        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
         self.visualization_changed_callback()
         self.update()
 
@@ -428,6 +436,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.symbols_actor_structural = None
         self.symbols_actor_acoustic = None
+        self.symbols_actor_acoustic_fixed_size = None
         self.nodes_actor = None
         self.ghost_actor = None
 
