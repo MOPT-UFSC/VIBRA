@@ -27,8 +27,9 @@ def compute_acoustic_modal_field(
     selected_mode_shape = solver.solution[:, index]
     amplitudes = np.abs(selected_mode_shape)
     phases = np.angle(selected_mode_shape)
-
-    acoustic_pressures = amplitudes * np.cos(phases + phase_rad)
+    delta = -phases[np.argmax(amplitudes)]
+    acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
+    
     if plot_type == "absolute_values":
         acoustic_pressures = np.abs(selected_mode_shape)
     elif plot_type == "real_values":
