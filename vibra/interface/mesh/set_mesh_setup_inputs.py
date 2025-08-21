@@ -562,7 +562,8 @@ class MeshSetupInputs(MesherSetup_UI):
             ),
         }
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
-        self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 150)
+        self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 110)
+        self.tableWidget_mesh_quality.horizontalHeader().resizeSection(2, 80)
         # This should be done in the done in the ui file
         # but it kept going like this so I'm leaving it here.
         tooltips = [
@@ -592,6 +593,9 @@ class MeshSetupInputs(MesherSetup_UI):
             stdev_item = QTableWidgetItem(
                 str(round(mesh_quality_statistics[gmsh_label][2], 3))
             )
+            bad_elements_count = QTableWidgetItem(
+                str(len(self.mesh.mesh_bad_elements[gmsh_label]))
+            )
 
             worst_value_color = color_fn(mesh_quality_statistics[gmsh_label][0])
             worst_value_item.setForeground(QBrush(QColor(worst_value_color)))
@@ -602,6 +606,7 @@ class MeshSetupInputs(MesherSetup_UI):
             self.tableWidget_mesh_quality.setItem(i, 1, worst_value_item)
             self.tableWidget_mesh_quality.setItem(i, 2, avg_item)
             self.tableWidget_mesh_quality.setItem(i, 3, stdev_item)
+            self.tableWidget_mesh_quality.setItem(i, 4, bad_elements_count)
 
         if self.tableWidget_mesh_quality.rowCount() > 0:
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)
