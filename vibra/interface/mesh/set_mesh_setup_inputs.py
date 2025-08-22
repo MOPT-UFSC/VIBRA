@@ -78,6 +78,8 @@ class MeshSetupInputs(MesherSetup_UI):
         self.complete = False
         self.keep_window_open = True
         self.bad_elements_showed = False
+
+        self.mesh_quality_data = dict()
         self.mesh_refinement_data = defaultdict(list)
 
         self.mesh_quality_parameters = {
@@ -103,6 +105,7 @@ class MeshSetupInputs(MesherSetup_UI):
         self.comboBox_recombine_all.setDisabled(True)
         #
         self.pushButton_show_bad_elements.setDisabled(True)
+        self.pushButton_generate_mesh.setAutoDefault(False)
         #
         self.lineEdit_selected_ids.setDisabled(True)
         #
@@ -135,6 +138,8 @@ class MeshSetupInputs(MesherSetup_UI):
         self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         #
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        #
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
         #
@@ -157,6 +162,10 @@ class MeshSetupInputs(MesherSetup_UI):
         if selection:
             text = ", ".join([str(i) for i in selection])
             self.lineEdit_selected_ids.setText(text)
+
+    def tab_event_callback(self):
+        mesh_quality_tab = self.tabWidget_main.currentIndex() == 2
+        self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
 
     def item_clicked_callback(self, item):
         row = item.row()
@@ -393,8 +402,8 @@ class MeshSetupInputs(MesherSetup_UI):
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
 
-        self.config_control_quality_table()
         app().file.write_mesh_quality_data_in_file()
+        self.config_control_quality_table()
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
@@ -506,58 +515,46 @@ class MeshSetupInputs(MesherSetup_UI):
             return
         
         self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
-
-        mesh_quality_statistics = self.mesh.mesh_quality_statistics
-        if not mesh_quality_statistics:
-            mesh_quality_statistics = self.mesh_quality_data.get("statistics")
-
         if not self.mesh_quality_data:
-            self.mesh_quality_data = {
-                "bad_elements": self.mesh.mesh_bad_elements,
-                "histograms_data": self.mesh.mesh_quality_histograms_data,
-            }
-
-        self.mesh.mesh_quality_temp = mesh_quality_statistics
-        if not mesh_quality_statistics:
             return
-
-        self.quality_bins = self.mesh.quality_bins
+        
+        quality_bins = self.mesh.quality_bins
 
         param_map = {
             0: (
                 "gamma",
                 "Gamma",
                 lambda v: "green"
-                if v > self.quality_bins["gamma"][0]
+                if v > quality_bins["gamma"][0]
                 else "yellow"
-                if v > self.quality_bins["gamma"][1]
+                if v > quality_bins["gamma"][1]
                 else "red",
             ),
             1: (
                 "volume",
                 "Volume (mm³)",
                 lambda v: "green"
-                if v > self.quality_bins["volume"][0]
+                if v > quality_bins["volume"][0]
                 else "yellow"
-                if v > self.quality_bins["volume"][1]
+                if v > quality_bins["volume"][1]
                 else "red",
             ),
             2: (
                 "minSJ",
                 "Scaled Jacobian",
                 lambda v: "green"
-                if v > self.quality_bins["minSJ"][0]
+                if v > quality_bins["minSJ"][0]
                 else "yellow"
-                if v > self.quality_bins["minSJ"][1]
+                if v > quality_bins["minSJ"][1]
                 else "red",
             ),
             3: (
                 "aspectRatio",
                 "Aspect Ratio",
                 lambda v: "green"
-                if v < self.quality_bins["aspectRatio"][0]
+                if v < quality_bins["aspectRatio"][0]
                 else "yellow"
-                if v < self.quality_bins["aspectRatio"][1]
+                if v < quality_bins["aspectRatio"][1]
                 else "red",
             ),
         }
@@ -578,6 +575,9 @@ class MeshSetupInputs(MesherSetup_UI):
             + "and the shortest edge. Values close to 1 indicate well-shaped elements; higher values mean the element is elongated or distorted.\n",
         ]
 
+        bad_elements = self.mesh_quality_data.get("bad_elements")
+        mesh_quality_statistics = self.mesh_quality_data.get("statistics")
+
         for i, (key, (gmsh_label, label, color_fn)) in enumerate(param_map.items()):
             name_item = QTableWidgetItem(label)
             name_item.setToolTip(tooltips[i])
@@ -593,9 +593,9 @@ class MeshSetupInputs(MesherSetup_UI):
             stdev_item = QTableWidgetItem(
                 str(round(mesh_quality_statistics[gmsh_label][2], 3))
             )
-            if self.mesh.mesh_bad_elements:
+            if bad_elements:
                 bad_elements_count = QTableWidgetItem(
-                    str(len(self.mesh.mesh_bad_elements.get(gmsh_label)))
+                    str(len(bad_elements.get(gmsh_label)))
                 )
             else:
                 bad_elements_count = QTableWidgetItem("")
@@ -611,7 +611,7 @@ class MeshSetupInputs(MesherSetup_UI):
             self.tableWidget_mesh_quality.setItem(i, 3, stdev_item)
             self.tableWidget_mesh_quality.setItem(i, 4, bad_elements_count)
 
-        if any(self.mesh.mesh_bad_elements.values()):
+        if any(bad_elements.values()):
             self.tabWidget_main.tabBar().setTabTextColor(2, QColor("orange"))
 
         if self.tableWidget_mesh_quality.rowCount() > 0:
@@ -619,27 +619,30 @@ class MeshSetupInputs(MesherSetup_UI):
 
     def mesh_quality_item_clicked(self, item):
         selected_parameter = self.mesh_quality_parameters.get(item.row())
+        if not self.mesh_quality_data:
+            self.pushButton_show_bad_elements.setEnabled(False)
+            return
+
         bad_elements_data = self.mesh_quality_data.get("bad_elements")
         bad_elements = bad_elements_data[selected_parameter]
         self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
+
+        if not self.mesh_quality_data:
+            return
+
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
         selected_parameter = self.mesh_quality_parameters.get(current_index)
 
         histograms_data = self.mesh_quality_data.get("histograms_data")
-        if histograms_data:
-            hist_data = histograms_data[selected_parameter]
-        else:
-            hist_data = (self.mesh.mesh_quality_histograms_data[selected_parameter])
-
-        hist, bin_edges, percentile_5, percentile_95 = hist_data
+        hist, bin_edges, percentile_5, percentile_95 = histograms_data[selected_parameter]
 
         bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_min = self.quality_bins[selected_parameter][1]
-        bin_max = self.quality_bins[selected_parameter][0]
+        bin_min = self.mesh.quality_bins[selected_parameter][1]
+        bin_max = self.mesh.quality_bins[selected_parameter][0]
         bin_med = (bin_min + bin_max) / 2
 
         if selected_parameter == "aspectRatio":
@@ -711,15 +714,18 @@ class MeshSetupInputs(MesherSetup_UI):
         plot_ui.exec_()
 
     def show_bad_elements(self):
+
+        if not self.mesh_quality_data:
+            return
+
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
         selected_parameter = self.mesh_quality_parameters.get(current_index)
 
-        bad_elements_data = self.mesh_quality_data.get("bad_elements")
-        if bad_elements_data:
-            mesh_bad_elements = bad_elements_data[selected_parameter]
-        else:
-            mesh_bad_elements = self.mesh.mesh_bad_elements[selected_parameter]
-
+        bad_elements_data = self.mesh_quality_data.get("bad_elements", dict())
+        if not bad_elements_data:
+            return
+    
+        mesh_bad_elements = bad_elements_data[selected_parameter]
         if not mesh_bad_elements:
             return
 
