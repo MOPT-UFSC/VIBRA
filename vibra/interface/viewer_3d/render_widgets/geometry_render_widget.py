@@ -3,7 +3,6 @@ from molde.render_widgets import CommonRenderWidget
 from molde import Color
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
-from pandas import api
 
 from vibra import app
 from vibra.utils.image_functions import removes_image_background
