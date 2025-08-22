@@ -75,7 +75,7 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = None
 
         self._initialize()
-
+    
     def _initialize(self):
         self.dialog = None
         self.project_data_modified = False
@@ -903,7 +903,7 @@ class MainWindow(MainWindow_UI):
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            # self.model_setup_widget.model_setup_items.update_items_appearance()
+            self.model_setup_widget.model_setup_items.update_items_appearance()
 
         except Exception as error_log:
             from traceback import print_exception
@@ -1093,8 +1093,7 @@ class MainWindow(MainWindow_UI):
             widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
-        self.visualization_filter.acoustic_symbols = clicked
-        self.visualization_filter.structural_symbols = clicked
+        self.visualization_filter.symbols = clicked
         self.visualization_changed.emit()
 
     def close_app(self):

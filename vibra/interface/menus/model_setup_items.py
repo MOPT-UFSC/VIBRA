@@ -23,7 +23,7 @@ class ModelSetupItems(CommonMenuItems):
         self._create_connections()
         self._initial_configuration()
         self.update_items_appearance()
-
+    
     def _create_items(self):
         """Creates all TreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
