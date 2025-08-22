@@ -903,7 +903,7 @@ class MainWindow(MainWindow_UI):
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            # self.model_setup_widget.model_setup_items.update_items_appearance()
+            self.model_setup_widget.model_setup_items.update_items_appearance()
 
         except Exception as error_log:
             from traceback import print_exception
