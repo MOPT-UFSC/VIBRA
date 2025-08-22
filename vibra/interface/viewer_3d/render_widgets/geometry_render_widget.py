@@ -18,20 +18,7 @@ from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixed
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
 
-from .model_info_text import( 
-    points_info_text,
-    lines_info_text, 
-    faces_info_text, 
-    volumes_info_text, 
-    material_info_text, 
-    fluid_info_text, 
-    porous_material_info_text,
-    viscous_thermal_info_text,
-    perforated_plate_info_text, 
-    acoustic_boundary_conditions_info_text,
-    mass_source_info_text,
-    structural_boundary_conditions_info_text,
-)
+from .model_info_text import *
 
 import logging
 
@@ -471,6 +458,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         elif physical_domain == "acoustic":
             text += fluid_info_text()
+            text += proportional_damping_info_text()
             text += porous_material_info_text()
             text += viscous_thermal_info_text()
             text += perforated_plate_info_text()
@@ -479,5 +467,3 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-
-
