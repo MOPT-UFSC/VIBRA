@@ -199,7 +199,7 @@ class SolidsActor(vtkActor):
         if self.data is None:
             return
     
-        color = color.to_rgb()
+        color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         for cell in cells:
             cell_colors.SetTuple(cell, color)
