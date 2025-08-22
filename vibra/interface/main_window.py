@@ -1104,7 +1104,7 @@ class MainWindow(MainWindow_UI):
         self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
-        condition_2 = any(os.scandir(TEMP_PROJECT_DIR)) # TEMP_PROJECT_DIR is not empty
+        condition_2 = any(TEMP_PROJECT_DIR.iterdir()) # TEMP_PROJECT_DIR is not empty
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
