@@ -182,8 +182,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_temperature = QLineEdit(self.frame_10)
         self.lineEdit_temperature.setObjectName(u"lineEdit_temperature")
-        self.lineEdit_temperature.setMinimumSize(QSize(100, 28))
-        self.lineEdit_temperature.setMaximumSize(QSize(100, 28))
+        self.lineEdit_temperature.setMinimumSize(QSize(130, 28))
+        self.lineEdit_temperature.setMaximumSize(QSize(180, 28))
         font5 = QFont()
         font5.setPointSize(10)
         font5.setBold(False)
@@ -194,28 +194,10 @@ class Ui_Dialog(object):
 
         self.gridLayout_15.addWidget(self.lineEdit_temperature, 1, 2, 1, 1)
 
-        self.comboBox_pressure_units = QComboBox(self.frame_10)
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.addItem("")
-        self.comboBox_pressure_units.setObjectName(u"comboBox_pressure_units")
-        self.comboBox_pressure_units.setMinimumSize(QSize(80, 28))
-        self.comboBox_pressure_units.setMaximumSize(QSize(80, 28))
-        font6 = QFont()
-        font6.setFamilies([u"MS Shell Dlg 2"])
-        font6.setItalic(False)
-        self.comboBox_pressure_units.setFont(font6)
-
-        self.gridLayout_15.addWidget(self.comboBox_pressure_units, 2, 4, 1, 1)
-
         self.lineEdit_temperature_disch = QLineEdit(self.frame_10)
         self.lineEdit_temperature_disch.setObjectName(u"lineEdit_temperature_disch")
-        self.lineEdit_temperature_disch.setMinimumSize(QSize(100, 28))
-        self.lineEdit_temperature_disch.setMaximumSize(QSize(100, 28))
+        self.lineEdit_temperature_disch.setMinimumSize(QSize(130, 28))
+        self.lineEdit_temperature_disch.setMaximumSize(QSize(180, 28))
         self.lineEdit_temperature_disch.setFont(font5)
         self.lineEdit_temperature_disch.setStyleSheet(u"")
         self.lineEdit_temperature_disch.setAlignment(Qt.AlignCenter)
@@ -236,8 +218,11 @@ class Ui_Dialog(object):
         self.comboBox_temperature_units.addItem("")
         self.comboBox_temperature_units.addItem("")
         self.comboBox_temperature_units.setObjectName(u"comboBox_temperature_units")
-        self.comboBox_temperature_units.setMinimumSize(QSize(80, 28))
-        self.comboBox_temperature_units.setMaximumSize(QSize(80, 28))
+        self.comboBox_temperature_units.setMinimumSize(QSize(100, 28))
+        self.comboBox_temperature_units.setMaximumSize(QSize(100, 28))
+        font6 = QFont()
+        font6.setFamilies([u"MS Shell Dlg 2"])
+        font6.setItalic(False)
         self.comboBox_temperature_units.setFont(font6)
 
         self.gridLayout_15.addWidget(self.comboBox_temperature_units, 1, 4, 1, 1)
@@ -263,8 +248,8 @@ class Ui_Dialog(object):
         self.lineEdit_pressure_disch = QLineEdit(self.frame_10)
         self.lineEdit_pressure_disch.setObjectName(u"lineEdit_pressure_disch")
         self.lineEdit_pressure_disch.setEnabled(True)
-        self.lineEdit_pressure_disch.setMinimumSize(QSize(100, 28))
-        self.lineEdit_pressure_disch.setMaximumSize(QSize(100, 28))
+        self.lineEdit_pressure_disch.setMinimumSize(QSize(130, 28))
+        self.lineEdit_pressure_disch.setMaximumSize(QSize(180, 28))
         self.lineEdit_pressure_disch.setFont(font5)
         self.lineEdit_pressure_disch.setStyleSheet(u"")
         self.lineEdit_pressure_disch.setAlignment(Qt.AlignCenter)
@@ -274,13 +259,35 @@ class Ui_Dialog(object):
         self.lineEdit_pressure = QLineEdit(self.frame_10)
         self.lineEdit_pressure.setObjectName(u"lineEdit_pressure")
         self.lineEdit_pressure.setEnabled(True)
-        self.lineEdit_pressure.setMinimumSize(QSize(100, 28))
-        self.lineEdit_pressure.setMaximumSize(QSize(100, 28))
+        self.lineEdit_pressure.setMinimumSize(QSize(130, 28))
+        self.lineEdit_pressure.setMaximumSize(QSize(180, 28))
         self.lineEdit_pressure.setFont(font5)
         self.lineEdit_pressure.setStyleSheet(u"")
         self.lineEdit_pressure.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_15.addWidget(self.lineEdit_pressure, 2, 2, 1, 1)
+
+        self.comboBox_pressure_units = QComboBox(self.frame_10)
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.setObjectName(u"comboBox_pressure_units")
+        self.comboBox_pressure_units.setMinimumSize(QSize(100, 28))
+        self.comboBox_pressure_units.setMaximumSize(QSize(100, 28))
+        self.comboBox_pressure_units.setFont(font6)
+
+        self.gridLayout_15.addWidget(self.comboBox_pressure_units, 2, 4, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_10, 0, 1, 1, 1)
@@ -324,20 +331,20 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.tableWidget_new_fluid, 0, 2, 1, 1)
 
-        self.treeWidget_reference_gases = QTreeWidget(self.scrollAreaWidgetContents)
+        self.treeWidget_refprop_fluids = QTreeWidget(self.scrollAreaWidgetContents)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_reference_gases.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_reference_gases.setObjectName(u"treeWidget_reference_gases")
-        self.treeWidget_reference_gases.setMinimumSize(QSize(390, 0))
-        self.treeWidget_reference_gases.setMaximumSize(QSize(390, 350))
-        self.treeWidget_reference_gases.setFont(font7)
-        self.treeWidget_reference_gases.setStyleSheet(u"")
-        self.treeWidget_reference_gases.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.treeWidget_reference_gases.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
-        self.treeWidget_reference_gases.setDragDropMode(QAbstractItemView.DragOnly)
+        self.treeWidget_refprop_fluids.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_refprop_fluids.setObjectName(u"treeWidget_refprop_fluids")
+        self.treeWidget_refprop_fluids.setMinimumSize(QSize(390, 0))
+        self.treeWidget_refprop_fluids.setMaximumSize(QSize(390, 350))
+        self.treeWidget_refprop_fluids.setFont(font7)
+        self.treeWidget_refprop_fluids.setStyleSheet(u"")
+        self.treeWidget_refprop_fluids.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.treeWidget_refprop_fluids.setSizeAdjustPolicy(QAbstractScrollArea.AdjustIgnored)
+        self.treeWidget_refprop_fluids.setDragDropMode(QAbstractItemView.DragOnly)
 
-        self.gridLayout_2.addWidget(self.treeWidget_reference_gases, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.treeWidget_refprop_fluids, 0, 0, 1, 1)
 
         self.frame_middle = QFrame(self.scrollAreaWidgetContents)
         self.frame_middle.setObjectName(u"frame_middle")
@@ -493,12 +500,11 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.lineEdit_temperature_disch, self.lineEdit_pressure)
         QWidget.setTabOrder(self.lineEdit_pressure, self.lineEdit_pressure_disch)
         QWidget.setTabOrder(self.lineEdit_pressure_disch, self.comboBox_temperature_units)
-        QWidget.setTabOrder(self.comboBox_temperature_units, self.comboBox_pressure_units)
-        QWidget.setTabOrder(self.comboBox_pressure_units, self.pushButton_confirm)
+        QWidget.setTabOrder(self.comboBox_temperature_units, self.pushButton_confirm)
         QWidget.setTabOrder(self.pushButton_confirm, self.pushButton_exit)
         QWidget.setTabOrder(self.pushButton_exit, self.scrollArea)
-        QWidget.setTabOrder(self.scrollArea, self.treeWidget_reference_gases)
-        QWidget.setTabOrder(self.treeWidget_reference_gases, self.tableWidget_new_fluid)
+        QWidget.setTabOrder(self.scrollArea, self.treeWidget_refprop_fluids)
+        QWidget.setTabOrder(self.treeWidget_refprop_fluids, self.tableWidget_new_fluid)
 
         self.retranslateUi(Dialog)
 
@@ -521,14 +527,6 @@ class Ui_Dialog(object):
         self.label_selected_fluid.setText("")
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Pressure:", None))
         self.lineEdit_temperature.setText("")
-        self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Dialog", u" Pa", None))
-        self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Dialog", u" kPa", None))
-        self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Dialog", u" atm", None))
-        self.comboBox_pressure_units.setItemText(3, QCoreApplication.translate("Dialog", u" bar", None))
-        self.comboBox_pressure_units.setItemText(4, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2", None))
-        self.comboBox_pressure_units.setItemText(5, QCoreApplication.translate("Dialog", u" psi", None))
-        self.comboBox_pressure_units.setItemText(6, QCoreApplication.translate("Dialog", u" ksi", None))
-
         self.lineEdit_temperature_disch.setText("")
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Temperature:", None))
         self.comboBox_temperature_units.setItemText(0, QCoreApplication.translate("Dialog", u"  K", None))
@@ -539,14 +537,29 @@ class Ui_Dialog(object):
         self.label_suction.setText(QCoreApplication.translate("Dialog", u"Suction", None))
         self.lineEdit_pressure_disch.setText("")
         self.lineEdit_pressure.setText("")
+        self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Dialog", u" Pa (a)", None))
+        self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Dialog", u" kPa (a)", None))
+        self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Dialog", u" atm (a)", None))
+        self.comboBox_pressure_units.setItemText(3, QCoreApplication.translate("Dialog", u" bar (a)", None))
+        self.comboBox_pressure_units.setItemText(4, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2 (a)", None))
+        self.comboBox_pressure_units.setItemText(5, QCoreApplication.translate("Dialog", u" psi (a)", None))
+        self.comboBox_pressure_units.setItemText(6, QCoreApplication.translate("Dialog", u" ksi (a)", None))
+        self.comboBox_pressure_units.setItemText(7, QCoreApplication.translate("Dialog", u" Pa (g)", None))
+        self.comboBox_pressure_units.setItemText(8, QCoreApplication.translate("Dialog", u" kPa (g)", None))
+        self.comboBox_pressure_units.setItemText(9, QCoreApplication.translate("Dialog", u" atm (g)", None))
+        self.comboBox_pressure_units.setItemText(10, QCoreApplication.translate("Dialog", u" bar (g)", None))
+        self.comboBox_pressure_units.setItemText(11, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2 (g)", None))
+        self.comboBox_pressure_units.setItemText(12, QCoreApplication.translate("Dialog", u" psi (g)", None))
+        self.comboBox_pressure_units.setItemText(13, QCoreApplication.translate("Dialog", u" ksi (g)", None))
+
         ___qtablewidgetitem = self.tableWidget_new_fluid.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Fluid name", None));
         ___qtablewidgetitem1 = self.tableWidget_new_fluid.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Molar fraction [%]", None));
-        ___qtreewidgetitem = self.treeWidget_reference_gases.headerItem()
+        ___qtreewidgetitem = self.treeWidget_refprop_fluids.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Default fluid library", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_reference_gases.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Press double-click to add fluid to the mixture</p></body></html>", None))
+        self.treeWidget_refprop_fluids.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Press double-click to add fluid to the mixture</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_add_gas.setText(QCoreApplication.translate("Dialog", u"Add gas", None))
         self.label_6.setText(QCoreApplication.translate("Dialog", u"Molar fraction [%]", None))
@@ -585,7 +598,6 @@ class SetFluidCompositionInput_UI(QDialog, Ui_Dialog):
                                             - (Layout): QGridLayout
                                                     - label_9: QLabel
                                                     - lineEdit_temperature: QLineEdit
-                                                    - comboBox_pressure_units: QComboBox
                                                     - lineEdit_temperature_disch: QLineEdit
                                                     - label_10: QLabel
                                                     - comboBox_temperature_units: QComboBox
@@ -593,11 +605,12 @@ class SetFluidCompositionInput_UI(QDialog, Ui_Dialog):
                                                     - label_suction: QLabel
                                                     - lineEdit_pressure_disch: QLineEdit
                                                     - lineEdit_pressure: QLineEdit
+                                                    - comboBox_pressure_units: QComboBox
                             - scrollArea: QScrollArea
                                 - scrollAreaWidgetContents: QWidget
                                     - (Layout): QGridLayout
                                             - tableWidget_new_fluid: QTableWidget
-                                            - treeWidget_reference_gases: QTreeWidget
+                                            - treeWidget_refprop_fluids: QTreeWidget
                                             - frame_middle: QFrame
                                                 - (Layout): QGridLayout
                                                         - pushButton_add_gas: QPushButton

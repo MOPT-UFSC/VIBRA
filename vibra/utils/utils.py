@@ -52,3 +52,10 @@ def get_color_rgb(color):
         color = color[1:-1]
     tokens = color.split(',')
     return list(map(int, tokens))
+
+def get_color_rgb(color):
+    color = color.replace(" ", "")
+    if ("[" or "(") in color:
+        color = color[1:-1]
+    tokens = color.split(',')
+    return list(map(int, tokens))
