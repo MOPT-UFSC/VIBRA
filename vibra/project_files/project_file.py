@@ -629,6 +629,8 @@ class ProjectFile:
                         for i, freq in enumerate(frequencies):
                             writer[:, i] = solution[:, i]
 
+        self.remove_results_data_from_project_file()
+
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
         return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype, is_resume)
 
@@ -677,7 +679,7 @@ class ProjectFile:
             os.remove(self.results_data_filepath)
 
     def archive_project(self, zip_path: Path):
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:
             for path in self.path.rglob("*"):
                 if path.is_file():
                     arcname = path.relative_to(self.path)

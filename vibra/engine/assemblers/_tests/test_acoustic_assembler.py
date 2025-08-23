@@ -10,16 +10,17 @@ def test_acoustic_stacked_assembler(acoustic_model: Model):
     '''
 
     assembler = AcousticAssembler(acoustic_model)
+    assembler.define_acoustic_elements()
 
-    element_3D, _ = assembler.get_element()
+    element_3D = assembler.element_3d
     element_3D.reorder_connect()
 
-    data_K, data_M = element_3D.stacked_elementary_matrices()
+    int3d_BtB, int3d_NtN = element_3D.stacked_elementary_matrices_NtN_BtB()
 
     assembler.gather_data_to_assemble_global_matrices_reference()
 
-    rel_error_K = (data_K - assembler.data_K.astype(float)) / assembler.data_K.astype(float)
-    rel_error_M = (data_M - assembler.data_M.astype(float)) / assembler.data_M.astype(float)
+    rel_error_K = (int3d_BtB - assembler.int3d_BtB.astype(float)) / assembler.int3d_BtB.astype(float)
+    rel_error_M = (int3d_NtN - assembler.int3d_NtN.astype(float)) / assembler.int3d_NtN.astype(float)
 
     max_error_K = max(abs(rel_error_K.flatten()))
     max_error_M = max(abs(rel_error_M.flatten()))
@@ -39,8 +40,8 @@ def test_reordering_approach_for_frequency_dependent_acoustic_assembler(viscous_
     # Enforce assembly with reordering
     reordering = matrix_helper.get_reordering_indexes(assembler.ind_rows, assembler.ind_cols)
     factor_K, factor_M = assembler.compute_global_matrices_factors(1)
-    data_K = assembler.data_K * factor_K
-    data_M = assembler.data_M * factor_M
+    data_K = assembler.int3d_BtB * factor_K
+    data_M = assembler.int3d_NtN * factor_M
     full_stiffness_with_reordering = matrix_helper.reorder_data(data_K, reordering)
     full_mass_with_reordering = matrix_helper.reorder_data(data_M, reordering)
     

@@ -41,7 +41,7 @@ def test_partial_and_resume_write(hdf5_file_path: Path):
     writer.save(np.ones(num_rows, dtype=float), 0)
     writer.close()
 
-    writer = LazyHDF5MatrixWriter(hdf5_file_path, num_rows, freqs, float)
+    writer = LazyHDF5MatrixWriter(hdf5_file_path, num_rows, freqs, float, is_resume=True)
     writer.save(np.ones(num_rows, dtype=float) * 2, 2)
     writer.close()
 
