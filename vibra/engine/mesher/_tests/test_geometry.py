@@ -77,15 +77,36 @@ def test_geometry_centers(geometry: Geometry):
 
 
 def test_convert_all_length_units(geometry: Geometry):
-
     geometry._curves_lengths = {1: 10.0}        # mm
     geometry._surfaces_areas = {1: 100.0}       # mm²
     geometry._solids_volumes = {1: 1000.0}      # mm³
+
+    geometry._solids_centers = {1: np.array([10.0, 0.0, 0.0])}
+    geometry._surfaces_centers = {1: np.array([0.0, 20.0, 0.0])}
+    geometry._curves_centers = {1: np.array([0.0, 0.0, 30.0])}
+    geometry._points_centers = {1: np.array([5.0, 5.0, 5.0])}
+
     geometry.set_length_unit("inch")
-    # assert np.allclose(geo._curves_lengths[1], 0.393700787)
-    # assert np.allclose(geo._surfaces_areas[1], 0.393700787**2)
-    # assert np.allclose(geo._solids_volumes[1], 0.393700787**3)
-    # assert np.allclose(geo._solids_centers[1], np.array([0.19685039370078738, 0.19685039370078738, 0.19685039370078738]))
+
+    assert geometry._curves_lengths[1] == 0.39370078740157477
+    assert (np.isclose(geometry._surfaces_areas[1], 100*0.03937**2, atol=1e-6))
+    assert (np.isclose(geometry._solids_volumes[1], 1000*0.03937**3, atol=1e-6))
+
+    geometry._points_centers[2] = np.zeros(3)
+
+    geometry.set_length_unit("inch")
+
+    scale = geometry._get_length_unit_factor("milimeter") / geometry._get_length_unit_factor("inch")
+    assert np.allclose(geometry._solids_centers[1], np.array([10.0, 0.0, 0.0]) * scale)
+    assert np.allclose(geometry._surfaces_centers[1], np.array([0.0, 20.0, 0.0]) * scale)
+    assert np.allclose(geometry._curves_centers[1], np.array([0.0, 0.0, 30.0]) * scale)
+    assert np.allclose(geometry._points_centers[1], np.array([5.0, 5.0, 5.0]) * scale)
+    assert np.allclose(geometry._points_centers[2], np.zeros(3))
+
+
+@pytest.mark.skip
+def test_entities_relactions(geometry: Geometry):
+    pass
 
 
 
