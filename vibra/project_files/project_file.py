@@ -12,9 +12,12 @@ import numpy as np
 
 from copy import deepcopy
 from pathlib import Path
+from configparser import ConfigParser
 
 from vibra.project_files.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
+
+from utils.utils import get_color_rgb, get_list_of_values_from_string
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -31,7 +34,7 @@ class ProjectFile:
 
     def _default_paths(self):
         self.project_setup_filepath = self.path / "project_setup.json"
-        self.fluid_library_filepath = self.path / "fluid_library.config"
+        self.fluid_library_filepath = self.path / "fluid_library.json"
         self.material_library_filepath = self.path / "material_library.config"
         self.geometry_data_filepath = self.path / "geometry_data.hdf5"
         self.model_properties_filepath = self.path / "model_properties.json"
@@ -387,14 +390,17 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_material_library_from_file(self):
+        # return read_json(self.material_library_filepath)
         return read_config(self.material_library_filepath)
 
-    def write_fluid_library_in_file(self, config):
-        write_config(self.fluid_library_filepath, config)
+    def write_fluid_library_in_file(self, fluid_data: dict):
+        write_json(self.fluid_library_filepath, fluid_data)
         app().main_window.project_data_modified = True
 
     def read_fluid_library_from_file(self):
-        return read_config(self.fluid_library_filepath)
+        self.backward_compatibility_for_fluids_data_file()
+        return read_json(self.fluid_library_filepath)
+        # return read_config(self.fluid_library_filepath)
 
     def write_model_properties_in_file(self):
 
@@ -681,6 +687,55 @@ class ProjectFile:
         with zipfile.ZipFile(path, 'r') as zipf:
             zipf.extractall(path=self.path)
 
+    def backward_compatibility_for_fluids_data_file(self):
+        path = deepcopy(str(self.fluid_library_filepath))
+        cpath = Path(path.replace(".json", ".config"))
+        if cpath.exists():
+            fluid_data = self.convert_fluid_data_from_configparser_to_dictionary(cpath, remove_after_convert=True)
+            if fluid_data:
+                self.write_fluid_library_in_file(fluid_data)
+
+    def convert_fluid_data_from_configparser_to_dictionary(self, path: Path, remove_after_convert: bool=False) -> dict:
+
+        fluid_data = dict()
+        config = read_config(path)
+
+        for tag in config.sections():
+
+            section = config[tag]
+            keys = section.keys()
+
+            identifier = int(section.get('identifier', -1))
+
+            fluid_parameters = {
+                                "name" : section.get("name", ""),
+                                "identifier" : identifier,
+                                "fluid_density" : float(section.get('fluid_density', -1)),
+                                "speed_of_sound" : float(section.get('speed_of_sound', -1)),
+                                "isentropic_exponent" : float(section.get('isentropic_exponent', -1)),
+                                "thermal_conductivity" : float(section.get('thermal_conductivity', -1)),
+                                "specific_heat_Cp" : float(section.get('specific_heat_Cp', -1)),
+                                "dynamic_viscosity" : float(section.get('dynamic_viscosity', -1)),
+                                "temperature" : float(section.get('temperature', -1)),
+                                "pressure" : float(section.get('pressure', -1)),
+                                "molar_mass" : float(section.get('molar_mass', -1)),
+                                "color" : get_color_rgb(section.get('color')),
+                                }
+
+            if 'key_mixture' in keys:
+                fluid_parameters["key_mixture"] = section.get('key_mixture')
+
+            if 'molar_fractions' in keys:
+                str_molar_fractions = section.get('molar_fractions')
+                molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
+                fluid_parameters["molar_fractions"] = molar_fractions
+
+            fluid_data[identifier] = fluid_parameters
+
+        if remove_after_convert:
+            os.remove(path)
+
+        return fluid_data
 
 def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float):
     """ This function converts a numeric dictionary into an equivalent 

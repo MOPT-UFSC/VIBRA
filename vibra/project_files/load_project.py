@@ -51,99 +51,48 @@ class LoadProject:
                                                   )
 
     def load_project_libraries(self):
-        self.load_fluid_library()
-        self.load_material_library()
+        self.fluids_from_library = self.load_fluid_library()
+        self.materials_from_library = self.load_material_library()
 
     def load_fluid_library(self):
 
-        self.library_fluids = dict()
-        config = self.file.read_fluid_library_from_file()
-
-        if config is None:
+        fluids_data = dict()
+        fluid_library_data = self.file.read_fluid_library_from_file()
+        if fluid_library_data is None:
             return
 
-        for tag in config.sections():
+        for str_fluid_id, fluid_data in fluid_library_data.items():
+            if not isinstance(fluid_data, dict):
+                continue
 
-            section = config[tag]
-            keys = section.keys()
+            identifier = int(str_fluid_id)
 
-            name = section['name']
-            fluid_density =  float(section['fluid_density'])
-            speed_of_sound =  float(section['speed_of_sound'])
-            color =  get_color_rgb(section['color'])
-            identifier =  int(section['identifier'])
+            fluid = Fluid(  
+                          name = fluid_data.get("name"),
+                          fluid_density = fluid_data.get("fluid_density"),
+                          speed_of_sound = fluid_data.get("speed_of_sound"),
+                          color =  fluid_data.get("color"),
+                          identifier = identifier,
+                          isentropic_exponent = fluid_data.get("isentropic_exponent"),
+                          thermal_conductivity = fluid_data.get("thermal_conductivity"),
+                          specific_heat_Cp = fluid_data.get("specific_heat_Cp"),
+                          dynamic_viscosity = fluid_data.get("dynamic_viscosity"),
+                          temperature = fluid_data.get("temperature"),
+                          pressure = fluid_data.get("pressure"),
+                          molar_mass = fluid_data.get("molar_mass")  
+                          )
 
-            if 'isentropic_exponent' in keys:
-                isentropic_exponent = float(section['isentropic_exponent'])
-            else:
-                isentropic_exponent = ""
+            fluids_data[identifier] = fluid
 
-            if 'thermal_conductivity' in keys:
-                thermal_conductivity = float(section['thermal_conductivity'])
-            else:
-                thermal_conductivity = ""
-
-            if 'specific_heat_Cp' in keys:
-                specific_heat_Cp = float(section['specific_heat_Cp'])
-            else:
-                specific_heat_Cp = ""
-
-            if 'dynamic_viscosity' in keys:
-                dynamic_viscosity = float(section['dynamic_viscosity'])
-            else:
-                dynamic_viscosity = ""
-            
-            if 'temperature' in keys:
-                temperature = float(section['temperature'])
-            else:
-                temperature = None
-
-            if 'pressure' in keys:
-                pressure = float(section['pressure'])
-            else:
-                pressure = None
-
-            # if 'key_mixture' in keys:
-            #     key_mixture = section['key_mixture']
-            # else:
-            #     key_mixture = None
-
-            # if 'molar_fractions' in keys:
-            #     str_molar_fractions = section['molar_fractions']
-            #     molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
-            # else:
-            #     molar_fractions = None
-
-            if 'molar_mass' in keys:
-                if section['molar_mass'] == "None":
-                    molar_mass = None
-                else:
-                    molar_mass = float(section['molar_mass'])
-            else:
-                molar_mass = None
-
-            fluid = Fluid(  name = name,
-                            fluid_density = fluid_density,
-                            speed_of_sound = speed_of_sound,
-                            color =  color,
-                            identifier = identifier,
-                            isentropic_exponent = isentropic_exponent,
-                            thermal_conductivity = thermal_conductivity,
-                            specific_heat_Cp = specific_heat_Cp,
-                            dynamic_viscosity = dynamic_viscosity,
-                            temperature = temperature,
-                            pressure = pressure,
-                            molar_mass = molar_mass  )
-
-            self.library_fluids[identifier] = fluid
+        return fluids_data
 
     def load_material_library(self):
 
-        self.library_materials = dict()
+        materials_data = dict()
         config = self.file.read_material_library_from_file()
 
         if config is None:
-            return
+            return None
 
         for tag in config.sections():
 
@@ -166,7 +115,9 @@ class LoadProject:
                                 # color = getColorRGB(section['color'])
                                 )
             
-            self.library_materials[identifier] = material
+            materials_data[identifier] = material
+
+        return materials_data
 
     def load_geometry_data(self):
         
@@ -380,17 +331,17 @@ class LoadProject:
 
                     if property == "fluid":
                         fluid_id = prop_data["fluid_id"]
-                        if fluid_id not in self.library_fluids.keys():
+                        if fluid_id not in self.fluids_from_library.keys():
                             continue
                         else:
-                            prop_data = self.library_fluids[fluid_id]
+                            prop_data = self.fluids_from_library[fluid_id]
 
                     elif property == "material":
                         material_id = prop_data["material_id"]
-                        if material_id not in self.library_materials.keys():
+                        if material_id not in self.materials_from_library.keys():
                             continue
                         else:
-                            prop_data = self.library_materials[material_id]
+                            prop_data = self.materials_from_library[material_id]
 
                     if key == "volume_properties":
                         self.properties._set_property(property, prop_data, volume=id)
