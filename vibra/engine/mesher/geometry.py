@@ -140,22 +140,22 @@ class Geometry:
                 if surface_id in surfaces_tuple:
                     yield solid_id[0]
 
-
     def curves_to_points(self, *curve_ids: int) -> Iterator[int]:
         for curve_id in curve_ids:
             for point_id in self._curves_to_points.get(curve_id, []):
-                print("point_id", point_id)
                 yield point_id
 
     def curves_to_surfaces(self, *curve_ids: int) -> Iterator[int]:
         for curve_id in curve_ids:
-            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
-                yield surface_id
+            for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
+                if curve_id in curves_tuple:
+                    yield surface_id[0]
 
     def curves_to_solids(self, *curve_ids: int) -> Iterator[int]:
         for surface_id in self.curves_to_surfaces(*curve_ids):
-            for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
-                yield solid_id
+            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
+                if surface_id in surfaces_tuple:
+                    yield solid_id[0]
 
     def surfaces_to_curves(self, *surface_ids: int) -> Iterator[int]:
         for surface_id in surface_ids:
@@ -169,8 +169,9 @@ class Geometry:
 
     def surfaces_to_solids(self, *surface_ids: int) -> Iterator[int]:
         for surface_id in surface_ids:
-            for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
-                yield solid_id
+            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
+                if surface_id in surfaces_tuple:
+                    yield solid_id[0]
 
     def solids_to_points(self, *volume_ids: int) -> Iterator[int]:
         for surface_id in self.solids_to_surfaces(*volume_ids):
@@ -276,22 +277,13 @@ class Geometry:
                           
     def _process_curves_normals(self):
         for curve in self.curves:
-            # adjacent_surfaces = set(self.curves_to_surfaces(curve))
-            adjacent_surfaces = list()
-            for k, v in self._surfaces_to_curves.items():
-                if curve in v:
-                    adjacent_surfaces.append(k)
-
-            if not adjacent_surfaces:
-                self._curves_normals[curve] = np.zeros((1, 3))
-                continue
-
+            adjacent_surfaces = set(self.curves_to_surfaces(curve))
             normals_sum = np.zeros((1, 3))
+
             for surface in adjacent_surfaces:
                 normals_sum += self._surfaces_normals[surface]
 
             normals_avg = normals_sum / len(adjacent_surfaces)
-
             self._curves_normals[curve] = normals_avg
 
     def _process_points_normals(self):

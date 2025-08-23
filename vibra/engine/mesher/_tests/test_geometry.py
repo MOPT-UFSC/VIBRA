@@ -104,9 +104,26 @@ def test_convert_all_length_units(geometry: Geometry):
     assert np.allclose(geometry._points_centers[2], np.zeros(3))
 
 
-@pytest.mark.skip
 def test_entities_relactions(geometry: Geometry):
-    pass
+    gen1 = set(geometry.curves_to_points(1))
+    gen2 = set(geometry.curves_to_surfaces(1))
+    gen3 = set(geometry.curves_to_solids(1))
+    gen4 = set(geometry.surfaces_to_curves(1))
+    gen5 = set(geometry.surfaces_to_points(1))
+    gen6 = set(geometry.surfaces_to_solids(1))
+    gen7 = set(geometry.solids_to_points(1))
+    gen8 = set(geometry.solids_to_curves(1))
+    gen9 = set(geometry.solids_to_surfaces(1))
+
+    assert (gen1 == {1, 2})
+    assert (gen2 == {1, 3})
+    assert (gen3 == {1})
+    assert (gen4 == {1, 2, 3, 4})
+    assert (gen5 == {1, 2, 3, 4}) 
+    assert (gen6 == {1})
+    assert (gen7 == {1, 2, 3, 4})
+    assert (gen8 == {1, 2, 3, 4, 5, 6})
+    assert (gen9 == {1, 2, 3, 4})
 
 
 
