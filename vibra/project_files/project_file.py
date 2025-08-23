@@ -35,7 +35,7 @@ class ProjectFile:
     def _default_paths(self):
         self.project_setup_filepath = self.path / "project_setup.json"
         self.fluid_library_filepath = self.path / "fluid_library.json"
-        self.material_library_filepath = self.path / "material_library.config"
+        self.material_library_filepath = self.path / "material_library.json"
         self.geometry_data_filepath = self.path / "geometry_data.hdf5"
         self.model_properties_filepath = self.path / "model_properties.json"
         self.mesh_data_filepath = self.path / "mesh_data.hdf5"
@@ -386,12 +386,13 @@ class ProjectFile:
         return read_json(self.project_setup_filepath)
 
     def write_material_library_in_file(self, config):
-        write_config(self.material_library_filepath, config)
+        write_json(self.material_library_filepath, config)
         app().main_window.project_data_modified = True
 
     def read_material_library_from_file(self):
-        # return read_json(self.material_library_filepath)
-        return read_config(self.material_library_filepath)
+        self.backward_compatibility_for_materials_data_file()
+        return read_json(self.material_library_filepath)
+        # return read_config(self.material_library_filepath)
 
     def write_fluid_library_in_file(self, fluid_data: dict):
         write_json(self.fluid_library_filepath, fluid_data)
@@ -693,9 +694,17 @@ class ProjectFile:
         path = deepcopy(str(self.fluid_library_filepath))
         cpath = Path(path.replace(".json", ".config"))
         if cpath.exists():
-            fluid_data = self.convert_fluid_data_from_configparser_to_dictionary(cpath, remove_after_convert=True)
+            fluid_data = self.convert_fluid_data_from_configparser_to_dictionary(cpath, remove_after_convert=False)
             if fluid_data:
                 self.write_fluid_library_in_file(fluid_data)
+
+    def backward_compatibility_for_materials_data_file(self):
+        path = deepcopy(str(self.material_library_filepath))
+        cpath = Path(path.replace(".json", ".config"))
+        if cpath.exists():
+            material_data = self.convert_material_data_from_configparser_to_dictionary(cpath, remove_after_convert=False)
+            if material_data:
+                self.write_material_library_in_file(material_data)
 
     def convert_fluid_data_from_configparser_to_dictionary(self, path: Path, remove_after_convert: bool=False) -> dict:
 
@@ -738,6 +747,33 @@ class ProjectFile:
             os.remove(path)
 
         return fluid_data
+
+    def convert_material_data_from_configparser_to_dictionary(self, path: Path, remove_after_convert: bool=False) -> dict:
+
+        material_library_data = dict()
+        config = read_config(path)
+
+        for tag in config.sections():
+
+            section = config[tag]
+            identifier = int(section.get('identifier', -1))
+
+            material_parameters = {
+                                    "name" : section.get("name", ""),
+                                    "identifier" : identifier,
+                                    "material_density" : float(section.get('material_density', -1)),
+                                    "poisson_ratio" : float(section.get('poisson_ratio', -1)),
+                                    "elasticity_modulus" : float(section.get('elasticity_modulus', -1)),
+                                    "thermal_expansion_coefficient" : float(section.get('thermal_expansion_coefficient', -1)),
+                                    "color" : get_color_rgb(section.get('color')),
+                                    }
+
+            material_library_data[identifier] = material_parameters
+
+        if remove_after_convert:
+            os.remove(path)
+
+        return material_library_data
 
 def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float):
     """ This function converts a numeric dictionary into an equivalent 

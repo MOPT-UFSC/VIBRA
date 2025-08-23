@@ -55,7 +55,7 @@ class LoadProject:
     def load_fluid_library(self):
 
         fluids_data = dict()
-        fluid_library_data = self.file.read_fluid_library_from_file()
+        fluid_library_data = app().file.read_fluid_library_from_file()
         if fluid_library_data is None:
             return
 
@@ -87,32 +87,26 @@ class LoadProject:
     def load_material_library(self):
 
         materials_data = dict()
-        config = self.file.read_material_library_from_file()
+        material_library_data = app().file.read_material_library_from_file()
+        if material_library_data is None:
+            return
 
-        if config is None:
-            return None
+        for str_material_id, material_data in material_library_data.items():
+            if not isinstance(material_data, dict):
+                continue
 
-        for tag in config.sections():
-
-            section = config[tag]
-
-            name = section['name']
-            identifier = int(section['identifier'])
-            density = float(section['material_density'])
-            poisson_ratio = float(section['poisson_ratio'])
-            elasticity_modulus = float(section['elasticity_modulus'])
-            thermal_expansion_coefficient = float(section['thermal_expansion_coefficient'])
+            identifier = int(str_material_id)
 
             material = Material(
-                                name = name,
+                                name = material_data.get("name"),
                                 identifier = identifier, 
-                                material_density = density,
-                                poisson_ratio = poisson_ratio,
-                                elasticity_modulus = elasticity_modulus,
-                                thermal_expansion_coefficient = thermal_expansion_coefficient, 
-                                # color = getColorRGB(section['color'])
+                                material_density = material_data.get("material_density"),
+                                poisson_ratio = material_data.get("poisson_ratio"),
+                                elasticity_modulus = material_data.get("elasticity_modulus"),
+                                thermal_expansion_coefficient = material_data.get("thermal_expansion_coefficient"), 
+                                color =  material_data.get("color"),
                                 )
-            
+
             materials_data[identifier] = material
 
         return materials_data

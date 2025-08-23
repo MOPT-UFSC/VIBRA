@@ -256,5 +256,8 @@ class RefpropInterface:
 
             # print(np.array([temperatures, pressures]).T)
             return (temperatures, pressures, colors)
+        
+        elif distribution_type == "exponential":
+            pass
 
         return None          

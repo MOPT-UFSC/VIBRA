@@ -105,33 +105,20 @@ class MaterialWidget(MaterialWidget_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def load_data_from_materials_library(self):
-        config = app().file.read_material_library_from_file()
-        if config is None:
-            self.reset_library_to_default()
-            return
 
         self.materials_from_library.clear()
 
-        if not list(config.sections()):
-            self.update_table()
+        materials_from_library = app().load_project.load_material_library()
+        if materials_from_library is None:
+            self.reset_library_to_default()
             return
 
-        for tag in config.sections():
+        elif isinstance(materials_from_library, dict):
+            if not materials_from_library:
+                self.reset_library_to_default()
+                return
 
-            section = config[tag]
-            identifier =  int(section['identifier'])
-
-            material = Material(
-                                name = section['name'],
-                                identifier = identifier, 
-                                material_density = float(section['material_density']),
-                                poisson_ratio = float(section['poisson_ratio']),
-                                elasticity_modulus = float(section['elasticity_modulus']),
-                                thermal_expansion_coefficient = float(section['thermal_expansion_coefficient']), 
-                                color = getColorRGB(section['color'])
-                                )
-
-            self.materials_from_library[identifier] = material
+        self.materials_from_library = materials_from_library
 
         self.update_table()
 
@@ -207,6 +194,9 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.selectColumn(last_col)
         self.tableWidget_material_data.blockSignals(False)
 
+        app().processEvents()
+        self.set_scroll_bar_to_maximum()
+
     def remove_selected_column(self):
 
         selected_column = self.get_selected_column()
@@ -250,15 +240,24 @@ class MaterialWidget(MaterialWidget_UI):
 
         dmaterial = deepcopy(material)
         new_identifier = self.new_identifier()
+        new_name = self.get_suffix_for_duplicated_material(dmaterial.name)
 
-        dmaterial.identifier = new_identifier
-        dmaterial.name = self.get_suffix_for_duplicated_material(dmaterial.name)
-        self.materials_from_library[new_identifier] = dmaterial
+        material_data = {
+                        "name" : new_name,
+                        "identifier" : new_identifier,
+                        "material_density" : dmaterial.material_density,
+                        "poisson_ratio" : dmaterial.poisson_ratio,
+                        "elasticity_modulus" : dmaterial.elasticity_modulus,
+                        "thermal_expansion_coefficient" : dmaterial.thermal_expansion_coefficient,
+                        "color" : dmaterial.color,
+                        }
 
+        if self.add_material_in_file_from_material_data(material_data):
+            return
+
+        self.load_data_from_materials_library()
         self.update_table()
-        last_col = self.tableWidget_material_data.columnCount()
 
-        self.add_material_to_file(last_col-1, material=dmaterial.__dict__)
         app().processEvents()
         self.set_scroll_bar_to_maximum()
 
@@ -304,12 +303,15 @@ class MaterialWidget(MaterialWidget_UI):
         if self.column_has_empty_items(item.column()):
             self.tableWidget_material_data.blockSignals(False)
             return
+        
+        material_data = self.get_material_data_for_selected_column(item.column())
+        if self.add_material_in_file_from_material_data(material_data):
+            return
 
-        self.add_material_to_file(item.column())
         self.load_data_from_materials_library()
+        self.update_table()
 
         self.tableWidget_material_data.blockSignals(False)
-        self.tableWidget_material_data.horizontalScrollBar().setSliderPosition(0)
 
     def go_to_next_cell(self, item : QTableWidgetItem):
 
@@ -428,49 +430,104 @@ class MaterialWidget(MaterialWidget_UI):
         if row == COLOR_ROW:
             self.pick_color(row, col)
 
-    def add_material_to_file(self, column: int, material: None | dict = None):
+    def add_material_in_file_from_material_data(self, material_data: dict):
+
+        # check all inputs before proceeding
+        for key in self.material_data_keys:
+            value = material_data.get(key)
+            if value is None:
+                return True
+
+        # material identifier
+        identifier = material_data.get("identifier")
+
+        # read material library data from file
+        material_library_data = app().file.read_material_library_from_file()
+        
+        # add the new material data
+        material_library_data[identifier] = material_data
+
+        # save the modified material data in file
+        app().file.write_material_library_in_file(material_library_data)
+
+    def get_material_data_for_selected_column(self, column: int):
         try:
 
             material_data = dict()
-
             for i, key in enumerate(self.material_data_keys):
                 item = self.tableWidget_material_data.item(i, column)
-                if key == "color":
+                if key == "name":
+                    material_data[key] = item.text()
+
+                elif key == "color":
                     color = item.background().color().getRgb()
                     material_data[key] = list(color[:3])
 
+                elif key == "identifier":
+                    identifier = int(item.text())
+                    material_data[key] = identifier
+
                 else:
-                    if material is None:
-                        material_data[key] = item.text()
-                    else:
-                        material_data[key] = str(material.get(key))
+                    material_data[key] = float(item.text())
 
-            material_identifier = material_data["identifier"]
-            if not material_identifier:
-                return
-
-            config = app().file.read_material_library_from_file()
-            config[material_identifier] = material_data
-
-            app().file.write_material_library_in_file(config)
+            return material_data
                     
         except Exception as error_log:
             title = "Error while writing material data in file"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
-            return True
+            return None
+
+    # def add_material_to_file(self, column: int, material: None | dict = None):
+    #     try:
+
+    #         material_data = dict()
+
+    #         for i, key in enumerate(self.material_data_keys):
+    #             item = self.tableWidget_material_data.item(i, column)
+    #             if key == "color":
+    #                 color = item.background().color().getRgb()
+    #                 material_data[key] = list(color[:3])
+
+    #             else:
+    #                 if material is None:
+    #                     material_data[key] = item.text()
+    #                 else:
+    #                     material_data[key] = str(material.get(key))
+
+    #         identifier = material_data["identifier"]
+    #         if not identifier:
+    #             return
+
+    #         # read material library data from file
+    #         material_library_data = app().file.read_material_library_from_file()
+            
+    #         # add the new material data
+    #         material_library_data[identifier] = material_data
+
+    #         # save the modified material data in file
+    #         app().file.write_material_library_in_file(material_library_data)
+                    
+    #     except Exception as error_log:
+    #         title = "Error while writing material data in file"
+    #         message = str(error_log)
+    #         PrintMessageInput([window_title_1, title, message])
+    #         return True
 
     def remove_material_from_file(self, material: Material):
 
-        config = app().file.read_material_library_from_file()
+        # read material library data from file
+        material_library_data = app().file.read_material_library_from_file()
 
-        identifier = str(material.identifier)
-
-        if not identifier in config.sections():
+        str_material_id = str(material.identifier)
+        if not str_material_id in material_library_data.keys():
             return
 
-        config.remove_section(identifier)
-        app().file.write_material_library_in_file(config)
+        # remove the selected material
+        material_library_data.pop(str_material_id)
+
+        # save the modified material data in file
+        app().file.write_material_library_in_file(material_library_data)
 
         self.reset_materials_from_bodies_and_surfaces([material.identifier])
         self.load_data_from_materials_library()
@@ -506,13 +563,15 @@ class MaterialWidget(MaterialWidget_UI):
             
     def get_confirmation_to_proceed(self):
 
-        title = "Additional confirmation required to proceed"
+        title = "Material library reset"
         message = "Would you like to reset the material library to default values?"
 
-        buttons_config = {  "left_button_label" : "No", 
-                            "right_button_label" : "Yes",
-                            "left_button_size" : 80,
-                            "right_button_size" : 80}
+        buttons_config = {  
+                          "left_button_label" : "No", 
+                          "right_button_label" : "Yes",
+                          "left_button_size" : 80,
+                          "right_button_size" : 80
+                          }
 
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
@@ -530,23 +589,21 @@ class MaterialWidget(MaterialWidget_UI):
 
     def reset_library_to_default(self):
 
-        config_cache = app().file.read_material_library_from_file()
+        # read material library data from file
+        material_library_data = app().file.read_material_library_from_file()
 
-        sections_cache = list()
-        if config_cache is not None:
-            sections_cache = config_cache.sections()
+        # get the material identifiers to be removed from properties
+        material_identifiers = list()
+        if isinstance(material_library_data, dict):
+            for str_material_id in material_library_data.keys():
+                material_identifiers.append(int(str_material_id))
 
+        # reset the material library to default state
         default_material_library()
 
-        config = app().file.read_material_library_from_file()
+        if material_identifiers:
+            self.reset_materials_from_bodies_and_surfaces(material_identifiers)
 
-        material_identifiers = list()
-        for section_cache in sections_cache:
-            if section_cache not in config.sections():
-                identifier = config_cache[section_cache]["identifier"]
-                material_identifiers.append(int(identifier))
-
-        self.reset_materials_from_bodies_and_surfaces(material_identifiers)
         self.load_data_from_materials_library()
 
     def reset_materials_from_bodies_and_surfaces(self, material_identifiers: list):

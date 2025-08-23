@@ -610,13 +610,16 @@ class FluidWidget(FluidWidget_UI):
 
         # get the fluid identifiers to be removed from properties
         fluid_identifiers = list()
-        for str_fluid_id in fluid_library_data.keys():
-            fluid_identifiers.append(int(str_fluid_id))
+        if isinstance(fluid_library_data, dict):
+            for str_fluid_id in fluid_library_data.keys():
+                fluid_identifiers.append(int(str_fluid_id))
 
         # reset the fluid library to default state
         default_fluid_library()
 
-        self.reset_fluids_from_bodies_and_surfaces(fluid_identifiers)
+        if fluid_identifiers:
+            self.reset_fluids_from_bodies_and_surfaces(fluid_identifiers)
+
         self.load_data_from_fluids_library()
 
     def reset_fluids_from_bodies_and_surfaces(self, fluid_identifiers : list):
