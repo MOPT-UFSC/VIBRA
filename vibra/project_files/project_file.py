@@ -451,6 +451,7 @@ class ProjectFile:
                         point_properties = normalize(properties.point_properties),
                         element_properties = normalize(properties.element_properties),
                         nodal_properties = normalize(properties.nodal_properties),
+                        group_properties = normalize(properties.group_properties)
                         )
 
             write_json(self.model_properties_filepath, data)
@@ -497,6 +498,7 @@ class ProjectFile:
                                 point_properties = denormalize(data.get("point_properties")),
                                 element_properties = denormalize(data.get("element_properties")),
                                 nodal_properties = denormalize(data.get("nodal_properties")),
+                                group_properties = denormalize(data.get("group_properties"))
                                 )
 
         return model_properties

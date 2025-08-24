@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'viscous_thermal_model_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(559, 510)
+        Dialog.resize(559, 513)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -64,7 +64,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 525, 588))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 522, 586))
         self.gridLayout_5 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
@@ -435,6 +435,7 @@ class Ui_Dialog(object):
 
         self.label_5 = QLabel(self.frame_4)
         self.label_5.setObjectName(u"label_5")
+        self.label_5.setEnabled(True)
         self.label_5.setMinimumSize(QSize(120, 0))
         self.label_5.setMaximumSize(QSize(132, 16777215))
         self.label_5.setFont(font1)
@@ -455,6 +456,7 @@ class Ui_Dialog(object):
 
         self.label_18 = QLabel(self.frame_4)
         self.label_18.setObjectName(u"label_18")
+        self.label_18.setEnabled(True)
         self.label_18.setMinimumSize(QSize(40, 0))
         self.label_18.setMaximumSize(QSize(40, 16777215))
         self.label_18.setFont(font1)
@@ -601,6 +603,7 @@ class Ui_Dialog(object):
 
         self.label_19 = QLabel(self.frame_5)
         self.label_19.setObjectName(u"label_19")
+        self.label_19.setEnabled(True)
         self.label_19.setMinimumSize(QSize(40, 0))
         self.label_19.setMaximumSize(QSize(40, 16777215))
         self.label_19.setFont(font1)
@@ -609,6 +612,7 @@ class Ui_Dialog(object):
 
         self.label_7 = QLabel(self.frame_5)
         self.label_7.setObjectName(u"label_7")
+        self.label_7.setEnabled(True)
         self.label_7.setMinimumSize(QSize(120, 0))
         self.label_7.setMaximumSize(QSize(132, 16777215))
         self.label_7.setFont(font1)
@@ -641,6 +645,7 @@ class Ui_Dialog(object):
 
         self.label_10 = QLabel(self.frame_5)
         self.label_10.setObjectName(u"label_10")
+        self.label_10.setEnabled(True)
         self.label_10.setMinimumSize(QSize(120, 0))
         self.label_10.setMaximumSize(QSize(132, 16777215))
         self.label_10.setFont(font1)
@@ -659,6 +664,7 @@ class Ui_Dialog(object):
 
         self.label_22 = QLabel(self.frame_5)
         self.label_22.setObjectName(u"label_22")
+        self.label_22.setEnabled(True)
         self.label_22.setMinimumSize(QSize(40, 0))
         self.label_22.setMaximumSize(QSize(40, 16777215))
         self.label_22.setFont(font1)
@@ -688,26 +694,62 @@ class Ui_Dialog(object):
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.tabWidget_models = QTabWidget(self.tab)
         self.tabWidget_models.setObjectName(u"tabWidget_models")
-        self.tab_2 = QWidget()
-        self.tab_2.setObjectName(u"tab_2")
-        self.gridLayout_11 = QGridLayout(self.tab_2)
+        self.rectangular_tab = QWidget()
+        self.rectangular_tab.setObjectName(u"rectangular_tab")
+        self.gridLayout_11 = QGridLayout(self.rectangular_tab)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
-        self.tableWidget_rectangular = QTableWidget(self.tab_2)
+        self.tableWidget_rectangular = QTableWidget(self.rectangular_tab)
+        if (self.tableWidget_rectangular.rowCount() < 6):
+            self.tableWidget_rectangular.setRowCount(6)
+        __qtablewidgetitem = QTableWidgetItem()
+        __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_rectangular.setVerticalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_rectangular.setVerticalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_rectangular.setVerticalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_rectangular.setVerticalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_rectangular.setVerticalHeaderItem(4, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_rectangular.setVerticalHeaderItem(5, __qtablewidgetitem5)
         self.tableWidget_rectangular.setObjectName(u"tableWidget_rectangular")
+        self.tableWidget_rectangular.horizontalHeader().setVisible(False)
 
         self.gridLayout_11.addWidget(self.tableWidget_rectangular, 0, 0, 1, 1)
 
-        self.tabWidget_models.addTab(self.tab_2, "")
-        self.tab_3 = QWidget()
-        self.tab_3.setObjectName(u"tab_3")
-        self.gridLayout_12 = QGridLayout(self.tab_3)
+        self.tabWidget_models.addTab(self.rectangular_tab, "")
+        self.circular_tab = QWidget()
+        self.circular_tab.setObjectName(u"circular_tab")
+        self.gridLayout_12 = QGridLayout(self.circular_tab)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.tableWidget_circular = QTableWidget(self.tab_3)
+        self.tableWidget_circular = QTableWidget(self.circular_tab)
+        if (self.tableWidget_circular.rowCount() < 4):
+            self.tableWidget_circular.setRowCount(4)
+        __qtablewidgetitem6 = QTableWidgetItem()
+        __qtablewidgetitem6.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_circular.setVerticalHeaderItem(0, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        __qtablewidgetitem7.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_circular.setVerticalHeaderItem(1, __qtablewidgetitem7)
+        __qtablewidgetitem8 = QTableWidgetItem()
+        __qtablewidgetitem8.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_circular.setVerticalHeaderItem(2, __qtablewidgetitem8)
+        __qtablewidgetitem9 = QTableWidgetItem()
+        __qtablewidgetitem9.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget_circular.setVerticalHeaderItem(3, __qtablewidgetitem9)
         self.tableWidget_circular.setObjectName(u"tableWidget_circular")
+        self.tableWidget_circular.horizontalHeader().setVisible(False)
 
         self.gridLayout_12.addWidget(self.tableWidget_circular, 0, 0, 1, 1)
 
-        self.tabWidget_models.addTab(self.tab_3, "")
+        self.tabWidget_models.addTab(self.circular_tab, "")
 
         self.gridLayout_10.addWidget(self.tabWidget_models, 0, 0, 1, 1)
 
@@ -840,7 +882,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_models.setCurrentIndex(1)
+        self.tabWidget_models.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -917,8 +959,28 @@ class Ui_Dialog(object):
         self.label_22.setText(QCoreApplication.translate("Dialog", u"[m]", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Formulation:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_circular), QCoreApplication.translate("Dialog", u"Circular", None))
-        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_2), QCoreApplication.translate("Dialog", u"Rectangular", None))
-        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.tab_3), QCoreApplication.translate("Dialog", u"Circular", None))
+        ___qtablewidgetitem = self.tableWidget_rectangular.verticalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"ID", None));
+        ___qtablewidgetitem1 = self.tableWidget_rectangular.verticalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Section type", None));
+        ___qtablewidgetitem2 = self.tableWidget_rectangular.verticalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Formulation type", None));
+        ___qtablewidgetitem3 = self.tableWidget_rectangular.verticalHeaderItem(3)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Duct height", None));
+        ___qtablewidgetitem4 = self.tableWidget_rectangular.verticalHeaderItem(4)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Duct width", None));
+        ___qtablewidgetitem5 = self.tableWidget_rectangular.verticalHeaderItem(5)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Number of terms", None));
+        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.rectangular_tab), QCoreApplication.translate("Dialog", u"Rectangular", None))
+        ___qtablewidgetitem6 = self.tableWidget_circular.verticalHeaderItem(0)
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"ID", None));
+        ___qtablewidgetitem7 = self.tableWidget_circular.verticalHeaderItem(1)
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Section type", None));
+        ___qtablewidgetitem8 = self.tableWidget_circular.verticalHeaderItem(2)
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"Formulation type", None));
+        ___qtablewidgetitem9 = self.tableWidget_circular.verticalHeaderItem(3)
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"Duct diameter", None));
+        self.tabWidget_models.setTabText(self.tabWidget_models.indexOf(self.circular_tab), QCoreApplication.translate("Dialog", u"Circular", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab), QCoreApplication.translate("Dialog", u"Edit", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -927,7 +989,7 @@ class Ui_Dialog(object):
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Volume/Group ID", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Attribution", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_viscous_thermal_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+        self.treeWidget_viscous_thermal_model.setToolTip(QCoreApplication.translate("Dialog", u"Select an element to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
@@ -1018,10 +1080,10 @@ class ViscousThermalModelInputs_UI(QDialog, Ui_Dialog):
                                                 - tab: QWidget
                                                     - (Layout): QGridLayout
                                                             - tabWidget_models: QTabWidget
-                                                                - tab_2: QWidget
+                                                                - rectangular_tab: QWidget
                                                                     - (Layout): QGridLayout
                                                                             - tableWidget_rectangular: QTableWidget
-                                                                - tab_3: QWidget
+                                                                - circular_tab: QWidget
                                                                     - (Layout): QGridLayout
                                                                             - tableWidget_circular: QTableWidget
                                                 - tab_list: QWidget
