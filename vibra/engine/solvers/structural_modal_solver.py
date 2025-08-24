@@ -95,15 +95,7 @@ class StructuralModalSolver:
         sigma = self.assembler.model.analysis_setup.get("sigma_factor", 0.01)
         logging.info("Solving the eigenproblem... [75/100]")
 
-        is_M_complex = np.any(np.imag(M.data))
-        is_K_complex = np.any(np.imag(K.data))
-        is_complex = is_M_complex or is_K_complex
-
-        if not is_complex:
-            M.data = np.real(M.data)
-            K.data = np.real(K.data)
-
-        linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
+        linear_solver = initialize_solver(SolverType.PARDISO)
         opinv = linear_solver.build_linear_operator(K - sigma * M)
 
         eigen_values, eigen_vectors = eigs(K, M=M, k=n_modes, sigma=sigma, which=which, OPinv=opinv)

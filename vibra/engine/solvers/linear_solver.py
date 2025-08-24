@@ -1,7 +1,8 @@
 from enum import Enum, auto
 from pypardiso.pardiso_wrapper import PyPardisoSolver, Matrix_type
 from scipy.sparse.linalg import LinearOperator
-from scipy.sparse import triu
+from scipy.sparse import triu, issparse
+import numpy as np
 
 
 class SolverType(Enum):
@@ -10,8 +11,8 @@ class SolverType(Enum):
 
 
 class MumpsLinearOperator(LinearOperator):
-    def __init__(self, ctx, A):
-        ctx.set_matrix(A)
+    def __init__(self, ctx, A, is_symmetric: bool):
+        ctx.set_matrix(A, symmetric=is_symmetric)
         ctx.factor()
         self.solve = ctx.solve
         LinearOperator.__init__(self, A.dtype, A.shape)
@@ -21,12 +22,10 @@ class MumpsLinearOperator(LinearOperator):
 
 
 class PardisoLinearOperator(LinearOperator):
-    def __init__(self, ps, A):
-        symmetric_matrices = [Matrix_type.CS, Matrix_type.RSS, Matrix_type.RSPD, Matrix_type.RSI, Matrix_type.CSS]
-        if ps.mtype in symmetric_matrices:
-            ps.factorize(triu(A, format='csr'))
-        else:
-            ps.factorize(A)
+    def __init__(self, ps, A, is_symmetric):
+        if is_symmetric:
+            A = triu(A, format='csr')
+        ps.factorize(A)
         self.factorized_A = ps.factorized_A
         self.solve = ps.solve
         LinearOperator.__init__(self, A.dtype, A.shape)
@@ -36,8 +35,10 @@ class PardisoLinearOperator(LinearOperator):
 
 
 class LinearSolver:
-    def __init__(self, is_complex: bool, is_symmetric: bool, **kwargs):
-        pass
+    def __init__(self, **kwargs):
+        self.is_complex = False
+        self.is_symmetric = False
+        self.linear_operator_class = LinearOperator
 
     def solve(self, A, F):
         pass
@@ -46,60 +47,110 @@ class LinearSolver:
         pass
 
     def build_linear_operator(self, A) -> LinearOperator:
+        solver = self.get_solver_instance(A)
+        self.handle_linear_system_data(A)
+        return self.linear_operator_class(solver, A, self.is_symmetric)
+
+    def get_solver_instance(self, A, f=None):
         pass
+
+    def handle_linear_system_data(self, A, f=None):
+        if not self.is_complex:
+            A.data = np.real(A.data)
+            if f is not None:
+                return np.real(f)
+        return f
 
 
 class PardisoLinearSolver(LinearSolver):
-    def __init__(self, is_complex: bool, is_symmetric: bool, **kwargs):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
-        mtype = kwargs.get('mtype')
-        if mtype is None:
-            if is_complex:
-                if is_symmetric:
-                    mtype = Matrix_type.CS
-                else:
-                    mtype = Matrix_type.CNS
-            else:
-                if is_symmetric:
-                    mtype = Matrix_type.RSI
-                else:
-                    mtype = Matrix_type.RNS
-
-        phase = kwargs.get('phase', 13)
-        size_limit_storage = kwargs.get('size_limit_storage', 5e7)
-        self._solver = PyPardisoSolver(mtype, phase, size_limit_storage)
+        self.mtype = kwargs.get('mtype')
+        self.phase = kwargs.get('phase', 13)
+        self.size_limit_storage = kwargs.get('size_limit_storage', 5e7)
+        self._solver = None
+        self.linear_operator_class = PardisoLinearOperator
 
     def solve(self, A, F):
-        return self._solver.solve(A, F)
+        solver = self.get_solver_instance(A, F)
+        F = self.handle_linear_system_data(A, F)
+        if self.is_symmetric:
+            # convert the symmetric matrix [A] into an upper triangular matrix to enhance the solver's
+            # performance and reduce the amount of memory required to compute the solution
+            A = triu(A, format="csr")
+        return solver.solve(A, F)
 
     def clear_memory(self):
         self._solver.free_memory(everything=True)
 
-    def build_linear_operator(self, A) -> LinearOperator:
-        return PardisoLinearOperator(self._solver, A)
+    def get_solver_instance(self, A, f=None):
+        if self._solver:
+            return self._solver
+        self.is_symmetric, self.is_complex = analyse_linear_system(A, f)
+        if self.mtype is None:
+            if self.is_complex:
+                if self.is_symmetric:
+                    self.mtype = Matrix_type.CS
+                else:
+                    self.mtype = Matrix_type.CNS
+            else:
+                if self.is_symmetric:
+                    self.mtype = Matrix_type.RSI
+                else:
+                    self.mtype = Matrix_type.RNS
+        print(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {self.is_complex}")
+        self._solver = PyPardisoSolver(self.mtype, self.phase, self.size_limit_storage)
+        return self._solver
 
 
 class MumpsLinearSolver(LinearSolver):
-    def __init__(self, is_complex: bool, is_symmetric: bool, **kwargs):
-        # local import of mumps for backward compatibility with the current build (without conda)
-        from mumps import Context
-        self.is_complex = is_complex
-        self.is_symmetric = is_symmetric
-        verbose = kwargs.get('verbose', False)
-        self._solver = Context(verbose)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.verbose = kwargs.get('verbose', False)
+        self._solver = None
+        self.linear_operator_class = MumpsLinearOperator
 
     def solve(self, A, F):
-        self._solver.set_matrix(A, symmetric=self.is_symmetric)
-        self._solver.factor()
-        return self._solver.solve(F)
+        solver = self.get_solver_instance(A, F)
+        F = self.handle_linear_system_data(A, F)
+        solver.set_matrix(A, symmetric=self.is_symmetric)
+        solver.factor()
+        return solver.solve(F)
 
-    def build_linear_operator(self, A) -> LinearOperator:
-        return MumpsLinearOperator(self._solver, A)
+    def get_solver_instance(self, A, f=None):
+        if self._solver:
+            return self._solver
+        # local import of mumps for backward compatibility with the current build (without conda)
+        from mumps import Context
+        self.is_symmetric, self.is_complex = analyse_linear_system(A, f)
+        print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {self.is_complex}")
+        self._solver = Context(self.verbose)
+        return self._solver
 
 
-def initialize_solver(solver_type: SolverType, is_complex: bool = False, is_symmetric: bool = True,
-                      **kwargs) -> LinearSolver:
+def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
     if solver_type == SolverType.PARDISO:
-        return PardisoLinearSolver(is_complex, is_symmetric, **kwargs)
+        return PardisoLinearSolver(**kwargs)
     elif solver_type == SolverType.MUMPS:
-        return MumpsLinearSolver(is_complex, is_symmetric, **kwargs)
+        return MumpsLinearSolver(**kwargs)
+    
+def is_symmetric(matrix, tol=1e-10) -> bool:
+    if matrix.shape[0] != matrix.shape[1]:
+        return False
+
+    if issparse(matrix):
+        diff = matrix - matrix.T
+        if diff.nnz == 0:
+            return True
+        return np.all(np.abs(diff.data) < tol)
+    else:
+        return np.allclose(matrix, matrix.T, atol=tol)
+
+
+def analyse_linear_system(A, f=None):
+    is_A_complex = np.any(np.iscomplex(A.data))
+    is_f_complex = np.any(np.iscomplex(f)) if f is not None else False
+    is_complex = is_A_complex or is_f_complex
+
+    return is_symmetric(A), is_complex
