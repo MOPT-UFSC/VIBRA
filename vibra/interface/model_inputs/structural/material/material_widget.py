@@ -35,9 +35,8 @@ class MaterialWidget(MaterialWidget_UI):
 
         app().main_window.action_model_workspace_callback()
 
-        self.project = app().project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self.dialog = kwargs.get("dialog", None)
 
@@ -46,15 +45,6 @@ class MaterialWidget(MaterialWidget_UI):
         self._config_widgets()
         self._paint_icons()
         self.load_data_from_materials_library()
-
-    # def _config_window(self):
-    #     self.setWindowFlags(Qt.WindowStaysOnTopHint)
-    #     self.setWindowModality(Qt.WindowModal)
-    #     self.setWindowIcon(app().main_window.vibra_icon)
-    #     self.setWindowTitle("Vibra")
-
-    # def _add_icon_and_title(self):
-    #     self._config_window()
 
     def _initialize(self):
 
@@ -104,54 +94,6 @@ class MaterialWidget(MaterialWidget_UI):
         widgets = [self.pushButton_duplicate]
         change_icon_color_for_widgets(widgets, icon_color)
 
-    def load_data_from_materials_library(self):
-
-        self.materials_from_library.clear()
-
-        materials_from_library = app().load_project.load_material_library()
-        if materials_from_library is None:
-            self.reset_library_to_default()
-            return
-
-        elif isinstance(materials_from_library, dict):
-            if not materials_from_library:
-                self.reset_library_to_default()
-                return
-
-        self.materials_from_library = materials_from_library
-
-        self.update_table()
-
-    def update_table(self):
-
-        self.tableWidget_material_data.clearContents()
-        self.tableWidget_material_data.blockSignals(True)
-        self.tableWidget_material_data.setRowCount(COLOR_ROW + 1)
-        self.tableWidget_material_data.setColumnCount(len(self.materials_from_library))
-
-        for j, material in enumerate(self.materials_from_library.values()):
-            if isinstance(material, Material):
-
-                self.tableWidget_material_data.setItem(0, j, QTableWidgetItem(str(material.name)))
-                self.tableWidget_material_data.setItem(1, j, QTableWidgetItem(str(material.identifier)))
-                self.tableWidget_material_data.setItem(2, j, QTableWidgetItem(str(material.material_density)))
-                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.elasticity_modulus :.4e}"))
-                self.tableWidget_material_data.setItem(4, j, QTableWidgetItem(str(material.poisson_ratio)))
-                self.tableWidget_material_data.setItem(5, j, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
-
-                item = QTableWidgetItem()
-                item.setBackground(Color(*material.color).to_qt())
-                item.setForeground(Color(*material.color).to_qt())
-                item.setSizeHint(QSize(80, 30))
-                self.tableWidget_material_data.setItem(6, j, item)
-
-        for i in range(self.tableWidget_material_data.rowCount()):
-            for j in range(self.tableWidget_material_data.columnCount()):
-                self.tableWidget_material_data.item(i, j).setTextAlignment(Qt.AlignCenter)
-
-        self.tableWidget_material_data.blockSignals(False)
-        self._update_size_policy()
-
     def get_selected_column(self) -> int:
         selected_items = self.tableWidget_material_data.selectedIndexes()
         if not selected_items:
@@ -170,6 +112,13 @@ class MaterialWidget(MaterialWidget_UI):
         identifier = int(item.text())
 
         return self.materials_from_library.get(identifier)
+
+    def get_selected_material_id(self) -> int | None:
+        material = self.get_selected_material()
+        if material is None:
+            return None
+
+        return material.identifier
 
     def add_column(self):
     
@@ -229,34 +178,33 @@ class MaterialWidget(MaterialWidget_UI):
             return
         
         self.refprop = None
-        item = self.tableWidget_material_data.item(1, selected_column)
-        if item.text() == "":
+        item_identifier = self.tableWidget_material_data.item(1, selected_column)
+        if item_identifier.text() == "":
             return
 
-        identifier = int(item.text())
+        identifier = int(item_identifier.text())
         material = self.materials_from_library.get(identifier)
         if not isinstance(material, Material):
             return
 
         dmaterial = deepcopy(material)
-        new_identifier = self.new_identifier()
-        new_name = self.get_suffix_for_duplicated_material(dmaterial.name)
+        dmaterial.identifier = self.new_identifier()
+        dmaterial.name = self.get_suffix_for_duplicated_material(dmaterial.name)
 
-        material_data = {
-                        "name" : new_name,
-                        "identifier" : new_identifier,
-                        "material_density" : dmaterial.material_density,
-                        "poisson_ratio" : dmaterial.poisson_ratio,
-                        "elasticity_modulus" : dmaterial.elasticity_modulus,
-                        "thermal_expansion_coefficient" : dmaterial.thermal_expansion_coefficient,
-                        "color" : dmaterial.color,
-                        }
+        # material_data = {
+        #                 "name" : new_name,
+        #                 "identifier" : new_identifier,
+        #                 "material_density" : dmaterial.material_density,
+        #                 "poisson_ratio" : dmaterial.poisson_ratio,
+        #                 "elasticity_modulus" : dmaterial.elasticity_modulus,
+        #                 "thermal_expansion_coefficient" : dmaterial.thermal_expansion_coefficient,
+        #                 "color" : dmaterial.color,
+        #                 }
 
-        if self.add_material_in_file_from_material_data(material_data):
+        if self.add_material_data_in_file(dmaterial.__dict__):
             return
 
         self.load_data_from_materials_library()
-        self.update_table()
 
         app().processEvents()
         self.set_scroll_bar_to_maximum()
@@ -279,6 +227,10 @@ class MaterialWidget(MaterialWidget_UI):
         scroll_bar.setSliderPosition(scroll_bar.minimum())
         app().processEvents()
         scroll_bar.setSliderPosition(scroll_bar.maximum())
+
+    def cell_clicked_callback(self, row, col):
+        if row == COLOR_ROW:
+            self.pick_color(row, col)
 
     def item_changed_callback(self, item : QTableWidgetItem):
 
@@ -305,11 +257,10 @@ class MaterialWidget(MaterialWidget_UI):
             return
         
         material_data = self.get_material_data_for_selected_column(item.column())
-        if self.add_material_in_file_from_material_data(material_data):
+        if self.add_material_data_in_file(material_data):
             return
 
         self.load_data_from_materials_library()
-        self.update_table()
 
         self.tableWidget_material_data.blockSignals(False)
 
@@ -426,11 +377,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         return False
 
-    def cell_clicked_callback(self, row, col):
-        if row == COLOR_ROW:
-            self.pick_color(row, col)
-
-    def add_material_in_file_from_material_data(self, material_data: dict):
+    def add_material_data_in_file(self, material_data: dict):
 
         # check all inputs before proceeding
         for key in self.material_data_keys:
@@ -478,42 +425,6 @@ class MaterialWidget(MaterialWidget_UI):
             PrintMessageInput([window_title_1, title, message])
             return None
 
-    # def add_material_to_file(self, column: int, material: None | dict = None):
-    #     try:
-
-    #         material_data = dict()
-
-    #         for i, key in enumerate(self.material_data_keys):
-    #             item = self.tableWidget_material_data.item(i, column)
-    #             if key == "color":
-    #                 color = item.background().color().getRgb()
-    #                 material_data[key] = list(color[:3])
-
-    #             else:
-    #                 if material is None:
-    #                     material_data[key] = item.text()
-    #                 else:
-    #                     material_data[key] = str(material.get(key))
-
-    #         identifier = material_data["identifier"]
-    #         if not identifier:
-    #             return
-
-    #         # read material library data from file
-    #         material_library_data = app().file.read_material_library_from_file()
-            
-    #         # add the new material data
-    #         material_library_data[identifier] = material_data
-
-    #         # save the modified material data in file
-    #         app().file.write_material_library_in_file(material_library_data)
-                    
-    #     except Exception as error_log:
-    #         title = "Error while writing material data in file"
-    #         message = str(error_log)
-    #         PrintMessageInput([window_title_1, title, message])
-    #         return True
-
     def remove_material_from_file(self, material: Material):
 
         # read material library data from file
@@ -531,35 +442,6 @@ class MaterialWidget(MaterialWidget_UI):
 
         self.reset_materials_from_bodies_and_surfaces([material.identifier])
         self.load_data_from_materials_library()
-
-    def new_identifier(self):
-        already_used_ids = set()
-        for material in self.materials_from_library.values():
-            material: Material
-            already_used_ids.add(material.identifier)
-
-        for i in count(1):
-            if i not in already_used_ids:
-                return i
-
-    def pick_color(self, row, col):
-
-        read = PickColorInput()
-        if not read.complete:
-            return True
-
-        picked_color = read.color
-        item = QTableWidgetItem()
-        item.setBackground(Color(*picked_color).to_qt())
-        item.setForeground(Color(*picked_color).to_qt())
-        self.tableWidget_material_data.setItem(row, col, item)
-        self.tableWidget_material_data.item(row, 0).setSelected(True)
-
-    def get_selected_material_id(self):
-        material = self.get_selected_material()
-        if material is None:
-            return None
-        return material.identifier
             
     def get_confirmation_to_proceed(self):
 
@@ -606,6 +488,54 @@ class MaterialWidget(MaterialWidget_UI):
 
         self.load_data_from_materials_library()
 
+    def load_data_from_materials_library(self):
+
+        self.materials_from_library.clear()
+        materials_from_library = app().load_project.load_material_library()
+
+        if materials_from_library is None:
+            self.reset_library_to_default()
+            return
+
+        elif isinstance(materials_from_library, dict):
+            if not materials_from_library:
+                self.reset_library_to_default()
+                return
+
+        self.materials_from_library = materials_from_library
+
+        self.update_table_of_materials()
+
+    def update_table_of_materials(self):
+
+        self.tableWidget_material_data.clearContents()
+        self.tableWidget_material_data.blockSignals(True)
+        self.tableWidget_material_data.setRowCount(COLOR_ROW + 1)
+        self.tableWidget_material_data.setColumnCount(len(self.materials_from_library))
+
+        for j, material in enumerate(self.materials_from_library.values()):
+            if isinstance(material, Material):
+
+                self.tableWidget_material_data.setItem(0, j, QTableWidgetItem(str(material.name)))
+                self.tableWidget_material_data.setItem(1, j, QTableWidgetItem(str(material.identifier)))
+                self.tableWidget_material_data.setItem(2, j, QTableWidgetItem(str(material.material_density)))
+                self.tableWidget_material_data.setItem(3, j, QTableWidgetItem(f"{material.elasticity_modulus :.4e}"))
+                self.tableWidget_material_data.setItem(4, j, QTableWidgetItem(str(material.poisson_ratio)))
+                self.tableWidget_material_data.setItem(5, j, QTableWidgetItem(str(material.thermal_expansion_coefficient)))
+
+                item = QTableWidgetItem()
+                item.setBackground(Color(*material.color).to_qt())
+                item.setForeground(Color(*material.color).to_qt())
+                item.setSizeHint(QSize(80, 30))
+                self.tableWidget_material_data.setItem(6, j, item)
+
+        for i in range(self.tableWidget_material_data.rowCount()):
+            for j in range(self.tableWidget_material_data.columnCount()):
+                self.tableWidget_material_data.item(i, j).setTextAlignment(Qt.AlignCenter)
+
+        self.tableWidget_material_data.blockSignals(False)
+        self._update_size_policy()
+
     def reset_materials_from_bodies_and_surfaces(self, material_identifiers: list):
 
         surfaces_to_remove_material = list()
@@ -617,20 +547,43 @@ class MaterialWidget(MaterialWidget_UI):
                 if isinstance(data, Material):
                     if data.identifier in material_identifiers:
                         volumes_to_remove_material.append(volume_id)
-                        surface_ids = self.model.mesh.surfaces_from_volume[volume_id]
+                        surface_ids = self.mesh.surfaces_from_volume[volume_id]
                         for surface_id in surface_ids:
                             surfaces_to_remove_material.append(surface_id)
 
         for vol_id in volumes_to_remove_material:
-            self.model.properties._remove_volume_property("material", volume_id=vol_id)
+            self.properties._remove_volume_property("material", volume_id=vol_id)
 
         for surf_id in surfaces_to_remove_material:
-            self.model.properties._remove_surface_property("material", surface_id=surf_id)
+            self.properties._remove_surface_property("material", surface_id=surf_id)
 
         app().file.write_model_properties_in_file()
 
         if isinstance(self.dialog, QDialog):
             self.dialog.load_model_info()
+
+    def new_identifier(self):
+        already_used_ids = set()
+        for material in self.materials_from_library.values():
+            material: Material
+            already_used_ids.add(material.identifier)
+
+        for i in count(1):
+            if i not in already_used_ids:
+                return i
+
+    def pick_color(self, row, col):
+
+        read = PickColorInput()
+        if not read.complete:
+            return True
+
+        picked_color = read.color
+        item = QTableWidgetItem()
+        item.setBackground(Color(*picked_color).to_qt())
+        item.setForeground(Color(*picked_color).to_qt())
+        self.tableWidget_material_data.setItem(row, col, item)
+        self.tableWidget_material_data.item(row, 0).setSelected(True)
 
     def keyPressEvent(self, event):
 

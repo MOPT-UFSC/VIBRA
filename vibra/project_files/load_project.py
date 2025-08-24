@@ -77,7 +77,9 @@ class LoadProject:
                           dynamic_viscosity = fluid_data.get("dynamic_viscosity"),
                           temperature = fluid_data.get("temperature"),
                           pressure = fluid_data.get("pressure"),
-                          molar_mass = fluid_data.get("molar_mass")  
+                          molar_mass = fluid_data.get("molar_mass"),
+                          key_mixture = fluid_data.get("key_mixture"),
+                          molar_fractions = fluid_data.get("molar_fractions"),
                           )
 
             fluids_data[identifier] = fluid

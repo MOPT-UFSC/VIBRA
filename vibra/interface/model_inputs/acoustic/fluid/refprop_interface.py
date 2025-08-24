@@ -151,7 +151,7 @@ class RefpropInterface:
         
     def get_specific_fluid_property(self, **kwargs):
 
-        fluids_string = kwargs.get("fluids_string", "")
+        key_mixture = kwargs.get("key_mixture", "")
         molar_fractions = kwargs.get("molar_fractions", list())
         property_key = kwargs.get("property_key")
         temperature_K = kwargs.get("temperature_K")
@@ -160,7 +160,7 @@ class RefpropInterface:
         
         units = self.refprop.GETENUMdll(0, "MASS BASE SI").iEnum
         read = self.refprop.REFPROPdll( 
-                                        fluids_string, 
+                                        key_mixture, 
                                         state_properties, 
                                         property_key, 
                                         units, 
@@ -184,34 +184,20 @@ class RefpropInterface:
     def compute_fluid_properties_for_multiple_state_properties(self, **kwargs):
 
         fluid_name = kwargs.get("fluid_name", "")
-        fluids_string = kwargs.get("fluids_string", "")
+        key_mixture = kwargs.get("key_mixture", "")
         molar_fractions = kwargs.get("molar_fractions", list())
         state_properties = kwargs.get("state_properties", list())
 
         if not state_properties:
-            return None, None
+            return None
 
-        fluid_properties_for_all_states = dict()
+        all_fluids_properties = dict()
         temperatures_K, pressures_Pa, rgb_colors = state_properties
 
         for j, temperature_K in enumerate(temperatures_K):
+
             fluid_properties = dict()
             pressure_Pa = pressures_Pa[j]
-
-            for prop_key, prop_label in self.map_properties.items():
-                fluid_property, errors = self.get_specific_fluid_property(
-                                                                          fluids_string = fluids_string,
-                                                                          molar_fractions = molar_fractions,
-                                                                          property_key = prop_key,
-                                                                          temperature_K = temperature_K,
-                                                                          pressure_Pa = pressure_Pa,
-                                                                          )
-
-                if errors:
-                    print(errors)
-                    return None, errors
-
-                fluid_properties[prop_label] = fluid_property
 
             if fluid_name != "":
                 fluid_properties["name"] = f"{fluid_name} ({j+1})"
@@ -220,44 +206,81 @@ class RefpropInterface:
             fluid_properties["pressure"] = float(pressure_Pa)
             fluid_properties["color"] = rgb_colors[j]
 
-            fluid_properties_for_all_states[j+1] = {
-                                                    "fluid_string" : fluids_string,
-                                                    "molar_fractions" : molar_fractions,
-                                                    "fluid_properties" : fluid_properties,
-                                                    }
+            for prop_key, prop_label in self.map_properties.items():
+                fluid_property, errors = self.get_specific_fluid_property(
+                                                                          key_mixture = key_mixture,
+                                                                          molar_fractions = molar_fractions,
+                                                                          property_key = prop_key,
+                                                                          temperature_K = temperature_K,
+                                                                          pressure_Pa = pressure_Pa,
+                                                                          )
 
-        return fluid_properties_for_all_states, None
+                if errors:
+                    print(errors)
+                    return None
 
-    def get_red_blue_color_scale(self, N_fluids: int):
-        x_values = np.linspace(255, 0, N_fluids)
-        rgb_colors = [[int(x), 0, int(255-x)] for x in x_values]
-        return rgb_colors
+                fluid_properties[prop_label] = fluid_property
+
+            fluid_properties["key_mixture"] = key_mixture
+            fluid_properties["molar_fractions"] = molar_fractions
+
+            all_fluids_properties[j+1] = fluid_properties
+
+        return all_fluids_properties
 
     def get_state_properties(self, **kwargs):
 
         temperatures_K = kwargs.get("temperatures_K")
         pressures_Pa = kwargs.get("pressures_Pa")
-        N_fluids = kwargs.get("N_fluids", 10)
+        number_of_fluids = kwargs.get("number_of_fluids", 10)
         distribution_type = kwargs.get("distribution_type", "linear")
+        decay_factor = kwargs.get("decay_factor", 0.5)
+        color_scale = kwargs.get("color_scale", "red-to-blue")
+
+        if len(temperatures_K) != 2:
+            return
+
+        if len(pressures_Pa) != 2:
+            return
+
+        T_start, T_end = temperatures_K
+        P_start, P_end = pressures_Pa
 
         if distribution_type == "linear":
-            if len(temperatures_K) != 2:
-                return
-
-            if len(pressures_Pa) != 2:
-                return
-
-            T_start, T_end = temperatures_K
-            P_start, P_end = pressures_Pa
-
-            temperatures = np.linspace(T_start, T_end, N_fluids)
-            pressures = np.linspace(P_start, P_end, N_fluids)
-            colors = self.get_red_blue_color_scale(N_fluids)
-
-            # print(np.array([temperatures, pressures]).T)
-            return (temperatures, pressures, colors)
+            temperatures = np.linspace(T_start, T_end, number_of_fluids)
+            pressures = np.linspace(P_start, P_end, number_of_fluids)
+            x_colors = np.linspace(255, 0, number_of_fluids)
         
         elif distribution_type == "exponential":
-            pass
 
-        return None          
+            def get_exponential_distribution(x, x1, x2, decay_factor):
+                delta = x1 - x2
+                k = np.log(-np.log(1 - decay_factor * (1 - np.exp(-1)))) / np.log(1/2)
+                y = x1 - (delta / (1 - np.exp(-1))) * (1 - np.exp(-(x**k)))
+                return y
+
+            x = np.linspace(0, 1, number_of_fluids)
+            temperatures = get_exponential_distribution(x, T_start, T_end, decay_factor)
+            pressures = get_exponential_distribution(x, P_start, P_end, decay_factor)
+            x_colors = get_exponential_distribution(x, 255, 0, decay_factor)
+
+        else:
+            None
+
+        # process the colors for each fluid
+        if color_scale == "red-to-blue":
+            colors = self.get_red_to_blue_color_scale(x_colors)
+        elif color_scale == "blue-to-red":
+            colors = self.get_blue_to_red_color_scale(x_colors)
+        else:
+            return None
+
+        return (temperatures, pressures, colors)
+
+    def get_red_to_blue_color_scale(self, x_values):
+        rgb_colors = [[int(x), 0, int(255-x)] for x in x_values]
+        return rgb_colors
+    
+    def get_blue_to_red_color_scale(self, x_values):
+        rgb_colors = [[int(255-x), 0, int(x)] for x in x_values]
+        return rgb_colors
