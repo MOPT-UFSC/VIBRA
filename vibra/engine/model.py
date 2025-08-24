@@ -1,3 +1,4 @@
+from typing import Optional, Callable
 
 from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
@@ -58,7 +59,8 @@ class ModelStatus:
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, disable_resume_callback:  Optional[Callable] = None):
+        self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
 
     def reset_variables(self):
@@ -91,7 +93,7 @@ class Model:
         self.structural_element_2d = None
         self.structural_element_3d = None
 
-        self.properties = ModelProperties()
+        self.properties = ModelProperties(self.disable_resume_callback)
 
         self.reset_dissipation_model_properties()
 
@@ -200,6 +202,8 @@ class Model:
         logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
         self.generated_mesh = True
+        if self.disable_resume_callback is not None:
+            self.disable_resume_callback()
 
         logging.info("Processing mesh... [90/100]")
         self.mesh.process_solid_elements_connected_to_nodes()
@@ -568,6 +572,44 @@ class Model:
             property, surface_id = key
             if property == "surface_thickness":
                 self.mesh.set_face_element_thickness(surface_id, data)
+
+    def is_surface_thickness_properly_applied_in_model(self):
+
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        if volume_exists:
+            return None
+
+        surface_without_thickness = list()
+        for surface_id in self.mesh.geometry_information.get("surfaces", dict()):
+            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if st_data is None:
+                surface_without_thickness.append(surface_id)
+
+        return surface_without_thickness
+
+    def is_the_property_present_in_model(self, property_to_check: str, attribution_filter: str | None = None):
+        """
+        """
+        properties = {
+                        "volumes" : self.properties.volume_properties,
+                        "surfaces" : self.properties.surface_properties,
+                        "lines" : self.properties.line_properties,
+                        "points" : self.properties.point_properties,
+                        "nodes" : self.properties.nodal_properties,
+                        }
+
+        if attribution_filter is None:
+            for _property in properties.values():    
+                for (property_label, *args) in _property.keys():
+                    if property_label == property_to_check:
+                        return True
+
+        _property = properties.get(attribution_filter, dict())
+        for (property_label, *args) in _property.keys():
+            if property_label == property_to_check:
+                return True
+
+        return False
 
     def process_degrees_of_freedom_decoupling(self):
         self.dofs_decoupling = DegreesOfFreedomDecoupling(self)

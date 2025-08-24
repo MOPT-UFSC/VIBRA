@@ -8,6 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import os
 # import openpyxl
 import numpy as np
+import platform
 from pathlib import Path
 
 window_title_1 = "Error"
@@ -16,8 +17,6 @@ window_title_2 = "Warning"
 class ExportModelResults(QFileDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.main_window = app().main_window
 
         self._initialize()
 
@@ -122,12 +121,16 @@ class ExportModelResults(QFileDialog):
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 
-            file_path, check = self.getSaveFileName(self.main_window, 
+            kwargs = dict()
+            if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+            file_path, file_extension = self.getSaveFileName(app().main_window, 
                                                     caption, 
                                                     directory_path, 
-                                                    filter = _filter)
-
-            if not check:
+                                                    filter = _filter,
+                                                    **kwargs)
+            
+            if not file_extension:
                 return
 
         else:

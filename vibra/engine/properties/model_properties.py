@@ -1,3 +1,4 @@
+from typing import Callable, Optional
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
@@ -54,7 +55,8 @@ class ModelProperties:
 
     """
 
-    def __init__(self, model=None):
+    def __init__(self, disable_resume_callback: Optional[Callable] = None):
+        self.disable_resume_callback = disable_resume_callback
 
         self._reset_variables()
 
@@ -177,6 +179,9 @@ class ModelProperties:
 
         else:
             self.global_properties[property, "global"] = data
+        
+        if self.disable_resume_callback is not None:
+            self.disable_resume_callback()
 
     def _get_property(self, property: str, node=None, element=None, point=None, line=None, surface=None, volume=None):
         """
@@ -259,6 +264,9 @@ class ModelProperties:
 
             for _key in keys_to_remove:
                 data.pop(_key)
+        
+        if self.disable_resume_callback is not None:
+            self.disable_resume_callback()
 
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""

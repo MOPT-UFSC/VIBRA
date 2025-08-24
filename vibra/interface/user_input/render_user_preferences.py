@@ -18,7 +18,6 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
 
         app().main_window.set_input_widget(self)
 
-        self.main_window = app().main_window
         self.config = app().config
         self.tmp_user_preferences = deepcopy(app().config.user_preferences)
 
@@ -222,7 +221,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         self.update_reference_scale_state()
         self.update_renderers_font_size()
         self.update_compatibility_mode()
-        self.main_window.update_plots(reset_camera=False)
+        app().main_window.update_plots(reset_camera=False)
 
     def reset_to_default(self):
         if self.config.user_preferences.interface_theme == "dark":
@@ -239,10 +238,10 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
     def update_reference_scale_state(self):
         if self.checkBox_reference_scale.isChecked():
             self.tmp_user_preferences.show_reference_scale_bar = True
-            self.main_window.update_scale_bar(True)
+            app().main_window.update_scale_bar(True)
         else:
             self.tmp_user_preferences.show_reference_scale_bar = False
-            self.main_window.update_scale_bar(False)
+            app().main_window.update_scale_bar(False)
 
     def update_compatibility_mode(self):
         is_checked = self.checkBox_compatibility_mode.isChecked()
@@ -255,7 +254,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         self.checkBox_reference_scale.setChecked(self.tmp_user_preferences.show_reference_scale_bar)
         
     def update_renderers_font_size(self):
-        self.main_window.update_renderer_font_size()
+        app().main_window.update_renderer_font_size()
 
     def load_user_preferences(self):
         self.update_line_edit_renderer_background_color_1()

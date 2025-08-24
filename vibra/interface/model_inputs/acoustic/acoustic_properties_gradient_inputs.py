@@ -18,9 +18,8 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -64,7 +63,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.attribution_type_callback()
@@ -78,7 +77,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
             self.lineEdit_selection_id.setEnabled(False)
 
         else:
-            volumes = self.main_window.selected_geometry_volumes
+            volumes = app().main_window.selected_geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
 
@@ -91,7 +90,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def geometry_selection_callback(self):
 
-        volumes = self.main_window.selected_geometry_volumes
+        volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -106,7 +105,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
 
     def get_selected_fluid(self):

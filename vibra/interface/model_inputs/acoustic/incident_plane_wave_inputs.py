@@ -9,6 +9,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.incident_plane_wave_input
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.data_handler.data_importer import DataImporter
 
 import os
 import numpy as np
@@ -21,15 +22,14 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
-
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+       
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -45,7 +45,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
@@ -67,7 +67,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.treeWidget_incident_plane_wave.itemClicked.connect(self.on_click_item)
         self.treeWidget_incident_plane_wave.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def _configure_qt_variables(self):
         #
@@ -120,7 +120,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def geometry_selection_callback(self):
 
-        surfaces = self.main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
 
         if surfaces:
             text = ", ".join([str(i) for i in surfaces])
@@ -415,42 +415,32 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'incident plane wave' table"
+        imported_file = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
+               imported_data = DataImporter.import_single_file("imported_table_folder", 
+                ["csv", "dat", "txt", "xlsx", "xls"],
+                "Choose a table to import the absorption surface")
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
+               if not imported_data:
+                   return
+               
+               imported_file = imported_data.data
+               lineEdit.setText(imported_data.path)
 
-                caption = "Choose a table to import the absorption surface"
-                imported_table_path, check = QFileDialog.getOpenFileName( 
-                                                                         None, 
-                                                                         caption, 
-                                                                         path, 
-                                                                         "Files (*.csv; *.dat; *.txt)"
-                                                                         )
 
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            imported_values = np.loadtxt(imported_table_path, delimiter=",")
-
-            if imported_values.shape[1] < 3:
-                message = "The imported table has insufficient number of columns. The incident plane wave data must"
-                message += "have two columns in the form: frequencies real values, and imaginary values."
+            if imported_file.shape[1] < 3:
+                message = "The imported table has insufficient number of columns. The incident plane wave"
+                message += " data must have two columns in the form: frequencies real values, and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            mask = imported_values[:, 0] > 0
-
-            return imported_values[mask, :]
+            return imported_file
 
         except Exception as log_error:
             message = str(log_error)
@@ -541,18 +531,18 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 self.imported_values = self.load_table( self.lineEdit_table_path, 
                                                         direct_load = True )
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-                table_path = self.lineEdit_table_path.text()
-
                 if isinstance(self.imported_values, np.ndarray):
                     if self.imported_values.shape[1] < 3:
                         return
                 else:
                     return
             
-                if self.check_wave_incidence(surface_ids, complex_values):
-                   return
+            complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+            table_path = self.lineEdit_table_path.text()
 
+            if self.check_wave_incidence(surface_ids, complex_values):
+                return
+            
             for surface_id in surface_ids:
 
                 wave_vector = self.get_input_wave_vector(surface_id)
@@ -661,9 +651,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
-        self.main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
+        app().main_window.update_info_text()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):

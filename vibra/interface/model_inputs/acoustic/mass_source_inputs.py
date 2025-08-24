@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -23,12 +24,13 @@ class MassSourceInputs(MassSourceInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
-
+        app().main_window.workspace_updating_for_model_setup()
+        
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
+        
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -89,24 +91,14 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def geometry_selection_callback(self):
 
-        points = app().main_window.selected_geometry_points
-        lines = app().main_window.selected_geometry_lines
-        surfaces = app().main_window.selected_geometry_surfaces
         volumes = app().main_window.selected_geometry_volumes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
         text = ""
-        if points:
-            text = ", ".join([str(i) for i in points])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(1)
-
-        elif lines:
-            text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(2)
-
-        elif volumes:
+        if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(4)
@@ -115,6 +107,16 @@ class MassSourceInputs(MassSourceInputs_UI):
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(3)
+
+        elif lines:
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(2)
+
+        elif points:
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
         elif nodes:
             text = ", ".join([str(i) for i in nodes])
@@ -605,43 +607,30 @@ class MassSourceInputs(MassSourceInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'mass source' table"
+        imported_file = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
+                imported_file = DataImporter.read_data_in_file(imported_table_path).data
 
             else:
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the mass source")
 
-                last_path = app().config.get_last_folder_for("imported_table_folder")
-                if last_path is None:
-                    path = os.path.expanduser("~")
-                else:
-                    path = last_path
+                if not imported_data:
+                    return
 
-                caption = "Choose a table to import the mass source"
-                imported_table_path, check = QFileDialog.getOpenFileName(  None, 
-                                                                            caption, 
-                                                                            path, 
-                                                                            "Files (*.csv; *.dat; *.txt)"
-                                                                        )
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
-                if not check:
-                    return None
-
-            lineEdit.setText(imported_table_path)
-            app().config.write_last_folder_path_in_file("imported_table_folder", imported_table_path)
-
-            imported_values = np.loadtxt(imported_table_path, delimiter=",")
-
-            if imported_values.shape[1] < 3:
+            if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum data must "
                 message += "have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([window_title_1, title, message])
                 return None
 
-            mask = imported_values[:, 0] > 0
-
-            return imported_values[mask, :]
+            return imported_file
 
         except Exception as log_error:
             message = str(log_error)

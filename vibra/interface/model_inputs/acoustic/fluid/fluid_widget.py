@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
-from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt
 
-from vibra import app, TEMP_PROJECT_FILE
+from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.interface.formatters.icons import *
 
@@ -39,8 +38,8 @@ class FluidWidget(FluidWidget_UI):
         self.state_properties = kwargs.get("state_properties", dict())
 
         self.project = app().project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._configure_qt_variables()
@@ -121,10 +120,6 @@ class FluidWidget(FluidWidget_UI):
         self._config_window()
 
     def load_data_from_fluids_library(self):
-
-        if not TEMP_PROJECT_FILE.exists():
-            self.reset_library_to_default()
-            return
 
         config = app().file.read_fluid_library_from_file()
         if config is None:

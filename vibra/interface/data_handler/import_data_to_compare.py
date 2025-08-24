@@ -3,12 +3,14 @@ from PySide6.QtGui import *
 from PySide6.QtCore import Qt
 from pathlib import Path
 
-import os
 import numpy as np
+from typing import List
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.data_handler.imported_data import ImportedData
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -18,6 +20,7 @@ window_title_2 = "Warning"
 
 
 class ImportDataToCompare(ImportDataToCompare_UI):
+
     def __init__(self, plotter: 'FrequencyResponsePlotter', *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -38,10 +41,9 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.lineEdit_import_results_path.setDisabled(True)
 
     def _initialize(self):
-
         self.keep_window_open = True
-        self.imported_data = None
 
+        self.imported_data = None
         self.imported_results = dict()
         self.ids_to_checkBox = dict()
         self.checkButtons_state = dict()
@@ -61,7 +63,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.pushButton_add_imported_data_to_plot.clicked.connect(self.add_imported_data_to_plot)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_reset_imported_data.clicked.connect(self.reset_imported_data)
-        self.pushButton_search_file_to_import.clicked.connect(self.choose_path_to_import_results)
+        self.pushButton_search_file_to_import.clicked.connect(self.import_results)
         #
         self.update_skiprows_visibility()
 
@@ -78,104 +80,34 @@ class ImportDataToCompare(ImportDataToCompare_UI):
     def update_skiprows_visibility(self):
         self.spinBox_skiprows.setDisabled(not self.checkBox_skiprows.isChecked())
 
-    def choose_path_to_import_results(self):
+    def import_results(self):
+        extensions = ["csv", "txt", "dat", "xls", "xlsx"]
+        self.imported_data = DataImporter.import_multiple_files("imported_data_folder", extensions)
 
-        path = app().config.get_last_folder_for("imported_data_folder")
-        if path is None:
-            folder_path = os.path.expanduser("~")
-        else:
-            folder_path = path
-
-        imported_path, check = QFileDialog.getOpenFileName( None, 
-                                                            'Open file', 
-                                                            folder_path, 
-                                                            'Files (*.csv *.dat *.txt *.xlsx *.xls)' )
-
-        if not check:
-            return
-
-        app().config.write_last_folder_path_in_file("imported_data_folder", imported_path)
-
-        self.import_name = os.path.basename(imported_path)
-        self.lineEdit_import_results_path.setText(imported_path)
-
-        self.import_results(imported_path)
-        self.update_treeWidget_info()
-
-    def import_results(self, imported_path):
-
-        from pandas import read_excel
-        from openpyxl import load_workbook
-
-        try:
-
-            message = ""
-
-            run = True
-            if self.checkBox_skiprows.isChecked():
-                skiprows = self.spinBox_skiprows.value()
-            else:
-                skiprows = 0
-            maximum_lines_to_skip = 100
-            
-            while run:
-                try:
-                    sufix = Path(imported_path).suffix
-                    filename = os.path.basename(imported_path)
-                    if sufix in [".txt", ".dat", ".csv"]:
-                        loaded_data = np.loadtxt(imported_path, 
-                                                 delimiter = ",", 
-                                                 skiprows = skiprows)
-                        key = self.get_data_index()
-                        self.imported_results[key] = {  "data" : loaded_data,
-                                                        "filename" : filename,
-                                                        "extension" : sufix  }
-
-                    elif sufix in [".xls", ".xlsx"]:
-                        wb = load_workbook(imported_path)
-                        sheetnames = wb.sheetnames
-                        for sheetname in sheetnames:
-
-                            try:
-                                sheet_data = read_excel(
-                                                        imported_path, 
-                                                        sheet_name = sheetname, 
-                                                        header = skiprows, 
-                                                        usecols = [0,1,2]
-                                                        ).to_numpy()
-                            except:
-                                sheet_data = read_excel(
-                                                        imported_path, 
-                                                        sheet_name = sheetname, 
-                                                        header = skiprows, 
-                                                        usecols = [0,1]
-                                                        ).to_numpy()
-
-                            key = self.get_data_index()
-                            self.imported_results[key] = {  "data" : sheet_data,
-                                                            "filename" : filename,
-                                                            "sheetname" : sheetname,
-                                                            "extension" : sufix  }
-
-                    self.spinBox_skiprows.setValue(int(skiprows))
-                    run = False
-
-                except:
-                    skiprows += 1
-                    if skiprows >= maximum_lines_to_skip:
-                        run = False
-                        title = "Error while loading data from file"
-                        message = "The maximum number of rows to skip has been reached and no valid data has "
-                        message += "been found. Please, verify the data in the imported file to proceed."
-                        message += "Maximum number of header rows: 100"
-
-        except Exception as log_error:
-            title = "Error while loading data from file"
-            message = str(log_error)
+        if self.imported_data is None:
             return
         
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
+        self.organize_imported_results_according_to_file_type(self.imported_data)
+        self.update_treeWidget_info()
+    
+    def organize_imported_results_according_to_file_type(self, imported_data: List[ImportedData]): 
+        for data in imported_data:
+            key = len(self.imported_results)
+
+            if data.sheetname == "":
+                self.imported_results[key] = {
+                                              "data" : data.data,
+                                              "filename" : data.filename,
+                                              "extension" : data.extension
+                                              }
+
+            else:
+                self.imported_results[key] = {
+                                              "data" : data.data,
+                                              "filename" : data.filename,
+                                              "extension" : data.extension,
+                                              "sheetname" : data.sheetname
+                                              }
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
@@ -186,7 +118,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             for i, (id, data) in enumerate(self.imported_results.items()):
                 # Creates the QCheckButtons to control data to be plotted
                 self.ids_to_checkBox[id] = QCheckBox()
-                self.ids_to_checkBox[id].setStyleSheet("margin-left:40%; margin-right:50%;")
+
+                checkbox_conteiner = QWidget()
+                cointeiner_layout = QHBoxLayout(checkbox_conteiner)
+                cointeiner_layout.addStretch()
+                cointeiner_layout.addWidget(self.ids_to_checkBox[id])
+                cointeiner_layout.addStretch()
+                cointeiner_layout.setContentsMargins(0, 0, 0, 0)
 
                 if id in self.checkButtons_state.keys():
                     self.ids_to_checkBox[id].setChecked(self.checkButtons_state[id])
@@ -194,11 +132,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 if "sheetname" in data.keys():
                     _item = QTreeWidgetItem([str(data["filename"]), str(data["sheetname"])])
                     self.treeWidget_import_sheet_files.addTopLevelItem(_item)
-                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, self.ids_to_checkBox[id])
+                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, checkbox_conteiner)
+
+                    _item.setTextAlignment(2, Qt.AlignCenter)
                 else:
                     _item = QTreeWidgetItem([str(data["filename"])])
                     self.treeWidget_import_text_files.addTopLevelItem(_item)
-                    self.treeWidget_import_text_files.setItemWidget(_item, 1, self.ids_to_checkBox[id])                  
+                    self.treeWidget_import_text_files.setItemWidget(_item, 1, checkbox_conteiner)
 
                 for i in range(5):
                     _item.setTextAlignment(i, Qt.AlignCenter)
@@ -223,7 +163,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         for id, checkBox in self.ids_to_checkBox.items():
             
             checkBox: QCheckBox
-            aux = dict()
 
             if checkBox.isChecked():
 
@@ -231,15 +170,15 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                     color = self.colors[j]
                     j += 1
                 else:
-                    color = np.random.randint(0,255,3) / 255
+                    color = np.random.randint(0, 255, 3) / 255
 
                 data = self.imported_results[id]["data"]
-                cols = data.shape[1]
                 x_values = data[:, 0]
-                if cols == 2:
+
+                if data.shape[1] == 2:
                     y_values = data[:, 1]
                 else:
-                    y_values = data[:, 1] + 1j*data[:, 2]
+                    y_values = data[:, 1] + 1j * data[:, 2]
 
                 if "sheetname" in self.imported_results[id].keys():
                     sheetname = self.imported_results[id]["sheetname"]
@@ -249,21 +188,19 @@ class ImportDataToCompare(ImportDataToCompare_UI):
 
                 y_label = self.plotter.y_label.replace(" [dB]", "").split(" - ")[0]
 
-                aux = { 
-                       "type" : "imported_data",
-                       "x_data" : x_values,
-                       "y_data" : y_values,
-                       "x_label" : "Frequency [Hz]",
-                       "y_label" : y_label,
-                       "legend" : legend_label,
-                       "unit" : "",
-                       "title" : "",
-                       "color" : color,
-                       "linestyle" : "--" 
-                       }
-
                 key = (id)
-                imported_results_data[key] = aux
+                imported_results_data[key] = { 
+                                                "type" : "imported_data",
+                                                "x_data" : x_values,
+                                                "y_data" : y_values,
+                                                "x_label" : "Frequency [Hz]",
+                                                "y_label" : y_label,
+                                                "legend" : legend_label,
+                                                "unit" : "",
+                                                "title" : "",
+                                                "color" : color,
+                                                "linestyle" : "--" 
+                                                }
 
         self.plotter._set_imported_results_data_to_plot(imported_results_data)
 
@@ -277,6 +214,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.treeWidget_import_sheet_files.clear()
         self.treeWidget_import_text_files.clear()
         self._initialize()
+        self.plotter.reset_imported_results_data_to_plot()
 
     def add_imported_data_to_plot(self):
         self.join_imported_data()

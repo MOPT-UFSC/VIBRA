@@ -35,6 +35,7 @@
         <file>get_fluid_blue.png</file>
         <file>settings.png</file>
         <file>geometry_icon.png</file>
+        <file>resume_icon.png</file>
         <file>save.png</file>
         <file>warnings/transparent_warning.png</file>
         <file>warnings/error_red.png</file>
@@ -76,6 +77,7 @@
         <file>model_setup_items/reciprocating_compressor_excitation.png</file>
         <file>model_setup_items/nodal_loads.png</file>
         <file>model_setup_items/anechoic_termination.png</file>
+        <file>model_setup_items/error_red.png</file>
         <file>model_setup_items/material.png</file>
         <file>model_setup_items/perforated_plate_model.png</file>
         <file>model_setup_items/warning_yellow2.png</file>

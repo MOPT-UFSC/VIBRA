@@ -4,6 +4,10 @@ from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 from vibra.engine.properties.fluid import Fluid
 
 from typing import TYPE_CHECKING
+
+from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
+from vibra.project_files.project_file import ProjectFile
+
 if TYPE_CHECKING:
     from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 
@@ -15,8 +19,9 @@ from scipy.sparse import triu
 from time import time
 
 class AcousticHarmonicSolver:
-    def __init__(self, assembler: "AcousticAssembler", **kwargs):
+    def __init__(self, assembler: "AcousticAssembler", project_file: ProjectFile | None = None, **kwargs):
         self.assembler = assembler
+        self.project_file = project_file
         self.reset_variables()
 
 
@@ -92,7 +97,7 @@ class AcousticHarmonicSolver:
         return p_min, p_max
 
 
-    def solve(self, print_log: bool = False):
+    def solve(self, print_log: bool = False, is_resume: bool = False):
         """ 
         This method solves the acoustic harmonic analysis using the
         direct method for both damped and undamped problems.
@@ -105,6 +110,28 @@ class AcousticHarmonicSolver:
 
         logging.info(f"Solving harmonic analysis (direct method)... [10/100]")
 
+        frequencies = self.assembler.model.frequencies
+
+        if self.project_file:
+            num_rows = self.assembler.total_dofs
+            solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
+        else:
+            num_rows = self.assembler.stiffness_matrix.shape[0]
+            solution = np.zeros((num_rows, len(frequencies)), dtype=complex)
+
+        self.compute_frequency_sweep(solution, print_log, is_resume)
+
+        logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
+        if isinstance(solution, LazyHDF5MatrixWriter):
+            solution.close()
+            self.solution = self.project_file.get_solution_loader()
+        else:
+            # reinsert the prescribed degrees of freedom into the solution vector
+            self.solution = self.reinsert_the_prescribed_dofs_into_solution_matrix(solution)
+
+        return self.solution
+
+    def compute_frequency_sweep(self, solution, print_log, is_resume):
         self.get_min_max_values_of_pressures.cache_clear()
 
         # mass and stiffness matrices
@@ -114,7 +141,7 @@ class AcousticHarmonicSolver:
         # damping matrices
         C_imp = self.assembler.damping_matrix
         C_visc = self.assembler.visc_damping_matrix
-        
+
         # mass flow load vector
         f_Q = self.assembler.mass_flow_vectors
 
@@ -126,16 +153,12 @@ class AcousticHarmonicSolver:
 
         # process the prescribed values
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
-
-        rows = K.shape[0]
-        cols = len(frequencies)
-        solution = np.zeros((rows, cols), dtype=complex)
-
         frequency_dependent = self.assembler.frequency_dependent
-
         for i, freq in enumerate(frequencies):
-
-            logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i+1}/{len(frequencies)}]")
+            logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
+            
+            if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+                continue
 
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
@@ -167,6 +190,8 @@ class AcousticHarmonicSolver:
                 # initialize the solver based on data types
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
                 del A, f
+                if is_resume and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+                    continue
 
             else:
 
@@ -208,21 +233,18 @@ class AcousticHarmonicSolver:
             A = triu(A, format="csr")
 
             # compute the solution for each frequency step
-            solution[:, i] = linear_solver.solve(A, f)
+            solution_freq = linear_solver.solve(A, f)
+            if isinstance(solution, LazyHDF5MatrixWriter):
+                # reinsert the prescribed degrees of freedom into the solution vector
+                solution_freq = self.reinsert_the_prescribed_dofs_into_solution_freq(solution_freq, i)
+
+            solution[:, i] = solution_freq
 
             # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
             del A, f
 
-        logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
-
-        # reinsert the prescribed degrees of freedom into the solution vector
-        self.solution = self.reinsert_the_prescribed_degrees_of_freedoom(solution)
-
-        return self.solution
-
-
-    def reinsert_the_prescribed_degrees_of_freedoom(self, solution: np.ndarray):
+    def reinsert_the_prescribed_dofs_into_solution_matrix(self, solution: np.ndarray):
         """
         This method reinserts the value of the prescribed degree of freedom in the solution array.
 
@@ -247,6 +269,31 @@ class AcousticHarmonicSolver:
 
         return full_solution
 
+    def reinsert_the_prescribed_dofs_into_solution_freq(self, solution: np.ndarray, freq_index: int):
+        """
+        This method reinserts the value of the prescribed degree of freedom in the solution array.
+
+        Parameters
+        ----------
+        solution : np.ndarray
+            Solution data obtained from harmonic analysis using the direct method.
+        freq_index: int
+            Frequency index related to the input solution.
+
+        Returns
+        -------
+        full_solution: np.ndarray
+            An array that contains the solution of all the degrees of freedom.
+        """
+        rows = solution.shape[0] + len(self.prescribed_indexes)
+
+        full_solution = np.zeros(rows, dtype=complex)
+        full_solution[self.unprescribed_indexes] = solution
+
+        if len(self.prescribed_indexes):
+            full_solution[self.prescribed_indexes] = self.array_prescribed_values[:, freq_index]
+
+        return full_solution
 
     def get_prescribed_pressure_model_excitation(self, index: int = 0):
         """
@@ -313,15 +360,23 @@ class AcousticHarmonicSolver:
         frequencies = self.assembler.model.frequencies
         element_3d = self.assembler.model.acoustic_element_3d
 
+        if element_3d is None:
+            self.assembler.define_acoustic_elements()
+            element_3d = self.assembler.element_3d
+            element_3d.reorder_connect()
+
         data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
         solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id)
 
         pv_data = dict()
+
+        # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
+        nodal_pressures = self.solution[:, :]
         for node_id, solid_element_ids in solid_elements_connected_to_nodes.items():
 
             Vk = 0.
             for solid_element_id in solid_element_ids:
-                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, frequencies, self.solution)
+                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, frequencies, nodal_pressures)
 
             pv_data[node_id] = Vk / len(solid_element_ids)
 
@@ -678,6 +733,9 @@ class AcousticHarmonicSolver:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
         element_2d = self.assembler.element_2d
+        if element_2d is None:
+            self.assembler.define_acoustic_elements()
+            element_2d = self.assembler.element_2d
 
         sound_power = 0.
         for i, e_connect in enumerate(connectivities):
@@ -727,6 +785,9 @@ class AcousticHarmonicSolver:
             sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
 
         element_2d = self.assembler.element_2d
+        if element_2d is None:
+            self.assembler.define_acoustic_elements()
+            element_2d = self.assembler.element_2d
 
         sound_power = 0.
         for i, e_connect in enumerate(connectivities):
