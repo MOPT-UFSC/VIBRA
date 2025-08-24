@@ -17,7 +17,7 @@ from vibra.interface.model_inputs.acoustic.circular_duct_data import CircularDuc
 
 import warnings
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from enum import IntEnum
 from collections import defaultdict
 from copy import deepcopy
@@ -37,8 +37,8 @@ class TabType(IntEnum):
 class AttributionType(IntEnum):
     ALL_BODIES = 0
     SELECTED_BODIES = 1
-    SPHERE_MULT = 2
-    SPHERE_AVE = 3
+    # SPHERE_MULT = 2
+    # SPHERE_AVE = 3
 
 
 class SectionType(IntEnum):
@@ -61,7 +61,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
 
@@ -82,16 +81,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.material_model_data = dict()
         self.models: List[RectangularDuctData|CircularDuctData] = list()
 
-    def _configure_qt_variables(self):
-        self.lineEdit_center_coordinates.setDisabled(True)
-
     def _create_connections(self):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_section_type.currentIndexChanged.connect(self.rectangular_section_type_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
-        self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
+        # self.doubleSpinBox_selection_radius.valueChanged.connect(self.call_sphere_plotter)
         #
         self.lineEdit_width_rectangular.textChanged.connect(self.update_rectangular_duct_area)
         self.lineEdit_height_rectangular.textChanged.connect(self.update_rectangular_duct_area)
@@ -102,7 +98,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
-        self.pushButton_selection_info.clicked.connect(self.get_selection_information)
+        # self.pushButton_selection_info.clicked.connect(self.get_selection_information)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -136,9 +132,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def _config_widgets(self):
         #
-        self.lineEdit_center_coordinates.setDisabled(True)
+        # self.lineEdit_center_coordinates.setDisabled(True)
         #
-        for i, w in enumerate([150, 150, 100]):
+        for i, w in enumerate([250, 250]):
             self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
             self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -200,13 +196,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if property == "viscous_thermal_model":
                 volume_ids.append(volume_id)
 
-        group_ids = list()
-        for key, data in self.properties.group_properties.items():
-            property, group_id = key
-            if property == "viscous_thermal_model":
-                group_ids.append(group_id)
+        # group_ids = list()
+        # for key, data in self.properties.group_properties.items():
+        #     property, group_id = key
+        #     if property == "viscous_thermal_model":
+        #         group_ids.append(group_id)
 
-        if volume_ids or group_ids:
+        if volume_ids:
 
             self.hide()
 
@@ -224,8 +220,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("viscous_thermal_model", volume_id)
 
-                for group_id in group_ids:
-                    self.properties._remove_group_property("viscous_thermal_model", group_id)
+                # for group_id in group_ids:
+                #     self.properties._remove_group_property("viscous_thermal_model", group_id)
 
                 self.models = list()
                 app().file.write_model_properties_in_file()
@@ -244,11 +240,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.frame_plot_buttons.setDisabled(True)
 
             self.label_12.setDisabled(True)
-            self.label_selection_type_5.setDisabled(True)
-            self.label_selection_type_2.setDisabled(True)
-            self.label_diameter_3.setDisabled(True)
-            self.label_unit.setDisabled(True)
-            self.label_unit_5.setDisabled(True)
+            # self.label_selection_type_5.setDisabled(True)
+            # self.label_selection_type_2.setDisabled(True)
+            # self.label_diameter_3.setDisabled(True)
+            # self.label_unit.setDisabled(True)
+            # self.label_unit_5.setDisabled(True)
 
         else:
             current_index = self.comboBox_attribution_type.currentIndex()
@@ -278,7 +274,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-        self.get_lrf_info()
+        # self.get_lrf_info()
 
     def rectangular_section_type_callback(self):
 
@@ -303,51 +299,51 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def attribution_type_callback(self):
 
-        self.comboBox_filter_type.setDisabled(True)
-        self.doubleSpinBox_selection_radius.setDisabled(True)
-        self.pushButton_selection_info.setDisabled(True)
+        # self.comboBox_filter_type.setDisabled(True)
+        # self.doubleSpinBox_selection_radius.setDisabled(True)
+        # self.pushButton_selection_info.setDisabled(True)
 
         attribution_type = self.comboBox_attribution_type.currentIndex()
-        if attribution_type == 0:
+        if attribution_type == AttributionType.ALL_BODIES:
             self.lineEdit_selection_id.setText("All bodies")
-            self.lineEdit_selection_id.setEnabled(False)
-            self.hide_sphere()
+            # self.lineEdit_selection_id.setEnabled(False)
+            # self.hide_sphere()
 
-            self.label_12.setDisabled(True)
-            self.label_selection_type_5.setDisabled(True)
-            self.label_selection_type_2.setDisabled(True)
-            self.label_diameter_3.setDisabled(True)
-            self.label_unit.setDisabled(True)
-            self.label_unit_5.setDisabled(True)
+            # self.label_12.setDisabled(True)
+            # self.label_selection_type_5.setDisabled(True)
+            # self.label_selection_type_2.setDisabled(True)
+            # self.label_diameter_3.setDisabled(True)
+            # self.label_unit.setDisabled(True)
+            # self.label_unit_5.setDisabled(True)
 
-        elif attribution_type == 1:
+        elif attribution_type == AttributionType.SELECTED_BODIES:
             volumes = app().main_window.selected_geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
 
             self.lineEdit_selection_id.setEnabled(True)
             self.label_12.setDisabled(False)
-            self.hide_sphere()
+            # self.hide_sphere()
 
-        elif attribution_type in [2, 3]:
-            if app().main_window.selected_geometry_volumes:
-                self.lineEdit_selection_id.setText("")
-                app().main_window.set_geometry_selection()
+        # elif attribution_type in [2, 3]:
+        #     if app().main_window.selected_geometry_volumes:
+        #         self.lineEdit_selection_id.setText("")A
+        #         app().main_window.set_geometry_selection()
 
-            surfaces = app().main_window.selected_geometry_surfaces
-            if not surfaces or self.lineEdit_selection_id.text() == "All bodies":
-                self.lineEdit_selection_id.setText("")
+        #     surfaces = app().main_window.selected_geometry_surfaces
+        #     if not surfaces or self.lineEdit_selection_id.text() == "All bodies":
+        #         self.lineEdit_selection_id.setText("")
 
-            self.comboBox_filter_type.setEnabled(True)
-            self.doubleSpinBox_selection_radius.setEnabled(True)
-            self.pushButton_selection_info.setEnabled(True)
+        #     self.comboBox_filter_type.setEnabled(True)
+        #     self.doubleSpinBox_selection_radius.setEnabled(True)
+        #     self.pushButton_selection_info.setEnabled(True)
 
-            self.label_12.setDisabled(False)
-            self.label_selection_type_5.setDisabled(False)
-            self.label_selection_type_2.setDisabled(False)
-            self.label_unit.setDisabled(False)
+        #     self.label_12.setDisabled(False)
+        #     self.label_selection_type_5.setDisabled(False)
+        #     self.label_selection_type_2.setDisabled(False)
+        #     self.label_unit.setDisabled(False)
 
-            self.call_sphere_plotter()
+        #     self.call_sphere_plotter()
     
     def cell_changed_callback(self, row: int, column: int, section_type: str):
         item = None
@@ -393,27 +389,27 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for volume in volumes:
                     self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
             
-            else:
-                for key, data in self.properties.group_properties.copy().items():
-                    _, group_id = key
+            # else:
+            #     for key, data in self.properties.group_properties.copy().items():
+            #         _, group_id = key
 
-                    if model_id != data["model_id"]:
-                        continue
+            #         if model_id != data["model_id"]:
+            #             continue
 
-                    group_model_data = deepcopy(model_data)
+            #         group_model_data = deepcopy(model_data)
                     
-                    keys = ["surface_ids", "selection_radius", "averaged", "filter_type"]
-                    for _key in keys:
-                        group_model_data[_key] = data[_key]
+            #         keys = ["surface_ids", "selection_radius", "averaged", "filter_type"]
+            #         for _key in keys:
+            #             group_model_data[_key] = data[_key]
 
-                    self.properties._set_property("viscous_thermal_model", group_model_data, group=group_id)
+            #         self.properties._set_property("viscous_thermal_model", group_model_data, group=group_id)
             
             app().file.write_model_properties_in_file()
     
     def map_existing_viscous_thermal_loss_models(self):
         self.map_model_id_to_models: Dict[int, List[RectangularDuctData|CircularDuctData]] = defaultdict(list)
         self.map_model_id_to_volumes: Dict[int, List[int]] = defaultdict(list)
-        self.map_model_id_to_groups: Dict[int, List[int]] = defaultdict(list)
+        # self.map_model_id_to_groups: Dict[int, List[int]] = defaultdict(list)
 
         for key, data in self.properties.volume_properties.items():
 
@@ -435,45 +431,45 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
         
-        for key, data in self.properties.group_properties.items():
+        # for key, data in self.properties.group_properties.items():
 
-            property, group_id = key
-            if property == "viscous_thermal_model":
+        #     property, group_id = key
+        #     if property == "viscous_thermal_model":
                 
-                model = None
-                section_type = data["section_type"]
+        #         model = None
+        #         section_type = data["section_type"]
                 
-                if section_type in ["Rectangular duct", "Quadrangular duct", "Narrow slit duct"]:
-                    model = RectangularDuctData.set_data(data)
-                else:
-                    model = CircularDuctData.set_data(data)
+        #         if section_type in ["Rectangular duct", "Quadrangular duct", "Narrow slit duct"]:
+        #             model = RectangularDuctData.set_data(data)
+        #         else:
+        #             model = CircularDuctData.set_data(data)
                                 
-                if model not in self.models:
-                    self.models.append(model)
+        #         if model not in self.models:
+        #             self.models.append(model)
 
-                model_id = data["model_id"]
-                self.map_model_id_to_models[model_id] = model
-                self.map_model_id_to_groups[model_id].append(group_id)
+        #         model_id = data["model_id"]
+        #         self.map_model_id_to_models[model_id] = model
+        #         self.map_model_id_to_groups[model_id].append(group_id)
             
     def update_viscous_thermall_loss_tree_widget(self):
         self.treeWidget_viscous_thermal_model.clear()
 
         for model_id, volumes_ids in self.map_model_id_to_volumes.items():
                 for volume_id in volumes_ids:
-                    new = QTreeWidgetItem(["Volume", str(volume_id), str(model_id)])
+                    new = QTreeWidgetItem([str(volume_id), str(model_id)])
                     for i in range(3):
                         new.setTextAlignment(i, Qt.AlignCenter)
 
                     self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
 
-        for model_id, groups_ids in self.map_model_id_to_groups.items():
-                for group_id in groups_ids:
+        # for model_id, groups_ids in self.map_model_id_to_groups.items():
+        #         for group_id in groups_ids:
                 
-                    new = QTreeWidgetItem(["Group", str(group_id), str(model_id)])
-                    for i in range(3):
-                        new.setTextAlignment(i, Qt.AlignCenter)
+        #             new = QTreeWidgetItem(["Group", str(group_id), str(model_id)])
+        #             for i in range(3):
+        #                 new.setTextAlignment(i, Qt.AlignCenter)
 
-                    self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
+        #             self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
     
     def configure_tables_and_tabs_widgets(self):
         rectangular_duct_counter = 0
@@ -610,11 +606,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
-        for key, _ in self.properties.group_properties.items():
-            property, _ = key
-            if property == "viscous_thermal_model":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+        # for key, _ in self.properties.group_properties.items():
+        #     property, _ = key
+        #     if property == "viscous_thermal_model":
+        #         self.tabWidget_main.setTabVisible(2, True)
+        #         return
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
@@ -625,139 +621,139 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        # faces = app().main_window.selected_geometry_surfaces
         volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
-            self.lineEdit_center_coordinates.setText("---")
+            # self.lineEdit_center_coordinates.setText("---")
             if self.comboBox_attribution_type.currentIndex() != AttributionType.SELECTED_BODIES:
                 self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
-            self.hide_sphere()
+            # self.hide_sphere()
 
-        elif faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
-            if self.comboBox_attribution_type.currentIndex() in [AttributionType.ALL_BODIES, AttributionType.SELECTED_BODIES]:
-                self.comboBox_attribution_type.setCurrentIndex(AttributionType.SPHERE_MULT)
-            else:
-                self.call_sphere_plotter()
+        # elif faces:
+        #     text = ", ".join([str(i) for i in faces])
+        #     self.lineEdit_selection_id.setText(text)
+        #     if self.comboBox_attribution_type.currentIndex() in [AttributionType.ALL_BODIES, AttributionType.SELECTED_BODIES]:
+        #         self.comboBox_attribution_type.setCurrentIndex(AttributionType.SPHERE_MULT)
+        #     else:
+        #         self.call_sphere_plotter()
 
         else:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_center_coordinates.setText("")
-            self.hide_sphere()
+            # self.lineEdit_center_coordinates.setText("")
+            # self.hide_sphere()
 
-    def get_center_coordinates(self):
+    # def get_center_coordinates(self):
 
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+    #     input_ids = self.lineEdit_selection_id.text()
+    #     surface_ids, error_data = self.mesh.check_selected_ids(
+    #                                                            input_ids, 
+    #                                                            selection = "surfaces"
+    #                                                            )
 
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return list()
+    #     if error_data is not None:
+    #         self.hide()
+    #         self.lineEdit_selection_id.setFocus()
+    #         PrintMessageInput(error_data)
+    #         return list()
         
-        selection_index = self.comboBox_attribution_type.currentIndex()
+    #     selection_index = self.comboBox_attribution_type.currentIndex()
 
-        if not surface_ids or selection_index == AttributionType.ALL_BODIES:
-            self.lineEdit_center_coordinates.setText("")
-            return list()
+    #     if not surface_ids or selection_index == AttributionType.ALL_BODIES:
+    #         self.lineEdit_center_coordinates.setText("")
+    #         return list()
 
-        averaged_selection = False
-        if selection_index == AttributionType.SPHERE_AVE:
-            averaged_selection = True
+    #     averaged_selection = False
+    #     if selection_index == AttributionType.SPHERE_AVE:
+    #         averaged_selection = True
 
-        center_coords = self.mesh.get_average_nodal_coordinates(surface_ids, averaged=averaged_selection)
-        if averaged_selection:
-            try:
-                str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
-                self.lineEdit_center_coordinates.setText(str_center_coords)
-            except:
-                self.lineEdit_center_coordinates.setText("")
-                return list()
+    #     center_coords = self.mesh.get_average_nodal_coordinates(surface_ids, averaged=averaged_selection)
+    #     if averaged_selection:
+    #         try:
+    #             str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
+    #             self.lineEdit_center_coordinates.setText(str_center_coords)
+    #         except:
+    #             self.lineEdit_center_coordinates.setText("")
+    #             return list()
 
-        else:
-            if len(center_coords) == 1:
-                try:
-                    str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
-                    self.lineEdit_center_coordinates.setText(str_center_coords)
-                except:
-                    self.lineEdit_center_coordinates.setText("")
-                    return list()
-            else:
-                self.lineEdit_center_coordinates.setText("Multiple centers")
+    #     else:
+    #         if len(center_coords) == 1:
+    #             try:
+    #                 str_center_coords = f"{center_coords[0][0]: .4f}, {center_coords[0][1]: .4f}, {center_coords[0][2]: .4f}"
+    #                 self.lineEdit_center_coordinates.setText(str_center_coords)
+    #             except:
+    #                 self.lineEdit_center_coordinates.setText("")
+    #                 return list()
+    #         else:
+    #             self.lineEdit_center_coordinates.setText("Multiple centers")
 
-        return center_coords
+    #     return center_coords
 
-    def call_sphere_plotter(self):
+    # def call_sphere_plotter(self):
 
-        if self.lineEdit_selection_id.text() == "":
-            return
+    #     if self.lineEdit_selection_id.text() == "":
+    #         return
 
-        if self.comboBox_attribution_type.currentIndex() in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
+    #     if self.comboBox_attribution_type.currentIndex() in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
 
-            self.selection_radius = self.doubleSpinBox_selection_radius.value()
-            center_coords = self.get_center_coordinates()
+    #         self.selection_radius = self.doubleSpinBox_selection_radius.value()
+    #         center_coords = self.get_center_coordinates()
 
-            if not center_coords:
-                return
+    #         if not center_coords:
+    #             return
 
-            if len(center_coords):
-                all_radius = [self.selection_radius for _ in center_coords]
-                geometry_widget = app().main_window.geometry_widget
-                geometry_widget.set_selection_spheres(center_coords, all_radius)
+    #         if len(center_coords):
+    #             all_radius = [self.selection_radius for _ in center_coords]
+    #             geometry_widget = app().main_window.geometry_widget
+    #             geometry_widget.set_selection_spheres(center_coords, all_radius)
 
-                mesh_widget = app().main_window.mesh_widget
-                mesh_widget.set_selection_spheres(center_coords, all_radius)
+    #             mesh_widget = app().main_window.mesh_widget
+    #             mesh_widget.set_selection_spheres(center_coords, all_radius)
 
-    def hide_sphere(self):
-        geometry_widget = app().main_window.geometry_widget
-        geometry_widget.clear_selection_spheres()
-        mesh_widget = app().main_window.mesh_widget
-        mesh_widget.clear_selection_spheres()
+    # def hide_sphere(self):
+    #     geometry_widget = app().main_window.geometry_widget
+    #     geometry_widget.clear_selection_spheres()
+    #     mesh_widget = app().main_window.mesh_widget
+    #     mesh_widget.clear_selection_spheres()
 
-    def get_selection_information(self):
+    # def get_selection_information(self):
 
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+    #     input_ids = self.lineEdit_selection_id.text()
+    #     surface_ids, error_data = self.mesh.check_selected_ids(
+    #                                                            input_ids, 
+    #                                                            selection = "surfaces"
+    #                                                            )
 
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return
+    #     if error_data is not None:
+    #         self.hide()
+    #         self.lineEdit_selection_id.setFocus()
+    #         PrintMessageInput(error_data)
+    #         return
 
-        index = self.comboBox_attribution_type.currentIndex()
-        if index in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
+    #     index = self.comboBox_attribution_type.currentIndex()
+    #     if index in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
 
-            selection_radius = self.doubleSpinBox_selection_radius.value()
+    #         selection_radius = self.doubleSpinBox_selection_radius.value()
             
-            averaged_selection = False
-            if index == AttributionType.SPHERE_AVE:
-                averaged_selection = True
+    #         averaged_selection = False
+    #         if index == AttributionType.SPHERE_AVE:
+    #             averaged_selection = True
 
-            if self.generate_mesh():
-                return
+    #         if self.generate_mesh():
+    #             return
             
-            self.hide()
-            filter_type = self.comboBox_filter_type.currentIndex()
+    #         self.hide()
+    #         filter_type = self.comboBox_filter_type.currentIndex()
 
-            GetSphereSelectionInformation(  surface_ids,
-                                            selection_radius,
-                                            averaged_selection,
-                                            filter_type  )
+    #         GetSphereSelectionInformation(  surface_ids,
+    #                                         selection_radius,
+    #                                         averaged_selection,
+    #                                         filter_type  )
 
-            app().main_window.set_input_widget(self)
-            app().main_window.action_model_workspace_callback()
+    #         app().main_window.set_input_widget(self)
+    #         app().main_window.action_model_workspace_callback()
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
@@ -851,85 +847,85 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             
             model_data = model.get_data()
             
-            self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
+            # self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
 
             model_data["model_id"] = len(self.models)
             
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
-        elif assignment_type in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
+        # elif assignment_type in [AttributionType.SPHERE_MULT, AttributionType.SPHERE_AVE]:
 
-            averaged_selection = False
-            if assignment_type == AttributionType.SPHERE_AVE:
-                averaged_selection = True
+        #     averaged_selection = False
+        #     if assignment_type == AttributionType.SPHERE_AVE:
+        #         averaged_selection = True
 
-            filter_type = self.comboBox_filter_type.currentIndex()
+        #     filter_type = self.comboBox_filter_type.currentIndex()
 
-            surface_ids = self.main_window.selected_geometry_surfaces
-            group_id = self.get_lrf_group_index(surface_ids)
-            self.selection_radius = self.doubleSpinBox_selection_radius.value()
+        #     surface_ids = self.main_window.selected_geometry_surfaces
+        #     group_id = self.get_lrf_group_index(surface_ids)
+        #     self.selection_radius = self.doubleSpinBox_selection_radius.value()
 
-            if model not in self.models:
-                self.models.append(model)
+        #     if model not in self.models:
+        #         self.models.append(model)
 
-            model_data = model.get_data()
-            model_data["surface_ids"] = list(surface_ids)
-            model_data["selection_radius"] = self.selection_radius
-            model_data["averaged"] = averaged_selection
-            model_data["filter_type"] = filter_type
+        #     model_data = model.get_data()
+        #     model_data["surface_ids"] = list(surface_ids)
+        #     model_data["selection_radius"] = self.selection_radius
+        #     model_data["averaged"] = averaged_selection
+        #     model_data["filter_type"] = filter_type
 
-            self.verify_and_remove_model_conflicts_if_it_exists(model_data)
+        #     self.verify_and_remove_model_conflicts_if_it_exists(model_data)
 
-            model_data["model_id"] = len(self.models)
+        #     model_data["model_id"] = len(self.models)
 
-            self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
+        #     self.properties._set_property("viscous_thermal_model", model_data, group=group_id)
 
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.load_info()
     
-    def verify_and_remove_model_conflicts_if_it_exists(self, model_data: dict, volume_ids: List[int]=None):
+    # def verify_and_remove_model_conflicts_if_it_exists(self, model_data: dict, volume_ids: List[int]=None):
 
-        if volume_ids:
+    #     if volume_ids:
         
-            if not self.properties.group_properties:
-                return
+    #         if not self.properties.group_properties:
+    #             return
 
-            surfaces = set()
-            for volume_id in volume_ids:
-                surfaces = surfaces.union(self.mesh.surfaces_from_volume[volume_id])
+    #         surfaces = set()
+    #         for volume_id in volume_ids:
+    #             surfaces = surfaces.union(self.mesh.surfaces_from_volume[volume_id])
             
-            for surface in surfaces:
-                for key, group_data in self.properties.group_properties.copy().items():
-                    _, group_id = key
-                    if surface in group_data["surface_ids"]:
-                        self.properties._remove_group_property("viscous_thermal_model", group_id)
+    #         for surface in surfaces:
+    #             for key, group_data in self.properties.group_properties.copy().items():
+    #                 _, group_id = key
+    #                 if surface in group_data["surface_ids"]:
+    #                     self.properties._remove_group_property("viscous_thermal_model", group_id)
 
-                        for model_id, group_ids in self.map_model_id_to_groups.items():
-                            if group_id in group_ids and len(group_ids) == 1:
-                                model = self.map_model_id_to_models[model_id]
+    #                     for model_id, group_ids in self.map_model_id_to_groups.items():
+    #                         if group_id in group_ids and len(group_ids) == 1:
+    #                             model = self.map_model_id_to_models[model_id]
 
-                                if model in self.models:
-                                    self.models.remove(model)
+    #                             if model in self.models:
+    #                                 self.models.remove(model)
 
-        elif self.map_model_id_to_volumes:
+    #     elif self.map_model_id_to_volumes:
 
-            volumes = set()
-            for surface in model_data["surface_ids"]:
-                volumes = volumes.union(self.mesh.volumes_from_surface[surface])
+    #         volumes = set()
+    #         for surface in model_data["surface_ids"]:
+    #             volumes = volumes.union(self.mesh.volumes_from_surface[surface])
                                     
-            for volume in volumes:
-                for mapped_volumes in self.map_model_id_to_volumes.values():
-                    if volume in mapped_volumes:
-                        self.properties._remove_volume_property("viscous_thermal_model", volume)
+    #         for volume in volumes:
+    #             for mapped_volumes in self.map_model_id_to_volumes.values():
+    #                 if volume in mapped_volumes:
+    #                     self.properties._remove_volume_property("viscous_thermal_model", volume)
                     
-                        for model_id, volumes in self.map_model_id_to_volumes.items():
-                            if volume in volumes and len(volumes) == 1:
-                                model = self.map_model_id_to_models[model_id]
+    #                     for model_id, volumes in self.map_model_id_to_volumes.items():
+    #                         if volume in volumes and len(volumes) == 1:
+    #                             model = self.map_model_id_to_models[model_id]
 
-                                if model in self.models:
-                                    self.models.remove(model)
+    #                             if model in self.models:
+    #                                 self.models.remove(model)
             
     def check_inputs(self, lineEdit, label, _float=True):
 
@@ -966,55 +962,55 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         else:
             return out, False
 
-    def get_lrf_group_index(self, surface_ids):
-        keys = list()
+    # def get_lrf_group_index(self, surface_ids):
+    #     keys = list()
 
-        for key, data in self.properties.group_properties.items():
-            property, group_id = key
-            if property == "viscous_thermal_model":
+    #     for key, data in self.properties.group_properties.items():
+    #         property, group_id = key
+    #         if property == "viscous_thermal_model":
 
-                for surface_id in surface_ids:
-                    if surface_id in data["surface_ids"]:
+    #             for surface_id in surface_ids:
+    #                 if surface_id in data["surface_ids"]:
 
-                        model = self.map_model_id_to_models[data["model_id"]]
-                        self.models.remove(model)
+    #                     model = self.map_model_id_to_models[data["model_id"]]
+    #                     self.models.remove(model)
                         
-                        return group_id
+    #                     return group_id
                 
-                if group_id not in keys:
-                    keys.append(group_id)
+    #             if group_id not in keys:
+    #                 keys.append(group_id)
 
-        index = 1
-        while index in keys:
-            index += 1
+    #     index = 1
+    #     while index in keys:
+    #         index += 1
 
-        return index
+    #     return index
 
-    def get_lrf_info(self):
+    # def get_lrf_info(self):
 
-        # TODO: review this method
+    #     # TODO: review this method
 
-        try:
-            input_id = self.lineEdit_selection_id.text()
-            selected_id = int(input_id)
-        except:
-            return
+    #     try:
+    #         input_id = self.lineEdit_selection_id.text()
+    #         selected_id = int(input_id)
+    #     except:
+    #         return
 
-        self.hide()
-        def get_info(data: dict):
-            GetSphereSelectionInformation(  data["surface_ids"],
-                                            data["selection_radius"],
-                                            data["averaged"],
-                                            data["filter_type"]  )
+    #     self.hide()
+    #     def get_info(data: dict):
+    #         GetSphereSelectionInformation(  data["surface_ids"],
+    #                                         data["selection_radius"],
+    #                                         data["averaged"],
+    #                                         data["filter_type"]  )
 
-            app().main_window.set_input_widget(self)
-            app().main_window.action_model_workspace_callback()
+    #         app().main_window.set_input_widget(self)
+    #         app().main_window.action_model_workspace_callback()
 
-        group_properties = self.properties.group_properties.copy()
-        for key, data in group_properties.items():
-            property, group_id = key
-            if property == "viscous_thermal_model" and int(selected_id) == group_id:
-                return get_info(data)
+        # group_properties = self.properties.group_properties.copy()
+        # for key, data in group_properties.items():
+        #     property, group_id = key
+        #     if property == "viscous_thermal_model" and int(selected_id) == group_id:
+        #         return get_info(data)
 
         # volume_properties = self.properties.volume_properties.copy()
         # for key, data in volume_properties.items():
@@ -1022,11 +1018,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         #     if property == "viscous_thermal_model" and int(picked_id) == volume_id:
         #         return get_info()
 
-    def hide_sphere(self):
-        geometry_widget = app().main_window.geometry_widget
-        geometry_widget.clear_selection_spheres()
-        mesh_widget = app().main_window.mesh_widget
-        mesh_widget.clear_selection_spheres()
+    # def hide_sphere(self):
+    #     geometry_widget = app().main_window.geometry_widget
+    #     geometry_widget.clear_selection_spheres()
+    #     mesh_widget = app().main_window.mesh_widget
+    #     mesh_widget.clear_selection_spheres()
 
     # Plot viscous_thermal effective properties
 
@@ -1247,7 +1243,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
-        self.hide_sphere()
+        # self.hide_sphere()
         try:
             warnings.filterwarnings('default')
             app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
