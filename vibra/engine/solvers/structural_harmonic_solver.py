@@ -1,6 +1,5 @@
 
 from vibra.engine.solvers.linear_solver import initialize_solver, SolverType
-from vibra.engine import AnalysisID
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -206,6 +205,8 @@ class StructuralHarmonicSolver:
 
         logging.info(f"Solving harmonic analysis... [0/{len(frequencies)}]")
 
+        linear_solver = initialize_solver(SolverType.PARDISO)
+
         for i, freq in enumerate(frequencies):
             logging.info(f"Solution step {i+1} and frequency {freq} Hz [{i}/{cols}]")
 
@@ -217,24 +218,8 @@ class StructuralHarmonicSolver:
             f_eq = self.get_prescribed_dofs_model_excitation(index=i)
             f = structural_loads[:, i] - f_eq
 
-            if i == 0:
-                # evaluates A matrix for omega = 1
-                A = (-1 + 1j*alpha) * M + (1 + 1j*(eta + beta)) * K
-
-                is_A_complex = np.any(np.imag(A.data))
-                is_F_complex = np.any(np.imag(f))
-                is_complex = is_A_complex or is_F_complex
-
-                linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
-                del A
-
             A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K 
 
-            if not is_complex:
-                A.data = np.real(A.data)
-                f = np.real(f)
-
-            A = triu(A, format="csr")
             solution[:, i] = linear_solver.solve(A, f)
 
             linear_solver.clear_memory()

@@ -15,7 +15,6 @@ import logging
 import numpy as np
 
 from functools import cache
-from scipy.sparse import triu
 from time import time
 
 class AcousticHarmonicSolver:
@@ -155,10 +154,13 @@ class AcousticHarmonicSolver:
         self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
 
         frequency_dependent = self.assembler.frequency_dependent
-
+        
+        # initialize the solver
+        linear_solver = initialize_solver(SolverType.PARDISO)
+        
         for i, freq in enumerate(frequencies):
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
-            
+
             if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
                 continue
 
@@ -168,56 +170,26 @@ class AcousticHarmonicSolver:
             # create the frequency vector
             omega = 2 * np.pi * freq
 
-            if i == 0:
+            # update the damping matrix [C]
+            self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
+            C_imp = self.assembler.damping_matrix
+            C = C_imp + C_visc
 
-                # compute the mass source load vector
-                f_Qms = self.assembler.compute_mass_source_load_vector(1)
+            if frequency_dependent:
+                # reassemble the global mass and stiffness matrices
+                factor_K, factor_M = self.assembler.compute_global_matrices_factors(index=i)
+                self.assembler.assemble_global_mass_matrix(factor_M)
+                self.assembler.assemble_global_stiffness_matrix(factor_K)
 
-                # compute the prescribed dofs-related load vector
-                f_eq = self.assembler.get_prescribed_pressure_model_excitation(self.array_prescribed_values)
+                M = self.assembler.mass_matrix
+                K = self.assembler.stiffness_matrix
 
-                # compute the load vector f for omega = 1
-                f = f_Qms - 1j * f_Q[:, i] - f_eq
+                # reassemble the mass source matrices
+                self.assembler.assemble_mass_source_matrices_from_surfaces(index=i)
+                self.assembler.assemble_mass_source_matrices_from_volumes(index=i)
 
-                # compose the damping matrix [C]
-                C = C_imp + C_visc
-
-                # computes the A matrix for omega = 1
-                A = K - M + 1j * C
-
-                is_A_complex = np.any(np.imag(A.data))
-                is_f_complex = np.any(np.imag(f)) or np.any(np.imag(f_eq)) or np.any(np.imag(f_Qms))
-                is_complex = is_A_complex or is_f_complex
-
-                # initialize the solver based on data types
-                linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
-                del A, f
-                if is_resume and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
-                    continue
-
-            else:
-
-                # update the damping matrix [C]
-                self.assembler.assemble_global_damping_matrix_2d_elements(index=i)
-                C_imp = self.assembler.damping_matrix
-                C = C_imp + C_visc
-
-                if frequency_dependent:
-
-                    # reassemble the global mass and stiffness matrices
-                    factor_K, factor_M = self.assembler.compute_global_matrices_factors(index=i)
-                    self.assembler.assemble_global_mass_matrix(factor_M)
-                    self.assembler.assemble_global_stiffness_matrix(factor_K)
-
-                    M = self.assembler.mass_matrix
-                    K = self.assembler.stiffness_matrix
-
-                    # reassemble the mass source matrices
-                    self.assembler.assemble_mass_source_matrices_from_surfaces(index=i)
-                    self.assembler.assemble_mass_source_matrices_from_volumes(index=i)
-
-                # update the prescribed dofs-related load vector for each frequency step
-                f_eq = self.assembler.get_prescribed_pressure_model_excitation(self.array_prescribed_values, index=i)
+            # update the prescribed dofs-related load vector for each frequency step
+            f_eq = self.assembler.get_prescribed_pressure_model_excitation(self.array_prescribed_values, index=i)
 
             # compute the mass source load vector
             f_Qms = self.assembler.compute_mass_source_load_vector(omega, index=i)
@@ -225,14 +197,6 @@ class AcousticHarmonicSolver:
             # define the linear system equation terms [A]{x} = {f}
             A = K - (omega**2) * M + 1j * omega * C
             f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
-
-            if not is_complex:
-                A.data = np.real(A.data)
-                f = np.real(f)
-
-            # convert the symmetric matrix [A] into an upper triangular matrix to enhance the solver's
-            # performance and reduce the amount of memory required to compute the solution
-            A = triu(A, format="csr")
 
             # compute the solution for each frequency step
             solution_freq = linear_solver.solve(A, f)
