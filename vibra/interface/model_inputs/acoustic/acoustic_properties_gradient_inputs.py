@@ -1,4 +1,5 @@
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLineEdit
+from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -26,12 +27,12 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self._initialize()
         self._config_window()
-        self._create_connections()
-        # self._config_widgets()
+        self._config_widgets()
 
-        # self.load_info()
+        self._initialize()
+        self._create_connections()
+        self.load_model_info()
 
         while self.keep_window_open:
             self.exec()
@@ -41,6 +42,9 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+
+    def _config_widgets(self):
+        self.current_line_edit = None
 
     def _initialize(self):
         self.selected_fluid = None
@@ -65,9 +69,113 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
+        self.clickable(self.lineEdit_selection_id).connect(self.lineEdit_selection_id_clicked)
+        self.clickable(self.lineEdit_start_coords).connect(self.lineEdit_start_coords_clicked)
+        self.clickable(self.lineEdit_end_coords).connect(self.lineEdit_end_coords_clicked)
+        #
         self.geometry_selection_callback()
         self.attribution_type_callback()
 
+    def geometry_selection_callback(self):
+
+        nodes = app().main_window.selected_mesh_nodes
+        points = app().main_window.selected_geometry_points
+        lines = app().main_window.selected_geometry_lines
+        surfaces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selected_geometry_volumes
+
+        if self.current_line_edit == self.lineEdit_selection_id:
+            if volumes:
+                text = ", ".join([str(i) for i in volumes])
+                self.lineEdit_selection_id.setText(text)
+                if self.comboBox_attribution_type.currentIndex() != 1:
+                    self.comboBox_attribution_type.setCurrentIndex(1)
+            return
+        
+        if volumes:
+            if len(volumes):
+                volume_id = list(volumes)[0]
+                nodes_from_volume = self.mesh.nodes_from_volumes.get(volume_id)
+                avg_coords = np.average(self.mesh.nodal_coordinates[nodes_from_volume, 1:], axis=0)
+                round_coords = np.round(avg_coords, 4)
+
+        elif surfaces:
+            if len(surfaces) == 1:
+                surface_id = list(surfaces)[0]
+                nodes_from_surface = self.mesh.nodes_from_surfaces.get(surface_id)
+                avg_coords = np.average(self.mesh.nodal_coordinates[nodes_from_surface, 1:], axis=0)
+                round_coords = np.round(avg_coords, 4)
+
+        elif lines:
+            if len(lines) == 1:
+                line_id = list(lines)[0]
+                nodes_from_line = self.mesh.nodes_from_lines.get(line_id)
+                avg_coords = np.average(self.mesh.nodal_coordinates[nodes_from_line, 1:], axis=0)
+                round_coords = np.round(avg_coords, 4)
+
+        elif points:
+            if len(points) == 1:
+                point_id = list(points)[0]
+                node_id = self.mesh.nodes_from_points.get(point_id)
+                if node_id is None:
+                    return
+                round_coords = np.round(self.mesh.nodal_coordinates[node_id, 1:], 4)
+
+        elif nodes:
+            if len(nodes) == 1:
+                node_id = list(nodes)[0]
+                round_coords = np.round(self.mesh.nodal_coordinates[node_id, 1:], 4)
+
+        else:
+            return
+        
+        point_coords = f"({round_coords[0]}, {round_coords[1]}, {round_coords[2]})"
+        self.current_line_edit.setText(point_coords)
+
+
+    def clickable(self, widget: QLineEdit):
+        class Filter(QObject):
+            clicked = Signal()
+
+            def eventFilter(self, obj, event):
+                if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
+                    self.clicked.emit()
+                    return True
+                else:
+                    return False
+
+        filter = Filter(widget)
+        widget.installEventFilter(filter)
+        return filter.clicked
+
+    def lineEdit_selection_id_clicked(self):
+        app().main_window.set_geometry_selection()
+        self.current_line_edit = self.lineEdit_selection_id
+        self.highlight_line_edit()
+
+    def lineEdit_start_coords_clicked(self):
+        app().main_window.set_geometry_selection()
+        self.current_line_edit = self.lineEdit_start_coords
+        self.highlight_line_edit()
+
+    def lineEdit_end_coords_clicked(self):
+        app().main_window.set_geometry_selection()
+        self.current_line_edit = self.lineEdit_end_coords
+        self.highlight_line_edit()
+
+    def highlight_line_edit(self):
+        self.current_line_edit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+        if self.current_line_edit == self.lineEdit_start_coords:
+            self.lineEdit_end_coords.setStyleSheet("")
+            self.lineEdit_selection_id.setStyleSheet("")
+        elif self.current_line_edit == self.lineEdit_end_coords:
+            self.lineEdit_start_coords.setStyleSheet("")
+            self.lineEdit_selection_id.setStyleSheet("")
+        elif self.current_line_edit == self.lineEdit_selection_id:
+            self.lineEdit_start_coords.setStyleSheet("")
+            self.lineEdit_end_coords.setStyleSheet("")
+        else:
+            pass
 
     def attribution_type_callback(self):
 
@@ -77,6 +185,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
             self.lineEdit_selection_id.setEnabled(False)
 
         else:
+            self.lineEdit_selection_id_clicked()
             volumes = app().main_window.selected_geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
@@ -86,18 +195,6 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def refinement_regions_callback(self):
         pass
-
-
-    def geometry_selection_callback(self):
-
-        volumes = app().main_window.selected_geometry_volumes
-
-        if volumes:
-            text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selection_id.setText(text)
-            if self.comboBox_attribution_type.currentIndex() != 1:
-                self.comboBox_attribution_type.setCurrentIndex(1)
-
 
     def get_fluid_callback(self):
         self.hide()
@@ -144,7 +241,6 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
             self.lineEdit_selection_id.setDisabled(False)
 
-
     def attribute_callback(self):
         pass
 
@@ -152,6 +248,9 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         pass
 
     def reset_callback(self):
+        pass
+
+    def load_model_info(self):
         pass
 
     def on_click_item(self, item):
@@ -171,4 +270,5 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

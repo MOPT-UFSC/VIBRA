@@ -58,8 +58,8 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
         
         self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
-        self.item_child_acoustic_properties_gradient.setHidden(True)
-        
+        # self.item_child_acoustic_properties_gradient.setHidden(True)
+
         self.top_level_items = [
             self.item_top_general_settings,
             self.item_top_structural_model_setup,
