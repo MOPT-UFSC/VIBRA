@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Sequence
 
 import numpy as np
-import vtk
 from molde.colors import Color, color_names
 from vtkmodules.util.numpy_support import (
     numpy_to_vtk,
@@ -15,14 +14,18 @@ from vtkmodules.vtkCommonCore import (
     vtkPoints,
 )
 from vtkmodules.vtkCommonDataModel import (
+    vtkCellArray,
     vtkPlane,
     vtkPolyData,
 )
-from vtkmodules.vtkFiltersCore import vtkExtractCells, vtkPolyDataNormals
+from vtkmodules.vtkFiltersCore import vtkAppendPolyData, vtkExtractCells, vtkPolyDataNormals, vtkPolyDataTangents
+from vtkmodules.vtkFiltersTexture import vtkTextureMapToPlane
+from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkDataSetMapper,
     vtkPropAssembly,
+    vtkTexture,
 )
 
 from vibra import TEXTURE_DIR, app
@@ -44,16 +47,16 @@ def read_texture(path: str | Path | None):
         raise FileNotFoundError(f'Texture file "{path}" not found')
 
     if path.suffix == ".png":
-        reader = vtk.vtkPNGReader()
+        reader = vtkPNGReader()
     elif path.suffix == ".jpg":
-        reader = vtk.vtkJPEGReader()
+        reader = vtkJPEGReader()
     else:
         raise ValueError(f"Unsupported image format {path.suffix}")
 
     reader.SetFileName(path)
     reader.Update()
 
-    texture = vtk.vtkTexture()
+    texture = vtkTexture()
     texture.InterpolateOn()
     texture.RepeatOn()
     texture.SetInputData(reader.GetOutput())
@@ -223,7 +226,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def _create_surfaces(self):
         nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
 
-        combined_surfaces = vtk.vtkAppendPolyData()
+        combined_surfaces = vtkAppendPolyData()
         for surface, elements in self.mesh.elements_from_surface.items():
             coords, connect = self._reduce_connectivity(
                 self.mesh.nodal_coordinates[:, 1:],
@@ -235,7 +238,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             # The format here is [n, p0, p1, ..., pn, n, p0, p1, ..., pn]
             # Therefore I add a "n" column at the start and then flatten it
-            cells = vtk.vtkCellArray()
+            cells = vtkCellArray()
             helper = np.insert(connect, 0, nodes_per_element, axis=1)
             vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
             cells.SetCells(len(connect), vtk_id_array)
@@ -248,7 +251,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             # Every surface have its own plane defining
             # how to project the texture coordinates on it
-            add_tcoords = vtk.vtkTextureMapToPlane()
+            add_tcoords = vtkTextureMapToPlane()
             add_tcoords.AutomaticPlaneGenerationOff()
 
             # This should have been calculated by the mesher
@@ -279,7 +282,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         add_normals.SetInputData(combined_surfaces.GetOutput())
         add_normals.Update()
 
-        add_tangents = vtk.vtkPolyDataTangents()
+        add_tangents = vtkPolyDataTangents()
         add_tangents.SetInputData(add_normals.GetOutput())
         add_tangents.Update()
 
