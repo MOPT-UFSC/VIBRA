@@ -23,9 +23,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -79,8 +78,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.treeWidget_transfer_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
-        self.main_window.theme_changed.connect(self._paint_icons)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
         self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
@@ -138,7 +137,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if self.tabWidget_main.currentIndex() == 1:
             return
 
-        surfaces = self.main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
         if surfaces:
 
             if len(surfaces) == 1:

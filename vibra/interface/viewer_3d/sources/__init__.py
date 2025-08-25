@@ -4,6 +4,7 @@ from .arrows import (
     create_double_arrow_source,
     create_outwards_arrow_source,
     create_triple_arrow_source,
+    create_quadruple_arrow_source,
     create_outwards_triple_arrow_source,
     create_normal_pressure_load,
     create_outwards_normal_pressure_load,
@@ -15,6 +16,11 @@ from .arrows import (
 from .simple_shapes import (
     create_cone_source,
     create_cube_source,
+    create_mass_load_first_layer_source,
+    create_mass_load_second_layer_source,
+    create_mass_load_third_layer_source,
+    create_mass_load_fourth_layer_source,
+    create_double_cone_source,
 )
 
 from .complex_shapes import (
@@ -29,7 +35,8 @@ from .complex_shapes import (
     create_degrees_of_freedom_decoupling_source,
     create_absorption_surface_source,
     create_acoustic_pressure_source,
-    create_reciprocating_compressor_source,
+    create_compressor_discharge_source,
+    create_compressor_suction_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
 )

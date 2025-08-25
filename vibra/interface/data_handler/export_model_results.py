@@ -18,8 +18,6 @@ class ExportModelResults(QFileDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-
         self._initialize()
 
     def _initialize(self):
@@ -126,7 +124,7 @@ class ExportModelResults(QFileDialog):
             kwargs = dict()
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-            file_path, file_extension = self.getSaveFileName(self.main_window, 
+            file_path, file_extension = self.getSaveFileName(app().main_window, 
                                                     caption, 
                                                     directory_path, 
                                                     filter = _filter,

@@ -3,13 +3,13 @@ import os
 import sys
 from functools import partial
 from pathlib import Path
-from shutil import copy, rmtree
+from shutil import rmtree
 import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
-from PySide6.QtCore import QEvent, QTimer, Qt, Signal
-from PySide6.QtGui import QAction, QColor
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QAbstractButton,
     QFileDialog,
@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from vibra import app, TEMP_PROJECT_DIR, TEMP_PROJECT_FILE, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
+from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -75,7 +75,7 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = None
 
         self._initialize()
-
+    
     def _initialize(self):
         self.dialog = None
         self.project_data_modified = False
@@ -234,6 +234,7 @@ class MainWindow(MainWindow_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)
+
     def update_mesh_information(self):
         self.status_bar.update_mesh_information()
 
@@ -492,6 +493,11 @@ class MainWindow(MainWindow_UI):
             if hasattr(widget, "update_renderer_font_size"):
                 widget.update_renderer_font_size()
 
+    def workspace_updating_for_model_setup(self):
+        mesh_workspace = app().main_window.action_mesh_workspace.isChecked()
+        if mesh_workspace:
+            app().main_window.action_model_workspace_callback()
+
     def action_model_workspace_callback(self):
         self.action_node_view.setToolTip("Points view")
         self.action_model_workspace.setChecked(True)
@@ -503,11 +509,11 @@ class MainWindow(MainWindow_UI):
         else:
             self.action_results_workspace.setEnabled(False)
 
-        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
+        self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
@@ -523,11 +529,11 @@ class MainWindow(MainWindow_UI):
             self.action_results_workspace.setEnabled(False)
 
         self.update_mesh_information()
-        self.splitter.widget(0).setVisible(True)
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.model_setup_widget.model_setup_items.modify_items_access_after_geometry_importing()
+        self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
+        self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
@@ -636,8 +642,9 @@ class MainWindow(MainWindow_UI):
         )
 
     def distinguish_mesh_solids(self, solids):
-        if solids is None:
-            pass
+        if not solids:
+            return
+
         self.distinguished_solids = set(solids)
         self.show_mesh_render_widget()
         self.action_line_view_callback(False)
@@ -698,9 +705,6 @@ class MainWindow(MainWindow_UI):
             return True
 
     def save_project_as_dialog(self):
-        if not TEMP_PROJECT_FILE.exists():
-            return
-
         obj = SaveProjectDataSelector()
         if obj.complete:
             last_path = app().config.get_last_folder_for("project_folder")
@@ -725,6 +729,7 @@ class MainWindow(MainWindow_UI):
                 return
 
             if obj.ignore_results_data:
+                app().file.delete_harmonic_solution()
                 app().file.remove_results_data_from_project_file()
 
             if obj.ignore_mesh_data:
@@ -754,7 +759,7 @@ class MainWindow(MainWindow_UI):
             self.update_recents_menu()
             logging.info("Saving project data... [75/100]")
 
-            copy(TEMP_PROJECT_FILE, path)
+            app().file.archive_project(path)
             self.update_window_title(path)
             self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
@@ -828,7 +833,7 @@ class MainWindow(MainWindow_UI):
             return False
 
         app().file.write_geometry_in_file(
-            load_path,
+            Path(load_path),
             app().project.model.length_unit,
             app().project.model.geometry_qf,
         )
@@ -843,11 +848,13 @@ class MainWindow(MainWindow_UI):
             logging.info("Removing the results data from project file... [75/100]")
             app().file.remove_results_data_from_project_file()
 
+        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
         LoadingWindow(remove_callback).run()
 
         _geometry_path = app().file.read_geometry_from_file()
         self.import_geometry_or_mesh(_geometry_path)
-        self.model_setup_widget.model_setup_items.update_items_appearance()            
+
+        self.model_setup_widget.model_setup_items.update_items_appearance()
         
         return True
 
@@ -863,13 +870,16 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
+
+        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
+
         try:
             if project_path is not None:
                 project_path = Path(project_path)
                 app().config.add_recent_file(project_path)
                 app().config.write_last_folder_path_in_file("project_folder", project_path)
                 self.update_recents_menu()
-                copy(project_path, TEMP_PROJECT_FILE)
+                app().file.extract_project(project_path)
                 self.update_window_title(project_path)
 
             app().project.reset_variables()
@@ -882,6 +892,7 @@ class MainWindow(MainWindow_UI):
             app().load_project.initialize()
             LoadingWindow(app().load_project.load).run()
 
+            self.update_toolbar_and_menu_items_after_load_project()
             self.analysis_toolbar.check_analysis_setup_callback()
             self.status_bar.setVisible(True)
             self.action_front_view_callback()
@@ -889,11 +900,15 @@ class MainWindow(MainWindow_UI):
 
             LoadingWindow(self.mesh_widget.update_plot).run()
             LoadingWindow(self.geometry_widget.update_plot).run()
-            self.model_setup_widget.model_setup_items.update_items_appearance()            
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
+            self.model_setup_widget.model_setup_items.update_items_appearance()
             
+            if app().project.can_resume_solution:
+                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records",
+                               "Click on the 'Resume the analysis' button to solve remaining frequencies"])
+
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
@@ -906,7 +921,7 @@ class MainWindow(MainWindow_UI):
             self.welcome_widget.update_recent_projects()
             self.update_recents_menu()
 
-    def import_geometry_or_mesh(self, path: str, update_render: bool = True):
+    def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
 
         geometry_file = self.check_path_for_geometry_file(path)
 
@@ -929,18 +944,22 @@ class MainWindow(MainWindow_UI):
                 app().main_window.project_data_modified = False
 
             self.update_geometry_information()
+            self.update_toolbar_and_menu_items_after_load_project()
 
         try:
             self.renderer_toolbar.setDisabled(False)
             self.analysis_toolbar.setDisabled(False)
             self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
-            self.analysis_toolbar.update_analysis_combo_boxes()
+            self.analysis_toolbar.set_pushbutton_resume_analysis_enabled(app().project.can_resume_solution)
 
             app().project.reset_solutions()
             app().project.model.properties._reset_variables()
 
             if update_render:
                 LoadingWindow(self.update_plots).run()
+
+            if ignore_workspaces:
+                return
 
             if geometry_file:
                 self.action_model_workspace_callback()
@@ -970,6 +989,9 @@ class MainWindow(MainWindow_UI):
             return True
 
         return False
+    
+    def update_toolbar_and_menu_items_after_load_project(self):
+        self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()
@@ -1075,15 +1097,14 @@ class MainWindow(MainWindow_UI):
             widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
-        self.visualization_filter.acoustic_symbols = clicked
-        self.visualization_filter.structural_symbols = clicked
+        self.visualization_filter.symbols = clicked
         self.visualization_changed.emit()
 
     def close_app(self):
         self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
-        condition_2 = TEMP_PROJECT_FILE.exists()
+        condition_2 = any(TEMP_PROJECT_DIR.iterdir()) # TEMP_PROJECT_DIR is not empty
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 

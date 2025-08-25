@@ -16,8 +16,7 @@ class ExportMeshData(ExportMesh_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
         
         self.project = app().project
         self.model = self.project.model
@@ -27,7 +26,7 @@ class ExportMeshData(ExportMesh_UI):
         if self.mesh is None:
             return
         else:
-            self.main_window.action_mesh_workspace_callback()
+            app().main_window.action_mesh_workspace_callback()
 
         self._configure_window()
         self._reset_variables()
@@ -53,7 +52,7 @@ class ExportMeshData(ExportMesh_UI):
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
-        self.main_window.theme_changed.connect(self.update_icons_color)
+        app().main_window.theme_changed.connect(self.update_icons_color)
 
     def search_folder(self):
         self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', self.temp_path)

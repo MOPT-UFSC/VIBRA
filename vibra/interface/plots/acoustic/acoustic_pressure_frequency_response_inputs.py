@@ -17,8 +17,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
@@ -58,14 +57,14 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
 
-        surfaces = self.main_window.selected_geometry_surfaces
-        lines = self.main_window.selected_geometry_lines
-        points = self.main_window.selected_geometry_points
-        nodes = self.main_window.selected_mesh_nodes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
+        nodes = app().main_window.selected_mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if surfaces and index == 0:
@@ -92,9 +91,9 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 3:
-            self.main_window.show_mesh_render_widget()
+            app().main_window.show_mesh_render_widget()
         else:
-            self.main_window.show_geometry_render_widget()
+            app().main_window.show_geometry_render_widget()
 
     def check_inputs(self):
 
@@ -161,7 +160,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
-        self.title = f"Acoustic frequency response - {self.analysis_method}"
+        self.title = "Acoustic frequency response"
 
         for i, selected_id in enumerate(self.selected_ids):
 

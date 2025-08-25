@@ -159,7 +159,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         selection_type = current_text.lower()[:-1]
 
         self.model_results = dict()
-        self.title = f"Acoustic pressure waveform - {self.analysis_method}"
+        self.title = "Acoustic pressure waveform"
 
         for i, selected_id in enumerate(self.selected_ids):
 

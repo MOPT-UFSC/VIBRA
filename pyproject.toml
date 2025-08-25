@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "numpy (>=2.2.6,<3.0.0)",
-    "vtk (>=9.4.2,<10.0.0)",
+    "vtk (>=9.4.2,<9.5)",
     "gmsh (>=4.13.1,<5.0.0)",
     "ctrefprop (>=0.10.5,<0.11.0)",
     "scipy (>=1.15.3,<2.0.0)",
@@ -21,7 +21,7 @@ dependencies = [
     "moviepy (>=1.0.3,<2.0.0)",
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
-    "molde (>=0.1.10,<0.2.0)",
+    "molde (>=0.1.15,<0.2.0)",
     "pyside6 (>=6.9.0,<7.0.0)",
 ]
 
