@@ -6,8 +6,8 @@ from vibra.engine.properties.material import Material
 
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 
 class AnalysisRequirementsChecker:
@@ -34,7 +34,7 @@ class AnalysisRequirementsChecker:
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
                 app().main_window.set_geometry_selection(volumes=volumes_without_material)
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
 
         surfaces_without_material = list()
@@ -43,12 +43,6 @@ class AnalysisRequirementsChecker:
             if prop_data is None:
                 surfaces_without_material.append(surface_id)
 
-        surface_without_thickness = list()
-        for surface_id in self.surface_ids:
-            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
-            if st_data is None:
-                surface_without_thickness.append(surface_id)
-
         if surfaces_without_material:
             if len(surfaces_without_material) != len(self.surface_ids):
                 title = "Invalid model setup"
@@ -56,17 +50,23 @@ class AnalysisRequirementsChecker:
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
                 app().main_window.set_geometry_selection(surfaces=surfaces_without_material)
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
 
-        if surface_without_thickness:
-            if len(surface_without_thickness) != len(self.surface_ids):
+        surfaces_without_thickness = list()
+        for surface_id in self.surface_ids:
+            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if st_data is None:
+                surfaces_without_thickness.append(surface_id)
+
+        if surfaces_without_thickness:
+            if len(surfaces_without_thickness) != len(self.surface_ids):
                 title = "Invalid model setup"
-                message = f"You should assign the surface thickness for surfaces {surfaces_without_material} "
+                message = f"You should assign the surface thickness for surfaces {surfaces_without_thickness} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(surfaces=surface_without_thickness)
-                PrintMessageInput([window_title_1, title, message])
+                app().main_window.set_geometry_selection(surfaces=surfaces_without_thickness)
+                PrintMessageInput([error_title, title, message])
                 return True
 
         return False
@@ -93,7 +93,7 @@ class AnalysisRequirementsChecker:
                 message += "to proceed with the analysis solution."
                 app().main_window.action_model_workspace_callback()
                 app().main_window.set_geometry_selection(volumes=volumes_without_fluid)
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
 
             else:
@@ -103,7 +103,7 @@ class AnalysisRequirementsChecker:
                     message += "to proceed with the analysis solution."
                     app().main_window.action_model_workspace_callback()
                     app().main_window.set_geometry_selection(surfaces=surfaces_without_fluid)
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
                     return True
 
                 return False
@@ -112,7 +112,7 @@ class AnalysisRequirementsChecker:
             title = "Invalid geometry for acoustic analysis"
             message = f"The selected geometry file does not contain "
             message += "volumes, therefore, it is invalid for acoustic analysis."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
     def check_acoustic_harmonic_excitations(self):
@@ -143,7 +143,7 @@ class AnalysisRequirementsChecker:
         title = "Invalid model excitation"    
         message = "Enter a valid acoustic model excitation to proceed "
         message += "with the acoustic harmonic analysis solution."
-        PrintMessageInput([window_title_1, title, message])
+        PrintMessageInput([error_title, title, message])
 
         return True
 
@@ -173,7 +173,7 @@ class AnalysisRequirementsChecker:
         title = "Invalid model excitation"    
         message = "Enter a valid structural model excitation to proceed "
         message += "with the structural harmonic analysis solution."
-        PrintMessageInput([window_title_1, title, message])
+        PrintMessageInput([error_title, title, message])
 
         return True
 
