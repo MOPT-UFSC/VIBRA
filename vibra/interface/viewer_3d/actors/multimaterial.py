@@ -100,9 +100,13 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material = properties._get_property("material", surface=surface, volume=volume)
             porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
+            perforated = properties._get_property("perforated_plate_model", surface=surface, volume=volume)
 
             if porous is not None:
                 color = color_names.YELLOW_6
+
+            elif perforated is not None:
+                color = color_names.WHITE
 
             elif material is not None:
                 color = Color(*material.color)
