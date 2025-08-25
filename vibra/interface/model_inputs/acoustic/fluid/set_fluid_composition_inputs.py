@@ -68,6 +68,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.refprop_fluids_data = dict()
 
         self.selected_row = None
+        self.cache_number_of_fluids = None
 
         self.complete = False
         self.keep_window_open = True
@@ -98,6 +99,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.pushButton_load_composition.clicked.connect(self.load_fluid_composition_callback)
         self.pushButton_remove_gas.clicked.connect(self.remove_selected_gas)
         self.pushButton_reset_fluid.clicked.connect(self.reset_fluid)
+        self.pushButton_fluid_configuration_mode.clicked.connect(self.fluids_configuration_mode_callback)
         #
         self.tableWidget_new_fluid.cellClicked.connect(self.cell_clicked_on_composition_table)
         self.tableWidget_new_fluid.itemChanged.connect(self.item_changed_callback)
@@ -106,7 +108,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.treeWidget_refprop_fluids.itemDoubleClicked.connect(self.on_double_click_item_refprop_fluids)
         #
         self.distribution_type_changed_callback()
-        self.number_of_fluids_changed_callback()
+        self.fluids_configuration_mode_callback()
 
     def distribution_type_changed_callback(self):
         distribution_type = self.comboBox_distribution_type.currentText()
@@ -121,25 +123,49 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.doubleSpinBox_decay_factor.setEnabled(True)
 
     def number_of_fluids_changed_callback(self):
+        self.cache_number_of_fluids = self.spinBox_number_of_fluids.value()
+
+    def fluids_configuration_mode_callback(self):
+
         if self.state_properties:
-            self.frame_number_of_fluids.setEnabled(False)
+            self.frame_multiple_fluids.setVisible(False)
+            self.pushButton_fluid_configuration_mode.setDisabled(True)
             return
 
-        multiple_fluids = self.spinBox_number_of_fluids.value() > 1
-        if not multiple_fluids:
-            self.comboBox_distribution_type.setCurrentText("Linear")
+        self.spinBox_number_of_fluids.blockSignals(True)
+        multiple_fluids_mode = not self.pushButton_fluid_configuration_mode.text() == "Single fluid mode"
 
-        self.label_distribution_type.setEnabled(multiple_fluids)
-        self.comboBox_distribution_type.setEnabled(multiple_fluids)
+        self.label_thermostate_left.setVisible(multiple_fluids_mode)
+        self.label_thermostate_right.setVisible(multiple_fluids_mode)
+        self.lineEdit_pressure_right.setVisible(multiple_fluids_mode)
+        self.lineEdit_temperature_right.setVisible(multiple_fluids_mode)
 
-        self.label_thermostate_left.setVisible(multiple_fluids)
-        self.label_thermostate_right.setVisible(multiple_fluids)
-        self.lineEdit_pressure_right.setVisible(multiple_fluids)
-        self.lineEdit_temperature_right.setVisible(multiple_fluids)
-
-        if multiple_fluids:
+        if multiple_fluids_mode:
             self.label_thermostate_left.setText("Start")
             self.label_thermostate_right.setText("End")
+            self.spinBox_number_of_fluids.setMinimum(2)
+            if isinstance(self.cache_number_of_fluids, int):
+                self.spinBox_number_of_fluids.setValue(self.cache_number_of_fluids)
+
+            self.frame_multiple_fluids.setVisible(True)
+            self.pushButton_fluid_configuration_mode.setText("Single fluid mode")
+            
+            main_title = "Mulit-fluid configuration mode"
+            tool_tip = "Switch to simple fluid configuration mode"
+
+        else:
+            self.spinBox_number_of_fluids.setMinimum(1)
+            self.spinBox_number_of_fluids.setValue(1)
+            self.frame_multiple_fluids.setVisible(False)
+            self.pushButton_fluid_configuration_mode.setText("Multi-fluid mode")
+            self.comboBox_distribution_type.setCurrentText("Linear")
+
+            main_title = "Single fluid configuration mode"
+            tool_tip = "Switch to multi-fluid configuration mode"
+
+        self.label_title.setText(main_title)
+        self.pushButton_fluid_configuration_mode.setToolTip(tool_tip)
+        self.spinBox_number_of_fluids.blockSignals(False)
 
     def _config_widgets(self):
         #
