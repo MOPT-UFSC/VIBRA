@@ -27,43 +27,45 @@ class AnalysisRequirementsChecker:
             if prop_data is None:
                 volumes_without_material.append(volume_id)
 
+        if volumes_without_material:
+            if len(volumes_without_material) != len(self.volume_ids):
+                title = "Invalid model setup"
+                message = f"You should assign one material for volumes {volumes_without_material} "
+                message += "to proceed with the analysis solution."
+                app().main_window.workspace_updating_for_model_setup()
+                app().main_window.set_geometry_selection(volumes=volumes_without_material)
+                PrintMessageInput([window_title_1, title, message])
+                return True
+
         surfaces_without_material = list()
         for surface_id in self.surface_ids:
             prop_data = self.properties._get_property("material", surface=surface_id)
             if prop_data is None:
                 surfaces_without_material.append(surface_id)
 
-        surfaces_without_material, _, shell_without_thickness = self.check_material_and_surface_thickness()
-        if volumes_without_material:
-            if len(volumes_without_material) != len(self.volume_ids):
+        surface_without_thickness = list()
+        for surface_id in self.surface_ids:
+            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
+            if st_data is None:
+                surface_without_thickness.append(surface_id)
+
+        if surfaces_without_material:
+            if len(surfaces_without_material) != len(self.surface_ids):
                 title = "Invalid model setup"
-                message = f"You should assign one material for volumes {volumes_without_material} "
+                message = f"You should assign one material for surfaces {surfaces_without_material} "
                 message += "to proceed with the analysis solution."
-                app().main_window.action_model_workspace_callback()
-                app().main_window.set_geometry_selection(volumes=volumes_without_material)
+                app().main_window.workspace_updating_for_model_setup()
+                app().main_window.set_geometry_selection(surfaces=surfaces_without_material)
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
-        if len(volumes_without_material) == len(self.volume_ids):
-            if len(surfaces_without_material) == len(self.surface_ids):
+        if surface_without_thickness:
+            if len(surface_without_thickness) != len(self.surface_ids):
                 title = "Invalid model setup"
-                if len(self.volume_ids):
-                    message = f"You should assign one material for all volumes or some surfaces "
-                else:
-                    message = f"You should assign one material to some surfaces "
+                message = f"You should assign the surface thickness for surfaces {surfaces_without_material} "
                 message += "to proceed with the analysis solution."
-                # app().main_window.set_geometry_selection(surfaces=shell_without_material)
-                PrintMessageInput([window_title_1, title, message])
-                return True
-
-            if shell_without_thickness:
-                title = "Invalid model setup"
-                if len(shell_without_thickness) == len(self.surface_ids):
-                    message = f"You should assign at least one material and thickness for one surface "
-                else:
-                    message = f"You should assign a thickness for the already assigned surface materials "
-                    app().main_window.set_geometry_selection(surfaces=shell_without_thickness)
-                message += "to proceed with the analysis solution."
+                app().main_window.workspace_updating_for_model_setup()
+                app().main_window.set_geometry_selection(surfaces=surface_without_thickness)
                 PrintMessageInput([window_title_1, title, message])
                 return True
 
@@ -112,23 +114,6 @@ class AnalysisRequirementsChecker:
             message += "volumes, therefore, it is invalid for acoustic analysis."
             PrintMessageInput([window_title_1, title, message])
             return True
-
-    def check_material_and_surface_thickness(self):
-
-        shell_without_material = list()
-        surface_without_material = list()
-        shell_without_thickness = list()
-        for surface_id in self.surface_ids:
-            mat_data = self.properties._get_property("material", surface=surface_id)
-            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
-            if mat_data is None:
-                surface_without_material.append(surface_id)
-                if isinstance(st_data, dict):
-                    shell_without_material.append(surface_id)
-            elif isinstance(mat_data, Material) and st_data is None:
-                shell_without_thickness.append(surface_id)
-
-        return surface_without_material, shell_without_material, shell_without_thickness
 
     def check_acoustic_harmonic_excitations(self):
 
