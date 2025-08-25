@@ -172,8 +172,7 @@ class ProjectFile:
                 else:
                     f.create_dataset(prefix, data=output_data, dtype=dtype)
 
-        if self.results_data_filepath.exists():
-            os.remove(self.results_data_filepath)
+        self.remove_results_data_from_project_file()
         app().main_window.project_data_modified = True
 
     def read_geometry_data_from_file(self):
@@ -322,8 +321,7 @@ class ProjectFile:
                 else:
                     f.create_dataset(prefix, data=data, dtype=dtype)
 
-        if self.results_data_filepath.exists():
-            os.remove(self.results_data_filepath)
+        self.remove_results_data_from_project_file()
         app().main_window.project_data_modified = True
 
     def read_mesh_data_from_file(self):
@@ -509,8 +507,8 @@ class ProjectFile:
         return model_properties
 
     def write_imported_table_data_in_file(self):
-        if self.imported_table_data_filepath.exists():
-            os.remove(self.imported_table_data_filepath)
+
+        self.remove_table_data_from_project_file()
         acoustic_imported_tables = app().project.model.properties.acoustic_imported_tables
         structural_imported_tables = app().project.model.properties.structural_imported_tables
 
@@ -636,11 +634,13 @@ class ProjectFile:
         return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype, is_resume)
 
     def get_solution_loader(self):
+        if not self.harmonic_solution_filepath.exists():
+            return None
         return LazyHDF5MatrixLoader(self.harmonic_solution_filepath)
 
     def delete_harmonic_solution(self):
         if self.harmonic_solution_filepath.exists():
-            os.remove(self.harmonic_solution_filepath)
+            self.harmonic_solution_filepath.unlink()
 
     def read_results_data_from_file(self):
         results_data = dict()
@@ -675,9 +675,13 @@ class ProjectFile:
     def remove_mesh_data_from_project_file(self):
         self.mesh_data_filepath.unlink(missing_ok=True)
 
+    def remove_table_data_from_project_file(self):
+        if self.imported_table_data_filepath.exists():
+            self.imported_table_data_filepath.unlink(missing_ok=True)
+
     def remove_results_data_from_project_file(self):
         if self.results_data_filepath.exists():
-            os.remove(self.results_data_filepath)
+            self.results_data_filepath.unlink(missing_ok=True)
 
     def archive_project(self, zip_path: Path):
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:
@@ -744,7 +748,7 @@ class ProjectFile:
             fluid_data[identifier] = fluid_parameters
 
         if remove_after_convert:
-            os.remove(path)
+            path.unlink()
 
         return fluid_data
 
@@ -771,7 +775,7 @@ class ProjectFile:
             material_library_data[identifier] = material_parameters
 
         if remove_after_convert:
-            os.remove(path)
+            path.unlink()
 
         return material_library_data
 

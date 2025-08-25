@@ -391,40 +391,45 @@ class LoadProject:
         project = app().project
         results_data = self.file.read_results_data_from_file()
 
-        if results_data:
-            logging.info("Loading results... [20/100]")
-            for key, data in results_data.items():
-                data: dict
+        if not results_data:
+            return
 
-                if key == "modal_acoustic" and project.acoustic_modal_solver is not None:
-                    if np.iscomplexobj(data["natural_frequencies"]):
-                        project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    else:
-                        project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    project.acoustic_modal_solver.solution = data.get("solution")
+        logging.info("Loading results... [20/100]")
+        for key, data in results_data.items():
+            data: dict
 
-                elif key == "modal_structural" and project.structural_modal_solver is not None:
-                    project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    project.structural_modal_solver.solution = data.get("solution")
-                    project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
-
-                elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
-                    project.acoustic_harmonic_solver.solution = data.get("solution")
-                    app().main_window.disable_advanced_acoustic_plots_buttons(False)
-
-                elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
-                    project.structural_harmonic_solver.solution = data.get("solution")
-                    project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
-
+            if key == "modal_acoustic" and project.acoustic_modal_solver is not None:
+                if np.iscomplexobj(data["natural_frequencies"]):
+                    project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
                 else:
-                    continue
+                    project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                project.acoustic_modal_solver.solution = data.get("solution")
 
-            logging.info("Updating analysis render... [85/100]")
+            elif key == "modal_structural" and project.structural_modal_solver is not None:
+                project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                project.structural_modal_solver.solution = data.get("solution")
+                project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
+
+            elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
+                project.acoustic_harmonic_solver.solution = data.get("solution")
+                app().main_window.disable_advanced_acoustic_plots_buttons(False)
+
+            elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
+                project.structural_harmonic_solver.solution = data.get("solution")
+                project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
+
+            else:
+                continue
+
+        logging.info("Updating analysis render... [85/100]")
         
         acoustic_harmonic_solver = project.acoustic_harmonic_solver
         if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
             self.file.handling_harmonic_solution_results()
             acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
+            if acoustic_harmonic_solver.solution is None:
+                return
+
             app().main_window.disable_advanced_acoustic_plots_buttons(False)
             if acoustic_harmonic_solver.solution.has_partial_solutions():
                 acoustic_harmonic_solver.solution = None
