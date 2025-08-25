@@ -409,7 +409,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             property, volume_id = key
             if property == "viscous_thermal_model":
-                print(key, data)
                 
                 model = None
                 section_type = data["section_type"]
@@ -830,19 +829,20 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                                                                       selection = "volumes", 
                                                                       single_id = False,
                                                                       )
+                
 
                 if error_data is not None:
                     self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return
+                
+                self.verify_and_remove_model_conflicts_if_it_exists(volume_ids)
 
             if model not in self.models:
                 self.models.append(model)
             
             model_data = model.get_data()
-
-            self.verify_and_remove_model_conflicts_if_it_exists(volume_ids)
             
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
