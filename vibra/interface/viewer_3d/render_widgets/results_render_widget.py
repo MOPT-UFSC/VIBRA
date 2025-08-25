@@ -45,6 +45,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cache_lock = Lock()
         self.min_value = 0
         self.max_value = 0
+        self.complex_result = False
         self.frequency_index = None
         self.mode_index = None
 
@@ -166,9 +167,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             point_data,
             point_position,
         )
-
-        mirrored_frame = self._animation_total_frames - frame - 1
-        self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
+        if not self.complex_result:
+            mirrored_frame = self._animation_total_frames - frame - 1
+            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
@@ -235,7 +236,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            displacements, color_scalars, min_value, max_value = data
+            displacements, color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -257,7 +258,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            displacements, color_scalars, min_value, max_value = data
+            displacements, color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -276,7 +277,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            color_scalars, min_value, max_value = data
+            color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -295,7 +296,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            color_scalars, min_value, max_value = data
+            color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value

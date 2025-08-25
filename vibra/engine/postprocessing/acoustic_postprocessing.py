@@ -41,7 +41,7 @@ def compute_acoustic_modal_field(
 
     min_value, max_value = solver.get_min_max_values_of_pressures(index, plot_type)
 
-    return acoustic_pressures, min_value, max_value
+    return acoustic_pressures, min_value, max_value, np.imag(selected_mode_shape).any()
 
 
 def compute_acoustic_harmonic_field(
@@ -71,4 +71,4 @@ def compute_acoustic_harmonic_field(
 
     min_value, max_value = solver.get_min_max_values_of_pressures(index, plot_type)
 
-    return acoustic_pressures, min_value, max_value
+    return acoustic_pressures, min_value, max_value, np.imag(selected_results).any()
