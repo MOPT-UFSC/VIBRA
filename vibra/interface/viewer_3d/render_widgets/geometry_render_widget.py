@@ -134,14 +134,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
+        self.faces_actor = FacesActor(mesh)    
+        self.multimaterial = MultimaterialGeometryActor(mesh)
 
-        from time import perf_counter
-        
-        s = perf_counter()
-        self.faces_actor = FacesActor(mesh)
-        e = perf_counter()
-        print("Faces", e - s)
-        
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
@@ -149,11 +144,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
-
-        s = perf_counter()
-        self.multimaterial = MultimaterialGeometryActor(mesh)
-        e = perf_counter()
-        print("Multimaterial", e - s)
 
         self.plane_actor = SectionPlaneActor(self.multimaterial.GetBounds())
         self.plane_actor.VisibilityOff()
