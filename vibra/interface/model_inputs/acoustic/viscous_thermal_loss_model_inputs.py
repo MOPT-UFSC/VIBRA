@@ -20,7 +20,6 @@ import numpy as np
 from typing import Dict, List
 from enum import IntEnum
 from collections import defaultdict
-from copy import deepcopy
 
 
 window_title_1 = "Error"
@@ -166,24 +165,20 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
         selected_item = selected_items[0]
 
-        selection_type = selected_item.text(0)
-        selection_id = int(selected_item.text(1))
-        model_id = int(selected_item.text(2))
+        selection_id = int(selected_item.text(0))
+        model_id = int(selected_item.text(1))
 
         model = self.map_model_id_to_models[model_id]
 
-        if selection_type == "Volume":
-            self.properties._remove_volume_property("viscous_thermal_model", selection_id)
-        else:
-            self.properties._remove_group_property("viscous_thermal_model", selection_id)
+        self.properties._remove_volume_property("viscous_thermal_model", selection_id)
+
+        if len(self.map_model_id_to_volumes[model_id]) == 1:
+            self.models.remove(model)
 
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.pushButton_remove.setDisabled(True)
         self.load_info()
-
-        if model not in self.map_model_id_to_models.values():
-            self.models.remove(model)
 
         if self.map_model_id_to_volumes:
             self.tabWidget_main.setCurrentIndex(TabType.LIST)
@@ -427,7 +422,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 if model not in self.models:
                     self.models.append(model)
                 
-                model_id = data["model_id"]
+                model_id = self.models.index(model) + 1
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
         
