@@ -11,8 +11,8 @@ import numpy as np
 
 # fmt: off
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
     def __init__(self, *args, **kwargs):

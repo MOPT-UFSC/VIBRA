@@ -18,8 +18,8 @@ from molde import Color
 from copy import deepcopy
 from itertools import count
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 COLOR_ROW = 11
 
@@ -457,14 +457,14 @@ class FluidWidget(FluidWidget_UI):
             message = f"The value typed for '{prop_labels[row]}' "
             message += "must be a non-zero positive number.\n\n"
             message += f"Details: {error_log}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             item.setText("")
             return True
 
         if value < 0:
             title = "Negative value not allowed"
             message = f"The value typed for '{prop_labels[row]}' must be a non-zero positive number."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             item.setText("")
             return True
 
@@ -542,7 +542,7 @@ class FluidWidget(FluidWidget_UI):
         except Exception as error_log:
             title = "Error while writing fluid data in file"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
 
     def remove_fluid_from_file(self, fluid: Fluid):
