@@ -637,7 +637,7 @@ class FluidWidget(FluidWidget_UI):
 
     def get_confirmation_to_proceed(self):
 
-        title = "Resetting the fluids library"
+        title = "Fluids library reset"
         message = "Would you like to reset the fluid library to default?"
 
         buttons_config = {  "left_button_label" : "No", 
@@ -667,9 +667,8 @@ class FluidWidget(FluidWidget_UI):
         # get the fluid identifiers to be removed from properties
         fluid_identifiers = list()
         if isinstance(fluid_library_data, dict):
-            for str_fluid_id in fluid_library_data.keys():
-                fluid_identifiers.append(int(str_fluid_id))
-
+            fluid_identifiers = [int(fluid_id) for fluid_id in fluid_library_data.keys()]
+       
         # reset the fluid library to default state
         default_fluid_library()
 

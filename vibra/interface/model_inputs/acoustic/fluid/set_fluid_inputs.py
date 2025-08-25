@@ -133,7 +133,8 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def reset_fluid_library_callback(self):
         self.hide()
-        self.fluid_widget.reset_library_callback()
+        if self.fluid_widget.reset_library_callback():
+            self.actions_to_finalize()
 
     def geometry_selection_callback(self):
 
@@ -276,9 +277,9 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.load_model_info()
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
-        app().file.write_model_properties_in_file()
         app().main_window.update_symbols()
-        
+        app().file.write_model_properties_in_file()
+
         self.complete = True
 
     def load_model_info(self):

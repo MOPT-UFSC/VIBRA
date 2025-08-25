@@ -477,8 +477,7 @@ class MaterialWidget(MaterialWidget_UI):
         # get the material identifiers to be removed from properties
         material_identifiers = list()
         if isinstance(material_library_data, dict):
-            for str_material_id in material_library_data.keys():
-                material_identifiers.append(int(str_material_id))
+            material_identifiers = [int(material_id) for material_id in material_library_data.keys()]
 
         # reset the material library to default state
         default_material_library()

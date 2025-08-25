@@ -126,7 +126,8 @@ class MaterialInputs(SetMaterial_UI):
 
     def reset_material_library_callback(self):
         self.hide()
-        self.material_widget.reset_library_callback()
+        if self.material_widget.reset_library_callback():
+            self.actions_to_finalize()
 
     def geometry_selection_callback(self):
 
@@ -312,8 +313,8 @@ class MaterialInputs(SetMaterial_UI):
         self.load_model_info()
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
-        app().file.write_model_properties_in_file()
         app().main_window.update_symbols()
+        app().file.write_model_properties_in_file()
 
     def load_model_info(self):
 
