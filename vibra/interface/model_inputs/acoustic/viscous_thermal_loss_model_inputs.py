@@ -376,7 +376,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             setattr(model, parameter, new_parameter_value)
 
             model_data = model.get_data()
-            model_data["model_id"] = model_id
 
             if model_id in self.map_model_id_to_volumes:
                 volumes = self.map_model_id_to_volumes[model_id]
@@ -410,6 +409,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             property, volume_id = key
             if property == "viscous_thermal_model":
+                print(key, data)
                 
                 model = None
                 section_type = data["section_type"]
@@ -836,15 +836,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return
-            
+
             if model not in self.models:
                 self.models.append(model)
             
             model_data = model.get_data()
-            
-            # self.verify_and_remove_model_conflicts_if_it_exists(model_data, volume_ids)
 
-            model_data["model_id"] = len(self.models)
+            self.verify_and_remove_model_conflicts_if_it_exists(volume_ids)
             
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
@@ -880,7 +878,12 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.actions_to_finalize()
         self.load_info()
     
-    # def verify_and_remove_model_conflicts_if_it_exists(self, model_data: dict, volume_ids: List[int]=None):
+    def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: List[int]=None):
+        for volume_id in volume_ids:
+            for model_id, volumes in self.map_model_id_to_volumes.items():
+                if volume_id in volumes and len(volumes) == 1:
+                    model = self.map_model_id_to_models[model_id]
+                    self.models.remove(model)
 
     #     if volume_ids:
         
