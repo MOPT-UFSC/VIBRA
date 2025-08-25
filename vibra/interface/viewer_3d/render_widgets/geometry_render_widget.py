@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QApplication
 from vibra import app
 from vibra.utils.image_functions import removes_image_background
 
-from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
 from ..actors.multimaterial import MultimaterialGeometryActor
@@ -134,7 +133,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
-        self.faces_actor = FacesActor(mesh)    
         self.multimaterial = MultimaterialGeometryActor(mesh)
 
         self.selection_spheres_actor = SelectionSpheres()
@@ -184,7 +182,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         color = Color(247, 0, 255)
         self.renderer.SetBackground(color.to_rgb_f())
         self.renderer.SetBackground2(color.to_rgb_f())
-        # self.faces_actor.set_color(Color(255, 255, 255))
         self.lines_actor.set_color(Color(0, 0, 0))
 
         self.disable_scale_bar()
@@ -220,7 +217,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         )
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
-        # self.faces_actor.SetVisibility(visualization.faces)
         self.multimaterial.SetVisibility(visualization.faces)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
@@ -248,10 +244,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             self.update_plot()
             return
-
-        # self.remove_actors(self.faces_actor)
-        # self.faces_actor = FacesActor(mesh)
-        # self.add_actors(self.faces_actor)
 
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
@@ -337,7 +329,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
-        # self.faces_actor.clear_colors()
         self.multimaterial.clear_colors()
 
         points = app().main_window.selected_geometry_points
@@ -362,7 +353,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
-        # self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
         self.multimaterial.paint_surfaces(self.selection_faces_color, faces)
 
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
@@ -439,7 +429,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         super().remove_all_actors()
         self.nodes_actor = None
         self.edges_actor = None
-        self.faces_actor = None
         self.multimaterial = None
         self.selection_spheres_actor = None
         self.plane_actor = None
