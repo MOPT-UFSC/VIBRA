@@ -46,9 +46,12 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _reset_variables(self):
-        self.selected_fluid = None
-        self.exporter = None
+
         self.plotter = None
+        self.exporter = None
+        self.fluid_dialog = None
+        self.selected_fluid = None
+
         self.unit_label = "Pa"
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
