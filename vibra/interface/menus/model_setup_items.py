@@ -108,33 +108,56 @@ class ModelSetupItems(CommonMenuItems):
             if attr_value == qtree_widet_item:
                 return attr_name
     
-    def _contains_property(self, property_name):
-        property = app().project.model.properties
+    def _contains_property(self, property_name: str):
+
+        model = app().project.model
+        properties = app().project.model.properties
+        
         property_dicts = [
-            property.acoustic_imported_tables,
-            property.structural_imported_tables,
-            property.global_properties,
-            property.group_properties,
-            property.volume_properties,
-            property.surface_properties,
-            property.line_properties,
-            property.point_properties,
-            property.element_properties,
-            property.nodal_properties,
+            properties.acoustic_imported_tables,
+            properties.structural_imported_tables,
+            properties.global_properties,
+            properties.group_properties,
+            properties.volume_properties,
+            properties.surface_properties,
+            properties.line_properties,
+            properties.point_properties,
+            properties.element_properties,
+            properties.nodal_properties,
             ]
+
+        if property_name == "material":
+            if model.mesh.are_there_volumes_in_geometry():
+                volume_ids = model.mesh.geometry_information.get("volumes")
+                volumes_without_material = model.properties.get_entities_without_property("material", volumes=volume_ids)
+                return not bool(len(volumes_without_material))
+            else:
+                surface_ids = model.mesh.geometry_information.get("surfaces")
+                surfaces_without_material = model.properties.get_entities_without_property("material", surfaces=surface_ids)
+                return not bool(len(surfaces_without_material))
+
+        if property_name == "fluid":
+            if model.mesh.are_there_volumes_in_geometry():
+                volume_ids = model.mesh.geometry_information.get("volumes")
+                volumes_without_fluid = model.properties.get_entities_without_property("fluid", volumes=volume_ids)
+                return not bool(len(volumes_without_fluid))
+            # else:
+            #     surface_ids = model.mesh.geometry_information.get("surfaces")
+            #     surfaces_without_fluid = model.properties.get_entities_without_property("fluid", surfaces=surface_ids)
+            #     return not bool(len(surfaces_without_fluid))
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            mesh = app().project.model.mesh
+            mesh = model.mesh
             collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
             if collapsed:
                 return False
-            return app().project.model.mesh_setup is not None
+            return model.mesh_setup is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
         if property_name == "surface_thickness":
-            if app().project.model.mesh is not None:
-                st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
+            if model.mesh is not None:
+                st_check = model.is_surface_thickness_properly_applied_in_model()
                 if isinstance(st_check, list) and st_check:
                     if st_check:
                         return False
@@ -144,7 +167,7 @@ class ModelSetupItems(CommonMenuItems):
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
         if property_name == "specific_impedance":
-            for key, data in property.surface_properties.items():
+            for key, data in properties.surface_properties.items():
                 if key[0] == "specific_impedance":
                     if "anechoic_termination" not in data.keys():
                         return True
@@ -152,7 +175,7 @@ class ModelSetupItems(CommonMenuItems):
         
         # search for anechoic_termination in specific_impedance
         if property_name == "anechoic_termination":
-            for key, data in property.surface_properties.items():
+            for key, data in properties.surface_properties.items():
                 if key[0] == "specific_impedance":
                     if "anechoic_termination" in data.keys():
                         return True
@@ -162,7 +185,7 @@ class ModelSetupItems(CommonMenuItems):
             for key in property_dict.keys():
                 if key[0] == property_name:
                     if property_name == "degrees_of_freedom_decoupling":
-                        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=key[1])
+                        pp_data = model.properties._get_property("perforated_plate_model", surface=key[1])
                         if isinstance(pp_data, dict):
                             continue
 

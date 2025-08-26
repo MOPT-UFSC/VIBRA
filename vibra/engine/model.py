@@ -579,11 +579,8 @@ class Model:
         if volume_exists:
             return None
 
-        surface_without_thickness = list()
-        for surface_id in self.mesh.geometry_information.get("surfaces", dict()):
-            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
-            if st_data is None:
-                surface_without_thickness.append(surface_id)
+        surface_ids = self.mesh.geometry_information.get("surfaces")
+        surface_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
 

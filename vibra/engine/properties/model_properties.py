@@ -401,6 +401,27 @@ class ModelProperties:
                 return True
 
         return False
+    
+    def get_entities_without_property(self, property: str, **kwargs):
+
+        entities_without_property = list()
+        volume_ids = kwargs.get("volumes", list())
+        surface_ids = kwargs.get("surfaces", list())
+
+        if volume_ids:
+            for volume_id in volume_ids:
+                data = self._get_property(property, volume=volume_id)
+                if data is None:
+                    entities_without_property.append(volume_id)
+
+        elif surface_ids:
+            for surface_id in kwargs.get("surfaces", list()):
+                data = self._get_property(property, surface=surface_id)
+                if data is None:
+                    entities_without_property.append(surface_id)
+    
+        return entities_without_property
+
 
 if __name__ == "__main__":
     p = ModelProperties()
