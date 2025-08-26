@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QDialog, QLineEdit
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -94,6 +94,16 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         if len(surfaces) == 1:
             surface_id = list(surfaces)[0]
+
+            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            if len(volumes_from_surface) == 1:
+                selected_fluid = self.properties._get_property("fluid", volume=volumes_from_surface[0])
+                self.get_selected_fluid(selected_fluid=selected_fluid)
+            elif len(volumes_from_surface) == 2:
+                fluid_A = self.properties._get_property("fluid", volume=volumes_from_surface[0])
+                fluid_B = self.properties._get_property("fluid", volume=volumes_from_surface[1])
+                if fluid_A == fluid_B:
+                    self.get_selected_fluid(selected_fluid=fluid_A)
 
             if self.tabWidget_main.currentIndex() == 1:
                 return
@@ -359,16 +369,22 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
 
-    def get_selected_fluid(self):
-        self.selected_fluid = self.fluid_dialog.get_selected_fluid()
-        if isinstance(self.selected_fluid, Fluid):
-            self.fluid_dialog.close()
-            P_L = self.selected_fluid.pressure / 1e5
-            C_0 = self.selected_fluid.speed_of_sound
+    def get_selected_fluid(self, selected_fluid: Fluid|None=None):
 
-            self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
+        if isinstance(self.fluid_dialog, QDialog):
+            selected_fluid = self.fluid_dialog.get_selected_fluid()     
+            self.fluid_dialog.close()
+            self.fluid_dialog = None
+
+        if isinstance(selected_fluid, Fluid):
+            P_L = selected_fluid.pressure / 1e5
+            C_0 = selected_fluid.speed_of_sound
+
+            self.lineEdit_selected_fluid.setText(selected_fluid.name)
             self.lineEdit_average_line_pressure.setText(f"{P_L : .6f}")
             self.lineEdit_speed_of_sound.setText(f"{C_0 : .6f}")
+
+        self.selected_fluid = selected_fluid
 
     def get_internal_diameter_from_selection(self):
 
