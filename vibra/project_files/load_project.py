@@ -389,12 +389,10 @@ class LoadProject:
     def load_analysis_results(self):
 
         project = app().project
-        results_data = self.file.read_results_data_from_file()
-
-        if not results_data:
-            return
 
         logging.info("Loading results... [20/100]")
+        results_data = self.file.read_results_data_from_file()
+
         for key, data in results_data.items():
             data: dict
 
@@ -422,18 +420,23 @@ class LoadProject:
                 continue
 
         logging.info("Updating analysis render... [85/100]")
-        
-        acoustic_harmonic_solver = project.acoustic_harmonic_solver
-        if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
-            self.file.handling_harmonic_solution_results()
-            acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
-            if acoustic_harmonic_solver.solution is None:
-                return
 
-            app().main_window.disable_advanced_acoustic_plots_buttons(False)
-            if acoustic_harmonic_solver.solution.has_partial_solutions():
-                acoustic_harmonic_solver.solution = None
-                project.can_resume_solution = True
+        acoustic_harmonic_solver = project.acoustic_harmonic_solver
+        if acoustic_harmonic_solver is None:
+            return
+
+        if acoustic_harmonic_solver.project_file is None:
+            return
+
+        self.file.handling_harmonic_solution_results()          
+        acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
+        if acoustic_harmonic_solver.solution is None:
+            return
+
+        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+        if acoustic_harmonic_solver.solution.has_partial_solutions():
+            acoustic_harmonic_solver.solution = None
+            project.can_resume_solution = True
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):
