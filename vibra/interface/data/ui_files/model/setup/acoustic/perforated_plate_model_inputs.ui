@@ -1784,6 +1784,113 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>Edit</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="0">
+           <widget class="QTableWidget" name="tableWidget">
+            <row>
+             <property name="text">
+              <string>Model ID</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Fluid</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Fluid density</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Speed of sound</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Plate thickness</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Hole diameter</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Porosity</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Linear discharge coefficient</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Include effects</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Non-linear discharge coefficient</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>Non-linear correction factor</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+            <row>
+             <property name="text">
+              <string>User-defined transfer impedance</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </row>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="tab_list">
          <attribute name="title">
           <string>List</string>
@@ -1841,15 +1948,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Coupling type</string>
-             </property>
-             <property name="textAlignment">
-              <set>AlignCenter</set>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>Perforated plate parameters</string>
+              <string>Model ID</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

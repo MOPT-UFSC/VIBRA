@@ -14,8 +14,11 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.model_inputs.acoustic.perforated_plate_data import PerforatedPlateData
 
+from collections import defaultdict
 from copy import deepcopy
+from typing import Dict, List
 
 import logging, os, warnings
 import numpy as np
@@ -227,7 +230,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         #
         self.current_line_edit = self.lineEdit_selection_id_A
         #
-        for i, w in enumerate([120, 130, 200]):
+        for i, w in enumerate([290, 290]):
             self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
             self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
         
@@ -309,28 +312,29 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
 
     def load_model_info(self):
+        self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
+        self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
 
         self.treeWidget_perforated_plate_model.clear()
 
+        print(self.properties.surface_properties)
+
+        models = list()
         for key, data in self.properties.surface_properties.items():
 
             property, surface_id = key
             if property == "perforated_plate_model":
-                data: dict
 
-                model_inputs = list()
-                for key, value in data.items():
+                model = PerforatedPlateData.set_data(data)
+                print(model)
+                
+                if model not in models:
+                    models.append(model)
 
-                    if key in ["formulation", "fluid_data", "values", "table_names", "table_paths"]:
-                        continue
+                model_id = models.index(model) + 1
 
-                    if key == "coupling_type":
-                        coupling_type = data.get("coupling_type")
-                    else:
-                        model_inputs.append(value)
-
-                new = QTreeWidgetItem([str(surface_id), coupling_type, str(model_inputs)])
-                for i in range(3):
+                new = QTreeWidgetItem([str(surface_id), str(model_id)])
+                for i in range(2):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_perforated_plate_model.addTopLevelItem(new)
@@ -494,55 +498,59 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def get_inputs_for_perforated_plate_with_circular_holes(self):
+    def get_inputs_for_perforated_plate_with_circular_holes(self) -> PerforatedPlateData:
 
         if self.tabWidget_perforated_plate_models.currentIndex() != 0:
-            return dict()
+            return
         
         if self.selected_fluid is None:
             self.get_fluid_callback()
 
         if not isinstance(self.selected_fluid, Fluid):
-            return dict()
+            return
 
-        self.pp_data["fluid_data"] = dict(
-                                          name = self.selected_fluid.name,
-                                          fluid_density = self.selected_fluid.fluid_density,
-                                          speed_of_sound = self.selected_fluid.speed_of_sound,
-                                          isentropic_exponent = self.selected_fluid.isentropic_exponent,
-                                          thermal_conductivity = self.selected_fluid.thermal_conductivity,
-                                          specific_heat_Cp = self.selected_fluid.specific_heat_Cp,
-                                          dynamic_viscosity = self.selected_fluid.dynamic_viscosity,
-                                          temperature = self.selected_fluid.temperature,
-                                          pressure = self.selected_fluid.pressure,
-                                          molar_mass = self.selected_fluid.molar_mass,
-                                          )
+
+        # self.pp_data["fluid_data"] = dict(
+        #                                   name = self.selected_fluid.name,
+        #                                   fluid_density = self.selected_fluid.fluid_density,
+        #                                   speed_of_sound = self.selected_fluid.speed_of_sound,
+        #                                   isentropic_exponent = self.selected_fluid.isentropic_exponent,
+        #                                   thermal_conductivity = self.selected_fluid.thermal_conductivity,
+        #                                   specific_heat_Cp = self.selected_fluid.specific_heat_Cp,
+        #                                   dynamic_viscosity = self.selected_fluid.dynamic_viscosity,
+        #                                   temperature = self.selected_fluid.temperature,
+        #                                   pressure = self.selected_fluid.pressure,
+        #                                   molar_mass = self.selected_fluid.molar_mass,
+        #                                   )
 
         lineEdit = self.lineEdit_plate_thickness
         plate_thickness = self.check_inputs(lineEdit, "Plate thickness")
         if plate_thickness is None:
             lineEdit.setFocus()
-            return dict()
+            return
 
         lineEdit = self.lineEdit_hole_diameter
         hole_diameter = self.check_inputs(lineEdit, "Hole diameter")
         if hole_diameter is None:
             lineEdit.setFocus()
-            return dict()
+            return
 
         lineEdit = self.lineEdit_porosity
         porosity = self.check_inputs(lineEdit, "Porosity")
         if porosity is None:
             lineEdit.setFocus()
-            return dict()
+            return
 
         lineEdit = self.lineEdit_linear_discharge_coefficient
         linear_discharge_coefficient = self.check_inputs(lineEdit, "Linear discharge coefficient")
         if linear_discharge_coefficient is None:
             lineEdit.setFocus()
-            return dict()
+            return
+        
+        model = PerforatedPlateData()
 
         pp_data_general = dict(
+                                fluid = self.selected_fluid,
                                 formulation = "circular_hole",
                                 plate_thickness = plate_thickness,
                                 hole_diameter = hole_diameter,
@@ -550,7 +558,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                 linear_discharge_coefficient = linear_discharge_coefficient,
                                 )
 
-        self.pp_data.update(pp_data_general)
+        model.set_general_data(pp_data_general)
+        # self.pp_data.update(pp_data_general)
 
         if "Non-linear" in self.comboBox_include_effects.currentText():
 
@@ -558,16 +567,19 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             non_linear_discharge_coefficient = self.check_inputs(lineEdit, "Non-linear discharge coefficient")
             if non_linear_discharge_coefficient is None:
                 lineEdit.setFocus()
-                return dict()
+                return
 
             lineEdit = self.lineEdit_non_linear_correction_factor
             non_linear_correction_factor = self.check_inputs(lineEdit, "Non-linear correction factor")
             if non_linear_correction_factor is None:
                 lineEdit.setFocus()
-                return dict()
+                return
 
-            self.pp_data["non_linear_discharge_coefficient"] = non_linear_discharge_coefficient
-            self.pp_data["non_linear_correction_factor"] = non_linear_correction_factor
+            model.set_non_linear_data( non_linear_discharge_coefficient, non_linear_correction_factor)
+            # self.pp_data["non_linear_discharge_coefficient"] = non_linear_discharge_coefficient
+            # self.pp_data["non_linear_correction_factor"] = non_linear_correction_factor
+        
+        return model
 
     def check_selected_surfaces(self):
 
@@ -642,7 +654,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def attribute_callback(self):
 
-        self.pp_data.clear()
+        # self.pp_data.clear()
         if self.tabWidget_main.currentIndex():
             return
 
@@ -651,32 +663,33 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             return
 
         self.remove_conflicting_excitations(surface_ids)
-        self.get_inputs_for_perforated_plate_with_circular_holes()
+        model = self.get_inputs_for_perforated_plate_with_circular_holes()
 
-        if not self.pp_data:
+        if not model:
             return
 
-        if self.pp_data.get("coupling_type") == "inside_surfaces":
+        if self.comboBox_selection_type.currentText() == "Inside surfaces":
 
             for surface_id in surface_ids:
                 if "User-defined" in self.comboBox_include_effects.currentText():
-                    self.include_user_defined_transfer_impedance(surface_id)
-                    if not self.pp_data:
-                        return
+                   self.include_user_defined_transfer_impedance(model, surface_id)
+                    
+                    # if not self.pp_data:
+                    #     return
 
-                pp_data = deepcopy(self.pp_data)
-                self.properties._set_property("perforated_plate_model", pp_data, surface=surface_id)
+                # pp_data = deepcopy(self.pp_data)
+                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
                 self.decouple_degrees_of_freedom(surface_id)
 
-        else:
+        # else:
 
-            if "User-defined" in self.comboBox_include_effects.currentText():
-                self.include_user_defined_transfer_impedance(surface_ids)
-                if not self.pp_data:
-                    return
+        #     if "User-defined" in self.comboBox_include_effects.currentText():
+        #         self.include_user_defined_transfer_impedance(surface_ids)
+        #         if not self.pp_data:
+        #             return
 
-            pp_data = deepcopy(self.pp_data)
-            self.properties._set_property("perforated_plate_model", self.pp_data, surface=tuple(surface_ids))
+        #     pp_data = deepcopy(self.pp_data)
+        #     self.properties._set_property("perforated_plate_model", self.pp_data, surface=tuple(surface_ids))
 
         self.assignment_complete = True
         self.lineEdit_selection_id_A.setText("")
@@ -685,21 +698,21 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.hide()
         self.actions_to_finalize()
 
-    def include_user_defined_transfer_impedance(self, surface_id: int | list[int]):
+    def include_user_defined_transfer_impedance(self, model: PerforatedPlateData, surface_id: int | list[int]):
 
         if self.imported_values is None:
             self.imported_values = self.load_user_defined_transfer_impedance()
 
         if self.imported_values is None:
-            self.pp_data.clear()
+            # self.pp_data.clear()
             return
 
         if not isinstance(self.imported_values, np.ndarray):
-            self.pp_data.clear()
+            # self.pp_data.clear()
             return
 
         if self.imported_values.shape[1] < 3:
-            self.pp_data.clear()
+            # self.pp_data.clear()
             return
 
         if self.imported_values[0, 0] == 0:
@@ -713,15 +726,17 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if self.save_table_values(table_name, self.imported_values):
             self.lineEdit_user_defined_transfer_impedance_path.setFocus()
             self.imported_values = None
-            self.pp_data.clear()
+            # self.pp_data.clear()
             return
 
         complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-        table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
+        # table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
 
-        self.pp_data["table_names"] = [table_name]
-        self.pp_data["table_paths"] = [table_path]
-        self.pp_data["values"] = [complex_values]
+        model.set_user_defined_transfer_impedance(complex_values)
+    
+        # self.pp_data["table_names"] = [table_name]
+        # self.pp_data["table_paths"] = [table_path]
+        # self.pp_data["values"] = [complex_values]
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
