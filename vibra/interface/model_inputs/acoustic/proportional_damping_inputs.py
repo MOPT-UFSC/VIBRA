@@ -28,9 +28,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self._create_connections()
         self.load_info()
 
-        self.geometry_selection_callback()
-        self.attribution_type_callback()
-
         while self.keep_window_open:
             self.exec()
 
@@ -58,6 +55,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.treeWidget_proportional_damping.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.geometry_selection_callback()
 
     def attribution_type_callback(self):
 
