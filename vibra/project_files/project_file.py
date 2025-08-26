@@ -698,7 +698,7 @@ class ProjectFile:
         path = deepcopy(str(self.fluid_library_filepath))
         cpath = Path(path.replace(".json", ".config"))
         if cpath.exists():
-            fluid_data = self.convert_fluid_data_from_configparser_to_dictionary(cpath, remove_after_convert=False)
+            fluid_data = self.convert_fluid_data_from_configparser_to_dictionary(cpath, remove_after_convert=True)
             if fluid_data:
                 self.write_fluid_library_in_file(fluid_data)
 
@@ -706,7 +706,7 @@ class ProjectFile:
         path = deepcopy(str(self.material_library_filepath))
         cpath = Path(path.replace(".json", ".config"))
         if cpath.exists():
-            material_data = self.convert_material_data_from_configparser_to_dictionary(cpath, remove_after_convert=False)
+            material_data = self.convert_material_data_from_configparser_to_dictionary(cpath, remove_after_convert=True)
             if material_data:
                 self.write_material_library_in_file(material_data)
 
