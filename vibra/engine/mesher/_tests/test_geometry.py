@@ -77,10 +77,9 @@ def test_geometry_centers(geometry: Geometry):
 
 
 def test_convert_all_length_units(geometry: Geometry):
-
-    geometry._curves_lengths = {1: 10.0}        # mm
-    geometry._surfaces_areas = {1: 100.0}       # mm²
-    geometry._solids_volumes = {1: 1000.0}      # mm³
+    geometry._curves_lengths = {1: 10.0}  # mm
+    geometry._surfaces_areas = {1: 100.0}  # mm²
+    geometry._solids_volumes = {1: 1000.0}  # mm³
     geometry.set_length_unit("inch")
     # assert np.allclose(geo._curves_lengths[1], 0.393700787)
     # assert np.allclose(geo._surfaces_areas[1], 0.393700787**2)
@@ -88,25 +87,25 @@ def test_convert_all_length_units(geometry: Geometry):
     # assert np.allclose(geo._solids_centers[1], np.array([0.19685039370078738, 0.19685039370078738, 0.19685039370078738]))
 
 
-
-@pytest.mark.skip
 def test_geometry_normals(geometry: Geometry):
+    sq2 = np.sqrt(2)
+
     assert geometry.surface_normal(1) == np.array([1, 0, 0])
     assert geometry.surface_normal(2) == np.array([-1, 0, 0])
     assert geometry.surface_normal(3) == np.array([0, 1, 0])
     assert geometry.surface_normal(4) == np.array([0, -1, 0])
 
-    assert geometry.curve_normal(1) == np.array([1, 1, 0])
+    assert geometry.curve_normal(1) == np.array([sq2, sq2, 0])
     assert geometry.curve_normal(2) == np.array([0, 0, 1])
-    assert geometry.curve_normal(3) == np.array([1, -1, 0])
+    assert geometry.curve_normal(3) == np.array([sq2, -sq2, 0])
     assert geometry.curve_normal(4) == np.array([0, 0, -1])
-    assert geometry.curve_normal(5) == np.array([-1, 1, 0])
-    assert geometry.curve_normal(6) == np.array([-1, -1, 0])
+    assert geometry.curve_normal(5) == np.array([-sq2, sq2, 0])
+    assert geometry.curve_normal(6) == np.array([-sq2, -sq2, 0])
 
-    assert geometry.point_normal(1) == np.array([0, 1, 1])
-    assert geometry.point_normal(2) == np.array([0, 1, -1])
-    assert geometry.point_normal(3) == np.array([0, -1, 1])
-    assert geometry.point_normal(4) == np.array([0, -1, -1])
+    assert geometry.point_normal(1) == np.array([0, sq2, sq2])
+    assert geometry.point_normal(2) == np.array([0, sq2, -sq2])
+    assert geometry.point_normal(3) == np.array([0, -sq2, sq2])
+    assert geometry.point_normal(4) == np.array([0, -sq2, -sq2])
 
 
 @pytest.mark.skip
