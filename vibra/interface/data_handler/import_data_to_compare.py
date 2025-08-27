@@ -81,7 +81,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.spinBox_skiprows.setDisabled(not self.checkBox_skiprows.isChecked())
 
     def import_results(self):
-        extensions = ["csv", "txt", "dat", "xls", "xlsx"]
+        extensions = ["xlsx", "xls", "csv", "txt", "dat"]
         self.imported_data = DataImporter.import_multiple_files("imported_data_folder", extensions)
 
         if self.imported_data is None:
