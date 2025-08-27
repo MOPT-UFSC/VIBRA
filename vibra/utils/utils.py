@@ -1,4 +1,5 @@
 from pathlib import Path
+from numpy import ndarray
 
 def get_list_of_values_from_string(input_string, int_values=True):
     """ 
@@ -59,3 +60,20 @@ def get_color_rgb(color):
         color = color[1:-1]
     tokens = color.split(',')
     return list(map(int, tokens))
+
+def are_there_values_different_from_zero(values: list[complex|ndarray]):
+    """
+    """
+    for value in values:
+        if value is None:
+            continue
+
+        if isinstance(value, complex):
+            if value != complex(0):
+                return True
+
+        if isinstance(value, ndarray):
+            if value.any():
+                return True
+
+    return False

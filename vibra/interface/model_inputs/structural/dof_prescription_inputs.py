@@ -9,6 +9,7 @@ from vibra.interface.ui_generated.model.setup.structural.dof_prescription_inputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.utils.utils import are_there_values_different_from_zero
 
 import numpy as np
 from enum import IntEnum
@@ -208,7 +209,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
         
         values = data.get("values", list())
-        if is_the_sum_of_values_zero(values):
+        if not are_there_values_different_from_zero(values):
             return
 
         self.reset_input_fields()
@@ -820,7 +821,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 continue
 
             values = data["values"]
-            if is_the_sum_of_values_zero(values):
+            if not are_there_values_different_from_zero(values):
                 continue
 
             element_type = data["element_type"]
@@ -857,7 +858,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             for (property, _), data in current_property.items():
                 if property == "prescribed_dofs":
                     values = data["values"]
-                    if is_the_sum_of_values_zero(values):
+                    if not are_there_values_different_from_zero(values):
                         continue
 
                     self.tabWidget_main.setTabVisible(2, True)
@@ -1016,7 +1017,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     if property_label != "prescribed_dofs":
                         continue
     
-                    if is_the_sum_of_values_zero(data.get("values")):
+                    if not are_there_values_different_from_zero(data.get("values")):
                         continue
     
                     entities_to_remove[entity_label].append(args[0])
@@ -1128,16 +1129,3 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                     return
-
-def is_the_sum_of_values_zero(values: list):
-
-    sum_values = 0.
-    for value in values:
-        if value is None:
-            continue
-        sum_values += value
-
-    if isinstance(sum_values, np.ndarray):
-        return not sum_values.any()
-    else:
-        return sum_values == complex(0)

@@ -7,6 +7,7 @@ from vibra import app
 from vibra.interface.ui_generated.model.setup.structural.dof_constraint_inputs_ui import DofConstraintInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.utils.utils import are_there_values_different_from_zero
 
 import numpy as np
 from enum import IntEnum
@@ -20,6 +21,13 @@ warning_title = "Warning"
 class ElementFormulation(IntEnum):
     ELEMENT_2D = 0
     ELEMENT_3D = 1
+
+
+class AssignmentType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
 
 
 class DofConstraintInputs(DofConstraintInputs_UI):
@@ -169,7 +177,7 @@ class DofConstraintInputs(DofConstraintInputs_UI):
         values = data.get("values")
         element_type = data.get("element_type", None)
 
-        if not is_the_sum_of_values_zero(values):
+        if are_there_values_different_from_zero(values):
             return
 
         mask = [False if value is None else True for value in values]
@@ -208,23 +216,12 @@ class DofConstraintInputs(DofConstraintInputs_UI):
     def attribute_callback(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
+        assign_index = self.comboBox_attribution_type.currentIndex()
 
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
-
+        assigment_types = ["surfaces", "lines", "points", "nodes"]
         selected_ids, error_data = self.mesh.check_selected_ids(
                                                                 input_ids, 
-                                                                selection = selection, 
+                                                                selection = assigment_types[assign_index], 
                                                                 single_id = False
                                                                 )
 
@@ -234,8 +231,8 @@ class DofConstraintInputs(DofConstraintInputs_UI):
             PrintMessageInput(error_data)
             return
         
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
+        self.remove_duplicated_attributions(selected_ids, assigment_types[assign_index])
+        self.remove_conflicting_excitations(selected_ids, assigment_types[assign_index])
 
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
@@ -276,16 +273,16 @@ class DofConstraintInputs(DofConstraintInputs_UI):
                     "imag_values" : imag_values
                     }
 
-            if attribution_type == 0:
+            if  assign_index == AssignmentType.SURFACES:
                 self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
 
-            elif attribution_type == 1:
+            elif assign_index == AssignmentType.LINES:
                 self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
-            elif attribution_type == 2:
+            elif assign_index == AssignmentType.POINTS:
                 self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
 
-            elif attribution_type == 3:
+            elif assign_index == AssignmentType.NODES:
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()
@@ -426,7 +423,7 @@ class DofConstraintInputs(DofConstraintInputs_UI):
                 continue
 
             values = data["values"]
-            if not is_the_sum_of_values_zero(values):
+            if are_there_values_different_from_zero(values):
                 continue
 
             element_type = data["element_type"]
@@ -611,7 +608,7 @@ class DofConstraintInputs(DofConstraintInputs_UI):
                     if property_label != "prescribed_dofs":
                         continue
     
-                    if not is_the_sum_of_values_zero(data.get("values")):
+                    if are_there_values_different_from_zero(data.get("values")):
                         continue
     
                     entities_to_remove[entity_label].append(args[0])
@@ -704,16 +701,3 @@ class DofConstraintInputs(DofConstraintInputs_UI):
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                     return
-
-
-def is_the_sum_of_values_zero(values: list):
-    sum_values = 0.
-    for value in values:
-        if value is None:
-            continue
-        sum_values += value
-    
-    if isinstance(sum_values, np.ndarray):
-        return not sum_values.any()
-    else:
-        return sum_values == complex(0)
