@@ -3,8 +3,8 @@ from PySide6.QtWidgets import QFileDialog
 from vibra import app
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.utils.utils import get_new_path
 
-from utils.utils import get_new_path
 from pathlib import Path
 
 import os
