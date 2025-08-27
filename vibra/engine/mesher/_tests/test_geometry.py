@@ -90,22 +90,22 @@ def test_convert_all_length_units(geometry: Geometry):
 def test_geometry_normals(geometry: Geometry):
     sq2 = np.sqrt(2)
 
-    assert geometry.surface_normal(1) == np.array([1, 0, 0])
-    assert geometry.surface_normal(2) == np.array([-1, 0, 0])
-    assert geometry.surface_normal(3) == np.array([0, 1, 0])
-    assert geometry.surface_normal(4) == np.array([0, -1, 0])
+    assert np.allclose(geometry.surface_normal(1), np.array([1, 0, 0]))
+    assert np.allclose(geometry.surface_normal(2), np.array([-1, 0, 0]))
+    assert np.allclose(geometry.surface_normal(3), np.array([0, 1, 0]))
+    assert np.allclose(geometry.surface_normal(4), np.array([0, -1, 0]))
 
-    assert geometry.curve_normal(1) == np.array([sq2, sq2, 0])
-    assert geometry.curve_normal(2) == np.array([0, 0, 1])
-    assert geometry.curve_normal(3) == np.array([sq2, -sq2, 0])
-    assert geometry.curve_normal(4) == np.array([0, 0, -1])
-    assert geometry.curve_normal(5) == np.array([-sq2, sq2, 0])
-    assert geometry.curve_normal(6) == np.array([-sq2, -sq2, 0])
+    assert np.allclose(geometry.curve_normal(1), np.array([sq2, sq2, 0]))
+    assert np.allclose(geometry.curve_normal(2), np.array([0, 0, 1]))
+    assert np.allclose(geometry.curve_normal(3), np.array([sq2, -sq2, 0]))
+    assert np.allclose(geometry.curve_normal(4), np.array([0, 0, -1]))
+    assert np.allclose(geometry.curve_normal(5), np.array([-sq2, sq2, 0]))
+    assert np.allclose(geometry.curve_normal(6), np.array([-sq2, -sq2, 0]))
 
-    assert geometry.point_normal(1) == np.array([0, sq2, sq2])
-    assert geometry.point_normal(2) == np.array([0, sq2, -sq2])
-    assert geometry.point_normal(3) == np.array([0, -sq2, sq2])
-    assert geometry.point_normal(4) == np.array([0, -sq2, -sq2])
+    assert np.allclose(geometry.point_normal(1), np.array([0, sq2, sq2]))
+    assert np.allclose(geometry.point_normal(2), np.array([0, sq2, -sq2]))
+    assert np.allclose(geometry.point_normal(3), np.array([0, -sq2, sq2]))
+    assert np.allclose(geometry.point_normal(4), np.array([0, -sq2, -sq2]))
 
 
 @pytest.mark.skip
