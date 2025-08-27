@@ -202,7 +202,7 @@ class Ui_Dialog(object):
         self.gridLayout_14.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
 
 
-        self.gridLayout_12.addWidget(self.frame_20, 4, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.frame_20, 3, 0, 1, 1)
 
         self.frame_8 = QFrame(self.tab_constant_data)
         self.frame_8.setObjectName(u"frame_8")
@@ -492,11 +492,7 @@ class Ui_Dialog(object):
 
         self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_12.addItem(self.verticalSpacer_5, 5, 0, 1, 1)
-
-        self.verticalSpacer_8 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_12.addItem(self.verticalSpacer_8, 3, 0, 1, 1)
+        self.gridLayout_12.addItem(self.verticalSpacer_5, 4, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_constant_data, "")
         self.tab_tabular_data = QWidget()
@@ -830,6 +826,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -839,6 +836,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 

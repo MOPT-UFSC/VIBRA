@@ -34,7 +34,8 @@ class ModelSetupItems(CommonMenuItems):
 
         self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
-        self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
+        self.item_child_constrain_dof = self.add_item("Constrain DOF")
+        self.item_child_prescribe_dof = self.add_item("Prescribe DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
@@ -347,8 +348,11 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_surface_thickness_callback(self):
         app().main_window.input_ui.set_surface_thickness()
 
-    def item_child_prescribed_dof_callback(self):
-        app().main_window.input_ui.prescribe_structural_dofs()
+    def item_child_constrain_dof_callback(self):
+        app().main_window.input_ui.constrain_structural_dof()
+
+    def item_child_prescribe_dof_callback(self):
+        app().main_window.input_ui.prescribe_structural_dof()
 
     def item_child_nodal_loads_callback(self):
        app().main_window.input_ui.set_nodal_loads()
@@ -418,7 +422,8 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_surface_thickness.setDisabled(key)
-        self.item_child_prescribed_dof.setDisabled(key)
+        self.item_child_constrain_dof.setDisabled(key)
+        self.item_child_prescribe_dof.setDisabled(key)
         self.item_child_nodal_loads.setDisabled(key)
         self.item_child_normal_pressure_load.setDisabled(key)
         self.item_child_distributed_loads.setDisabled(key)

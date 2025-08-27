@@ -21,7 +21,8 @@ from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs impo
 from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
+from vibra.interface.model_inputs.structural.dof_constraint_inputs import DofConstraintInputs
+from vibra.interface.model_inputs.structural.dof_prescription_inputs import DofPrescriptionInputs
 from vibra.interface.model_inputs.structural.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.normal_pressure_load_inputs import NormalPressureLoadInputs
 from vibra.interface.model_inputs.structural.distributed_loads_inputs import DistributedLoadsInputs
@@ -95,11 +96,15 @@ class InputUi:
     def set_surface_thickness(self):
         if not self.model_setup_items.item_child_surface_thickness.isDisabled():
             self.process_input(SurfaceThicknessInputs)
-        
-    def prescribe_structural_dofs(self):
-        if not self.model_setup_items.item_child_prescribed_dof.isDisabled():
-            self.process_input(DofsPrescriptionInputs)
-        
+    
+    def constrain_structural_dof(self):
+        if not self.model_setup_items.item_child_constrain_dof.isDisabled():
+            self.process_input(DofConstraintInputs)
+
+    def prescribe_structural_dof(self):
+        if not self.model_setup_items.item_child_prescribe_dof.isDisabled():
+            self.process_input(DofPrescriptionInputs)
+
     def set_nodal_loads(self):
         if not self.model_setup_items.item_child_nodal_loads.isDisabled():
             self.process_input(NodalLoadsInputs)
