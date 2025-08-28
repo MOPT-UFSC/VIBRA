@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem, QTableWidgetItem
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent, QColor
 
@@ -312,34 +312,64 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
 
     def load_model_info(self):
+        
+        self.map_existing_models()
+        self.configure_edit_table_widget()
+
+        self.update_pp_model_tree_widget()
+        self.update_edit_table_widget()
+
+        self.update_tabs_visibility()
+    
+    def map_existing_models(self):
         self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
         self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
 
-        self.treeWidget_perforated_plate_model.clear()
-
-        print(self.properties.surface_properties)
-
         models = list()
-        for key, data in self.properties.surface_properties.items():
+        for key, data in deepcopy(self.properties.surface_properties).items():
 
             property, surface_id = key
             if property == "perforated_plate_model":
 
                 model = PerforatedPlateData.set_data(data)
-                print(model)
                 
                 if model not in models:
                     models.append(model)
 
                 model_id = models.index(model) + 1
 
+                self.map_model_id_to_model[model_id] = model
+                self.map_model_id_to_surfaces[model_id].append(surface_id)
+
+    def update_pp_model_tree_widget(self):
+        for model_id, surface_ids in self.map_model_id_to_surfaces.items():
+            for surface_id in surface_ids:
                 new = QTreeWidgetItem([str(surface_id), str(model_id)])
                 for i in range(2):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_perforated_plate_model.addTopLevelItem(new)
+            self.treeWidget_perforated_plate_model.addTopLevelItem(new)
+    
+    def configure_edit_table_widget(self):
+        self.edit_tableWidget.clearContents()
+        self.edit_tableWidget.blockSignals(True)
+        self.edit_tableWidget.setRowCount(12)
+        self.edit_tableWidget.setColumnCount(len(self.map_model_id_to_model))
+    
+    def update_edit_table_widget(self):
+        for column, model_info in enumerate(self.map_model_id_to_model.items()):
+            model_id, model = model_info
+            
+            model_id_item = QTableWidgetItem(str(model_id))
+            model_id_item.setFlags(Qt.ItemIsSelectable)
 
-        self.update_tabs_visibility()
+            self.edit_tableWidget.setItem(1, column + 1, model_id_item)
+
+            for row, fluid_data in enumerate(model.get_fluid_data()):
+                fluid_item = QTableWidgetItem(str(fluid_data))
+                fluid_item.setFlags(Qt.ItemIsSelectable)
+
+                self.edit_tableWidget.setItem(row + 1, column + 1, fluid_item)
 
     def update_tabs_visibility(self):
 
@@ -653,8 +683,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         return surface_ids
 
     def attribute_callback(self):
-
-        # self.pp_data.clear()
         if self.tabWidget_main.currentIndex():
             return
 
@@ -673,11 +701,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             for surface_id in surface_ids:
                 if "User-defined" in self.comboBox_include_effects.currentText():
                    self.include_user_defined_transfer_impedance(model, surface_id)
-                    
-                    # if not self.pp_data:
-                    #     return
-
-                # pp_data = deepcopy(self.pp_data)
+                
                 self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
                 self.decouple_degrees_of_freedom(surface_id)
 

@@ -1,11 +1,10 @@
-from dataclasses import dataclass
-
+from dataclasses import dataclass, asdict
 
 @dataclass
 class Fluid:
-    name: str
-    fluid_density: float
-    speed_of_sound: float
+    name: str = None
+    fluid_density: float = 0.0
+    speed_of_sound: float = 0.0
     color: tuple = (0, 0, 0)
     identifier: int = 0
     isentropic_exponent: float = 0.0

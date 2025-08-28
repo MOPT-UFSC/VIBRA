@@ -1790,7 +1790,7 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_13">
           <item row="0" column="0">
-           <widget class="QTableWidget" name="tableWidget">
+           <widget class="QTableWidget" name="edit_tableWidget">
             <row>
              <property name="text">
               <string>Model ID</string>

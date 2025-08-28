@@ -16,6 +16,7 @@ from pathlib import Path
 from vibra.project_files.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
 
+
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
@@ -443,6 +444,7 @@ class ProjectFile:
                 return output
 
             properties = app().project.model.properties
+
             data = dict(
                         # global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
@@ -452,7 +454,7 @@ class ProjectFile:
                         element_properties = normalize(properties.element_properties),
                         nodal_properties = normalize(properties.nodal_properties),
                         )
-
+                                        
             write_json(self.model_properties_filepath, data)
             app().main_window.project_data_modified = True
 

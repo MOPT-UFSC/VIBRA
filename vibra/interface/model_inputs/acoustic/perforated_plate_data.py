@@ -1,6 +1,6 @@
 from vibra.engine.properties.fluid import Fluid
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, asdict
 import numpy as np
 
 
@@ -31,16 +31,18 @@ class PerforatedPlateData:
     
     def get_data(self) -> dict:
         data = dict()
-
-        for attr, value in self.fluid.__dict__.items():
-            data[attr] = value
+        data.update(asdict(self.fluid))
 
         for attr, value in self.__dict__.items():
             if value is not None and attr != "fluid":
                 data[attr] = value
         
         return data
-            
+
+    def get_fluid_data(self) -> list:
+        return [self.fluid.name, self.fluid.fluid_density, 
+                self.fluid.speed_of_sound]
+
     def __str__(self) -> str:
         string = ""
         for attr, value in self.__dict__.items():
@@ -50,8 +52,18 @@ class PerforatedPlateData:
     
     @classmethod
     def set_data(cls, data: dict):
+        fluid_data = dict()
+
+        for key, value in data.items():
+            if key in Fluid.__dict__:
+                fluid_data[key] = value
+
+        fluid = Fluid(**fluid_data)
+
         for key in data.copy():
             if key not in cls.__dict__:
                 data.pop(key)
+
+        data["fluid"] = fluid
 
         return PerforatedPlateData(**data)

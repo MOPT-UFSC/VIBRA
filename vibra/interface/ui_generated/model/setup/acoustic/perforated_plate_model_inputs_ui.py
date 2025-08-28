@@ -645,48 +645,48 @@ class Ui_Dialog(object):
         self.tab_2.setObjectName(u"tab_2")
         self.gridLayout_13 = QGridLayout(self.tab_2)
         self.gridLayout_13.setObjectName(u"gridLayout_13")
-        self.tableWidget = QTableWidget(self.tab_2)
-        if (self.tableWidget.rowCount() < 12):
-            self.tableWidget.setRowCount(12)
+        self.edit_tableWidget = QTableWidget(self.tab_2)
+        if (self.edit_tableWidget.rowCount() < 12):
+            self.edit_tableWidget.setRowCount(12)
         __qtablewidgetitem = QTableWidgetItem()
         __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(0, __qtablewidgetitem)
+        self.edit_tableWidget.setVerticalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
         __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(1, __qtablewidgetitem1)
+        self.edit_tableWidget.setVerticalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
         __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(2, __qtablewidgetitem2)
+        self.edit_tableWidget.setVerticalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
         __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(3, __qtablewidgetitem3)
+        self.edit_tableWidget.setVerticalHeaderItem(3, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
         __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(4, __qtablewidgetitem4)
+        self.edit_tableWidget.setVerticalHeaderItem(4, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
         __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(5, __qtablewidgetitem5)
+        self.edit_tableWidget.setVerticalHeaderItem(5, __qtablewidgetitem5)
         __qtablewidgetitem6 = QTableWidgetItem()
         __qtablewidgetitem6.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(6, __qtablewidgetitem6)
+        self.edit_tableWidget.setVerticalHeaderItem(6, __qtablewidgetitem6)
         __qtablewidgetitem7 = QTableWidgetItem()
         __qtablewidgetitem7.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(7, __qtablewidgetitem7)
+        self.edit_tableWidget.setVerticalHeaderItem(7, __qtablewidgetitem7)
         __qtablewidgetitem8 = QTableWidgetItem()
         __qtablewidgetitem8.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(8, __qtablewidgetitem8)
+        self.edit_tableWidget.setVerticalHeaderItem(8, __qtablewidgetitem8)
         __qtablewidgetitem9 = QTableWidgetItem()
         __qtablewidgetitem9.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(9, __qtablewidgetitem9)
+        self.edit_tableWidget.setVerticalHeaderItem(9, __qtablewidgetitem9)
         __qtablewidgetitem10 = QTableWidgetItem()
         __qtablewidgetitem10.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(10, __qtablewidgetitem10)
+        self.edit_tableWidget.setVerticalHeaderItem(10, __qtablewidgetitem10)
         __qtablewidgetitem11 = QTableWidgetItem()
         __qtablewidgetitem11.setTextAlignment(Qt.AlignCenter);
-        self.tableWidget.setVerticalHeaderItem(11, __qtablewidgetitem11)
-        self.tableWidget.setObjectName(u"tableWidget")
+        self.edit_tableWidget.setVerticalHeaderItem(11, __qtablewidgetitem11)
+        self.edit_tableWidget.setObjectName(u"edit_tableWidget")
 
-        self.gridLayout_13.addWidget(self.tableWidget, 0, 0, 1, 1)
+        self.gridLayout_13.addWidget(self.edit_tableWidget, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_2, "")
         self.tab_list = QWidget()
@@ -865,29 +865,29 @@ class Ui_Dialog(object):
         self.label_18.setText(QCoreApplication.translate("Dialog", u"Plot selector:", None))
         self.tabWidget_perforated_plate_models.setTabText(self.tabWidget_perforated_plate_models.indexOf(self.tab), QCoreApplication.translate("Dialog", u"Circular holes", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
-        ___qtablewidgetitem = self.tableWidget.verticalHeaderItem(0)
+        ___qtablewidgetitem = self.edit_tableWidget.verticalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Model ID", None));
-        ___qtablewidgetitem1 = self.tableWidget.verticalHeaderItem(1)
+        ___qtablewidgetitem1 = self.edit_tableWidget.verticalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Fluid", None));
-        ___qtablewidgetitem2 = self.tableWidget.verticalHeaderItem(2)
+        ___qtablewidgetitem2 = self.edit_tableWidget.verticalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Fluid density", None));
-        ___qtablewidgetitem3 = self.tableWidget.verticalHeaderItem(3)
+        ___qtablewidgetitem3 = self.edit_tableWidget.verticalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Speed of sound", None));
-        ___qtablewidgetitem4 = self.tableWidget.verticalHeaderItem(4)
+        ___qtablewidgetitem4 = self.edit_tableWidget.verticalHeaderItem(4)
         ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Plate thickness", None));
-        ___qtablewidgetitem5 = self.tableWidget.verticalHeaderItem(5)
+        ___qtablewidgetitem5 = self.edit_tableWidget.verticalHeaderItem(5)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Hole diameter", None));
-        ___qtablewidgetitem6 = self.tableWidget.verticalHeaderItem(6)
+        ___qtablewidgetitem6 = self.edit_tableWidget.verticalHeaderItem(6)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Porosity", None));
-        ___qtablewidgetitem7 = self.tableWidget.verticalHeaderItem(7)
+        ___qtablewidgetitem7 = self.edit_tableWidget.verticalHeaderItem(7)
         ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Linear discharge coefficient", None));
-        ___qtablewidgetitem8 = self.tableWidget.verticalHeaderItem(8)
+        ___qtablewidgetitem8 = self.edit_tableWidget.verticalHeaderItem(8)
         ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"Include effects", None));
-        ___qtablewidgetitem9 = self.tableWidget.verticalHeaderItem(9)
+        ___qtablewidgetitem9 = self.edit_tableWidget.verticalHeaderItem(9)
         ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"Non-linear discharge coefficient", None));
-        ___qtablewidgetitem10 = self.tableWidget.verticalHeaderItem(10)
+        ___qtablewidgetitem10 = self.edit_tableWidget.verticalHeaderItem(10)
         ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Non-linear correction factor", None));
-        ___qtablewidgetitem11 = self.tableWidget.verticalHeaderItem(11)
+        ___qtablewidgetitem11 = self.edit_tableWidget.verticalHeaderItem(11)
         ___qtablewidgetitem11.setText(QCoreApplication.translate("Dialog", u"User-defined transfer impedance", None));
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_2), QCoreApplication.translate("Dialog", u"Edit", None))
         ___qtreewidgetitem = self.treeWidget_perforated_plate_model.headerItem()
@@ -983,7 +983,7 @@ class PerforatedPlateModelInputs_UI(QDialog, Ui_Dialog):
                                                                                         - label_18: QLabel
                                 - tab_2: QWidget
                                     - (Layout): QGridLayout
-                                            - tableWidget: QTableWidget
+                                            - edit_tableWidget: QTableWidget
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - treeWidget_perforated_plate_model: QTreeWidget
