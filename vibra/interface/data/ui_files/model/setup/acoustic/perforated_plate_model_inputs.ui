@@ -1791,6 +1791,9 @@
          <layout class="QGridLayout" name="gridLayout_13">
           <item row="0" column="0">
            <widget class="QTableWidget" name="edit_tableWidget">
+            <attribute name="horizontalHeaderVisible">
+             <bool>false</bool>
+            </attribute>
             <row>
              <property name="text">
               <string>Model ID</string>

@@ -30,6 +30,9 @@ class Fluid:
     @property
     def pressure_state(self):
         return self.fluid_density*(self.speed_of_sound**2)/self.isentropic_exponent
+
+    def get_data(self) -> dict:
+        return asdict(self)
     
     def get_lrf_properties(self):
         c_0 = self.speed_of_sound

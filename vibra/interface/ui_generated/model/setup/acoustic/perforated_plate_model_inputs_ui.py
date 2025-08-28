@@ -685,6 +685,7 @@ class Ui_Dialog(object):
         __qtablewidgetitem11.setTextAlignment(Qt.AlignCenter);
         self.edit_tableWidget.setVerticalHeaderItem(11, __qtablewidgetitem11)
         self.edit_tableWidget.setObjectName(u"edit_tableWidget")
+        self.edit_tableWidget.horizontalHeader().setVisible(False)
 
         self.gridLayout_13.addWidget(self.edit_tableWidget, 0, 0, 1, 1)
 

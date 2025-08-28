@@ -89,6 +89,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.treeWidget_perforated_plate_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
+        self.edit_tableWidget.cellChanged.connect(self.edit_table_widget_item)
+        #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
@@ -312,7 +314,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
 
     def load_model_info(self):
-        
         self.map_existing_models()
         self.configure_edit_table_widget()
 
@@ -342,6 +343,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.map_model_id_to_surfaces[model_id].append(surface_id)
 
     def update_pp_model_tree_widget(self):
+        self.treeWidget_perforated_plate_model.clear()
+
         for model_id, surface_ids in self.map_model_id_to_surfaces.items():
             for surface_id in surface_ids:
                 new = QTreeWidgetItem([str(surface_id), str(model_id)])
@@ -359,17 +362,47 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def update_edit_table_widget(self):
         for column, model_info in enumerate(self.map_model_id_to_model.items()):
             model_id, model = model_info
-            
+        
             model_id_item = QTableWidgetItem(str(model_id))
+            model_id_item.setTextAlignment(Qt.AlignCenter)
             model_id_item.setFlags(Qt.ItemIsSelectable)
 
-            self.edit_tableWidget.setItem(1, column + 1, model_id_item)
+            self.edit_tableWidget.setItem(0, column, model_id_item)
 
-            for row, fluid_data in enumerate(model.get_fluid_data()):
+            for row, fluid_data in enumerate(model.get_fluid_data_to_fill_edit_table_widget()):
                 fluid_item = QTableWidgetItem(str(fluid_data))
+                fluid_item.setTextAlignment(Qt.AlignCenter)
+
                 fluid_item.setFlags(Qt.ItemIsSelectable)
 
-                self.edit_tableWidget.setItem(row + 1, column + 1, fluid_item)
+                self.edit_tableWidget.setItem(row + 1, column, fluid_item)
+            
+            for row, pp_data in enumerate(model.get_data_to_fill_edit_table_widget()):
+                pp_item = QTableWidgetItem(str(pp_data))
+                pp_item.setTextAlignment(Qt.AlignCenter)
+
+                if isinstance(pp_data, str):
+                    pp_item.setFlags(Qt.ItemIsSelectable)
+
+                self.edit_tableWidget.setItem(row + 4, column, pp_item)
+        
+        self.edit_tableWidget.blockSignals(False)
+    
+    def edit_table_widget_item(self, row, column):
+        item = self.edit_tableWidget.item(row, column)
+
+        model_id = int(self.edit_table_widget_item(0, column).text())
+
+        new_item_value = None
+        unnaceptable_value_error = False
+
+        try:
+            new_item_value = float(item.text())
+        except:
+            unnaceptable_value_error = True
+        
+        if unnaceptable_value_error:
+            ...
 
     def update_tabs_visibility(self):
 
@@ -585,6 +618,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                 plate_thickness = plate_thickness,
                                 hole_diameter = hole_diameter,
                                 porosity = porosity,
+                                include_effects = self.comboBox_include_effects.currentText(),
                                 linear_discharge_coefficient = linear_discharge_coefficient,
                                 )
 
