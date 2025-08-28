@@ -13,7 +13,6 @@ from vibra.utils.utils import get_color_rgb
 import logging
 import numpy as np
 
-from collections import defaultdict
 
 class LoadProject:
     def __init__(self):
@@ -462,7 +461,7 @@ class LoadProject:
                     project.structural_modal_solver.solution = data.get("solution")
                     project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
 
-                elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None:
+                elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
                     project.acoustic_harmonic_solver.solution = data.get("solution")
                     app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
@@ -474,7 +473,15 @@ class LoadProject:
                     continue
 
             logging.info("Updating analysis render... [85/100]")
-            
+        
+        acoustic_harmonic_solver = project.acoustic_harmonic_solver
+        if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
+            self.file.handling_harmonic_solution_results()
+            acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
+            app().main_window.disable_advanced_acoustic_plots_buttons(False)
+            if acoustic_harmonic_solver.solution.has_partial_solutions():
+                acoustic_harmonic_solver.solution = None
+                project.can_resume_solution = True
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

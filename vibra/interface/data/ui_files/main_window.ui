@@ -20,9 +20,6 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -37,7 +34,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
+        <enum>Qt::NoContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -106,6 +103,8 @@
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
+   <addaction name="action_save"/>
+   <addaction name="action_save_as"/>
    <addaction name="separator"/>
    <addaction name="action_top_view"/>
    <addaction name="action_bottom_view"/>
@@ -137,7 +136,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>33</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -684,7 +683,7 @@
     <string>Ghost</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
  </widget>

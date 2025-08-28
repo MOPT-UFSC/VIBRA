@@ -1,9 +1,8 @@
 # fmt: off
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR, TEMP_PROJECT_FILE
+from vibra import app
 from vibra.interface.ui_generated.project.geometry.geometry_setup_ui import GeometrySetup_UI
 
 window_title_1 = "Error"

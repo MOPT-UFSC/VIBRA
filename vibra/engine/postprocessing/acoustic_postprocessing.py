@@ -54,7 +54,7 @@ def compute_acoustic_harmonic_field(
     if solver.solution is None:
         return None
 
-    selected_results = solver.solution[:, index].copy()
+    selected_results = solver.solution[:, index]
     amplitudes = np.abs(selected_results)
     phases = np.angle(selected_results)
     delta = -phases[np.argmax(amplitudes)]

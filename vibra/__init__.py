@@ -23,7 +23,6 @@ EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 
 USER_PATH = Path().home()
 TEMP_PROJECT_DIR = USER_PATH / "temp_vibra"
-TEMP_PROJECT_FILE = TEMP_PROJECT_DIR / "tmp.vibra"
 
 SUPPORTED_GEOMETRY_EXTENSIONS = [
     "iges",
@@ -44,12 +43,12 @@ SUPPORTED_MESH_EXTENSIONS = [
 ]
 
 SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
-                                    "dat",
-                                    "txt", 
-                                    "csv", 
-                                    "xls", 
-                                    "xlsx",
-                                    ]
+    "dat",
+    "txt",
+    "csv",
+    "xls",
+    "xlsx",
+]
 
 LIGHT_ICON_COLOR = Color("#1a73e8")
 DARK_ICON_COLOR = Color("#5F9AF4")
