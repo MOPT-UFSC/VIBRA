@@ -21,9 +21,9 @@ class AnalysisRequirementsChecker:
 
     def check_materials(self):
 
-        volumes_without_material = self.properties.get_entities_without_property("material", volumes=self.volume_ids)
-        if volumes_without_material:
-            if len(volumes_without_material) != len(self.volume_ids):
+        if self.volume_ids:
+            volumes_without_material = self.properties.get_entities_without_property("material", volumes=self.volume_ids)
+            if volumes_without_material:
                 title = "Invalid model setup"
                 message = f"You should assign one material for volumes {volumes_without_material} "
                 message += "to proceed with the analysis solution."
@@ -32,9 +32,9 @@ class AnalysisRequirementsChecker:
                 PrintMessageInput([error_title, title, message])
                 return True
 
-        surfaces_without_material = self.properties.get_entities_without_property("material", surfaces=self.surface_ids)
-        if surfaces_without_material:
-            if len(surfaces_without_material) != len(self.surface_ids):
+        else:
+            surfaces_without_material = self.properties.get_entities_without_property("material", surfaces=self.surface_ids)
+            if surfaces_without_material:
                 title = "Invalid model setup"
                 message = f"You should assign one material for surfaces {surfaces_without_material} "
                 message += "to proceed with the analysis solution."
@@ -43,9 +43,8 @@ class AnalysisRequirementsChecker:
                 PrintMessageInput([error_title, title, message])
                 return True
 
-        surfaces_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=self.surface_ids)
-        if surfaces_without_thickness:
-            if len(surfaces_without_thickness) != len(self.surface_ids):
+            surfaces_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=self.surface_ids)
+            if surfaces_without_thickness:
                 title = "Invalid model setup"
                 message = f"You should assign the surface thickness for surfaces {surfaces_without_thickness} "
                 message += "to proceed with the analysis solution."
