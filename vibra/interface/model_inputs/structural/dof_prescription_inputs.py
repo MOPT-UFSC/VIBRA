@@ -26,6 +26,12 @@ class ElementFormulation(IntEnum):
     ELEMENT_3D = 1
 
 
+class DOFSetup(IntEnum):
+    VALUE = 0
+    FREE = 1
+    FIXED = 2
+
+
 class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -92,14 +98,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def _create_line_edits(self):
 
-        self.constante_line_edits = [  
-                                    [self.lineEdit_real_ux, self.lineEdit_imag_ux],
-                                    [self.lineEdit_real_uy, self.lineEdit_imag_uy],
-                                    [self.lineEdit_real_uz, self.lineEdit_imag_uz],
-                                    [self.lineEdit_real_rx, self.lineEdit_imag_rx],
-                                    [self.lineEdit_real_ry, self.lineEdit_imag_ry],
-                                    [self.lineEdit_real_rz, self.lineEdit_imag_rz],
-                                    ]
+        self.constant_line_edits = {
+                                    "Ux": [self.lineEdit_real_ux, self.lineEdit_imag_ux],
+                                    "Uy": [self.lineEdit_real_uy, self.lineEdit_imag_uy],
+                                    "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
+                                    "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
+                                    "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
+                                    "Ry": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+                                }
 
         self.table_line_edits = { 
                                 "Ux" : self.lineEdit_path_table_ux,
@@ -109,6 +115,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                                 "Ry" : self.lineEdit_path_table_ry,
                                 "Rz" : self.lineEdit_path_table_rz,
                                 }
+
+        self.dof_setup_combo_boxes = { 
+                                        "Ux" : self.comboBox_displacement_ux,
+                                        "Uy" : self.comboBox_displacement_uy,
+                                        "Uz" : self.comboBox_displacement_uz,
+                                        "Rx" : self.comboBox_rotation_rx,
+                                        "Ry" : self.comboBox_rotation_ry,
+                                        "Rz" : self.comboBox_rotation_rz,
+                                        }
 
     def _config_widgets(self):
         #
@@ -122,16 +137,24 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
+        self.comboBox_displacement_ux.currentIndexChanged.connect(self.displacement_ux_callback)
+        self.comboBox_displacement_uy.currentIndexChanged.connect(self.displacement_uy_callback)
+        self.comboBox_displacement_uz.currentIndexChanged.connect(self.displacement_uz_callback)
+        self.comboBox_rotation_rx.currentIndexChanged.connect(self.rotation_rx_callback)
+        self.comboBox_rotation_ry.currentIndexChanged.connect(self.rotation_ry_callback)
+        self.comboBox_rotation_rz.currentIndexChanged.connect(self.rotation_rz_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_all_dof_fixed.clicked.connect(self.set_all_dof_fixed_callback)
+        self.pushButton_all_dof_free.clicked.connect(self.set_all_dof_free_callback)
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_load_ux_table.clicked.connect(self.load_ux_table)
         self.pushButton_load_uy_table.clicked.connect(self.load_uy_table)
         self.pushButton_load_uz_table.clicked.connect(self.load_uz_table)
         self.pushButton_load_rx_table.clicked.connect(self.load_rx_table)
         self.pushButton_load_ry_table.clicked.connect(self.load_ry_table)
         self.pushButton_load_rz_table.clicked.connect(self.load_rz_table)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -143,22 +166,127 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         #
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
+        self.set_all_dof_free_callback()
+
+    def attribution_type_callback(self):
+        if self.comboBox_attribution_type.currentIndex() == 3:
+            app().main_window.action_mesh_workspace_callback()
+        else:
+            app().main_window.action_model_workspace_callback()
+
+    def element_type_callback(self):
+
+        element_2d = self.comboBox_element_type.currentIndex() == ElementFormulation.ELEMENT_2D
+
+        self.comboBox_rotation_rx.setVisible(element_2d)
+        self.comboBox_rotation_ry.setVisible(element_2d)
+        self.comboBox_rotation_rz.setVisible(element_2d)
+        self.comboBox_angular_data_type.setVisible(element_2d)
+
+        self.label_Rx_constant.setVisible(element_2d)
+        self.label_Ry_constant.setVisible(element_2d)
+        self.label_Rz_constant.setVisible(element_2d)
+
+        self.label_angular.setVisible(element_2d)
+        # self.label_Rx_unit.setVisible(element_2d)
+        # self.label_Ry_unit.setVisible(element_2d)
+        # self.label_Rz_unit.setVisible(element_2d)
+        self.label_Rx_table.setVisible(element_2d)
+        self.label_Ry_table.setVisible(element_2d)
+        self.label_Rz_table.setVisible(element_2d)
+
+        self.lineEdit_real_rx.setVisible(element_2d)
+        self.lineEdit_real_ry.setVisible(element_2d)
+        self.lineEdit_real_rz.setVisible(element_2d)
+
+        self.lineEdit_imag_rx.setVisible(element_2d)
+        self.lineEdit_imag_ry.setVisible(element_2d)
+        self.lineEdit_imag_rz.setVisible(element_2d)
+
+        self.pushButton_load_rx_table.setVisible(element_2d)
+        self.pushButton_load_ry_table.setVisible(element_2d)
+        self.pushButton_load_rz_table.setVisible(element_2d)
+
+        self.lineEdit_path_table_rx.setVisible(element_2d)
+        self.lineEdit_path_table_ry.setVisible(element_2d)
+        self.lineEdit_path_table_rz.setVisible(element_2d)
+
+    def combo_box_callback(self, unit_label: str):
+
+        combo_box = self.dof_setup_combo_boxes[unit_label]
+        value_based = combo_box.currentIndex() == DOFSetup.VALUE
+
+        line_edit_real, line_edit_imag = self.constant_line_edits.get(unit_label, (None, None))
+        line_edit_real.setEnabled(value_based)
+        line_edit_imag.setEnabled(value_based)
+        line_edit_real.setText("")
+        line_edit_imag.setText("")
+
+        if value_based:
+            return
+
+        if combo_box.currentIndex() == DOFSetup.FIXED:
+            line_edit_real.setText("fixed")
+            line_edit_imag.setText("fixed")
+
+        elif combo_box.currentIndex() == DOFSetup.FREE:
+            line_edit_real.setText("free")
+            line_edit_imag.setText("free")
+
+    def displacement_ux_callback(self):
+        self.combo_box_callback("Ux")
+
+    def displacement_uy_callback(self):
+        self.combo_box_callback("Uy")
+
+    def displacement_uz_callback(self):
+        self.combo_box_callback("Uz")
+
+    def rotation_rx_callback(self):
+        self.combo_box_callback("Rx")
+
+    def rotation_ry_callback(self):
+        self.combo_box_callback("Ry")
+
+    def rotation_rz_callback(self):
+        self.combo_box_callback("Rz")
+
+    def set_all_dof_fixed_callback(self):
+        self.set_index_for_all_dof_combo_boxes(DOFSetup.FIXED)
+
+    def set_all_dof_free_callback(self):
+        self.set_index_for_all_dof_combo_boxes(DOFSetup.FREE)
+        # reset the constant values lineEdits
+        for lineEdit_real, lineEdit_imag in self.constant_line_edits.values():
+            lineEdit_real.setText("free")
+            lineEdit_imag.setText("free")
+
+    def set_index_for_all_dof_combo_boxes(self, index: int):
+
+        self.comboBox_displacement_ux.setCurrentIndex(index)
+        self.comboBox_displacement_uy.setCurrentIndex(index)
+        self.comboBox_displacement_uz.setCurrentIndex(index)
+
+        if self.comboBox_element_type.currentIndex() == ElementFormulation.ELEMENT_2D:
+            self.comboBox_rotation_rx.setCurrentIndex(index)
+            self.comboBox_rotation_ry.setCurrentIndex(index)
+            self.comboBox_rotation_rz.setCurrentIndex(index)
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
         points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
-        if faces:
+        if surfaces:
 
-            text = ", ".join([str(i) for i in faces])
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(0)
 
-            if len(faces) == 1:
-                surface_id = list(faces)[0]
+            if len(surfaces) == 1:
+                surface_id = list(surfaces)[0]
                 data = self.properties._get_property("prescribed_dofs", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
@@ -207,10 +335,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if data is None:
             return
-        
-        values = data.get("values", list())
-        if not are_there_values_different_from_zero(values):
+
+        if self.tabWidget_main.currentIndex() == 2:
             return
+
+        values = data.get("values", list())
+        # if not are_there_values_different_from_zero(values):
+        #     return
 
         self.reset_input_fields()
 
@@ -221,6 +352,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
         if "table_paths" in data.keys():
+    
+            self.tabWidget_main.setCurrentIndex(1)
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 if data["element_type"] == "3d_element" and index >= 3:
@@ -231,93 +364,89 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     lineEdit_table.setText(table_path)
 
         else:
-            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.constante_line_edits):
+
+            self.tabWidget_main.setCurrentIndex(0)
+            for index, (unit_label, (lineEdit_real, lineEdit_imag)) in enumerate(self.constant_line_edits.items()):
+    
                 if data["element_type"] == "3d_element" and index >= 3:
                     continue
 
-                elif index <= 5 and values[index] is not None:
+                if values[index] is None:
+                    self.dof_setup_combo_boxes[unit_label].setCurrentIndex(DOFSetup.FREE)
+
+                elif isinstance(values[index], complex):
+                    if values[index] == complex(0):
+                        self.dof_setup_combo_boxes[unit_label].setCurrentIndex(DOFSetup.FIXED)
+                    else:
+                        self.dof_setup_combo_boxes[unit_label].setCurrentIndex(DOFSetup.VALUE)
+
+                if isinstance(values[index], complex):
+                    if values[index] == complex(0):
+                        continue
                     lineEdit_real.setText(str(np.real(values[index])))
                     lineEdit_imag.setText(str(np.imag(values[index])))
-
-    def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 3:
-            app().main_window.action_mesh_workspace_callback()
-        else:
-            app().main_window.action_model_workspace_callback()
-
-    def element_type_callback(self):
-
-        element_2d = self.comboBox_element_type.currentIndex() == ElementFormulation.ELEMENT_2D
-
-        self.label_Rx_constant.setVisible(element_2d)
-        self.label_Ry_constant.setVisible(element_2d)
-        self.label_Rz_constant.setVisible(element_2d)
-
-        self.label_Rx_unit.setVisible(element_2d)
-        self.label_Ry_unit.setVisible(element_2d)
-        self.label_Rz_unit.setVisible(element_2d)
-
-        self.label_angular.setVisible(element_2d)
-        self.label_Rx_table.setVisible(element_2d)
-        self.label_Ry_table.setVisible(element_2d)
-        self.label_Rz_table.setVisible(element_2d)
-
-        self.lineEdit_real_rx.setVisible(element_2d)
-        self.lineEdit_real_ry.setVisible(element_2d)
-        self.lineEdit_real_rz.setVisible(element_2d)
-
-        self.lineEdit_imag_rx.setVisible(element_2d)
-        self.lineEdit_imag_ry.setVisible(element_2d)
-        self.lineEdit_imag_rz.setVisible(element_2d)
-
-        self.pushButton_load_rx_table.setVisible(element_2d)
-        self.pushButton_load_ry_table.setVisible(element_2d)
-        self.pushButton_load_rz_table.setVisible(element_2d)
-
-        self.lineEdit_path_table_rx.setVisible(element_2d)
-        self.lineEdit_path_table_ry.setVisible(element_2d)
-        self.lineEdit_path_table_rz.setVisible(element_2d)
-
-        self.comboBox_angular_data_type.setVisible(element_2d)
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def check_complex_entries(self, real_input: str, imag_input: str, label: str):
+    def check_complex_entries(self, line_edit_real: QLineEdit, line_edit_imag: QLineEdit, label: str):
 
         _real = None
-        if real_input != "":
-            try:
-                real_input = real_input.replace(",", ".")
-                _real = float(real_input)
+        input_real = line_edit_real.text()
 
-            except Exception:
-                self.hide()
-                title = f"Invalid entry to the {label}"
-                message = f"Wrong input for real part of {label}."
-                PrintMessageInput([error_title, title, message])
-                return True, None
+        if input_real != "":
+            if input_real == "fixed":
+                _real = 0.
+
+            elif input_real != "free":
+                try:
+                    real_input = input_real.replace(",", ".")
+                    _real = float(real_input)
+
+                except Exception:
+                    self.hide()
+                    title = f"Invalid entry to the {label}"
+                    message = f"Wrong input for real part of {label}."
+                    PrintMessageInput([error_title, title, message])
+                    return True, None
 
         _imag = None
-        if imag_input != "":
-            try:
-                imag_input = imag_input.replace(",", ".")
-                _imag = float(imag_input)
+        input_imag = line_edit_imag.text()
 
-            except Exception:
+        if input_imag != "":
+            if input_imag == "fixed":
+                _imag = 0.
+
+            elif input_imag != "free":
+                try:
+                    input_imag = input_imag.replace(",", ".")
+                    _imag = float(input_imag)
+
+                except Exception:
+                    self.hide()
+                    title = f"Invalid entry to the {label}"
+                    message = f"Wrong input for imaginary part of {label}."
+                    PrintMessageInput([error_title, title, message])
+                    return True, None
+
+        if (_real, _imag).count(None) == 2:
+            if line_edit_real.isEnabled() and line_edit_imag.isEnabled():
                 self.hide()
-                title = f"Invalid entry to the {label}"
-                message = f"Wrong input for imaginary part of {label}."
+                title = f"Empty fields detected"
+                message = f"Enter a value in the real and/or imaginary "
+                message += "part input field to proceed."
                 PrintMessageInput([error_title, title, message])
                 return True, None
+            else:
+                values = None
 
-        if _real is None and _imag is None:
-            values = None
         elif _real is None:
             values = 1j * _imag
+
         elif _imag is None:
             values = complex(_real)
+
         else:
             values = _real + 1j * _imag
 
@@ -358,15 +487,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
 
-        stop, ux = self.check_complex_entries(self.lineEdit_real_ux.text(), self.lineEdit_imag_ux.text(), "ux")
+        stop, ux = self.check_complex_entries(self.lineEdit_real_ux, self.lineEdit_imag_ux, "ux")
         if stop:
             return
 
-        stop, uy = self.check_complex_entries(self.lineEdit_real_uy.text(), self.lineEdit_imag_uy.text(), "uy")
+        stop, uy = self.check_complex_entries(self.lineEdit_real_uy, self.lineEdit_imag_uy, "uy")
         if stop:
             return
 
-        stop, uz = self.check_complex_entries(self.lineEdit_real_uz.text(), self.lineEdit_imag_uz.text(), "uz")
+        stop, uz = self.check_complex_entries(self.lineEdit_real_uz, self.lineEdit_imag_uz, "uz")
         if stop:
             return
 
@@ -374,15 +503,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if element_type == "2d_element":
 
-            stop, rx = self.check_complex_entries(self.lineEdit_real_rx.text(), self.lineEdit_imag_rx.text(), "rx")
+            stop, rx = self.check_complex_entries(self.lineEdit_real_rx, self.lineEdit_imag_rx, "rx")
             if stop:
                 return
 
-            stop, ry = self.check_complex_entries(self.lineEdit_real_ry.text(), self.lineEdit_imag_ry.text(), "ry")
+            stop, ry = self.check_complex_entries(self.lineEdit_real_ry, self.lineEdit_imag_ry, "ry")
             if stop:
                 return
 
-            stop, rz = self.check_complex_entries(self.lineEdit_real_rz.text(), self.lineEdit_imag_rz.text(), "rz")
+            stop, rz = self.check_complex_entries(self.lineEdit_real_rz, self.lineEdit_imag_rz, "rz")
             if stop:
                 return
 
@@ -393,9 +522,9 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if condition_1 or condition_2:
             self.hide()
-            title = "Additional inputs required"
-            message = "It is necessary to enter at least one non-zero prescribed "
-            message += "dof before confirming the property assignment."
+            title = "Invalid inputs for DOF prescription"
+            message = "You must enter at least one non-zero value or constrain "
+            message += "one dof before confirming the property assignment."
             PrintMessageInput([error_title, title, message])
             return
 
@@ -803,7 +932,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         return text
 
-    def add_model_info_in_treeWidget(self, entity: str):
+    def add_model_info_in_tree_widget(self, entity: str):
 
         properties = {
                         "surface" : self.properties.surface_properties,
@@ -821,8 +950,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 continue
 
             values = data["values"]
-            if not are_there_values_different_from_zero(values):
-                continue
+            # if not are_there_values_different_from_zero(values):
+            #     continue
 
             element_type = data["element_type"]
             constrained_dofs_mask = [False if value is None else True for value in values]
@@ -838,11 +967,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         self.treeWidget_prescribed_dofs.clear()
 
-        self.add_model_info_in_treeWidget("surface")
-        self.add_model_info_in_treeWidget("line")
-        self.add_model_info_in_treeWidget("point")
-        self.add_model_info_in_treeWidget("node")
-
+        self.add_model_info_in_tree_widget("surface")
+        self.add_model_info_in_tree_widget("line")
+        self.add_model_info_in_tree_widget("point")
+        self.add_model_info_in_tree_widget("node")
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
@@ -856,13 +984,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         for current_property in properties_to_check:
             for (property, _), data in current_property.items():
-                if property == "prescribed_dofs":
-                    values = data["values"]
-                    if not are_there_values_different_from_zero(values):
-                        continue
+                if property != "prescribed_dofs":
+                    continue
 
-                    self.tabWidget_main.setTabVisible(2, True)
-                    return
+                # if not are_there_values_different_from_zero(data.get("values")):
+                #     continue
+
+                self.tabWidget_main.setTabVisible(2, True)
+                return
 
         self.lineEdit_real_ux.setFocus()
         self.tabWidget_main.setCurrentIndex(0)
@@ -1017,8 +1146,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     if property_label != "prescribed_dofs":
                         continue
     
-                    if not are_there_values_different_from_zero(data.get("values")):
-                        continue
+                    # if not are_there_values_different_from_zero(data.get("values")):
+                    #     continue
     
                     entities_to_remove[entity_label].append(args[0])
 
@@ -1040,6 +1169,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def actions_to_finalize(self):
         self.load_model_info()
+        self.set_index_for_all_dof_combo_boxes(DOFSetup.VALUE)
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -1071,7 +1201,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for lineEdit_real, lineEdit_imag in self.constante_line_edits:
+        for combo_box in self.dof_setup_combo_boxes.values():
+            combo_box.setCurrentIndex(DOFSetup.VALUE)
+
+        for lineEdit_real, lineEdit_imag in self.constant_line_edits.values():
             lineEdit_real.setText("")
             lineEdit_imag.setText("")
 

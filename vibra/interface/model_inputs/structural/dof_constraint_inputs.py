@@ -444,7 +444,6 @@ class DofConstraintInputs(DofConstraintInputs_UI):
         self.add_model_info_in_treeWidget("line")
         self.add_model_info_in_treeWidget("point")
         self.add_model_info_in_treeWidget("node")
-
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
@@ -457,10 +456,15 @@ class DofConstraintInputs(DofConstraintInputs_UI):
                                ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property.keys():
-                if property == "prescribed_dofs":
-                    self.tabWidget_main.setTabVisible(1, True)
-                    return
+            for (property, _), data in current_property.items():
+                if property != "prescribed_dofs":
+                    continue
+
+                if are_there_values_different_from_zero((data.get("values"))):
+                    continue
+
+                self.tabWidget_main.setTabVisible(1, True)
+                return
 
         self.tabWidget_main.setTabVisible(1, False)
         self.tabWidget_main.setCurrentIndex(0)

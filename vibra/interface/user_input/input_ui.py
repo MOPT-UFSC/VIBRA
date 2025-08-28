@@ -96,10 +96,6 @@ class InputUi:
     def set_surface_thickness(self):
         if not self.model_setup_items.item_child_surface_thickness.isDisabled():
             self.process_input(SurfaceThicknessInputs)
-    
-    def constrain_structural_dof(self):
-        if not self.model_setup_items.item_child_constrain_dof.isDisabled():
-            self.process_input(DofConstraintInputs)
 
     def prescribe_structural_dof(self):
         if not self.model_setup_items.item_child_prescribe_dof.isDisabled():
