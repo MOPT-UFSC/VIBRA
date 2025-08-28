@@ -218,7 +218,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         )
 
     def _build_incident_plane_wave(
-        self, property_name: str, surface_id: int = -1
+        self, property_name: str, surface_id: int = -1, *args, **kwargs
     ):
         if surface_id == -1:
             return

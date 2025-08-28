@@ -135,7 +135,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
-        self.splitter.widget(0).setMinimumWidth(360)
+        self.splitter.widget(0).setMinimumWidth(360)        
 
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -641,13 +641,15 @@ class MainWindow(MainWindow_UI):
             ]
         )
 
-    def distinguish_mesh_solids(self, solids):
-        if not solids:
-            return
+    def distinguish_mesh_solids(self, solid_elements):
 
-        self.distinguished_solids = set(solids)
-        self.show_mesh_render_widget()
-        self.action_line_view_callback(False)
+        self.distinguished_solids = set(solid_elements)
+        if solid_elements:
+            self.show_mesh_render_widget()
+        else:
+            self.show_geometry_render_widget()
+
+        self.action_line_view_callback(not solid_elements)
         self.update_visualization_filter()
         self.visualization_changed.emit()
 
@@ -1030,7 +1032,7 @@ class MainWindow(MainWindow_UI):
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed.emit() 
 
     def action_line_view_callback(self, clicked: bool):
         self.visualization_filter.lines = clicked
