@@ -1387,6 +1387,11 @@
               <string>Std. Deviation</string>
              </property>
             </column>
+            <column>
+             <property name="text">
+              <string>Bad elements</string>
+             </property>
+            </column>
            </widget>
           </item>
           <item>
