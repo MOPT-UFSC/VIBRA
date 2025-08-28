@@ -9,8 +9,6 @@ from vibra.interface.ui_generated.model.setup.acoustic.proportional_damping_inpu
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-import numpy as np
-
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
@@ -22,8 +20,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
-        self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
@@ -56,7 +52,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        self.tabWidget_main.currentChanged.connect(self.tabEvent_dissipation_model)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
         self.treeWidget_proportional_damping.itemClicked.connect(self.on_click_item)
         self.treeWidget_proportional_damping.itemDoubleClicked.connect(self.on_doubleclick_item)
@@ -229,34 +225,21 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
                 self.actions_to_finalize()
 
-    def tabEvent_dissipation_model(self):
-        tab_index = self.tabWidget_main.currentIndex()
-        self.comboBox_attribution_type.setDisabled(bool(tab_index))
-        if tab_index == 1:
+    def tab_event_callback(self):
+        list_tab = self.tabWidget_main.currentIndex() == 1
+        self.pushButton_confirm.setDisabled(list_tab)
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.comboBox_attribution_type.setDisabled(list_tab)
+        if list_tab:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
+        volume_id = int(item.text(0))
         self.lineEdit_selection_id.setText(item.text(0))
+        app().main_window.set_geometry_selection(volumes=[volume_id])
 
     def on_doubleclick_item(self, item):
-        self.lineEdit_selection_id.setText(item.text(0))
-        # self.remove_bc_from_selection()
-
-    def update_tabs_visibility(self):
-
-        volume_with_dissipation_model = list()
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "proportional_damping":
-                volume_with_dissipation_model.append(volume_id)
-
-        if volume_with_dissipation_model:
-            self.tabWidget_main.setTabVisible(1, True)
-        else:
-            self.tabWidget_main.setTabVisible(1, False)
+        self.on_click_item(item)
 
     def load_info(self):
 
@@ -282,6 +265,15 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         self.update_tabs_visibility()
 
+    def update_tabs_visibility(self):
+        for (property, _) in self.properties.volume_properties.keys():
+            if property == "proportional_damping":
+                self.tabWidget_main.setTabVisible(1, True)
+                return
+
+        self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setCurrentIndex(0)
+
     def actions_to_finalize(self):
         self.load_info()
         app().main_window.update_info_text()
@@ -300,4 +292,5 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

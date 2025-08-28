@@ -244,6 +244,31 @@ def fluid_info_text():
 
     return text
 
+def proportional_damping_info_text():
+    volumes = list(app().main_window.selected_geometry_volumes)
+    text = ""
+
+    if len(volumes) != 1:
+        return text
+
+    pd_data = app().project.model.properties._get_property(
+        "proportional_damping", volume=volumes[0]
+    )
+    if not isinstance(pd_data, dict):
+        return text
+
+    tree = TreeInfo("Proportional damping")
+
+    speed_factor = pd_data.get("speed_of_sound_factor")
+    if speed_factor:
+        tree.add_item("Speed of sound factor", pd_data.get("speed_of_sound_factor", ""))
+
+    density_factor = pd_data.get("density_factor")
+    if density_factor:
+        tree.add_item("Density factor", pd_data.get("density_factor", ""))
+
+    return str(tree)
+
 def porous_material_info_text():
     volumes = list(app().main_window.selected_geometry_volumes)
     text = ""

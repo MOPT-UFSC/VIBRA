@@ -75,7 +75,7 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = None
 
         self._initialize()
-
+    
     def _initialize(self):
         self.dialog = None
         self.project_data_modified = False
@@ -135,7 +135,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
-        self.splitter.widget(0).setMinimumWidth(360)
+        self.splitter.widget(0).setMinimumWidth(360)        
 
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -905,7 +905,11 @@ class MainWindow(MainWindow_UI):
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
-            # self.model_setup_widget.model_setup_items.update_items_appearance()
+            self.model_setup_widget.model_setup_items.update_items_appearance()
+            
+            if app().project.can_resume_solution:
+                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records",
+                               "Click on the 'Resume the analysis' button to solve remaining frequencies"])
 
         except Exception as error_log:
             from traceback import print_exception
@@ -1028,7 +1032,7 @@ class MainWindow(MainWindow_UI):
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed.emit() 
 
     def action_line_view_callback(self, clicked: bool):
         self.visualization_filter.lines = clicked
@@ -1095,15 +1099,14 @@ class MainWindow(MainWindow_UI):
             widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
-        self.visualization_filter.acoustic_symbols = clicked
-        self.visualization_filter.structural_symbols = clicked
+        self.visualization_filter.symbols = clicked
         self.visualization_changed.emit()
 
     def close_app(self):
         self.minimize_dialogs()
 
         condition_1 = app().project.save_path is None
-        condition_2 = any(os.scandir(TEMP_PROJECT_DIR)) # TEMP_PROJECT_DIR is not empty
+        condition_2 = any(TEMP_PROJECT_DIR.iterdir()) # TEMP_PROJECT_DIR is not empty
         condition_3 = self.project_data_modified
         condition = (condition_1 and condition_2) or condition_3
 
