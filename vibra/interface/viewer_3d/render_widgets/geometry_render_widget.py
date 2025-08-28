@@ -58,6 +58,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
+        self.renderer.UseFXAAOn()
 
         # dont't remove, transparency depends on it
         self.renderer.UseDepthPeelingOn()
