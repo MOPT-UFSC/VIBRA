@@ -814,11 +814,15 @@ class Mesh:
 
         for selection_type, local_size, selection_ids in refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
-            if selection_type == "surfaces":
+            if selection_type == "lines":
+                gmsh.model.mesh.field.setNumbers(
+                    threshold_type, "CurvesList", selection_ids
+                )
+            elif selection_type == "surfaces":
                 gmsh.model.mesh.field.setNumbers(
                     threshold_type, "SurfacesList", selection_ids
                 )
-            else:
+            elif selection_type == "volumes":
                 gmsh.model.mesh.field.setNumbers(
                     threshold_type, "VolumesList", selection_ids
                 )
@@ -838,28 +842,33 @@ class Mesh:
         size_factor: float,
         refinement_parameters=list(),
     ):
-        if refinement_parameters:
-            self.local_mesh_refine(maximum_element_size, refinement_parameters)
+        # if refinement_parameters:
+            # self.local_mesh_refine(maximum_element_size, refinement_parameters)
 
-        else:
-            gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
-            gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
+        # else:
+        #     gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
+        #     gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
-        gmsh.option.setNumber("Mesh.RandomSeed", 1234)
-        gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber(
-            "Mesh.RecombinationAlgorithm", element_type.recombination_algorithm
-        )
-        gmsh.option.setNumber(
-            "Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm
-        )
-        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber(
-            "Mesh.SecondOrderIncomplete", element_type.second_order_incomplete
-        )
+        # gmsh.option.setNumber("Mesh.RandomSeed", 1234)
+        # gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
+        # gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
+        # gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
+        # gmsh.option.setNumber(
+        #     "Mesh.RecombinationAlgorithm", element_type.recombination_algorithm
+        # )
+        # gmsh.option.setNumber(
+        #     "Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm
+        # )
+        # gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
+        # gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
+        # gmsh.option.setNumber(
+        #     "Mesh.SecondOrderIncomplete", element_type.second_order_incomplete
+        # )
+        refined_size = 0.002
+        small_lines = [12, 15, 18, 13, 10, 2, 3, 14, 9]
+
+        self.local_mesh_refine(maximum_element_size, [("lines", refined_size, small_lines)])
+
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
