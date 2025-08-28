@@ -521,8 +521,8 @@ class Ui_Dialog(object):
         self.verticalLayout = QVBoxLayout(self.tab_5)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.tableWidget_mesh_quality = QTableWidget(self.tab_5)
-        if (self.tableWidget_mesh_quality.columnCount() < 4):
-            self.tableWidget_mesh_quality.setColumnCount(4)
+        if (self.tableWidget_mesh_quality.columnCount() < 5):
+            self.tableWidget_mesh_quality.setColumnCount(5)
         __qtablewidgetitem3 = QTableWidgetItem()
         self.tableWidget_mesh_quality.setHorizontalHeaderItem(0, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
@@ -531,6 +531,8 @@ class Ui_Dialog(object):
         self.tableWidget_mesh_quality.setHorizontalHeaderItem(2, __qtablewidgetitem5)
         __qtablewidgetitem6 = QTableWidgetItem()
         self.tableWidget_mesh_quality.setHorizontalHeaderItem(3, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(4, __qtablewidgetitem7)
         self.tableWidget_mesh_quality.setObjectName(u"tableWidget_mesh_quality")
         self.tableWidget_mesh_quality.setMaximumSize(QSize(654654, 16777215))
         self.tableWidget_mesh_quality.horizontalHeader().setStretchLastSection(True)
@@ -710,6 +712,8 @@ class Ui_Dialog(object):
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Average", None));
         ___qtablewidgetitem6 = self.tableWidget_mesh_quality.horizontalHeaderItem(3)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Std. Deviation", None));
+        ___qtablewidgetitem7 = self.tableWidget_mesh_quality.horizontalHeaderItem(4)
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Bad elements", None));
         self.pushButton_plot_histogram.setText(QCoreApplication.translate("Dialog", u"Plot Histogram", None))
         self.pushButton_show_bad_elements.setText(QCoreApplication.translate("Dialog", u"Show bad elements", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_5), QCoreApplication.translate("Dialog", u"Mesh quality", None))

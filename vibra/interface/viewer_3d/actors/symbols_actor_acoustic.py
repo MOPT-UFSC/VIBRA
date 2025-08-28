@@ -217,7 +217,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             sources.create_acoustic_transfer_element_data_source, coords, normal, color=color_names.TURQUOISE
         )
 
-    def _build_incident_plane_wave(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+    def _build_incident_plane_wave(
+        self, property_name: str, surface_id: int = -1, *args, **kwargs
+    ):
         if surface_id == -1:
             return
 

@@ -207,56 +207,41 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def write_mesh_quality_data_in_file(self):
-        mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
-        mesh_bad_elements = app().project.model.mesh.mesh_bad_elements
-        mesh_quality_histograms_data = app().project.model.mesh.mesh_quality_histograms_data
-        if mesh_quality_statistics is not None:
-            mesh_quality_data = dict()
-            mesh_quality_data["statistics"] = mesh_quality_statistics
-            mesh_quality_data["bad_elements"] = mesh_bad_elements
-            mesh_quality_data["histograms_data"] = mesh_quality_histograms_data
+        mesh_quality_data = app().project.model.mesh.get_mesh_quality_data()
+        if not mesh_quality_data:
+            return
         
-        def convert_ndarrays_to_lists(obj):
-            if isinstance(obj, dict):
-                return {k: convert_ndarrays_to_lists(v) for k, v in obj.items()}
-            elif isinstance(obj, list):
-                return [convert_ndarrays_to_lists(i) for i in obj]
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-            elif isinstance(obj, np.uint64):
-                return int(obj)
+        def convert_ndarrays_to_lists(qm_data: dict):
+            if isinstance(qm_data, dict):
+                return {k: convert_ndarrays_to_lists(v) for k, v in qm_data.items()}
+            elif isinstance(qm_data, list):
+                return [convert_ndarrays_to_lists(i) for i in qm_data]
+            elif isinstance(qm_data, np.ndarray):
+                return qm_data.tolist()
+            elif isinstance(qm_data, np.uint64):
+                return int(qm_data)
             else:
-                return obj
+                return qm_data
+
         mesh_quality_data_json_ready = convert_ndarrays_to_lists(mesh_quality_data)
         
         write_json(self.mesh_quality_data_filepath, mesh_quality_data_json_ready)
-
         app().main_window.project_data_modified = True    
 
     def read_mesh_quality_data_from_file(self):
         mesh_quality_data = dict()
         try:
             if not self.mesh_data_filepath.exists():
-                return None, None, None
+                return mesh_quality_data
 
             mesh_quality_data = read_json(self.mesh_quality_data_filepath)
-
             if mesh_quality_data:
-                mesh_quality_statistics = mesh_quality_data["statistics"]
-                mesh_bad_elements = mesh_quality_data["bad_elements"]
-                mesh_quality_histograms_data = mesh_quality_data["histograms_data"]
-                
-                return mesh_quality_statistics, mesh_bad_elements, mesh_quality_histograms_data
-
-            else: 
-                return None, None, None
-
+                return mesh_quality_data
 
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
-            return None, None, None
-        
+            return mesh_quality_data
 
     def read_mesh_setup_from_file(self):
         project_setup = read_json(self.project_setup_filepath)

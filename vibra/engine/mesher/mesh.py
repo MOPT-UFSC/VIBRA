@@ -1746,6 +1746,7 @@ class Mesh:
 
         bad_elements = []
         for parameter in self.mesh_quality_parameters:
+            bad_elements = []
             for element in self.mesh_quality[parameter].keys():
                 quality = self.mesh_quality[parameter][element]
 
@@ -1779,6 +1780,16 @@ class Mesh:
                 percentile_5,
                 percentile_95,
             ]
+
+    def get_mesh_quality_data(self):
+
+        mesh_quality_data = {
+                            "statistics" : self.mesh_quality_statistics,
+                            "bad_elements" : self.mesh_bad_elements,
+                            "histograms_data" : self.mesh_quality_histograms_data,
+                            }
+
+        return mesh_quality_data
 
     def compute_initial_mesh_size(
         self, path, geometry_tolerance: float = 1e-10, threads: int = 0

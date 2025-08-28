@@ -1,7 +1,9 @@
-from PySide6.QtGui import QPen, QColor
-from PySide6.QtCore import Qt
+from pathlib import Path
+from PySide6.QtGui import QIcon, QPen, QColor
+from PySide6.QtCore import QTimer, Qt
+from PySide6.QtWidgets import QToolTip
 
-from vibra import app
+from vibra import ICON_DIR, app
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
 from molde import Color
@@ -32,7 +34,19 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
 
-        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
+        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
+
+        tooltip_html = '''
+                        <p><b>Structural Properties</b></p>
+                        <p><span style="color:red;">
+                        <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span> 
+                        While we are actively working to ensure complete accuracy, please be aware that simulation results may 
+                        exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
+                        '''
+        self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
+        path_image = str(Path((ICON_DIR / "model_setup_items" / "structural_help.png")))
+        self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
+        
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
         self.item_child_prescribe_dof = self.add_item("Prescribe DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
