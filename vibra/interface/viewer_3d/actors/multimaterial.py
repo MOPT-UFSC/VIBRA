@@ -228,6 +228,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         combined_surfaces = vtkAppendPolyData()
         for surface, elements in self.mesh.elements_from_surface.items():
+            if surface in app().main_window.hidden_surfaces:
+                continue
+
             coords, connect = self._reduce_connectivity(
                 self.mesh.nodal_coordinates[:, 1:],
                 self.mesh.faces_connectivity[elements, 4:],

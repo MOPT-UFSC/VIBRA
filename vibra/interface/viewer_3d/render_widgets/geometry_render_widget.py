@@ -248,6 +248,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
+        self.remove_actors(self.multimaterial)
+        self.multimaterial = MultimaterialGeometryActor(mesh)
+        self.add_actors(self.multimaterial)
+
         self.update_selection()
         self.update_section_plane()
 
