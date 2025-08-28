@@ -151,7 +151,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.add_actors(
             self.points_actor,
             self.lines_actor,
-            # self.faces_actor,
             self.multimaterial,
             self.selection_spheres_actor,
             self.ghost_actor,
