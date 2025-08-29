@@ -127,24 +127,25 @@ def test_entities_relactions(geometry: Geometry):
 
 
 def test_geometry_normals(geometry: Geometry):
-    side = np.sin(np.pi / 4)    
+    def _norm(*coords):
+        return np.array(coords) / np.linalg.norm(coords)
 
-    assert np.allclose(geometry.surface_normal(1), np.array([1, 0, 0]))
-    assert np.allclose(geometry.surface_normal(2), np.array([-1, 0, 0]))
-    assert np.allclose(geometry.surface_normal(3), np.array([0, 1, 0]))
-    assert np.allclose(geometry.surface_normal(4), np.array([0, -1, 0]))
+    assert np.allclose(geometry.surface_normal(1), _norm(1, 0, 0))
+    assert np.allclose(geometry.surface_normal(2), _norm(-1, 0, 0))
+    assert np.allclose(geometry.surface_normal(3), _norm(0, 1, 0))
+    assert np.allclose(geometry.surface_normal(4), _norm(0, -1, 0))
 
-    assert np.allclose(geometry.curve_normal(1), np.array([side, side, 0]))
-    assert np.allclose(geometry.curve_normal(2), np.array([0, 0, 1]))
-    assert np.allclose(geometry.curve_normal(3), np.array([side, -side, 0]))
-    assert np.allclose(geometry.curve_normal(4), np.array([0, 0, -1]))
-    assert np.allclose(geometry.curve_normal(5), np.array([-side, side, 0]))
-    assert np.allclose(geometry.curve_normal(6), np.array([-side, -side, 0]))
+    assert np.allclose(geometry.curve_normal(1), _norm(1, 1, 0))
+    assert np.allclose(geometry.curve_normal(2), _norm(0, 0, 1))
+    assert np.allclose(geometry.curve_normal(3), _norm(1, -1, 0))
+    assert np.allclose(geometry.curve_normal(4), _norm(0, 0, -1))
+    assert np.allclose(geometry.curve_normal(5), _norm(-1, 1, 0))
+    assert np.allclose(geometry.curve_normal(6), _norm(-1, -1, 0))
 
-    assert np.allclose(geometry.point_normal(1), np.array([0, side, side]))
-    assert np.allclose(geometry.point_normal(2), np.array([0, side, -side]))
-    assert np.allclose(geometry.point_normal(3), np.array([0, -side, side]))
-    assert np.allclose(geometry.point_normal(4), np.array([0, -side, -side]))
+    assert np.allclose(geometry.point_normal(1), _norm(0, 1, 2))
+    assert np.allclose(geometry.point_normal(2), _norm(0, 1, -2))
+    assert np.allclose(geometry.point_normal(3), _norm(0, -1, 2))
+    assert np.allclose(geometry.point_normal(4), _norm(0, -1, -2))
 
 
 @pytest.mark.skip
