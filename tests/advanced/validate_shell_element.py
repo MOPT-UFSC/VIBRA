@@ -75,10 +75,7 @@ def load_external_mesh_and_solve():
 
     tag = 1
     mesh.elements_from_surface[tag] = face_connectivity[:, 0]
-    for face_element in face_connectivity[:, 0]:
-        mesh.surface_from_element[face_element] = tag
-
-    mesh.connectivity_from_surfaces[tag] = face_connectivity[:, 4:]
+    mesh.external_connectivity_from_surfaces[tag] = face_connectivity[:, 4:]
     mesh.faces_connectivity = face_connectivity
     mesh.nodes_from_surfaces[tag] = nodal_coordinates[:, 0]
 

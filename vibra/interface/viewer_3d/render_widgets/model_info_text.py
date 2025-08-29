@@ -711,7 +711,7 @@ def mesh_material_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         material = app().project.model.properties._get_property("material", volume=current_solid)
         if material is None:
             return text
@@ -738,7 +738,7 @@ def mesh_fluid_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
         if fluid is None:
             return text

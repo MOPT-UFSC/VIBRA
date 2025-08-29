@@ -344,14 +344,13 @@ class DegreesOfFreedomDecoupling:
 
         for i, line_id in enumerate(lines_from_surface):
 
-            line_connectivity = self.mesh.cache_connectivity_from_lines[line_id]
+            line_connectivity = self.mesh.get_connectivity_from_line(line_id, from_cache=True)
             new_connectivity = np.zeros_like(line_connectivity, dtype=int)
 
             for j, connect in enumerate(line_connectivity):
                 new_connectivity[j, :] = self.update_nodes_from_array(connect)
 
             new_line_id = self.lines_mapping.get(line_id)
-            self.mesh.connectivity_from_lines[new_line_id] = new_connectivity
             self.mesh.nodes_from_lines[new_line_id] = np.array([*set(new_connectivity.flatten())], dtype=int)
 
             etag, nodes_per_element = self.get_line_element_tag_and_nodes_number(line_id)
@@ -383,14 +382,13 @@ class DegreesOfFreedomDecoupling:
         """
 
         cols = self.mesh.faces_connectivity.shape[1]
-        face_connectivity = self.mesh.cache_connectivity_from_surfaces[surface_id]
+        face_connectivity = self.mesh.get_connectivity_from_surface(surface_id, from_cache=True)
         new_connectivity = np.zeros_like(face_connectivity, dtype=int)
 
         for j, connect in enumerate(face_connectivity):
             new_connectivity[j, :] = self.update_nodes_from_array(connect)
 
         new_surface_id = self.surfaces_mapping.get(surface_id)
-        self.mesh.connectivity_from_surfaces[new_surface_id] = new_connectivity
         etag, nodes_per_element = self.get_surface_element_tag_and_nodes_number(surface_id)
 
         rows = new_connectivity.shape[0]

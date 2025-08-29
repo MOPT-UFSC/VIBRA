@@ -269,18 +269,6 @@ class Model:
 
         if self.list_frequencies != frequencies:
             return True
-
-    def get_volume(self, **kwargs):
-        """ This method returns the volume based on kwargs. """
-        volume = kwargs.get("volume", None)
-        if volume is None:
-            try:
-                element = kwargs.get("element", None) 
-                volume = self.mesh.volume_from_element[element]
-            except:
-                # temporary solution to allow running external mesh file
-                volume = 1
-        return volume
     
     def get_structural_elements(self):
 

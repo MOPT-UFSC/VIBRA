@@ -208,7 +208,7 @@ class AcousticAssembler:
             complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
 
             surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]    
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surface_elements):
                 aux_connect[el] = surf_connect[i]
@@ -271,7 +271,7 @@ class AcousticAssembler:
                 speed_of_sound = fluid.speed_of_sound
 
             surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             data: dict
             values = data.get("values")
@@ -335,7 +335,7 @@ class AcousticAssembler:
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
 
             line_elements = list(self.model.mesh.elements_from_line[line_id])
-            line_connect = self.model.mesh.connectivity_from_lines[line_id]   
+            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
 
             for i, el in enumerate(line_elements):
                 aux_connect[el] = line_connect[i]
@@ -388,7 +388,7 @@ class AcousticAssembler:
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
 
             surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-            surf_connect = self.model.mesh.connectivity_from_surfaces[surface_id]   
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)  
 
             for i, el in enumerate(surface_elements):
                 aux_connect[el] = surf_connect[i]
@@ -1151,7 +1151,7 @@ class AcousticAssembler:
                 self.int3d_BtB[el, :, :] = Ke
                 self.int3d_NtN[el, :, :] = Me
 
-                volume_id = self.model.get_volume(element=el)
+                volume_id = self.model.mesh.get_volume_from_element(el)
 
                 if volume_id in self.model.porous_material_properties.keys():
 
@@ -1198,7 +1198,7 @@ class AcousticAssembler:
 
                 last_progress = progress
 
-                volume_id = self.model.get_volume(element=el)
+                volume_id = self.model.get_volume_from_element(el)
                 fluid = self.model.properties._get_property("fluid", volume=volume_id)
                 proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
 

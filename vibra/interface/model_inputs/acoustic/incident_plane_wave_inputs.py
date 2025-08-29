@@ -270,7 +270,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def get_average_surface_normal(self, surface_id: int):
 
         normal = 0.
-        connectivity_from_surfaces = self.mesh.connectivity_from_surfaces.get(surface_id)
+        connectivity_from_surfaces = self.mesh.get_connectivity_from_surface(surface_id)
         for connect in connectivity_from_surfaces:
             normal += self.mesh.get_element_face_normal(connect)
 

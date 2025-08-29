@@ -205,12 +205,16 @@ class StructuralAssembler:
         output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
+            if property not in ["distributed_loads", "normal_pressure_loads"]:
+                continue
+
+            connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
             if property == "distributed_loads":
                 surface_load = self.process_loads_arrays(data["values"])
                 if surface_load is None:
                     continue
 
-                for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
+                for connect in connectivities_from_surface:
                     g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_area(connect, surface_load)
                     output[g_dofs, :] += F_elem
 
@@ -219,7 +223,7 @@ class StructuralAssembler:
                 if normal_pressure is None:
                     continue
 
-                for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
+                for connect in connectivities_from_surface:
                     g_dofs, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
                     output[g_dofs, :] += F_elem
 
@@ -231,10 +235,13 @@ class StructuralAssembler:
 
                 nodes_from_line = self.model.mesh.nodes_from_lines[line_id]
                 for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                    connectivities = self.model.mesh.connectivity_from_surfaces[surface_id]
-                    mask = np.sum(np.isin(connectivities, nodes_from_line), axis=1) == 2
 
-                    for connect_2d in connectivities[mask, :]:
+                    # mask = np.sum(np.isin(connectivities, nodes_from_line), axis=1) == 2
+                    # for connect_2d in connectivities_from_surface[mask, :]:
+
+                    mask = np.sum(np.isin(connectivities_from_surface, nodes_from_line), axis=1) == 2
+
+                    for connect_2d in connectivities_from_surface[mask, :]:
                         active_nodes = [1 if node_id in nodes_from_line else 0 for node_id in connect_2d]
                         g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dofs, :] += F_elem

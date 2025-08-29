@@ -721,7 +721,7 @@ class AcousticHarmonicSolver:
         """
 
         node_ids = np.sort(self.assembler.model.mesh.nodes_from_surfaces.get(surface_id))
-        connectivities = self.assembler.model.mesh.connectivity_from_surfaces.get(surface_id)
+        surface_connectivities = self.assembler.model.mesh.get_connectivity_from_surface(surface_id)
 
         number_nodes = len(node_ids)
         map_nodes = dict(zip(node_ids, np.arange(number_nodes)))
@@ -738,7 +738,7 @@ class AcousticHarmonicSolver:
             element_2d = self.assembler.element_2d
 
         sound_power = 0.
-        for i, e_connect in enumerate(connectivities):
+        for i, e_connect in enumerate(surface_connectivities):
             node_indexes = [map_nodes.get(node) for node in e_connect]
             L_sv = pressures[node_indexes, :].T.reshape(-1, 1, 3)
             R_sv = particle_velocities[node_indexes, :].T.reshape(-1, 3, 1)
@@ -776,7 +776,7 @@ class AcousticHarmonicSolver:
         """
 
         node_ids = np.sort(self.assembler.model.mesh.nodes_from_surfaces.get(surface_id))
-        connectivities = self.assembler.model.mesh.connectivity_from_surfaces.get(surface_id)
+        surface_connectivities = self.assembler.model.mesh.get_connectivity_from_surface(surface_id)
 
         number_nodes = len(node_ids)
         map_nodes = dict(zip(node_ids, np.arange(number_nodes)))
@@ -790,7 +790,7 @@ class AcousticHarmonicSolver:
             element_2d = self.assembler.element_2d
 
         sound_power = 0.
-        for i, e_connect in enumerate(connectivities):
+        for i, e_connect in enumerate(surface_connectivities):
             node_indexes = [map_nodes.get(node) for node in e_connect]
             sound_intensity = sound_intensities[node_indexes, :]
             normalized_data = element_2d.elementary_sound_power_from_sound_intensity(e_connect, sound_intensity)
