@@ -391,7 +391,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def edit_table_widget_item(self, row, column):
         item = self.edit_tableWidget.item(row, column)
 
-        model_id = int(self.edit_table_widget_item(0, column).text())
+        model_id = int(self.edit_tableWidget.item(0, column).text())
 
         new_item_value = None
         unnaceptable_value_error = False
@@ -400,9 +400,21 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             new_item_value = float(item.text())
         except:
             unnaceptable_value_error = True
+
+        model = self.map_model_id_to_model[model_id]
+        indexed_attributes = model.get_indexed_attributes()
         
+        attribute = indexed_attributes[row - 2]
+
         if unnaceptable_value_error:
-            ...
+            new_item_value = getattr(model, attribute)
+            item.setText(str(new_item_value))
+        else:
+            setattr(model, attribute, new_item_value)
+                
+        surfaces_ids = self.map_model_id_to_surfaces[model_id]
+        for surface_id in surfaces_ids:
+            self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
 
     def update_tabs_visibility(self):
 

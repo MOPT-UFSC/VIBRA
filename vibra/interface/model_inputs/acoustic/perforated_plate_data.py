@@ -49,12 +49,20 @@ class PerforatedPlateData:
                 value = "---"
 
             data.append(value)
-
+    
         return data
 
     def get_fluid_data_to_fill_edit_table_widget(self) -> list:
         return [self.fluid.name, self.fluid.fluid_density, 
                 self.fluid.speed_of_sound]
+
+    def get_indexed_attributes(self) -> dict:
+        indexed_attr = dict()
+
+        for index, attr in enumerate(self.__dict__):
+            indexed_attr[index] = attr
+
+        return indexed_attr
 
     def __str__(self) -> str:
         string = ""
