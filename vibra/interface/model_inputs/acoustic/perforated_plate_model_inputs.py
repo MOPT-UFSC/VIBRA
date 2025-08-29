@@ -801,7 +801,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         model.set_user_defined_transfer_impedance(complex_values)
     
-        # self.pp_data["table_names"] = [table_name]
         # self.pp_data["table_paths"] = [table_path]
         # self.pp_data["values"] = [complex_values]
 
