@@ -237,10 +237,6 @@ class Geometry:
             _, downwards = gmsh.model.getAdjacencies(dim, tag)
             downwards = [int(_id) for _id in downwards]
 
-            if dim == 0:
-                self.points.append(tag)
-                continue
-
             mass = gmsh.model.occ.getMass(dim, tag)
 
             if dim == 3:
@@ -279,27 +275,37 @@ class Geometry:
                 self._curves_centers[tag] = center
                 if np.any(np.isclose(curvature, 0, atol=1e-8)):
                     self._straight_curves.add(tag)
+            
+            elif dim == 0:
+                self.points.append(tag)
+                center, uv_mid = self.process_center_element(dim, tag)
+                center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+                self._points_centers[tag] = center
                           
     def _process_curves_normals(self):
         for curve in self.curves:
+            center_coord = self._curves_centers[curve]
             adjacent_surfaces = set(self.curves_to_surfaces(curve))
-            normals_sum = np.zeros((1, 3))
-            for surface in adjacent_surfaces:
-                normals_sum += self._surfaces_normals[surface]
 
-            normals_avg = normals_sum / len(adjacent_surfaces)
-            self._curves_normals[curve] = normals_avg
+            normals_sum = np.zeros(3)
+            for surface in adjacent_surfaces:
+                center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
+                normals_sum += gmsh.model.get_normal(surface, center_uv)
+
+            self._curves_normals[curve] = normals_sum / np.linalg.norm(normals_sum)
 
     def _process_points_normals(self):
         for point in self.points:
+            center_coord = self._points_centers[point]
             adjacent_surfaces = set(self.points_to_surfaces(point))
-            normals_sum = np.zeros((1, 3))
             
+            normals_sum = np.zeros(3)
             for surface in adjacent_surfaces:
-                normals_sum += self._surfaces_normals[surface]
+                center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
+                normals_sum += gmsh.model.get_normal(surface, center_uv)
 
-            normals_avg = normals_sum / len(adjacent_surfaces)
-            self._points_normals[point] = normals_avg
+            self._points_normals[point] = normals_sum / np.linalg.norm(normals_sum)
+
     def process_center_element(self, dim: int, tag: int) -> np.ndarray:
         """Process the center of an element based on its dimension."""
 
