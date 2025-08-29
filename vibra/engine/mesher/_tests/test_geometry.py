@@ -150,60 +150,60 @@ def test_geometry_relations(geometry: Geometry):
     # I hope this is correct
 
     # Points
-    assert list(sorted(geometry.points_to_curves(1))) == [1, 2, 5]
-    assert list(sorted(geometry.points_to_curves(2))) == [1, 4, 5]
-    assert list(sorted(geometry.points_to_curves(3))) == [2, 3, 6]
-    assert list(sorted(geometry.points_to_curves(4))) == [3, 4, 6]
+    assert set(sorted(geometry.points_to_curves(1))) == {1, 2, 5}
+    assert set(sorted(geometry.points_to_curves(2))) == {1, 4, 5}
+    assert set(sorted(geometry.points_to_curves(3))) == {2, 3, 6}
+    assert set(sorted(geometry.points_to_curves(4))) == {3, 4, 6}
 
-    assert list(sorted(geometry.points_to_surfaces(1))) == [1, 2, 3]
-    assert list(sorted(geometry.points_to_surfaces(2))) == [1, 2, 3]
-    assert list(sorted(geometry.points_to_surfaces(3))) == [1, 2, 4]
-    assert list(sorted(geometry.points_to_surfaces(4))) == [1, 2, 4]
+    assert set(sorted(geometry.points_to_surfaces(1))) == {1, 2, 3}
+    assert set(sorted(geometry.points_to_surfaces(2))) == {1, 2, 3}
+    assert set(sorted(geometry.points_to_surfaces(3))) == {1, 2, 4}
+    assert set(sorted(geometry.points_to_surfaces(4))) == {1, 2, 4}
 
-    assert list(sorted(geometry.points_to_solids(1))) == [1]
-    assert list(sorted(geometry.points_to_solids(2))) == [1]
-    assert list(sorted(geometry.points_to_solids(3))) == [1]
-    assert list(sorted(geometry.points_to_solids(4))) == [1]
+    assert set(sorted(geometry.points_to_solids(1))) == {1}
+    assert set(sorted(geometry.points_to_solids(2))) == {1}
+    assert set(sorted(geometry.points_to_solids(3))) == {1}
+    assert set(sorted(geometry.points_to_solids(4))) == {1}
 
     # Curves
-    assert list(sorted(geometry.curves_to_points(1))) == [1, 2]
-    assert list(sorted(geometry.curves_to_points(2))) == [1, 3]
-    assert list(sorted(geometry.curves_to_points(3))) == [3, 4]
-    assert list(sorted(geometry.curves_to_points(4))) == [2, 4]
-    assert list(sorted(geometry.curves_to_points(5))) == [1, 2]
-    assert list(sorted(geometry.curves_to_points(6))) == [3, 4]
+    assert set(sorted(geometry.curves_to_points(1))) == {1, 2}
+    assert set(sorted(geometry.curves_to_points(2))) == {1, 3}
+    assert set(sorted(geometry.curves_to_points(3))) == {3, 4}
+    assert set(sorted(geometry.curves_to_points(4))) == {2, 4}
+    assert set(sorted(geometry.curves_to_points(5))) == {1, 2}
+    assert set(sorted(geometry.curves_to_points(6))) == {3, 4}
 
-    assert list(sorted(geometry.curves_to_surfaces(1))) == [1, 3]
-    assert list(sorted(geometry.curves_to_surfaces(2))) == [1, 2]
-    assert list(sorted(geometry.curves_to_surfaces(3))) == [1, 4]
-    assert list(sorted(geometry.curves_to_surfaces(4))) == [1, 2]
-    assert list(sorted(geometry.curves_to_surfaces(5))) == [2, 3]
-    assert list(sorted(geometry.curves_to_surfaces(6))) == [2, 4]
+    assert set(sorted(geometry.curves_to_surfaces(1))) == {1, 3}
+    assert set(sorted(geometry.curves_to_surfaces(2))) == {1, 2}
+    assert set(sorted(geometry.curves_to_surfaces(3))) == {1, 4}
+    assert set(sorted(geometry.curves_to_surfaces(4))) == {1, 2}
+    assert set(sorted(geometry.curves_to_surfaces(5))) == {2, 3}
+    assert set(sorted(geometry.curves_to_surfaces(6))) == {2, 4}
 
-    assert list(sorted(geometry.curves_to_solids(1))) == [1]
-    assert list(sorted(geometry.curves_to_solids(2))) == [1]
-    assert list(sorted(geometry.curves_to_solids(3))) == [1]
-    assert list(sorted(geometry.curves_to_solids(4))) == [1]
-    assert list(sorted(geometry.curves_to_solids(5))) == [1]
-    assert list(sorted(geometry.curves_to_solids(6))) == [1]
+    assert set(sorted(geometry.curves_to_solids(1))) == {1}
+    assert set(sorted(geometry.curves_to_solids(2))) == {1}
+    assert set(sorted(geometry.curves_to_solids(3))) == {1}
+    assert set(sorted(geometry.curves_to_solids(4))) == {1}
+    assert set(sorted(geometry.curves_to_solids(5))) == {1}
+    assert set(sorted(geometry.curves_to_solids(6))) == {1}
 
     # Surfaces
-    assert list(sorted(geometry.surfaces_to_points(1))) == [1, 2, 3, 4]
-    assert list(sorted(geometry.surfaces_to_points(2))) == [1, 2, 3, 4]
-    assert list(sorted(geometry.surfaces_to_points(3))) == [1, 2]
-    assert list(sorted(geometry.surfaces_to_points(4))) == [3, 4]
+    assert set(sorted(geometry.surfaces_to_points(1))) == {1, 2, 3, 4}
+    assert set(sorted(geometry.surfaces_to_points(2))) == {1, 2, 3, 4}
+    assert set(sorted(geometry.surfaces_to_points(3))) == {1, 2}
+    assert set(sorted(geometry.surfaces_to_points(4))) == {3, 4}
 
-    assert list(sorted(geometry.surfaces_to_curves(1))) == [1, 2, 3, 4]
-    assert list(sorted(geometry.surfaces_to_curves(2))) == [2, 4, 5, 6]
-    assert list(sorted(geometry.surfaces_to_curves(3))) == [1, 5]
-    assert list(sorted(geometry.surfaces_to_curves(4))) == [3, 6]
+    assert set(sorted(geometry.surfaces_to_curves(1))) == {1, 2, 3, 4}
+    assert set(sorted(geometry.surfaces_to_curves(2))) == {2, 4, 5, 6}
+    assert set(sorted(geometry.surfaces_to_curves(3))) == {1, 5}
+    assert set(sorted(geometry.surfaces_to_curves(4))) == {3, 6}
 
-    assert list(sorted(geometry.surfaces_to_solids(1))) == [1]
-    assert list(sorted(geometry.surfaces_to_solids(2))) == [1]
-    assert list(sorted(geometry.surfaces_to_solids(3))) == [1]
-    assert list(sorted(geometry.surfaces_to_solids(4))) == [1]
+    assert set(sorted(geometry.surfaces_to_solids(1))) == {1}
+    assert set(sorted(geometry.surfaces_to_solids(2))) == {1}
+    assert set(sorted(geometry.surfaces_to_solids(3))) == {1}
+    assert set(sorted(geometry.surfaces_to_solids(4))) == {1}
 
     # Solids
-    assert list(sorted(geometry.solids_to_curves(1))) == [1, 2, 3, 4, 5, 6]
-    assert list(sorted(geometry.solids_to_points(1))) == [1, 2, 3, 4]
-    assert list(sorted(geometry.solids_to_surfaces(1))) == [1, 2, 3, 4]
+    assert set(sorted(geometry.solids_to_curves(1))) == {1, 2, 3, 4, 5, 6}
+    assert set(sorted(geometry.solids_to_points(1))) == {1, 2, 3, 4}
+    assert set(sorted(geometry.solids_to_surfaces(1))) == {1, 2, 3, 4}
