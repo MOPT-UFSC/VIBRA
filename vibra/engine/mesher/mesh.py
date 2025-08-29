@@ -1,6 +1,16 @@
+import logging
+import os
+import sys
+from collections import defaultdict
+from copy import deepcopy
+from pathlib import Path
+from time import time
+from traceback import print_exception
+from typing import Literal
+from pprint import pprint
 
-# fmt: off
-
+import gmsh
+import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import (
     VTK_HEXAHEDRON,
@@ -17,18 +27,7 @@ from vibra.engine.mesher.element_type import (
     ElementType,
 )
 
-from collections import defaultdict
-from copy import deepcopy
-from pathlib import Path
-from time import time
-from traceback import print_exception
-from time import time
-
-import logging
-import os
-import sys
-import gmsh
-import numpy as np
+type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:
@@ -1286,7 +1285,6 @@ class Mesh:
             self.elements_from_volume[volume_id] = element_ids
 
     def compute_mesh_quality_parameters(self):
-
         t0 = time()
         self.calculate_mesh_quality_parameters()
         dt = time() - t0
@@ -1306,6 +1304,11 @@ class Mesh:
         self.calculate_mesh_quality_histograms()
         dt = time() - t0
         print(f"Elapsed time to calculate_mesh_quality_histograms: {dt : .5f} s")
+
+        t0 = time()
+        self.fast_mesh_quality_parameters()
+        dt = time() - t0
+        print(f"Elapsed time to fast_mesh_quality_parameters: {dt : .5f} s")
 
     def get_line_from_element(self, element_id: int) -> int | None:
         for line_id, elements_from_line in self.elements_from_line.items():
@@ -1734,6 +1737,63 @@ class Mesh:
         n_face_elements = self.faces_connectivity.shape[0]
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
+
+    def fast_mesh_quality_parameters(self) -> dict | None:
+        _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
+        if not element_tags:
+            return
+
+        parameters = [
+            "gamma",
+            "volume",
+            "minSJ",
+            "aspectRatio",
+        ]
+
+        elements = element_tags[0]
+        min_edge_quals = gmsh.model.mesh.getElementQualities(elements, "minEdge")
+        max_edge_quals = gmsh.model.mesh.getElementQualities(elements, "maxEdge")
+
+        shape = (len(elements), len(parameters))
+        quality_table = np.zeros(shape, dtype=float)
+        quality_table[:, 0] = gmsh.model.mesh.get_element_qualities(elements, "gamma")
+        quality_table[:, 1] = gmsh.model.mesh.get_element_qualities(elements, "volume")
+        quality_table[:, 2] = gmsh.model.mesh.get_element_qualities(elements, "minSJ")
+        quality_table[:, 3] = max_edge_quals / min_edge_quals  # aspect ratio
+
+        quality_statistics: dict[MeshQualityParams, list[float]] = dict()
+        for i, parameter in enumerate(parameters):
+            column = quality_table[:, i]
+            worst = np.max(column) if (parameter == "aspectRatio") else np.min(column)
+
+            quality_statistics[parameter] = [
+                worst,
+                np.mean(column),
+                np.std(column),
+            ]
+
+        bad_elements: dict[MeshQualityParams, np.ndarray] = dict()
+        (bad_elements["gamma"],) = np.where(quality_table[:, 0] < 0.15)
+        (bad_elements["volume"],) = np.where(quality_table[:, 1] < 0)
+        (bad_elements["minSJ"],) = np.where(quality_table[:, 2] < 1.5)
+        (bad_elements["aspectRatio"],) = np.where(quality_table[:, 3] > 4)
+
+        histograms: dict[MeshQualityParams, dict] = dict()
+        for i, parameter in enumerate(self.mesh_quality_parameters):
+            column = quality_table[:, i]
+            bins = np.linspace(np.min(column), np.max(column), 30)
+            hist, bin_edges = np.histogram(column, bins=bins)
+
+            histograms[parameter] = [
+                hist,
+                bin_edges,
+                np.percentile(column, 5),
+                np.percentile(column, 95),
+            ]
+
+        self.mesh_quality_statistics = quality_statistics
+        self.mesh_bad_elements = bad_elements
+        self.mesh_quality_histograms_data = histograms
 
     def calculate_mesh_quality_parameters(self):
         if not gmsh.model.mesh.getElements(3, -1)[1]:
@@ -2393,5 +2453,3 @@ if __name__ == "__main__":
 
     mesh = Mesh()
     mesh.load_cad(path, 100, element_type=TETRAHEDRON_4)
-
-# fmt: on
