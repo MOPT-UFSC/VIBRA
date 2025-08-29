@@ -6,6 +6,7 @@ import numpy as np
 
 @dataclass
 class PerforatedPlateData:
+    coupling_type: str = None
     fluid : Fluid = None
     formulation : str = None
     plate_thickness : float = None
@@ -42,7 +43,7 @@ class PerforatedPlateData:
         data = list()
 
         for attr, value in self.__dict__.items():
-            if attr == "fluid" or attr == "formulation":
+            if attr in ["fluid", "formulation", "coupling_type"]:
                 continue
             
             if value is None:

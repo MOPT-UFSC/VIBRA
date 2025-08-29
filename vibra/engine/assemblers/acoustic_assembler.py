@@ -581,8 +581,8 @@ class AcousticAssembler:
                 Z_0 = pp_model.get("Z_0", 0)
 
                 non_linear = z_nl_urms != 0
-
-                if pp_data.get("coupling_type") == "inside_surfaces":
+                
+                if pp_data.get("coupling_type") == "Inside surfaces":
 
                     decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
                     if not isinstance(decouple_data, dict):

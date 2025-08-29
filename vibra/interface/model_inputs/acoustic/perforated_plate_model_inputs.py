@@ -342,6 +342,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.map_model_id_to_model[model_id] = model
                 self.map_model_id_to_surfaces[model_id].append(surface_id)
 
+        
+
     def update_pp_model_tree_widget(self):
         self.treeWidget_perforated_plate_model.clear()
 
@@ -404,7 +406,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         model = self.map_model_id_to_model[model_id]
         indexed_attributes = model.get_indexed_attributes()
         
-        attribute = indexed_attributes[row - 2]
+        attribute = indexed_attributes[row - 1]
 
         if unnaceptable_value_error:
             new_item_value = getattr(model, attribute)
@@ -418,14 +420,15 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key, _ in self.properties.surface_properties.items():
-            property, _ = key
-            if property == "perforated_plate_model":
-                self.tabWidget_main.setTabVisible(1, True)
-                return
+        if len(self.map_model_id_to_model) > 0:
+            self.tabWidget_main.setTabVisible(1, True)
+            self.tabWidget_main.setTabVisible(2, True)
+
+            return
 
         self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setTabVisible(2, False)
 
     def load_perforated_plate_inputs(self, data: dict):
 
@@ -625,6 +628,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         model = PerforatedPlateData()
 
         pp_data_general = dict(
+                                coupling_type = self.comboBox_selection_type.currentText(),
                                 fluid = self.selected_fluid,
                                 formulation = "circular_hole",
                                 plate_thickness = plate_thickness,
@@ -635,7 +639,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                 )
 
         model.set_general_data(pp_data_general)
-        # self.pp_data.update(pp_data_general)
 
         if "Non-linear" in self.comboBox_include_effects.currentText():
 
@@ -651,9 +654,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 lineEdit.setFocus()
                 return
 
-            model.set_non_linear_data( non_linear_discharge_coefficient, non_linear_correction_factor)
-            # self.pp_data["non_linear_discharge_coefficient"] = non_linear_discharge_coefficient
-            # self.pp_data["non_linear_correction_factor"] = non_linear_correction_factor
+            model.set_non_linear_data(non_linear_discharge_coefficient, non_linear_correction_factor)
         
         return model
 
@@ -774,15 +775,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.imported_values = self.load_user_defined_transfer_impedance()
 
         if self.imported_values is None:
-            # self.pp_data.clear()
             return
 
         if not isinstance(self.imported_values, np.ndarray):
-            # self.pp_data.clear()
             return
 
         if self.imported_values.shape[1] < 3:
-            # self.pp_data.clear()
             return
 
         if self.imported_values[0, 0] == 0:
@@ -796,7 +794,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if self.save_table_values(table_name, self.imported_values):
             self.lineEdit_user_defined_transfer_impedance_path.setFocus()
             self.imported_values = None
-            # self.pp_data.clear()
             return
 
         complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
