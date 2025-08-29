@@ -49,7 +49,13 @@ class Geometry:
             self.read_file(path)
 
     def read_file(self, file_path: str):
-        gmsh.initialize()
+        # allowed to run in a secondary thread
+        gmsh.initialize("", False, interruptible=False)
+
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.Verbosity", 0)
+        gmsh.option.setNumber("General.NumThreads", 0)  # all available threads
+
         gmsh.open(file_path)
 
         gmsh.model.occ.synchronize()
@@ -91,7 +97,7 @@ class Geometry:
             self._solids_centers,
             self._surfaces_centers,
             self._curves_centers,
-            self._points_centers
+            self._points_centers,
         ]
 
         for center in centers:
@@ -102,7 +108,7 @@ class Geometry:
         for key, value in self._curves_lengths.items():
             if value:
                 self._curves_lengths[key] = value * scale
-        
+
         for key, value in self._surfaces_areas.items():
             if value:
                 self._surfaces_areas[key] = value * (scale**2)
@@ -111,7 +117,7 @@ class Geometry:
             if value:
                 self._solids_volumes[key] = value * (scale**3)
 
-        self.length_unit = length_unit 
+        self.length_unit = length_unit
         self.length_unit_factor = new_factor
 
     def points_to_curves(self, *point_ids: int) -> Iterator[int]:
@@ -269,19 +275,23 @@ class Geometry:
                 self.curves.append(tag)
 
                 center, uv_mid = self.process_center_element(dim, tag)
-                center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+                center = (
+                    gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+                )
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
 
                 self._curves_centers[tag] = center
                 if np.any(np.isclose(curvature, 0, atol=1e-8)):
                     self._straight_curves.add(tag)
-            
+
             elif dim == 0:
                 self.points.append(tag)
                 center, uv_mid = self.process_center_element(dim, tag)
-                center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+                center = (
+                    gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+                )
                 self._points_centers[tag] = center
-                          
+
     def _process_curves_normals(self):
         for curve in self.curves:
             center_coord = self._curves_centers[curve]
@@ -298,7 +308,7 @@ class Geometry:
         for point in self.points:
             center_coord = self._points_centers[point]
             adjacent_surfaces = set(self.points_to_surfaces(point))
-            
+
             normals_sum = np.zeros(3)
             for surface in adjacent_surfaces:
                 center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
@@ -313,7 +323,7 @@ class Geometry:
         uv_mid = (uv_min + uv_max) / 2
         center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
         return center, uv_mid
-    
+
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "milimeter":
             return 1e-3
