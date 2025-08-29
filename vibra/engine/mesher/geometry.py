@@ -15,28 +15,23 @@ class Geometry:
         path: str | Path | None = None,
         length_unit: LengthUnits = "milimeter",
     ):
-        # relations
         self._solids_to_surfaces = bidict()
         self._surfaces_to_curves = bidict()
         self._curves_to_points = bidict()
 
-        # centers
         self._solids_centers = dict()
         self._surfaces_centers = dict()
         self._curves_centers = dict()
         self._points_centers = dict()
 
-        # normals
         self._surfaces_normals = dict()
         self._curves_normals = dict()
         self._points_normals = dict()
 
-        # areas
         self._surfaces_areas = dict()
         self._curves_lengths = dict()
         self._solids_volumes = dict()
 
-        # curvatures
         self._straight_curves = set()
         self._straight_surfaces = set()
 
@@ -61,6 +56,8 @@ class Geometry:
 
         self._process_geometry_information()
         self._process_curves_normals()
+        self._process_points_normals()
+
         gmsh.finalize()
 
     def clear(self):
@@ -68,18 +65,15 @@ class Geometry:
         self._surfaces_to_curves.clear()
         self._curves_to_points.clear()
 
-        # centers
         self._solids_centers.clear()
         self._surfaces_centers.clear()
         self._curves_centers.clear()
         self._points_centers.clear()
 
-        # normals
         self._surfaces_normals.clear()
         self._curves_normals.clear()
         self._points_normals.clear()
 
-        # areas
         self._surfaces_areas.clear()
         self._curves_lengths.clear()
 
@@ -121,63 +115,80 @@ class Geometry:
         self.length_unit_factor = new_factor
 
     def points_to_curves(self, *point_ids: int) -> Iterator[int]:
+        """Get all curves connected to the given points."""
         for point_id in point_ids:
-            for curve_id in self._curves_to_points.inverse.get(point_id, []):
-                yield curve_id
+            for points_tuple, curve_id in self._curves_to_points.inverse.items():
+                if point_id in points_tuple:
+                    yield curve_id[0]
 
     def points_to_surfaces(self, *point_ids: int) -> Iterator[int]:
+        """Get all surfaces connected to the given points."""
         for curve_id in self.points_to_curves(*point_ids):
-            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
-                yield surface_id
+            for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
+                if curve_id in curves_tuple:
+                    yield surface_id[0]
 
     def points_to_solids(self, *point_ids: int) -> Iterator[int]:
-        for curve_id in self.points_to_curves(*point_ids):
-            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
-                for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
-                    yield solid_id
+        """Get all solids connected to the given points."""
+        for surface_id in self.points_to_surfaces(*point_ids):
+            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
+                if surface_id in surfaces_tuple:
+                    yield solid_id[0]
 
     def curves_to_points(self, *curve_ids: int) -> Iterator[int]:
+        """Get all points connected to the given curves."""
         for curve_id in curve_ids:
             for point_id in self._curves_to_points.get(curve_id, []):
                 yield point_id
 
     def curves_to_surfaces(self, *curve_ids: int) -> Iterator[int]:
+        """Get all surfaces connected to the given curves."""
         for curve_id in curve_ids:
-            for surface_id in self._surfaces_to_curves.inverse.get(curve_id, []):
-                yield surface_id
+            for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
+                if curve_id in curves_tuple:
+                    yield surface_id[0]
 
     def curves_to_solids(self, *curve_ids: int) -> Iterator[int]:
+        """Get all solids connected to the given curves."""
         for surface_id in self.curves_to_surfaces(*curve_ids):
-            for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
-                yield solid_id
+            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
+                if surface_id in surfaces_tuple:
+                    yield solid_id[0]
 
     def surfaces_to_curves(self, *surface_ids: int) -> Iterator[int]:
+        """Get all curves connected to the given surfaces."""
         for surface_id in surface_ids:
             for curve_id in self._surfaces_to_curves.get(surface_id, []):
                 yield curve_id
 
     def surfaces_to_points(self, *surface_ids: int) -> Iterator[int]:
+        """Get all points connected to the given surfaces."""
         for curve_id in self.surfaces_to_curves(*surface_ids):
             for point_id in self._curves_to_points.get(curve_id, []):
                 yield point_id
 
     def surfaces_to_solids(self, *surface_ids: int) -> Iterator[int]:
+        """Get all solids connected to the given surfaces."""
         for surface_id in surface_ids:
-            for solid_id in self._solids_to_surfaces.inverse.get(surface_id, []):
-                yield solid_id
+            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
+                if surface_id in surfaces_tuple:
+                    yield solid_id[0]
 
     def solids_to_points(self, *volume_ids: int) -> Iterator[int]:
+        """Get all points connected to the given solids."""
         for surface_id in self.solids_to_surfaces(*volume_ids):
             for curve_id in self._surfaces_to_curves.get(surface_id, []):
                 for point_id in self._curves_to_points.get(curve_id, []):
                     yield point_id
 
     def solids_to_curves(self, *volume_ids: int) -> Iterator[int]:
+        """Get all curves connected to the given solids."""
         for surface_id in self.solids_to_surfaces(*volume_ids):
             for curve_id in self._surfaces_to_curves.get(surface_id, []):
                 yield curve_id
 
     def solids_to_surfaces(self, *volume_ids: int) -> Iterator[int]:
+        """Get all surfaces connected to the given solids."""
         for volume_id in volume_ids:
             for surface_id in self._solids_to_surfaces.get(volume_id, []):
                 yield surface_id
@@ -219,6 +230,7 @@ class Geometry:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
     def _process_geometry_information(self):
+        """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
         self.clear()
 
         for dim, tag in gmsh.model.getEntities():
@@ -236,7 +248,7 @@ class Geometry:
                 self._solids_to_surfaces[tag] = tuple(downwards)
                 self.solids.append(tag)
 
-                center = self.process_center_element(dim, tag)
+                center, _ = self.process_center_element(dim, tag)
                 self._solids_centers[tag] = center
 
             elif dim == 2:
@@ -244,49 +256,57 @@ class Geometry:
                 self._surfaces_to_curves[tag] = tuple(downwards)
                 self.surfaces.append(tag)
 
-                uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
-                uv_mid = (uv_min + uv_max) / 2
-                center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-
+                center, uv_mid = self.process_center_element(dim, tag)
                 self._surfaces_centers[tag] = center
 
-                normal = gmsh.model.getNormal(tag, uv_mid).reshape(-1, 3)
+                normal = gmsh.model.getNormal(tag, uv_mid)
+                curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
 
                 self._surfaces_normals[tag] = normal
+
+                if np.any(np.isclose(curvature, 0, atol=1e-8)):
+                    self._straight_surfaces.add(tag)
 
             elif dim == 1:
                 self._curves_lengths[tag] = mass * (self.length_unit_factor**1)
                 self._curves_to_points[tag] = tuple(downwards)
                 self.curves.append(tag)
 
-                center = self.process_center_element(dim, tag)
-                self._curves_centers[tag] = center               
-    
+                center, uv_mid = self.process_center_element(dim, tag)
+                center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+                curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
+
+                self._curves_centers[tag] = center
+                if np.any(np.isclose(curvature, 0, atol=1e-8)):
+                    self._straight_curves.add(tag)
+                          
     def _process_curves_normals(self):
         for curve in self.curves:
-            adjacent_surfaces = list()
-            for k, v in self._surfaces_to_curves.items():
-                if curve in v:
-                    adjacent_surfaces.append(k)
-
-            if not adjacent_surfaces:
-                self._curves_normals[curve] = np.zeros((1, 3))
-                continue
-
+            adjacent_surfaces = set(self.curves_to_surfaces(curve))
             normals_sum = np.zeros((1, 3))
             for surface in adjacent_surfaces:
                 normals_sum += self._surfaces_normals[surface]
 
             normals_avg = normals_sum / len(adjacent_surfaces)
-
             self._curves_normals[curve] = normals_avg
-    def process_center_element(self, dim: int, tag: int) -> np.ndarray | None:
+
+    def _process_points_normals(self):
+        for point in self.points:
+            adjacent_surfaces = set(self.points_to_surfaces(point))
+            normals_sum = np.zeros((1, 3))
+            
+            for surface in adjacent_surfaces:
+                normals_sum += self._surfaces_normals[surface]
+
+            normals_avg = normals_sum / len(adjacent_surfaces)
+            self._points_normals[point] = normals_avg
+    def process_center_element(self, dim: int, tag: int) -> np.ndarray:
         """Process the center of an element based on its dimension."""
 
         uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
         uv_mid = (uv_min + uv_max) / 2
         center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-        return center
+        return center, uv_mid
     
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "milimeter":
