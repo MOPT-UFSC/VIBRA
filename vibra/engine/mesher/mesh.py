@@ -1,14 +1,6 @@
-import logging
-import os
-import sys
-from collections import defaultdict
-from copy import deepcopy
-from pathlib import Path
-from time import time
-from traceback import print_exception
-from time import time
-import gmsh
-import numpy as np
+
+# fmt: off
+
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import (
     VTK_HEXAHEDRON,
@@ -24,6 +16,19 @@ from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
     ElementType,
 )
+
+from collections import defaultdict
+from copy import deepcopy
+from pathlib import Path
+from time import time
+from traceback import print_exception
+from time import time
+
+import logging
+import os
+import sys
+import gmsh
+import numpy as np
 
 
 class Mesh:
@@ -113,8 +118,6 @@ class Mesh:
         self.external_connectivity_from_lines = dict()
         self.external_connectivity_from_surfaces = dict()
 
-        self.nodes_from_face_element = dict()
-        self.nodes_from_solid_element = dict()
         self.solid_elements_center = dict()
 
         self.nodes_out_of_face_element = dict()
@@ -138,8 +141,6 @@ class Mesh:
         self.cache_lines_from_surface = dict()
         self.cache_points_from_line = dict()
 
-        # self.cache_connectivity_from_lines = dict()
-        # self.cache_connectivity_from_surfaces = dict()
         self.decoupled_points = list()
 
     def set_length_unit(self, length_unit: str = "milimeter"):
@@ -212,12 +213,12 @@ class Mesh:
             self._merge_nodes_from_adjacent_volumes()
 
         try:
-            logging.info("Processing geometry data... [45/100]")
+            logging.info("Processing geometry data... [25/100]")
             self.process_geometry_information()
             self.process_downwards_adjacencies_from_entities()
             self.process_upwards_adjacencies_from_entities()
 
-            logging.info("Generating mesh... [60/100]")
+            logging.info("Generating mesh... [50/100]")
             gmsh.model.mesh.generate(dim=dimension)
 
             gmsh.model.mesh.removeDuplicateNodes()
@@ -226,12 +227,11 @@ class Mesh:
             print_exception(error_log)
             # gmsh.finalize()
 
-        logging.info("Post-processing mesh... [70/100]")
+        logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
-        self.calculate_mesh_quality_parameters()
-        self.calculate_mesh_quality_statistics()
-        self.calculate_mesh_bad_elements()
-        self.calculate_mesh_quality_histograms()
+
+        logging.info("Post-processing mesh... [95/100]")
+        self.compute_mesh_quality_parameters()
 
         if gmsh_gui:
             gmsh.fltk.run()
@@ -895,8 +895,6 @@ class Mesh:
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
 
-        # self.cache_connectivity_from_lines.clear()
-        # self.cache_connectivity_from_surfaces.clear()
         self.decoupled_points.clear()
 
     def clear_geometry_data(self):
@@ -1059,22 +1057,17 @@ class Mesh:
                     np.array([*set(element_nodes[0])], dtype=int) - 1
                 )
 
-        logging.info("Post-processing mesh... [80/100]")
+        logging.info("Post-processing mesh... [65/100]")
 
-        self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(
-            connectivity_dim1
-        )
-        self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(
-            connectivity_dim2
-        )
-        self.solids_connectivity, self.map_solid_elements = (
-            self._get_connectivity_array(connectivity_dim3)
-        )
+        self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
+        self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
+        self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
+        logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings()
-        self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = (
-            self.get_collapsed_elements()
-        )
+
+        logging.info("Post-processing mesh... [88/100]")
+        self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
 
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
@@ -1245,22 +1238,25 @@ class Mesh:
                 self.surface_from_solid_element[el_index].append(surface_id)
 
     def process_mesh_related_mappings(self):
-        logging.info("Loading mesh... [70/100]")
+        logging.info("Post-processing mesh... [70/100]")
         t0 = time()
         self.process_connectivities_from_lines_and_surfaces()
         dt = time() - t0
-        print(f"Elapsed time A: {dt} s")
+        print(f"Elapsed time to process_connectivities_from_lines_and_surfaces: {dt : .5f} s")
 
-        logging.info("Loading mesh... [75/100]")
+        logging.info("Post-processing mesh... [75/100]")
         t0 = time()
         self.map_elements_from_lines_surfaces_and_volumes()
         dt = time() - t0
-        print(f"Elapsed time B: {dt} s")
+        print(f"Elapsed time to map_elements_from_lines_surfaces_and_volumes: {dt : .5f} s")
 
-        logging.info("Loading mesh... [80/100]")
+        logging.info("Post-processing mesh... [80/100]")
+        t0 = time()
         self.map_face_elements_to_solid_elements()
+        dt = time() - t0
+        print(f"Elapsed time to map_face_elements_to_solid_elements: {dt : .5f} s")
 
-        logging.info("Loading mesh... [85/100]")
+        logging.info("Post-processing mesh... [85/100]")
         self.get_principal_diagonal_structure_parallelepiped()
 
     def map_elements_from_lines_surfaces_and_volumes(self):
@@ -1289,6 +1285,28 @@ class Mesh:
             element_ids = self.solids_connectivity[rows, 0]
             self.elements_from_volume[volume_id] = element_ids
 
+    def compute_mesh_quality_parameters(self):
+
+        t0 = time()
+        self.calculate_mesh_quality_parameters()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_quality_parameters: {dt : .5f} s")
+
+        t0 = time()
+        self.calculate_mesh_quality_statistics()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_quality_statistics: {dt : .5f} s")
+
+        t0 = time()
+        self.calculate_mesh_bad_elements()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_bad_elements: {dt : .5f} s")
+
+        t0 = time()
+        self.calculate_mesh_quality_histograms()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_quality_histograms: {dt : .5f} s")
+
     def get_line_from_element(self, element_id: int) -> int | None:
         for line_id, elements_from_line in self.elements_from_line.items():
             if np.isin(elements_from_line, element_id).any():
@@ -1315,7 +1333,7 @@ class Mesh:
         return element_ids
 
     def _process_face_elements_connected_to_nodes(self, selected_ids: int | list):
-        self.nodes_from_face_element.clear()
+
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()
 
@@ -1325,7 +1343,7 @@ class Mesh:
         for tag in selected_ids:
             connect_data = self.get_connectivity_from_surface(tag)
 
-            # integrate the total surface area by the summation of element areas
+            # integrate the total surface area by the summation of each element area
             area = 0.0
             for element_nodes in connect_data:
                 area += self.process_triangular_area_by_nodal_coordinates(element_nodes)
@@ -1335,23 +1353,15 @@ class Mesh:
 
             for node in np.sort(face_nodes):
                 mask = np.sum(np.isin(connect_data, node), axis=1) == 1
-                self.face_elements_connected_to_nodes[node].extend(
-                    connect_data[mask, :]
-                )
+                self.face_elements_connected_to_nodes[node].extend(connect_data[mask, :])
 
         # import json
         # with open("areas_data.json", "r") as file:
         #     areas_data = json.load(file)
 
-    def process_solid_elements_connected_to_nodes(self):
-        # t0 = time()
-
-        self.nodes_from_solid_element.clear()
-        for el, connected_nodes in enumerate(self.solids_connectivity[:, 4:]):
-            self.nodes_from_solid_element[el] = connected_nodes
-
-        # dt = time() - t0
-        # print(f"Elapsed '_process_solid_elements_connected_to_nodes': {dt} s")
+    def get_nodes_from_solid_elements(self, node_id: int):
+        rows = np.isin(self.solids_connectivity[:, 1], node_id)
+        return np.unique(self.solids_connectivity[rows, 4:]).astype(int)
 
     def map_face_elements_to_solid_elements_reference(self):
         self.face_to_solid_element = dict()
@@ -1444,17 +1454,25 @@ class Mesh:
             self.solid_to_face_elements[solid_id].append(face_id)
 
     def get_collapsed_elements(self):
+
+        t0 = time()
+        logging.info("Checking collapsed 3D elements... [90/100]")
         mask = self._repeated_mask(self.solids_connectivity[:, 4:])
         collapsed_solids = self.solids_connectivity[mask]
         solids_set = set(collapsed_solids[:, 0].tolist()) if collapsed_solids.size else set()
 
+        logging.info("Checking collapsed 2D elements... [95/100]")
         mask = self._repeated_mask(self.faces_connectivity[:, 4:])
         collapsed_faces = self.faces_connectivity[mask]
         faces_set = set(collapsed_faces[:, 0].tolist()) if collapsed_faces.size else set()
 
+        logging.info("Checking collapsed 1D elements... [98/100]")
         mask = self._repeated_mask(self.lines_connectivity[:, 4:])
         collapsed_lines = self.lines_connectivity[mask]
         lines_set = set(collapsed_lines[:, 0].tolist()) if collapsed_lines.size else set()
+
+        dt = time() - t0
+        print(f"Elapsed time to process collapsed elements: {dt : .5f} s")
 
         return solids_set, faces_set, lines_set
 
@@ -1731,28 +1749,24 @@ class Mesh:
 
         for parameter in parameters:
             element_qualities_dict = dict()
-            qualities_array = np.array(
-                gmsh.model.mesh.getElementQualities(elements, parameter)
-            )
+            qualities_array = np.array(gmsh.model.mesh.getElementQualities(elements, parameter), dtype=float)
 
             for i, element in enumerate(elements):
                 element_qualities_dict[element] = qualities_array[i]
 
             self.mesh_quality[parameter] = element_qualities_dict
+            # self.mesh_quality[parameter] = dict(zip(elements, qualities_array))
 
         element_qualities_dict = dict()
-        min_edge_quals = np.array(
-            gmsh.model.mesh.getElementQualities(elements, "minEdge")
-        )
-        max_edge_quals = np.array(
-            gmsh.model.mesh.getElementQualities(elements, "maxEdge")
-        )
+        min_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "minEdge"), dtype=float)
+        max_edge_quals = np.array(gmsh.model.mesh.getElementQualities(elements, "maxEdge"), dtype=float)
         aspect_ratio_quals = max_edge_quals / min_edge_quals
 
         for i, element in enumerate(elements):
             element_qualities_dict[element] = aspect_ratio_quals[i]
 
         self.mesh_quality["aspectRatio"] = element_qualities_dict
+        # self.mesh_quality["aspectRatio"] = dict(zip(elements, max_edge_quals / min_edge_quals))
 
     def calculate_mesh_quality_statistics(self):
         if not self.mesh_quality:
@@ -2054,10 +2068,8 @@ class Mesh:
         solid_elements_center = dict()
 
         for i, element_id in enumerate(element_ids):
-            nodes = self.nodes_from_solid_element[element_id]
-            solid_elements_center[element_id] = np.average(
-                self.nodal_coordinates[nodes, 1:], axis=0
-            )
+            nodes = self.get_nodes_from_solid_elements(element_id)
+            solid_elements_center[element_id] = np.average(self.nodal_coordinates[nodes, 1:], axis=0)
 
         return solid_elements_center
 
@@ -2367,7 +2379,6 @@ class Mesh:
 
         return nearest_node, nearest_coords
 
-
 if __name__ == "__main__":
     # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Paralelepipedo.STEP"
     # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Tetraedro.STEP"
@@ -2382,3 +2393,5 @@ if __name__ == "__main__":
 
     mesh = Mesh()
     mesh.load_cad(path, 100, element_type=TETRAHEDRON_4)
+
+# fmt: on
