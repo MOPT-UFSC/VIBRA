@@ -39,7 +39,6 @@ def test_geometry_measures(geometry: Geometry):
     assert np.allclose(volume, geometry.volume(1))
 
 
-@pytest.mark.skip
 def test_geometry_straightness(geometry: Geometry):
     assert not geometry.is_surface_straight(1)
     assert not geometry.is_surface_straight(2)
@@ -54,26 +53,25 @@ def test_geometry_straightness(geometry: Geometry):
     assert not geometry.is_curve_straight(6)
 
 
-@pytest.mark.skip
 def test_geometry_centers(geometry: Geometry):
-    assert geometry.solid_center(1) == np.array([0, 1, 0])
+    assert np.allclose(geometry.solid_center(1), (0, 1, 0))
 
-    assert geometry.surface_center(1) == np.array([0.25, 1, 0])
-    assert geometry.surface_center(2) == np.array([-0.25, 1, 0])
-    assert geometry.surface_center(3) == np.array([0, 2, 0])
-    assert geometry.surface_center(4) == np.array([0, 0, 0])
+    assert np.allclose(geometry.surface_center(1), (0.25, 1, 0))
+    assert np.allclose(geometry.surface_center(2), (-0.25, 1, 0))
+    assert np.allclose(geometry.surface_center(3), (0, 2, 0))
+    assert np.allclose(geometry.surface_center(4), (0, 0, 0))
 
-    assert geometry.curve_center(1) == np.array([0.25, 2, 0])
-    assert geometry.curve_center(2) == np.array([0, 1, 0.25])
-    assert geometry.curve_center(3) == np.array([0.25, 0, 0])
-    assert geometry.curve_center(4) == np.array([0, 1, -0.25])
-    assert geometry.curve_center(5) == np.array([-0.25, 2, 0])
-    assert geometry.curve_center(6) == np.array([-0.25, 0, 0])
+    assert np.allclose(geometry.curve_center(1), (0.25, 2, 0))
+    assert np.allclose(geometry.curve_center(2), (0, 1, 0.25))
+    assert np.allclose(geometry.curve_center(3), (0.25, 0, 0))
+    assert np.allclose(geometry.curve_center(4), (0, 1, -0.25))
+    assert np.allclose(geometry.curve_center(5), (-0.25, 2, 0))
+    assert np.allclose(geometry.curve_center(6), (-0.25, 0, 0))
 
-    assert geometry.point_center(1) == np.array([0, 2, 0.25])
-    assert geometry.point_center(2) == np.array([0, 2, -0.25])
-    assert geometry.point_center(3) == np.array([0, 0, 0.25])
-    assert geometry.point_center(4) == np.array([0, 0, -0.25])
+    assert np.allclose(geometry.point_center(1), (0, 2, 0.25))
+    assert np.allclose(geometry.point_center(2), (0, 2, -0.25))
+    assert np.allclose(geometry.point_center(3), (0, 0, 0.25))
+    assert np.allclose(geometry.point_center(4), (0, 0, -0.25))
 
 
 def test_convert_all_length_units(geometry: Geometry):
@@ -148,7 +146,6 @@ def test_geometry_normals(geometry: Geometry):
     assert np.allclose(geometry.point_normal(4), _norm(0, -1, -2))
 
 
-@pytest.mark.skip
 def test_geometry_relations(geometry: Geometry):
     # I hope this is correct
 
