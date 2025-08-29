@@ -340,49 +340,51 @@ class StructuralAssembler:
 
         self.active_2d_element_dofs, self.n_dofs, shift_index = self.process_face_elements_with_thickness(self.element_2d, self.element_3d)
 
-        self.element_3d.reorder_connect()
-        # rows_se, cols_se = self.element_3d.generate_ind_rows_cols()
-        # self.ind_rows = np.append(self.ind_rows, rows_se)
-        # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        dofs = self.element_3d.DOFS_PER_ELEMENT
-        nel = len(self.element_3d.connectivity)
+        if self.model.mesh.solids_connectivity.size:
+            self.element_3d.reorder_connect()
+            # rows_se, cols_se = self.element_3d.generate_ind_rows_cols()
+            # self.ind_rows = np.append(self.ind_rows, rows_se)
+            # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
-        ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
-        data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
-        data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
+            dofs = self.element_3d.DOFS_PER_ELEMENT
+            nel = len(self.element_3d.connectivity)
 
-        last_progress = 0
+            ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
+            ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
+            data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
+            data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        # loop for solid elements
-        for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
+            last_progress = 0
 
-            progress = 100 * np.round(el_index/nel, 2)
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
+            # loop for 3d elements
+            for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
 
-            last_progress = progress
+                progress = 100 * np.round(el_index/nel, 2)
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
-            material = self.model.properties._get_property("material", volume=vol_id)
-            if material is None:
-                continue
+                last_progress = progress
 
-            rows, cols = self.element_3d.get_rows_and_cols_indexes(el_index, shift_index)
-            ind_rows[el_index, :, :] = rows
-            ind_cols[el_index, :, :] = cols
+                material = self.model.properties._get_property("material", volume=vol_id)
+                if material is None:
+                    continue
 
-            Ke, Me = self.element_3d.elementary_matrices(el_index, material)
-            data_K_se[el_index, :, :] = Ke
-            data_M_se[el_index, :, :] = Me
+                rows, cols = self.element_3d.get_rows_and_cols_indexes(el_index, shift_index)
+                ind_rows[el_index, :, :] = rows
+                ind_cols[el_index, :, :] = cols
 
-        self.data_K = np.append(self.data_K, data_K_se.flatten())
-        self.data_M = np.append(self.data_M, data_M_se.flatten())
+                Ke, Me = self.element_3d.elementary_matrices(el_index, material)
+                data_K_se[el_index, :, :] = Ke
+                data_M_se[el_index, :, :] = Me
 
-        self.ind_rows = np.append(self.ind_rows, ind_rows.flatten())
-        self.ind_cols = np.append(self.ind_cols, ind_cols.flatten())
+            self.data_K = np.append(self.data_K, data_K_se.flatten())
+            self.data_M = np.append(self.data_M, data_M_se.flatten())
 
-        # np.savetxt("indexes_exported.dat", np.array([ind_rows.flatten(), ind_cols.flatten()], dtype=int).T, delimiter=",", fmt="%i")
+            self.ind_rows = np.append(self.ind_rows, ind_rows.flatten())
+            self.ind_cols = np.append(self.ind_cols, ind_cols.flatten())
+
+            # np.savetxt("indexes_exported.dat", np.array([ind_rows.flatten(), ind_cols.flatten()], dtype=int).T, delimiter=",", fmt="%i")
 
         aux_nodes = list()
 
@@ -402,7 +404,7 @@ class StructuralAssembler:
 
             last_progress = 0
 
-            # loop for face elements
+            # loop for 2d elements
             for el_index, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
 
                 progress = 100 * np.round(el_index/nel, 2)

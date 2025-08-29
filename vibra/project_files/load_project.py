@@ -49,122 +49,69 @@ class LoadProject:
                                                   )
 
     def load_project_libraries(self):
-        self.load_fluid_library()
-        self.load_material_library()
+        self.fluids_from_library = self.load_fluid_library()
+        self.materials_from_library = self.load_material_library()
 
     def load_fluid_library(self):
 
-        self.library_fluids = dict()
-        config = self.file.read_fluid_library_from_file()
-
-        if config is None:
+        fluids_data = dict()
+        fluid_library_data = app().file.read_fluid_library_from_file()
+        if fluid_library_data is None:
             return
 
-        for tag in config.sections():
+        for str_fluid_id, fluid_data in fluid_library_data.items():
+            if not isinstance(fluid_data, dict):
+                continue
 
-            section = config[tag]
-            keys = section.keys()
+            identifier = int(str_fluid_id)
 
-            name = section['name']
-            fluid_density =  float(section['fluid_density'])
-            speed_of_sound =  float(section['speed_of_sound'])
-            color =  get_color_rgb(section['color'])
-            identifier =  int(section['identifier'])
+            fluid = Fluid(  
+                          name = fluid_data.get("name"),
+                          fluid_density = fluid_data.get("fluid_density"),
+                          speed_of_sound = fluid_data.get("speed_of_sound"),
+                          color =  fluid_data.get("color"),
+                          identifier = identifier,
+                          isentropic_exponent = fluid_data.get("isentropic_exponent"),
+                          thermal_conductivity = fluid_data.get("thermal_conductivity"),
+                          specific_heat_Cp = fluid_data.get("specific_heat_Cp"),
+                          dynamic_viscosity = fluid_data.get("dynamic_viscosity"),
+                          temperature = fluid_data.get("temperature"),
+                          pressure = fluid_data.get("pressure"),
+                          molar_mass = fluid_data.get("molar_mass"),
+                          key_mixture = fluid_data.get("key_mixture"),
+                          molar_fractions = fluid_data.get("molar_fractions"),
+                          )
 
-            if 'isentropic_exponent' in keys:
-                isentropic_exponent = float(section['isentropic_exponent'])
-            else:
-                isentropic_exponent = ""
+            fluids_data[identifier] = fluid
 
-            if 'thermal_conductivity' in keys:
-                thermal_conductivity = float(section['thermal_conductivity'])
-            else:
-                thermal_conductivity = ""
-
-            if 'specific_heat_Cp' in keys:
-                specific_heat_Cp = float(section['specific_heat_Cp'])
-            else:
-                specific_heat_Cp = ""
-
-            if 'dynamic_viscosity' in keys:
-                dynamic_viscosity = float(section['dynamic_viscosity'])
-            else:
-                dynamic_viscosity = ""
-            
-            if 'temperature' in keys:
-                temperature = float(section['temperature'])
-            else:
-                temperature = None
-
-            if 'pressure' in keys:
-                pressure = float(section['pressure'])
-            else:
-                pressure = None
-
-            # if 'key_mixture' in keys:
-            #     key_mixture = section['key_mixture']
-            # else:
-            #     key_mixture = None
-
-            # if 'molar_fractions' in keys:
-            #     str_molar_fractions = section['molar_fractions']
-            #     molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
-            # else:
-            #     molar_fractions = None
-
-            if 'molar_mass' in keys:
-                if section['molar_mass'] == "None":
-                    molar_mass = None
-                else:
-                    molar_mass = float(section['molar_mass'])
-            else:
-                molar_mass = None
-
-            fluid = Fluid(  name = name,
-                            fluid_density = fluid_density,
-                            speed_of_sound = speed_of_sound,
-                            color =  color,
-                            identifier = identifier,
-                            isentropic_exponent = isentropic_exponent,
-                            thermal_conductivity = thermal_conductivity,
-                            specific_heat_Cp = specific_heat_Cp,
-                            dynamic_viscosity = dynamic_viscosity,
-                            temperature = temperature,
-                            pressure = pressure,
-                            molar_mass = molar_mass  )
-
-            self.library_fluids[identifier] = fluid
+        return fluids_data
 
     def load_material_library(self):
 
-        self.library_materials = dict()
-        config = self.file.read_material_library_from_file()
-
-        if config is None:
+        materials_data = dict()
+        material_library_data = app().file.read_material_library_from_file()
+        if material_library_data is None:
             return
 
-        for tag in config.sections():
+        for str_material_id, material_data in material_library_data.items():
+            if not isinstance(material_data, dict):
+                continue
 
-            section = config[tag]
-
-            name = section['name']
-            identifier = int(section['identifier'])
-            density = float(section['material_density'])
-            poisson_ratio = float(section['poisson_ratio'])
-            elasticity_modulus = float(section['elasticity_modulus'])
-            thermal_expansion_coefficient = float(section['thermal_expansion_coefficient'])
+            identifier = int(str_material_id)
 
             material = Material(
-                                name = name,
+                                name = material_data.get("name"),
                                 identifier = identifier, 
-                                material_density = density,
-                                poisson_ratio = poisson_ratio,
-                                elasticity_modulus = elasticity_modulus,
-                                thermal_expansion_coefficient = thermal_expansion_coefficient, 
-                                # color = getColorRGB(section['color'])
+                                material_density = material_data.get("material_density"),
+                                poisson_ratio = material_data.get("poisson_ratio"),
+                                elasticity_modulus = material_data.get("elasticity_modulus"),
+                                thermal_expansion_coefficient = material_data.get("thermal_expansion_coefficient"), 
+                                color =  material_data.get("color"),
                                 )
-            
-            self.library_materials[identifier] = material
+
+            materials_data[identifier] = material
+
+        return materials_data
 
     def load_geometry_data(self):
         
@@ -378,17 +325,17 @@ class LoadProject:
 
                     if property == "fluid":
                         fluid_id = prop_data["fluid_id"]
-                        if fluid_id not in self.library_fluids.keys():
+                        if fluid_id not in self.fluids_from_library.keys():
                             continue
                         else:
-                            prop_data = self.library_fluids[fluid_id]
+                            prop_data = self.fluids_from_library[fluid_id]
 
                     elif property == "material":
                         material_id = prop_data["material_id"]
-                        if material_id not in self.library_materials.keys():
+                        if material_id not in self.materials_from_library.keys():
                             continue
                         else:
-                            prop_data = self.library_materials[material_id]
+                            prop_data = self.materials_from_library[material_id]
 
                     if key == "volume_properties":
                         self.properties._set_property(property, prop_data, volume=id)
@@ -442,46 +389,54 @@ class LoadProject:
     def load_analysis_results(self):
 
         project = app().project
+
+        logging.info("Loading results... [20/100]")
         results_data = self.file.read_results_data_from_file()
 
-        if results_data:
-            logging.info("Loading results... [20/100]")
-            for key, data in results_data.items():
-                data: dict
+        for key, data in results_data.items():
+            data: dict
 
-                if key == "modal_acoustic" and project.acoustic_modal_solver is not None:
-                    if np.iscomplexobj(data["natural_frequencies"]):
-                        project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    else:
-                        project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    project.acoustic_modal_solver.solution = data.get("solution")
-
-                elif key == "modal_structural" and project.structural_modal_solver is not None:
-                    project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                    project.structural_modal_solver.solution = data.get("solution")
-                    project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
-
-                elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
-                    project.acoustic_harmonic_solver.solution = data.get("solution")
-                    app().main_window.disable_advanced_acoustic_plots_buttons(False)
-
-                elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
-                    project.structural_harmonic_solver.solution = data.get("solution")
-                    project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
-
+            if key == "modal_acoustic" and project.acoustic_modal_solver is not None:
+                if np.iscomplexobj(data["natural_frequencies"]):
+                    project.acoustic_modal_solver.complex_natural_frequencies = data.get("natural_frequencies", np.array([]))
                 else:
-                    continue
+                    project.acoustic_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                project.acoustic_modal_solver.solution = data.get("solution")
 
-            logging.info("Updating analysis render... [85/100]")
-        
+            elif key == "modal_structural" and project.structural_modal_solver is not None:
+                project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
+                project.structural_modal_solver.solution = data.get("solution")
+                project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
+
+            elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
+                project.acoustic_harmonic_solver.solution = data.get("solution")
+                app().main_window.disable_advanced_acoustic_plots_buttons(False)
+
+            elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
+                project.structural_harmonic_solver.solution = data.get("solution")
+                project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
+
+            else:
+                continue
+
+        logging.info("Updating analysis render... [85/100]")
+
         acoustic_harmonic_solver = project.acoustic_harmonic_solver
-        if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
-            self.file.handling_harmonic_solution_results()
-            acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
-            app().main_window.disable_advanced_acoustic_plots_buttons(False)
-            if acoustic_harmonic_solver.solution.has_partial_solutions():
-                acoustic_harmonic_solver.solution = None
-                project.can_resume_solution = True
+        if acoustic_harmonic_solver is None:
+            return
+
+        if acoustic_harmonic_solver.project_file is None:
+            return
+
+        self.file.handling_harmonic_solution_results()          
+        acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
+        if acoustic_harmonic_solver.solution is None:
+            return
+
+        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+        if acoustic_harmonic_solver.solution.has_partial_solutions():
+            acoustic_harmonic_solver.solution = None
+            project.can_resume_solution = True
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):
