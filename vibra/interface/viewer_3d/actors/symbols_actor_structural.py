@@ -121,7 +121,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if coords is not None and property is not None:
-            U_R = [(i if i is not None else 0) for i in property["values"]]
+            U_R = [i for i in property["values"]]
 
             # handle table attributed values
             for index, i in enumerate(U_R):
@@ -129,10 +129,11 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
             # alternate add_symbol function to a generic one
             for index, v in enumerate(U_R):
-                if index < 3 and v != 0:
+                if index < 3 and v is not None:
                     self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN)
-                elif index >= 3 and v != 0:
-                    self.add_symbol(sources.create_double_cone_source, coords, (index==3, index==4, index==5), color=color_names.RED_5)    
+                elif index >= 3 and v is not None:
+                    self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=color_names.PINK)    
+                    self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=color_names.RED_5)    
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:

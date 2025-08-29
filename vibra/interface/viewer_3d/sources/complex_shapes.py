@@ -121,3 +121,23 @@ def create_acoustic_transfer_element_data_source():
         rotation=(0, 90, 180),
         scale=(1, 1, 1),
     )
+
+def create_dof_rotation_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_rotations.stl")
+    s = 0.6
+    return transform_polydata(
+        polydata,
+        position=(-s*1.2, 0, 0),
+        rotation=(0, 90, 180),
+        scale=(s/3, s/3, s/3),
+    )
+
+def create_dof_rotation_arrows_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_rotations_arrows.stl")
+    s = 0.6
+    return transform_polydata(
+        polydata,
+        position=(-s*1.2, 0, 0),
+        rotation=(0, 90, 180),
+        scale=(s/3, s/3, s/3),
+    )
