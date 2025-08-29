@@ -1775,7 +1775,7 @@ class Mesh:
         bad_elements: dict[MeshQualityParams, np.ndarray] = dict()
         (bad_elements["gamma"],) = np.where(quality_table[:, 0] < 0.15)
         (bad_elements["volume"],) = np.where(quality_table[:, 1] < 0)
-        (bad_elements["minSJ"],) = np.where(quality_table[:, 2] < 1.5)
+        (bad_elements["minSJ"],) = np.where(quality_table[:, 2] < 0.1)
         (bad_elements["aspectRatio"],) = np.where(quality_table[:, 3] > 4)
 
         histograms: dict[MeshQualityParams, dict] = dict()
