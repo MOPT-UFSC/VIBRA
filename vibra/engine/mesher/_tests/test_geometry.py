@@ -127,7 +127,7 @@ def test_entities_relactions(geometry: Geometry):
 
 
 def test_geometry_normals(geometry: Geometry):
-    sq2 = np.sqrt(2)
+    side = np.sin(np.pi / 4)    
 
     assert np.allclose(geometry.surface_normal(1), np.array([1, 0, 0]), atol=1e-6)
     assert np.allclose(geometry.surface_normal(2), np.array([-1, 0, 0]), atol=1e-6)
@@ -139,17 +139,17 @@ def test_geometry_normals(geometry: Geometry):
     assert np.allclose(geometry.surface_normal(3), np.array([0, 1, 0]))
     assert np.allclose(geometry.surface_normal(4), np.array([0, -1, 0]))
 
-    assert np.allclose(geometry.curve_normal(1), np.array([sq2, sq2, 0]))
+    assert np.allclose(geometry.curve_normal(1), np.array([side, side, 0]))
     assert np.allclose(geometry.curve_normal(2), np.array([0, 0, 1]))
-    assert np.allclose(geometry.curve_normal(3), np.array([sq2, -sq2, 0]))
+    assert np.allclose(geometry.curve_normal(3), np.array([side, -side, 0]))
     assert np.allclose(geometry.curve_normal(4), np.array([0, 0, -1]))
-    assert np.allclose(geometry.curve_normal(5), np.array([-sq2, sq2, 0]))
-    assert np.allclose(geometry.curve_normal(6), np.array([-sq2, -sq2, 0]))
+    assert np.allclose(geometry.curve_normal(5), np.array([-side, side, 0]))
+    assert np.allclose(geometry.curve_normal(6), np.array([-side, -side, 0]))
 
-    assert np.allclose(geometry.point_normal(1), np.array([0, sq2, sq2]))
-    assert np.allclose(geometry.point_normal(2), np.array([0, sq2, -sq2]))
-    assert np.allclose(geometry.point_normal(3), np.array([0, -sq2, sq2]))
-    assert np.allclose(geometry.point_normal(4), np.array([0, -sq2, -sq2]))
+    assert np.allclose(geometry.point_normal(1), np.array([0, side, side]))
+    assert np.allclose(geometry.point_normal(2), np.array([0, side, -side]))
+    assert np.allclose(geometry.point_normal(3), np.array([0, -side, side]))
+    assert np.allclose(geometry.point_normal(4), np.array([0, -side, -side]))
 
 
 @pytest.mark.skip
