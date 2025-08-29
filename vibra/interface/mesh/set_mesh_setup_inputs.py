@@ -807,9 +807,10 @@ class MeshSetupInputs(MesherSetup_UI):
     def closeEvent(self, a0):
         self.keep_window_open = False
 
-        import gmsh
-        if gmsh.isInitialized():
-            gmsh.finalize()
+        # TODO: we can close the GMSH after concluding the mesh generation
+        # import gmsh
+        # if gmsh.isInitialized():
+        #     gmsh.finalize()
 
         if self.bad_elements_showed:
             app().main_window.distinguish_mesh_solids([])
