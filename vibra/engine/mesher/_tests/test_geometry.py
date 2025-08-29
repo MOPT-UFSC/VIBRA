@@ -129,10 +129,11 @@ def test_entities_relactions(geometry: Geometry):
 
 @pytest.mark.skip
 def test_geometry_normals(geometry: Geometry):
-    assert geometry.surface_normal(1) == np.array([1, 0, 0])
-    assert geometry.surface_normal(2) == np.array([-1, 0, 0])
-    assert geometry.surface_normal(3) == np.array([0, 1, 0])
-    assert geometry.surface_normal(4) == np.array([0, -1, 0])
+    print(geometry.surface_normal(1))
+    assert np.allclose(geometry.surface_normal(1), np.array([1, 0, 0]), atol=1e-6)
+    assert np.allclose(geometry.surface_normal(2), np.array([-1, 0, 0]), atol=1e-6)
+    assert np.allclose(geometry.surface_normal(3), np.array([0, 1, 0]), atol=1e-6)
+    assert np.allclose(geometry.surface_normal(4), np.array([0, -1, 0]), atol=1e-6)
 
     assert geometry.curve_normal(1) == np.array([1, 1, 0])
     assert geometry.curve_normal(2) == np.array([0, 0, 1])

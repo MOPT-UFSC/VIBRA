@@ -15,28 +15,23 @@ class Geometry:
         path: str | Path | None = None,
         length_unit: LengthUnits = "milimeter",
     ):
-        # relations
         self._solids_to_surfaces = bidict()
         self._surfaces_to_curves = bidict()
         self._curves_to_points = bidict()
 
-        # centers
         self._solids_centers = dict()
         self._surfaces_centers = dict()
         self._curves_centers = dict()
         self._points_centers = dict()
 
-        # normals
         self._surfaces_normals = dict()
         self._curves_normals = dict()
         self._points_normals = dict()
 
-        # areas
         self._surfaces_areas = dict()
         self._curves_lengths = dict()
         self._solids_volumes = dict()
 
-        # curvatures
         self._straight_curves = set()
         self._straight_surfaces = set()
 
@@ -70,18 +65,15 @@ class Geometry:
         self._surfaces_to_curves.clear()
         self._curves_to_points.clear()
 
-        # centers
         self._solids_centers.clear()
         self._surfaces_centers.clear()
         self._curves_centers.clear()
         self._points_centers.clear()
 
-        # normals
         self._surfaces_normals.clear()
         self._curves_normals.clear()
         self._points_normals.clear()
 
-        # areas
         self._surfaces_areas.clear()
         self._curves_lengths.clear()
 
@@ -123,68 +115,80 @@ class Geometry:
         self.length_unit_factor = new_factor
 
     def points_to_curves(self, *point_ids: int) -> Iterator[int]:
+        """Get all curves connected to the given points."""
         for point_id in point_ids:
             for points_tuple, curve_id in self._curves_to_points.inverse.items():
                 if point_id in points_tuple:
                     yield curve_id[0]
 
     def points_to_surfaces(self, *point_ids: int) -> Iterator[int]:
+        """Get all surfaces connected to the given points."""
         for curve_id in self.points_to_curves(*point_ids):
             for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
                 if curve_id in curves_tuple:
                     yield surface_id[0]
 
     def points_to_solids(self, *point_ids: int) -> Iterator[int]:
+        """Get all solids connected to the given points."""
         for surface_id in self.points_to_surfaces(*point_ids):
             for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
                 if surface_id in surfaces_tuple:
                     yield solid_id[0]
 
     def curves_to_points(self, *curve_ids: int) -> Iterator[int]:
+        """Get all points connected to the given curves."""
         for curve_id in curve_ids:
             for point_id in self._curves_to_points.get(curve_id, []):
                 yield point_id
 
     def curves_to_surfaces(self, *curve_ids: int) -> Iterator[int]:
+        """Get all surfaces connected to the given curves."""
         for curve_id in curve_ids:
             for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
                 if curve_id in curves_tuple:
                     yield surface_id[0]
 
     def curves_to_solids(self, *curve_ids: int) -> Iterator[int]:
+        """Get all solids connected to the given curves."""
         for surface_id in self.curves_to_surfaces(*curve_ids):
             for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
                 if surface_id in surfaces_tuple:
                     yield solid_id[0]
 
     def surfaces_to_curves(self, *surface_ids: int) -> Iterator[int]:
+        """Get all curves connected to the given surfaces."""
         for surface_id in surface_ids:
             for curve_id in self._surfaces_to_curves.get(surface_id, []):
                 yield curve_id
 
     def surfaces_to_points(self, *surface_ids: int) -> Iterator[int]:
+        """Get all points connected to the given surfaces."""
         for curve_id in self.surfaces_to_curves(*surface_ids):
             for point_id in self._curves_to_points.get(curve_id, []):
                 yield point_id
 
     def surfaces_to_solids(self, *surface_ids: int) -> Iterator[int]:
+        """Get all solids connected to the given surfaces."""
         for surface_id in surface_ids:
             for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
                 if surface_id in surfaces_tuple:
                     yield solid_id[0]
 
     def solids_to_points(self, *volume_ids: int) -> Iterator[int]:
+        """Get all points connected to the given solids."""
         for surface_id in self.solids_to_surfaces(*volume_ids):
             for curve_id in self._surfaces_to_curves.get(surface_id, []):
                 for point_id in self._curves_to_points.get(curve_id, []):
                     yield point_id
 
     def solids_to_curves(self, *volume_ids: int) -> Iterator[int]:
+        """Get all curves connected to the given solids."""
         for surface_id in self.solids_to_surfaces(*volume_ids):
             for curve_id in self._surfaces_to_curves.get(surface_id, []):
                 yield curve_id
 
     def solids_to_surfaces(self, *volume_ids: int) -> Iterator[int]:
+        """Get all surfaces connected to the given solids."""
         for volume_id in volume_ids:
             for surface_id in self._solids_to_surfaces.get(volume_id, []):
                 yield surface_id
@@ -226,6 +230,7 @@ class Geometry:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
     def _process_geometry_information(self):
+        """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
         self.clear()
 
         for dim, tag in gmsh.model.getEntities():
@@ -254,7 +259,7 @@ class Geometry:
                 center, uv_mid = self.process_center_element(dim, tag)
                 self._surfaces_centers[tag] = center
 
-                normal = gmsh.model.getNormal(tag, uv_mid).reshape(-1, 3)
+                normal = gmsh.model.getNormal(tag, uv_mid)
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
 
                 self._surfaces_normals[tag] = normal
@@ -279,7 +284,6 @@ class Geometry:
         for curve in self.curves:
             adjacent_surfaces = set(self.curves_to_surfaces(curve))
             normals_sum = np.zeros((1, 3))
-
             for surface in adjacent_surfaces:
                 normals_sum += self._surfaces_normals[surface]
 
