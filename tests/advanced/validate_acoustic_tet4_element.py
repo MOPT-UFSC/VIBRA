@@ -78,7 +78,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
@@ -219,8 +219,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # print(M_mat*rho_0)
     # return
 
-    input_rows = mesh.nodes_from_surfaces[1]
-    output_rows = mesh.nodes_from_surfaces[2]
+    input_rows = mesh.external_nodes_from_surfaces[1]
+    output_rows = mesh.external_nodes_from_surfaces[2]
 
     input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
@@ -230,7 +230,7 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     element_3d = assembler.element_3d
 
     list_nodes = list()
-    for tag, surface_nodes in mesh.nodes_from_surfaces.items():
+    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)

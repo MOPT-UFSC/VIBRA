@@ -63,7 +63,7 @@ def load_external_mesh_and_solve():
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
         mesh.volumes_from_surface[tag] = [1]
 
@@ -179,7 +179,7 @@ def load_external_mesh_and_solve():
     element_3d = model.acoustic_element_3d
 
     list_nodes = list()
-    for tag, surface_nodes in mesh.nodes_from_surfaces.items():
+    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
@@ -204,14 +204,14 @@ def load_external_mesh_and_solve():
         particle_velocity[_node_id] = Vk / len(element_ids)
 
     # input_Vx = 0.
-    # for node_id in mesh.nodes_from_surfaces[1]:
+    # for node_id in mesh.external_nodes_from_surfaces[1]:
     #     input_Vx += particle_velocity[node_id][0, :]
-    # input_Vx /= len(mesh.nodes_from_surfaces[1])
+    # input_Vx /= len(mesh.external_nodes_from_surfaces[1])
 
     # output_Vx = 0.
-    # for node_id in mesh.nodes_from_surfaces[2]:
+    # for node_id in mesh.external_nodes_from_surfaces[2]:
     #     output_Vx += particle_velocity[node_id][0, :]
-    # output_Vx /= len(mesh.nodes_from_surfaces[2])
+    # output_Vx /= len(mesh.external_nodes_from_surfaces[2])
 
     mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
@@ -238,12 +238,12 @@ def load_external_mesh_and_solve():
         output_ns = "output_face"
 
         if output_ns == "input_face":
-            rows = mesh.nodes_from_surfaces[1]
+            rows = mesh.external_nodes_from_surfaces[1]
             freq_ref = pressure_at_input_face[:, 0]
             results_ref = pressure_at_input_face[:, 1] + 1j*pressure_at_input_face[:, 2]
 
         else:
-            rows = mesh.nodes_from_surfaces[2]
+            rows = mesh.external_nodes_from_surfaces[2]
             freq_ref = pressure_at_output_face[:, 0]
             results_ref = pressure_at_output_face[:, 1] + 1j*pressure_at_output_face[:, 2]
 

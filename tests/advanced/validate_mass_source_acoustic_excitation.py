@@ -74,11 +74,11 @@ def load_external_mesh_and_solve(assignment_type: str):
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
     # line information
     line_id = 1
-    mesh.nodes_from_lines[line_id] = np.array([86, 116, 115, 114, 28], dtype=int) - 1
+    mesh.external_nodes_from_lines[line_id] = np.array([86, 116, 115, 114, 28], dtype=int) - 1
     mesh.elements_from_line[line_id] = np.array([1, 2, 3, 4], dtype=int) - 1
     mesh.external_connectivity_from_lines[line_id] = np.array([[ 86, 116],
                                                       [116, 115],
@@ -226,8 +226,8 @@ def load_external_mesh_and_solve(assignment_type: str):
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
-    input_rows = mesh.nodes_from_surfaces[1]
-    output_rows = mesh.nodes_from_surfaces[2]
+    input_rows = mesh.external_nodes_from_surfaces[1]
+    output_rows = mesh.external_nodes_from_surfaces[2]
 
     input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
@@ -237,7 +237,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     element_3d = model.acoustic_element_3d
 
     list_nodes = list()
-    for tag, surface_nodes in mesh.nodes_from_surfaces.items():
+    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)

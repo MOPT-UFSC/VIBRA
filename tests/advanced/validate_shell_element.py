@@ -77,7 +77,7 @@ def load_external_mesh_and_solve():
     mesh.elements_from_surface[tag] = face_connectivity[:, 0]
     mesh.external_connectivity_from_surfaces[tag] = face_connectivity[:, 4:]
     mesh.faces_connectivity = face_connectivity
-    mesh.nodes_from_surfaces[tag] = nodal_coordinates[:, 0]
+    mesh.external_nodes_from_surfaces[tag] = nodal_coordinates[:, 0]
 
     # Define the material properties
 

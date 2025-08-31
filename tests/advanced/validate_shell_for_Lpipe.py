@@ -77,7 +77,7 @@ def load_external_mesh_and_solve():
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
 
     # # Load the external data
@@ -200,7 +200,7 @@ def load_external_mesh_and_solve():
     # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
-    selected_nodes = mesh.nodes_from_surfaces[3]
+    selected_nodes = mesh.external_nodes_from_surfaces[3]
 
     dofs_index = {
                   "ux" : 0,
