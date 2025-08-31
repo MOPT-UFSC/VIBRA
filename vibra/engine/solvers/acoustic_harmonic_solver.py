@@ -444,8 +444,8 @@ class AcousticHarmonicSolver:
         model = self.assembler.model
         frequencies = self.assembler.model.frequencies
 
-        nodes_input = np.sort(model.mesh.nodes_from_surfaces.get(input_surface_id))
-        nodes_output = np.sort(model.mesh.nodes_from_surfaces.get(output_surface_id))
+        nodes_input = np.sort(model.mesh.get_nodes_from_surface(input_surface_id))
+        nodes_output = np.sort(model.mesh.get_nodes_from_surface(output_surface_id))
 
         P_in = self.solution[nodes_input, :]
         P_out = self.solution[nodes_output, :]
@@ -720,11 +720,11 @@ class AcousticHarmonicSolver:
             The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
         """
 
-        node_ids = np.sort(self.assembler.model.mesh.nodes_from_surfaces.get(surface_id))
+        nodes = np.sort(self.assembler.model.mesh.get_nodes_from_surface(surface_id))
         surface_connectivities = self.assembler.model.mesh.get_connectivity_from_surface(surface_id)
 
-        number_nodes = len(node_ids)
-        map_nodes = dict(zip(node_ids, np.arange(number_nodes)))
+        number_nodes = len(nodes)
+        map_nodes = dict(zip(nodes, np.arange(number_nodes)))
 
         if len(pressures.shape) == 1:
             pressures = np.tile(pressures, (number_nodes, 1))
@@ -775,11 +775,11 @@ class AcousticHarmonicSolver:
             The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
         """
 
-        node_ids = np.sort(self.assembler.model.mesh.nodes_from_surfaces.get(surface_id))
+        nodes = np.sort(self.assembler.model.mesh.get_nodes_from_surface(surface_id))
         surface_connectivities = self.assembler.model.mesh.get_connectivity_from_surface(surface_id)
 
-        number_nodes = len(node_ids)
-        map_nodes = dict(zip(node_ids, np.arange(number_nodes)))
+        number_nodes = len(nodes)
+        map_nodes = dict(zip(nodes, np.arange(number_nodes)))
 
         if len(sound_intensities.shape) == 1:
             sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
@@ -826,8 +826,8 @@ class AcousticHarmonicSolver:
 
         """
         frequencies = self.assembler.model.frequencies
-        rows_input = self.assembler.model.mesh.nodes_from_surfaces[input_surface_id]
-        rows_output = self.assembler.model.mesh.nodes_from_surfaces[output_surface_id]
+        rows_input = self.assembler.model.mesh.get_nodes_from_surface(input_surface_id)
+        rows_output = self.assembler.model.mesh.get_nodes_from_surface(output_surface_id)
 
         P_in = np.average(self.solution[rows_input,:], axis=0)
         P_out = np.average(self.solution[rows_output,:], axis=0)

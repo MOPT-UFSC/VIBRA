@@ -87,7 +87,9 @@ class AcousticAssembler:
                     imag_values = np.array(data["imag_values"])
                     complex_values = real_values + 1j * imag_values
                 
-                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                nodes = self.model.mesh.get_nodes_from_surface.get(surface_id)
+                if nodes is None:
+                    continue
 
                 for _ in nodes:
                     for _complex_values in complex_values:
@@ -121,10 +123,15 @@ class AcousticAssembler:
         _prescribed_indexes = list()
         for key, _ in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "acoustic_pressure":
-                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
-                for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
-                    _prescribed_indexes.append(index)
+            if property != "acoustic_pressure":
+                continue
+
+            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            if nodes is None:
+                continue
+
+            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                _prescribed_indexes.append(index)
 
         return _prescribed_indexes
 
@@ -717,10 +724,13 @@ class AcousticAssembler:
             if "values" in data.keys():
                 _complex_values = data.get("values")[0]
 
-            node_ids = self.model.mesh.nodes_from_lines.get(args[0])
-            aux_ones = np.ones((len(node_ids), 1), dtype=float)
+            nodes = self.model.mesh.get_nodes_from_line(args[0])
+            if nodes is None:
+                continue
 
-            self.mass_source_vector_lines[node_ids, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+            aux_ones = np.ones((len(nodes), 1), dtype=float)
+
+            self.mass_source_vector_lines[nodes, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
 
         if self.mass_source_vector_lines.any():
             self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_indexes, :]
@@ -745,10 +755,13 @@ class AcousticAssembler:
             if "values" in data.keys():
                 _complex_values = data.get("values")[0]
 
-            node_ids = self.model.mesh.nodes_from_surfaces.get(args[0])
-            aux_ones = np.ones((node_ids.size, 1))
+            nodes = self.model.mesh.get_nodes_from_surface(args[0])
+            if nodes is None:
+                continue
 
-            self.mass_source_vector_surfaces[node_ids, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+            aux_ones = np.ones((nodes.size, 1))
+
+            self.mass_source_vector_surfaces[nodes, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
 
         if self.mass_source_vector_surfaces.any():
             self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.unprescribed_indexes, :]
@@ -773,10 +786,10 @@ class AcousticAssembler:
             if "values" in data.keys():
                 _complex_values = data.get("values")[0]
 
-            node_ids = self.model.mesh.nodes_from_volumes.get(args[0])
-            aux_ones = np.ones((node_ids.size, 1))
+            nodes = self.model.mesh.get_nodes_from_volume(args[0])
+            aux_ones = np.ones((nodes.size, 1))
 
-            self.mass_source_vector_volumes[node_ids, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+            self.mass_source_vector_volumes[nodes, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
 
         if self.mass_source_vector_volumes.any():
             self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.unprescribed_indexes, :]
@@ -1591,10 +1604,11 @@ class AcousticAssembler:
                         complex_values = _complex_values
 
                 if data["nodal_attribution"]:
+                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                    if nodes is None:
+                        continue
 
-                    nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                     N = len(nodes)
-
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
                         if data["averaged"]:
                             acoustic_excitation[index] += complex_values / N
@@ -1617,10 +1631,11 @@ class AcousticAssembler:
                         complex_values = _complex_values
 
                 if data["nodal_attribution"]:
+                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                    if nodes is None:
+                        continue
 
-                    nodes = self.model.mesh.nodes_from_surfaces[surface_id]
                     N = len(nodes)
-
                     self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration[surface_id]
 

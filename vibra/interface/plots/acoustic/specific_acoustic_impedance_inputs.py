@@ -89,9 +89,9 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 0:
-            app().main_window.action_model_workspace_callback()
+            app().main_window.show_mesh_render_widget()
         else:
-            app().main_window.action_mesh_workspace_callback()
+            app().main_window.show_geometry_render_widget()
 
     def check_inputs(self):
 
@@ -156,12 +156,6 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
 
         component_label = "Vn"
 
-        list_nodes = list()
-        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
-            if self.comboBox_selector_filter.currentIndex() == 0:
-                if tag == surface_id:
-                    list_nodes.extend(surface_nodes)
-
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:
             return np.zeros_like(self.frequencies, dtype=complex)
@@ -169,8 +163,8 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
         self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
         particle_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
 
-        node_ids = np.sort(list_nodes)
-        pressures = self.solution[node_ids, :]
+        nodes = self.mesh.get_nodes_from_surface(surface_id)
+        pressures = self.solution[np.sort(nodes), :]
 
         specific_impedance = pressures / particle_velocities
 
@@ -187,12 +181,9 @@ class SpecificAcousticImpedanceInputs(SpecificAcousticImpedanceInputs_UI):
                     pressure = self.solution[node_id, :]
                     return pressure / particle_velocity
 
-        list_nodes = list()
-        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
-            if self.comboBox_selector_filter.currentIndex() == 1:
-                if node_id in surface_nodes:
-                    list_nodes.extend(surface_nodes)
-                    surface_id = tag
+        mask = np.sum(np.isin(self.mesh.faces_connectivity[:, 4:], node_id), axis=1) == 1
+        surface_ids = [int(surf_id) for surf_id in np.unique(self.mesh.faces_connectivity[:, 1][mask])]
+        surface_id = surface_ids[0]
 
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:

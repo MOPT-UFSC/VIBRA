@@ -815,7 +815,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             if selection == "surfaces":
 
-                nodes_from_surface = self.mesh.nodes_from_surfaces[selected_id]
+                nodes_from_surface = self.mesh.get_nodes_from_surface(selected_id)
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
@@ -835,7 +835,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             elif selection == "lines":
 
-                nodes_from_line = self.mesh.nodes_from_lines[selected_id]
+                nodes_from_line = self.mesh.get_nodes_from_line(selected_id)
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
@@ -1238,8 +1238,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 return
             
         if isinstance(line_id, int):
-            for node_id in self.mesh.nodes_from_lines[line_id]:
-                for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.get_nodes_from_line(line_id):
+                for surface_id in self.mesh.get_surfaces_from_node(node_id):
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
@@ -1250,14 +1250,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if node_id is None:
                 return
 
-            for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for surface_id in self.mesh.get_surfaces_from_node(node_id):
                 data = self.properties._get_property("surface_thickness", surface=surface_id)
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                     return
 
         if isinstance(node_id, int):
-            for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for surface_id in self.mesh.get_surfaces_from_node(node_id):
                 data = self.properties._get_property("surface_thickness", surface=surface_id)
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)

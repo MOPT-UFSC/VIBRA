@@ -134,9 +134,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
-            rows = self.mesh.nodes_from_surfaces.get(selected_id)
+            rows = self.mesh.get_nodes_from_surface(selected_id)
         elif index == 1:
-            rows = self.mesh.nodes_from_lines.get(selected_id)
+            rows = self.mesh.get_nodes_from_line(selected_id)
         elif index == 2:
             rows = self.mesh.nodes_from_points.get(selected_id)
         else:

@@ -21,7 +21,6 @@ from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs impo
 from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.model_inputs.structural.dof_constraint_inputs import DofConstraintInputs
 from vibra.interface.model_inputs.structural.dof_prescription_inputs import DofPrescriptionInputs
 from vibra.interface.model_inputs.structural.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.normal_pressure_load_inputs import NormalPressureLoadInputs

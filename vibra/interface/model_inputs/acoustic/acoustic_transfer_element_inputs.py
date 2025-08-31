@@ -357,7 +357,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def get_response(self, excitation_id: int, surface_id: int):
 
-        surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
+        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:
