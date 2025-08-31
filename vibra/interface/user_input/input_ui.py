@@ -1,6 +1,6 @@
 from vibra.interface.model_inputs.structural.material.set_material_inputs import MaterialInputs
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
 #
 from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
 from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
@@ -74,7 +74,7 @@ class InputUi:
     def mesh_setup(self):
         if not self.model_setup_items.item_child_mesh_setup.isDisabled():
             app().main_window.action_model_workspace_callback()
-            obj = self.process_input(MeshSetupInputs)
+            obj = self.process_input(MesherSetupInputs)
             if obj.complete:
                 self.model_setup_items.enable_and_expand_menu_items()
 

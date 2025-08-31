@@ -2,12 +2,7 @@
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.mesher.element_type import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-)
+from vibra.engine.mesher.element_type import *
 from vibra.utils.utils import get_color_rgb
 
 import logging
@@ -249,9 +244,6 @@ class LoadProject:
         self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
         self.model.generated_mesh = True
 
-        logging.info("Loading mesh... [95/100]")
-        self.model.mesh.process_solid_elements_connected_to_nodes()
-
     def load_mesh_setup(self):
 
         mesh_setup = self.file.read_mesh_setup_from_file()
@@ -281,7 +273,7 @@ class LoadProject:
                 if algorithm_3d is not None:
                     solid_element.algorithm_3d = algorithm_3d
 
-                mesh_setup["element_type"] = solid_element
+                mesh_setup["ElementType"] = solid_element
 
                 app().project.reset_solutions()
                 app().project.set_mesh_setup(mesh_setup)

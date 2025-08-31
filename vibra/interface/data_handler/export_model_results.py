@@ -117,7 +117,7 @@ class ExportModelResults(QFileDialog):
                 directory_path = path
 
             if len(self.data) == 1:
-                _filter = "Text file (*.csv);; Spreadsheet (*.xlsx);; Text file (*.dat);;Text file (*.txt)"
+                _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls);; Text file (*.dat);; Text file (*.txt);; Text file (*.csv)"
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 

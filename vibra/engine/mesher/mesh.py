@@ -7,25 +7,15 @@ from pathlib import Path
 from time import time
 from traceback import print_exception
 from typing import Literal
-from pprint import pprint
 
 import gmsh
 import numpy as np
+
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON,
-    VTK_QUADRATIC_HEXAHEDRON,
-    VTK_QUADRATIC_TETRA,
-    VTK_TETRA,
-    vtkUnstructuredGrid,
-)
+from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.element_type import (
-    DEFAULT_ELEMENT_TYPE,
-    TETRAHEDRON_4,
-    ElementType,
-)
+from vibra.engine.mesher.element_type import *
 
 type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
@@ -36,7 +26,6 @@ class Mesh:
         self.geometry_qf = kwargs.get("geometry_qf", 1.0)
 
         self.geometry_setup = None
-        self.mesh_setup = None
         self.geometry_imported = True
 
         self.reset_variables()
@@ -87,7 +76,6 @@ class Mesh:
         self.mesh_quality_statistics = dict()
         self.mesh_bad_elements = dict()
         self.mesh_quality_histograms_data = dict()
-        self.mesh_quality_temp = None
 
         self.collapsed_3d_elements = set()
         self.collapsed_2d_elements = set()
@@ -153,35 +141,16 @@ class Mesh:
         else:
             return 1
 
-    def load_cad(
-        self,
-        path: (str | Path),
-        *,
-        minimum_element_size: float = 30.0,
-        maximum_element_size: float = 30.0,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-8,
-        size_factor: float = 1,
-        dimension: int = 3,
-        threads: int = 0,
-        gmsh_gui: bool = False,
-        mesh_refinement_parameters=list(),
-        mesh_connection=True,
-        **kwargs,
-    ):
-        self.mesh_setup = dict(
-            minimum_element_size=minimum_element_size,
-            maximum_element_size=maximum_element_size,
-            element_type=element_type,
-            geometry_tolerance=geometry_tolerance,
-            size_factor=size_factor,
-            dimension=dimension,
-            threads=threads,
-            mesh_refinement_parameters=mesh_refinement_parameters,
-            mesh_connection=mesh_connection,
-        )
-
-        self.mesh_connection = mesh_connection
+    def load_cad(self, path: str | Path, **kwargs):
+        geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
+        mesh_connection = kwargs.get("mesh_connection", True)
+        mesh_quality_metrics = kwargs.get("mesh_quality_metrics", False)
+        dimension = kwargs.get("dimension", 3)
+        threads = kwargs.get("threads", 0)
+        gmsh_gui = kwargs.get("gmsh_gui", False)
+ 
+        self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        self.element_type: ElementType
 
         if not gmsh.isInitialized():
             gmsh.initialize("", False, interruptible=False)
@@ -194,32 +163,25 @@ class Mesh:
             gmsh.open(str(path))
 
         logging.info("Configuring mesh... [20/100]")
-        self._configure_mesh(
-            element_type,
-            minimum_element_size,
-            maximum_element_size,
-            size_factor,
-            mesh_refinement_parameters,
-        )
+        self._configure_mesh(**kwargs)
 
         # clear the mesh data
         gmsh.model.mesh.clear()
-
         gmsh.model.occ.synchronize()
-        self.element_type = element_type
 
-        if self.mesh_connection:
+        if mesh_connection:
             self._merge_nodes_from_adjacent_volumes()
 
         try:
             logging.info("Processing geometry data... [25/100]")
             self.process_geometry_information()
+
+            logging.info("Processing geometry data... [35/100]")
             self.process_downwards_adjacencies_from_entities()
             self.process_upwards_adjacencies_from_entities()
 
             logging.info("Generating mesh... [50/100]")
             gmsh.model.mesh.generate(dim=dimension)
-
             gmsh.model.mesh.removeDuplicateNodes()
 
         except Exception as error_log:
@@ -230,10 +192,12 @@ class Mesh:
         self.post_process_mesh_data()
 
         logging.info("Post-processing mesh... [95/100]")
-        self.compute_mesh_quality_parameters()
+        if mesh_quality_metrics:
+            self.compute_mesh_quality_parameters()
 
         if gmsh_gui:
-            gmsh.fltk.run()
+            if "-nopopup" not in sys.argv:
+                gmsh.fltk.run()
 
         # gmsh.finalize()
 
@@ -254,14 +218,14 @@ class Mesh:
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
 
-    def load_mesh(
-        self,
-        path: Path | str,
-        element_type: ElementType = DEFAULT_ELEMENT_TYPE,
-        geometry_tolerance: float = 1e-8,
-        threads: int = 0,
-        gmsh_gui: bool = False,
-    ):
+    def load_mesh(self, path: Path | str,**kwargs):
+        geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
+        threads = kwargs.get("threads", 0)
+        gmsh_gui = kwargs.get("gmsh_gui", False)
+
+        self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        self.element_type: ElementType
+
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -273,8 +237,6 @@ class Mesh:
 
         logging.info("Loading mesh data... [90/100]")
         gmsh.model.occ.synchronize()
-
-        self.element_type = element_type
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
@@ -832,17 +794,16 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
-    def _configure_mesh(
-        self,
-        element_type: ElementType,
-        minimum_element_size: float,
-        maximum_element_size: float,
-        size_factor: float,
-        refinement_parameters=list(),
-    ):
+    def _configure_mesh(self, **kwargs):
+        size_factor = kwargs.get("size_factor", 0.0)
+        maximum_element_size = kwargs.get("maximum_element_size", 30.0)
+        minimum_element_size = kwargs.get("minimum_element_size", 30.0)
+        refinement_parameters = kwargs.get("refinement_parameters", list())
+        element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        element_type: ElementType
+
         if refinement_parameters:
             self.local_mesh_refine(maximum_element_size, refinement_parameters)
-
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
@@ -851,17 +812,11 @@ class Mesh:
         gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
         gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
         gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber(
-            "Mesh.RecombinationAlgorithm", element_type.recombination_algorithm
-        )
-        gmsh.option.setNumber(
-            "Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm
-        )
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
         gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
         gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber(
-            "Mesh.SecondOrderIncomplete", element_type.second_order_incomplete
-        )
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
@@ -879,6 +834,10 @@ class Mesh:
         self.map_solid_elements.clear()
         self.map_face_elements.clear()
         self.map_line_elements.clear()
+
+        self.mesh_bad_elements.clear()
+        self.mesh_quality_statistics.clear()
+        self.mesh_quality_histograms_data.clear()
 
         self.solid_elements_center.clear()
         self.external_connectivity_from_lines.clear()
@@ -1283,32 +1242,6 @@ class Mesh:
             rows = np.isin(self.solids_connectivity[:, 1], volume_id)
             element_ids = self.solids_connectivity[rows, 0]
             self.elements_from_volume[volume_id] = element_ids
-
-    def compute_mesh_quality_parameters(self):
-        t0 = time()
-        self.calculate_mesh_quality_parameters()
-        dt = time() - t0
-        print(f"Elapsed time to calculate_mesh_quality_parameters: {dt : .5f} s")
-
-        t0 = time()
-        self.calculate_mesh_quality_statistics()
-        dt = time() - t0
-        print(f"Elapsed time to calculate_mesh_quality_statistics: {dt : .5f} s")
-
-        t0 = time()
-        self.calculate_mesh_bad_elements()
-        dt = time() - t0
-        print(f"Elapsed time to calculate_mesh_bad_elements: {dt : .5f} s")
-
-        t0 = time()
-        self.calculate_mesh_quality_histograms()
-        dt = time() - t0
-        print(f"Elapsed time to calculate_mesh_quality_histograms: {dt : .5f} s")
-
-        t0 = time()
-        self.fast_mesh_quality_parameters()
-        dt = time() - t0
-        print(f"Elapsed time to fast_mesh_quality_parameters: {dt : .5f} s")
 
     def get_line_from_element(self, element_id: int) -> int | None:
         for line_id, elements_from_line in self.elements_from_line.items():
@@ -1738,39 +1671,62 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
+    def compute_mesh_quality_parameters(self):
+        t0 = time()
+        self.calculate_mesh_quality_parameters()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_quality_parameters: {dt : .5f} s")
+
+        t0 = time()
+        self.calculate_mesh_quality_statistics()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_quality_statistics: {dt : .5f} s")
+
+        t0 = time()
+        self.calculate_mesh_bad_elements()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_bad_elements: {dt : .5f} s")
+
+        t0 = time()
+        self.calculate_mesh_quality_histograms()
+        dt = time() - t0
+        print(f"Elapsed time to calculate_mesh_quality_histograms: {dt : .5f} s")
+
+        t0 = time()
+        self.fast_mesh_quality_parameters()
+        dt = time() - t0
+        print(f"Elapsed time to fast_mesh_quality_parameters: {dt : .5f} s")
+
     def fast_mesh_quality_parameters(self) -> dict | None:
+
         _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
         if not element_tags:
             return
 
-        parameters = [
-            "gamma",
-            "volume",
-            "minSJ",
-            "aspectRatio",
-        ]
-
+        # process the mesh quality metrics
         elements = element_tags[0]
         min_edge_quals = gmsh.model.mesh.getElementQualities(elements, "minEdge")
         max_edge_quals = gmsh.model.mesh.getElementQualities(elements, "maxEdge")
 
-        shape = (len(elements), len(parameters))
-        quality_table = np.zeros(shape, dtype=float)
+        N_el = len(elements)
+        N_qp = len(self.mesh_quality_parameters)
+        quality_table = np.zeros((N_el, N_qp), dtype=float)
+
         quality_table[:, 0] = gmsh.model.mesh.get_element_qualities(elements, "gamma")
         quality_table[:, 1] = gmsh.model.mesh.get_element_qualities(elements, "volume")
         quality_table[:, 2] = gmsh.model.mesh.get_element_qualities(elements, "minSJ")
         quality_table[:, 3] = max_edge_quals / min_edge_quals  # aspect ratio
 
+        # compute the bad elements
         quality_statistics: dict[MeshQualityParams, list[float]] = dict()
-        for i, parameter in enumerate(parameters):
+        for i, parameter in enumerate(self.mesh_quality_parameters):
             column = quality_table[:, i]
             worst = np.max(column) if (parameter == "aspectRatio") else np.min(column)
-
             quality_statistics[parameter] = [
-                worst,
-                np.mean(column),
-                np.std(column),
-            ]
+                                            worst, 
+                                            np.mean(column), 
+                                            np.std(column)
+                                            ]
 
         bad_elements: dict[MeshQualityParams, np.ndarray] = dict()
         (bad_elements["gamma"],) = np.where(quality_table[:, 0] < 0.15)
@@ -1778,6 +1734,7 @@ class Mesh:
         (bad_elements["minSJ"],) = np.where(quality_table[:, 2] < 0.1)
         (bad_elements["aspectRatio"],) = np.where(quality_table[:, 3] > 4)
 
+        # compute the histogram data
         histograms: dict[MeshQualityParams, dict] = dict()
         for i, parameter in enumerate(self.mesh_quality_parameters):
             column = quality_table[:, i]
@@ -1785,11 +1742,11 @@ class Mesh:
             hist, bin_edges = np.histogram(column, bins=bins)
 
             histograms[parameter] = [
-                hist,
-                bin_edges,
-                np.percentile(column, 5),
-                np.percentile(column, 95),
-            ]
+                                    hist,
+                                    bin_edges,
+                                    np.percentile(column, 5),
+                                    np.percentile(column, 95),
+                                    ]
 
         self.mesh_quality_statistics = quality_statistics
         self.mesh_bad_elements = bad_elements
@@ -2452,4 +2409,10 @@ if __name__ == "__main__":
         raise FileNotFoundError
 
     mesh = Mesh()
-    mesh.load_cad(path, 100, element_type=TETRAHEDRON_4)
+    mesh.load_cad(
+                  path, 
+                  maximum_element_size = 100, 
+                  minimum_element_size = 100, 
+                  size_factor = 0,
+                  ElementType = TETRAHEDRON_4,
+                  )

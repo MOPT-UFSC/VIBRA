@@ -1,11 +1,6 @@
 from typing import Optional, Callable
 
-from vibra.engine.mesher.element_type import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-)
+from vibra.engine.mesher.element_type import *
 
 from vibra.engine.elements.elements_3d import (
     # 3d elements - acoustic
@@ -132,22 +127,24 @@ class Model:
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
-                    path,
-                    dimension=2,
-                    minimum_element_size=element_size * 0.4,
-                    maximum_element_size=element_size,
-                )
+                                    path,
+                                    dimension = 2,
+                                    minimum_element_size = element_size * 0.4,
+                                    maximum_element_size = element_size,
+                                    ElementType = DEFAULT_ELEMENT_TYPE,
+                                    )
 
             except:
                 self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
                 element_size = 10
                 self.mesh.load_cad(
-                    path,
-                    dimension=2,
-                    minimum_element_size=element_size * 0.5,
-                    maximum_element_size=element_size,
-                )
+                                    path,
+                                    dimension = 2,
+                                    minimum_element_size = element_size * 0.5,
+                                    maximum_element_size = element_size,
+                                    ElementType = DEFAULT_ELEMENT_TYPE,
+                                    )
 
             self.generated_mesh = False
             self.initial_element_size = element_size

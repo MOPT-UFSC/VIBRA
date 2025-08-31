@@ -1,37 +1,27 @@
-import logging
-from collections import defaultdict
+# fmt: off
 
-import matplotlib.colors as mcolors
-import numpy as np
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QHeaderView,
-    QTableWidgetItem,
-    QVBoxLayout,
-)
+from PySide6.QtGui import QBrush, QColor, QIcon
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
 
-from vibra import app
+from vibra import app, ICON_DIR
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_type import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementType,
-)
+from vibra.engine.mesher.element_type import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.mesh.mesher_setup_ui import MesherSetup_UI
-from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import (
-    MeshQualityHistogramPlot_UI,
-)
+from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
+from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+import logging
+import matplotlib.colors as mcolors
+import numpy as np
+
+from copy import deepcopy
+from enum import IntEnum
+
+from collections import defaultdict
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 
 gmsh_algorithms_2d = [
@@ -53,7 +43,17 @@ map_algorithms_2d = dict(zip(gmsh_algorithms_2d, [0, 1, 2, 3, 4, 5]))
 map_algorithms_3d = dict(zip(gmsh_algorithms_3d, [0, 1, 2]))
 
 
-class MeshSetupInputs(MesherSetup_UI):
+class GMSH_ALGORITHMS_3D(IntEnum):
+    DELAUNAY_3D = 0
+    FRONTAL_3D = 1
+    HXT_3D = 2
+
+
+error_title = "Error"
+warning_title = "Warning"
+
+
+class MesherSetupInputs(MesherSetupInputs_UI):
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -69,7 +69,6 @@ class MeshSetupInputs(MesherSetup_UI):
         self._config_widgets()
         self.update_gmsh_controls()
         self._load_current_mesh_setup()
-        self.config_control_quality_table()
 
         while self.keep_window_open:
             self.exec()
@@ -78,7 +77,9 @@ class MeshSetupInputs(MesherSetup_UI):
         self.complete = False
         self.keep_window_open = True
         self.bad_elements_showed = False
+        self.synchronize_sizes = False
 
+        self.mesh_setup = dict()
         self.mesh_quality_data = dict()
         self.mesh_refinement_data = defaultdict(list)
 
@@ -87,7 +88,7 @@ class MeshSetupInputs(MesherSetup_UI):
                                         1: "volume",
                                         2: "minSJ",
                                         3: "aspectRatio",
-                                    }
+                                        }
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -112,24 +113,20 @@ class MeshSetupInputs(MesherSetup_UI):
         widths = [160, 160]
         for i, width in enumerate(widths):
             self.tableWidget_refining_mesh_data.setColumnWidth(i, width)
-            self.tableWidget_refining_mesh_data.horizontalHeaderItem(
-                i
-            ).setTextAlignment(Qt.AlignCenter)
-
-        self.tableWidget_refining_mesh_data.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior(1)
-        )
-        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode(0)
-        )
-        self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(
-            True
-        )
+            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
+        #
+        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
+        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
+        self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):
         #
         self.comboBox_shape_function.currentIndexChanged.connect(self.update_gmsh_controls)
         self.comboBox_element_type.currentIndexChanged.connect(self.update_gmsh_controls)
+        self.comboBox_mesh_quality_metrics.currentIndexChanged.connect(self.mesh_quality_metrics_callback)
+        #
+        self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
+        self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_exit.clicked.connect(self.close)
@@ -137,6 +134,7 @@ class MeshSetupInputs(MesherSetup_UI):
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
+        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
@@ -144,6 +142,35 @@ class MeshSetupInputs(MesherSetup_UI):
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.mesh_quality_metrics_callback()
+
+    def mesh_quality_metrics_callback(self):
+        visible = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
+        self.tabWidget_main.setTabVisible(2, visible)
+
+    def maximum_element_size_changed_callback(self):
+        if self.synchronize_sizes:
+            value = self.doubleSpinBox_maximum_element_size.value()
+            self.doubleSpinBox_minimum_element_size.setValue(value)
+
+    def minimum_element_size_changed_callback(self):
+        if self.synchronize_sizes:
+            value = self.doubleSpinBox_minimum_element_size.value()
+            self.doubleSpinBox_maximum_element_size.setValue(value)
+
+    def synchronize_button_callback(self):
+        self.synchronize_sizes = not self.synchronize_sizes
+        if self.synchronize_sizes:
+            icon = QIcon(str(ICON_DIR / "sync_disabled.png"))
+            tool_tip = "Desynchronize the sizes of elements"
+        else:
+            icon = QIcon(str(ICON_DIR / "sync_enabled.png"))
+            tool_tip = "Synchronize the sizes of elements"
+
+        self.pushButton_syncrhonize.setIcon(icon)
+        self.pushButton_syncrhonize.setToolTip(tool_tip)
+        self.maximum_element_size_changed_callback()
 
     def geometry_selection_callback(self):
         faces = app().main_window.selected_geometry_surfaces
@@ -224,7 +251,7 @@ class MeshSetupInputs(MesherSetup_UI):
                             else:
                                 self.mesh_refinement_data.pop(key)
 
-            self.update_table_data()
+            self.update_refining_table_data()
 
         self.lineEdit_selected_ids.setText("")
 
@@ -245,7 +272,7 @@ class MeshSetupInputs(MesherSetup_UI):
 
                 if (selection_type, ref_size) in self.mesh_refinement_data.keys():
                     self.mesh_refinement_data.pop((selection_type, ref_size))
-                    self.update_table_data()
+                    self.update_refining_table_data()
 
             app().main_window.set_geometry_selection()
 
@@ -256,6 +283,7 @@ class MeshSetupInputs(MesherSetup_UI):
         element_size = app().project.model.initial_element_size
         if element_size is not None:
             self.doubleSpinBox_maximum_element_size.setValue(element_size)
+            self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().project.model.mesh_setup
@@ -270,37 +298,40 @@ class MeshSetupInputs(MesherSetup_UI):
                 geometry_tolerance = mesh_setup["geometry_tolerance"]
                 minimum_element_size = mesh_setup["minimum_element_size"]
                 maximum_element_size = mesh_setup["maximum_element_size"]
-                size_factor = minimum_element_size / maximum_element_size
+                size_factor = mesh_setup["size_factor"]
                 mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
-                mesh_connection = mesh_setup["mesh_connection"]
+                mesh_connection = mesh_setup.get("mesh_connection", True)
+                mesh_quality_metrics = mesh_setup.get("mesh_quality_metrics", False)
 
                 gmsh_algorithm_3d = mesh_setup.get("algorithm_3d")
                 if gmsh_algorithm_3d is not None:
-                    self.comboBox_3d_algorithm.setCurrentIndex(
-                        map_algorithms_3d[gmsh_algorithm_3d]
-                    )
+                    self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[gmsh_algorithm_3d])
 
                 self.update_element_type(element_type)
 
                 self.doubleSpinBox_maximum_element_size.setValue(maximum_element_size)
-                self.doubleSpinBox_minimum_element_size_factor.setValue(size_factor)
+                self.doubleSpinBox_minimum_element_size.setValue(minimum_element_size)
+                self.doubleSpinBox_size_factor.setValue(size_factor)
                 self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
-                self.checkBox_mesh_connection.setChecked(mesh_connection)
 
+                self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_connection))
+                self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_quality_metrics))
+                
                 for selection_type, e_size, selected_ids in mesh_refinement_parameters:
-                    self.mesh_refinement_data[(selection_type, e_size)].extend(
-                        selected_ids
-                    )
+                    self.mesh_refinement_data[(selection_type, e_size)].extend(selected_ids)
 
-                self.update_table_data()
+                self.update_refining_table_data()
+
+                if mesh_quality_metrics:
+                    self.config_control_quality_table()
 
             except Exception as error_log:
                 self.hide()
                 title = "Error while loading mesh setup"
                 message = str(error_log)
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
 
-    def update_table_data(self):
+    def update_refining_table_data(self):
         self.tableWidget_refining_mesh_data.clearContents()
 
         try:
@@ -333,24 +364,24 @@ class MeshSetupInputs(MesherSetup_UI):
             self.hide()
             title = "Error while table data"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
 
-    def update_element_type(self, element_type):
+    def update_element_type(self, element_type: ElementType):
         if element_type == TETRAHEDRON_4:
-            self.comboBox_element_type.setCurrentIndex(0)
-            self.comboBox_shape_function.setCurrentIndex(0)
+            self.comboBox_element_type.setCurrentText("Tetrahedral")
+            self.comboBox_shape_function.setCurrentText("Linear")
 
         elif element_type == TETRAHEDRON_10:
-            self.comboBox_element_type.setCurrentIndex(0)
-            self.comboBox_shape_function.setCurrentIndex(1)
+            self.comboBox_element_type.setCurrentText("Tetrahedral")
+            self.comboBox_shape_function.setCurrentText("Quadratic")
 
         elif element_type == HEXAHEDRON_8:
-            self.comboBox_element_type.setCurrentIndex(1)
-            self.comboBox_shape_function.setCurrentIndex(0)
+            self.comboBox_element_type.setCurrentText("Hexahedral")
+            self.comboBox_shape_function.setCurrentText("Linear")
 
         elif element_type == HEXAHEDRON_20:
-            self.comboBox_element_type.setCurrentIndex(1)
-            self.comboBox_shape_function.setCurrentIndex(1)
+            self.comboBox_element_type.setCurrentText("Hexahedral")
+            self.comboBox_shape_function.setCurrentText("Quadratic")
 
         else:
             NotImplementedError()
@@ -369,7 +400,10 @@ class MeshSetupInputs(MesherSetup_UI):
 
             logging.info("Processing mesh... [30/100]")
             app().project.set_mesh_setup(self.mesh_setup)
-            app().file.write_mesh_setup_in_file(self.file_mesh_setup)
+
+            mesh_setup = deepcopy(self.mesh_setup)
+            mesh_setup.pop("ElementType")
+            app().file.write_mesh_setup_in_file(mesh_setup)
 
             logging.info("Processing mesh... [40/100]")
             app().project.generate_mesh()
@@ -391,19 +425,19 @@ class MeshSetupInputs(MesherSetup_UI):
             if self.mesh.collapsed_1d_elements:
                 message += "Collapsed 1d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_1d_elements) + "."
 
-            PrintMessageInput([window_title_1, title, message])
-
-        # We can further control the behaviour when the mesh has collapsed elements
+            PrintMessageInput([error_title, title, message])
 
         self.process_degress_of_freedom_if_necessary()
 
         app().file.write_mesh_data_in_file()
         app().file.write_geometry_data_in_file()
+
+        if self.comboBox_mesh_quality_metrics.currentText() == "Enabled":
+            app().file.write_mesh_quality_data_in_file()
+            self.config_control_quality_table()
+
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
-
-        app().file.write_mesh_quality_data_in_file()
-        self.config_control_quality_table()
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
@@ -446,8 +480,10 @@ class MeshSetupInputs(MesherSetup_UI):
         return refine_data
 
     def check_mesh_inputs(self):
+
         maximum_element_size = self.doubleSpinBox_maximum_element_size.value()
-        min_factor = self.doubleSpinBox_minimum_element_size_factor.value()
+        minimum_element_size = self.doubleSpinBox_minimum_element_size.value()
+        size_factor = self.doubleSpinBox_size_factor.value()
 
         lineEdit = self.lineEdit_geometry_tolerance
         geometry_tolerance = self.check_inputs(lineEdit, "Geometry tolerance")
@@ -460,64 +496,118 @@ class MeshSetupInputs(MesherSetup_UI):
             return True
 
         alg3d_index = self.comboBox_3d_algorithm.currentIndex()
-        solid_element.algorithm_3d = gmsh_algorithms_3d[alg3d_index]
+        if alg3d_index == GMSH_ALGORITHMS_3D.DELAUNAY_3D:
+            solid_element.algorithm_3d = gmsh_constants.DELAUNAY_3D
+        elif alg3d_index == GMSH_ALGORITHMS_3D.FRONTAL_3D:
+            solid_element.algorithm_3d = gmsh_constants.FRONTAL_3D
+        elif alg3d_index == GMSH_ALGORITHMS_3D.HXT_3D:
+            solid_element.algorithm_3d = gmsh_constants.HXT_3D
+        else:
+            return
 
-        connected_mesh = self.checkBox_mesh_connection.isChecked()
+        merge_nodes = self.comboBox_volumes_interface_behavior.currentText() == "Merge nodes"
+        mesh_quality_metrics = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
+
         self.mesh_setup = {
-            "element_type": solid_element,
-            "geometry_tolerance": geometry_tolerance,
-            "size_factor": 0,
-            "minimum_element_size": min_factor * maximum_element_size,
-            "maximum_element_size": maximum_element_size,
-            "mesh_refinement_parameters": self.get_mesh_refinement_data(),
-            "mesh_connection": connected_mesh,
-        }
-
-        self.file_mesh_setup = {
-            "element_type": self.comboBox_element_type.currentText().lower(),
-            "shape_function": self.comboBox_shape_function.currentText().lower(),
-            "geometry_tolerance": geometry_tolerance,
-            "size_factor": 0,
-            "minimum_element_size": min_factor * maximum_element_size,
-            "maximum_element_size": maximum_element_size,
-            "algorithm_3d": solid_element.algorithm_3d,
-            "mesh_refinement_parameters": self.get_mesh_refinement_data(),
-            "mesh_connection": connected_mesh,
-        }
+                           "ElementType" : solid_element,
+                           "element_type" : self.comboBox_element_type.currentText().lower(),
+                           "shape_function" : self.comboBox_shape_function.currentText().lower(),
+                           "minimum_element_size" : minimum_element_size,
+                           "maximum_element_size" : maximum_element_size,
+                           "size_factor" : size_factor,
+                           "geometry_tolerance" : geometry_tolerance,
+                           "algorithm_3d" : solid_element.algorithm_3d,
+                           "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
+                           "mesh_connection" : merge_nodes,
+                           "mesh_quality_metrics"  : mesh_quality_metrics,
+                           }
 
     def get_element_type(self) -> ElementType:
-        _element_type = self.comboBox_element_type.currentText().lower()
-        _shape_function = self.comboBox_shape_function.currentText().lower()
+        element_type = self.comboBox_element_type.currentText().lower()
+        shape_function = self.comboBox_shape_function.currentText().lower()
 
-        if _element_type == "tetrahedral" and _shape_function == "linear":
+        if element_type == "tetrahedral" and shape_function == "linear":
             return TETRAHEDRON_4
-        elif _element_type == "tetrahedral" and _shape_function == "quadratic":
+        elif element_type == "tetrahedral" and shape_function == "quadratic":
             return TETRAHEDRON_10
-        elif _element_type == "hexahedral" and _shape_function == "linear":
+        elif element_type == "hexahedral" and shape_function == "linear":
             return HEXAHEDRON_8
-        elif _element_type == "hexahedral" and _shape_function == "quadratic":
+        elif element_type == "hexahedral" and shape_function == "quadratic":
             return HEXAHEDRON_20
         else:
             return None
             # raise NotImplementedError(f"Element type not defined!")
 
+    def update_gmsh_controls(self):
+        element_type = self.get_element_type()
+        if element_type is None:
+            return
+
+        self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
+        self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
+
+        self.comboBox_recombination_algorithm.setCurrentIndex(element_type.recombination_algorithm)
+        self.comboBox_subdivision_algorithm.setCurrentIndex(element_type.subdivision_algorithm)
+        self.comboBox_recombine_all.setCurrentIndex(int(element_type.recombine_all))
+        self.comboBox_second_order_incomplete.setCurrentIndex(int(element_type.second_order_incomplete))
+
+    def check_inputs(
+        self, lineEdit, label, only_positive=True, zero_included=False, _float=True
+    ):
+        self.stop = False
+        message = ""
+        title = "Invalid input at mesh setup"
+
+        if lineEdit.text() != "":
+            try:
+                if _float:
+                    out = float(lineEdit.text())
+                else:
+                    out = int(lineEdit.text())
+
+                if only_positive:
+                    if zero_included:
+                        if out < 0:
+                            message = f"Insert a positive value to the {label}."
+                            message += "\n\nNote: zero value is allowed."
+                    else:
+                        if out <= 0:
+                            message = f"Insert a positive value to the {label}."
+                            message += "\n\nNote: zero value is not allowed."
+
+            except Exception as _err:
+                message = "Dear user, you have typed and invalid value at the \n"
+                message += f"{label} input field.\n\n"
+                message += str(_err)
+
+        else:
+            if zero_included:
+                return float(0)
+            else:
+                message = f"Insert some value at the {label} input field."
+
+        if message != "":
+            PrintMessageInput([error_title, title, message])
+            self.stop = True
+            return None
+        return out
+
     def config_control_quality_table(self):
 
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.tabWidget_main.setTabVisible(2, volume_exists)                
-        self.pushButton_plot_histogram.setDisabled(True)
-
         if not volume_exists:
             return
 
         if self.get_element_type() not in [TETRAHEDRON_4, TETRAHEDRON_10]:
             self.tabWidget_main.setTabVisible(2, False)
             return
-        
+
         self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
         if not self.mesh_quality_data:
             return
         
+        self.pushButton_plot_histogram.setDisabled(True)        
         quality_bins = self.mesh.quality_bins
 
         param_map = {
@@ -558,58 +648,73 @@ class MeshSetupInputs(MesherSetup_UI):
                 else "red",
             ),
         }
+
+        self.tableWidget_mesh_quality.clearContents()
         self.tableWidget_mesh_quality.setRowCount(len(param_map))
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(0, 110)
         self.tableWidget_mesh_quality.horizontalHeader().resizeSection(2, 80)
+
         # This should be done in the done in the ui file
         # but it kept going like this so I'm leaving it here.
-        tooltips = [
-            "The Gamma quality metric is the ratio between the radius of the inscribed sphere and\n"
-            + "the radius of the circumscribed sphere of an element. It ranges from 0 to 1, \n"
-            + "where values closer to 1 indicate more regular, well-shaped elements.\n",
-            "The Volume metric is simply the calculated volume of the elements. \n"
-            + "Very small volumes possibly indicate collapsed elements, wich are a problem.\n",
-            "Scaled Jacobian is the ratio between the minimum and maximum Jacobian determinant inside the element.\n"
-            + "Values close to 1 indicate good shape; values ≤ 0 mean inverted or invalid elements.",
-            "The Aspect Ratio measures how stretched a tetrahedral element is, defined as the ratio between the longest edge \n"
-            + "and the shortest edge. Values close to 1 indicate well-shaped elements; higher values mean the element is elongated or distorted.\n",
-        ]
+
+        gamma_tool_tip  = "The Gamma quality metric is the ratio between the radius of the inscribed sphere and\n"
+        gamma_tool_tip += "the radius of the circumscribed sphere of an element. It ranges from 0 to 1, \n"
+        gamma_tool_tip += "where values closer to 1 indicate more regular, well-shaped elements.\n"
+
+        volume_tool_tip  = "The Volume metric is simply the calculated volume of the elements. \n"
+        volume_tool_tip += "Very small volumes possibly indicate collapsed elements, wich are a problem.\n"
+        
+        scaled_jacobian_tool_tip  = "Scaled Jacobian is the ratio between the minimum and maximum "
+        scaled_jacobian_tool_tip += "Jacobian determinant inside the element.\nValues close to 1 "
+        scaled_jacobian_tool_tip += "indicate good shape; values ≤ 0 mean inverted or invalid elements."
+
+        aspect_ratio_tool_tip  = "The Aspect Ratio measures how stretched a tetrahedral element is, "
+        aspect_ratio_tool_tip += "defined as the ratio between the longest edge \nand the shortest edge. "
+        aspect_ratio_tool_tip += "Values close to 1 indicate well-shaped elements; higher values mean the "
+        aspect_ratio_tool_tip += "element is elongated or distorted.\n"
+
+        tool_tips = [
+                    gamma_tool_tip, 
+                    volume_tool_tip, 
+                    scaled_jacobian_tool_tip, 
+                    aspect_ratio_tool_tip,
+                    ]
 
         bad_elements = self.mesh_quality_data.get("bad_elements")
         mesh_quality_statistics = self.mesh_quality_data.get("statistics")
 
         for i, (key, (gmsh_label, label, color_fn)) in enumerate(param_map.items()):
-            name_item = QTableWidgetItem(label)
-            name_item.setToolTip(tooltips[i])
+            metric_label_item = QTableWidgetItem(label)
+            metric_label_item.setToolTip(tool_tips[i])
+            metric_label_item.setTextAlignment(Qt.AlignCenter)
 
-            self.tableWidget_mesh_quality.setItem(i, 0, name_item)
+            metric_statistics = mesh_quality_statistics.get(gmsh_label)
+            if not metric_statistics:
+                continue
 
-            worst_value_item = QTableWidgetItem(
-                str(round(mesh_quality_statistics[gmsh_label][0], 3))
-            )
-            avg_item = QTableWidgetItem(
-                str(round(mesh_quality_statistics[gmsh_label][1], 3))
-            )
-            stdev_item = QTableWidgetItem(
-                str(round(mesh_quality_statistics[gmsh_label][2], 3))
-            )
+            self.tableWidget_mesh_quality.setItem(i, 0, metric_label_item)
+
+            worst_value_item = QTableWidgetItem(str(round(metric_statistics[0], 3)))
+            avg_item = QTableWidgetItem(str(round(metric_statistics[1], 3)))
+            stdev_item = QTableWidgetItem(str(round(metric_statistics[2], 3)))
+
             if bad_elements:
-                bad_elements_count = QTableWidgetItem(
-                    str(len(bad_elements.get(gmsh_label)))
-                )
+                bad_elements_count = QTableWidgetItem(str(len(bad_elements.get(gmsh_label))))
             else:
                 bad_elements_count = QTableWidgetItem("")
 
-            worst_value_color = color_fn(mesh_quality_statistics[gmsh_label][0])
+            worst_value_color = color_fn(metric_statistics[0])
             worst_value_item.setForeground(QBrush(QColor(worst_value_color)))
 
-            avg_color = color_fn(mesh_quality_statistics[gmsh_label][1])
+            avg_color = color_fn(metric_statistics[1])
             avg_item.setForeground(QBrush(QColor(avg_color)))
 
-            self.tableWidget_mesh_quality.setItem(i, 1, worst_value_item)
-            self.tableWidget_mesh_quality.setItem(i, 2, avg_item)
-            self.tableWidget_mesh_quality.setItem(i, 3, stdev_item)
-            self.tableWidget_mesh_quality.setItem(i, 4, bad_elements_count)
+            for j, _item in enumerate([worst_value_item, avg_item, stdev_item, bad_elements_count]):
+                _item.setTextAlignment(Qt.AlignCenter)
+                self.tableWidget_mesh_quality.setItem(i, j+1, _item)
+
+        self.tableWidget_mesh_quality.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget_mesh_quality.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         if any(bad_elements.values()):
             self.tabWidget_main.tabBar().setTabTextColor(2, QColor("orange"))
@@ -731,70 +836,6 @@ class MeshSetupInputs(MesherSetup_UI):
 
         app().main_window.distinguish_mesh_solids(mesh_bad_elements)
         self.bad_elements_showed = True
-
-    def update_gmsh_controls(self):
-        element_type = self.get_element_type()
-        if element_type is None:
-            return
-
-        self.comboBox_2d_algorithm.setCurrentIndex(
-            map_algorithms_2d[element_type.algorithm_2d]
-        )
-        self.comboBox_3d_algorithm.setCurrentIndex(
-            map_algorithms_3d[element_type.algorithm_3d]
-        )
-
-        self.comboBox_recombination_algorithm.setCurrentIndex(
-            element_type.recombination_algorithm
-        )
-        self.comboBox_subdivision_algorithm.setCurrentIndex(
-            element_type.subdivision_algorithm
-        )
-        self.comboBox_recombine_all.setCurrentIndex(int(element_type.recombine_all))
-        self.comboBox_second_order_incomplete.setCurrentIndex(
-            int(element_type.second_order_incomplete)
-        )
-
-    def check_inputs(
-        self, lineEdit, label, only_positive=True, zero_included=False, _float=True
-    ):
-        self.stop = False
-        message = ""
-        title = "Invalid input at mesh setup"
-
-        if lineEdit.text() != "":
-            try:
-                if _float:
-                    out = float(lineEdit.text())
-                else:
-                    out = int(lineEdit.text())
-
-                if only_positive:
-                    if zero_included:
-                        if out < 0:
-                            message = f"Insert a positive value to the {label}."
-                            message += "\n\nNote: zero value is allowed."
-                    else:
-                        if out <= 0:
-                            message = f"Insert a positive value to the {label}."
-                            message += "\n\nNote: zero value is not allowed."
-
-            except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
-                message += f"{label} input field.\n\n"
-                message += str(_err)
-
-        else:
-            if zero_included:
-                return float(0)
-            else:
-                message = f"Insert some value at the {label} input field."
-
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
-            self.stop = True
-            return None
-        return out
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
