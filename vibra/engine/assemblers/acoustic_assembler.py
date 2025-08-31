@@ -214,10 +214,10 @@ class AcousticAssembler:
 
             complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
 
-            surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
-            for i, el in enumerate(surface_elements):
+            for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
                 aux_data[el] = complex_values
 
@@ -277,7 +277,7 @@ class AcousticAssembler:
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
 
-            surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             data: dict
@@ -285,7 +285,7 @@ class AcousticAssembler:
             p_inc = self.get_value_in_array_form(values[0], flatten=True)
             Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
 
-            for i, el in enumerate(surface_elements):
+            for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
                 plane_wave_impedances[el] = Z
                 e_normals[el] = self.model.mesh.get_element_face_normal(surf_connect[i])
@@ -394,10 +394,10 @@ class AcousticAssembler:
             _factor_Qms1 = 1 / _rho_f
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
 
-            surface_elements = list(self.model.mesh.elements_from_surface[surface_id])
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)  
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id) 
 
-            for i, el in enumerate(surface_elements):
+            for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
                 factor_Qms1[el] = _factor_Qms1
                 factor_Qms2[el] = _factor_Qms2
@@ -511,26 +511,26 @@ class AcousticAssembler:
                 if new_surface_id is None:
                     continue
 
-                surface_elements_A = list(self.model.mesh.elements_from_surface[surface_ids])
-                surface_elements_B = list(self.model.mesh.elements_from_surface[new_surface_id])
+                surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
+                surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
 
             else:
 
-                surface_elements_A = list()
+                surf_elements_A = list()
                 for surface_id_A in p_data.get("surfaces_A"):
-                    surface_elements_A.extend(list(self.model.mesh.elements_from_surface[surface_id_A]))
+                    surf_elements_A.extend(list(self.model.mesh.elements_from_surface.get(surface_id_A)))
 
-                surface_elements_B = list()
+                surf_elements_B = list()
                 for surface_id_B in p_data.get("surfaces_B"):
-                    surface_elements_B.extend(list(self.model.mesh.elements_from_surface[surface_id_B]))
+                    surf_elements_B.extend(list(self.model.mesh.elements_from_surface.get(surface_id_B)))
 
-            for i, el in enumerate(surface_elements_A):
+            for i, el in enumerate(surf_elements_A):
                 nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
                 connectivity_surface_A[el] = nodes_from_element
 
                 surface_data_A[el] = Z_tr
 
-            for i, el in enumerate(surface_elements_B):
+            for i, el in enumerate(surf_elements_B):
                 nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
                 connectivity_surface_B[el] = nodes_from_element
 
@@ -599,20 +599,20 @@ class AcousticAssembler:
                     if new_surface_id is None:
                         continue
 
-                    surface_elements_A = list(self.model.mesh.elements_from_surface[surface_ids])
-                    surface_elements_B = list(self.model.mesh.elements_from_surface[new_surface_id])
+                    surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
+                    surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
 
                 else:
 
-                    surface_elements_A = list()
+                    surf_elements_A = list()
                     for surface_id_A in pp_data.get("surfaces_A"):
-                        surface_elements_A.extend(list(self.model.mesh.elements_from_surface[surface_id_A]))
+                        surf_elements_A.extend(list(self.model.mesh.elements_from_surface.get(surface_id_A)))
 
-                    surface_elements_B = list()
+                    surf_elements_B = list()
                     for surface_id_B in pp_data.get("surfaces_B"):
-                        surface_elements_B.extend(list(self.model.mesh.elements_from_surface[surface_id_B]))
+                        surf_elements_B.extend(list(self.model.mesh.elements_from_surface.get(surface_id_B)))
 
-                for i, el in enumerate(surface_elements_A):
+                for i, el in enumerate(surf_elements_A):
 
                     U_rms = 0
                     nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
@@ -627,7 +627,7 @@ class AcousticAssembler:
                     Ztr_A = Z_0 * (z_orifice + z_end + z_nl_urms*U_rms + z_ud)
                     surface_data_A[el] = Ztr_A
 
-                for i, el in enumerate(surface_elements_B):
+                for i, el in enumerate(surf_elements_B):
 
                     U_rms = 0
                     nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]

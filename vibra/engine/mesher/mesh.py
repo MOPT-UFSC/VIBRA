@@ -179,8 +179,13 @@ class Mesh:
             self.process_upwards_adjacencies_from_entities()
 
             logging.info("Generating mesh... [50/100]")
+
+            t0 = time()
             gmsh.model.mesh.generate(dim=dimension)
+            dt = time() - t0
+
             gmsh.model.mesh.removeDuplicateNodes()
+            print(f"Elapsed time to generate mesh: {dt : .5f} s")
 
         except Exception as error_log:
             print_exception(error_log)
@@ -1048,8 +1053,6 @@ class Mesh:
         return nodes
 
     def get_nodes_from_surface(self, surface_id: int, from_cache: bool=False):
-        
-        t0 = time()
 
         if surface_id in self.external_nodes_from_surfaces.keys():
             return self.external_nodes_from_surfaces.get(surface_id)
@@ -1064,9 +1067,6 @@ class Mesh:
 
         rows = connect_data[:, 1] == surface_id
         nodes = np.unique(connect_data[rows, 4:]).astype(int)
-
-        dt = time() - t0
-        print(f"Tempo decorrido: {dt} s")
 
         return nodes
 
@@ -1307,23 +1307,23 @@ class Mesh:
     def map_elements_from_lines(self):
         self.elements_from_line.clear()
         for line_id in np.unique(self.lines_connectivity[:, 1]).astype(int):
-            rows = np.isin(self.lines_connectivity[:, 1], line_id)
-            element_ids = self.lines_connectivity[rows, 0]
-            self.elements_from_line[line_id] = element_ids
+            # rows = np.isin(self.lines_connectivity[:, 1], line_id)
+            rows = np.where(self.lines_connectivity[:, 1] == line_id)
+            self.elements_from_line[line_id] = self.lines_connectivity[rows, 0]
 
     def map_elements_from_surfaces(self):
         self.elements_from_surface.clear()
         for surface_id in np.unique(self.faces_connectivity[:, 1]).astype(int):
-            rows = np.isin(self.faces_connectivity[:, 1], surface_id)
-            element_ids = self.faces_connectivity[rows, 0]
-            self.elements_from_surface[surface_id] = element_ids
+            # rows = np.isin(self.faces_connectivity[:, 1], surface_id)
+            rows = np.where(self.faces_connectivity[:, 1] == surface_id)
+            self.elements_from_surface[surface_id] = self.faces_connectivity[rows, 0]
 
     def map_elements_from_volumes(self):
         self.elements_from_volume.clear()
         for volume_id in np.unique(self.solids_connectivity[:, 1]).astype(int):
-            rows = np.isin(self.solids_connectivity[:, 1], volume_id)
-            element_ids = self.solids_connectivity[rows, 0]
-            self.elements_from_volume[volume_id] = element_ids
+            # rows = np.isin(self.solids_connectivity[:, 1], volume_id)
+            rows = np.where(self.solids_connectivity[:, 1] == volume_id)
+            self.elements_from_volume[volume_id] = self.solids_connectivity[rows, 0]
 
     def get_line_from_element(self, element_id: int) -> int | None:
         for line_id, elements_from_line in self.elements_from_line.items():
@@ -1744,7 +1744,7 @@ class Mesh:
         return area
 
     def set_face_element_thickness(self, surface_id: int, data: dict):
-        for face_element in self.elements_from_surface[surface_id]:
+        for face_element in self.elements_from_surface.get(surface_id, list()):
             self.face_element_thickness[face_element] = data
 
     def get_mesh_info(self):

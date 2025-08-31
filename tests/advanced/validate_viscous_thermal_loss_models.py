@@ -60,10 +60,6 @@ def load_external_mesh_and_solve():
 
     mesh.surfaces_from_volume[1] = [1, 2]
 
-    # for id, elements in mesh.elements_from_volume.items():
-    #     print(id, len(elements))
-    # return
-
     # Define the fluid properties
 
     temperature = 293.15
