@@ -104,26 +104,26 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                                     "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
                                     "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
                                     "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
-                                    "Ry": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
-                                }
+                                    "Rz": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+                                    }
 
         self.table_line_edits = { 
-                                "Ux" : self.lineEdit_path_table_ux,
-                                "Uy" : self.lineEdit_path_table_uy,
-                                "Uz" : self.lineEdit_path_table_uz,
-                                "Rx" : self.lineEdit_path_table_rx,
-                                "Ry" : self.lineEdit_path_table_ry,
-                                "Rz" : self.lineEdit_path_table_rz,
-                                }
+                                 "Ux" : self.lineEdit_path_table_ux,
+                                 "Uy" : self.lineEdit_path_table_uy,
+                                 "Uz" : self.lineEdit_path_table_uz,
+                                 "Rx" : self.lineEdit_path_table_rx,
+                                 "Ry" : self.lineEdit_path_table_ry,
+                                 "Rz" : self.lineEdit_path_table_rz,
+                                 }
 
         self.dof_setup_combo_boxes = { 
-                                        "Ux" : self.comboBox_displacement_ux,
-                                        "Uy" : self.comboBox_displacement_uy,
-                                        "Uz" : self.comboBox_displacement_uz,
-                                        "Rx" : self.comboBox_rotation_rx,
-                                        "Ry" : self.comboBox_rotation_ry,
-                                        "Rz" : self.comboBox_rotation_rz,
-                                        }
+                                      "Ux" : self.comboBox_displacement_ux,
+                                      "Uy" : self.comboBox_displacement_uy,
+                                      "Uz" : self.comboBox_displacement_uz,
+                                      "Rx" : self.comboBox_rotation_rx,
+                                      "Ry" : self.comboBox_rotation_ry,
+                                      "Rz" : self.comboBox_rotation_rz,
+                                      }
 
     def _config_widgets(self):
         #
@@ -217,10 +217,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         value_based = combo_box.currentIndex() == DOFSetup.VALUE
 
         line_edit_real, line_edit_imag = self.constant_line_edits.get(unit_label, (None, None))
-        line_edit_real.setEnabled(value_based)
-        line_edit_imag.setEnabled(value_based)
+        if (line_edit_real, line_edit_imag).count(None) == 2:
+            return
+
         line_edit_real.setText("")
         line_edit_imag.setText("")
+        line_edit_real.setEnabled(value_based)   
+        line_edit_imag.setEnabled(value_based)
 
         if value_based:
             return
