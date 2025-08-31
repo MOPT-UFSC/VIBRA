@@ -244,13 +244,10 @@ class StructuralAssembler:
                     continue
 
                 for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
+                    rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
 
-                    # mask = np.sum(np.isin(connectivities, nodes), axis=1) == 2
-                    # for connect_2d in connectivities_from_surface[mask, :]:
-
-                    mask = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
-
-                    for connect_2d in connectivities_from_surface[mask, :]:
+                    for connect_2d in connectivities_from_surface[rows, :]:
                         active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
                         g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dofs, :] += F_elem
