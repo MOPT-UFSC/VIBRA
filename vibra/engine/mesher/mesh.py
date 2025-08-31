@@ -22,7 +22,7 @@ type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 class Mesh:
     def __init__(self, **kwargs):
-        self.length_unit = kwargs.get("length_unit", "milimeter")
+        self.length_unit = kwargs.get("length_unit", "millimeter")
         self.geometry_qf = kwargs.get("geometry_qf", 1.0)
 
         self.geometry_setup = None
@@ -128,11 +128,11 @@ class Mesh:
 
         self.decoupled_points = list()
 
-    def set_length_unit(self, length_unit: str = "milimeter"):
+    def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
     def get_length_unit_factor(self):
-        if self.length_unit == "milimeter":
+        if self.length_unit == "millimeter":
             return 1e-3
         elif self.length_unit == "inch":
             return 0.0254
@@ -1308,21 +1308,21 @@ class Mesh:
         self.elements_from_line.clear()
         for line_id in np.unique(self.lines_connectivity[:, 1]).astype(int):
             # rows = np.isin(self.lines_connectivity[:, 1], line_id)
-            rows = np.where(self.lines_connectivity[:, 1] == line_id)
+            (rows,) = np.where(self.lines_connectivity[:, 1] == line_id)
             self.elements_from_line[line_id] = self.lines_connectivity[rows, 0]
 
     def map_elements_from_surfaces(self):
         self.elements_from_surface.clear()
         for surface_id in np.unique(self.faces_connectivity[:, 1]).astype(int):
             # rows = np.isin(self.faces_connectivity[:, 1], surface_id)
-            rows = np.where(self.faces_connectivity[:, 1] == surface_id)
+            (rows,) = np.where(self.faces_connectivity[:, 1] == surface_id)
             self.elements_from_surface[surface_id] = self.faces_connectivity[rows, 0]
 
     def map_elements_from_volumes(self):
         self.elements_from_volume.clear()
         for volume_id in np.unique(self.solids_connectivity[:, 1]).astype(int):
             # rows = np.isin(self.solids_connectivity[:, 1], volume_id)
-            rows = np.where(self.solids_connectivity[:, 1] == volume_id)
+            (rows,) = np.where(self.solids_connectivity[:, 1] == volume_id)
             self.elements_from_volume[volume_id] = self.solids_connectivity[rows, 0]
 
     def get_line_from_element(self, element_id: int) -> int | None:

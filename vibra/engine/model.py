@@ -97,7 +97,7 @@ class Model:
         self.porous_material_properties = dict()
         self.viscous_thermal_model_properties = dict()
 
-    def set_length_unit(self, length_unit: str = "milimeter"):
+    def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
     def set_geometry_quality_factor(self, geometry_qf: float = 1.0):

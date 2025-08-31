@@ -46,7 +46,7 @@ class ProjectFile:
         self.harmonic_solution_filepath = self.path / "harmonic_solution.hdf5"
         self.geometry_folder = self.path / "geometry_file"
 
-    def write_geometry_in_file(self, path: Path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
+    def write_geometry_in_file(self, path: Path, length_unit: str = "millimeter", geometry_qf: float = 1.0):
         basename = path.name
         internal_path = self.geometry_folder / basename
 
@@ -89,7 +89,7 @@ class ProjectFile:
 
     def read_geometry_setup_from_file(self):
         project_setup = read_json(self.project_setup_filepath)
-        length_unit = project_setup.get("length_unit", "milimeter")  
+        length_unit = project_setup.get("length_unit", "millimeter")  
         geometry_qf = project_setup.get("geometry_qf", 3.0)  
         return length_unit, geometry_qf
 
