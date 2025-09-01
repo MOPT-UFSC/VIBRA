@@ -1326,22 +1326,28 @@ class Mesh:
             self.elements_from_volume[volume_id] = self.solids_connectivity[rows, 0]
 
     def get_line_from_element(self, element_id: int) -> int | None:
-        for line_id, elements_from_line in self.elements_from_line.items():
-            if np.isin(elements_from_line, element_id).any():
-                return line_id
-        return None
+        line_id = None
+        (row,) = np.where(self.lines_connectivity[:, 0] == element_id)
+        if row.size:
+            line_id = int(self.lines_connectivity[row, 1])
+
+        return line_id
 
     def get_surface_from_element(self, element_id: int) -> int | None:
-        for surface_id, elements_from_surface in self.elements_from_surface.items():
-            if np.isin(elements_from_surface, element_id).any():
-                return surface_id
-        return None
+        surface_id = None
+        (row,) = np.where(self.faces_connectivity[:, 0] == element_id)
+        if row.size:
+            surface_id = int(self.faces_connectivity[row, 1])
+
+        return surface_id
 
     def get_volume_from_element(self, element_id: int) -> int | None:
-        for volume_id, elements_from_volume in self.elements_from_volume.items():
-            if np.isin(elements_from_volume, element_id).any():
-                return volume_id
-        return None
+        volume_id = None
+        (row,) = np.where(self.solids_connectivity[:, 0] == element_id)
+        if row.size:
+            volume_id = int(self.solids_connectivity[row, 1])
+
+        return volume_id
 
     def get_elements_from_lines(self, line_ids: list[int]):
         element_ids = list()
@@ -1372,13 +1378,15 @@ class Mesh:
             for node in np.sort(face_nodes):
                 mask = np.sum(np.isin(connect_data, node), axis=1) == 1
                 self.face_elements_connected_to_nodes[node].extend(connect_data[mask, :])
+                # rows, _ = np.where(connect_data == node)
+                # self.face_elements_connected_to_nodes[node].extend(connect_data[rows, :])
 
         # import json
         # with open("areas_data.json", "r") as file:
         #     areas_data = json.load(file)
 
     def get_nodes_from_solid_elements(self, node_id: int):
-        rows = np.isin(self.solids_connectivity[:, 1], node_id)
+        (rows,) = np.where(self.solids_connectivity[:, 1] == node_id)
         return np.unique(self.solids_connectivity[rows, 4:]).astype(int)
 
     def map_face_elements_to_solid_elements_reference(self):
@@ -1562,7 +1570,7 @@ class Mesh:
 
         return face_elements_connected_to_nodes
 
-    def get_solid_elements_connected_to_nodes(self, **kwargs) -> dict:
+    def get_solid_elements_connected_to_nodes(self, **kwargs) -> tuple[dict, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1576,29 +1584,36 @@ class Mesh:
         else:
             node_ids = kwargs.get("node_ids")
 
+        return_nodes = kwargs.get("return_nodes", False)
+
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         filtered_data = self.solids_connectivity[mask_0, :]
 
         elem_ids = filtered_data[:, 0]
         connect_nodes = filtered_data[:, 4:]
 
-        progress = 0
-        number_nodes = len(node_ids)
+        # progress = 0
+        # number_nodes = len(node_ids)
         solid_elements_connected_to_nodes = dict()
 
         for i, node_id in enumerate(node_ids):
-            mask = np.sum(connect_nodes == node_id, axis=1) == 1
-            solid_elements_connected_to_nodes[node_id] = elem_ids[mask]
+            # mask = np.sum(connect_nodes == node_id, axis=1) == 1
+            # solid_elements_connected_to_nodes[node_id] = elem_ids[mask]
+            solid_elements_connected_to_nodes[node_id] = elem_ids[np.where(connect_nodes == node_id)[0]]
 
-            current_progress = int(100 * i / number_nodes)
-            if current_progress % 5 and progress != current_progress:
-                progress = current_progress
-                logging.info(
-                    f"Obtaining solid elements connected to nodes... [{int(100 * i / number_nodes)}/100]"
-                )
+            # current_progress = int(100*(i + 1) / number_nodes)
+            # if current_progress % 5 and progress != current_progress:
+            #     progress = current_progress
+            #     logging.info(
+            #         f"Obtaining solid elements connected to nodes... [{int(100 * i / number_nodes)}/100]"
+            #     )
 
         # dt = time() - t0
         # print(f"Loop time: {dt} s")
+
+        if return_nodes:
+            nodes_from_solid_elements = np.sort(np.unique(connect_nodes).astype(int))
+            return solid_elements_connected_to_nodes, nodes_from_solid_elements
 
         return solid_elements_connected_to_nodes
 
@@ -2304,9 +2319,7 @@ class Mesh:
 
                 if sum(mask_nodes):
                     nodes_inside_sphere = node_indexes[mask_nodes]
-                    selection_data = self.get_solid_elements_connected_to_nodes(
-                        node_ids=nodes_inside_sphere
-                    )
+                    selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
                     for _node, element_ids in selection_data.items():
                         for element_id in element_ids:
                             if element_id not in selected_elements:
@@ -2345,9 +2358,7 @@ class Mesh:
         mask_nodes = diff_nodes <= selection_radius
         nodes_inside_sphere = node_indexes[mask_nodes]
 
-        selection_data = self.get_solid_elements_connected_to_nodes(
-            node_ids=nodes_inside_sphere
-        )
+        selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
 
         _selected_elements = list()
         for _node, element_ids in selection_data.items():

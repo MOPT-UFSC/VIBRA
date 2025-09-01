@@ -283,12 +283,14 @@ class ACT_TETRAHEDRON_4C(Element3D):
         return Ke, Me
 
     
-    def process_particle_velocity(  self, 
-                                    element_id : int, 
-                                    node_id : int, 
-                                    rho : float | np.ndarray, 
-                                    frequencies : np.ndarray, 
-                                    nodal_pressures : np.ndarray  ):
+    def process_particle_velocity(  
+                                    self,
+                                    element_id : int,
+                                    node_id : int,
+                                    rho : float | np.ndarray,
+                                    frequencies : np.ndarray,
+                                    **kwargs
+                                    ):
         """
         This method computes the particle velocity components in
         the x, y, and z directions.
@@ -316,14 +318,24 @@ class ACT_TETRAHEDRON_4C(Element3D):
             An array containing the particle velocity components in the
             x, y, and z directions.
         """
+        node_ids = kwargs.get("node_ids")
+        if node_ids is None:
+            node_ids = self.connectivity[element_id, 1:]
+
+        solution = kwargs.get("solution")
+        nodal_pressures = kwargs.get("nodal_pressures", )
+
+        if isinstance(nodal_pressures, np.ndarray):
+            Pe = nodal_pressures
+        elif isinstance(solution, np.ndarray):
+            Pe = solution[node_ids, :]    
+        else:
+            return 0.
 
         omega = 2 * np.pi * frequencies
 
         if self.connectivity is None:
             self.reorder_connect()
-
-        node_ids = self.connectivity[element_id, 1:]
-        Pe = nodal_pressures[node_ids, :]
 
         p_calc = np.array([ [ 0, 0, 0 ],
                             [ 1, 0, 0 ],

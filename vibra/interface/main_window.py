@@ -601,9 +601,11 @@ class MainWindow(MainWindow_UI):
         volumes_to_hide = set()
         if self.selected_geometry_volumes:
             volumes_to_hide |= self.selected_geometry_volumes
+
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
                 volumes_to_hide |= set(mesh.volumes_from_surface[surface])
+
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
                 volumes_to_hide.add(mesh.get_volume_from_element(element))

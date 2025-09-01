@@ -356,6 +356,7 @@ class AcousticHarmonicSolver:
             A dictionary with the normal particle velocity and its components in
             the x, y, and z directions, computed in the selected surface.
         """
+        # t0 = time()
 
         frequencies = self.assembler.model.frequencies
         element_3d = self.assembler.model.acoustic_element_3d
@@ -366,17 +367,33 @@ class AcousticHarmonicSolver:
             element_3d.reorder_connect()
 
         data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
-        solid_elements_connected_to_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id)
-
-        pv_data = dict()
+        map_elements_to_nodes, filtered_nodes = self.assembler.model.mesh.get_solid_elements_connected_to_nodes(
+                                                                                                                surface_id = surface_id, 
+                                                                                                                return_nodes = True
+                                                                                                                )
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
-        nodal_pressures = self.solution[:, :]
-        for node_id, solid_element_ids in solid_elements_connected_to_nodes.items():
+        node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
+        solution = self.solution[filtered_nodes, :]
+        # nodal_pressures = self.solution[:, :]
+
+        pv_data = dict()
+        for node_id, solid_element_ids in map_elements_to_nodes.items():
 
             Vk = 0.
-            for solid_element_id in solid_element_ids:
-                Vk += element_3d.process_particle_velocity(solid_element_id, node_id, rho, frequencies, nodal_pressures)
+            for element_id in solid_element_ids:
+                connect = element_3d.connectivity[element_id, 1:]
+                indexes = np.array([node_to_index.get(node) for node in connect])
+                enodal_pressures = solution[indexes, :]
+
+                Vk += element_3d.process_particle_velocity(
+                                                            element_id, 
+                                                            node_id, 
+                                                            rho, 
+                                                            frequencies,
+                                                            nodal_pressures = enodal_pressures,
+                                                            solution = None,
+                                                            )
 
             pv_data[node_id] = Vk / len(solid_element_ids)
 
@@ -411,6 +428,9 @@ class AcousticHarmonicSolver:
         # fname = f"nodal_normals_data_surface_{surface_id}.dat"
         # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
         # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
+
+        # dt = time() - t0
+        # print(f"Elpased time to get_particle_velocity_from_surface: {dt} s")
 
         return particle_velocities
 

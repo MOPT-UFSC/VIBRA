@@ -1211,7 +1211,7 @@ class AcousticAssembler:
 
                 last_progress = progress
 
-                volume_id = self.model.get_volume_from_element(el)
+                volume_id = self.model.mesh.get_volume_from_element(el)
                 fluid = self.model.properties._get_property("fluid", volume=volume_id)
                 proportional_damping = self.properties._get_property("proportional_damping", volume=volume_id)
 
