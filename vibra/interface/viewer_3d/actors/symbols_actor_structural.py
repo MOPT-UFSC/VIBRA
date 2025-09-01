@@ -132,8 +132,8 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                 if index < 3 and v is not None:
                     self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN)
                 elif index >= 3 and v is not None:
-                    self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=color_names.PINK)    
-                    self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=color_names.RED_5)    
+                    self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=color_names.YELLOW)    
+                    self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=color_names.RED)    
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:

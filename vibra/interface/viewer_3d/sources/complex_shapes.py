@@ -127,7 +127,7 @@ def create_dof_rotation_source():
     s = 0.6
     return transform_polydata(
         polydata,
-        position=(-s*1.2, 0, 0),
+        position=(-s*1.1, 0, 0),
         rotation=(0, 90, 180),
         scale=(s/3, s/3, s/3),
     )
@@ -137,7 +137,7 @@ def create_dof_rotation_arrows_source():
     s = 0.6
     return transform_polydata(
         polydata,
-        position=(-s*1.2, 0, 0),
+        position=(-s*1.1, 0, 0),
         rotation=(0, 90, 180),
         scale=(s/3, s/3, s/3),
     )
