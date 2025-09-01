@@ -1,3 +1,4 @@
+from typing import Callable, Optional
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
@@ -54,7 +55,8 @@ class ModelProperties:
 
     """
 
-    def __init__(self, model=None):
+    def __init__(self, disable_resume_callback: Optional[Callable] = None):
+        self.disable_resume_callback = disable_resume_callback
 
         self._reset_variables()
 
@@ -177,6 +179,9 @@ class ModelProperties:
 
         else:
             self.global_properties[property, "global"] = data
+        
+        if self.disable_resume_callback is not None:
+            self.disable_resume_callback()
 
     def _get_property(self, property: str, node=None, element=None, point=None, line=None, surface=None, volume=None):
         """
@@ -259,6 +264,9 @@ class ModelProperties:
 
             for _key in keys_to_remove:
                 data.pop(_key)
+        
+        if self.disable_resume_callback is not None:
+            self.disable_resume_callback()
 
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
@@ -393,6 +401,27 @@ class ModelProperties:
                 return True
 
         return False
+    
+    def get_entities_without_property(self, property: str, **kwargs):
+
+        entities_without_property = list()
+        volume_ids = kwargs.get("volumes", list())
+        surface_ids = kwargs.get("surfaces", list())
+
+        if volume_ids:
+            for volume_id in volume_ids:
+                data = self._get_property(property, volume=volume_id)
+                if data is None:
+                    entities_without_property.append(volume_id)
+
+        elif surface_ids:
+            for surface_id in kwargs.get("surfaces", list()):
+                data = self._get_property(property, surface=surface_id)
+                if data is None:
+                    entities_without_property.append(surface_id)
+    
+        return entities_without_property
+
 
 if __name__ == "__main__":
     p = ModelProperties()

@@ -9,8 +9,8 @@ from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 def getColorRGB(color):
     color = color.replace(" ", "")
@@ -27,9 +27,8 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
         self.state_properties = kwargs.get("state_properties", dict())
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -46,7 +45,6 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.load_compressor_info()
 
         self.load_model_info()
-        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -102,9 +100,10 @@ class SetFluidInputs(SetFluidInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
+        self.geometry_selection_callback()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
         self.selected_column = current_col
@@ -134,7 +133,8 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def reset_fluid_library_callback(self):
         self.hide()
-        self.fluid_widget.reset_library_callback()
+        if self.fluid_widget.reset_library_callback():
+            self.actions_to_finalize()
 
     def geometry_selection_callback(self):
 
@@ -142,22 +142,12 @@ class SetFluidInputs(SetFluidInputs_UI):
             return
 
         volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
-
         if volumes:
-            selected_ids = volumes
-            self.comboBox_attribution_type.setCurrentIndex(5)
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
-        elif surfaces:
-            selected_ids = surfaces
-            self.comboBox_attribution_type.setCurrentIndex(4)
-        
-        else:
-            selected_ids = set()
-
-        if len(selected_ids):
-            text = ", ".join([str(i) for i in selected_ids])
-            self.lineEdit_selection_id.setText(text)
+            if len(volumes):
+                text = ", ".join([str(i) for i in volumes])
+                self.lineEdit_selection_id.setText(text)
 
     def _config_widgets(self):
         self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
@@ -181,14 +171,13 @@ class SetFluidInputs(SetFluidInputs_UI):
     def attribution_type_callback(self):
         
         index = self.comboBox_attribution_type.currentIndex()
-        selection_texts = ["All bodies/faces", "All bodies", "All faces"]
 
-        if index in [0, 1, 2]:
-            self.lineEdit_selection_id.setEnabled(False)
-            self.lineEdit_selection_id.setText(selection_texts[index])
-        else:
-            self.lineEdit_selection_id.setEnabled(True)
-            self.lineEdit_selection_id.setText("")
+        text = ""
+        if index == 0:
+            text = "All bodies"
+
+        self.lineEdit_selection_id.setText(text)
+        self.lineEdit_selection_id.setEnabled(bool(index))
 
     def attribute_callback(self):
 
@@ -198,33 +187,19 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.hide()
             self.title = "No fluids selected"
             self.message = "Select a fluid in the list before confirming the fluid attribution."
-            PrintMessageInput([window_title_1, self.title, self.message])
+            PrintMessageInput([error_title, self.title, self.message])
             return
 
+        volume_ids = list()
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
-        if attribution_type in [0, 1, 2]:
+        if attribution_type == 0:
+            if "volumes" in self.mesh.geometry_information.keys():
+                volume_ids = self.mesh.geometry_information["volumes"]
 
-            if attribution_type in [0, 1]:
-                volume_ids = list()
-                if "volumes" in self.mesh.geometry_information.keys():
-                    volume_ids = self.mesh.geometry_information["volumes"]
-
-                for volume_id in volume_ids:
-                    self.properties._set_property("fluid", selected_fluid, volume=volume_id)
-
-            if attribution_type in [0, 2]:
-                surface_ids = list()
-                if "surfaces" in self.mesh.geometry_information.keys():
-                    surface_ids = self.mesh.geometry_information["surfaces"]
-
-                for surface_id in surface_ids:
-                    self.properties._set_property("fluid", selected_fluid, surface=surface_id)
-
-        elif attribution_type in [3, 5]:
-
+        elif attribution_type == 1:
             input_ids = self.lineEdit_selection_id.text()
-            surface_ids, error_data = self.mesh.check_selected_ids(
+            volume_ids, error_data = self.mesh.check_selected_ids(
                                                                    input_ids, 
                                                                    selection = "volumes", 
                                                                    single_id = False,
@@ -236,29 +211,13 @@ class SetFluidInputs(SetFluidInputs_UI):
                 PrintMessageInput(error_data)
                 return
 
-            for volume_id in volume_ids:
-                self.properties._set_property("fluid", selected_fluid, volume=volume_id)
+        if not volume_ids:
+            return
 
-                if attribution_type == 5:
-                    for surface_id in self.mesh.surfaces_from_volume[volume_id]:
-                        self.properties._set_property("fluid", selected_fluid, surface=surface_id)
+        for volume_id in volume_ids:
+            self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
-        elif attribution_type == 4:
-
-            input_ids = self.lineEdit_selection_id.text()
-            surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = "surfaces", 
-                                                                   single_id = False
-                                                                   )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return
-
-            for surface_id in surface_ids:
+            for surface_id in self.mesh.surfaces_from_volume[volume_id]:
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         self.actions_to_finalize()
@@ -269,22 +228,25 @@ class SetFluidInputs(SetFluidInputs_UI):
     def remove_callback(self):
 
         text = self.lineEdit_selection_id.text()
+        if "-" not in text:
+            return
 
-        if "-" in text:
+        selection, str_selected_id = text.split("-")
+        selected_id = int(str_selected_id)
 
-            selection, _selected_id = text.split("-")
-            selected_id = int(_selected_id)
+        if selection == "Surface":
+            self.properties._remove_surface_property("fluid", selected_id)
+            self.properties._remove_surface_property("fluid_id", selected_id)
 
-            if selection == "Surface":
-                self.properties._remove_surface_property("fluid", selected_id)
-                self.properties._remove_surface_property("fluid_id", selected_id)
+        elif selection == "Volume":
+            self.properties._remove_volume_property("fluid", selected_id)
+            self.properties._remove_volume_property("fluid_id", selected_id)
+            for surface_id in self.mesh.surfaces_from_volume[selected_id]:
+                self.properties._remove_surface_property("fluid", surface_id)
+                self.properties._remove_surface_property("fluid_id", surface_id)
 
-            elif selection == "Volume":
-                self.properties._remove_volume_property("fluid", selected_id)
-                self.properties._remove_volume_property("fluid_id", selected_id)
-
-            self.actions_to_finalize()
-            app().main_window.set_geometry_selection()
+        self.actions_to_finalize()
+        app().main_window.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -315,15 +277,15 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.load_model_info()
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
-        app().file.write_model_properties_in_file()
         app().main_window.update_symbols()
-        
+        app().file.write_model_properties_in_file()
+
         self.complete = True
 
     def load_model_info(self):
 
         properties = {
-                      "Surface" : self.properties.surface_properties,
+                    #   "Surface" : self.properties.surface_properties,
                       "Volume" : self.properties.volume_properties
                       }
 

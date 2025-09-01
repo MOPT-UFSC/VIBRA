@@ -53,13 +53,13 @@ class DataImporter:
         imported_data = None
         last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
 
+        imported_data = list()
         if isinstance(imported_paths, list):
-            imported_data = list()
             for imported_path in imported_paths:
-                imported_data.append(DataImporter.read_data_in_file(imported_path))
-        
+                imported_data.extend(DataImporter.read_data_in_file(imported_path, use_first_sheet=False))
+
         else:
-            imported_data = DataImporter.read_data_in_file(imported_paths)
+            imported_data.extend(DataImporter.read_data_in_file(imported_paths, use_first_sheet=True))
 
         app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
         
@@ -68,16 +68,21 @@ class DataImporter:
     @staticmethod
     def import_multiple_files(last_folder: str, file_extensions: List[str], caption: str = "Open file") -> List[ImportedData]:
         return DataImporter.__import_files(caption, last_folder, file_extensions, True)
-    
+
     @staticmethod
     def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData | None:
-        return DataImporter.__import_files(caption, last_folder, file_extensions)
-    
+        imported_data = DataImporter.__import_files(caption, last_folder, file_extensions)
+        if isinstance(imported_data, list):
+            if imported_data:
+                return imported_data[0]
+        return None
+
     @staticmethod
-    def read_data_in_file(file_path: str):
-        from pandas import read_excel
-        from openpyxl import load_workbook
+    def read_data_in_file(file_path: str, use_first_sheet: bool = True):
+
         import warnings
+
+        output_data = list()
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
@@ -86,40 +91,63 @@ class DataImporter:
             filename = os.path.basename(file_path)
 
             if sufix in [".txt", ".dat", ".csv"]:
-                loaded_data = np.loadtxt(file_path, 
-                                        delimiter = ",", 
-                                        )
-                
-                loaded_data = DataImporter.__remove_unnecesary_header_in_data(loaded_data)
+                try:
+                    loaded_data = np.loadtxt(file_path, delimiter = ",")
+                except:
+                    loaded_data = DataImporter.__load_text_file_data(file_path)
 
-                return ImportedData(loaded_data, filename, sufix, path=file_path)
+                loaded_data = DataImporter.__remove_unnecesary_header_in_data(loaded_data)
+                output_data.append(ImportedData(loaded_data, filename, sufix, path=file_path))
                 
             elif sufix in [".xls", ".xlsx"]:
-                wb = load_workbook(file_path)
-                sheetnames = wb.sheetnames
 
-                for sheetname in sheetnames:
-                    try:
-                        sheet_data = read_excel(
-                                                file_path, 
-                                                sheet_name = sheetname,  
-                                                usecols = [0,1,2],
-                                                engine="openpyxl"
-                                                ).to_numpy()
-                    except:
-                        sheet_data = read_excel(
-                                                file_path, 
-                                                sheet_name = sheetname, 
-                                                usecols = [0,1],
-                                                engine="openpyxl"
-                                                ).to_numpy()
+                from pandas import read_excel
+                from openpyxl import load_workbook
+
+                wb = load_workbook(file_path)
+                
+                for sheetname in wb.sheetnames:
+                    for cols in [(0, 1, 2), (0, 1)]:
+                        try:
+                            sheet_data = read_excel(
+                                                    file_path, 
+                                                    sheet_name = sheetname,  
+                                                    usecols = cols,
+                                                    engine = "openpyxl",
+                                                    ).to_numpy()
+                            break
+                        except:
+                            pass
 
                     sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
+                    output_data.append(ImportedData(sheet_data, filename, sufix, sheetname, file_path))
+                    if use_first_sheet:
+                        break
 
-                    return ImportedData(sheet_data, filename, sufix, sheetname, file_path)
+                    # return ImportedData(sheet_data, filename, sufix, sheetname, file_path)
+
+            return output_data
 
     @staticmethod                      
     def __remove_unnecesary_header_in_data(data: np.ndarray) -> np.ndarray:
         filtered_data = [row for row in data if not isinstance(row[0], str)]
-        return np.array(filtered_data)
+        return np.array(filtered_data, dtype=float)
 
+    @staticmethod
+    def __load_text_file_data(path: str):
+
+        output_data = list()
+        if isinstance(path, str):
+            path = Path(path)
+
+        with open(path, 'r') as file:
+            for line in file.readlines():
+                try:
+                    modif_line = line.replace(",", " ").strip().split(" ")
+                    line_values = [float(value) for value in modif_line if value != ""]
+                except:
+                    continue
+
+                output_data.append(line_values)
+
+        return np.array(output_data, dtype=float)

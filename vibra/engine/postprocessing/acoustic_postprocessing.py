@@ -27,8 +27,9 @@ def compute_acoustic_modal_field(
     selected_mode_shape = solver.solution[:, index]
     amplitudes = np.abs(selected_mode_shape)
     phases = np.angle(selected_mode_shape)
-
-    acoustic_pressures = amplitudes * np.cos(phases + phase_rad)
+    delta = -phases[np.argmax(amplitudes)]
+    acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
+    
     if plot_type == "absolute_values":
         acoustic_pressures = np.abs(selected_mode_shape)
     elif plot_type == "real_values":
@@ -40,7 +41,7 @@ def compute_acoustic_modal_field(
 
     min_value, max_value = solver.get_min_max_values_of_pressures(index, plot_type)
 
-    return acoustic_pressures, min_value, max_value
+    return acoustic_pressures, min_value, max_value, np.imag(selected_mode_shape).any()
 
 
 def compute_acoustic_harmonic_field(
@@ -53,10 +54,11 @@ def compute_acoustic_harmonic_field(
     if solver.solution is None:
         return None
 
-    selected_results = solver.solution[:, index].copy()
+    selected_results = solver.solution[:, index]
     amplitudes = np.abs(selected_results)
     phases = np.angle(selected_results)
-    acoustic_pressures = amplitudes * np.cos(phases + phase_rad)
+    delta = -phases[np.argmax(amplitudes)]
+    acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
 
     if plot_type == "absolute_values":
         acoustic_pressures = np.abs(selected_results)
@@ -69,4 +71,4 @@ def compute_acoustic_harmonic_field(
 
     min_value, max_value = solver.get_min_max_values_of_pressures(index, plot_type)
 
-    return acoustic_pressures, min_value, max_value
+    return acoustic_pressures, min_value, max_value, np.imag(selected_results).any()

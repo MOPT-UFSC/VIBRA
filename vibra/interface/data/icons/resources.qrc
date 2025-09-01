@@ -31,6 +31,7 @@
         <file>reset-image (2).png</file>
         <file>reset_icon.png</file>
         <file>results.png</file>
+        <file>resume_icon.png</file>
         <file>save.png</file>
         <file>save_as.png</file>
         <file>settings.png</file>
@@ -50,9 +51,11 @@
         <file>model_setup_items/distributed_loads.png</file>
         <file>model_setup_items/distributed_loads3.png</file>
         <file>model_setup_items/distributed_loads4.png</file>
+        <file>model_setup_items/error_red.png</file>
         <file>model_setup_items/fluid.png</file>
         <file>model_setup_items/incident_plane_wave.png</file>
         <file>model_setup_items/mass_flow_rate.png</file>
+        <file>model_setup_items/mass_source.png</file>
         <file>model_setup_items/material.png</file>
         <file>model_setup_items/mesh_setup.png</file>
         <file>model_setup_items/mesh_setup1.png</file>
@@ -67,6 +70,7 @@
         <file>model_setup_items/reciprocating_compressor_excitation.png</file>
         <file>model_setup_items/s.png</file>
         <file>model_setup_items/specific_impedance.png</file>
+        <file>model_setup_items/structural_help.png</file>
         <file>model_setup_items/surface_thickness.png</file>
         <file>model_setup_items/surface_thickness2.png</file>
         <file>model_setup_items/surface_velocity.png</file>

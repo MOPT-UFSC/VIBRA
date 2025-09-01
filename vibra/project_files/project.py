@@ -1,3 +1,4 @@
+from PySide6.QtCore import Signal, QObject
 
 from vibra import app
 from vibra.engine import AnalysisID
@@ -17,10 +18,23 @@ from vibra.interface.loading_window import LoadingWindow
 import logging
 from time import sleep, time
 
+from vibra.project_files.project_file import ProjectFile
 
-class Project:
-    def __init__(self):
+
+class Project(QObject):
+
+    can_resume_solution_changed = Signal(bool)
+
+    def __init__(self, project_file: ProjectFile | None = None):
+        super().__init__()
+        self.project_file = project_file
+        self.can_resume_solution = False
         self.reset_variables()
+
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
+        if key == 'can_resume_solution':
+            self.can_resume_solution_changed.emit(value)
 
     def reset_variables(self):
 
@@ -34,7 +48,11 @@ class Project:
         self.analysis_setup = dict()
         self.analysis_id = AnalysisID.NO_ANALYSIS
 
-        self.model = Model()
+        def disable_resume_callback():
+            self.can_resume_solution = False
+
+
+        self.model = Model(disable_resume_callback)
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
 
@@ -170,7 +188,7 @@ class Project:
 
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler)
+                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, self.project_file)
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
 
             # acoustic modal analysis
@@ -210,14 +228,14 @@ class Project:
         self.structural_modal_solver.solve()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
-    def solve_acoustic_harmonic_analysis(self):
+    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties(self.model.frequencies)
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
         self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
         t0 = time()
-        self.acoustic_harmonic_solver.solve()
+        self.acoustic_harmonic_solver.solve(is_resume=is_resume)
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
@@ -233,7 +251,7 @@ class Project:
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
 
-    def run_analysis(self):
+    def run_analysis(self, is_resume: bool = False):
 
         if not self.model.generated_mesh:
             obj = MeshSetupInputs(close_after_generate=True)
@@ -266,7 +284,7 @@ class Project:
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
-            LoadingWindow(analysis.process_acoustic_harmonic_analysis).run()
+            LoadingWindow(lambda: analysis.process_acoustic_harmonic_analysis(is_resume)).run()
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
@@ -283,10 +301,17 @@ class Project:
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
-        
-        if not any([self.structural_harmonic_solver, self.structural_modal_solver, self.acoustic_modal_solver, self.acoustic_harmonic_solver]):
+
+        solvers = [
+                    self.structural_harmonic_solver, 
+                    self.structural_modal_solver, 
+                    self.acoustic_modal_solver, 
+                    self.acoustic_harmonic_solver
+                    ]
+
+        if not any(solvers):
             return False
-            
+
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
@@ -365,7 +390,9 @@ class Project:
 
         return analysis_type, physical_domain
 
-    def is_there_a_valid_analysis_setup(self):
+    def is_there_a_valid_analysis_setup(self, **kwargs):
+
+        current_analysis_id = kwargs.get("current_analysis_id", None)
 
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
@@ -374,6 +401,10 @@ class Project:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return False
+
+        if isinstance(current_analysis_id, int):
+            if analysis_id != current_analysis_id:
+                return False
 
         if analysis_id in [
                             AnalysisID.ACOUSTIC_HARMONIC,

@@ -11,8 +11,8 @@ from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import Spec
 from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
 from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.absorption_surface_inputs import AbsorptionSurfaceInputs
-from vibra.interface.model_inputs.acoustic.proportional_damping_inputs import ProportionalDampingInput
-from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
+from vibra.interface.model_inputs.acoustic.dissipation_models.proportional_damping_inputs import ProportionalDampingInput
+from vibra.interface.model_inputs.acoustic.dissipation_models.porous_material_model_inputs import PorousMaterialModelInputs
 from vibra.interface.model_inputs.acoustic.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
 from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import PerforatedPlateModelInputs
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
@@ -21,7 +21,8 @@ from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs impo
 from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
+from vibra.interface.model_inputs.structural.dof_constraint_inputs import DofConstraintInputs
+from vibra.interface.model_inputs.structural.dof_prescription_inputs import DofPrescriptionInputs
 from vibra.interface.model_inputs.structural.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.normal_pressure_load_inputs import NormalPressureLoadInputs
 from vibra.interface.model_inputs.structural.distributed_loads_inputs import DistributedLoadsInputs
@@ -55,7 +56,6 @@ window_title_2 = "Warning"
 class InputUi:
     def __init__(self, parent=None):
 
-        self.main_window = app().main_window
         self.project = app().project
 
         self.model_setup_items = app().main_window.model_setup_widget.model_setup_items
@@ -73,14 +73,14 @@ class InputUi:
     
     def mesh_setup(self):
         if not self.model_setup_items.item_child_mesh_setup.isDisabled():
-            self.main_window.action_model_workspace_callback()
+            app().main_window.action_model_workspace_callback()
             obj = self.process_input(MeshSetupInputs)
             if obj.complete:
-                self.model_setup_items.modify_items_access_after_geometry_importing()
- 
+                self.model_setup_items.enable_and_expand_menu_items()
+
     def generate_mesh(self):
         LoadingWindow(app().project.generate_mesh).run()
-        self.main_window.action_mesh_workspace_callback()
+        app().main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
         nodes = list(app().project.model.mesh.nodes_collapsed_elements)
         app().main_window.set_mesh_selection(nodes=nodes)
@@ -96,11 +96,11 @@ class InputUi:
     def set_surface_thickness(self):
         if not self.model_setup_items.item_child_surface_thickness.isDisabled():
             self.process_input(SurfaceThicknessInputs)
-        
-    def prescribe_structural_dofs(self):
-        if not self.model_setup_items.item_child_prescribed_dofs.isDisabled():
-            self.process_input(DofsPrescriptionInputs)
-        
+
+    def prescribe_structural_dof(self):
+        if not self.model_setup_items.item_child_prescribe_dof.isDisabled():
+            self.process_input(DofPrescriptionInputs)
+
     def set_nodal_loads(self):
         if not self.model_setup_items.item_child_nodal_loads.isDisabled():
             self.process_input(NodalLoadsInputs)
@@ -201,15 +201,15 @@ class InputUi:
 
     def plot_reaction_frequency_response(self):
         if self.projct:
-            self.main_window.show_geometry_render_widget()
+            app().main_window.show_geometry_render_widget()
 
     def plot_stress_field(self):
         if not self.results_viewer_items.item_child_stress_field.isDisabled():
-            self.main_window.configure_results_render_widget()
+            app().main_window.configure_results_render_widget()
 
     def plot_stress_frequency_response(self):
         if not self.results_viewer_items.item_child_stress_frequency_response.isDisabled():
-            self.main_window.show_geometry_render_widget() 
+            app().main_window.show_geometry_render_widget() 
 
     def plot_acoustic_mode_shapes(self):
         if self.project.analysis_id == AnalysisID.ACOUSTIC_MODAL:

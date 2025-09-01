@@ -84,9 +84,9 @@ class Mesh:
         self.mesh_quality_histograms_data = dict()
         self.mesh_quality_temp = None
 
-        self.collapsed_solids = set()
-        self.collapsed_faces = set()
-        self.collapsed_lines = set()
+        self.collapsed_3d_elements = set()
+        self.collapsed_2d_elements = set()
+        self.collapsed_1d_elements = set()
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -1068,7 +1068,7 @@ class Mesh:
         )
 
         self.process_mesh_related_mappings()
-        self.collapsed_solids, self.collapsed_faces, self.collapsed_lines = (
+        self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = (
             self.get_collapsed_elements()
         )
 
@@ -1745,6 +1745,7 @@ class Mesh:
 
         bad_elements = []
         for parameter in self.mesh_quality_parameters:
+            bad_elements = []
             for element in self.mesh_quality[parameter].keys():
                 quality = self.mesh_quality[parameter][element]
 
@@ -1778,6 +1779,16 @@ class Mesh:
                 percentile_5,
                 percentile_95,
             ]
+
+    def get_mesh_quality_data(self):
+
+        mesh_quality_data = {
+                            "statistics" : self.mesh_quality_statistics,
+                            "bad_elements" : self.mesh_bad_elements,
+                            "histograms_data" : self.mesh_quality_histograms_data,
+                            }
+
+        return mesh_quality_data
 
     def compute_initial_mesh_size(
         self, path, geometry_tolerance: float = 1e-10, threads: int = 0
@@ -1870,7 +1881,8 @@ class Mesh:
                 self.length_from_lines[tag] = value * (unit_factor**1)
 
     def process_downwards_adjacencies_from_entities(self):
-        """This method processes the downwards adjacencies
+        """
+        This method processes the downwards adjacencies
         from the geometric entities.
         """
 
@@ -1892,7 +1904,8 @@ class Mesh:
                 self.points_from_line[tag] = downwards
 
     def process_upwards_adjacencies_from_entities(self):
-        """This method processes the upwards adjacencies
+        """
+        This method processes the upwards adjacencies
         from the geometric entities.
         """
 
@@ -1912,10 +1925,17 @@ class Mesh:
             for point_id in point_ids:
                 self.lines_from_point[point_id].append(line_id)
 
+    def are_there_volumes_in_geometry(self) -> bool:
+        volumes = self.geometry_information.get("volumes")
+        if isinstance(volumes, list):
+            if volumes:
+                return True
+        return False
+
     def _get_connectivity_array(self, input_dict):
         """
         The returned value is an array where each line is a connectivity
-        and the collums follow this order:
+        and the colums follow this order:
 
         Element index || Line/Face/Solid tag || Element type || Nodes per element || Connectivity
         """

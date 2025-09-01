@@ -17,16 +17,15 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
+        app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
+
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
-
-        self._reset()
+        self._initialize()
         self._config_window()
         self._configure_qt_variables()
         self._create_connections()
@@ -44,7 +43,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
-    def _reset(self):
+    def _initialize(self):
         self.keep_window_open = True
         self.anechoic_termination = None
 
@@ -65,7 +64,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
         #
@@ -88,7 +87,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        faces = app().main_window.selected_geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -248,7 +247,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
-        self.main_window.update_info_text()
+        app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()

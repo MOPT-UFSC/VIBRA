@@ -1,18 +1,23 @@
+import zipfile
+import shutil
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-from fileboxes import Filebox
-
 import os
-import json
 import h5py
 import numpy as np
 
 from copy import deepcopy
 from pathlib import Path
+from configparser import ConfigParser
+
+from vibra.project_files.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
+from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
+
+from vibra.utils.utils import get_color_rgb, get_list_of_values_from_string
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -20,49 +25,39 @@ window_title_2 = "Warning"
 
 class ProjectFile:
     
-    def __init__(self, path : str, override=False):
+    def __init__(self, path: str):
         super().__init__()
 
-        self.path = path
-        self.filebox = Filebox(Path(path), override=override)
+        self.path = Path(path)
 
-        self._initialize()
-        self._default_filenames()
-        self._default_foldernames()
+        self._default_paths()
 
-    def _initialize(self):
-        self.project_folder_path = Path(os.path.dirname(self.path))
+    def _default_paths(self):
+        self.project_setup_filepath = self.path / "project_setup.json"
+        self.fluid_library_filepath = self.path / "fluid_library.json"
+        self.material_library_filepath = self.path / "material_library.json"
+        self.geometry_data_filepath = self.path / "geometry_data.hdf5"
+        self.model_properties_filepath = self.path / "model_properties.json"
+        self.mesh_data_filepath = self.path / "mesh_data.hdf5"
+        self.mesh_quality_data_filepath = self.path / "mesh_quality_data.json"
+        self.imported_table_data_filepath = self.path / "imported_tables_data.hdf5"
+        self.results_data_filepath = self.path / "results_data.hdf5"
+        self.thumbnail_filepath = self.path / "thumbnail.png"
+        self.harmonic_solution_filepath = self.path / "harmonic_solution.hdf5"
+        self.geometry_folder = self.path / "geometry_file"
 
-    def _default_filenames(self):
-        self.project_setup_filename = "project_setup.json"
-        self.fluid_library_filename = "fluid_library.config"
-        self.material_library_filename = "material_library.config"
-        self.geometry_data_filename = "geometry_data.hdf5"
-        self.model_properties_filename = "model_properties.json"
-        self.mesh_data_filename = "mesh_data.hdf5"
-        self.mesh_quality_data_filename = "mesh_quality_data.json"
-        self.imported_table_data_filename = "imported_tables_data.hdf5"
-        self.results_data_filename = "results_data.hdf5"
-        self.thumbnail_filename = "thumbnail.png"
+    def write_geometry_in_file(self, path: Path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
+        basename = path.name
+        internal_path = self.geometry_folder / basename
 
-    def _default_foldernames(self):
-        pass
+        shutil.rmtree(self.geometry_folder, ignore_errors=True)
+        self.geometry_folder.mkdir(exist_ok=True)
 
-    def write_geometry_in_file(self, path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
-
-        basename = os.path.basename(path)
-        internal_path = f"geometry_file/{basename}"
-
-        try:
-            self.filebox.remove("geometry_file")
-        except:
-            pass
-
-        self.filebox.write_from_path(internal_path, path, encoding="iso-8859-1")
+        shutil.copy(path, internal_path)
 
         try:
 
-            project_setup = self.filebox.read(self.project_setup_filename)
+            project_setup = read_json(self.project_setup_filepath)
             if project_setup is None:
                 project_setup = {   
                                  "geometry_filename" : basename,
@@ -76,7 +71,7 @@ class ProjectFile:
 
                 project_setup["geometry_filename"] = basename
             
-            self.filebox.write(self.project_setup_filename, project_setup)
+            write_json(self.project_setup_filepath, project_setup)
             app().main_window.project_data_modified = True
 
         except Exception as error_log:
@@ -84,29 +79,16 @@ class ProjectFile:
             print_exception(error_log)
 
     def read_geometry_from_file(self):
-
-        project_setup = self.filebox.read(self.project_setup_filename)
+        project_setup = read_json(self.project_setup_filepath)
 
         if "geometry_filename" in project_setup.keys():
-
             geometry_filename = project_setup["geometry_filename"]
-            dirname = self.project_folder_path / "geometry" 
-            temp_path = dirname / geometry_filename
-            internal_path = f"geometry_file/{geometry_filename}"
+            temp_path = self.geometry_folder / geometry_filename
 
-            if os.path.exists(dirname):
-                for filename in os.listdir(dirname).copy():
-                    file_path = dirname / filename
-                    os.remove(file_path)
-            else:
-                os.mkdir(dirname)
-
-            self.filebox.read_to_path(internal_path, temp_path)
-
-        return str(temp_path)
+            return str(temp_path)
 
     def read_geometry_setup_from_file(self):
-        project_setup = self.filebox.read(self.project_setup_filename)
+        project_setup = read_json(self.project_setup_filepath)
         length_unit = project_setup.get("length_unit", "milimeter")  
         geometry_qf = project_setup.get("geometry_qf", 3.0)  
         return length_unit, geometry_qf
@@ -116,97 +98,97 @@ class ProjectFile:
         mesh = app().project.model.mesh
 
         geometry_data = dict(
-                            geometry_info = mesh.geometry_information,
-                            length_from_lines = mesh.length_from_lines,
-                            area_from_surfaces = mesh.area_from_surfaces,
-                            volume_from_bodies = mesh.volume_from_bodies,
-                            surfaces_from_volume = mesh.surfaces_from_volume,
-                            lines_from_surface = mesh.lines_from_surface,
-                            points_from_line = mesh.points_from_line,
-                            )
+            geometry_info = mesh.geometry_information,
+            length_from_lines = mesh.length_from_lines,
+            area_from_surfaces = mesh.area_from_surfaces,
+            volume_from_bodies = mesh.volume_from_bodies,
+            surfaces_from_volume = mesh.surfaces_from_volume,
+            lines_from_surface = mesh.lines_from_surface,
+            points_from_line = mesh.points_from_line,
+        )
 
         if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             geometry_data.update(dict(
-                                      cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
-                                      cache_lines_from_surface = mesh.cache_lines_from_surface,
-                                      cache_points_from_line = mesh.cache_points_from_line,
-                                      ))
+                cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
+                cache_lines_from_surface = mesh.cache_lines_from_surface,
+                cache_points_from_line = mesh.cache_points_from_line,
+            ))
 
-        with self.filebox.open(self.geometry_data_filename, "w") as internal_file:
-            with h5py.File(internal_file, "w") as f:
+        with h5py.File(self.geometry_data_filepath, "w") as f:
 
-                for key, input_data in geometry_data.items():
+            for key, input_data in geometry_data.items():
 
-                    if key == "geometry_info":
-                        dtype = int
-                        output_data = dict()
+                if key == "geometry_info":
+                    dtype = int
+                    output_data = dict()
 
-                        for _key, _data in input_data.items():
-                            new_key = f"entities/{_key}"
-                            output_data[new_key] = _data
+                    for _key, _data in input_data.items():
+                        new_key = f"entities/{_key}"
+                        output_data[new_key] = _data
 
-                    elif key in [ 
-                                "surfaces_from_volume", 
-                                "lines_from_surface", 
-                                "points_from_line", 
-                                "cache_surfaces_from_volume", 
-                                "cache_lines_from_surface", 
-                                "cache_points_from_line",
-                                ]:
+                elif key in [
+                    "surfaces_from_volume",
+                    "lines_from_surface",
+                    "points_from_line",
+                    "cache_surfaces_from_volume",
+                    "cache_lines_from_surface",
+                    "cache_points_from_line",
+                ]:
 
-                        dtype = int
-                        prefix = f"adjacencies/{key}"
-                        output_data = deepcopy(input_data)
+                    dtype = int
+                    prefix = f"adjacencies/{key}"
+                    output_data = deepcopy(input_data)
 
-                    elif key in [
-                                 "length_from_lines",
-                                 "area_from_surfaces",
-                                 "volume_from_bodies",
-                                 ]:
+                elif key in [
+                    "length_from_lines",
+                    "area_from_surfaces",
+                    "volume_from_bodies",
+                ]:
 
-                        dtype = float
-                        prefix = f"properties/{key}"
-                        output_data = convert_numeric_dictionary_in_array(input_data, float)
-
-                    else:
+                    if not input_data:
                         continue
 
-                    if isinstance(output_data, dict):
-                        for _key, values in output_data.items():
-                            if isinstance(_key, int):
-                                name = f"{prefix}_{_key}"
+                    dtype = float
+                    prefix = f"properties/{key}"
+                    output_data = convert_numeric_dictionary_in_array(input_data, float)
 
-                            elif isinstance(_key, str) and "entities" in _key:
-                                name = _key
+                else:
+                    continue
 
-                            else:
-                                continue
+                if isinstance(output_data, dict):
+                    for _key, values in output_data.items():
+                        if isinstance(_key, int):
+                            name = f"{prefix}_{_key}"
 
-                            f.create_dataset(name, data=values, dtype=dtype)
+                        elif isinstance(_key, str) and "entities" in _key:
+                            name = _key
 
-                    else:
-                        f.create_dataset(prefix, data=output_data, dtype=dtype)
+                        else:
+                            continue
 
-        self.filebox.remove(self.results_data_filename)
+                        f.create_dataset(name, data=values, dtype=dtype)
+
+                else:
+                    f.create_dataset(prefix, data=output_data, dtype=dtype)
+
+        self.remove_results_data_from_project_file()
         app().main_window.project_data_modified = True
 
     def read_geometry_data_from_file(self):
-
         geometry_data = dict()
 
         try:
-            with self.filebox.open(self.geometry_data_filename) as internal_file:
-                with h5py.File(internal_file, "r") as f:
+            with h5py.File(self.geometry_data_filepath, "r") as f:
 
-                    for group in list(f.keys()):
-                        for key, values in f.get(group).items():
+                for group in list(f.keys()):
+                    for key, values in f.get(group).items():
 
-                            try:
-                                geometry_data[key] = np.array(values)
+                        try:
+                            geometry_data[key] = np.array(values)
 
-                            except:
-                                geometry_data[key] = int(values)
+                        except:
+                            geometry_data[key] = int(values)
 
         except Exception as error_log:
             # from traceback import print_exception
@@ -216,70 +198,53 @@ class ProjectFile:
         return geometry_data
 
     def write_mesh_setup_in_file(self, mesh_setup):
-
-        project_setup = self.filebox.read(self.project_setup_filename)
+        project_setup = read_json(self.project_setup_filepath)
         if project_setup is None:
             return   
 
         project_setup["mesh_setup"] = mesh_setup           
-        self.filebox.write(self.project_setup_filename, project_setup)
+        write_json(self.project_setup_filepath, project_setup)
         app().main_window.project_data_modified = True
 
     def write_mesh_quality_data_in_file(self):
-        mesh_quality_statistics = app().project.model.mesh.mesh_quality_statistics
-        mesh_bad_elements = app().project.model.mesh.mesh_bad_elements
-        mesh_quality_histograms_data = app().project.model.mesh.mesh_quality_histograms_data
-        if mesh_quality_statistics is not None:
-            mesh_quality_data = dict()
-            mesh_quality_data["statistics"] = mesh_quality_statistics
-            mesh_quality_data["bad_elements"] = mesh_bad_elements
-            mesh_quality_data["histograms_data"] = mesh_quality_histograms_data
+        mesh_quality_data = app().project.model.mesh.get_mesh_quality_data()
+        if not mesh_quality_data:
+            return
         
-        def convert_ndarrays_to_lists(obj):
-            if isinstance(obj, dict):
-                return {k: convert_ndarrays_to_lists(v) for k, v in obj.items()}
-            elif isinstance(obj, list):
-                return [convert_ndarrays_to_lists(i) for i in obj]
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-            elif isinstance(obj, np.uint64):
-                return int(obj)
+        def convert_ndarrays_to_lists(qm_data: dict):
+            if isinstance(qm_data, dict):
+                return {k: convert_ndarrays_to_lists(v) for k, v in qm_data.items()}
+            elif isinstance(qm_data, list):
+                return [convert_ndarrays_to_lists(i) for i in qm_data]
+            elif isinstance(qm_data, np.ndarray):
+                return qm_data.tolist()
+            elif isinstance(qm_data, np.uint64):
+                return int(qm_data)
             else:
-                return obj
+                return qm_data
+
         mesh_quality_data_json_ready = convert_ndarrays_to_lists(mesh_quality_data)
         
-        self.filebox.write(self.mesh_quality_data_filename, mesh_quality_data_json_ready)
-
+        write_json(self.mesh_quality_data_filepath, mesh_quality_data_json_ready)
         app().main_window.project_data_modified = True    
 
     def read_mesh_quality_data_from_file(self):
         mesh_quality_data = dict()
         try:
-            if not self.filebox.contains(self.mesh_data_filename):
-                return None, None, None
+            if not self.mesh_data_filepath.exists():
+                return mesh_quality_data
 
-            mesh_quality_data = self.filebox.read(self.mesh_quality_data_filename)
-
+            mesh_quality_data = read_json(self.mesh_quality_data_filepath)
             if mesh_quality_data:
-                mesh_quality_statistics = mesh_quality_data["statistics"]
-                mesh_bad_elements = mesh_quality_data["bad_elements"]
-                mesh_quality_histograms_data = mesh_quality_data["histograms_data"]
-                
-                return mesh_quality_statistics, mesh_bad_elements, mesh_quality_histograms_data
-
-            else: 
-                return None, None, None
-
+                return mesh_quality_data
 
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
-            return None, None, None
-        
+            return mesh_quality_data
 
     def read_mesh_setup_from_file(self):
-
-        project_setup = self.filebox.read(self.project_setup_filename)
+        project_setup = read_json(self.project_setup_filepath)
         if project_setup is None:
             return
 
@@ -288,80 +253,76 @@ class ProjectFile:
         return mesh_setup
 
     def write_mesh_data_in_file(self):
-
         mesh = app().project.model.mesh
 
         mesh_data = dict(
-                         nodal_coordinates = mesh.nodal_coordinates,
-                         nodes_from_points = convert_numeric_dictionary_in_array(mesh.nodes_from_points, int),
-                         lines_connectivity = mesh.lines_connectivity,
-                         faces_connectivity = mesh.faces_connectivity,
-                         solids_connectivity = mesh.solids_connectivity,
-                         normals_surface = mesh.normals_surface,
-                         curvatures_surface = mesh.curvatures_surface,
-                         )
+            nodal_coordinates = mesh.nodal_coordinates,
+            nodes_from_points = convert_numeric_dictionary_in_array(mesh.nodes_from_points, int),
+            lines_connectivity = mesh.lines_connectivity,
+            faces_connectivity = mesh.faces_connectivity,
+            solids_connectivity = mesh.solids_connectivity,
+            normals_surface = mesh.normals_surface,
+            curvatures_surface = mesh.curvatures_surface,
+        )
 
         if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             mesh_data.update(dict(
-                                  cache_nodal_coordinates = mesh.cache_nodal_coordinates,
-                                  cache_solids_connectivity = mesh.cache_solids_connectivity,
-                                  cache_faces_connectivity = mesh.cache_faces_connectivity,
-                                  cache_lines_connectivity = mesh.cache_lines_connectivity,
-                                  ))
+                cache_nodal_coordinates = mesh.cache_nodal_coordinates,
+                cache_solids_connectivity = mesh.cache_solids_connectivity,
+                cache_faces_connectivity = mesh.cache_faces_connectivity,
+                cache_lines_connectivity = mesh.cache_lines_connectivity,
+            ))
 
-        with self.filebox.open(self.mesh_data_filename, "w") as internal_file:
-            with h5py.File(internal_file, "w") as f:
+        with h5py.File(self.mesh_data_filepath, "w") as f:
 
-                for key, data in mesh_data.items():
+            for key, data in mesh_data.items():
 
-                    if "nodes" in key or "nodal" in key:
-                        dtype = float
-                        prefix = f"nodal_data/{key}"
+                if "nodes" in key or "nodal" in key:
+                    dtype = float
+                    prefix = f"nodal_data/{key}"
 
-                    elif "connectivity" in key:
-                        dtype = int
-                        prefix = f"connectivity/{key}"
+                elif "connectivity" in key:
+                    dtype = int
+                    prefix = f"connectivity/{key}"
 
-                    elif "normals_surface" in key:
-                        dtype = float
-                        prefix = f"normals/{key}"
+                elif "normals_surface" in key:
+                    dtype = float
+                    prefix = f"normals/{key}"
 
-                    elif "curvatures_surface" in key:
-                        dtype = float
-                        prefix = f"curvatures/{key}"
+                elif "curvatures_surface" in key:
+                    dtype = float
+                    prefix = f"curvatures/{key}"
 
-                    else:
-                        dtype = int
-                        prefix = key
+                else:
+                    dtype = int
+                    prefix = key
 
-                    if isinstance(data, dict):
-                        for _id, values in data.items():
-                            name = f"{prefix}_{_id}"
-                            f.create_dataset(name, data=values, dtype=dtype)
+                if isinstance(data, dict):
+                    for _id, values in data.items():
+                        name = f"{prefix}_{_id}"
+                        f.create_dataset(name, data=values, dtype=dtype)
 
-                    else:
-                        f.create_dataset(prefix, data=data, dtype=dtype)
+                else:
+                    f.create_dataset(prefix, data=data, dtype=dtype)
 
-        self.filebox.remove(self.results_data_filename)
+        self.remove_results_data_from_project_file()
         app().main_window.project_data_modified = True
 
     def read_mesh_data_from_file(self):
-
         mesh_data = dict()
 
         try:
-            with self.filebox.open(self.mesh_data_filename) as internal_file:
-                with h5py.File(internal_file, "r") as f:
+            with h5py.File(self.mesh_data_filepath, "r") as f:
 
-                    for group in list(f.keys()):
-                        for key, values in f.get(group).items():
+                for group in list(f.keys()):
+                    for key, values in f.get(group).items():
 
-                            try:
-                                mesh_data[key] = np.array(values)
+                        try:
+                            mesh_data[key] = np.array(values)
 
-                            except:
-                                mesh_data[key] = int(values)
+                        except:
+                            mesh_data[key] = int(values)
 
         except Exception as error_log:
             # from traceback import print_exception
@@ -372,8 +333,7 @@ class ProjectFile:
 
 
     def write_analysis_setup_in_file(self, analysis_setup: dict):
-
-        project_setup = self.filebox.read(self.project_setup_filename)
+        project_setup = read_json(self.project_setup_filepath)
         if project_setup is None:
             return   
 
@@ -386,13 +346,12 @@ class ProjectFile:
             aux[key] = data
 
         project_setup["analysis_setup"] = aux         
-        self.filebox.write(self.project_setup_filename, project_setup)
+        write_json(self.project_setup_filepath, project_setup)
         app().main_window.project_data_modified = True
 
     def read_analysis_setup_from_file(self):
-
         analysis_setup = None
-        project_setup = self.filebox.read(self.project_setup_filename)
+        project_setup = read_json(self.project_setup_filepath)
 
         if project_setup is None:
             return
@@ -403,30 +362,33 @@ class ProjectFile:
         return analysis_setup
 
     def write_model_setup_in_file(self, project_setup : dict):
-        self.filebox.write(self.project_setup_filename, project_setup)
+        write_json(self.project_setup_filepath, project_setup)
         app().main_window.project_data_modified = True
 
     def read_model_setup_from_file(self):
-        return self.filebox.read(self.project_setup_filename)
+        return read_json(self.project_setup_filepath)
 
     def write_material_library_in_file(self, config):
-        self.filebox.write(self.material_library_filename, config)
+        write_json(self.material_library_filepath, config)
         app().main_window.project_data_modified = True
 
     def read_material_library_from_file(self):
-        return self.filebox.read(self.material_library_filename)
+        self.backward_compatibility_for_materials_data_file()
+        return read_json(self.material_library_filepath)
+        # return read_config(self.material_library_filepath)
 
-    def write_fluid_library_in_file(self, config):
-        self.filebox.write(self.fluid_library_filename, config)
+    def write_fluid_library_in_file(self, fluid_data: dict):
+        write_json(self.fluid_library_filepath, fluid_data)
         app().main_window.project_data_modified = True
 
     def read_fluid_library_from_file(self):
-        return self.filebox.read(self.fluid_library_filename)
+        self.backward_compatibility_for_fluids_data_file()
+        return read_json(self.fluid_library_filepath)
+        # return read_config(self.fluid_library_filepath)
 
     def write_model_properties_in_file(self):
 
         try:
-
             def normalize(prop: dict):
                 """
                 Sadly json doesn't accepts tuple keys,
@@ -481,7 +443,7 @@ class ProjectFile:
                         nodal_properties = normalize(properties.nodal_properties),
                         )
 
-            self.filebox.write(self.model_properties_filename, data)
+            write_json(self.model_properties_filepath, data)
             app().main_window.project_data_modified = True
 
         except Exception as error_log:
@@ -512,7 +474,7 @@ class ProjectFile:
 
             return new_prop
 
-        data = self.filebox.read(self.model_properties_filename)
+        data = read_json(self.model_properties_filepath)
 
         if data is None:
             return dict()
@@ -531,50 +493,48 @@ class ProjectFile:
 
     def write_imported_table_data_in_file(self):
 
-        self.filebox.remove(self.imported_table_data_filename)
+        self.remove_table_data_from_project_file()
         acoustic_imported_tables = app().project.model.properties.acoustic_imported_tables
         structural_imported_tables = app().project.model.properties.structural_imported_tables
 
         if acoustic_imported_tables or structural_imported_tables:
 
-            with self.filebox.open(self.imported_table_data_filename, "w") as internal_file:
-                with h5py.File(internal_file, "w") as f:
+            with h5py.File(self.imported_table_data_filepath, "w") as f:
 
-                    for group_label in ["acoustic", "structural"]:
+                for group_label in ["acoustic", "structural"]:
 
-                        if group_label == "acoustic":
-                            imported_tables = acoustic_imported_tables
-                        else:
-                            imported_tables = structural_imported_tables
+                    if group_label == "acoustic":
+                        imported_tables = acoustic_imported_tables
+                    else:
+                        imported_tables = structural_imported_tables
 
-                        for table_name, data_array in imported_tables.items():
+                    for table_name, data_array in imported_tables.items():
 
-                            if table_name is None:
-                                continue
+                        if table_name is None:
+                            continue
 
-                            data_name = f"{group_label}/{table_name}"
-                            f.create_dataset(data_name, data=data_array, dtype=float)
+                        data_name = f"{group_label}/{table_name}"
+                        f.create_dataset(data_name, data=data_array, dtype=float)
 
-                    app().main_window.project_data_modified = True
+                app().main_window.project_data_modified = True
 
     def read_imported_table_data_from_file(self):
 
         try:
             tables_data = dict()
-            with self.filebox.open(self.imported_table_data_filename) as internal_file:
-                with h5py.File(internal_file, "r") as f:
+            with h5py.File(self.imported_table_data_filepath, "r") as f:
 
-                    for group in list(f.keys()):
-                        aux = dict()
-                        for key, values in f.get(group).items():
+                for group in list(f.keys()):
+                    aux = dict()
+                    for key, values in f.get(group).items():
 
-                            try:
-                                aux[key] = np.array(values)
-                            except:
-                                continue
+                        try:
+                            aux[key] = np.array(values)
+                        except:
+                            continue
 
-                        if aux:
-                            tables_data[group] = aux
+                    if aux:
+                        tables_data[group] = aux
 
         except:
             return dict()
@@ -585,79 +545,106 @@ class ProjectFile:
         thumbnail = app().project.thumbnail
         if thumbnail is None:
             return
-        self.filebox.write(self.thumbnail_filename, thumbnail)
+        write_image(self.thumbnail_filepath, thumbnail)
         app().main_window.project_data_modified = True
 
     def read_thumbnail(self):
-        return self.filebox.read(self.thumbnail_filename)
+        return read_image(self.thumbnail_filepath)
     
     def write_results_data_in_file(self):
 
-        with self.filebox.open(self.results_data_filename, "w") as internal_file:
-            with h5py.File(internal_file, "w") as f:
+        with h5py.File(self.results_data_filepath, "w") as f:
 
-                acoustic_modal_solver = app().project.acoustic_modal_solver
-                if acoustic_modal_solver is not None:
-                    if acoustic_modal_solver.solution is not None:
-                        modal_shapes = acoustic_modal_solver.solution
-                        natural_frequencies = acoustic_modal_solver.natural_frequencies
-                        complex_natural_frequencies = acoustic_modal_solver.complex_natural_frequencies
-                        if len(complex_natural_frequencies):
-                            f.create_dataset("modal_acoustic/natural_frequencies", data=complex_natural_frequencies, dtype=complex)
-                        else:
-                            f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
-                        f.create_dataset("modal_acoustic/solution", data=modal_shapes, dtype=complex)
+            acoustic_modal_solver = app().project.acoustic_modal_solver
+            if acoustic_modal_solver is not None:
+                if acoustic_modal_solver.solution is not None:
+                    modal_shapes = acoustic_modal_solver.solution
+                    natural_frequencies = acoustic_modal_solver.natural_frequencies
+                    complex_natural_frequencies = acoustic_modal_solver.complex_natural_frequencies
+                    if len(complex_natural_frequencies):
+                        f.create_dataset("modal_acoustic/natural_frequencies", data=complex_natural_frequencies, dtype=complex)
+                    else:
+                        f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
+                    f.create_dataset("modal_acoustic/solution", data=modal_shapes, dtype=complex)
 
-                structural_modal_solver = app().project.structural_modal_solver
-                if structural_modal_solver is not None:
-                    if structural_modal_solver.solution is not None:
-                        natural_frequencies = structural_modal_solver.natural_frequencies
-                        solution_full = structural_modal_solver.solution
-                        displacement_dofs = structural_modal_solver.displacement_dofs
-                        f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
-                        f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
-                        f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+            structural_modal_solver = app().project.structural_modal_solver
+            if structural_modal_solver is not None:
+                if structural_modal_solver.solution is not None:
+                    natural_frequencies = structural_modal_solver.natural_frequencies
+                    solution_full = structural_modal_solver.solution
+                    displacement_dofs = structural_modal_solver.displacement_dofs
+                    f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
+                    f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
+                    f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
-                acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
-                if acoustic_harmonic_solver is not None:
-                    if acoustic_harmonic_solver.solution is not None:
-                        frequencies = app().project.model.frequencies
-                        solution = acoustic_harmonic_solver.solution
-                        f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
-                        f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
-                
-                structural_harmonic_solver = app().project.structural_harmonic_solver
-                if structural_harmonic_solver is not None:
-                    if structural_harmonic_solver.solution is not None:
-                        frequencies = app().project.model.frequencies
-                        solution = structural_harmonic_solver.solution
-                        displacement_dofs = structural_harmonic_solver.displacement_dofs
-                        f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
-                        f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
-                        f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+            acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
+            if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
+                if acoustic_harmonic_solver.solution is not None:
+                    frequencies = app().project.model.frequencies
+                    solution = acoustic_harmonic_solver.solution
+                    f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
+                    f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
 
-                app().main_window.project_data_modified = True
+            structural_harmonic_solver = app().project.structural_harmonic_solver
+            if structural_harmonic_solver is not None:
+                if structural_harmonic_solver.solution is not None:
+                    frequencies = app().project.model.frequencies
+                    solution = structural_harmonic_solver.solution
+                    displacement_dofs = structural_harmonic_solver.displacement_dofs
+                    f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+                    f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+                    f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+
+            app().main_window.project_data_modified = True
+
+    def handling_harmonic_solution_results(self):
+        if not self.results_data_filepath.exists():
+            return
+        with h5py.File(self.results_data_filepath, "r") as f_src:
+            # Converting Acoustic Harmonic solution in the old form.
+            analysis = f_src.get("harmonic_acoustic")
+            if analysis:
+                frequencies = analysis.get("frequencies")
+                if frequencies:
+                    solution_dset = analysis["solution"]
+                    if solution_dset.chunks is None:
+                        solution = solution_dset[()]
+                        writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
+                        for i, freq in enumerate(frequencies):
+                            writer[:, i] = solution[:, i]
+
+        self.remove_results_data_from_project_file()
+
+    def get_solution_writer(self, num_rows, columns, dtype, is_resume):
+        return LazyHDF5MatrixWriter(self.harmonic_solution_filepath, num_rows, columns, dtype, is_resume)
+
+    def get_solution_loader(self):
+        if not self.harmonic_solution_filepath.exists():
+            return None
+        return LazyHDF5MatrixLoader(self.harmonic_solution_filepath)
+
+    def delete_harmonic_solution(self):
+        if self.harmonic_solution_filepath.exists():
+            self.harmonic_solution_filepath.unlink()
 
     def read_results_data_from_file(self):
-        
         results_data = dict()
 
         try:
 
-            with self.filebox.open(self.results_data_filename) as internal_file:
-                with h5py.File(internal_file, "r") as f:
+            with h5py.File(self.results_data_filepath, "r") as f:
 
-                    for group in list(f.keys()):
-                        aux = dict()
-                        for key, values in f.get(group).items():
+                for group in list(f.keys()):
+                    aux = dict()
+                    for key, values in f.get(group).items():
 
-                            try:
-                                aux[key] = np.array(values)
-                            except:
-                                continue
+                        try:
+                            aux[key] = np.array(values)
+                        except:
+                            continue
 
-                        if aux:
-                            results_data[group] = aux
+                    if aux:
+                        results_data[group] = aux
 
         except:
             return dict()
@@ -665,16 +652,117 @@ class ProjectFile:
         return results_data
 
     def remove_geometry_data_from_project_file(self):
-        self.filebox.remove(self.geometry_data_filename)
+        self.geometry_data_filepath.unlink(missing_ok=True)
 
     def remove_model_properties_from_project_file(self):
-        self.filebox.remove(self.model_properties_filename)
+        self.model_properties_filepath.unlink(missing_ok=True)
 
     def remove_mesh_data_from_project_file(self):
-        self.filebox.remove(self.mesh_data_filename)
+        self.mesh_data_filepath.unlink(missing_ok=True)
+
+    def remove_table_data_from_project_file(self):
+        if self.imported_table_data_filepath.exists():
+            self.imported_table_data_filepath.unlink(missing_ok=True)
 
     def remove_results_data_from_project_file(self):
-        self.filebox.remove(self.results_data_filename)
+        if self.results_data_filepath.exists():
+            self.results_data_filepath.unlink(missing_ok=True)
+
+    def archive_project(self, zip_path: Path):
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:
+            for path in self.path.rglob("*"):
+                if path.is_file():
+                    arcname = path.relative_to(self.path)
+                    zipf.write(path, arcname)
+
+    def extract_project(self, path: Path):
+        with zipfile.ZipFile(path, 'r') as zipf:
+            zipf.extractall(path=self.path)
+
+    def backward_compatibility_for_fluids_data_file(self):
+        path = deepcopy(str(self.fluid_library_filepath))
+        cpath = Path(path.replace(".json", ".config"))
+        if cpath.exists():
+            fluid_data = self.convert_fluid_data_from_configparser_to_dictionary(cpath, remove_after_convert=True)
+            if fluid_data:
+                self.write_fluid_library_in_file(fluid_data)
+
+    def backward_compatibility_for_materials_data_file(self):
+        path = deepcopy(str(self.material_library_filepath))
+        cpath = Path(path.replace(".json", ".config"))
+        if cpath.exists():
+            material_data = self.convert_material_data_from_configparser_to_dictionary(cpath, remove_after_convert=True)
+            if material_data:
+                self.write_material_library_in_file(material_data)
+
+    def convert_fluid_data_from_configparser_to_dictionary(self, path: Path, remove_after_convert: bool=False) -> dict:
+
+        fluid_data = dict()
+        config = read_config(path)
+
+        for tag in config.sections():
+
+            section = config[tag]
+            keys = section.keys()
+
+            identifier = int(section.get('identifier', -1))
+
+            fluid_parameters = {
+                                "name" : section.get("name", ""),
+                                "identifier" : identifier,
+                                "fluid_density" : float(section.get('fluid_density', -1)),
+                                "speed_of_sound" : float(section.get('speed_of_sound', -1)),
+                                "isentropic_exponent" : float(section.get('isentropic_exponent', -1)),
+                                "thermal_conductivity" : float(section.get('thermal_conductivity', -1)),
+                                "specific_heat_Cp" : float(section.get('specific_heat_Cp', -1)),
+                                "dynamic_viscosity" : float(section.get('dynamic_viscosity', -1)),
+                                "temperature" : float(section.get('temperature', -1)),
+                                "pressure" : float(section.get('pressure', -1)),
+                                "molar_mass" : float(section.get('molar_mass', -1)),
+                                "color" : get_color_rgb(section.get('color')),
+                                }
+
+            if 'key_mixture' in keys:
+                fluid_parameters["key_mixture"] = section.get('key_mixture')
+
+            if 'molar_fractions' in keys:
+                str_molar_fractions = section.get('molar_fractions')
+                molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
+                fluid_parameters["molar_fractions"] = molar_fractions
+
+            fluid_data[identifier] = fluid_parameters
+
+        if remove_after_convert:
+            path.unlink()
+
+        return fluid_data
+
+    def convert_material_data_from_configparser_to_dictionary(self, path: Path, remove_after_convert: bool=False) -> dict:
+
+        material_library_data = dict()
+        config = read_config(path)
+
+        for tag in config.sections():
+
+            section = config[tag]
+            identifier = int(section.get('identifier', -1))
+
+            material_parameters = {
+                                    "name" : section.get("name", ""),
+                                    "identifier" : identifier,
+                                    "material_density" : float(section.get('material_density', -1)),
+                                    "poisson_ratio" : float(section.get('poisson_ratio', -1)),
+                                    "elasticity_modulus" : float(section.get('elasticity_modulus', -1)),
+                                    "thermal_expansion_coefficient" : float(section.get('thermal_expansion_coefficient', -1)),
+                                    "color" : get_color_rgb(section.get('color')),
+                                    }
+
+            material_library_data[identifier] = material_parameters
+
+        if remove_after_convert:
+            path.unlink()
+
+        return material_library_data
 
 def convert_numeric_dictionary_in_array(input_data: dict, data_type: int | float):
     """ This function converts a numeric dictionary into an equivalent 

@@ -5,7 +5,6 @@ class ProcessAnalysis:
     def __init__(self):
         super().__init__()
 
-        self.main_window = app().main_window
         self.project = app().project
 
     def process_acoustic_modal_analysis(self):
@@ -14,7 +13,7 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.configure_results_render_widget()
+            app().main_window.configure_results_render_widget()
 
     def process_structural_modal_analysis(self):
         try:
@@ -22,15 +21,15 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.configure_results_render_widget()
+            app().main_window.configure_results_render_widget()
 
-    def process_acoustic_harmonic_analysis(self):
+    def process_acoustic_harmonic_analysis(self, is_resume: bool = False):
         try:
-            self.project.solve_acoustic_harmonic_analysis()
+            self.project.solve_acoustic_harmonic_analysis(is_resume)
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.configure_results_render_widget()
+            app().main_window.configure_results_render_widget()
 
     def process_structural_harmonic_analysis(self):
         try:
@@ -38,4 +37,4 @@ class ProcessAnalysis:
         except NotImplementedError as e:
             ErrorMessage(e)
         else:
-            self.main_window.configure_results_render_widget()
+            app().main_window.configure_results_render_widget()

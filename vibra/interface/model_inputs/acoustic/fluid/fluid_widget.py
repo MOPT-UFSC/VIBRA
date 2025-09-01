@@ -1,8 +1,7 @@
 from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
-from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt
 
-from vibra import app, TEMP_PROJECT_FILE
+from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.interface.formatters.icons import *
 
@@ -19,17 +18,11 @@ from molde import Color
 from copy import deepcopy
 from itertools import count
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 COLOR_ROW = 11
 
-def get_color_rgb(color):
-    color = color.replace(" ", "")
-    if ("[" or "(") in color:
-        color = color[1:-1]
-    tokens = color.split(',')
-    return list(map(int, tokens))
 
 class FluidWidget(FluidWidget_UI):
     def __init__(self, *argas, **kwargs):
@@ -39,8 +32,8 @@ class FluidWidget(FluidWidget_UI):
         self.state_properties = kwargs.get("state_properties", dict())
 
         self.project = app().project
-        self.model = self.project.model
-        self.properties = self.model.properties
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._configure_qt_variables()
@@ -54,10 +47,9 @@ class FluidWidget(FluidWidget_UI):
         self.row = None
         self.col = None
         self.refprop = None
-        self.selected_column = None
 
+        self.refprop_fluids_data = dict()
         self.fluids_from_library = dict()
-        self.fluid_data_refprop = dict()
         self.fluid_name_to_refprop_data = dict()
 
         self.fluid_data_keys = [
@@ -122,111 +114,39 @@ class FluidWidget(FluidWidget_UI):
 
     def load_data_from_fluids_library(self):
 
-        if not TEMP_PROJECT_FILE.exists():
-            self.reset_library_to_default()
-            return
-
-        config = app().file.read_fluid_library_from_file()
-        if config is None:
-            self.reset_library_to_default()
-            return
-
         self.fluids_from_library.clear()
         self.fluid_name_to_refprop_data.clear()
 
-        if not list(config.sections()):
-            self.update_table()
+        fluids_from_library = app().load_project.load_fluid_library()
+        if fluids_from_library is None:
+            self.reset_library_to_default()
             return
 
-        for tag in config.sections():
+        elif isinstance(fluids_from_library, dict):
+            if not fluids_from_library:
+                self.reset_library_to_default()
+                return
 
-            section = config[tag]
-            keys = config[tag].keys()
+        self.fluids_from_library = fluids_from_library
 
-            name = section.get('name')
-            identifier =  int(section.get('identifier'))
-            fluid_density =  float(section.get('fluid_density'))
-            speed_of_sound =  float(section.get('speed_of_sound'))
-            color =  get_color_rgb(section.get('color'))
+        for fluid in fluids_from_library.values():
+            if not isinstance(fluid, Fluid):
+                continue
 
-            if 'isentropic_exponent' in keys:
-                isentropic_exponent = float(section.get('isentropic_exponent'))
-            else:
-                isentropic_exponent = ""
+            refprop_parameters = [
+                                  fluid.name,
+                                  fluid.temperature, 
+                                  fluid.pressure, 
+                                  fluid.key_mixture, 
+                                  fluid.molar_fractions
+                                  ]
 
-            if 'thermal_conductivity' in keys:
-                thermal_conductivity = float(section.get('thermal_conductivity'))
-            else:
-                thermal_conductivity = ""
+            if refprop_parameters.count(None) == 0:
+                self.fluid_name_to_refprop_data[fluid.name] = refprop_parameters
 
-            if 'specific_heat_Cp' in keys:
-                specific_heat_Cp = float(section.get('specific_heat_Cp'))
-            else:
-                specific_heat_Cp = ""
+        self.update_table_of_fluids()
 
-            if 'dynamic_viscosity' in keys:
-                dynamic_viscosity = float(section.get('dynamic_viscosity'))
-            else:
-                dynamic_viscosity = ""
-            
-            if 'temperature' in keys:
-                temperature = float(section.get('temperature'))
-            else:
-                temperature = None
-
-            if 'pressure' in keys:
-                pressure = float(section.get('pressure'))
-            else:
-                pressure = None
-
-            if 'key_mixture' in keys:
-                key_mixture = section.get('key_mixture')
-            else:
-                key_mixture = None
-
-            if 'molar_fractions' in keys:
-                str_molar_fractions = section.get('molar_fractions')
-                molar_fractions = get_list_of_values_from_string(str_molar_fractions, int_values=False)
-            else:
-                molar_fractions = None
-
-            if 'molar_mass' in keys:
-                if section.get('molar_mass') == "None":
-                    molar_mass = None
-                else:
-                    molar_mass = float(section.get('molar_mass'))
-            else:
-                molar_mass = None
-
-            fluid = Fluid(  name = name,
-                            fluid_density = fluid_density,
-                            speed_of_sound = speed_of_sound,
-                            color =  color,
-                            identifier = identifier,
-                            isentropic_exponent = isentropic_exponent,
-                            thermal_conductivity = thermal_conductivity,
-                            specific_heat_Cp = specific_heat_Cp,
-                            dynamic_viscosity = dynamic_viscosity,
-                            temperature = temperature,
-                            pressure = pressure,
-                            molar_mass = molar_mass  )
-
-            self.fluids_from_library[identifier] = fluid
-
-            aux = [
-                   name,
-                   temperature, 
-                   pressure, 
-                   key_mixture, 
-                   molar_fractions
-                   ]
-
-            if aux.count(None) == 0:
-                self.fluid_name_to_refprop_data[name] = aux
-
-        self.update_table()
-
-    def update_table(self):
+    def update_table_of_fluids(self):
 
         self.tableWidget_fluid_data.clearContents()
         self.tableWidget_fluid_data.blockSignals(True)
@@ -237,16 +157,16 @@ class FluidWidget(FluidWidget_UI):
             if isinstance(fluid, Fluid):
 
                 self.tableWidget_fluid_data.setItem( 0, j, QTableWidgetItem(str(fluid.name)))
-                self.tableWidget_fluid_data.setItem( 1, j, QTableWidgetItem(str(fluid.identifier)))
-                self.tableWidget_fluid_data.setItem( 2, j, QTableWidgetItem(str(fluid.temperature)))
-                self.tableWidget_fluid_data.setItem( 3, j, QTableWidgetItem(str(fluid.pressure)))
-                self.tableWidget_fluid_data.setItem( 4, j, QTableWidgetItem(str(fluid.fluid_density)))
-                self.tableWidget_fluid_data.setItem( 5, j, QTableWidgetItem(str(fluid.speed_of_sound)))
-                self.tableWidget_fluid_data.setItem( 6, j, QTableWidgetItem(str(fluid.isentropic_exponent)))
-                self.tableWidget_fluid_data.setItem( 7, j, QTableWidgetItem(f"{fluid.thermal_conductivity : .4e}"))
-                self.tableWidget_fluid_data.setItem( 8, j, QTableWidgetItem(str(fluid.specific_heat_Cp)))
-                self.tableWidget_fluid_data.setItem( 9, j, QTableWidgetItem(f"{fluid.dynamic_viscosity : .4e}"))
-                self.tableWidget_fluid_data.setItem(10, j, QTableWidgetItem(str(fluid.molar_mass)))
+                self.tableWidget_fluid_data.setItem( 1, j, QTableWidgetItem(f"{fluid.identifier}"))
+                self.tableWidget_fluid_data.setItem( 2, j, QTableWidgetItem(f"{round(fluid.temperature, 6)}"))
+                self.tableWidget_fluid_data.setItem( 3, j, QTableWidgetItem(f"{fluid.pressure : .6e}"))
+                self.tableWidget_fluid_data.setItem( 4, j, QTableWidgetItem(f"{fluid.fluid_density : .6f}"))
+                self.tableWidget_fluid_data.setItem( 5, j, QTableWidgetItem(f"{fluid.speed_of_sound : .6f}"))
+                self.tableWidget_fluid_data.setItem( 6, j, QTableWidgetItem(f"{fluid.isentropic_exponent : .6f}"))
+                self.tableWidget_fluid_data.setItem( 7, j, QTableWidgetItem(f"{fluid.thermal_conductivity : .6e}"))
+                self.tableWidget_fluid_data.setItem( 8, j, QTableWidgetItem(f"{fluid.specific_heat_Cp : .6e}"))
+                self.tableWidget_fluid_data.setItem( 9, j, QTableWidgetItem(f"{fluid.dynamic_viscosity : .6e}"))
+                self.tableWidget_fluid_data.setItem(10, j, QTableWidgetItem(f"{fluid.molar_mass : .3f}"))
 
                 item = QTableWidgetItem()
                 item.setBackground(Color(*fluid.color).to_qt())
@@ -284,12 +204,12 @@ class FluidWidget(FluidWidget_UI):
 
         return self.fluids_from_library.get(identifier)
 
-    def add_column(self):
+    def add_column(self, single_add: bool = True):
     
         self.tableWidget_fluid_data.blockSignals(True)
 
         table_size = self.tableWidget_fluid_data.columnCount()
-        if table_size > len(self.fluids_from_library):
+        if table_size > len(self.fluids_from_library) and single_add:
             # it means that if you already have a new row
             # to insert data you don't need another one
             self.tableWidget_fluid_data.blockSignals(False)
@@ -353,16 +273,30 @@ class FluidWidget(FluidWidget_UI):
             return
 
         dfluid = deepcopy(fluid)
-        new_identifier = self.new_identifier()
-
-        dfluid.identifier = new_identifier
+        dfluid.identifier = self.new_identifier()
         dfluid.name = self.get_suffix_for_duplicated_fluid(dfluid.name)
-        self.fluids_from_library[new_identifier] = dfluid
 
-        self.update_table()
-        last_col = self.tableWidget_fluid_data.columnCount()
+        fluid_data = dfluid.__dict__
 
-        self.add_fluid_to_file(last_col-1, fluid=dfluid.__dict__)
+        # fluid_data = {
+        #             "name" : dfluid.name,
+        #             "identifier" : dfluid.identifier,
+        #             "temperature" : dfluid.temperature,
+        #             "pressure" : dfluid.pressure,
+        #             "fluid_density" : dfluid.fluid_density,
+        #             "speed_of_sound" : dfluid.speed_of_sound,
+        #             "isentropic_exponent" : dfluid.isentropic_exponent,
+        #             "thermal_conductivity" : dfluid.thermal_conductivity,
+        #             "specific_heat_Cp" : dfluid.specific_heat_Cp,
+        #             "dynamic_viscosity" : dfluid.dynamic_viscosity,
+        #             "molar_mass" : dfluid.molar_mass,
+        #             "color" : dfluid.color,
+        #             }
+
+        if self.add_fluid_data_in_file([fluid_data]):
+            return
+
+        self.load_data_from_fluids_library()
 
         app().processEvents()
         self.set_scroll_bar_to_maximum()
@@ -386,7 +320,6 @@ class FluidWidget(FluidWidget_UI):
         app().processEvents()
         scroll_bar.setSliderPosition(scroll_bar.maximum())
 
-        
     def item_changed_callback(self, item):
 
         self.tableWidget_fluid_data.blockSignals(True)
@@ -411,11 +344,13 @@ class FluidWidget(FluidWidget_UI):
             self.tableWidget_fluid_data.blockSignals(False)
             return
 
-        self.add_fluid_to_file(item.column())
+        fluid_data = self.get_fluid_data_for_selected_column(item.column())
+        if self.add_fluid_data_in_file([fluid_data]):
+            return
+
         self.load_data_from_fluids_library()
 
         self.tableWidget_fluid_data.blockSignals(False)
-        self.tableWidget_fluid_data.horizontalScrollBar().setSliderPosition(0)
     
     def go_to_next_cell(self, item):
 
@@ -429,7 +364,7 @@ class FluidWidget(FluidWidget_UI):
                 self.tableWidget_fluid_data.editItem(next_item)
 
         elif row == COLOR_ROW - 1:
-            self.pick_color(row + 1, column)
+            self.pick_color_for_item(row + 1, column)
 
     def column_has_invalid_name(self, column):
 
@@ -522,98 +457,130 @@ class FluidWidget(FluidWidget_UI):
             message = f"The value typed for '{prop_labels[row]}' "
             message += "must be a non-zero positive number.\n\n"
             message += f"Details: {error_log}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             item.setText("")
             return True
 
         if value < 0:
             title = "Negative value not allowed"
             message = f"The value typed for '{prop_labels[row]}' must be a non-zero positive number."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             item.setText("")
             return True
 
         return False
 
-    def add_fluid_to_file(self, column: int, fluid: None | dict = None):
+    def add_fluid_data_in_file(self, fluids_data: list, from_refprop: bool=False):
+
+        # read fluid library data from file
+        fluid_library_data = app().file.read_fluid_library_from_file()
+
+        # get list of new fluid identifiers
+        identifiers = self.get_new_identifiers(len(fluids_data))
+
+        for j, fluid_data in enumerate(fluids_data):
+            filt_fluid_data = dict()
+
+            # check all inputs before proceeding
+            for key in self.fluid_data_keys:
+                value = fluid_data.get(key)
+                if value is None:
+                    if key == "identifier" and from_refprop:
+                        filt_fluid_data["identifier"] = identifiers[j]
+                        continue
+                    elif key == "color":
+                        filt_fluid_data[key] = self.pick_color()
+                        continue
+                    return True
+
+                filt_fluid_data[key] = value
+
+            # additionally, check all refprop inputs before proceeding    
+            if from_refprop:
+                for key in ["key_mixture", "molar_fractions"]:
+                    value = fluid_data.get(key)
+                    if value is None:
+                        return True
+                    filt_fluid_data[key] = value
+
+            # fluid identifier
+            identifier = filt_fluid_data.get("identifier")
+        
+            # add the new fluid data
+            fluid_library_data[identifier] = filt_fluid_data
+
+        # save the modified fluid data in file
+        app().file.write_fluid_library_in_file(fluid_library_data)
+
+    def get_fluid_data_for_selected_column(self, column: int):
         try:
 
             fluid_data = dict()
             for i, key in enumerate(self.fluid_data_keys):
                 item = self.tableWidget_fluid_data.item(i, column)
+                if key == "name":
+                    fluid_data[key] = item.text()
 
-                if key == "color":
+                elif key == "color":
                     color = item.background().color().getRgb()
                     fluid_data[key] = list(color[:3])
 
-                else:
-                    if fluid is None:
-                        fluid_data[key] = item.text()
-                    else:
-                        fluid_data[key] = str(fluid.get(key))
+                elif key == "identifier":
+                    identifier = int(item.text())
+                    fluid_data[key] = identifier
 
-            identifier = fluid_data["identifier"]
+                else:
+                    fluid_data[key] = float(item.text())
 
             if self.refprop is not None:
-                [key_mixture, molar_fractions] = self.fluid_setup
-                fluid_data['key_mixture'] = key_mixture
-                fluid_data['molar_fractions'] = molar_fractions
-                fluid_data['molar_mass'] = round(self.fluid_data_refprop['molar_mass'], 6)
+                fluid_data['key_mixture'] = self.refprop_fluids_data.get("key_mixture")
+                fluid_data['molar_fractions'] = self.refprop_fluids_data.get("molar_fractions")
+                fluid_data['molar_mass'] = round(self.refprop_fluids_data.get("molar_mass"), 6)
 
-            config = app().file.read_fluid_library_from_file()
-            config[identifier] = fluid_data
-
-            app().file.write_fluid_library_in_file(config)
-
+            return fluid_data
+                    
         except Exception as error_log:
             title = "Error while writing fluid data in file"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
-            return True
+            PrintMessageInput([error_title, title, message])
+            return None
 
     def remove_fluid_from_file(self, fluid: Fluid):
 
-        config = app().file.read_fluid_library_from_file()
+        # read fluid library data from file
+        fluid_library_data = app().file.read_fluid_library_from_file()
 
-        identifier = str(fluid.identifier)
-        if not identifier in config.sections():
+        str_fluid_id = str(fluid.identifier)
+        if not str_fluid_id in fluid_library_data.keys():
             return
 
-        config.remove_section(identifier)
-        app().file.write_fluid_library_in_file(config)
+        # remove the selected fluid
+        fluid_library_data.pop(str_fluid_id)
+
+        # save the modified fluid data in file
+        app().file.write_fluid_library_in_file(fluid_library_data)
 
         self.reset_fluids_from_bodies_and_surfaces([fluid.identifier])
         self.load_data_from_fluids_library()
 
     def cell_clicked_callback(self, row, col):
         if row == COLOR_ROW:
-            self.pick_color(row, col)
+            self.pick_color_for_item(row, col)
 
     def cell_double_clicked_callback(self, row, col):
 
-        self.tableWidget_fluid_data.blockSignals(True)
         fluid_name = self.tableWidget_fluid_data.item(0, col).text()
+        identifier = int(self.tableWidget_fluid_data.item(1, col).text())
+        selected_fluid = self.fluids_from_library.get(identifier)
+        if not isinstance(selected_fluid, Fluid):
+            return
+
+        self.tableWidget_fluid_data.blockSignals(True)
 
         if fluid_name in self.fluid_name_to_refprop_data.keys():
-
-            if isinstance(self.dialog, QDialog):
-                self.dialog.hide()
-
-            selected_fluid = self.fluid_name_to_refprop_data.get(fluid_name)
-            self.refprop = SetFluidCompositionInputs(
-                                                     selected_fluid_to_edit = selected_fluid, 
-                                                     state_properties = self.state_properties
-                                                     )
-
-            if not self.refprop.complete:
-                self.refprop = None
-                app().main_window.set_input_widget(self)
+            if self.call_refprop_interface(selected_fluid = selected_fluid):
                 self.tableWidget_fluid_data.blockSignals(False)
                 return
-
-            self.selected_column = col
-            self.after_getting_fluid_properties_from_refprop()
-            self.selected_column = None
 
         self.tableWidget_fluid_data.selectColumn(col)
         self.tableWidget_fluid_data.blockSignals(False)
@@ -629,22 +596,48 @@ class FluidWidget(FluidWidget_UI):
             if i not in already_used_ids:
                 return i
 
-    def pick_color(self, row, col):
+    def get_new_identifiers(self, N: int):
 
-        read = PickColorInput()
-        if not read.complete:
+        new_identifiers = list()
+        already_used_ids = list(self.fluids_from_library.keys())
+        for n in range(N):
+            for i in count(1):
+                if i not in already_used_ids:
+                    already_used_ids.append(i)
+                    new_identifiers.append(i)
+                    break
+
+        return new_identifiers
+
+    def pick_color(self):
+
+        if isinstance(self.dialog, QDialog):
+            self.dialog.hide()
+
+        pick = PickColorInput()
+        if not pick.complete:
+            return list()
+
+        return pick.color
+
+    def pick_color_for_item(self, row, col):
+
+        picked_color = self.pick_color()
+        if not picked_color:
             return True
 
-        picked_color = read.color
-        item = QTableWidgetItem()
-        item.setBackground(Color(*picked_color).to_qt())
-        item.setForeground(Color(*picked_color).to_qt())
-        self.tableWidget_fluid_data.setItem(row, col, item)
+        self.set_color_to_item(row, col, picked_color)
         self.tableWidget_fluid_data.item(row, 0).setSelected(True)
+
+    def set_color_to_item(self, row: int, col: int, rgb_color: list):
+        item = QTableWidgetItem()
+        item.setBackground(Color(*rgb_color).to_qt())
+        item.setForeground(Color(*rgb_color).to_qt())
+        self.tableWidget_fluid_data.setItem(row, col, item)
 
     def get_confirmation_to_proceed(self):
 
-        title = "Resetting the fluids library"
+        title = "Fluids library reset"
         message = "Would you like to reset the fluid library to default?"
 
         buttons_config = {  "left_button_label" : "No", 
@@ -668,23 +661,20 @@ class FluidWidget(FluidWidget_UI):
 
     def reset_library_to_default(self):
 
-        config_cache = app().file.read_fluid_library_from_file()
+        # read fluid library data from file
+        fluid_library_data = app().file.read_fluid_library_from_file()
 
-        sections_cache = list()
-        if config_cache is not None:
-            sections_cache = config_cache.sections()
-
+        # get the fluid identifiers to be removed from properties
+        fluid_identifiers = list()
+        if isinstance(fluid_library_data, dict):
+            fluid_identifiers = [int(fluid_id) for fluid_id in fluid_library_data.keys()]
+       
+        # reset the fluid library to default state
         default_fluid_library()
 
-        config = app().file.read_fluid_library_from_file()
+        if fluid_identifiers:
+            self.reset_fluids_from_bodies_and_surfaces(fluid_identifiers)
 
-        fluid_identifiers = list()
-        for section_cache in sections_cache:
-            if section_cache not in config.sections():
-                identifier = config_cache[section_cache]["identifier"]
-                fluid_identifiers.append(int(identifier))
-
-        self.reset_fluids_from_bodies_and_surfaces(fluid_identifiers)
         self.load_data_from_fluids_library()
 
     def reset_fluids_from_bodies_and_surfaces(self, fluid_identifiers : list):
@@ -713,67 +703,46 @@ class FluidWidget(FluidWidget_UI):
         if isinstance(self.dialog, QDialog):
             self.dialog.load_model_info()
 
-    def call_refprop_interface(self):
+    def call_refprop_interface(self, selected_fluid: Fluid | None = None):
 
         if isinstance(self.dialog, QDialog):
             self.dialog.hide()
 
-        self.refprop = SetFluidCompositionInputs(state_properties = self.state_properties)
+        self.refprop = SetFluidCompositionInputs(
+                                                fluid_to_edit = selected_fluid,
+                                                state_properties = self.state_properties,
+                                                )
+
         if not self.refprop.complete:
             self.refprop = None
             app().main_window.set_input_widget(self)
             return True
 
         self.after_getting_fluid_properties_from_refprop()
+        self.refprop = None
 
     def after_getting_fluid_properties_from_refprop(self):
 
-        if self.refprop.complete:
+        if not self.refprop.complete:
+            return
 
-            self.fluid_setup = self.refprop.fluid_setup
-            self.fluid_data_refprop = self.refprop.fluid_properties
+        refprop_fluids_data = deepcopy(self.refprop.refprop_fluids_data)
+        fluid_properties = refprop_fluids_data.get("properties")
 
-            if self.selected_column is None:
-                self.add_column()
-                self.tableWidget_fluid_data.blockSignals(True)
-                selected_column = self.tableWidget_fluid_data.columnCount() - 1
-            else:
-                selected_column = self.selected_column
+        if refprop_fluids_data.get("thermodynamic_states") == "multiple_states":
+            fluids_data = list(fluid_properties.values())
+        else:
+            fluids_data = [fluid_properties]
+        
+        if self.add_fluid_data_in_file(fluids_data, from_refprop=True):
+            return
 
-            for row, key in enumerate(self.fluid_data_keys):
+        self.load_data_from_fluids_library()
 
-                if key == "identifier":
-                    if isinstance(self.selected_column, int):
-                        item = self.tableWidget_fluid_data.item(1, self.selected_column)
-                        _data = str(item.text())
-                    else:
-                        _data = str(self.new_identifier())
+        app().processEvents()
+        self.set_scroll_bar_to_maximum()
 
-                elif key == "color":
-                    if self.selected_column is None:
-                        self.pick_color(row, selected_column)
-                    continue
-
-                else:
-
-                    data = self.fluid_data_refprop[key]
-                    if isinstance(data, float):
-
-                        if key in ["pressure", "thermal_conductivity", "dynamic_viscosity"]:
-                            _data = f"{data : .6e}"
-                        else:
-                            _data = f"{data : .6f}"
-
-                    elif isinstance(data, str):
-                        _data = data
-
-                self.tableWidget_fluid_data.item(row, selected_column).setText(_data)
-
-            self.add_fluid_to_file(selected_column)
-            self.tableWidget_fluid_data.blockSignals(False)
-            self.load_data_from_fluids_library()
-
-        self.refprop = None
+        self.tableWidget_fluid_data.blockSignals(False)
 
     def load_compressor_info(self):
 
@@ -808,13 +777,6 @@ class FluidWidget(FluidWidget_UI):
         for pressure_lineEdit in pressure_lineEdits:
             pressure_lineEdit.setText(str(round(self.pressure_comp,4)))
             pressure_lineEdit.setDisabled(True)
-
-    def update_compressor_info(self):
-        if self.state_properties:
-            if self.refprop is not None:
-                if self.refprop.complete:
-                    self.state_properties["temperature (discharge)"] = round(self.fluid_data_refprop["temperature"], 4)
-                    self.state_properties["molar_mass"] = self.fluid_data_refprop["molar_mass"]
 
     def keyPressEvent(self, event):
 

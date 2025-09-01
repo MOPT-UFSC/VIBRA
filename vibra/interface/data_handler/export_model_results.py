@@ -18,8 +18,6 @@ class ExportModelResults(QFileDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-
         self._initialize()
 
     def _initialize(self):
@@ -119,14 +117,14 @@ class ExportModelResults(QFileDialog):
                 directory_path = path
 
             if len(self.data) == 1:
-                _filter = "Text file (*.dat);;Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
+                _filter = "Text file (*.csv);; Spreadsheet (*.xlsx);; Text file (*.dat);;Text file (*.txt)"
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 
             kwargs = dict()
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-            file_path, file_extension = self.getSaveFileName(self.main_window, 
+            file_path, file_extension = self.getSaveFileName(app().main_window, 
                                                     caption, 
                                                     directory_path, 
                                                     filter = _filter,

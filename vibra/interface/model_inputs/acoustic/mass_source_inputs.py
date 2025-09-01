@@ -24,12 +24,13 @@ class MassSourceInputs(MassSourceInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
-
+        app().main_window.workspace_updating_for_model_setup()
+        
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-
+        
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -90,24 +91,14 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def geometry_selection_callback(self):
 
-        points = app().main_window.selected_geometry_points
-        lines = app().main_window.selected_geometry_lines
-        surfaces = app().main_window.selected_geometry_surfaces
         volumes = app().main_window.selected_geometry_volumes
+        surfaces = app().main_window.selected_geometry_surfaces
+        lines = app().main_window.selected_geometry_lines
+        points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
         text = ""
-        if points:
-            text = ", ".join([str(i) for i in points])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(1)
-
-        elif lines:
-            text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(2)
-
-        elif volumes:
+        if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(4)
@@ -116,6 +107,16 @@ class MassSourceInputs(MassSourceInputs_UI):
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_attribution_type.setCurrentIndex(3)
+
+        elif lines:
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(2)
+
+        elif points:
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(1)
 
         elif nodes:
             text = ", ".join([str(i) for i in nodes])
