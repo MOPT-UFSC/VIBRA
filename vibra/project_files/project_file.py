@@ -659,6 +659,9 @@ class ProjectFile:
     def remove_mesh_data_from_project_file(self):
         self.mesh_data_filepath.unlink(missing_ok=True)
 
+    def remove_mesh_quality_data_from_project_file(self):
+        self.mesh_quality_data_filepath.unlink(missing_ok=True)
+
     def remove_table_data_from_project_file(self):
         if self.imported_table_data_filepath.exists():
             self.imported_table_data_filepath.unlink(missing_ok=True)

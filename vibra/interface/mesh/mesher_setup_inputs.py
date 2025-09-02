@@ -23,12 +23,13 @@ import logging
 import matplotlib.colors as mcolors
 import numpy as np
 
+from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
+from gmsh import isInitialized as is_gmsh_initialized
 
-from collections import defaultdict
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
 gmsh_algorithms_2d = [
@@ -74,7 +75,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self._initialize()
         self._create_connections()
         self._config_widgets()
-        self.update_gmsh_controls()
+        self.update_advanced_gmsh_controls()
         self._load_current_mesh_setup()
 
         while self.keep_window_open:
@@ -128,8 +129,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_shape_function.currentIndexChanged.connect(self.update_gmsh_controls)
-        self.comboBox_element_type.currentIndexChanged.connect(self.update_gmsh_controls)
+        self.comboBox_shape_function.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
+        self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
         self.comboBox_mesh_quality_metrics.currentIndexChanged.connect(self.mesh_quality_metrics_callback)
         #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
@@ -153,8 +154,24 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.mesh_quality_metrics_callback()
 
     def mesh_quality_metrics_callback(self):
-        visible = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
-        self.tabWidget_main.setTabVisible(2, visible)
+        if self.comboBox_mesh_quality_metrics.currentText() == "Disabled":
+            if self.tabWidget_main.currentIndex() == 2:
+                self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setTabVisible(2, False)
+            return
+
+        if self.is_mesh_quality_computed():
+            self.config_control_quality_table()
+            return
+
+        def mesh_quality_callback():
+            self.hide()
+            self.mesh.compute_mesh_quality_parameters()
+            app().file.write_mesh_quality_data_in_file()
+            self.config_control_quality_table()
+
+        if is_gmsh_initialized():
+            LoadingWindow(mesh_quality_callback).run()
 
     def maximum_element_size_changed_callback(self):
         if self.synchronize_sizes:
@@ -442,6 +459,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if self.comboBox_mesh_quality_metrics.currentText() == "Enabled":
             app().file.write_mesh_quality_data_in_file()
             self.config_control_quality_table()
+            self.tabWidget_main.setTabVisible(2, True)
+
+        else:
+            self.mesh_quality_data = None
+            app().file.remove_mesh_quality_data_from_project_file()
 
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
@@ -516,18 +538,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         mesh_quality_metrics = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
 
         self.mesh_setup = {
-                           "ElementType" : solid_element,
-                           "element_type" : self.comboBox_element_type.currentText().lower(),
-                           "shape_function" : self.comboBox_shape_function.currentText().lower(),
-                           "minimum_element_size" : minimum_element_size,
-                           "maximum_element_size" : maximum_element_size,
-                           "size_factor" : size_factor,
-                           "geometry_tolerance" : geometry_tolerance,
-                           "algorithm_3d" : solid_element.algorithm_3d,
-                           "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
-                           "mesh_connection" : merge_nodes,
-                           "mesh_quality_metrics"  : mesh_quality_metrics,
-                           }
+            "ElementType" : solid_element,
+            "element_type" : self.comboBox_element_type.currentText().lower(),
+            "shape_function" : self.comboBox_shape_function.currentText().lower(),
+            "minimum_element_size" : minimum_element_size,
+            "maximum_element_size" : maximum_element_size,
+            "size_factor" : size_factor,
+            "geometry_tolerance" : geometry_tolerance,
+            "algorithm_3d" : solid_element.algorithm_3d,
+            "mesh_refinement_parameters" : self.get_mesh_refinement_data(),
+            "mesh_connection" : merge_nodes,
+            "mesh_quality_metrics"  : mesh_quality_metrics,
+        }
 
     def get_element_type(self) -> ElementType:
         element_type = self.comboBox_element_type.currentText().lower()
@@ -545,7 +567,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return None
             # raise NotImplementedError(f"Element type not defined!")
 
-    def update_gmsh_controls(self):
+    def update_advanced_gmsh_controls(self):
         element_type = self.get_element_type()
         if element_type is None:
             return
@@ -577,8 +599,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                         if out < 0:
                             message = f"Insert a positive value to the {label}."
                             message += "\n\nNote: zero value is allowed."
-                    else:
-                        if out <= 0:
+                    elif out <= 0:
                             message = f"Insert a positive value to the {label}."
                             message += "\n\nNote: zero value is not allowed."
 
@@ -597,7 +618,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             PrintMessageInput([error_title, title, message])
             self.stop = True
             return None
+
         return out
+
+    def is_mesh_quality_computed(self):
+        if self.mesh_quality_data is None:
+            return False
+        return bool(sum([len(qdata) for qdata in self.mesh_quality_data.values()])) 
 
     def config_control_quality_table(self):
 
@@ -611,7 +638,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
-        if not self.mesh_quality_data:
+        if not self.is_mesh_quality_computed():
             return
         
         self.pushButton_plot_histogram.setDisabled(True)        
@@ -731,7 +758,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def mesh_quality_item_clicked(self, item):
         selected_parameter = self.mesh_quality_parameters.get(item.row())
-        if not self.mesh_quality_data:
+        if not self.is_mesh_quality_computed():
             self.pushButton_show_bad_elements.setEnabled(False)
             return
 
@@ -742,7 +769,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def plot_mesh_parameter_histogram(self):
 
-        if not self.mesh_quality_data:
+        if not self.is_mesh_quality_computed():
             return
 
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
@@ -827,7 +854,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def show_bad_elements(self):
 
-        if not self.mesh_quality_data:
+        if not self.is_mesh_quality_computed():
             return
 
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
@@ -854,14 +881,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def closeEvent(self, a0):
         self.keep_window_open = False
-
-        # TODO: we can close the GMSH after concluding the mesh generation
-        # import gmsh
-        # if gmsh.isInitialized():
-        #     gmsh.finalize()
-
         if self.bad_elements_showed:
             app().main_window.distinguish_mesh_solids([])
+
         return super().closeEvent(a0)
 
 # fmt: on

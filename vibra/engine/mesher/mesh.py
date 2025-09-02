@@ -1780,25 +1780,29 @@ class Mesh:
                               ]
 
         t0 = time()
+        logging.info("Computing mesh quality metrics... [10/100]")
         _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
         if not element_tags:
             return
 
         # process the mesh quality metrics
         elements = element_tags[0]
-        min_edge_quals = gmsh.model.mesh.getElementQualities(elements, "minEdge")
-        max_edge_quals = gmsh.model.mesh.getElementQualities(elements, "maxEdge")
-
         N_elem = len(elements)
         N_param = len(quality_parameters)
         quality_table = np.zeros((N_elem, N_param), dtype=float)
 
+        logging.info("Computing mesh quality metrics... [25/100]")
+        min_edge_quals = gmsh.model.mesh.getElementQualities(elements, "minEdge")
+        max_edge_quals = gmsh.model.mesh.getElementQualities(elements, "maxEdge")
+
+        logging.info("Computing mesh quality metrics... [40/100]")
         quality_table[:, 0] = gmsh.model.mesh.get_element_qualities(elements, "gamma")
         quality_table[:, 1] = gmsh.model.mesh.get_element_qualities(elements, "volume")
         quality_table[:, 2] = gmsh.model.mesh.get_element_qualities(elements, "minSJ")
         quality_table[:, 3] = max_edge_quals / min_edge_quals  # aspect ratio
 
         # compute the mesh quality statistics
+        logging.info("Computing mesh quality metrics... [70/100]")
         quality_statistics: dict[MeshQualityParams, list[float]] = dict()
         for i, parameter in enumerate(quality_parameters):
             column = quality_table[:, i]
@@ -1810,6 +1814,7 @@ class Mesh:
                                             ]
 
         # compute the bad elements
+        logging.info("Computing mesh quality metrics... [85/100]")
         bad_elements: dict[MeshQualityParams, np.ndarray] = dict()
         for j, parameter in enumerate(quality_parameters):
             limit = self.quality_bins.get(parameter)
@@ -1819,6 +1824,7 @@ class Mesh:
                 bad_elements[parameter] = np.where(quality_table[:, j] < limit[1])[0]
 
         # compute the histogram data
+        logging.info("Computing mesh quality metrics... [95/100]")
         histograms_data: dict[MeshQualityParams, dict] = dict()
         for i, parameter in enumerate(quality_parameters):
             column = quality_table[:, i]
