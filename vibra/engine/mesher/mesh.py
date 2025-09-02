@@ -184,13 +184,8 @@ class Mesh:
             self.process_upwards_adjacencies_from_entities()
 
             logging.info("Generating mesh... [50/100]")
-
-            t0 = time()
             gmsh.model.mesh.generate(dim=dimension)
-            dt = time() - t0
-
             gmsh.model.mesh.removeDuplicateNodes()
-            print(f"Elapsed time to generate mesh: {dt : .5f} s")
 
         except Exception as error_log:
             print_exception(error_log)
@@ -1283,53 +1278,38 @@ class Mesh:
     def process_mesh_related_mappings(self, label: str):
 
         logging.info(f"{label} mesh... [70/100]")
-        t0 = time()
         self.map_elements_from_volumes()
-        dt = time() - t0
-        print(f"Elapsed time to map_elements_from_volumes: {dt : .5f} s")
 
         logging.info(f"{label} mesh... [75/100]")
-        t0 = time()
         self.map_elements_from_surfaces()
-        dt = time() - t0
-        print(f"Elapsed time to map_elements_from_surfaces: {dt : .5f} s")
 
         logging.info(f"{label} mesh... [80/100]")
-        t0 = time()
         self.map_elements_from_lines()
-        dt = time() - t0
-        print(f"Elapsed time to map_elements_from_lines: {dt : .5f} s")
 
         logging.info(f"{label} mesh... [85/100]")
-        t0 = time()
         self.map_face_elements_to_solid_elements()
-        dt = time() - t0
-        print(f"Elapsed time to map_face_elements_to_solid_elements: {dt : .5f} s")
 
     def map_elements_from_lines(self):
         self.elements_from_line.clear()
         for line_id in np.unique(self.lines_connectivity[:, 1]).astype(int):
-            # rows = np.isin(self.lines_connectivity[:, 1], line_id)
-            (rows,) = np.where(self.lines_connectivity[:, 1] == line_id)
+            rows = np.where(self.lines_connectivity[:, 1] == line_id)[0]
             self.elements_from_line[line_id] = self.lines_connectivity[rows, 0]
 
     def map_elements_from_surfaces(self):
         self.elements_from_surface.clear()
         for surface_id in np.unique(self.faces_connectivity[:, 1]).astype(int):
-            # rows = np.isin(self.faces_connectivity[:, 1], surface_id)
-            (rows,) = np.where(self.faces_connectivity[:, 1] == surface_id)
+            rows = np.where(self.faces_connectivity[:, 1] == surface_id)[0]
             self.elements_from_surface[surface_id] = self.faces_connectivity[rows, 0]
 
     def map_elements_from_volumes(self):
         self.elements_from_volume.clear()
         for volume_id in np.unique(self.solids_connectivity[:, 1]).astype(int):
-            # rows = np.isin(self.solids_connectivity[:, 1], volume_id)
-            (rows,) = np.where(self.solids_connectivity[:, 1] == volume_id)
+            rows = np.where(self.solids_connectivity[:, 1] == volume_id)[0]
             self.elements_from_volume[volume_id] = self.solids_connectivity[rows, 0]
 
     def get_line_from_element(self, element_id: int) -> int | None:
         line_id = None
-        (row,) = np.where(self.lines_connectivity[:, 0] == element_id)
+        row = np.where(self.lines_connectivity[:, 0] == element_id)[0]
         if row.size:
             line_id = int(self.lines_connectivity[row, 1])
 
@@ -1337,7 +1317,7 @@ class Mesh:
 
     def get_surface_from_element(self, element_id: int) -> int | None:
         surface_id = None
-        (row,) = np.where(self.faces_connectivity[:, 0] == element_id)
+        row = np.where(self.faces_connectivity[:, 0] == element_id)[0]
         if row.size:
             surface_id = int(self.faces_connectivity[row, 1])
 
@@ -1345,7 +1325,7 @@ class Mesh:
 
     def get_volume_from_element(self, element_id: int) -> int | None:
         volume_id = None
-        (row,) = np.where(self.solids_connectivity[:, 0] == element_id)
+        row = np.where(self.solids_connectivity[:, 0] == element_id)[0]
         if row.size:
             volume_id = int(self.solids_connectivity[row, 1])
 
@@ -1354,7 +1334,7 @@ class Mesh:
     def get_elements_from_lines(self, line_ids: list[int]):
         element_ids = list()
         for line_id in line_ids:
-            rows = np.isin(self.lines_connectivity[:, 1], line_id)
+            rows = np.where(self.lines_connectivity[:, 1] == line_id)[0]
             element_ids.extend(self.lines_connectivity[rows, 0])
         return element_ids
 
@@ -1378,14 +1358,9 @@ class Mesh:
             face_nodes = np.unique(connect_data).astype(int)
 
             for node in np.sort(face_nodes):
-                mask = np.sum(np.isin(connect_data, node), axis=1) == 1
-                self.face_elements_connected_to_nodes[node].extend(connect_data[mask, :])
-                # rows, _ = np.where(connect_data == node)
-                # self.face_elements_connected_to_nodes[node].extend(connect_data[rows, :])
-
-        # import json
-        # with open("areas_data.json", "r") as file:
-        #     areas_data = json.load(file)
+                rows = np.where(connect_data == node)[0]
+                # rows = np.sum(np.isin(connect_data, node), axis=1) == 1
+                self.face_elements_connected_to_nodes[node].extend(connect_data[rows, :])
 
     def get_nodes_from_solid_elements(self, node_id: int):
         (rows,) = np.where(self.solids_connectivity[:, 1] == node_id)
@@ -1422,7 +1397,6 @@ class Mesh:
                 # The problematic nodes and face elements are highlighted after closing the section plane UI.
                 self.nodes_to_highlight.append(face_nodes)
                 self.efaces_to_highlight.append(e2d_id)
-                print(surf_id, e2d_id, face_nodes)
                 continue
 
             e3d_id = filtered_data[mask_1, 0][0]
@@ -1483,7 +1457,6 @@ class Mesh:
 
     def get_collapsed_elements(self):
 
-        t0 = time()
         logging.info("Checking collapsed 3D elements... [90/100]")
         mask = self._repeated_mask(self.solids_connectivity[:, 4:])
         collapsed_solids = self.solids_connectivity[mask]
@@ -1498,9 +1471,6 @@ class Mesh:
         mask = self._repeated_mask(self.lines_connectivity[:, 4:])
         collapsed_lines = self.lines_connectivity[mask]
         lines_set = set(collapsed_lines[:, 0].tolist()) if collapsed_lines.size else set()
-
-        dt = time() - t0
-        print(f"Elapsed time to process collapsed elements: {dt : .5f} s")
 
         return solids_set, faces_set, lines_set
 
@@ -1779,7 +1749,6 @@ class Mesh:
                               "aspectRatio",
                               ]
 
-        t0 = time()
         logging.info("Computing mesh quality metrics... [10/100]")
         _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
         if not element_tags:
@@ -1843,9 +1812,6 @@ class Mesh:
                                   "bad_elements" : bad_elements,
                                   "histograms_data" : histograms_data,
                                   }
-
-        dt = time() - t0
-        print(f"Elapsed time to compute_mesh_quality_parameters: {dt : .5f} s")
 
     def compute_initial_mesh_size(
         self, path: str, geometry_tolerance: float = 1e-10, threads: int = 0
