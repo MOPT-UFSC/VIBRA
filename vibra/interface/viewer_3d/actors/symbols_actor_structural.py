@@ -127,21 +127,17 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             for index, i in enumerate(U_R):
                 U_R[index] = i[0] if isinstance(i, np.ndarray) else i
 
-            # alternate add_symbol function to a generic one
+            colors = (
+                Color(255, 0, 0),
+                Color(0, 255, 0),
+                Color(0, 0, 255),
+            )
             for index, v in enumerate(U_R):
                 if index < 3 and v is not None:
                     self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
                 elif index >= 3 and v is not None:
-                    if index == 3:
-                        self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=Color(255, 0, 0)) 
-                        self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=Color(255, 0, 0))
-                    elif index == 4:
-                        self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=Color(0, 255, 0)) 
-                        self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=Color(0, 255, 0))
-                    else:
-                        self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=Color(0, 0, 255)) 
-                        self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=Color(0, 0, 255))
-                        
+                    self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=colors[index - 3]) 
+                    self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
                     self.add_symbol(sources.create_pencil_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
