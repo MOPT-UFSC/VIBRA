@@ -4,6 +4,7 @@ channels:
 dependencies:
   - pip=25.0.1
   - python=3.12.9
+  - pythonocc-core=7.9.0
   - python-mumps=0.0.3
   - pip:
       - black==23.12.1
