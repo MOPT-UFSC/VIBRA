@@ -1,11 +1,10 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import *
+from PySide6.QtGui import Qt
 
-from vibra.engine import AnalysisID
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title = "Error"
+error_title = "Error"
 
 
 class AnalysisSetupInput():
@@ -167,7 +166,7 @@ class AnalysisSetupInput():
                 message = "The maximum frequency (fmax) must be greater than \n"
                 message += "the sum between minimum frequency (fmin) and \n"
                 message += "frequency resolution (df)."
-                PrintMessageInput([window_title, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
             
             analysis_setup["f_min"] = f_min
@@ -261,7 +260,7 @@ class AnalysisSetupInput():
 
         if message != "":
             self.hide()
-            PrintMessageInput([window_title, title, message])
+            PrintMessageInput([error_title, title, message])
             self.stop = True
             return None
         return out

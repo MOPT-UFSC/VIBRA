@@ -1,14 +1,12 @@
-from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PySide6.QtGui import * 
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
-# import openpyxl
 import numpy as np
 import platform
+
 from pathlib import Path
 
 window_title_1 = "Error"

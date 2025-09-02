@@ -6,7 +6,14 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, 
 
 from vibra import app, ICON_DIR
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+    ElementType,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
+
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI

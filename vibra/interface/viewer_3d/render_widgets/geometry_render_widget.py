@@ -18,7 +18,22 @@ from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixed
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
 
-from .model_info_text import *
+from .model_info_text import (
+    volumes_info_text,
+    faces_info_text,
+    lines_info_text,
+    points_info_text,
+    nodes_info_text,
+    material_info_text,
+    fluid_info_text,
+    proportional_damping_info_text,
+    porous_material_info_text,
+    viscous_thermal_info_text,
+    perforated_plate_info_text,
+    mass_source_info_text,
+    acoustic_boundary_conditions_info_text,
+    structural_boundary_conditions_info_text,
+)
 
 import logging
 
