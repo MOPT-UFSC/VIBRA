@@ -2,7 +2,12 @@
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+)
 from vibra.utils.utils import get_color_rgb
 
 import logging

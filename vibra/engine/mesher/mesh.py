@@ -1,6 +1,9 @@
+import gmsh
 import logging
+import numpy as np
 import os
 import sys
+
 from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
@@ -8,14 +11,24 @@ from time import time
 from traceback import print_exception
 from typing import Literal
 
-import gmsh
-import numpy as np
-
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+from vtkmodules.vtkCommonDataModel import (
+    VTK_HEXAHEDRON, 
+    VTK_QUADRATIC_HEXAHEDRON, 
+    VTK_QUADRATIC_TETRA, 
+    VTK_TETRA, 
+    vtkUnstructuredGrid
+)
 
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+    ElementType,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    DEFAULT_ELEMENT_TYPE,
+)
 
 type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 

@@ -1,6 +1,12 @@
 from typing import Optional, Callable
 
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import (
+TETRAHEDRON_4,
+TETRAHEDRON_10,
+HEXAHEDRON_8,
+HEXAHEDRON_20,
+DEFAULT_ELEMENT_TYPE,
+)
 
 from vibra.engine.elements.elements_3d import (
     # 3d elements - acoustic

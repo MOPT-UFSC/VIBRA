@@ -1,6 +1,6 @@
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
