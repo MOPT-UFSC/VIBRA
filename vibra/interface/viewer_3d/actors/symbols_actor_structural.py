@@ -2,7 +2,7 @@ import numpy as np
 from molde.colors import color_names
 from molde.actors import CommonSymbolsActorVariableSize
 
-from vibra import app
+from vibra import Color, app
 from vibra.interface.viewer_3d import sources
 
 Triple = tuple[float, float, float]
@@ -130,10 +130,19 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             # alternate add_symbol function to a generic one
             for index, v in enumerate(U_R):
                 if index < 3 and v is not None:
-                    self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN)
+                    self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
                 elif index >= 3 and v is not None:
-                    self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=color_names.YELLOW)    
-                    self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=color_names.RED)    
+                    if index == 3:
+                        self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=Color(255, 0, 0)) 
+                        self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=Color(255, 0, 0))
+                    elif index == 4:
+                        self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=Color(0, 255, 0)) 
+                        self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=Color(0, 255, 0))
+                    else:
+                        self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=Color(0, 0, 255)) 
+                        self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=Color(0, 0, 255))
+                        
+                    self.add_symbol(sources.create_pencil_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:

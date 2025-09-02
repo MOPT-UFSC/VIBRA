@@ -11,6 +11,7 @@ from .arrows import (
     create_incident_plane_wave_source,
     create_outwards_incident_plane_wave_source,
     create_surface_velocity_source,
+    create_pencil_source,
 ) 
 
 from .simple_shapes import (
