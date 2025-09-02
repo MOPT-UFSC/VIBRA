@@ -20,10 +20,6 @@ class PerforatedPlateData:
     table_names : List[str] | None = None
     table_paths : List[str] | None = None
     values : List[np.ndarray] | None = None
-
-    # def __post_init__(self):
-    #     if isinstance(self.t, str):
-    #         self.transfer_impedance_file_path = Path(self.transfer_impedance_file_path)
         
     def set_general_data(self, data: dict):
         for field in fields(PerforatedPlateData):
@@ -52,17 +48,20 @@ class PerforatedPlateData:
     
     def get_data_to_fill_edit_table_widget(self) -> list:
         data = list()
+        new_value = None
 
         for attr, value in self.__dict__.items():
             if attr in ["fluid", "formulation", "coupling_type", "values", "table_names"]:
                 continue
-            
+
             if value is None:
-                data.append("---")
+                new_value = "---"
             elif isinstance(value, list):
-                data.append(value[0])
+                new_value = Path(value[0])
             else:
-                data.append(value)
+                new_value = value
+
+            data.append(new_value)
     
         return data
 

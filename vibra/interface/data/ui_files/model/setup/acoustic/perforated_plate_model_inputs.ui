@@ -1806,7 +1806,7 @@
                 </attribute>
                 <row>
                  <property name="text">
-                  <string>Model ID</string>
+                  <string>Perforated Plate ID</string>
                  </property>
                  <property name="textAlignment">
                   <set>AlignCenter</set>

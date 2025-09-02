@@ -878,7 +878,7 @@ class Ui_Dialog(object):
         self.tabWidget_perforated_plate_models.setTabText(self.tabWidget_perforated_plate_models.indexOf(self.tab), QCoreApplication.translate("Dialog", u"Circular holes", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         ___qtablewidgetitem = self.edit_tableWidget.verticalHeaderItem(0)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Model ID", None));
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Perforated Plate ID", None));
         ___qtablewidgetitem1 = self.edit_tableWidget.verticalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Fluid", None));
         ___qtablewidgetitem2 = self.edit_tableWidget.verticalHeaderItem(2)

@@ -91,6 +91,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.edit_tableWidget.cellChanged.connect(self.edit_table_widget_item)
+        self.edit_tableWidget.cellDoubleClicked.connect(self.edit_fluid_or_transfer_impedance)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
@@ -329,7 +330,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         models = list()
         for key, data in deepcopy(self.properties.surface_properties).items():
-
             property, surface_id = key
             if property == "perforated_plate_model":
 
@@ -376,7 +376,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 fluid_item = QTableWidgetItem(item_text)
                 fluid_item.setTextAlignment(Qt.AlignCenter)
 
-                fluid_item.setFlags(Qt.ItemIsSelectable)
+                if not isinstance(fluid_data, str):
+                    fluid_item.setFlags(Qt.ItemIsSelectable)
 
                 if isinstance(fluid_data, str):
                     fluid_item.setToolTip(item_text)
@@ -384,7 +385,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.edit_tableWidget.setItem(row + 1, column, fluid_item)
             
             for row, pp_data in enumerate(model.get_data_to_fill_edit_table_widget()):
-                item_text = str(pp_data)
+                item_text = str(pp_data) if not isinstance(pp_data, Path) else pp_data.name
 
                 pp_item = QTableWidgetItem(item_text)
                 pp_item.setTextAlignment(Qt.AlignCenter)
@@ -393,13 +394,33 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     pp_item.setFlags(Qt.ItemIsSelectable)
                     pp_item.setToolTip(item_text)
 
+                elif isinstance(pp_data, Path):
+                    pp_item.setFlags(Qt.ItemIsSelectable)
+                    pp_item.setToolTip(str(pp_data))
+
                 self.edit_tableWidget.setItem(row + 4, column, pp_item)
         
         self.edit_tableWidget.blockSignals(False)
     
+    def edit_fluid_or_transfer_impedance(self, row, column):
+        if row not in [1, 11]:
+            return
+
+        model_id = int(self.edit_tableWidget.item(0, column).text())
+        model = self.map_model_id_to_model[model_id]
+        surface_ids = self.map_model_id_to_surfaces[model_id]
+
+        if row == 1:
+            self.get_fluid_callback()
+            setattr(model, "fluid", self.selected_fluid)
+
+            for surface_id in surface_ids:
+                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
+        self.load_model_info()
+    
     def edit_table_widget_item(self, row, column):
         item = self.edit_tableWidget.item(row, column)
-
         model_id = int(self.edit_tableWidget.item(0, column).text())
 
         new_item_value = None
@@ -412,7 +433,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         model = self.map_model_id_to_model[model_id]
         indexed_attributes = model.get_indexed_attributes()
-        
+
         attribute = indexed_attributes[row - 1]
 
         if unnaceptable_value_error:
@@ -424,7 +445,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         surfaces_ids = self.map_model_id_to_surfaces[model_id]
         for surface_id in surfaces_ids:
             self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
-
+    
     def update_tabs_visibility(self):
 
         if len(self.map_model_id_to_model) > 0:
