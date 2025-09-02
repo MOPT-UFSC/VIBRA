@@ -16,6 +16,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.model_inputs.acoustic.perforated_plate_data import PerforatedPlateData
 
+from pathlib import Path
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, List
@@ -342,8 +343,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.map_model_id_to_model[model_id] = model
                 self.map_model_id_to_surfaces[model_id].append(surface_id)
 
-        
-
     def update_pp_model_tree_widget(self):
         self.treeWidget_perforated_plate_model.clear()
 
@@ -372,19 +371,27 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.edit_tableWidget.setItem(0, column, model_id_item)
 
             for row, fluid_data in enumerate(model.get_fluid_data_to_fill_edit_table_widget()):
-                fluid_item = QTableWidgetItem(str(fluid_data))
+                item_text = str(fluid_data)
+
+                fluid_item = QTableWidgetItem(item_text)
                 fluid_item.setTextAlignment(Qt.AlignCenter)
 
                 fluid_item.setFlags(Qt.ItemIsSelectable)
 
+                if isinstance(fluid_data, str):
+                    fluid_item.setToolTip(item_text)
+
                 self.edit_tableWidget.setItem(row + 1, column, fluid_item)
             
             for row, pp_data in enumerate(model.get_data_to_fill_edit_table_widget()):
-                pp_item = QTableWidgetItem(str(pp_data))
+                item_text = str(pp_data)
+
+                pp_item = QTableWidgetItem(item_text)
                 pp_item.setTextAlignment(Qt.AlignCenter)
 
                 if isinstance(pp_data, str):
                     pp_item.setFlags(Qt.ItemIsSelectable)
+                    pp_item.setToolTip(item_text)
 
                 self.edit_tableWidget.setItem(row + 4, column, pp_item)
         
@@ -497,7 +504,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_user_defined_transfer_impedance_path.setText(table_path[0])
             self.lineEdit_user_defined_transfer_impedance_path.setToolTip(table_path[0])
 
-    def load_table(self, lineEdit : QLineEdit, direct_load: bool=False):
+    def load_table(self, lineEdit : QLineEdit = None, direct_load: bool=False) -> np.ndarray:
 
         title = "Error reached while loading 'user-defined transfer impedance' table"
         imported_file = None
@@ -505,7 +512,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path).data
+                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                imported_data = DataImporter.import_single_file("imported_table_folder",
@@ -586,20 +593,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if not isinstance(self.selected_fluid, Fluid):
             return
-
-
-        # self.pp_data["fluid_data"] = dict(
-        #                                   name = self.selected_fluid.name,
-        #                                   fluid_density = self.selected_fluid.fluid_density,
-        #                                   speed_of_sound = self.selected_fluid.speed_of_sound,
-        #                                   isentropic_exponent = self.selected_fluid.isentropic_exponent,
-        #                                   thermal_conductivity = self.selected_fluid.thermal_conductivity,
-        #                                   specific_heat_Cp = self.selected_fluid.specific_heat_Cp,
-        #                                   dynamic_viscosity = self.selected_fluid.dynamic_viscosity,
-        #                                   temperature = self.selected_fluid.temperature,
-        #                                   pressure = self.selected_fluid.pressure,
-        #                                   molar_mass = self.selected_fluid.molar_mass,
-        #                                   )
 
         lineEdit = self.lineEdit_plate_thickness
         plate_thickness = self.check_inputs(lineEdit, "Plate thickness")
@@ -797,12 +790,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             return
 
         complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-        # table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
+        table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
 
-        model.set_user_defined_transfer_impedance(complex_values)
-    
-        # self.pp_data["table_paths"] = [table_path]
-        # self.pp_data["values"] = [complex_values]
+        model.set_table_data([table_name], [table_path], [complex_values])
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 

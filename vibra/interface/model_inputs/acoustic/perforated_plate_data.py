@@ -1,12 +1,13 @@
 from vibra.engine.properties.fluid import Fluid
 
-from dataclasses import dataclass, fields, asdict
+from dataclasses import dataclass, fields
+from pathlib import Path
+from typing import List
 import numpy as np
-
 
 @dataclass
 class PerforatedPlateData:
-    coupling_type: str = None
+    coupling_type: str = None 
     fluid : Fluid = None
     formulation : str = None
     plate_thickness : float = None
@@ -16,7 +17,13 @@ class PerforatedPlateData:
     include_effects : str = None
     non_linear_discharge_coefficient : float | None = None
     non_linear_correction_factor : float | None = None
-    user_defined_transfer_impedance : np.ndarray | None = None
+    table_names : List[str] | None = None
+    table_paths : List[str] | None = None
+    values : List[np.ndarray] | None = None
+
+    # def __post_init__(self):
+    #     if isinstance(self.t, str):
+    #         self.transfer_impedance_file_path = Path(self.transfer_impedance_file_path)
         
     def set_general_data(self, data: dict):
         for field in fields(PerforatedPlateData):
@@ -27,29 +34,35 @@ class PerforatedPlateData:
         self.non_linear_discharge_coefficient = non_linear_discharge_coefficient
         self.non_linear_correction_factor = non_linear_correction_factor
     
-    def set_user_defined_transfer_impedance(self, user_defined_transfer_impedance: np.ndarray):
-        self.user_defined_transfer_impedance = user_defined_transfer_impedance
-    
+    def set_table_data(self, names: List[str], paths: List[str], values: List[np.ndarray]):
+        self.table_names = names
+        self.table_paths = paths
+        self.values = values
+
     def get_data(self) -> dict:
         data = dict()
 
         for attr, value in self.__dict__.items():
-            if value is not None:
-                data[attr] = value
-        
+            if value is None:
+                continue
+
+            data[attr] = value
+    
         return data
     
     def get_data_to_fill_edit_table_widget(self) -> list:
         data = list()
 
         for attr, value in self.__dict__.items():
-            if attr in ["fluid", "formulation", "coupling_type"]:
+            if attr in ["fluid", "formulation", "coupling_type", "values", "table_names"]:
                 continue
             
             if value is None:
-                value = "---"
-
-            data.append(value)
+                data.append("---")
+            elif isinstance(value, list):
+                data.append(value[0])
+            else:
+                data.append(value)
     
         return data
 

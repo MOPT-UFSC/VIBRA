@@ -900,7 +900,7 @@ class Ui_Dialog(object):
         ___qtablewidgetitem10 = self.edit_tableWidget.verticalHeaderItem(10)
         ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Non-linear correction factor", None));
         ___qtablewidgetitem11 = self.edit_tableWidget.verticalHeaderItem(11)
-        ___qtablewidgetitem11.setText(QCoreApplication.translate("Dialog", u"User-defined transfer impedance", None));
+        ___qtablewidgetitem11.setText(QCoreApplication.translate("Dialog", u"User-defined transfer impedance file", None));
         self.edit_tabWidget.setTabText(self.edit_tabWidget.indexOf(self.tab_circular_holes), QCoreApplication.translate("Dialog", u"Circular holes", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_2), QCoreApplication.translate("Dialog", u"Edit", None))
         ___qtreewidgetitem = self.treeWidget_perforated_plate_model.headerItem()
