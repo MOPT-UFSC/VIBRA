@@ -207,7 +207,7 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def write_mesh_quality_data_in_file(self):
-        mesh_quality_data = app().project.model.mesh.get_mesh_quality_data()
+        mesh_quality_data = app().project.model.mesh.mesh_quality_data
         if not mesh_quality_data:
             return
         
