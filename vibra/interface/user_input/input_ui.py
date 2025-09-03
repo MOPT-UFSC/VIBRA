@@ -32,8 +32,9 @@ from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs 
 from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_waveform_inputs import AcousticPressureWaveformInputs
 #
-from vibra.interface.plots.acoustic.specific_acoustic_impedance_inputs import SpecificAcousticImpedanceInputs
-from vibra.interface.plots.acoustic.particle_velocity_frequency_response_inputs import ParticleVelocityFrequencyResponseInputs
+from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
+from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
+from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelocityInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 #
@@ -240,11 +241,15 @@ class InputUi:
 
     def plot_particle_velocity(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-           return self.process_input(ParticleVelocityFrequencyResponseInputs)
+           return self.process_input(ParticleVelocityInputs)
 
-    def plot_acoustic_specific_impedance_from_surface(self):
+    def plot_acoustic_impedance(self):
        if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-           return self.process_input(SpecificAcousticImpedanceInputs)
+           return self.process_input(AcousticImpedanceInputs)
+
+    def plot_absorption_coefficient_from_surface(self):
+       if self.project.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+           return self.process_input(SurfaceAbsorptionCoefficientInputs)
 
     def empty_project_action_message(self):
         title = 'EMPTY PROJECT'

@@ -1,6 +1,6 @@
 # fmt: off
 
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -11,7 +11,6 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 
-import os
 import numpy as np
 
 window_title_1 = "Error"

@@ -72,3 +72,99 @@ def compute_acoustic_harmonic_field(
     min_value, max_value = solver.get_min_max_values_of_pressures(index, plot_type)
 
     return acoustic_pressures, min_value, max_value, np.imag(selected_results).any()
+
+def compute_particle_velocity( 
+    hsolver: "AcousticHarmonicSolver",
+    component_label: str,
+    node_id : int | None = None,
+    surface_id : int | None = None,
+    ):
+
+        frequencies = hsolver.assembler.frequencies
+        zeros = np.zeros_like(frequencies, dtype=complex)
+
+        if isinstance(node_id, int):
+            surface_ids = hsolver.assembler.model.mesh.get_surfaces_from_node(node_id)
+            if np.unique(surface_ids).size != 1:
+                return zeros, None
+            surface_id = surface_ids[0]
+
+        rho, _ = hsolver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        if rho is None:
+            return zeros, None
+
+        particle_velocities_data = hsolver.get_particle_velocity_from_surface(surface_id, rho)
+        particle_velocities_Vj = particle_velocities_data.get(component_label)
+
+        if not isinstance(particle_velocities_Vj, dict):
+            return zeros, None
+
+        if isinstance(node_id, int):
+            return particle_velocities_Vj.get(node_id)
+
+        else:
+            array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
+            return np.average(array_particle_velocities_Vj, axis=0)
+
+def compute_acoustic_impedance( 
+    hsolver: "AcousticHarmonicSolver",
+    node_id : int | None = None,
+    surface_id : int | None = None,
+    ):
+
+        frequencies = hsolver.assembler.frequencies
+        aux_zeros = np.zeros_like(frequencies, dtype=complex)
+
+        if isinstance(node_id, int):
+            surface_ids = hsolver.assembler.model.mesh.get_surfaces_from_node(node_id)
+            if np.unique(surface_ids).size != 1:
+                return aux_zeros, None
+
+            surface_id = surface_ids[0]
+
+        elif isinstance(surface_id, int):
+            nodes = hsolver.assembler.model.mesh.get_nodes_from_surface(surface_id)
+
+        else:
+            return aux_zeros, None
+
+        rho, _ = hsolver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        if rho is None:
+            return aux_zeros, None
+
+        particle_velocities_data = hsolver.get_particle_velocity_from_surface(surface_id, rho)
+        particle_velocities_Vj = particle_velocities_data.get("Vn")
+
+        if not isinstance(particle_velocities_Vj, dict):
+            return aux_zeros, None
+
+        if isinstance(node_id, int):
+            pressure = hsolver.solution[node_id, :]
+            particle_velocity = particle_velocities_Vj.get(node_id)
+            return pressure / particle_velocity
+
+        else:
+            pressures = hsolver.solution[nodes, :]
+            array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
+            surface_impedance = pressures / array_particle_velocities_Vj
+            return np.average(surface_impedance, axis=0)
+
+def compute_surface_absorption_coefficient(
+    hsolver: "AcousticHarmonicSolver",
+    surface_id : int | None = None,
+    ):
+
+    frequencies = hsolver.assembler.frequencies
+    aux_zeros = np.zeros_like(frequencies, dtype=complex)
+
+    rho, speed_of_sound = hsolver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+    Z0 = rho * speed_of_sound
+
+    Zs = compute_acoustic_impedance(hsolver, surface_id = surface_id)
+    if not Zs.any():
+        return aux_zeros
+
+    R = (Zs - Z0) / (Zs + Z0)
+    absorption_coefficient = 1 - np.abs(R**2)
+
+    return absorption_coefficient

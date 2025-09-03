@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'particle_velocity_frequency_response_inputs.ui'
+## Form generated from reading UI file 'particle_velocity_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.1
 ##
@@ -294,7 +294,7 @@ class Ui_Form(object):
 
 
 
-class ParticleVelocityFrequencyResponseInputs_UI(QWidget, Ui_Form):
+class ParticleVelocityInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

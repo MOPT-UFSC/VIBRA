@@ -1044,10 +1044,10 @@ class Mesh:
         if not connect_data.size:
             return None
 
-        rows = connect_data[:, 1] == line_id
+        rows = np.where(connect_data[:, 1] == line_id)[0]
         nodes = np.unique(connect_data[rows, 4:]).astype(int)
 
-        return nodes
+        return np.sort(nodes)
 
     def get_nodes_from_surface(self, surface_id: int, from_cache: bool=False):
 
@@ -1062,10 +1062,10 @@ class Mesh:
         if not connect_data.size:
             return None
 
-        rows = connect_data[:, 1] == surface_id
+        rows = np.where(connect_data[:, 1] == surface_id)[0]
         nodes = np.unique(connect_data[rows, 4:]).astype(int)
 
-        return nodes
+        return np.sort(nodes)
 
     def get_nodes_from_volume(self, volume_id: int, from_cache: bool=False):
 
@@ -1080,10 +1080,10 @@ class Mesh:
         if not connect_data.size:
             return None
 
-        rows = connect_data[:, 1] == volume_id
+        rows = np.where(connect_data[:, 1] == volume_id)[0]
         nodes = np.unique(connect_data[rows, 4:]).astype(int)
 
-        return nodes
+        return np.sort(nodes)
 
     def get_connectivity_from_line(self, line_id: int, from_cache: bool=False) -> np.ndarray:
 
