@@ -87,8 +87,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.bad_elements_showed = False
         self.synchronize_sizes = False
 
+        self.mesh_quality_data = None
         self.mesh_setup = dict()
-        self.mesh_quality_data = dict()
         self.mesh_refinement_data = defaultdict(list)
 
         self.mesh_quality_parameters = {
@@ -154,6 +154,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.mesh_quality_metrics_callback()
 
     def mesh_quality_metrics_callback(self):
+
         if self.comboBox_mesh_quality_metrics.currentText() == "Disabled":
             if self.tabWidget_main.currentIndex() == 2:
                 self.tabWidget_main.setCurrentIndex(0)
@@ -325,7 +326,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 size_factor = mesh_setup["size_factor"]
                 mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
                 mesh_connection = mesh_setup.get("mesh_connection", True)
-                mesh_quality_metrics = mesh_setup.get("mesh_quality_metrics", False)
+                # mesh_quality_metrics = mesh_setup.get("mesh_quality_metrics", False)
 
                 gmsh_algorithm_3d = mesh_setup.get("algorithm_3d")
                 if gmsh_algorithm_3d is not None:
@@ -339,15 +340,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
 
                 self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_connection))
-                self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_quality_metrics))
+                # self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_quality_metrics))
                 
                 for selection_type, e_size, selected_ids in mesh_refinement_parameters:
                     self.mesh_refinement_data[(selection_type, e_size)].extend(selected_ids)
 
                 self.update_refining_table_data()
-
-                if mesh_quality_metrics:
-                    self.config_control_quality_table()
+                self.config_control_quality_table()
 
             except Exception as error_log:
                 self.hide()
@@ -456,13 +455,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().file.write_mesh_data_in_file()
         app().file.write_geometry_data_in_file()
 
+        self.mesh_quality_data = None
         if self.comboBox_mesh_quality_metrics.currentText() == "Enabled":
             app().file.write_mesh_quality_data_in_file()
             self.config_control_quality_table()
             self.tabWidget_main.setTabVisible(2, True)
-
         else:
-            self.mesh_quality_data = None
             app().file.remove_mesh_quality_data_from_project_file()
 
         app().main_window.update_mesh_information()
@@ -623,8 +621,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def is_mesh_quality_computed(self):
         if self.mesh_quality_data is None:
-            return False
-        return bool(sum([len(qdata) for qdata in self.mesh_quality_data.values()])) 
+            self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
+            if self.mesh_quality_data is None:
+                return False
+
+        if isinstance(self.mesh_quality_data, dict):
+            return bool(sum([len(qdata) for qdata in self.mesh_quality_data.values()])) 
+
+        return False
 
     def config_control_quality_table(self):
 
@@ -637,10 +641,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.tabWidget_main.setTabVisible(2, False)
             return
 
-        self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
         if not self.is_mesh_quality_computed():
             return
         
+        self.comboBox_mesh_quality_metrics.setCurrentText("Enabled")
         self.pushButton_plot_histogram.setDisabled(True)        
         quality_bins = self.mesh.quality_bins
 
@@ -757,18 +761,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.tableWidget_mesh_quality.setCurrentCell(0, 0)
 
     def mesh_quality_item_clicked(self, item):
-        selected_parameter = self.mesh_quality_parameters.get(item.row())
         if not self.is_mesh_quality_computed():
             self.pushButton_show_bad_elements.setEnabled(False)
             return
 
         bad_elements_data = self.mesh_quality_data.get("bad_elements")
+        selected_parameter = self.mesh_quality_parameters.get(item.row())
         bad_elements = bad_elements_data[selected_parameter]
+
         self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
-
         if not self.is_mesh_quality_computed():
             return
 
