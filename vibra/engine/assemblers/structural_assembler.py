@@ -335,7 +335,6 @@ class StructuralAssembler:
         active_dofs = np.array([])
         if active_nodes_list:
             shell_local_dofs = np.arange(element_2D.DOFS_PER_NODE)
-            # active_nodes = np.array([*set(active_nodes_list)], dtype=int)
             active_nodes = np.unique(active_nodes_list).astype(int)
             active_dofs = element_2D.DOFS_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dofs 
             active_dofs = np.sort(active_dofs.flatten())
