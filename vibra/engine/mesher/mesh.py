@@ -805,31 +805,40 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list):
-        fields_list = [1]
-        gmsh.model.mesh.field.add("Constant")
-        gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
-        gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
-        gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
+    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list, gradient: float = 1.0):
+        fields_list = []
+        # global size field
+        global_field = gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumber(global_field, "VOut", global_size)
+        gmsh.model.mesh.field.setNumbers(global_field, "CurvesList", [])
+        gmsh.model.mesh.field.setNumbers(global_field, "SurfacesList", [])
+        gmsh.model.mesh.field.setNumbers(global_field, "VolumesList", [])
+        fields_list.append(global_field)
 
         for selection_type, local_size, selection_ids in refinement_parameters:
-            threshold_type = gmsh.model.mesh.field.add("Constant")
+
+            # calculates distance to selected entities  
+            distance_field = gmsh.model.mesh.field.add("Distance")
             if selection_type == "lines":
-                gmsh.model.mesh.field.setNumbers(
-                    threshold_type, "CurvesList", selection_ids
-                )
+                gmsh.model.mesh.field.setNumbers(distance_field, "CurvesList", selection_ids)
             elif selection_type == "surfaces":
-                gmsh.model.mesh.field.setNumbers(
-                    threshold_type, "SurfacesList", selection_ids
-                )
+                gmsh.model.mesh.field.setNumbers(distance_field, "SurfacesList", selection_ids)
             elif selection_type == "volumes":
-                gmsh.model.mesh.field.setNumbers(
-                    threshold_type, "VolumesList", selection_ids
-                )
+                gmsh.model.mesh.field.setNumbers(distance_field, "VolumesList", selection_ids)
 
-            gmsh.model.mesh.field.setNumber(threshold_type, "VIn", local_size)
-            fields_list.append(threshold_type)
+            gmsh.model.mesh.field.setNumber(distance_field, "Sampling", 200)
 
+            # threshold field modifies other fields based on the InField field
+            threshold_field = gmsh.model.mesh.field.add("Threshold")
+            gmsh.model.mesh.field.setNumber(threshold_field, "InField", distance_field)
+            gmsh.model.mesh.field.setNumber(threshold_field, "SizeMin", local_size)
+            gmsh.model.mesh.field.setNumber(threshold_field, "SizeMax", global_size)
+            gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", 0.0) 
+            gmsh.model.mesh.field.setNumber(threshold_field, "DistMax", gradient) # from here, global_size
+
+            fields_list.append(threshold_field)
+
+        # uses the minimum value between fields to apply mesh size
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
@@ -867,7 +876,7 @@ class Mesh:
         refined_size = 0.002
         small_lines = [12, 15, 18, 13, 10, 2, 3, 14, 9]
 
-        self.local_mesh_refine(maximum_element_size, [("lines", refined_size, small_lines)])
+        self.local_mesh_refine(maximum_element_size, [("lines", refined_size, small_lines)], 1.0)
 
 
     def clear_mesh_data(self):
