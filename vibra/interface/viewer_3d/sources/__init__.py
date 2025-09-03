@@ -40,6 +40,8 @@ from .complex_shapes import (
     create_compressor_suction_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
-    create_dof_rotation_source,
-    create_dof_rotation_arrows_source,
+    create_arrows_cone_source,
+    create_arrows_cube_source,
+    create_arrows_rotation_pencil_source,
+    create_arrows_rotation_strips_source,
 )

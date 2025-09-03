@@ -122,22 +122,38 @@ def create_acoustic_transfer_element_data_source():
         scale=(1, 1, 1),
     )
 
-def create_dof_rotation_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_rotations.stl")
-    s = 0.6
+def create_arrows_cone_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_cone.stl")
     return transform_polydata(
         polydata,
-        position=(-s*1.3, 0, 0),
-        rotation=(0, 90, 180),
-        scale=(s/4, s/4, s/4),
+        position=(0, 0, 0),
+        rotation=(0, -90, 0),
+        scale=(30, 30, 30),
     )
 
-def create_dof_rotation_arrows_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_rotations_arrows.stl")
-    s = 0.6
+def create_arrows_cube_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_cube.stl")
     return transform_polydata(
         polydata,
-        position=(-s*1.3, 0, 0),
-        rotation=(0, 90, 180),
-        scale=(s/4, s/4, s/4),
+        position=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(30, 30, 30),
     )
+
+def create_arrows_rotation_pencil_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_rotation_pencil.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, -90, 0),
+        scale=(30, 30, 30),
+    )
+
+def create_arrows_rotation_strips_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_rotation_strips.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, -90, 0),
+        scale=(30, 30, 30),
+    )   

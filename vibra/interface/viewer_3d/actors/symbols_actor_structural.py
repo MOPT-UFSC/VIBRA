@@ -132,13 +132,16 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                 Color(0, 255, 0),
                 Color(0, 0, 255),
             )
+            
             for index, v in enumerate(U_R):
                 if index < 3 and v is not None:
-                    self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
-                elif index >= 3 and v is not None:
-                    self.add_symbol(sources.create_dof_rotation_source, coords, (index==3, index==4, index==5), color=colors[index - 3]) 
-                    self.add_symbol(sources.create_dof_rotation_arrows_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
-                    self.add_symbol(sources.create_pencil_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
+                    self.add_symbol(sources.create_arrows_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
+                elif index >= 3 and v is not None: 
+                    self.add_symbol(sources.create_arrows_rotation_pencil_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
+                    self.add_symbol(sources.create_arrows_rotation_strips_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
+            
+            if not np.any(U_R) and None not in U_R:
+                self.add_symbol(sources.create_arrows_cube_source, coords, (0, 0, 0), color=color_names.GREEN_2)
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
