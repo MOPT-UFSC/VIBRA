@@ -124,7 +124,6 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             absorption_coefficient = compute_surface_absorption_coefficient(solver, surface_id = selected_id)
 
             logging.info("Processing surface absorption coefficient... [95/100]")
-
             return absorption_coefficient
 
         return LoadingWindow(function_callback).run()

@@ -164,7 +164,10 @@ def compute_surface_absorption_coefficient(
     if not Zs.any():
         return aux_zeros
 
+    # R is the sound reflection coefficient
     R = (Zs - Z0) / (Zs + Z0)
-    absorption_coefficient = 1 - np.abs(R**2)
 
-    return absorption_coefficient
+    # alpha is the sound absorption coefficient
+    alpha = 1 - (np.abs(R))**2
+
+    return alpha
