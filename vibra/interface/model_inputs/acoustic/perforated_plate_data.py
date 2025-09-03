@@ -66,6 +66,9 @@ class PerforatedPlateData:
         return data
 
     def get_fluid_data_to_fill_edit_table_widget(self) -> list:
+        if not self.fluid:
+            return list()
+
         return [self.fluid.name, self.fluid.fluid_density, 
                 self.fluid.speed_of_sound]
 

@@ -380,7 +380,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     fluid_item.setFlags(Qt.ItemIsSelectable)
 
                 if isinstance(fluid_data, str):
-                    fluid_item.setToolTip(item_text)
+                    tool_tip = f"{item_text} \n\nDouble click to choose a new fluid"
+                    fluid_item.setToolTip(tool_tip)
 
                 self.edit_tableWidget.setItem(row + 1, column, fluid_item)
             
@@ -395,8 +396,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     pp_item.setToolTip(item_text)
 
                 elif isinstance(pp_data, Path):
-                    pp_item.setFlags(Qt.ItemIsSelectable)
-                    pp_item.setToolTip(str(pp_data))
+                    tool_tip = f"{str(pp_data)} \n\nDouble click to import a new transfer impedance file"
+                    pp_item.setToolTip(tool_tip)
 
                 self.edit_tableWidget.setItem(row + 4, column, pp_item)
         
@@ -412,10 +413,17 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if row == 1:
             self.get_fluid_callback()
-            setattr(model, "fluid", self.selected_fluid)
+ 
+            if self.selected_fluid:
+                setattr(model, "fluid", self.selected_fluid)
 
             for surface_id in surface_ids:
                 self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+        else:
+            for surface_id in surface_ids:
+                self.include_user_defined_transfer_impedance(model, surface_id)
+            
+            self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
 
         self.load_model_info()
     
@@ -536,14 +544,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
-               imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the user-defined transfer impedance")
+                imported_data = DataImporter.import_single_file("imported_table_folder",
+                        ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the user-defined transfer impedance")
                
-               if not imported_data:
-                return
-               
-               imported_file = imported_data.data
-               lineEdit.setText(imported_data.path)
+                if not imported_data:
+                    return
+                
+                imported_file = imported_data.data
+                lineEdit.setText(imported_data.path)
 
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
@@ -786,7 +794,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def include_user_defined_transfer_impedance(self, model: PerforatedPlateData, surface_id: int | list[int]):
 
         if self.imported_values is None:
-            self.imported_values = self.load_user_defined_transfer_impedance()
+            self.load_user_defined_transfer_impedance()
 
         if self.imported_values is None:
             return
@@ -814,6 +822,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
 
         model.set_table_data([table_name], [table_path], [complex_values])
+        self.lineEdit_user_defined_transfer_impedance_path.setText("")
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
