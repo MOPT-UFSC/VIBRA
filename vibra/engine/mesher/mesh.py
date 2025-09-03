@@ -807,7 +807,6 @@ class Mesh:
 
     def local_mesh_refine(self, global_size: float | int, refinement_parameters: list, gradient: float = 1.0):
         fields_list = []
-        print(refinement_parameters)
         # global size field
         global_field = gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumber(global_field, "VOut", global_size)
