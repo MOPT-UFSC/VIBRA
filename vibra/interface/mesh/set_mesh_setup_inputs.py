@@ -148,6 +148,7 @@ class MeshSetupInputs(MesherSetup_UI):
     def geometry_selection_callback(self):
         faces = app().main_window.selected_geometry_surfaces
         volumes = app().main_window.selected_geometry_volumes
+        lines = app().main_window.selected_geometry_lines
 
         if volumes:
             selection = volumes
@@ -155,6 +156,9 @@ class MeshSetupInputs(MesherSetup_UI):
         elif faces:
             selection = faces
             self.label_selected_ids.setText("Selected surface IDs:")
+        elif lines:
+            selection = lines
+            self.label_selected_ids.setText("Selected line IDs:")
         else:
             self.lineEdit_selected_ids.setText("")
             return
@@ -198,8 +202,10 @@ class MeshSetupInputs(MesherSetup_UI):
 
         if app().main_window.selected_geometry_volumes:
             selected_type = "volumes"
-        else:
+        elif app().main_window.selected_geometry_surfaces:
             selected_type = "surfaces"
+        elif app().main_window.selected_geometry_lines:
+            selected_type = "lines"
 
         selected_ids = self.get_selected_ids()
         ref_size = self.doubleSpinBox_refined_element_size.value()
