@@ -68,7 +68,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.imported_values = None
         self.assignment_complete = False
         self.keep_window_open = True
-        self.pp_data = dict()
 
     def _create_connections(self):
         #
@@ -422,8 +421,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         else:
             for surface_id in surface_ids:
                 self.include_user_defined_transfer_impedance(model, surface_id)
-            
-            self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
+            self.imported_values = None
+            app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
 
         self.load_model_info()
     
