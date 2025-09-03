@@ -1,6 +1,4 @@
 
-# fmt: off
-
 from vibra.engine.elements.solid_elements import Element3D
 
 from typing import TYPE_CHECKING
@@ -506,5 +504,3 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
-
-# fmt: on

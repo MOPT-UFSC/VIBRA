@@ -10,8 +10,6 @@ from vibra.engine.properties.fluid import Fluid
 import warnings
 import numpy as np
 
-# fmt: off
-
 error_title = "Error"
 warning_title = "Warning"
 

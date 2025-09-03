@@ -387,13 +387,13 @@ class AcousticHarmonicSolver:
                 enodal_pressures = solution[indexes, :]
 
                 Vk += element_3d.process_particle_velocity(
-                                                            element_id, 
-                                                            node_id, 
-                                                            rho, 
-                                                            frequencies,
-                                                            nodal_pressures = enodal_pressures,
-                                                            solution = None,
-                                                            )
+                    element_id, 
+                    node_id, 
+                    rho, 
+                    frequencies,
+                    nodal_pressures = enodal_pressures,
+                    solution = None,
+                )
 
             pv_data[node_id] = Vk / len(solid_element_ids)
 

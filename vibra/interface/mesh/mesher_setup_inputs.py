@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QIcon
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
@@ -51,7 +49,7 @@ map_algorithms_2d = dict(zip(gmsh_algorithms_2d, [0, 1, 2, 3, 4, 5]))
 map_algorithms_3d = dict(zip(gmsh_algorithms_3d, [0, 1, 2]))
 
 
-class GMSH_ALGORITHMS_3D(IntEnum):
+class GMSHAlgorithms_3D(IntEnum):
     DELAUNAY_3D = 0
     FRONTAL_3D = 1
     HXT_3D = 2
@@ -92,11 +90,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.mesh_refinement_data = defaultdict(list)
 
         self.mesh_quality_parameters = {
-                                        0: "gamma",
-                                        1: "volume",
-                                        2: "minSJ",
-                                        3: "aspectRatio",
-                                        }
+            0: "gamma",
+            1: "volume",
+            2: "minSJ",
+            3: "aspectRatio",
+        }
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -523,11 +521,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return True
 
         alg3d_index = self.comboBox_3d_algorithm.currentIndex()
-        if alg3d_index == GMSH_ALGORITHMS_3D.DELAUNAY_3D:
+        if alg3d_index == GMSHAlgorithms_3D.DELAUNAY_3D:
             solid_element.algorithm_3d = gmsh_constants.DELAUNAY_3D
-        elif alg3d_index == GMSH_ALGORITHMS_3D.FRONTAL_3D:
+        elif alg3d_index == GMSHAlgorithms_3D.FRONTAL_3D:
             solid_element.algorithm_3d = gmsh_constants.FRONTAL_3D
-        elif alg3d_index == GMSH_ALGORITHMS_3D.HXT_3D:
+        elif alg3d_index == GMSHAlgorithms_3D.HXT_3D:
             solid_element.algorithm_3d = gmsh_constants.HXT_3D
         else:
             return
@@ -900,5 +898,3 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             app().main_window.distinguish_mesh_solids([])
 
         return super().closeEvent(a0)
-
-# fmt: on

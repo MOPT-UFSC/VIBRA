@@ -133,24 +133,24 @@ class Model:
 
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
-                                    path,
-                                    dimension = 2,
-                                    minimum_element_size = element_size * 0.4,
-                                    maximum_element_size = element_size,
-                                    ElementType = DEFAULT_ELEMENT_TYPE,
-                                    )
+                    path,
+                    dimension = 2,
+                    minimum_element_size = element_size * 0.4,
+                    maximum_element_size = element_size,
+                    ElementType = DEFAULT_ELEMENT_TYPE,
+                )
 
             except:
                 self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
                 element_size = 10
                 self.mesh.load_cad(
-                                    path,
-                                    dimension = 2,
-                                    minimum_element_size = element_size * 0.5,
-                                    maximum_element_size = element_size,
-                                    ElementType = DEFAULT_ELEMENT_TYPE,
-                                    )
+                    path,
+                    dimension = 2,
+                    minimum_element_size = element_size * 0.5,
+                    maximum_element_size = element_size,
+                    ElementType = DEFAULT_ELEMENT_TYPE,
+                )
 
             self.generated_mesh = False
             self.initial_element_size = element_size

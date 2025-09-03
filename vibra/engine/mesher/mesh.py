@@ -74,11 +74,11 @@ class Mesh:
         self.geometry_information = defaultdict(list)
 
         self.quality_bins = {
-                            "gamma": (0.7, 0.15),
-                            "volume": (1e-3, 0),
-                            "minSJ": (0.3, 0.1),
-                            "aspectRatio": (4, 1.5),
-                            }
+            "gamma": (0.7, 0.15),
+            "volume": (1e-3, 0),
+            "minSJ": (0.3, 0.1),
+            "aspectRatio": (4, 1.5),
+        }
 
         self.mesh_quality_data = dict()
 
@@ -189,7 +189,6 @@ class Mesh:
 
         except Exception as error_log:
             print_exception(error_log)
-            # gmsh.finalize()
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
@@ -201,8 +200,6 @@ class Mesh:
         if gmsh_gui:
             if "-nopopup" not in sys.argv:
                 gmsh.fltk.run()
-
-        # gmsh.finalize()
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -1138,18 +1135,6 @@ class Mesh:
             volume_ids = [int(vol_id) for vol_id in np.unique(self.solids_connectivity[:, 1][mask])]
             volumes_from_nodes[node_id].extend(volume_ids)
 
-        # for vol_id, nodes_from_volume in self.nodes_from_volumes.items():
-        #     if not np.isin(nodes_from_volume, selected_nodes).any():
-        #         continue
-
-        #     for node_id in selected_nodes:
-        #         if node_id not in nodes_from_volume:
-        #             continue
-
-        #         vol_ids = volumes_from_nodes.get(node_id)
-        #         if vol_ids is None or vol_id not in vol_ids:
-        #             volumes_from_nodes[node_id].append(vol_id)
-
         return volumes_from_nodes
 
     def get_volumes_from_selected_points(self, selected_points: list | np.ndarray):
@@ -1743,11 +1728,11 @@ class Mesh:
     def compute_mesh_quality_parameters(self) -> dict | None:
 
         quality_parameters = [
-                              "gamma",
-                              "volume",
-                              "minSJ",
-                              "aspectRatio",
-                              ]
+            "gamma",
+            "volume",
+            "minSJ",
+            "aspectRatio",
+        ]
 
         logging.info("Computing mesh quality metrics... [10/100]")
         _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
@@ -1801,17 +1786,17 @@ class Mesh:
             hist, bin_edges = np.histogram(column, bins=bins)
 
             histograms_data[parameter] = [
-                                          hist,
-                                          bin_edges,
-                                          np.percentile(column, 5),
-                                          np.percentile(column, 95),
-                                          ]
+                hist,
+                bin_edges,
+                np.percentile(column, 5),
+                np.percentile(column, 95),
+            ]
 
         self.mesh_quality_data = {
-                                  "statistics" : quality_statistics,
-                                  "bad_elements" : bad_elements,
-                                  "histograms_data" : histograms_data,
-                                  }
+            "statistics" : quality_statistics,
+            "bad_elements" : bad_elements,
+            "histograms_data" : histograms_data,
+        }
 
     def compute_initial_mesh_size(
         self, path: str, geometry_tolerance: float = 1e-10, threads: int = 0
@@ -1855,7 +1840,6 @@ class Mesh:
 
         finally:
             pass
-            # gmsh.finalize()
 
     def compute_bounding_box_sizes(self, geo_entities):
         xmin = ymin = zmin = xmax = ymax = zmax = 0
@@ -2108,7 +2092,6 @@ class Mesh:
         x_min, y_min, z_min = np.min(nodal_coordinates[:, 1:], axis=0)
         x_max, y_max, z_max = np.max(nodal_coordinates[:, 1:], axis=0)
         principal_diagonal = np.sqrt((x_max - x_min)**2 + (y_max - y_min)**2 + (z_max - z_min)**2)
-        # print('The base length is: {}[m]'.format(round(self.principal_diagonal, 6)))
         return principal_diagonal
 
     def get_elements_and_nodes_from_sphere(
