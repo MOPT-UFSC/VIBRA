@@ -4,12 +4,11 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import compute_surface_absorption_coefficient
-from vibra.interface.ui_generated.plots.acoustic.surface_absorption_coefficient_inputs_ui import SurfaceAbsorptionCoefficientInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.surface_absorption_coefficient_inputs_ui import SurfaceAbsorptionCoefficientInputs_UI
 
 import logging
 import numpy as np
@@ -28,9 +27,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self._config_window()
         self._reset_variables()
         self._create_connections()
-
         self._load_analysis_setup_and_solution()
-        self.geometry_selection_callback()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -60,6 +57,8 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.geometry_selection_callback()
     
     def geometry_selection_callback(self):
 
@@ -69,26 +68,14 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
 
-        else:
-            return
-            self.lineEdit_selection_id.setText("")
-
     def check_inputs(self):
-
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        else:
-            selection = "nodes"
 
         input_ids = self.lineEdit_selection_id.text()
         self.selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                     input_ids, 
-                                                                     selection = selection, 
-                                                                     single_id = False
-                                                                     )
+            input_ids, 
+            selection = "surfaces", 
+            single_id = False
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -139,34 +126,34 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             legend_label = f"Absorption coefficient at surface [{selected_id}]"
 
             self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(selected_id),
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Absorption coefficient",
-                                        "title" : title,
-                                        "data_type" : "absorption coefficient",
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
+                "x_data" : self.frequencies,
+                "y_data" : self.get_response(selected_id),
+                "x_label" : "Frequency [Hz]",
+                "y_label" : "Absorption coefficient",
+                "title" : title,
+                "data_type" : "absorption coefficient",
+                "legend" : legend_label,
+                "unit" : self.unit_label,
+                "color" : self.get_color(i),
+                "linestyle" : "-"  
+            }
 
-    def get_color(self, index):
+    def get_color(self, index: int) -> tuple:
 
         colors = [  
-                  (0,0,1), 
-                  (0,0,0), 
-                  (1,0,0),
-                  (0,1,1), 
-                  (1,0,1), 
-                  (1,1,0),
-                  (0.25,0.25,0.25)
-                  ]
+            (0,0,1), 
+            (0,0,0), 
+            (1,0,0),
+            (0,1,1), 
+            (1,0,1), 
+            (1,1,0),
+            (0.25,0.25,0.25)
+        ]
 
         if index <= 6:
             return colors[index]
-        else:
-            return tuple(np.random.randint(0, 255, size=3) / 255)
+
+        return tuple(np.random.randint(0, 255, size=3) / 255)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
