@@ -567,8 +567,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def update_advanced_gmsh_controls(self):
         element_type = self.get_element_type()
-        if element_type is None:
-            return
+        if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
+            self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
+            self.comboBox_mesh_quality_metrics.setDisabled(True)
+            if element_type is None:
+                return
+
+        else:
+            self.comboBox_mesh_quality_metrics.setEnabled(True)
 
         self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
         self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
@@ -639,7 +645,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if self.get_element_type() not in [TETRAHEDRON_4, TETRAHEDRON_10]:
             self.tabWidget_main.setTabVisible(2, False)
+            self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
+            self.comboBox_mesh_quality_metrics.setDisabled(True)
             return
+
+        else:
+            self.comboBox_mesh_quality_metrics.setEnabled(True)
 
         if not self.is_mesh_quality_computed():
             return
