@@ -102,6 +102,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.plotter.imported_real_data()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
@@ -131,20 +132,20 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
     def join_model_data(self):
 
         self.model_results = dict()
-        title = "Specific acoustic impedance"
+        title = "Surface absorption coefficient"
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = ("surface", (selected_id))
-            legend_label = f"Specific acoustic impedance at surface [{selected_id}]"
+            legend_label = f"Absorption coefficient at surface [{selected_id}]"
 
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
                                         "y_data" : self.get_response(selected_id),
                                         "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Specific acoustic impedance",
+                                        "y_label" : "Absorption coefficient",
                                         "title" : title,
-                                        "data_type" : "specific acoustic impedance",
+                                        "data_type" : "absorption coefficient",
                                         "legend" : legend_label,
                                         "unit" : self.unit_label,
                                         "color" : self.get_color(i),
