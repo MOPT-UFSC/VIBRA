@@ -3,9 +3,11 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.utils.utils import are_there_values_different_from_zero
 
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
+
 
 import numpy as np
 from numbers import Number
@@ -591,8 +593,13 @@ def structural_boundary_conditions_info_text():
     if prescribed_dofs is not None:
         values = prescribed_dofs["values"]
         loaded_table = "table_names" in prescribed_dofs.keys()
+        if are_there_values_different_from_zero(values):
+            property_label = "Prescribed DOF"
+        else:
+            property_label = "Constrained DOF"
+
         text += structural_format(
-            "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
+            property_label, values, ("u", "r"), ("m", "rad"), loaded_table
         )
 
     if nodal_loads is not None:

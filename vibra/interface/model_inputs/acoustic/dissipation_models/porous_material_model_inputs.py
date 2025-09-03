@@ -5,12 +5,12 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
+from vibra.interface.ui_generated.model.setup.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.model_inputs.acoustic.show_porous_material_model_equations import ShowPorousMaterialModelEquations
-from vibra.interface.model_inputs.acoustic.delany_bazley_data import DelanyBazleyData
-from vibra.interface.model_inputs.acoustic.jca_data import JCAData
+from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
+from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import DelanyBazleyData
+from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JCAData
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter

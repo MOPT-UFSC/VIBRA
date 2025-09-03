@@ -11,8 +11,8 @@ from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import Spec
 from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
 from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
 from vibra.interface.model_inputs.acoustic.absorption_surface_inputs import AbsorptionSurfaceInputs
-from vibra.interface.model_inputs.acoustic.proportional_damping_inputs import ProportionalDampingInput
-from vibra.interface.model_inputs.acoustic.porous_material_model_inputs import PorousMaterialModelInputs
+from vibra.interface.model_inputs.acoustic.dissipation_models.proportional_damping_inputs import ProportionalDampingInput
+from vibra.interface.model_inputs.acoustic.dissipation_models.porous_material_model_inputs import PorousMaterialModelInputs
 from vibra.interface.model_inputs.acoustic.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
 from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import PerforatedPlateModelInputs
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
@@ -21,7 +21,8 @@ from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs impo
 from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.model_inputs.structural.dofs_prescription_inputs import DofsPrescriptionInputs
+from vibra.interface.model_inputs.structural.dof_constraint_inputs import DofConstraintInputs
+from vibra.interface.model_inputs.structural.dof_prescription_inputs import DofPrescriptionInputs
 from vibra.interface.model_inputs.structural.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.normal_pressure_load_inputs import NormalPressureLoadInputs
 from vibra.interface.model_inputs.structural.distributed_loads_inputs import DistributedLoadsInputs
@@ -95,11 +96,11 @@ class InputUi:
     def set_surface_thickness(self):
         if not self.model_setup_items.item_child_surface_thickness.isDisabled():
             self.process_input(SurfaceThicknessInputs)
-        
-    def prescribe_structural_dofs(self):
-        if not self.model_setup_items.item_child_prescribed_dof.isDisabled():
-            self.process_input(DofsPrescriptionInputs)
-        
+
+    def prescribe_structural_dof(self):
+        if not self.model_setup_items.item_child_prescribe_dof.isDisabled():
+            self.process_input(DofPrescriptionInputs)
+
     def set_nodal_loads(self):
         if not self.model_setup_items.item_child_nodal_loads.isDisabled():
             self.process_input(NodalLoadsInputs)

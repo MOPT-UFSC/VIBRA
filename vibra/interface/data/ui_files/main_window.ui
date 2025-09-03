@@ -20,6 +20,9 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -103,6 +106,7 @@
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
+   <addaction name="action_import_geometry"/>
    <addaction name="action_save"/>
    <addaction name="action_save_as"/>
    <addaction name="separator"/>

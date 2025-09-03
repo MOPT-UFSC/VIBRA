@@ -301,10 +301,17 @@ class Project(QObject):
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
-        
-        if not any([self.structural_harmonic_solver, self.structural_modal_solver, self.acoustic_modal_solver, self.acoustic_harmonic_solver]):
+
+        solvers = [
+                    self.structural_harmonic_solver, 
+                    self.structural_modal_solver, 
+                    self.acoustic_modal_solver, 
+                    self.acoustic_harmonic_solver
+                    ]
+
+        if not any(solvers):
             return False
-            
+
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
