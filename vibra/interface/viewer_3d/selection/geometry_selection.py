@@ -32,7 +32,12 @@ class GeometrySelection:
         point_ids, point_distance = self._pick_point(x, y)
         line_ids, line_distance = self._pick_line(x, y)
         surface_ids, surface_distance = self._pick_surface(x, y)
-        volume_ids, _ = self._pick_volume(x, y)
+
+        volume_ids = set()
+        mesh = app().project.model.mesh
+        for surface in surface_ids:
+            surface_volumes = mesh.volumes_from_surface.get(surface, [])
+            volume_ids.update(surface_volumes)
 
         # Cheating a bit to prioritize point selection
         point_distance *= 0.96

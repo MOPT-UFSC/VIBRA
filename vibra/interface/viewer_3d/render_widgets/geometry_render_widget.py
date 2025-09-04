@@ -295,7 +295,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             (
                 picked_points,
                 picked_lines,
-                picked_faces,
+                picked_surfaces,
                 picked_volumes,
             ) = self.geometry_selection.area_pick(x0, y0, x, y)
 
@@ -303,7 +303,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             (
                 picked_points,
                 picked_lines,
-                picked_faces,
+                picked_surfaces,
                 picked_volumes,
             ) = self.geometry_selection.pick(x, y)
 
@@ -315,11 +315,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not shift_pressed:
             picked_volumes.clear()
 
-
         app().main_window.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
-            surfaces=picked_faces,
+            surfaces=picked_surfaces,
             volumes=picked_volumes,
             join=ctrl_pressed,
             remove=alt_pressed,
@@ -337,27 +336,11 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         points = app().main_window.selected_geometry_points
         lines = app().main_window.selected_geometry_lines
-        faces = app().main_window.selected_geometry_surfaces
-        volumes = app().main_window.selected_geometry_volumes
-
-        mesh = app().project.model.mesh
-
-        # Get the face elements of all selected faces
-        all_faces_elements = list()
-        for face in faces:
-            indexes = mesh.elements_from_surface.get(face, [])
-            all_faces_elements.extend(indexes)
-
-        # Get the face elements of all selected volumes
-        for volume in volumes:
-            surfaces = app().project.model.mesh.surfaces_from_volume[volume]
-            for face in surfaces:
-                indexes = app().project.model.mesh.elements_from_surface.get(face, [])
-                all_faces_elements.extend(indexes)
+        surfaces = app().main_window.selected_geometry_surfaces
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
-        self.multimaterial.paint_surfaces(self.selection_faces_color, faces)
+        self.multimaterial.paint_surfaces(self.selection_faces_color, surfaces)
 
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
