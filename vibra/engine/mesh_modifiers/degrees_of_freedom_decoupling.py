@@ -210,16 +210,7 @@ class DegreesOfFreedomDecoupling:
         coords_from_twin_nodes[:, 0 ] = twin_nodes
         coords_from_twin_nodes[:, 1:] = self.mesh.nodal_coordinates[nodes_from_surfaces, 1:] 
 
-        # for surface_id, vol_id in self.decouple_info.items():
-
-        #     # add the twin nodes from the new surface
-        #     new_surface_id = self.surfaces_mapping.get(surface_id)
-        #     self.mesh.nodes_from_surfaces[new_surface_id] = self.get_nodes_from_new_surface(surface_id)
-
-        #     # update the nodes from volume
-        #     nodes_from_volume = deepcopy(self.mesh.get_nodes_from_volume(vol_id))
-        #     self.mesh.nodes_from_volumes[vol_id] = self.update_nodes_from_array(nodes_from_volume)
-
+        # append the twin nodes data in the nodal coordinates matrix
         self.mesh.nodal_coordinates = np.append(nodal_coordinates, coords_from_twin_nodes, axis=0)
 
 
@@ -354,8 +345,6 @@ class DegreesOfFreedomDecoupling:
                 new_connectivity[j, :] = self.update_nodes_from_array(connect)
 
             new_line_id = self.lines_mapping.get(line_id)
-            # self.mesh.nodes_from_lines[new_line_id] = np.array([*set(new_connectivity.flatten())], dtype=int)
-
             etag, nodes_per_element = self.get_line_element_tag_and_nodes_number(line_id)
 
             rows = new_connectivity.shape[0]
@@ -480,6 +469,7 @@ class DegreesOfFreedomDecoupling:
         self.update_nodes_from_points()
         self.mesh.process_mesh_related_mappings("Post-processing")
 
+
     def update_nodes_from_points(self):
         """ This method updates the nodes from created points.
         """
@@ -494,7 +484,6 @@ class DegreesOfFreedomDecoupling:
         
             self.mesh.nodes_from_points[new_point_id] = int(new_node_id)
             self.mesh.points_from_nodes[int(new_node_id)] = new_point_id
-            self.mesh.decoupled_points.append(new_point_id)
 
 
     def mimetize_the_fluid_from_decoupling_surfaces(self):
