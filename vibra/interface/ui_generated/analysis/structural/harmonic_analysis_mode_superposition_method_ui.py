@@ -17,7 +17,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QSpacerItem, QTabWidget, QVBoxLayout, QWidget)
+    QSpacerItem, QTabWidget, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -130,11 +130,11 @@ class Ui_Dialog(object):
 
         self.gridLayout_9.addWidget(self.frame_7, 0, 0, 1, 1)
 
-        self.tabWidget = QTabWidget(self.frame_2)
-        self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setMinimumSize(QSize(0, 0))
-        self.tabWidget.setMaximumSize(QSize(360, 188))
-        self.tabWidget.setFont(font1)
+        self.tabWidget_main = QTabWidget(self.frame_2)
+        self.tabWidget_main.setObjectName(u"tabWidget_main")
+        self.tabWidget_main.setMinimumSize(QSize(0, 0))
+        self.tabWidget_main.setMaximumSize(QSize(360, 188))
+        self.tabWidget_main.setFont(font1)
         self.tab_setup = QWidget()
         self.tab_setup.setObjectName(u"tab_setup")
         self.gridLayout_5 = QGridLayout(self.tab_setup)
@@ -240,193 +240,165 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
 
-        self.tabWidget.addTab(self.tab_setup, "")
-        self.widget = QWidget()
-        self.widget.setObjectName(u"widget")
-        self.gridLayout_4 = QGridLayout(self.widget)
+        self.tabWidget_main.addTab(self.tab_setup, "")
+        self.tab_damping = QWidget()
+        self.tab_damping.setObjectName(u"tab_damping")
+        self.gridLayout_4 = QGridLayout(self.tab_damping)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.gridLayout_13 = QGridLayout()
-        self.gridLayout_13.setObjectName(u"gridLayout_13")
-        self.label_16 = QLabel(self.widget)
+        self.gridLayout_4.setContentsMargins(6, 4, 6, 4)
+        self.frame_dampings = QFrame(self.tab_damping)
+        self.frame_dampings.setObjectName(u"frame_dampings")
+        self.frame_dampings.setFrameShape(QFrame.NoFrame)
+        self.frame_dampings.setFrameShadow(QFrame.Raised)
+        self.gridLayout_6 = QGridLayout(self.frame_dampings)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setContentsMargins(4, 4, 4, 4)
+        self.label_16 = QLabel(self.frame_dampings)
         self.label_16.setObjectName(u"label_16")
         self.label_16.setMinimumSize(QSize(0, 26))
         self.label_16.setMaximumSize(QSize(16777215, 26))
         self.label_16.setFont(font1)
         self.label_16.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_13.addWidget(self.label_16, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.label_16, 2, 4, 1, 1)
 
-        self.label_17 = QLabel(self.widget)
-        self.label_17.setObjectName(u"label_17")
-        self.label_17.setMinimumSize(QSize(0, 26))
-        self.label_17.setMaximumSize(QSize(16777215, 26))
-        self.label_17.setFont(font1)
-        self.label_17.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_13.addWidget(self.label_17, 1, 0, 1, 1)
-
-
-        self.gridLayout_4.addLayout(self.gridLayout_13, 1, 4, 1, 1)
-
-        self.gridLayout_15 = QGridLayout()
-        self.gridLayout_15.setObjectName(u"gridLayout_15")
-        self.label_10 = QLabel(self.widget)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setMinimumSize(QSize(40, 26))
-        self.label_10.setMaximumSize(QSize(40, 26))
+        self.lineEdit_constant_structural_coefficient = QLineEdit(self.frame_dampings)
+        self.lineEdit_constant_structural_coefficient.setObjectName(u"lineEdit_constant_structural_coefficient")
+        self.lineEdit_constant_structural_coefficient.setMinimumSize(QSize(80, 26))
+        self.lineEdit_constant_structural_coefficient.setMaximumSize(QSize(100, 26))
         font4 = QFont()
-        font4.setFamilies([u"Arial"])
-        font4.setPointSize(11)
+        font4.setPointSize(10)
         font4.setBold(False)
         font4.setItalic(False)
-        self.label_10.setFont(font4)
-        self.label_10.setAlignment(Qt.AlignCenter)
+        self.lineEdit_constant_structural_coefficient.setFont(font4)
+        self.lineEdit_constant_structural_coefficient.setStyleSheet(u"")
+        self.lineEdit_constant_structural_coefficient.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_15.addWidget(self.label_10, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.lineEdit_constant_structural_coefficient, 2, 3, 1, 1)
 
-        self.label_11 = QLabel(self.widget)
-        self.label_11.setObjectName(u"label_11")
-        self.label_11.setMinimumSize(QSize(40, 26))
-        self.label_11.setMaximumSize(QSize(40, 26))
-        self.label_11.setFont(font4)
-        self.label_11.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_15.addWidget(self.label_11, 1, 0, 1, 1)
-
-
-        self.gridLayout_4.addLayout(self.gridLayout_15, 0, 2, 1, 1)
-
-        self.verticalLayout_6 = QVBoxLayout()
-        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.label_9 = QLabel(self.widget)
+        self.label_9 = QLabel(self.frame_dampings)
         self.label_9.setObjectName(u"label_9")
-        self.label_9.setFont(font1)
+        self.label_9.setMinimumSize(QSize(132, 0))
+        self.label_9.setFont(font4)
         self.label_9.setAlignment(Qt.AlignCenter)
+        self.label_9.setWordWrap(True)
 
-        self.verticalLayout_6.addWidget(self.label_9)
-
-
-        self.gridLayout_4.addLayout(self.verticalLayout_6, 1, 1, 1, 1)
-
-        self.gridLayout_11 = QGridLayout()
-        self.gridLayout_11.setObjectName(u"gridLayout_11")
-        self.lineEdit_av = QLineEdit(self.widget)
-        self.lineEdit_av.setObjectName(u"lineEdit_av")
-        self.lineEdit_av.setMinimumSize(QSize(100, 26))
-        self.lineEdit_av.setMaximumSize(QSize(100, 26))
-        self.lineEdit_av.setFont(font1)
-        self.lineEdit_av.setStyleSheet(u"")
-        self.lineEdit_av.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_11.addWidget(self.lineEdit_av, 0, 0, 1, 1)
-
-        self.lineEdit_bv = QLineEdit(self.widget)
-        self.lineEdit_bv.setObjectName(u"lineEdit_bv")
-        self.lineEdit_bv.setMinimumSize(QSize(100, 26))
-        self.lineEdit_bv.setMaximumSize(QSize(100, 26))
-        self.lineEdit_bv.setFont(font1)
-        self.lineEdit_bv.setStyleSheet(u"")
-        self.lineEdit_bv.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_11.addWidget(self.lineEdit_bv, 1, 0, 1, 1)
-
-
-        self.gridLayout_4.addLayout(self.gridLayout_11, 0, 3, 1, 1)
+        self.gridLayout_6.addWidget(self.label_9, 2, 1, 1, 1)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 5, 1, 1)
+        self.gridLayout_6.addItem(self.horizontalSpacer, 0, 5, 1, 1)
 
-        self.gridLayout_10 = QGridLayout()
-        self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.lineEdit_ah = QLineEdit(self.widget)
-        self.lineEdit_ah.setObjectName(u"lineEdit_ah")
-        self.lineEdit_ah.setMinimumSize(QSize(100, 26))
-        self.lineEdit_ah.setMaximumSize(QSize(100, 26))
-        self.lineEdit_ah.setFont(font1)
-        self.lineEdit_ah.setStyleSheet(u"")
-        self.lineEdit_ah.setAlignment(Qt.AlignCenter)
+        self.lineEdit_stiffness_multiplier = QLineEdit(self.frame_dampings)
+        self.lineEdit_stiffness_multiplier.setObjectName(u"lineEdit_stiffness_multiplier")
+        self.lineEdit_stiffness_multiplier.setMinimumSize(QSize(80, 26))
+        self.lineEdit_stiffness_multiplier.setMaximumSize(QSize(100, 26))
+        self.lineEdit_stiffness_multiplier.setFont(font4)
+        self.lineEdit_stiffness_multiplier.setStyleSheet(u"")
+        self.lineEdit_stiffness_multiplier.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_10.addWidget(self.lineEdit_ah, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.lineEdit_stiffness_multiplier, 1, 3, 1, 1)
 
-        self.lineEdit_bh = QLineEdit(self.widget)
-        self.lineEdit_bh.setObjectName(u"lineEdit_bh")
-        self.lineEdit_bh.setMinimumSize(QSize(100, 26))
-        self.lineEdit_bh.setMaximumSize(QSize(100, 26))
-        self.lineEdit_bh.setFont(font1)
-        self.lineEdit_bh.setStyleSheet(u"")
-        self.lineEdit_bh.setAlignment(Qt.AlignCenter)
+        self.label_10 = QLabel(self.frame_dampings)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setMinimumSize(QSize(132, 0))
+        self.label_10.setFont(font4)
+        self.label_10.setAlignment(Qt.AlignCenter)
+        self.label_10.setWordWrap(True)
 
-        self.gridLayout_10.addWidget(self.lineEdit_bh, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.label_10, 1, 1, 1, 1)
 
+        self.label_11 = QLabel(self.frame_dampings)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMinimumSize(QSize(20, 26))
+        self.label_11.setMaximumSize(QSize(40, 26))
+        font5 = QFont()
+        font5.setFamilies([u"Arial"])
+        font5.setPointSize(11)
+        font5.setBold(False)
+        font5.setItalic(False)
+        self.label_11.setFont(font5)
+        self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_4.addLayout(self.gridLayout_10, 1, 3, 1, 1)
+        self.gridLayout_6.addWidget(self.label_11, 1, 2, 1, 1)
 
-        self.verticalLayout_5 = QVBoxLayout()
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.label_8 = QLabel(self.widget)
-        self.label_8.setObjectName(u"label_8")
-        self.label_8.setFont(font1)
-        self.label_8.setAlignment(Qt.AlignCenter)
-
-        self.verticalLayout_5.addWidget(self.label_8)
-
-
-        self.gridLayout_4.addLayout(self.verticalLayout_5, 0, 1, 1, 1)
-
-        self.gridLayout_12 = QGridLayout()
-        self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.label_15 = QLabel(self.widget)
-        self.label_15.setObjectName(u"label_15")
-        self.label_15.setMinimumSize(QSize(0, 26))
-        self.label_15.setMaximumSize(QSize(16777215, 26))
-        self.label_15.setFont(font1)
-        self.label_15.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_12.addWidget(self.label_15, 0, 0, 1, 1)
-
-        self.label_14 = QLabel(self.widget)
+        self.label_14 = QLabel(self.frame_dampings)
         self.label_14.setObjectName(u"label_14")
         self.label_14.setMinimumSize(QSize(0, 26))
         self.label_14.setMaximumSize(QSize(16777215, 26))
         self.label_14.setFont(font1)
         self.label_14.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_12.addWidget(self.label_14, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.label_14, 1, 4, 1, 1)
 
+        self.lineEdit_mass_multiplier = QLineEdit(self.frame_dampings)
+        self.lineEdit_mass_multiplier.setObjectName(u"lineEdit_mass_multiplier")
+        self.lineEdit_mass_multiplier.setMinimumSize(QSize(80, 26))
+        self.lineEdit_mass_multiplier.setMaximumSize(QSize(100, 26))
+        self.lineEdit_mass_multiplier.setFont(font4)
+        self.lineEdit_mass_multiplier.setStyleSheet(u"")
+        self.lineEdit_mass_multiplier.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_4.addLayout(self.gridLayout_12, 0, 4, 1, 1)
+        self.gridLayout_6.addWidget(self.lineEdit_mass_multiplier, 0, 3, 1, 1)
 
-        self.gridLayout_14 = QGridLayout()
-        self.gridLayout_14.setObjectName(u"gridLayout_14")
-        self.label_13 = QLabel(self.widget)
-        self.label_13.setObjectName(u"label_13")
-        self.label_13.setMinimumSize(QSize(40, 26))
-        self.label_13.setMaximumSize(QSize(40, 26))
-        self.label_13.setFont(font4)
-        self.label_13.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_14.addWidget(self.label_13, 0, 0, 1, 1)
-
-        self.label_12 = QLabel(self.widget)
+        self.label_12 = QLabel(self.frame_dampings)
         self.label_12.setObjectName(u"label_12")
-        self.label_12.setMinimumSize(QSize(40, 26))
+        self.label_12.setMinimumSize(QSize(20, 26))
         self.label_12.setMaximumSize(QSize(40, 26))
-        self.label_12.setFont(font4)
-        self.label_12.setAlignment(Qt.AlignCenter)
+        self.label_12.setFont(font5)
+        self.label_12.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_14.addWidget(self.label_12, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.label_12, 0, 2, 1, 1)
 
+        self.label_17 = QLabel(self.frame_dampings)
+        self.label_17.setObjectName(u"label_17")
+        self.label_17.setMinimumSize(QSize(132, 0))
+        self.label_17.setFont(font4)
+        self.label_17.setAlignment(Qt.AlignCenter)
+        self.label_17.setWordWrap(True)
 
-        self.gridLayout_4.addLayout(self.gridLayout_14, 1, 2, 1, 1)
+        self.gridLayout_6.addWidget(self.label_17, 0, 1, 1, 1)
+
+        self.label_15 = QLabel(self.frame_dampings)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setMinimumSize(QSize(0, 26))
+        self.label_15.setMaximumSize(QSize(16777215, 26))
+        self.label_15.setFont(font1)
+        self.label_15.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_6.addWidget(self.label_15, 0, 4, 1, 1)
+
+        self.label_13 = QLabel(self.frame_dampings)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setMinimumSize(QSize(20, 26))
+        self.label_13.setMaximumSize(QSize(40, 26))
+        self.label_13.setFont(font5)
+        self.label_13.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_6.addWidget(self.label_13, 2, 2, 1, 1)
 
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
+        self.gridLayout_6.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
 
-        self.tabWidget.addTab(self.widget, "")
+        self.label_12.raise_()
+        self.label_16.raise_()
+        self.lineEdit_constant_structural_coefficient.raise_()
+        self.label_9.raise_()
+        self.lineEdit_stiffness_multiplier.raise_()
+        self.label_10.raise_()
+        self.label_11.raise_()
+        self.label_14.raise_()
+        self.lineEdit_mass_multiplier.raise_()
+        self.label_17.raise_()
+        self.label_15.raise_()
+        self.label_13.raise_()
 
-        self.gridLayout_9.addWidget(self.tabWidget, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.frame_dampings, 0, 0, 1, 1)
+
+        self.tabWidget_main.addTab(self.tab_damping, "")
+
+        self.gridLayout_9.addWidget(self.tabWidget_main, 1, 0, 1, 1)
 
         self.frame = QFrame(self.frame_2)
         self.frame.setObjectName(u"frame")
@@ -465,20 +437,16 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.frame_2, 1, 0, 1, 1)
 
-        QWidget.setTabOrder(self.lineEdit_modes, self.tabWidget)
-        QWidget.setTabOrder(self.tabWidget, self.lineEdit_fmin)
+        QWidget.setTabOrder(self.lineEdit_modes, self.tabWidget_main)
+        QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_fmin)
         QWidget.setTabOrder(self.lineEdit_fmin, self.lineEdit_fmax)
         QWidget.setTabOrder(self.lineEdit_fmax, self.lineEdit_fstep)
         QWidget.setTabOrder(self.lineEdit_fstep, self.pushButton_enter_setup)
         QWidget.setTabOrder(self.pushButton_enter_setup, self.pushButton_run_analysis)
-        QWidget.setTabOrder(self.pushButton_run_analysis, self.lineEdit_av)
-        QWidget.setTabOrder(self.lineEdit_av, self.lineEdit_bv)
-        QWidget.setTabOrder(self.lineEdit_bv, self.lineEdit_ah)
-        QWidget.setTabOrder(self.lineEdit_ah, self.lineEdit_bh)
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget_main.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -498,20 +466,17 @@ class Ui_Dialog(object):
         self.label_22.setText(QCoreApplication.translate("Dialog", u"Freq. min:", None))
         self.label_23.setText(QCoreApplication.translate("Dialog", u"Freq. max:", None))
         self.label_21.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Frequency Setup", None))
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"[1/s\u00b2]", None))
-        self.label_17.setText(QCoreApplication.translate("Dialog", u"[-]", None))
-        self.label_10.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt;\">\u03b1</span><span style=\" font-size:10pt; vertical-align:sub;\">v</span><span style=\" font-size:10pt;\">:</span></p></body></html>", None))
-        self.label_11.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt;\">\u03b2</span><span style=\" font-size:10pt; vertical-align:sub;\">v</span><span style=\" font-size:10pt;\">:</span></p></body></html>", None))
-        self.label_9.setText(QCoreApplication.translate("Dialog", u"Proportional\n"
-"hysteretic", None))
-        self.label_8.setText(QCoreApplication.translate("Dialog", u"Proportional\n"
-"viscous", None))
-        self.label_15.setText(QCoreApplication.translate("Dialog", u"[1/s]", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Frequency Setup", None))
+        self.label_16.setText(QCoreApplication.translate("Dialog", u"[--]", None))
+        self.label_9.setText(QCoreApplication.translate("Dialog", u"Constant structural damping coefficient", None))
+        self.label_10.setText(QCoreApplication.translate("Dialog", u"Stiffness matrix multiplier", None))
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\"><span style=\" font-size:12pt;\">\u03b2:</span></p></body></html>", None))
         self.label_14.setText(QCoreApplication.translate("Dialog", u"[s]", None))
-        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt;\">\u03b1</span><span style=\" font-size:10pt; vertical-align:sub;\">h</span><span style=\" font-size:10pt;\">:</span></p></body></html>", None))
-        self.label_12.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"center\"><span style=\" font-size:10pt;\">\u03b2</span><span style=\" font-size:10pt; vertical-align:sub;\">h</span><span style=\" font-size:10pt;\">:</span></p></body></html>", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.widget), QCoreApplication.translate("Dialog", u"Structural damping", None))
+        self.label_12.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\"><span style=\" font-size:12pt;\">\u03b1:</span></p></body></html>", None))
+        self.label_17.setText(QCoreApplication.translate("Dialog", u"Mass matrix multiplier", None))
+        self.label_15.setText(QCoreApplication.translate("Dialog", u"[1/s]", None))
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\"><span style=\" font-size:12pt;\">\u03b7:</span></p></body></html>", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_damping), QCoreApplication.translate("Dialog", u"Structural damping", None))
         self.pushButton_enter_setup.setText(QCoreApplication.translate("Dialog", u"Enter setup", None))
         self.pushButton_run_analysis.setText(QCoreApplication.translate("Dialog", u"Run analysis", None))
     # retranslateUi
@@ -533,7 +498,7 @@ class HarmonicAnalysisModeSuperpositionMethod_UI(QDialog, Ui_Dialog):
                                 - (Layout): QGridLayout
                                         - label_2: QLabel
                                         - lineEdit_modes: QLineEdit
-                            - tabWidget: QTabWidget
+                            - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget
                                     - (Layout): QGridLayout
                                             - label_26: QLabel
@@ -545,30 +510,22 @@ class HarmonicAnalysisModeSuperpositionMethod_UI(QDialog, Ui_Dialog):
                                             - lineEdit_fmin: QLineEdit
                                             - label_23: QLabel
                                             - label_21: QLabel
-                                - widget: QWidget
+                                - tab_damping: QWidget
                                     - (Layout): QGridLayout
-                                            - (Layout): QGridLayout
-                                                    - label_16: QLabel
-                                                    - label_17: QLabel
-                                            - (Layout): QGridLayout
-                                                    - label_10: QLabel
-                                                    - label_11: QLabel
-                                            - (Layout): QVBoxLayout
-                                                    - label_9: QLabel
-                                            - (Layout): QGridLayout
-                                                    - lineEdit_av: QLineEdit
-                                                    - lineEdit_bv: QLineEdit
-                                            - (Layout): QGridLayout
-                                                    - lineEdit_ah: QLineEdit
-                                                    - lineEdit_bh: QLineEdit
-                                            - (Layout): QVBoxLayout
-                                                    - label_8: QLabel
-                                            - (Layout): QGridLayout
-                                                    - label_15: QLabel
-                                                    - label_14: QLabel
-                                            - (Layout): QGridLayout
-                                                    - label_13: QLabel
-                                                    - label_12: QLabel
+                                            - frame_dampings: QFrame
+                                                - (Layout): QGridLayout
+                                                        - label_16: QLabel
+                                                        - lineEdit_constant_structural_coefficient: QLineEdit
+                                                        - label_9: QLabel
+                                                        - lineEdit_stiffness_multiplier: QLineEdit
+                                                        - label_10: QLabel
+                                                        - label_11: QLabel
+                                                        - label_14: QLabel
+                                                        - lineEdit_mass_multiplier: QLineEdit
+                                                        - label_12: QLabel
+                                                        - label_17: QLabel
+                                                        - label_15: QLabel
+                                                        - label_13: QLabel
                             - frame: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_enter_setup: QPushButton

@@ -154,7 +154,7 @@ def load_external_mesh_and_solve():
 
     analysis_setup = {  
                       "analysis_id" : 0,
-                      "global_damping" : (0, 0, 1e-3, 1e-7),
+                      "global_damping" : (1e-3, 1e-7, 0),
                       "f_min" : f_min,
                       "f_max" : f_max,
                       "f_step" : df,

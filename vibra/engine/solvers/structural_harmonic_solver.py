@@ -47,8 +47,7 @@ class StructuralHarmonicSolver:
         if np.sum(self.prescribed_dofs_values) == 0:
             return 0.
 
-        global_damping = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
-        alpha_v, beta_v, alpha_h, beta_h = global_damping
+        alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
 
         frequencies = self.assembler.model.frequencies
         omega = 2 * np.pi * frequencies[index]
@@ -61,10 +60,7 @@ class StructuralHarmonicSolver:
         Kr_add = self.Kr @ values
         Mr_add = self.Mr @ values
 
-        f_Kadd = Kr_add
-        f_Madd = -(omega**2) * Mr_add 
-        f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
-        f_eq = f_Kadd + f_Madd + f_Cadd
+        f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_indexes = self.assembler.unprescribed_shell_dofs
@@ -87,8 +83,7 @@ class StructuralHarmonicSolver:
         if np.sum(self.prescribed_dofs_values) == 0:
             return 0.
 
-        global_damping = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
-        alpha_v, beta_v, alpha_h, beta_h = global_damping
+        alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
 
         frequencies = self.assembler.model.frequencies
 
@@ -121,10 +116,7 @@ class StructuralHarmonicSolver:
                 Mr_add = np.sum((Mr * self.array_prescribed_dofs_values[:, i]), axis=1)
                 #
                 omega = 2 * np.pi * freq
-                f_Kadd = Kr_add
-                f_Madd = -(omega**2) * Mr_add
-                f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
-                f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
+                f_eq[:, i] = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 
             logging.info("Processing prescribed dofs model excitation... [100/100]")
 
@@ -196,8 +188,7 @@ class StructuralHarmonicSolver:
         """
 
         frequencies = self.assembler.model.frequencies
-        global_damping = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
-        alpha_v, beta_v, alpha_h, beta_h = global_damping
+        alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
 
         self.get_max_min_values_of_displacements.cache_clear()
 
@@ -227,20 +218,17 @@ class StructuralHarmonicSolver:
             f = structural_loads[:, i] - f_eq
 
             if i == 0:
-
-                # evaluates C and A matrices for omega = 1
-                C = ((beta_h + beta_v) * K + (alpha_h + alpha_v) * M)
-                A = K - M + 1j * C
+                # evaluates A matrix for omega = 1
+                A = (-1 + 1j*alpha) * M + (1 + 1j*(eta + beta)) * K
 
                 is_A_complex = np.any(np.imag(A.data))
                 is_F_complex = np.any(np.imag(f))
                 is_complex = is_A_complex or is_F_complex
 
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
-                del A, C
+                del A
 
-            C = ((beta_h + omega * beta_v) * K + (alpha_h + omega * alpha_v) * M)
-            A = K - (omega**2) * M + 1j * omega * C
+            A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K 
 
             if not is_complex:
                 A.data = np.real(A.data)
