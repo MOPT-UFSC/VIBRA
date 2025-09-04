@@ -68,18 +68,19 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         color_to_surfaces = defaultdict(list)
         self.reload_composition()
 
+        surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+
         for surface, volumes in mesh.volumes_from_surface.items():
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material = properties._get_property("material", surface=surface, volume=volume)
             porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
-            perforated = properties._get_property("perforated_plate_model", surface=surface, volume=volume)
 
             if porous is not None:
                 color = color_names.YELLOW_6
 
-            elif perforated is not None:
+            elif surface in surfaces_with_perforated_plates:
                 color = color_names.WHITE
 
             elif material is not None:
@@ -107,6 +108,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         properties = app().project.model.properties
         composition_to_surfaces = defaultdict(list)
 
+        surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+
         for surface, volumes in mesh.volumes_from_surface.items():
             volume = get_first_visible_volume(volumes)
 
@@ -119,9 +122,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             material_wall = properties._get_property("material", surface=surface)
             material_volume = properties._get_property("material", volume=volume)
             porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
-            perforated = properties._get_property("perforated_plate_model", surface=surface, volume=volume)
 
-            if perforated is not None:
+            if surface in surfaces_with_perforated_plates:
                 composition = "perforated"
             elif porous is not None:
                 composition = "porous"
@@ -373,3 +375,19 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.perforated_normal_texture = read_texture(TEXTURE_DIR / "perforated_normal.jpg")
         self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
         self.wall_texture = read_texture(TEXTURE_DIR / "wall_texture.png")
+
+    def _surfaces_with_perforated_plate(self):
+        # Find both surfaces of a perforated plate
+        mesh = app().project.model.mesh
+        properties = app().project.model.properties
+
+        surfaces_with_perforated_plates = set()
+        for surface, _ in mesh.volumes_from_surface.items():
+            perforated = properties._get_property("perforated_plate_model", surface=surface)
+            decoupling = properties._get_property("degrees_of_freedom_decoupling", surface=surface)
+            if (perforated is not None) and (decoupling is not None):
+                complementary_surface = decoupling.get("new_surface_id")
+                surfaces_with_perforated_plates.add(surface)
+                surfaces_with_perforated_plates.add(complementary_surface)
+
+        return surfaces_with_perforated_plates
