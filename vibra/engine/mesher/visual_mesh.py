@@ -15,6 +15,8 @@ from OCC.Core.GCPnts import GCPnts_QuasiUniformDeflection
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from OCC.Core.TopTools import TopTools_IndexedMapOfShape
 
+from OCC.Core.Poly import Poly_Triangulation, Poly_Triangle
+
 from itertools import pairwise
 from typing import Iterator
 
@@ -56,6 +58,8 @@ class VisualMesh:
         visited_faces = set()
         visited_edges = set()
 
+        triangle: Poly_Triangle
+
         for face in iterate_faces(shape):
             face_index = face_mapper.FindIndex(face)
             if face_index in visited_faces:
@@ -63,15 +67,14 @@ class VisualMesh:
             visited_faces.add(face_index)
 
             triangulation = BRep_Tool.Triangulation(face, loc)
+            coord_shift = len(coords)
 
-            for a, b, c in extract_triangle_coords(triangulation):
-                index_a = len(coords)
-                index_b = len(coords) + 1
-                index_c = len(coords) + 2
-                triangles.append([index_a, index_b, index_c])
-                coords.append(a)
-                coords.append(b)
-                coords.append(c)
+            for i in range(triangulation.NbNodes()):
+                coords.append(triangulation.Node(i + 1).Coord())
+
+            for triangle in triangulation.Triangles():
+                triangle_indexes = np.array(triangle.Get())
+                triangles.append(triangle_indexes + coord_shift - 1)
 
             for edge in iterate_edges(face):
                 edge_index = edge_mapper.FindIndex(edge)
@@ -79,42 +82,16 @@ class VisualMesh:
                     continue
                 visited_edges.add(edge_index)
 
-                for a, b in pairwise(extract_edge_coords(edge, triangulation)):
-                    index_a = len(coords)
-                    index_b = len(coords) + 1
-                    coords.append(a)
-                    coords.append(b)
+                polygon = BRep_Tool.PolygonOnTriangulation(edge, triangulation, loc)
+                indexes = polygon.Nodes()
+                for a, b in pairwise(range(indexes.Length())):
+                    index_a = indexes.Value(a + 1) + coord_shift - 1
+                    index_b = indexes.Value(b + 1) + coord_shift - 1
+                    segments.append((index_a, index_b))
 
-        return shape
-
-
-def extract_triangle_coords(triangulation) -> Iterator[tuple[np.ndarray, np.ndarray, np.ndarray]]:
-    for i in range(1, triangulation.NbTriangles() + 1):
-        triangle = triangulation.Triangle(i)
-        a, b, c = triangle.Get()
-
-        node_a = triangulation.Node(a)
-        node_b = triangulation.Node(b)
-        node_c = triangulation.Node(c)
-
-        yield (
-            np.array([node_a.X(), node_a.Y(), node_a.Z()]),
-            np.array([node_b.X(), node_b.Y(), node_b.Z()]),
-            np.array([node_c.X(), node_c.Y(), node_c.Z()]),
-        )
-
-
-def extract_edge_coords(edge, triangulation):
-    loc = TopLoc_Location()
-    poly = BRep_Tool.PolygonOnTriangulation(edge, triangulation, loc)
-
-    if poly is None:
-        return ()
-
-    indices = poly.Nodes()
-    for i in range(1, indices.Length() + 1):
-        node = triangulation.Node(indices.Value(i))
-        yield (node.X(), node.Y(), node.Z())
+        self.coords = np.array(coords)
+        self.segments = np.array(segments)
+        self.triangles = np.array(triangles)
 
 
 def _iterate_entities(shape, entity_type):
