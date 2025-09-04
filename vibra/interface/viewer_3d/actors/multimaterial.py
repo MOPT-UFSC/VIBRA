@@ -187,6 +187,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def paint_cells(self, color: Color, cells: Sequence[int]):
         color_fmt = color.to_rgba()
         array = vtk_to_numpy(self.cell_colors)
+        if array.size == 0:
+            return
+
         array[cells] = color_fmt
         self.data.Modified()
 
@@ -226,7 +229,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return list(super().GetParts())
 
     def _surfaces_to_cells(self, surfaces: Sequence[int]) -> np.ndarray:
-        array = vtk_to_numpy(self.data.GetCellData().GetArray("surface_indexes"))
+        vtk_array = self.data.GetCellData().GetArray("surface_indexes")
+        if vtk_array is None:
+            return np.array([])
+
+        array = vtk_to_numpy(vtk_array)
         mask = np.isin(array, list(surfaces))
         return np.where(mask)[0]
 
