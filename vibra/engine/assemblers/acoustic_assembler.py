@@ -86,8 +86,8 @@ class AcousticAssembler:
                     real_values = np.array(data["real_values"])
                     imag_values = np.array(data["imag_values"])
                     complex_values = real_values + 1j * imag_values
-                
-                nodes = self.model.mesh.get_nodes_from_surface.get(surface_id)
+
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
                 if nodes is None:
                     continue
 
@@ -172,7 +172,7 @@ class AcousticAssembler:
             each column corresponds to a frequency step of analysis.
         """
 
-        if len(self.prescribed_values) == 0:
+        if prescribed_values.size == 0:
             return 0.
 
         frequencies = self.model.frequencies
