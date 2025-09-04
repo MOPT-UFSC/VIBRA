@@ -65,6 +65,12 @@ def read_texture(path: str | Path | None):
     return texture
 
 
+def get_first_visible_volume(volumes):
+    for volume in volumes:
+        if volume not in app().main_window.hidden_volumes:
+            return volume
+
+
 class MultimaterialGeometryActor(vtkPropAssembly):
     def __init__(self, mesh: Mesh | None = None):
         self.mesh = mesh
@@ -99,7 +105,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.reload_composition()
 
         for surface, volumes in mesh.volumes_from_surface.items():
-            volume = volumes[0]
+            volume = get_first_visible_volume(volumes)
+
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material = properties._get_property("material", surface=surface, volume=volume)
             porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
@@ -137,7 +144,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         composition_to_surfaces = defaultdict(list)
 
         for surface, volumes in mesh.volumes_from_surface.items():
-            volume = volumes[0]
+            volume = get_first_visible_volume(volumes)
 
             if surface in app().main_window.hidden_surfaces:
                 continue
