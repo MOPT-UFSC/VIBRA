@@ -282,7 +282,7 @@ def get_particle_velocity_from_surface(
     return particle_velocities
 
 
-def get_transmission_loss(
+def compute_transmission_loss(
         hsolver: "AcousticHarmonicSolver", 
         input_surface_id: int, 
         output_surface_id: int, 
@@ -537,7 +537,7 @@ def integrate_surface_sound_power_from_nodal_sound_intensity(
     return sound_power
 
 
-def get_noise_reduction(
+def compute_noise_reduction(
         hsolver: "AcousticHarmonicSolver",
         input_surface_id: int, 
         output_surface_id: int

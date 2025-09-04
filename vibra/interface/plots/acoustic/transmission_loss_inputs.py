@@ -8,7 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
-from vibra.engine.postprocessing import get_noise_reduction, get_transmission_loss
+from vibra.engine.postprocessing import compute_noise_reduction, compute_transmission_loss
 
 import logging
 
@@ -263,7 +263,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
 
-                x_data, y_data = get_transmission_loss(
+                x_data, y_data = compute_transmission_loss(
                     solver,
                     self.input_surface_id,
                     self.output_surface_id,
@@ -278,7 +278,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
             plot_type = "Noise reduction"
     
-            x_data, y_data = get_noise_reduction(
+            x_data, y_data = compute_noise_reduction(
                 solver,
                 self.input_surface_id, 
                 self.output_surface_id,

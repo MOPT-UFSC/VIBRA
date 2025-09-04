@@ -5,7 +5,7 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.postprocessing import get_particle_velocity_from_surface, get_transmission_loss
+from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -251,14 +251,14 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     for _node_id, element_ids in solid_elements_connected_to_nodes.items():
         Vk = 0.
         for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution)
+            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution=solution)
         particle_velocity[_node_id] = Vk / len(element_ids)
 
     # # nodal area calculation
     # mesh._process_face_elements_connected_to_nodes([1, 2])
     # mesh.compute_nodal_areas()
 
-    # freq_TL, TL_model = get_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)
+    # freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
