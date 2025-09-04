@@ -294,8 +294,8 @@ class MainWindow(MainWindow_UI):
         if volumes is None:
             volumes = set()
 
-        surfaces -= self.hidden_surfaces
-        volumes -= self.hidden_volumes
+        surfaces -= set(self.hidden_surfaces)
+        volumes -= set(self.hidden_volumes)
 
         mesh = app().project.model.mesh
 
