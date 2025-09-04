@@ -18,7 +18,22 @@ from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixed
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
 
-from .model_info_text import *
+from .model_info_text import (
+    volumes_info_text,
+    faces_info_text,
+    lines_info_text,
+    points_info_text,
+    nodes_info_text,
+    material_info_text,
+    fluid_info_text,
+    proportional_damping_info_text,
+    porous_material_info_text,
+    viscous_thermal_info_text,
+    perforated_plate_info_text,
+    mass_source_info_text,
+    acoustic_boundary_conditions_info_text,
+    structural_boundary_conditions_info_text,
+)
 
 import logging
 
@@ -333,9 +348,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         # Get the face elements of all selected volumes
         for volume in volumes:
-            surfaces = app().project.model.mesh.surfaces_from_volume[volume]
+            surfaces = mesh.surfaces_from_volume[volume]
             for face in surfaces:
-                indexes = app().project.model.mesh.elements_from_surface.get(face, [])
+                indexes = mesh.elements_from_surface.get(face, [])
                 all_faces_elements.extend(indexes)
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)

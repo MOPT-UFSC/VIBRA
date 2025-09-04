@@ -213,74 +213,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         self.check_fluid_inheritance()
 
-    def get_volumes_from_selected_nodes(self, selected_nodes: list | np.ndarray):
-        volumes_from_nodes = defaultdict(list)
-        for vol_id, nodes_from_volume in self.mesh.nodes_from_volumes.items():
-            if not np.isin(nodes_from_volume, selected_nodes).any():
-                continue
-
-            for node_id in selected_nodes:
-                if node_id not in nodes_from_volume:
-                    continue
-
-                vol_ids = volumes_from_nodes.get(node_id)
-                if vol_ids is None or vol_id not in vol_ids:
-                    volumes_from_nodes[node_id].append(vol_id)
-
-        return volumes_from_nodes
-
-    def get_volumes_from_selected_points(self, selected_points: list | np.ndarray):
-        volumes_from_points = defaultdict(list)
-        for line_id, points_from_line in self.mesh.points_from_line.items():
-            if not np.isin(points_from_line, selected_points).any():
-                continue
-
-            for surf_id in self.mesh.surfaces_from_line.get(line_id):
-                for vol_id in self.mesh.volumes_from_surface.get(surf_id):
-                    for point_id in selected_points:
-                        if point_id not in points_from_line:
-                            continue
-
-                        vol_ids = volumes_from_points.get(point_id)
-                        if vol_ids is None or vol_id not in vol_ids:
-                            volumes_from_points[point_id].append(vol_id)
-
-        return volumes_from_points
-
-    def get_volumes_from_selected_lines(self, selected_lines: list | np.ndarray):
-        volumes_from_lines = defaultdict(list)
-        for surf_id, lines_from_surface in self.mesh.lines_from_surface.items():
-            if not np.isin(lines_from_surface, selected_lines).any():
-                continue
-
-            for vol_id in self.mesh.volumes_from_surface.get(surf_id):
-                # for vol_id in self.mesh.volumes_from_surface.get(surf_id):
-                for line_id in selected_lines:
-                    if line_id not in lines_from_surface:
-                        continue
-
-                    vol_ids = volumes_from_lines.get(line_id)
-                    if vol_ids is None or vol_id not in vol_ids:
-                        volumes_from_lines[line_id].append(vol_id)
-
-        return volumes_from_lines
-
-    def get_volumes_from_selected_surfaces(self, selected_surfaces: list | np.ndarray):
-        volumes_from_surfaces = defaultdict(list)
-        for selected_surface in selected_surfaces:
-            vol_ids = self.mesh.volumes_from_surface.get(selected_surface)
-            if vol_ids is None:
-                continue
-
-            for vol_id in vol_ids:
-                if selected_surface in volumes_from_surfaces.keys():
-                    if vol_id in volumes_from_surfaces.get(selected_surface):
-                        continue
-
-                volumes_from_surfaces[selected_surface].append(vol_id)
-
-        return volumes_from_surfaces
-
     def check_volumes_from_selection(self, data: dict, print_message: bool = False):
 
         volume_ids_sets = list()
@@ -382,19 +314,19 @@ class MassSourceInputs(MassSourceInputs_UI):
             selection_ids, selection_type = selection_data
 
         if selection_type == "points":
-            volumes_from_points = self.get_volumes_from_selected_points(selection_ids)
+            volumes_from_points = self.mesh.get_volumes_from_selected_points(selection_ids)
             return self.update_inheritance_combo_box_data(volumes_from_points, print_message)
 
         elif selection_type == "nodes":
-            volumes_from_nodes = self.get_volumes_from_selected_nodes(selection_ids)
+            volumes_from_nodes = self.mesh.get_volumes_from_selected_nodes(selection_ids)
             return self.update_inheritance_combo_box_data(volumes_from_nodes, print_message)
 
         elif selection_type == "lines":
-            volumes_from_lines = self.get_volumes_from_selected_lines(selection_ids)
+            volumes_from_lines = self.mesh.get_volumes_from_selected_lines(selection_ids)
             return self.update_inheritance_combo_box_data(volumes_from_lines, print_message)
 
         elif selection_type == "surfaces":
-            volumes_from_surfaces = self.get_volumes_from_selected_surfaces(selection_ids)
+            volumes_from_surfaces = self.mesh.get_volumes_from_selected_surfaces(selection_ids)
             return self.update_inheritance_combo_box_data(volumes_from_surfaces, print_message)
 
         return False

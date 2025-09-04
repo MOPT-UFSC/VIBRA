@@ -1,4 +1,3 @@
-# fmt: off
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -878,5 +877,3 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.auxiliar_dialog.close()
 
         return super().closeEvent(a0)
-
-# fmt: on

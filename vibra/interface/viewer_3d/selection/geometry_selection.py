@@ -99,7 +99,6 @@ class GeometrySelection:
         view_coords = coordinate.GetComputedViewportValue(renderer)
         click = np.array([x, y])
 
-
         node_size = 15
         if np.linalg.norm(click - view_coords) < node_size / 2:
             equivalent_node_index = points_coords[i, 0].astype(int)

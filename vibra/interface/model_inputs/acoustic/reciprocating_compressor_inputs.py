@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
@@ -7,7 +7,7 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
@@ -427,7 +427,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
-            mesher = MeshSetupInputs(close_after_generate=True)
+            mesher = MesherSetupInputs(close_after_generate=True)
             if not mesher.complete:
                 return True
 

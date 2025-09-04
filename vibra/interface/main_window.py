@@ -44,6 +44,7 @@ from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
+import gmsh
 
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
@@ -600,12 +601,14 @@ class MainWindow(MainWindow_UI):
         volumes_to_hide = set()
         if self.selected_geometry_volumes:
             volumes_to_hide |= self.selected_geometry_volumes
+
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
                 volumes_to_hide |= set(mesh.volumes_from_surface[surface])
+
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
-                volumes_to_hide.add(mesh.volume_from_element[element])
+                volumes_to_hide.add(mesh.get_volume_from_element(element))
 
         self.hide_volumes(volumes_to_hide)
         self.clear_selection()
@@ -943,7 +946,7 @@ class MainWindow(MainWindow_UI):
                 self.update_mesh_information()
                 app().file.write_geometry_data_in_file()
                 app().file.write_mesh_data_in_file()
-                app().main_window.project_data_modified = False
+                self.project_data_modified = False
 
             self.update_geometry_information()
             self.update_toolbar_and_menu_items_after_load_project()
@@ -1139,6 +1142,12 @@ class MainWindow(MainWindow_UI):
                 return
 
         self.reset_temporary_vibra_folder()
+
+        # finalize the gmsh before closing the application
+        if gmsh.isInitialized():
+            gmsh.finalize()
+            app().processEvents()
+
         app().quit()
 
     def close_dialogs(self):

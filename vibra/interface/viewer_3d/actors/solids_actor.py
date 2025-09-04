@@ -20,20 +20,25 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from molde import Color
 from vibra.engine.mesher.element_type import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
 )
+
+from molde import Color
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.mesher.mesh import Mesh
 
 ALWAYS_FALSE = vtkSphere()
 ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
-    def __init__(self, mesh, allow_hidding=True):
+    def __init__(self, mesh: "Mesh", allow_hidding=True):
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding

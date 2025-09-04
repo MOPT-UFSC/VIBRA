@@ -1,5 +1,3 @@
-# fmt: off
-
 from vibra.engine.properties.fluid import Fluid
 
 from typing import TYPE_CHECKING
