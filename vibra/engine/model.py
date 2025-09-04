@@ -439,6 +439,143 @@ class Model:
 
         return density, speed_of_sound
 
+    def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
+        """
+        It returs the acoustic impedance of selected surface.
+
+        Parameter
+        ---------
+        surface_id: int
+            The selected surface ID.
+
+        Returns
+        -------
+        impedance: np.ndarray, float or None
+            The acoustic impedance of selected surface.
+        """
+
+        impedance = None
+
+        si_data = self.properties._get_property("specific_impedance", surface=surface_id)
+        pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
+
+        if isinstance(si_data, dict):
+            if "real_values" in si_data.keys():
+                real_values = np.array(si_data["real_values"])
+                imag_values = np.array(si_data["imag_values"])
+                impedance = real_values + 1j * imag_values
+
+            elif "anechoic_termination" in si_data.keys():
+                rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+                rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+                if isinstance(rho_eff_pm, np.ndarray):
+                    density = rho_eff_pm
+                    speed_of_sound = C_eff_pm
+
+                elif isinstance(rho_eff_tv, np.ndarray):
+                    density = rho_eff_tv
+                    speed_of_sound = C_eff_tv
+
+                else:
+
+                    fluid = self.properties._get_property("fluid", surface=surface_id)
+                    if not isinstance(fluid, Fluid):
+                        return None
+
+                    density = fluid.fluid_density
+                    speed_of_sound = fluid.speed_of_sound
+
+                impedance = density * speed_of_sound
+
+            elif "values" in si_data.keys():
+                impedance = si_data["values"][0]
+
+        elif isinstance(pw_data, dict):
+            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+            if isinstance(rho_eff_pm, np.ndarray):
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
+
+            elif isinstance(rho_eff_tv, np.ndarray):
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
+
+            else:
+                fluid = self.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    return None
+
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
+
+            impedance = density * speed_of_sound
+
+        return impedance
+
+    def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
+        """
+        This method computes the downstream pressure and particle velocity
+        from the model acoustic excitation.
+
+        Parameters
+        ----------
+        surface_id: int
+            The input surface ID.
+
+        Returns
+        -------
+        P_downstream: np.ndarray
+            The downstream pressure vector or matrix.
+
+        V_downstream: np.ndarray
+            The downstream velocity vector or matrix.
+        """
+
+        frequencies = self.frequencies
+
+        Zo_in = self.get_surface_impedance(surface_id)
+        if Zo_in is None:
+            return None, None
+
+        pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
+        sv_data = self.properties._get_property("surface_velocity", surface=surface_id)
+
+        if not (pw_data or sv_data):
+            return None, None
+
+        if isinstance(pw_data, dict):
+            values = pw_data.get("values")[0]
+            _wave_vector = pw_data.get("wave_vector")
+            wave_vector = np.array(_wave_vector, dtype=float)
+
+            if isinstance(values, complex | float):
+                P_inc = values * np.ones_like(frequencies, dtype=complex)
+            else:
+                P_inc = values
+
+            node_normals = self.mesh.get_stacked_normals_for_surface_elements(surface_id)
+            avg_normal = np.average(node_normals, axis=0).flatten()
+
+            P_downstream = P_inc * (avg_normal @ wave_vector)
+            V_downstream = -P_downstream / Zo_in
+
+        if isinstance(sv_data, dict):
+            if "real_values" in sv_data.keys():
+                real_values = np.array(sv_data["real_values"])
+                imag_values = np.array(sv_data["imag_values"])
+                V_in = real_values + 1j * imag_values
+
+            elif "values" in sv_data.keys():
+                V_in = sv_data["values"]
+
+            P_downstream = V_in * Zo_in / 2
+            V_downstream = P_downstream / Zo_in
+
+        return P_downstream, V_downstream
+
     def process_porous_material_properties(self, frequencies: np.ndarray):
         """
         This method processes the porous material model effective properties.

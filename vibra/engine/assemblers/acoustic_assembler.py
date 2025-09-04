@@ -155,6 +155,48 @@ class AcousticAssembler:
         return self.unprescribed_indexes, self.prescribed_indexes
 
 
+    def get_prescribed_pressure_model_excitation(self, prescribed_values: np.ndarray, index: int = 0):
+        """
+        This method computes the equivalent loads resulting from the degrees of freedom 
+        prescription to compound the acoustic model excitation vector.
+
+        Parameters
+        ----------
+        index: int, optional
+            An integer values that represents the frequency index.
+
+        Returns
+        -------
+        F_eq: np.ndarray
+            The equivalent acoustic load vector of complex numbers in which
+            each column corresponds to a frequency step of analysis.
+        """
+
+        if len(self.prescribed_values) == 0:
+            return 0.
+
+        frequencies = self.model.frequencies
+        omega = 2 * np.pi * frequencies[index]
+
+        values = prescribed_values[:, index]
+
+        self.Kr = self.stiffness_matrix_r
+        self.Mr = self.mass_matrix_r
+        self.Cr = self.damping_matrix_r
+        self.Cr_visc = self.visc_damping_matrix_r
+
+        Kr_add = self.Kr @ values
+        Mr_add = self.Mr @ values
+        Cr_add = (self.Cr + self.Cr_visc) @ values
+
+        F_Kadd = Kr_add
+        F_Madd = -(omega**2) * Mr_add 
+        F_Cadd = 1j * omega * Cr_add
+        F_eq = F_Kadd + F_Madd + F_Cadd
+
+        return F_eq[self.unprescribed_indexes]
+
+
     def get_surface_data_for_element_integration_by_property(self, property_label: str) -> dict:
         """ 
         This method processes the surface property data for element face
