@@ -419,12 +419,12 @@ class Ui_Dialog(object):
         self.label_16.setText(QCoreApplication.translate("Dialog", u"[--]", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Constant structural damping coefficient", None))
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Stiffness matrix multiplier", None))
-        self.label_11.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\"><span style=\" font-size:12pt;\">\u03b2:</span></p></body></html>", None))
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\">\u03b2:</p></body></html>", None))
         self.label_14.setText(QCoreApplication.translate("Dialog", u"[s]", None))
-        self.label_12.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\"><span style=\" font-size:12pt;\">\u03b1:</span></p></body></html>", None))
+        self.label_12.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\">\u03b1:</p></body></html>", None))
         self.label_17.setText(QCoreApplication.translate("Dialog", u"Mass matrix multiplier", None))
         self.label_15.setText(QCoreApplication.translate("Dialog", u"[1/s]", None))
-        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\"><span style=\" font-size:12pt;\">\u03b7:</span></p></body></html>", None))
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p align=\"right\">\u03b7:</p></body></html>", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_damping), QCoreApplication.translate("Dialog", u"Structural damping", None))
     # retranslateUi
 
