@@ -364,6 +364,8 @@ class AcousticHarmonicSolver:
         if element_3d is None:
             self.assembler.define_acoustic_elements()
             element_3d = self.assembler.element_3d
+
+        if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
         data_normals = self.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
