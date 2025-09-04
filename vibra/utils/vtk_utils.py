@@ -1,10 +1,22 @@
 from pathlib import Path
+from typing import Sequence
 
-from vtkmodules.vtkCommonCore import vtkUnsignedCharArray, vtkIntArray, vtkFloatArray
-from vtkmodules.vtkCommonDataModel import vtkPolyData
+from vtkmodules.vtkCommonCore import (
+    vtkFloatArray,
+    vtkIdList,
+    vtkIntArray,
+    vtkUnsignedCharArray,
+)
+from vtkmodules.vtkCommonDataModel import (
+    vtkPolyData,
+)
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
 from vtkmodules.vtkIOGeometry import vtkOBJReader, vtkSTLReader
+from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader
+from vtkmodules.vtkRenderingCore import (
+    vtkTexture,
+)
 
 
 def read_obj_file(path: str | Path) -> vtkPolyData:
@@ -67,5 +79,37 @@ def fill_array(data: vtkPolyData, name: str, value: int | float | tuple[int]):
     else:
         raise ValueError("Invalid data")
 
-    data.GetCellData().AddArray(array)    
+    data.GetCellData().AddArray(array)
     return array
+
+
+def create_vtk_id_list(id_list: Sequence[int]) -> vtkIdList:
+    vtk_id_list = vtkIdList()
+    for id in id_list:
+        vtk_id_list.InsertNextId(id)
+    return vtk_id_list
+
+
+def read_texture(path: str | Path | None):
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f'Texture file "{path}" not found')
+
+    if path.suffix == ".png":
+        reader = vtkPNGReader()
+    elif path.suffix == ".jpg":
+        reader = vtkJPEGReader()
+    else:
+        raise ValueError(f"Unsupported image format {path.suffix}")
+
+    reader.SetFileName(path)
+    reader.Update()
+
+    texture = vtkTexture()
+    texture.InterpolateOn()
+    texture.RepeatOn()
+    texture.SetInputData(reader.GetOutput())
+    texture.Update()
+
+    return texture

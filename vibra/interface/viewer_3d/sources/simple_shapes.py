@@ -1,6 +1,6 @@
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vibra.utils.polydata_utils import transform_polydata
+from vibra.utils.vtk_utils import transform_polydata
 from vtkmodules.vtkFiltersSources import (
     vtkConeSource,
     vtkCubeSource,
