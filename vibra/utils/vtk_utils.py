@@ -17,6 +17,7 @@ from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader
 from vtkmodules.vtkRenderingCore import (
     vtkTexture,
 )
+import numpy as np
 
 
 def read_obj_file(path: str | Path) -> vtkPolyData:
@@ -56,13 +57,13 @@ def transform_polydata(
 def fill_array(data: vtkPolyData, name: str, value: int | float | tuple[int]):
     n_cells = data.GetNumberOfCells()
 
-    if isinstance(value, int):
+    if isinstance(value, int | np.integer):
         array = vtkIntArray()
         array.SetName(name)
         array.SetNumberOfTuples(n_cells)
         array.Fill(value)
 
-    elif isinstance(value, float):
+    elif isinstance(value, float | np.floating):
         array = vtkFloatArray()
         array.SetName(name)
         array.SetNumberOfTuples(n_cells)
@@ -77,7 +78,7 @@ def fill_array(data: vtkPolyData, name: str, value: int | float | tuple[int]):
             array.FillComponent(i, val)
 
     else:
-        raise ValueError("Invalid data")
+        raise ValueError(f'Invalid data type "{type(value)}"')
 
     data.GetCellData().AddArray(array)
     return array

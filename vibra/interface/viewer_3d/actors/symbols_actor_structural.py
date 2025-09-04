@@ -54,8 +54,8 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-        surface_nodes = mesh.nodes_from_surfaces.get(surface_id)
-        surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
+        nodes = mesh.get_nodes_from_surface(surface_id)
+        surface_coordinates = mesh.nodal_coordinates[nodes, 1:]
 
         surface_normals = mesh.normals_surface.get(surface_id)
         if surface_normals is None:
@@ -79,8 +79,8 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-        line_nodes = mesh.nodes_from_lines.get(line_id)
-        line_coordinates = mesh.nodal_coordinates[line_nodes, 1:]
+        nodes = mesh.get_nodes_from_line(line_id)
+        line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
         dist = np.linalg.norm(line_coordinates - center_coords, axis=1)
         index = np.argmin(dist)
@@ -121,7 +121,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if coords is not None and property is not None:
-            U_R = [(i if i is not None else 0) for i in property["values"]]
+            U_R = [i for i in property["values"]]
 
             # handle table attributed values
             for index, i in enumerate(U_R):
@@ -129,9 +129,9 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
             # alternate add_symbol function to a generic one
             for index, v in enumerate(U_R):
-                if index < 3 and v != 0:
+                if index < 3 and v is not None:
                     self.add_symbol(sources.create_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN)
-                elif index >= 3 and v != 0:
+                elif index >= 3 and v is not None:
                     self.add_symbol(sources.create_double_cone_source, coords, (index==3, index==4, index==5), color=color_names.RED_5)    
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):

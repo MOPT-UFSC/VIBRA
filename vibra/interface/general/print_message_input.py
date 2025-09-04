@@ -1,10 +1,8 @@
-from PySide6.QtWidgets import QFrame, QLabel, QProgressBar, QPushButton, QDialog
-from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, QTimer
 
 from vibra import app
 from vibra.interface.ui_generated.messages.print_message_ui import PrintMessage_UI
-from vibra.interface.formatters.icons import *
+from vibra.interface.formatters.icons import get_error_icon, get_warning_icon
 
 from time import sleep, time 
 from molde import Color

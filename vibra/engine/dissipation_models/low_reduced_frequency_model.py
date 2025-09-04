@@ -1,15 +1,20 @@
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
 import logging
 import numpy as np
 
 from collections import defaultdict
 from scipy.special import jv
 
+
 class LowReducedFrequencyModel:
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         super().__init__()
 
         self.model = model
@@ -47,7 +52,7 @@ class LowReducedFrequencyModel:
 
                 selected_elements = self.mesh.selected_elements
                 for element_id in selected_elements:
-                    volume_id = self.mesh.volume_from_element[element_id]
+                    volume_id = self.mesh.get_volume_from_element(element_id)
                     fluid, _ = self.properties._get_property("fluid", volume=volume_id)
 
                     c_0, rho_0, mu, gamma, Pr, P_0 = fluid.get_lrf_properties()

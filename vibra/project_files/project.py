@@ -12,7 +12,7 @@ from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSo
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.loading_window import LoadingWindow
 
 import logging
@@ -254,7 +254,7 @@ class Project(QObject):
     def run_analysis(self, is_resume: bool = False):
 
         if not self.model.generated_mesh:
-            obj = MeshSetupInputs(close_after_generate=True)
+            obj = MesherSetupInputs(close_after_generate=True)
             if obj.complete:
                 app().main_window.update_plots()
             else:
@@ -301,10 +301,17 @@ class Project(QObject):
         analysis_setup = app().file.read_analysis_setup_from_file()
         if analysis_setup is None:
             return
-        
-        if not any([self.structural_harmonic_solver, self.structural_modal_solver, self.acoustic_modal_solver, self.acoustic_harmonic_solver]):
+
+        solvers = [
+                    self.structural_harmonic_solver, 
+                    self.structural_modal_solver, 
+                    self.acoustic_modal_solver, 
+                    self.acoustic_harmonic_solver
+                    ]
+
+        if not any(solvers):
             return False
-            
+
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:

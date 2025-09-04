@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -305,5 +303,3 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.keep_window_open = False
         self.process_surfaces_according_with_thickness_setup()
         return super().closeEvent(a0)
-
-# fmt: on

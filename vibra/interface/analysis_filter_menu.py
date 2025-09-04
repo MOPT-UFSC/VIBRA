@@ -1,6 +1,11 @@
 from PySide6.QtCore import Qt, QSize
-# from PySide6.QtGui import *
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QLabel, QComboBox
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QWidget,
+)
 
 from vibra import app
 

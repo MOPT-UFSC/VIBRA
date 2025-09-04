@@ -173,7 +173,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if app().project.thumbnail is None:
             self.save_thumbnail()
-    
+
     def save_thumbnail(self):
         thumbnail = app().project.thumbnail
 
@@ -187,7 +187,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.disable_scale_bar()
         thumbnail = self.get_thumbnail()
         app().project.thumbnail = removes_image_background(thumbnail)
-        
+
         if app().config.user_preferences.show_reference_scale_bar:
             self.enable_scale_bar()
 
@@ -199,22 +199,16 @@ class GeometryRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        
+
         # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
             _, physical_domain = app().project.get_analysis_type_and_physical_domain()
-        
-        self.symbols_actor_structural.SetVisibility(
-            visualization.symbols and (physical_domain == "Structural") 
-        )
-        self.symbols_actor_acoustic.SetVisibility(
-            visualization.symbols and (physical_domain == "Acoustic")
-        )
-        self.symbols_actor_acoustic_fixed_size.SetVisibility(
-            visualization.symbols and (physical_domain == "Acoustic")
-        )
+
+        self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
+        self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
+        self.symbols_actor_acoustic_fixed_size.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.multimaterial.SetVisibility(visualization.faces)
@@ -262,11 +256,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
+        self.remove_actors(
+            self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size
+        )
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
         self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
-        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
+        self.add_actors(
+            self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size
+        )
         self.visualization_changed_callback()
         self.update()
 
@@ -442,7 +440,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         return analysis_type, physical_domain
 
     def update_info_text(self):
-
         analysis_type, physical_domain = self.get_analysis_type_and_physical_domain()
 
         text = ""
