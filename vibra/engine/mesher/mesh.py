@@ -131,8 +131,6 @@ class Mesh:
         self.cache_lines_from_surface = dict()
         self.cache_points_from_line = dict()
 
-        self.decoupled_points = list()
-
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
@@ -563,8 +561,8 @@ class Mesh:
             for _node_id in corner_nodes:
                 node_id = int(_node_id)
                 if node_id in self.points_from_nodes.keys():
-                    point_from_node = self.points_from_nodes.get(node_id)
-                    points_from_line.append(point_from_node)
+                    points_from_nodes = self.points_from_nodes.get(node_id)
+                    points_from_line.append(points_from_nodes)
                     continue
 
                 point_id += 1
@@ -850,8 +848,6 @@ class Mesh:
         self.cache_lines_connectivity = None
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
-
-        self.decoupled_points.clear()
 
     def clear_geometry_data(self):
         self.geometry_information.clear()
@@ -1993,15 +1989,20 @@ class Mesh:
         return output_data, map_elements
 
     def get_array_based_elements_mapping(self, entity: str = "lines"):
+        """
+        """
         if entity == "lines":
             keys = list(self.map_line_elements.keys())
             values = list(self.map_line_elements.values())
+
         elif entity == "faces":
             keys = list(self.map_face_elements.keys())
             values = list(self.map_face_elements.values())
+
         elif entity == "solids":
             keys = list(self.map_solid_elements.keys())
             values = list(self.map_solid_elements.values())
+
         else:
             return None
 
@@ -2059,6 +2060,7 @@ class Mesh:
         return center_coords
 
     def get_element_face_normal(self, connect: np.ndarray):
+
         # ie = self.faces_connectivity[element_id, 4:]
         coords = self.nodal_coordinates[connect, 1:]
 
@@ -2093,123 +2095,6 @@ class Mesh:
         x_max, y_max, z_max = np.max(nodal_coordinates[:, 1:], axis=0)
         principal_diagonal = np.sqrt((x_max - x_min)**2 + (y_max - y_min)**2 + (z_max - z_min)**2)
         return principal_diagonal
-
-    def get_elements_and_nodes_from_sphere(
-        self,
-        surface_ids,
-        selection_radius,
-        averaged=False,
-        filter_type=0,
-        export_data=False,
-    ):
-        list_center_coords = self.get_average_nodal_coordinates(
-            surface_ids, averaged=averaged
-        )
-
-        if not list_center_coords:
-            return list(), list()
-
-        selected_elements = list()
-        nodes_inside_sphere = list()
-        node_indexes = self.nodal_coordinates[:, 0]
-        nodal_coordinates = self.nodal_coordinates[:, 1:]
-
-        for center_coords in list_center_coords:
-            if (
-                filter_type == 0
-            ):  # filters the elements inside sphere based on elements coordinates center
-                filter_radius = 1.1 * selection_radius
-                _, filtered_elements = (
-                    self.get_nodes_inside_sphere_and_its_elements_connected(
-                        center_coords, filter_radius
-                    )
-                )
-
-                if filtered_elements:
-                    filtered_solid_elements = self.process_element_average_coordinates(
-                        filtered_elements
-                    )
-                    element_indexes = np.array(
-                        list(filtered_solid_elements.keys()), dtype=int
-                    )
-                    elements_center_coordinates = np.array(
-                        list(filtered_solid_elements.values()), dtype=float
-                    )
-                else:
-                    return
-
-                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
-                diff_elem = np.linalg.norm(
-                    elements_center_coordinates - center_coords, axis=1
-                )
-
-                mask_nodes = diff_nodes <= selection_radius
-                mask_elem = diff_elem <= selection_radius
-
-                if sum(mask_nodes):
-                    for node_id in node_indexes[mask_nodes]:
-                        if node_id not in nodes_inside_sphere:
-                            nodes_inside_sphere.append(node_id)
-
-                if sum(mask_elem):
-                    for element_id in element_indexes[mask_elem]:
-                        if element_id not in selected_elements:
-                            selected_elements.append(element_id)
-
-            else:  # filters the elements inside sphere based on nodal coordinates
-                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
-                mask_nodes = diff_nodes <= selection_radius
-
-                if sum(mask_nodes):
-                    nodes_inside_sphere = node_indexes[mask_nodes]
-                    selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
-                    for _node, element_ids in selection_data.items():
-                        for element_id in element_ids:
-                            if element_id not in selected_elements:
-                                selected_elements.append(element_id)
-
-        self.nodes_inside_sphere = nodes_inside_sphere
-        self.selected_elements = selected_elements
-
-        if export_data:
-            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
-            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
-            list_nodes = np.array(nodes_inside_sphere).reshape(-1, 1)
-            list_elements = np.array(selected_elements).reshape(-1, 1)
-            connectivity = self.solids_connectivity[:, 4:]
-            rows = len(list_elements)
-            cols = connectivity.shape[1]
-            data_elem = np.zeros((rows, cols + 1), dtype=int)
-            data_elem[:, 0] = selected_elements
-            data_elem[:, 1:] = connectivity[selected_elements, :]
-
-            np.savetxt("nodes_inside_sphere.dat", list_nodes, delimiter=";", fmt="%i")
-            np.savetxt("selected_elements.dat", list_elements, delimiter=";", fmt="%i")
-            np.savetxt("selected_elements_data.dat", data_elem, delimiter=";", fmt="%i")
-            # print(f"Number of nodes: {len(nodes_inside_sphere)}")
-            # print(f"Number of elements: {len(selected_elements)}")
-
-        return selected_elements, nodes_inside_sphere
-
-    def get_nodes_inside_sphere_and_its_elements_connected(
-        self, center_coords, selection_radius
-    ):
-        node_indexes = self.nodal_coordinates[:, 0]
-        nodal_coordinates = self.nodal_coordinates[:, 1:]
-
-        diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
-        mask_nodes = diff_nodes <= selection_radius
-        nodes_inside_sphere = node_indexes[mask_nodes]
-
-        selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
-
-        _selected_elements = list()
-        for _node, element_ids in selection_data.items():
-            _selected_elements.extend(element_ids)
-
-        selected_elements = np.array([*set(_selected_elements)], dtype=int)
-
-        return nodes_inside_sphere, list(selected_elements)
 
     def check_selected_ids(
         self,
@@ -2333,6 +2218,126 @@ class Mesh:
         nearest_coords = self.nodal_coordinates[indexes[0], 1:]
 
         return nearest_node, nearest_coords
+
+    def get_elements_and_nodes_from_sphere(
+        self,
+        surface_ids,
+        selection_radius,
+        averaged=False,
+        filter_type=0,
+        export_data=False,
+    ):
+        list_center_coords = self.get_average_nodal_coordinates(
+            surface_ids, averaged=averaged
+        )
+
+        if not list_center_coords:
+            return list(), list()
+
+        selected_elements = list()
+        nodes_inside_sphere = list()
+        node_indexes = self.nodal_coordinates[:, 0]
+        nodal_coordinates = self.nodal_coordinates[:, 1:]
+
+        for center_coords in list_center_coords:
+            if (
+                filter_type == 0
+            ):  # filters the elements inside sphere based on elements coordinates center
+                filter_radius = 1.1 * selection_radius
+                _, filtered_elements = (
+                    self.get_nodes_inside_sphere_and_its_elements_connected(
+                        center_coords, filter_radius
+                    )
+                )
+
+                if filtered_elements:
+                    filtered_solid_elements = self.process_element_average_coordinates(
+                        filtered_elements
+                    )
+                    element_indexes = np.array(
+                        list(filtered_solid_elements.keys()), dtype=int
+                    )
+                    elements_center_coordinates = np.array(
+                        list(filtered_solid_elements.values()), dtype=float
+                    )
+                else:
+                    return
+
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+                diff_elem = np.linalg.norm(
+                    elements_center_coordinates - center_coords, axis=1
+                )
+
+                mask_nodes = diff_nodes <= selection_radius
+                mask_elem = diff_elem <= selection_radius
+
+                if sum(mask_nodes):
+                    for node_id in node_indexes[mask_nodes]:
+                        if node_id not in nodes_inside_sphere:
+                            nodes_inside_sphere.append(node_id)
+
+                if sum(mask_elem):
+                    for element_id in element_indexes[mask_elem]:
+                        if element_id not in selected_elements:
+                            selected_elements.append(element_id)
+
+            else:  # filters the elements inside sphere based on nodal coordinates
+                diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+                mask_nodes = diff_nodes <= selection_radius
+
+                if sum(mask_nodes):
+                    nodes_inside_sphere = node_indexes[mask_nodes]
+                    selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
+                    for _node, element_ids in selection_data.items():
+                        for element_id in element_ids:
+                            if element_id not in selected_elements:
+                                selected_elements.append(element_id)
+
+        self.nodes_inside_sphere = nodes_inside_sphere
+        self.selected_elements = selected_elements
+
+        if export_data:
+            # list_nodes = np.array(nodes_inside_sphere, dtype=int).reshape(-1,1)
+            # list_elements = np.array(selected_elements, dtype=int).reshape(-1,1)
+            list_nodes = np.array(nodes_inside_sphere).reshape(-1, 1)
+            list_elements = np.array(selected_elements).reshape(-1, 1)
+            connectivity = self.solids_connectivity[:, 4:]
+            rows = len(list_elements)
+            cols = connectivity.shape[1]
+            data_elem = np.zeros((rows, cols + 1), dtype=int)
+            data_elem[:, 0] = selected_elements
+            data_elem[:, 1:] = connectivity[selected_elements, :]
+
+            np.savetxt("nodes_inside_sphere.dat", list_nodes, delimiter=";", fmt="%i")
+            np.savetxt("selected_elements.dat", list_elements, delimiter=";", fmt="%i")
+            np.savetxt("selected_elements_data.dat", data_elem, delimiter=";", fmt="%i")
+            # print(f"Number of nodes: {len(nodes_inside_sphere)}")
+            # print(f"Number of elements: {len(selected_elements)}")
+
+        return selected_elements, nodes_inside_sphere
+
+    def get_nodes_inside_sphere_and_its_elements_connected(
+            self, 
+            center_coords, 
+            selection_radius
+        ):
+        node_indexes = self.nodal_coordinates[:, 0]
+        nodal_coordinates = self.nodal_coordinates[:, 1:]
+
+        diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
+        mask_nodes = diff_nodes <= selection_radius
+        nodes_inside_sphere = node_indexes[mask_nodes]
+
+        selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
+
+        _selected_elements = list()
+        for _node, element_ids in selection_data.items():
+            _selected_elements.extend(element_ids)
+
+        selected_elements = np.array([*set(_selected_elements)], dtype=int)
+
+        return nodes_inside_sphere, list(selected_elements)
+
 
 if __name__ == "__main__":
     # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Paralelepipedo.STEP"
