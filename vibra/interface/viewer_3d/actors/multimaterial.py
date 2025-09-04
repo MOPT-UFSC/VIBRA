@@ -262,20 +262,27 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             # Every surface have its own plane defining
             # how to project the texture coordinates on it
             add_tcoords = vtkTextureMapToPlane()
-            add_tcoords.AutomaticPlaneGenerationOff()
-
-            # This should have been calculated by the mesher
-            # or even better: by a geometry class
             all_normals = self.mesh.normals_surface.get(surface)
-            normal = np.average(all_normals, axis=0) if (all_normals is not None) else (0, 0, 1)
-            normal /= np.linalg.norm(normal)
-            nx, ny, nz = normal * 0.08
-            p1 = np.array([-ny, nz, nx])
-            p2 = np.cross(p1, normal)
 
-            add_tcoords.SetOrigin(0, 0, 0)
-            add_tcoords.SetPoint1(p1)
-            add_tcoords.SetPoint2(p2)
+            if all_normals is None:
+                add_tcoords.AutomaticPlaneGenerationOn()
+                add_tcoords.SetTRange(0, 5)
+                add_tcoords.SetSRange(0, 5)
+
+            else:
+                add_tcoords.AutomaticPlaneGenerationOff()
+
+                # This should have been calculated by the mesher
+                # or even better: by a geometry class
+                normal = np.average(all_normals, axis=0) if (all_normals is not None) else (0, 0, 1)
+                normal /= np.linalg.norm(normal)
+                nx, ny, nz = normal * 0.08
+                p1 = np.array([-ny, nz, nx])
+                p2 = np.cross(p1, normal)
+
+                add_tcoords.SetOrigin(0, 0, 0)
+                add_tcoords.SetPoint1(p1)
+                add_tcoords.SetPoint2(p2)
 
             add_tcoords.SetInputData(data)
             add_tcoords.Update()
