@@ -175,9 +175,12 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_geometry_data_from_file(self):
-        geometry_data = dict()
+
+        if not self.geometry_data_filepath.exists():
+            return dict()
 
         try:
+            geometry_data = dict()
             with h5py.File(self.geometry_data_filepath, "r") as f:
 
                 for group in list(f.keys()):
@@ -309,9 +312,12 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_mesh_data_from_file(self):
-        mesh_data = dict()
+
+        if not self.geometry_data_filepath.exists():
+            return dict()
 
         try:
+            mesh_data = dict()
             with h5py.File(self.mesh_data_filepath, "r") as f:
 
                 for group in list(f.keys()):
@@ -519,6 +525,9 @@ class ProjectFile:
 
     def read_imported_table_data_from_file(self):
 
+        if not self.imported_table_data_filepath.exists():
+            return dict()
+
         try:
             tables_data = dict()
             with h5py.File(self.imported_table_data_filepath, "r") as f:
@@ -630,10 +639,12 @@ class ProjectFile:
             self.harmonic_solution_filepath.unlink()
 
     def read_results_data_from_file(self):
-        results_data = dict()
+
+        if not self.results_data_filepath.exists():
+            return dict()
 
         try:
-
+            results_data = dict()
             with h5py.File(self.results_data_filepath, "r") as f:
 
                 for group in list(f.keys()):
