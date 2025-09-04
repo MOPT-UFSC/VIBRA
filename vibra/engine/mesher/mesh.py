@@ -805,7 +805,12 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list, gradient: float = 1.0):
+    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list, gradient = None):
+        
+        if gradient is None:
+            gradient = global_size
+            # gradient = global_size*3
+
         fields_list = []
         # global size field
         global_field = gmsh.model.mesh.field.add("Constant")
