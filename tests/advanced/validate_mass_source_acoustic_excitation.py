@@ -5,6 +5,7 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
+from vibra.engine.postprocessing import get_particle_velocity_from_surface, get_transmission_loss
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -14,13 +15,12 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
-# import pytest
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from time import time
 from pandas import read_excel
 from openpyxl import load_workbook
+from time import time
 
 # @pytest.mark.slow
 # @pytest.mark.skip
@@ -243,8 +243,8 @@ def load_external_mesh_and_solve(assignment_type: str):
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
     rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1, rho_eff_v1)
-    output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2, rho_eff_v2)
+    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
+    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
