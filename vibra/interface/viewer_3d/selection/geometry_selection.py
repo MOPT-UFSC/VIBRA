@@ -39,9 +39,9 @@ class GeometrySelection:
             surface_volumes = mesh.volumes_from_surface.get(surface, [])
             volume_ids.update(surface_volumes)
 
-        # Cheating a bit to prioritize point selection
-        point_distance *= 0.96
-        line_distance *= 0.98
+        # Cheating a bit to prioritize selection of points and lines
+        point_distance *= 0.98
+        line_distance *= 0.99
         closest = min(point_distance, line_distance, surface_distance)
 
         if closest == point_distance:
