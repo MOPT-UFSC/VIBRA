@@ -769,8 +769,9 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list, gradient = None):
-        
+    def local_mesh_refine(
+        self, global_size: float | int, refinement_parameters: list, gradient=None
+    ):
         if gradient is None:
             gradient = global_size
             # gradient = global_size*3
@@ -785,8 +786,7 @@ class Mesh:
         fields_list.append(global_field)
 
         for selection_type, local_size, selection_ids in refinement_parameters:
-
-            # calculates distance to selected entities  
+            # calculates distance to selected entities
             distance_field = gmsh.model.mesh.field.add("Distance")
             if selection_type == "lines":
                 gmsh.model.mesh.field.setNumbers(distance_field, "CurvesList", selection_ids)
@@ -802,8 +802,10 @@ class Mesh:
             gmsh.model.mesh.field.setNumber(threshold_field, "InField", distance_field)
             gmsh.model.mesh.field.setNumber(threshold_field, "SizeMin", local_size)
             gmsh.model.mesh.field.setNumber(threshold_field, "SizeMax", global_size)
-            gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", 0.0) 
-            gmsh.model.mesh.field.setNumber(threshold_field, "DistMax", gradient) # from here, global_size
+            gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", 0.0)
+            gmsh.model.mesh.field.setNumber(
+                threshold_field, "DistMax", gradient
+            )  # from here, global_size
 
             fields_list.append(threshold_field)
 
