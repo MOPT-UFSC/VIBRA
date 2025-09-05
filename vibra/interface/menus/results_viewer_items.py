@@ -43,7 +43,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable pulsation (Reciprocating Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
-        self.item_child_acoustic_specific_impedance = self.add_item("Acoustic Specific Impedance")
+        self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
+        self.item_child_absorption_coefficient = self.add_item("Absorption Coefficient")
 
         self.top_level_items = [
                                 self.item_top_results_viewer_acoustic,
@@ -103,7 +104,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_waveform.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
-        self.item_child_acoustic_specific_impedance.setDisabled(key)
+        self.item_child_acoustic_impedance.setDisabled(key)
+        self.item_child_absorption_coefficient.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
@@ -197,7 +199,8 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_pressure_waveform.setDisabled(False)
             self.item_child_TL_NR.setDisabled(False)
             self.item_child_particle_velocity.setDisabled(False)
-            self.item_child_acoustic_specific_impedance.setDisabled(False)
+            self.item_child_acoustic_impedance.setDisabled(False)
+            self.item_child_absorption_coefficient.setDisabled(False)
 
         self.update_allowable_pulsation_criteria_visibility(analysis_id)
         self.update_tree_visibility_after_solution()

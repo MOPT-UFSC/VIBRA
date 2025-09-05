@@ -1,10 +1,11 @@
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
+from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -14,13 +15,12 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
-# import pytest
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from time import time
 from pandas import read_excel
 from openpyxl import load_workbook
+from time import time
 
 # valid mesh sizes: 20mm and 200mm.
 mesh_size = "200mm"
@@ -75,10 +75,10 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
 
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
-        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
+        mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
@@ -219,8 +219,8 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     # print(M_mat*rho_0)
     # return
 
-    input_rows = mesh.nodes_from_surfaces[1]
-    output_rows = mesh.nodes_from_surfaces[2]
+    input_rows = mesh.external_nodes_from_surfaces[1]
+    output_rows = mesh.external_nodes_from_surfaces[2]
 
     input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
@@ -230,14 +230,14 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     element_3d = assembler.element_3d
 
     list_nodes = list()
-    for tag, surface_nodes in mesh.nodes_from_surfaces.items():
+    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
     rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1, rho_eff_v1)
-    output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2, rho_eff_v2)
+    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
+    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
@@ -251,14 +251,14 @@ def load_external_mesh_and_solve(interior_impedance: bool = False):
     for _node_id, element_ids in solid_elements_connected_to_nodes.items():
         Vk = 0.
         for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution)
+            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution=solution)
         particle_velocity[_node_id] = Vk / len(element_ids)
 
     # # nodal area calculation
     # mesh._process_face_elements_connected_to_nodes([1, 2])
     # mesh.compute_nodal_areas()
 
-    # freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2, surface_integration=False)
+    # freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")

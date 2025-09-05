@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtCore import Qt
 
 from vibra import app

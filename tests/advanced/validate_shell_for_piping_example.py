@@ -1,6 +1,6 @@
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
@@ -76,10 +76,10 @@ def load_external_mesh_and_solve():
 
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
-        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
+        mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
 
     # # Load the external data
@@ -154,7 +154,7 @@ def load_external_mesh_and_solve():
 
     analysis_setup = {  
                       "analysis_id" : 0,
-                      "global_damping" : (0, 0, 1e-3, 1e-7),
+                      "global_damping" : (1e-3, 1e-7, 0),
                       "f_min" : f_min,
                       "f_max" : f_max,
                       "f_step" : df,
@@ -208,8 +208,8 @@ def load_external_mesh_and_solve():
 
     solution = harmonic_solver.solution
 
-    top_right_face_nodes = mesh.nodes_from_surfaces[5]
-    branch2_top_face_nodes = mesh.nodes_from_surfaces[7]
+    top_right_face_nodes = mesh.external_nodes_from_surfaces[5]
+    branch2_top_face_nodes = mesh.external_nodes_from_surfaces[7]
 
     dofs_index = {
                   "ux" : 0,

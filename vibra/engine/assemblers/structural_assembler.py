@@ -49,14 +49,20 @@ class StructuralAssembler:
         prescribed_data = defaultdict(int)
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property == selected_property:
-                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
+
                 property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
                 for gdof, p_data in property_data_from_nodes.items():
                     prescribed_data[gdof] += p_data
 
         for (property, line_id), data in self.properties.line_properties.items():
             if property == selected_property:
-                nodes = self.model.mesh.nodes_from_lines[line_id]
+                nodes = self.model.mesh.get_nodes_from_line(line_id)
+                if nodes is None:
+                    continue
+
                 property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "lines")
                 for gdof, p_data in property_data_from_nodes.items():
                     prescribed_data[gdof] += p_data
@@ -205,12 +211,16 @@ class StructuralAssembler:
         output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
+            if property not in ["distributed_loads", "normal_pressure_loads"]:
+                continue
+
+            connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
             if property == "distributed_loads":
                 surface_load = self.process_loads_arrays(data["values"])
                 if surface_load is None:
                     continue
 
-                for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
+                for connect in connectivities_from_surface:
                     g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_area(connect, surface_load)
                     output[g_dofs, :] += F_elem
 
@@ -219,7 +229,7 @@ class StructuralAssembler:
                 if normal_pressure is None:
                     continue
 
-                for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
+                for connect in connectivities_from_surface:
                     g_dofs, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
                     output[g_dofs, :] += F_elem
 
@@ -229,13 +239,16 @@ class StructuralAssembler:
                 if line_load is None:
                     continue
 
-                nodes_from_line = self.model.mesh.nodes_from_lines[line_id]
-                for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                    connectivities = self.model.mesh.connectivity_from_surfaces[surface_id]
-                    mask = np.sum(np.isin(connectivities, nodes_from_line), axis=1) == 2
+                nodes = self.model.mesh.get_nodes_from_line(line_id)
+                if nodes is None:
+                    continue
 
-                    for connect_2d in connectivities[mask, :]:
-                        active_nodes = [1 if node_id in nodes_from_line else 0 for node_id in connect_2d]
+                for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
+                    rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
+
+                    for connect_2d in connectivities_from_surface[rows, :]:
+                        active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
                         g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dofs, :] += F_elem
 
@@ -313,12 +326,16 @@ class StructuralAssembler:
         for key in self.model.properties.surface_properties.keys():
             property, surface_id = key
             if property == "surface_thickness":
-                active_nodes_list.extend(self.model.mesh.nodes_from_surfaces[surface_id])
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
+
+                active_nodes_list.extend(nodes)
 
         active_dofs = np.array([])
         if active_nodes_list:
             shell_local_dofs = np.arange(element_2D.DOFS_PER_NODE)
-            active_nodes = np.array([*set(active_nodes_list)], dtype=int)
+            active_nodes = np.unique(active_nodes_list).astype(int)
             active_dofs = element_2D.DOFS_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dofs 
             active_dofs = np.sort(active_dofs.flatten())
 
@@ -340,49 +357,51 @@ class StructuralAssembler:
 
         self.active_2d_element_dofs, self.n_dofs, shift_index = self.process_face_elements_with_thickness(self.element_2d, self.element_3d)
 
-        self.element_3d.reorder_connect()
-        # rows_se, cols_se = self.element_3d.generate_ind_rows_cols()
-        # self.ind_rows = np.append(self.ind_rows, rows_se)
-        # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        dofs = self.element_3d.DOFS_PER_ELEMENT
-        nel = len(self.element_3d.connectivity)
+        if self.model.mesh.solids_connectivity.size:
+            self.element_3d.reorder_connect()
+            # rows_se, cols_se = self.element_3d.generate_ind_rows_cols()
+            # self.ind_rows = np.append(self.ind_rows, rows_se)
+            # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-        ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
-        ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
-        data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
-        data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
+            dofs = self.element_3d.DOFS_PER_ELEMENT
+            nel = len(self.element_3d.connectivity)
 
-        last_progress = 0
+            ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
+            ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
+            data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
+            data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
 
-        # loop for solid elements
-        for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
+            last_progress = 0
 
-            progress = 100 * np.round(el_index/nel, 2)
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
+            # loop for 3d elements
+            for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
 
-            last_progress = progress
+                progress = 100 * np.round(el_index/nel, 2)
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
-            material = self.model.properties._get_property("material", volume=vol_id)
-            if material is None:
-                continue
+                last_progress = progress
 
-            rows, cols = self.element_3d.get_rows_and_cols_indexes(el_index, shift_index)
-            ind_rows[el_index, :, :] = rows
-            ind_cols[el_index, :, :] = cols
+                material = self.model.properties._get_property("material", volume=vol_id)
+                if material is None:
+                    continue
 
-            Ke, Me = self.element_3d.elementary_matrices(el_index, material)
-            data_K_se[el_index, :, :] = Ke
-            data_M_se[el_index, :, :] = Me
+                rows, cols = self.element_3d.get_rows_and_cols_indexes(el_index, shift_index)
+                ind_rows[el_index, :, :] = rows
+                ind_cols[el_index, :, :] = cols
 
-        self.data_K = np.append(self.data_K, data_K_se.flatten())
-        self.data_M = np.append(self.data_M, data_M_se.flatten())
+                Ke, Me = self.element_3d.elementary_matrices(el_index, material)
+                data_K_se[el_index, :, :] = Ke
+                data_M_se[el_index, :, :] = Me
 
-        self.ind_rows = np.append(self.ind_rows, ind_rows.flatten())
-        self.ind_cols = np.append(self.ind_cols, ind_cols.flatten())
+            self.data_K = np.append(self.data_K, data_K_se.flatten())
+            self.data_M = np.append(self.data_M, data_M_se.flatten())
 
-        # np.savetxt("indexes_exported.dat", np.array([ind_rows.flatten(), ind_cols.flatten()], dtype=int).T, delimiter=",", fmt="%i")
+            self.ind_rows = np.append(self.ind_rows, ind_rows.flatten())
+            self.ind_cols = np.append(self.ind_cols, ind_cols.flatten())
+
+            # np.savetxt("indexes_exported.dat", np.array([ind_rows.flatten(), ind_cols.flatten()], dtype=int).T, delimiter=",", fmt="%i")
 
         aux_nodes = list()
 
@@ -402,7 +421,7 @@ class StructuralAssembler:
 
             last_progress = 0
 
-            # loop for face elements
+            # loop for 2d elements
             for el_index, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
 
                 progress = 100 * np.round(el_index/nel, 2)

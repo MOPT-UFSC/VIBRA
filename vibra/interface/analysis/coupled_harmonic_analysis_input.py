@@ -1,8 +1,5 @@
-from pathlib import Path
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.analysis.coupled.coupled_harmonic_analysis_input_ui import CoupledHarmonicAnalysisInput_UI

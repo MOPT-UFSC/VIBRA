@@ -6,7 +6,7 @@ from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -496,7 +496,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
-            self.mesher = MeshSetupInputs(close_after_generate=True)
+            self.mesher = MesherSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
                 return True

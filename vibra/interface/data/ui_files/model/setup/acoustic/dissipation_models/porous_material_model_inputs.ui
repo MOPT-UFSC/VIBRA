@@ -767,8 +767,8 @@
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset resource="../../../../icons/resources.qrc">
-                     <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
+                    <iconset resource="../../../../../icons/resources.qrc">
+                     <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
                    </property>
                    <property name="iconSize">
                     <size>
@@ -1364,8 +1364,8 @@
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset resource="../../../../icons/resources.qrc">
-                     <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
+                    <iconset resource="../../../../../icons/resources.qrc">
+                     <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
                    </property>
                    <property name="iconSize">
                     <size>
@@ -3176,7 +3176,7 @@
   <tabstop>pushButton_remove</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../../icons/resources.qrc"/>
+  <include location="../../../../../icons/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

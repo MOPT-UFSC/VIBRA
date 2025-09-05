@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QToolButton
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
@@ -143,7 +143,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)
 
-    def imported_dB_data(self):
+    def imported_real_data(self):
         self.imported_dB = True
         self.comboBox_plot_type.setCurrentIndex(2)
         self.comboBox_plot_type.setDisabled(True)

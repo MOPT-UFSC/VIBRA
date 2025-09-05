@@ -107,13 +107,12 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        tab_list = self.tabWidget_main.currentIndex() == 2
+        if tab_list:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_attribute.setDisabled(tab_list)
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()

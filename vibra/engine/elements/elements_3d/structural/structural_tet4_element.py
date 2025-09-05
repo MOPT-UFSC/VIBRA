@@ -2,6 +2,11 @@ import numpy as np
 
 from vibra.engine.elements.solid_elements import Element3D
 from vibra.engine.properties.material import Material
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
 # fmt: off
 
 def shapeT4C(ssx, ttx, rrx):
@@ -48,7 +53,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
     DOFS_PER_NODE = 3
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         #
         self.model = model
         self.initialize_variables()
@@ -57,12 +62,14 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
     def initialize_variables(self):
         """ """
+        self.connectivity = None
         self.element_label = "structural_tetrahedron_4"
+        
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.connectivity = self.model.mesh.solids_connectivity
+        self.solids_connectivity = self.model.mesh.solids_connectivity
         #
         self.number_of_nodes = len(self.nodal_coordinates)
-        self.number_of_elements = len(self.connectivity)
+        self.number_of_elements = len(self.solids_connectivity)
 
     def define_integration_points(self):
         """ """
@@ -157,7 +164,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7]]
+        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+            self.connectivity = self.solids_connectivity[:, [0, 6, 4, 5, 7]]
 
     def get_rows_and_cols_indexes(self, el_index: int, shift_index: int):
 
@@ -172,7 +180,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
             shift = shift_index
             dofs_node = self.DOFS_PER_NODE
-            surface_ids = self.model.mesh.surfaces_from_node.get(node_id, list())
+            surface_ids = self.model.mesh.get_surfaces_from_node(node_id)
 
             for surface_id in surface_ids:
                 shell_data = self.model.properties._get_property("surface_thickness", surface=surface_id)
@@ -191,10 +199,13 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
         return ind_rows, ind_cols
 
-    def generate_ind_rows_cols(self):
+    def generate_ind_rows_cols(self, reorder: bool = True):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
-        self.reorder_connect()
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7]]
 
         dofs = self.DOFS_PER_NODE
         edofs = self.DOFS_PER_ELEMENT

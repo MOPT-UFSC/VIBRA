@@ -4,7 +4,6 @@ from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
-from vibra.interface.formatters.icons import *
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
