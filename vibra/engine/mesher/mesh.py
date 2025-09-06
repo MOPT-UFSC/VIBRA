@@ -773,8 +773,8 @@ class Mesh:
         self, global_size: float | int, refinement_parameters: list, gradient=None
     ):
         if gradient is None:
-            gradient = global_size
-            # gradient = global_size*3
+            # gradient = global_size
+            gradient = global_size*3
 
         fields_list = []
         # global size field
@@ -814,15 +814,19 @@ class Mesh:
 
     def automatic_mesh_refinement(self):
         refinement_parameters = []
+        detected_surfaces = []
         for line, length in self.length_from_lines.items():
-            if length <= self.max_element_size/1000: # aqui é necessário converter as unidades
+            if (length <= self.max_element_size):  # aqui é necessário converter as u1nidades
+                print(":(")
                 vinculated_surfaces = gmsh.model.get_adjacencies(1, line)[0]
-                # vinculated_surfaces_areas = [gmsh.model.occ.get]
-                
-                # refinement_parameters.append(("lines", length, [line]))
-                # print(line, length, self.max_element_size/1000)
+                vinculated_surfaces_areas = [self.area_from_surfaces[surface] for surface in vinculated_surfaces]
+                smallest_surface = vinculated_surfaces[np.argmin(vinculated_surfaces_areas)]
 
-            self.local_mesh_refine(self.max_element_size, refinement_parameters)
+                if smallest_surface not in detected_surfaces:
+                    refinement_parameters.append(("surfaces", length, [smallest_surface]))
+                    detected_surfaces.append(smallest_surface)
+            print(detected_surfaces)
+            # self.local_mesh_refine(self.max_element_size, refinement_parameters)
             
     def _configure_mesh(self, **kwargs):
         size_factor = kwargs.get("size_factor", 0.0)
