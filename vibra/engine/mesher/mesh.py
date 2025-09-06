@@ -3,11 +3,11 @@ import logging
 import numpy as np
 import os
 import sys
+from vibra import app
 
 from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
-from time import time
 from traceback import print_exception
 from typing import Literal
 
@@ -803,9 +803,7 @@ class Mesh:
             gmsh.model.mesh.field.setNumber(threshold_field, "SizeMin", local_size)
             gmsh.model.mesh.field.setNumber(threshold_field, "SizeMax", global_size)
             gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", 0.0)
-            gmsh.model.mesh.field.setNumber(
-                threshold_field, "DistMax", gradient
-            )  # from here, global_size
+            gmsh.model.mesh.field.setNumber(threshold_field, "DistMax", gradient)  # from here, global_size
 
             fields_list.append(threshold_field)
 
@@ -814,6 +812,18 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
+    def automatic_mesh_refinement(self):
+        refinement_parameters = []
+        for line, length in self.length_from_lines.items():
+            if length <= self.max_element_size/1000: # aqui é necessário converter as unidades
+                vinculated_surfaces = gmsh.model.get_adjacencies(1, line)[0]
+                # vinculated_surfaces_areas = [gmsh.model.occ.get]
+                
+                # refinement_parameters.append(("lines", length, [line]))
+                # print(line, length, self.max_element_size/1000)
+
+            self.local_mesh_refine(self.max_element_size, refinement_parameters)
+            
     def _configure_mesh(self, **kwargs):
         size_factor = kwargs.get("size_factor", 0.0)
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
@@ -822,7 +832,12 @@ class Mesh:
         element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
         element_type: ElementType
 
-        if refinement_parameters:
+        self.max_element_size = maximum_element_size
+        a = 1
+        if a == 1:
+            self.automatic_mesh_refinement()
+
+        elif refinement_parameters:
             self.local_mesh_refine(maximum_element_size, refinement_parameters)
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
