@@ -67,7 +67,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-        surface_nodes = mesh.nodes_from_surfaces.get(surface_id)
+        surface_nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
 
         surface_normals = mesh.normals_surface.get(surface_id)
@@ -92,8 +92,8 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_from_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-        line_nodes = mesh.nodes_from_lines.get(line_id)
-        line_coordinates = mesh.nodal_coordinates[line_nodes, 1:]
+        nodes = mesh.get_nodes_from_line(line_id)
+        line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
         dist = np.linalg.norm(line_coordinates - center_coords, axis=1)
         index = np.argmin(dist)

@@ -175,29 +175,23 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         surface_ids = list()
 
         if selection_type == "surface":
-            surface_ids.append(selected_id)
-            nodes = self.mesh.nodes_from_surfaces[selected_id]
+            surface_ids = [selected_id]
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
 
         elif selection_type == "line":           
             surface_ids = self.mesh.surfaces_from_line[selected_id]
-            nodes = self.mesh.nodes_from_lines[selected_id]
+            nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":
             node_id = selected_id - 1
-            for surf_id, surf_nodes in self.mesh.nodes_from_surfaces.items():
-                if node_id in surf_nodes:
-                    if surf_id not in surface_ids:
-                        surface_ids.append(surf_id)
-
             nodes = np.array([node_id], dtype=int)
 
         else:
-            for surf_id, surf_nodes in self.mesh.nodes_from_surfaces.items():
-                if selected_id in surf_nodes:
-                    if surf_id not in surface_ids:
-                        surface_ids.append(surf_id)
-
             nodes = np.array([selected_id], dtype=int)
+        
+        if selection_type in ["point", "node"]:   
+            mask = np.sum(np.isin(self.mesh.faces_connectivity[:, 4:], nodes), axis=1) == 1
+            surface_ids = [int(surf_id) for surf_id in np.unique(self.mesh.faces_connectivity[:, 1][mask])]
 
         for surf_id in surface_ids:
 

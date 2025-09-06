@@ -1,6 +1,6 @@
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 # from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 # from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
@@ -75,12 +75,9 @@ def load_external_mesh_and_solve():
 
     tag = 1
     mesh.elements_from_surface[tag] = face_connectivity[:, 0]
-    for face_element in face_connectivity[:, 0]:
-        mesh.surface_from_element[face_element] = tag
-
-    mesh.connectivity_from_surfaces[tag] = face_connectivity[:, 4:]
+    mesh.external_connectivity_from_surfaces[tag] = face_connectivity[:, 4:]
     mesh.faces_connectivity = face_connectivity
-    mesh.nodes_from_surfaces[tag] = nodal_coordinates[:, 0]
+    mesh.external_nodes_from_surfaces[tag] = nodal_coordinates[:, 0]
 
     # Define the material properties
 

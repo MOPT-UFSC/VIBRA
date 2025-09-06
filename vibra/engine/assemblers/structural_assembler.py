@@ -49,14 +49,20 @@ class StructuralAssembler:
         prescribed_data = defaultdict(int)
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property == selected_property:
-                nodes = self.model.mesh.nodes_from_surfaces[surface_id]
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
+
                 property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
                 for gdof, p_data in property_data_from_nodes.items():
                     prescribed_data[gdof] += p_data
 
         for (property, line_id), data in self.properties.line_properties.items():
             if property == selected_property:
-                nodes = self.model.mesh.nodes_from_lines[line_id]
+                nodes = self.model.mesh.get_nodes_from_line(line_id)
+                if nodes is None:
+                    continue
+
                 property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "lines")
                 for gdof, p_data in property_data_from_nodes.items():
                     prescribed_data[gdof] += p_data
@@ -205,12 +211,16 @@ class StructuralAssembler:
         output = np.zeros((len(self.all_dofs), self.number_frequencies), dtype=complex)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
+            if property not in ["distributed_loads", "normal_pressure_loads"]:
+                continue
+
+            connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
             if property == "distributed_loads":
                 surface_load = self.process_loads_arrays(data["values"])
                 if surface_load is None:
                     continue
 
-                for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
+                for connect in connectivities_from_surface:
                     g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_area(connect, surface_load)
                     output[g_dofs, :] += F_elem
 
@@ -219,7 +229,7 @@ class StructuralAssembler:
                 if normal_pressure is None:
                     continue
 
-                for connect in self.model.mesh.connectivity_from_surfaces[surface_id]:
+                for connect in connectivities_from_surface:
                     g_dofs, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
                     output[g_dofs, :] += F_elem
 
@@ -229,13 +239,16 @@ class StructuralAssembler:
                 if line_load is None:
                     continue
 
-                nodes_from_line = self.model.mesh.nodes_from_lines[line_id]
-                for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                    connectivities = self.model.mesh.connectivity_from_surfaces[surface_id]
-                    mask = np.sum(np.isin(connectivities, nodes_from_line), axis=1) == 2
+                nodes = self.model.mesh.get_nodes_from_line(line_id)
+                if nodes is None:
+                    continue
 
-                    for connect_2d in connectivities[mask, :]:
-                        active_nodes = [1 if node_id in nodes_from_line else 0 for node_id in connect_2d]
+                for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
+                    rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
+
+                    for connect_2d in connectivities_from_surface[rows, :]:
+                        active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
                         g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dofs, :] += F_elem
 
@@ -313,12 +326,16 @@ class StructuralAssembler:
         for key in self.model.properties.surface_properties.keys():
             property, surface_id = key
             if property == "surface_thickness":
-                active_nodes_list.extend(self.model.mesh.nodes_from_surfaces[surface_id])
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
+
+                active_nodes_list.extend(nodes)
 
         active_dofs = np.array([])
         if active_nodes_list:
             shell_local_dofs = np.arange(element_2D.DOFS_PER_NODE)
-            active_nodes = np.array([*set(active_nodes_list)], dtype=int)
+            active_nodes = np.unique(active_nodes_list).astype(int)
             active_dofs = element_2D.DOFS_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dofs 
             active_dofs = np.sort(active_dofs.flatten())
 

@@ -1,9 +1,11 @@
 from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
+
+from molde import Color
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
-from vibra.interface.formatters.icons import *
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -13,8 +15,6 @@ from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_inputs im
 from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library
 
-from vibra.utils.utils import *
-from molde import Color
 from copy import deepcopy
 from itertools import count
 

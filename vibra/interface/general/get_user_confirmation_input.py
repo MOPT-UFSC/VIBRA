@@ -1,10 +1,7 @@
-from PySide6.QtWidgets import QDialog
-from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
 from vibra import app, __version__
 from vibra.interface.ui_generated.messages.get_user_confirmation_ui import GetUserConfirmation_UI
-from vibra.interface.formatters.icons import *
 
 
 class GetUserConfirmationInput(GetUserConfirmation_UI):

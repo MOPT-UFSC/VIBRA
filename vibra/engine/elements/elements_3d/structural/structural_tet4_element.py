@@ -180,7 +180,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
             shift = shift_index
             dofs_node = self.DOFS_PER_NODE
-            surface_ids = self.model.mesh.surfaces_from_node.get(node_id, list())
+            surface_ids = self.model.mesh.get_surfaces_from_node(node_id)
 
             for surface_id in surface_ids:
                 shell_data = self.model.properties._get_property("surface_thickness", surface=surface_id)

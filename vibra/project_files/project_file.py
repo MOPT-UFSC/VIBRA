@@ -12,7 +12,6 @@ import numpy as np
 
 from copy import deepcopy
 from pathlib import Path
-from configparser import ConfigParser
 
 from vibra.project_files.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
@@ -46,7 +45,7 @@ class ProjectFile:
         self.harmonic_solution_filepath = self.path / "harmonic_solution.hdf5"
         self.geometry_folder = self.path / "geometry_file"
 
-    def write_geometry_in_file(self, path: Path, length_unit: str = "milimeter", geometry_qf: float = 1.0):
+    def write_geometry_in_file(self, path: Path, length_unit: str = "millimeter", geometry_qf: float = 1.0):
         basename = path.name
         internal_path = self.geometry_folder / basename
 
@@ -89,7 +88,7 @@ class ProjectFile:
 
     def read_geometry_setup_from_file(self):
         project_setup = read_json(self.project_setup_filepath)
-        length_unit = project_setup.get("length_unit", "milimeter")  
+        length_unit = project_setup.get("length_unit", "millimeter")  
         geometry_qf = project_setup.get("geometry_qf", 3.0)  
         return length_unit, geometry_qf
 
@@ -176,9 +175,12 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_geometry_data_from_file(self):
-        geometry_data = dict()
+
+        if not self.geometry_data_filepath.exists():
+            return dict()
 
         try:
+            geometry_data = dict()
             with h5py.File(self.geometry_data_filepath, "r") as f:
 
                 for group in list(f.keys()):
@@ -207,7 +209,7 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def write_mesh_quality_data_in_file(self):
-        mesh_quality_data = app().project.model.mesh.get_mesh_quality_data()
+        mesh_quality_data = app().project.model.mesh.mesh_quality_data
         if not mesh_quality_data:
             return
         
@@ -310,9 +312,12 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_mesh_data_from_file(self):
-        mesh_data = dict()
+
+        if not self.geometry_data_filepath.exists():
+            return dict()
 
         try:
+            mesh_data = dict()
             with h5py.File(self.mesh_data_filepath, "r") as f:
 
                 for group in list(f.keys()):
@@ -325,8 +330,8 @@ class ProjectFile:
                             mesh_data[key] = int(values)
 
         except Exception as error_log:
-            # from traceback import print_exception
-            # print_exception(error_log)
+            from traceback import print_exception
+            print_exception(error_log)
             return dict()
 
         return mesh_data
@@ -520,6 +525,9 @@ class ProjectFile:
 
     def read_imported_table_data_from_file(self):
 
+        if not self.imported_table_data_filepath.exists():
+            return dict()
+
         try:
             tables_data = dict()
             with h5py.File(self.imported_table_data_filepath, "r") as f:
@@ -553,6 +561,9 @@ class ProjectFile:
     
     def write_results_data_in_file(self):
 
+        if app().project.acoustic_harmonic_solver is not None:
+            return
+
         with h5py.File(self.results_data_filepath, "w") as f:
 
             acoustic_modal_solver = app().project.acoustic_modal_solver
@@ -577,13 +588,13 @@ class ProjectFile:
                     f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
                     f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
 
-            acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
-            if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
-                if acoustic_harmonic_solver.solution is not None:
-                    frequencies = app().project.model.frequencies
-                    solution = acoustic_harmonic_solver.solution
-                    f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
-                    f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
+            # acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
+            # if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
+            #     if acoustic_harmonic_solver.solution is not None:
+            #         frequencies = app().project.model.frequencies
+            #         solution = acoustic_harmonic_solver.solution
+            #         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
+            #         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
 
             structural_harmonic_solver = app().project.structural_harmonic_solver
             if structural_harmonic_solver is not None:
@@ -628,10 +639,12 @@ class ProjectFile:
             self.harmonic_solution_filepath.unlink()
 
     def read_results_data_from_file(self):
-        results_data = dict()
+
+        if not self.results_data_filepath.exists():
+            return dict()
 
         try:
-
+            results_data = dict()
             with h5py.File(self.results_data_filepath, "r") as f:
 
                 for group in list(f.keys()):
@@ -660,13 +673,14 @@ class ProjectFile:
     def remove_mesh_data_from_project_file(self):
         self.mesh_data_filepath.unlink(missing_ok=True)
 
+    def remove_mesh_quality_data_from_project_file(self):
+        self.mesh_quality_data_filepath.unlink(missing_ok=True)
+
     def remove_table_data_from_project_file(self):
-        if self.imported_table_data_filepath.exists():
-            self.imported_table_data_filepath.unlink(missing_ok=True)
+        self.imported_table_data_filepath.unlink(missing_ok=True)
 
     def remove_results_data_from_project_file(self):
-        if self.results_data_filepath.exists():
-            self.results_data_filepath.unlink(missing_ok=True)
+        self.results_data_filepath.unlink(missing_ok=True)
 
     def archive_project(self, zip_path: Path):
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:
