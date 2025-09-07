@@ -230,7 +230,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data.SetPoints(points)
             data.SetPolys(cells)
 
-            volume = self.mesh.volumes_from_surface[surface][0]
+            volumes = self.mesh.volumes_from_surface.get(surface)
 
             # Every surface have its own plane defining
             # how to project the texture coordinates on it
@@ -260,7 +260,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data = add_tcoords.GetOutput()
 
             fill_array(data, "surface_indexes", surface)
-            fill_array(data, "volume_indexes", volume)
+            if isinstance(volumes, np.ndarray | list):
+                fill_array(data, "volume_indexes", volumes[0])
 
             combined_surfaces.AddInputData(data)
 
