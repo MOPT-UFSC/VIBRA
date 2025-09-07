@@ -142,6 +142,9 @@ class Mesh:
         else:
             return 1
 
+    def set_element_type(self, element_type: ElementType):
+        self.element_type = element_type
+
     def load_cad(self, path: str | Path, **kwargs):
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
         mesh_connection = kwargs.get("mesh_connection", True)
@@ -150,8 +153,8 @@ class Mesh:
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
  
-        self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        self.element_type: ElementType
+        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        # self.element_type: ElementType
 
         if not gmsh.isInitialized():
             gmsh.initialize("", False, interruptible=False)
@@ -221,8 +224,8 @@ class Mesh:
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
 
-        self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        self.element_type: ElementType
+        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        # self.element_type: ElementType
 
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)

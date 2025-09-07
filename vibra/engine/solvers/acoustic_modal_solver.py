@@ -180,6 +180,9 @@ class AcousticModalSolver:
             self.natural_frequencies = natural_frequencies[index_order]
             self.solution = eigen_vectors[:, index_order]
 
+            from pprint import pprint
+            pprint(self.natural_frequencies)
+
     def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution. If modal analysis is performed, the values are zeros.

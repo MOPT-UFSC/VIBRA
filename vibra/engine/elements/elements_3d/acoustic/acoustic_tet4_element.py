@@ -234,6 +234,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # derivative of shape functions
         B = dphi_t
 
+        # if el_index == 0:
+        #     print()
+        #     print(N.shape)
+        #     print(B.shape)
+        #     print(detJAC.shape)
+
         Ke = self.nint * (1 / 6) * B.T @ B * (detJAC * self.wps)
         Me = (1 / 6) * N.T @ N * (detJAC * self.wps)
 

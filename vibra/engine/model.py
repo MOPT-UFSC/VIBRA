@@ -24,11 +24,12 @@ from vibra.engine.elements.elements_3d import (
 
 from vibra.engine.elements.elements_2d import (
     # 2d elements - acoustic
-    ACT_FACE_3,
-    ACT_FACE_4,
+    ACT_TRIANGLE_3,
+    ACT_TRIANGLE_6,
+    ACT_QUADRANGLE_4,
 
     # 2D elements - structural
-    STRUCT_TRIANGULAR_3
+    STRUCT_TRIANGLE_3
 )
 
 #1d elements - acoustic
@@ -115,8 +116,9 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup):
+    def set_mesh_setup(self, mesh_setup: dict):
         self.mesh_setup = mesh_setup
+        self.mesh.set_element_type(mesh_setup.get("ElementType", DEFAULT_ELEMENT_TYPE))
 
     def initialize_mesh(self):
         self.mesh = Mesh(
@@ -272,7 +274,7 @@ class Model:
         element_type = self.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGULAR_3(self), None
+            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
         elif element_type == TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self), None, None
@@ -287,16 +289,17 @@ class Model:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
+
         element_type = self.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self), ACT_FACE_3(self), ACT_LINE_2(self)
+            return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return ACT_TETRAHEDRON_10C(self), None, None
+            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), None
 
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_FACE_4(self), None
+            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), None
 
         elif element_type == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self), None, None

@@ -1,10 +1,16 @@
-import numpy as np
 
 from vibra.engine.elements.surface_elements import Element2D
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
+import numpy as np
 
 
 def shapeFZ4(ssx, ttx):
     """This function returns the shape functions and its derivatives."""
+
     # shape functions
     denominator = 4
     phi = np.array([(1.+ssx)*(1.+ttx), 
@@ -12,23 +18,26 @@ def shapeFZ4(ssx, ttx):
                     (1.-ssx)*(1.-ttx), 
                     (1.+ssx)*(1.-ttx)], dtype=float).T / denominator
 
-    # derivatives
-    dphi = np.zeros((2,4), dtype=float)
+    # derivatives of shape functions
+    dphi = np.zeros((2, 4), dtype=float)
     dphi[0,:] =  np.array([(1.+ttx), -(1.+ttx), -(1.-ttx), (1.-ttx)])
     dphi[1,:] =  np.array([(1.+ssx), (1.-ssx), -(1.-ssx), -(1.+ssx)])
-    dphi = dphi/denominator
-    
+    dphi = dphi / denominator
+
     return phi, dphi
 
-def get_detJAC(JAC):
+
+def get_detJAC(JAC: np.ndarray):
     # Inverse Jacobian
-    detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
+    detJAC = JAC[0, 0] * JAC[1, 1]  - JAC[0, 1] * JAC[1, 0]  
     return detJAC
 
-def get_detJAC_3D(JAC):
+
+def get_detJAC_3D(JAC: np.ndarray):
     # Inverse Jacobian
-    detJAC = JAC[:,0,0] * JAC[:,1,1]  - JAC[:,0,1] * JAC[:,1,0]  
+    detJAC = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]  
     return detJAC.reshape(-1, 1, 1)
+
 
 def get_local_coordinates(coords):
     
@@ -71,33 +80,33 @@ def get_local_coordinates(coords):
 
     return coord_loc
 
-class ACT_FACE_4(Element2D):
+
+class ACT_QUADRANGLE_4(Element2D):
     #
     NODES_PER_ELEMENT = 4
     DOFS_PER_NODE = 1
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-    def __init__(self, model):
+    def __init__(self, model: "Model"):
         #
         self.model = model
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
+
     def initialize_variables(self):
-        """ """
+        """
+        """
+        self.connectivities = None
         self.element_label = "acoustic_triangular_3"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.connectivity = self.model.mesh.solids_connectivity
-        self.faces_connectivity = self.model.mesh.faces_connectivity
-        #
-        self.number_of_nodes = len(self.nodal_coordinates)
-        self.number_of_elements = len(self.connectivity)
+
 
     def define_integration_points(self):
         """ """
         self.nint = 4
-        con = 1/np.sqrt(3)
+        con = 1 / np.sqrt(3)
         self.wps = 1        
         self.pint = np.array([  [ con,  con],
                                 [-con,  con],
@@ -115,84 +124,98 @@ class ACT_FACE_4(Element2D):
         # shape functions
         denominator = 4
         phi = np.zeros((self.nint, self.NODES_PER_ELEMENT), dtype=float)
-        phi[:, 0] = (1.+ssx)*(1.+ttx)
-        phi[:, 1] = (1.-ssx)*(1.+ttx)
-        phi[:, 2] = (1.-ssx)*(1.-ttx)
-        phi[:, 3] = (1.+ssx)*(1.-ttx)
+        phi[:, 0] = (1 + ssx)*(1 + ttx)
+        phi[:, 1] = (1 - ssx)*(1 + ttx)
+        phi[:, 2] = (1 - ssx)*(1 - ttx)
+        phi[:, 3] = (1 + ssx)*(1 - ttx)
         self.phi = phi / denominator
 
         # derivatives
         dphi = np.zeros((self.nint, self.pint.shape[1], self.NODES_PER_ELEMENT), dtype=float)
-        dphi[:, 0, 0] =  (1.+ttx) 
-        dphi[:, 0, 1] = -(1.+ttx)
-        dphi[:, 0, 2] = -(1.-ttx)
-        dphi[:, 0, 3] =  (1.-ttx)
-        dphi[:, 1, 0] =  (1.+ssx)
-        dphi[:, 1, 1] =  (1.-ssx) 
-        dphi[:, 1, 2] = -(1.-ssx)
-        dphi[:, 1, 3] = -(1.+ssx)
+        dphi[:, 0, 0] =  (1 + ttx) 
+        dphi[:, 0, 1] = -(1 + ttx)
+        dphi[:, 0, 2] = -(1 - ttx)
+        dphi[:, 0, 3] =  (1 - ttx)
+        dphi[:, 1, 0] =  (1 + ssx)
+        dphi[:, 1, 1] =  (1 - ssx) 
+        dphi[:, 1, 2] = -(1 - ssx)
+        dphi[:, 1, 3] = -(1 + ssx)
         self.dphi = dphi/denominator
 
-    def reorder_connect(self, connect_face):
+
+    def reorder_connect(self, connect_face: np.ndarray):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        self.connect_face = connect_face[:, [0, 1, 2, 3]]
+        self.connectivities = connect_face[:, [0, 1, 2, 3]]
+
 
     def generate_ind_rows_cols(self, connect_face):
         """ This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect(connect_face)
         dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs*self.connect_face[:, :]
+        ind_dofs = dofs * self.connectivities[:, :]
 
         vect_indices = ind_dofs.flatten()
         ind_rows_face = ((np.tile(vect_indices, (edofs,1))).T).flatten()
         ind_cols_face = (np.tile(ind_dofs, edofs)).flatten()
 
         return ind_rows_face, ind_cols_face
-        
+
+
     def matrices_Z(self, el_index, rho=1, impedance=1):
         """ Z matrices
         """
 
-        ie = self.connect_face[el_index, :]
-        coords = self.nodal_coordinates[ie, :]
-        coord_loc = get_local_coordinates(coords)
-        #
+        # element nodal coordiantes
+        nodal_coords = self.nodal_coordinates[self.connectivities[el_index, :], :]
+
+        # nodal coordiantes in the local CS
+        coord_loc = get_local_coordinates(nodal_coords)
+
+        # Jacobian matrix
         JAC = self.dphi @ coord_loc
+        
+        # determinant of the Jacobian matrix
         detJAC = get_detJAC_3D(JAC)
-        # print(f"matrices_Z: index - {el_index} \n {coord_loc} {detJAC}")
-        #
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        N[:, 0, :] = self.phi
-        #
+        
+        # intialize the variable Ze
         Ze = 0.
+
+        # integration loop
         for i in range(self.nint):
-            Ze += -(rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :]*self.wps)
-            # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
+            N = self.phi[i, 0, :]
+            Ze += -(rho / impedance) * N.T @ N * (detJAC[i, :, :]*self.wps)
+
         return Ze
+
 
     def excitation_F(self, el_index, Vn=1):
         """ F matrices
         """
 
-        ie = self.connect_face[el_index, :]
-        coords = self.nodal_coordinates[ie, :]
-        coord_loc = get_local_coordinates(coords)
 
-        # print(f" new: {coord_loc}")
-        #
+        # element nodal coordiantes
+        nodal_coords = self.nodal_coordinates[self.connectivities[el_index, :], :]
+
+        # nodal coordiantes in the local CS
+        coord_loc = get_local_coordinates(nodal_coords)
+
+        # Jacobian matrix
         JAC = self.dphi @ coord_loc
+        
+        # determinant of the Jacobian matrix
         detJAC = get_detJAC_3D(JAC)
-        #
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        N[:, 0, :] = self.phi
-        #
+
+        # initialize the variable Fe
         Fe = 0.
+
+        # integration loop
         for i in range(self.nint):
-            # print(f" new detJAC: {detJAC[i, :, :]}")     
-            Fe += -(1/4) * Vn * N[i, :, :].T * (detJAC[i, :, :] * self.wps)
-            # print(f"excitation_F: index - {el_index} : k - {i} {N[i, :, :]}")
+            N = self.phi[i, 0, :]  
+            Fe += -(1/4) * Vn * N.T * (detJAC[i, :, :] * self.wps)
+
         return Fe
+
 
     def excitation_F_base(self, ee, Vn=1):
         """ F4 matrices
@@ -200,7 +223,7 @@ class ACT_FACE_4(Element2D):
         #Check Connectivity -- Ansys = Gmsh
 
         coord = self.nodal_coordinates
-        connect_face = self.connect_face
+        connect_face = self.connectivities
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
         XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
@@ -280,7 +303,7 @@ class ACT_FACE_4(Element2D):
         #Check Connectivity -- Ansys = Gmsh
 
         coord = self.nodal_coordinates
-        connect_face = self.connect_face
+        connect_face = self.connectivities
 
         ############## Definir plano de trabalho e adaptar coordenadas para tal plano
         XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
