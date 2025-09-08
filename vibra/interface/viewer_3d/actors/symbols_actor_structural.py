@@ -135,13 +135,17 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             
             for index, v in enumerate(U_R):
                 if index < 3 and v is not None:
-                    self.add_symbol(sources.create_arrows_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
+                    self.add_symbol(sources.create_dof_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
+
+                    if v == 0:
+                        self.add_symbol(sources.create_dof_hexagon_base_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
+                    
                 elif index >= 3 and v is not None: 
-                    self.add_symbol(sources.create_arrows_rotation_pencil_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
-                    self.add_symbol(sources.create_arrows_rotation_strips_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
-            
-            if not np.any(U_R) and None not in U_R:
-                self.add_symbol(sources.create_arrows_cube_source, coords, (0, 0, 0), color=color_names.GREEN_2)
+                    self.add_symbol(sources.create_dof_cone_arrow_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
+                    self.add_symbol(sources.create_dof_base_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
+                    
+                    if v == 0:
+                        self.add_symbol(sources.create_dof_hexagon_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
@@ -160,9 +164,11 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             m_orientation = np.real((Mx, My, Mz))
 
             if np.any(force_orientation):
-                self.add_symbol(sources.create_arrow_source, coords, force_orientation, color=color_names.RED_2)
+                self.add_symbol(sources.create_nodal_loads_force_base_source, coords, force_orientation, color=color_names.RED_2)
+                self.add_symbol(sources.create_nodal_loads_force_cone_arrow_source, coords, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
-                self.add_symbol(sources.create_double_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
+                self.add_symbol(sources.create_nodal_loads_momentum_base_source, coords, m_orientation, color=color_names.BLUE_5)
+                self.add_symbol(sources.create_nodal_loads_momentum_cone_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
 
         property = None
         coord = None
@@ -189,9 +195,12 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             m_orientation = np.real((Mx, My, Mz))
 
             if np.any(force_orientation):
-                self.add_symbol(sources.create_arrow_source, coord, force_orientation, color=color_names.RED_2)
+                self.add_symbol(sources.create_nodal_loads_force_base_source, coord, force_orientation, color=color_names.RED_2)
+                self.add_symbol(sources.create_nodal_loads_force_cone_arrow_source, coord, force_orientation, color=color_names.RED_2)
             if np.any(m_orientation):
-                self.add_symbol(sources.create_double_arrow_source, coord, m_orientation, color=color_names.BLUE_5)
+                self.add_symbol(sources.create_nodal_loads_momentum_base_source, coord, force_orientation, color=color_names.BLUE_5)
+                self.add_symbol(sources.create_nodal_loads_momentum_cone_arrow_source, coord, force_orientation, color=color_names.BLUE_5)
+
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
         if surface_id != -1:

@@ -122,38 +122,83 @@ def create_acoustic_transfer_element_data_source():
         scale=(1, 1, 1),
     )
 
-def create_arrows_cone_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_cone.stl")
+def create_dof_cone_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_arrow.stl")
     return transform_polydata(
         polydata,
-        position=(0, 0, 0),
-        rotation=(0, -90, 0),
-        scale=(30, 30, 30),
+        position=(-1, 0, 0),
+        rotation=(0, 90, 0),
+        scale=(.5, .5, .5),
     )
 
-def create_arrows_cube_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_cube.stl")
+def create_dof_hexagon_base_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_hexagon_base.stl")
     return transform_polydata(
         polydata,
-        position=(0, 0, 0),
-        rotation=(0, 0, 0),
-        scale=(30, 30, 30),
+        position=(-1, 0, 0),
+        rotation=(0, 90, 0),
+        scale=(.5, .5, .5),
     )
 
-def create_arrows_rotation_pencil_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_rotation_pencil.stl")
+def create_dof_base_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_base_arrow.stl")
     return transform_polydata(
         polydata,
-        position=(0, 0, 0),
-        rotation=(0, -90, 0),
-        scale=(30, 30, 30),
+        position=(-1, 0, 0),
+        rotation=(0, 90, 0),
+        scale=(.5, .5, .5),
     )
 
-def create_arrows_rotation_strips_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/arrows_rotation_strips.stl")
+def create_dof_hexagon_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_hexagon_arrow.stl")
     return transform_polydata(
         polydata,
-        position=(0, 0, 0),
-        rotation=(0, -90, 0),
-        scale=(30, 30, 30),
-    )   
+        position=(-1, 0, 0),
+        rotation=(0, 90, 0),
+        scale=(.5, .5, .5),
+    )
+
+def create_dof_cone_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone.stl")
+    return transform_polydata(
+        polydata,
+        position=(-1, 0, 0),
+        rotation=(0, 90, 0),
+        scale=(.5, .5, .5),
+    )
+
+def create_nodal_loads_momentum_base_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_base.stl")
+    return transform_polydata(
+        polydata,
+        position=(-1, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.3, .3, .3),
+    )
+
+def create_nodal_loads_momentum_cone_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_cone_arrow.stl")
+    return transform_polydata(
+        polydata,
+        position=(-1, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.3, .3, .3),
+    )
+
+def create_nodal_loads_force_cone_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_cone_arrow.stl")
+    return transform_polydata(
+        polydata,
+        position=(-1, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.3, .3, .3),
+    )
+
+def create_nodal_loads_force_base_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_base.stl")
+    return transform_polydata(
+        polydata,
+        position=(-1, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.3, .3, .3),
+    )
