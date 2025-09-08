@@ -1,4 +1,3 @@
-# fmt: off
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -7,7 +6,6 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app, TEMP_PROJECT_DIR
 from vibra.interface.ui_generated.project.save_project_data_selector_ui import SaveProjectDataSelector_UI
 
-import os
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -81,5 +79,3 @@ class SaveProjectDataSelector(SaveProjectDataSelector_UI):
 
 def get_folder_size(path: Path):
     return sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
-
-# fmt: on

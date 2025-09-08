@@ -10,8 +10,6 @@ from vibra.engine.properties.fluid import Fluid
 import warnings
 import numpy as np
 
-# fmt: off
-
 error_title = "Error"
 warning_title = "Warning"
 
@@ -95,21 +93,21 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         if volumes:
             if len(volumes):
                 volume_id = list(volumes)[0]
-                nodes_from_volume = self.mesh.nodes_from_volumes.get(volume_id)
+                nodes_from_volume = self.mesh.get_nodes_from_volume(volume_id)
                 avg_coords = np.average(self.mesh.nodal_coordinates[nodes_from_volume, 1:], axis=0)
                 round_coords = np.round(avg_coords, 4)
 
         elif surfaces:
             if len(surfaces) == 1:
                 surface_id = list(surfaces)[0]
-                nodes_from_surface = self.mesh.nodes_from_surfaces.get(surface_id)
+                nodes_from_surface = self.mesh.get_nodes_from_surface(surface_id)
                 avg_coords = np.average(self.mesh.nodal_coordinates[nodes_from_surface, 1:], axis=0)
                 round_coords = np.round(avg_coords, 4)
 
         elif lines:
             if len(lines) == 1:
                 line_id = list(lines)[0]
-                nodes_from_line = self.mesh.nodes_from_lines.get(line_id)
+                nodes_from_line = self.mesh.get_nodes_from_line(line_id)
                 avg_coords = np.average(self.mesh.nodal_coordinates[nodes_from_line, 1:], axis=0)
                 round_coords = np.round(avg_coords, 4)
 

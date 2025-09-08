@@ -1,10 +1,10 @@
-from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.particle_velocity_frequency_response_inputs_ui import ParticleVelocityFrequencyResponseInputs_UI
+from vibra.engine import AnalysisID
+from vibra.engine.postprocessing import compute_acoustic_impedance
+from vibra.interface.ui_generated.plots.acoustic.acoustic_impedance_inputs_ui import AcousticImpedanceInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -14,11 +14,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 import logging
 import numpy as np
 
-window_title1 = "Error"
-window_title2 = "Warning"
 
-
-class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseInputs_UI):
+class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -54,9 +51,8 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
     def _reset_variables(self):
         self.exporter = None
         self.plotter = None
-        self.unit_label = "m/s"
+        self.unit_label = "Pa/m/s"
         self.keep_window_open = True
-        self.particle_velocity = dict()
 
     def _create_connections(self):
         #
@@ -89,9 +85,9 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
         self.geometry_selection_callback()
 
         if self.comboBox_selector_filter.currentIndex() == 0:
-            app().main_window.action_model_workspace_callback()
+            app().main_window.show_geometry_render_widget()           
         else:
-            app().main_window.action_mesh_workspace_callback()
+            app().main_window.show_mesh_render_widget()
 
     def check_inputs(self):
 
@@ -106,7 +102,8 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
         input_ids = self.lineEdit_selection_id.text()
         self.selected_ids, error_data = self.mesh.check_selected_ids(
                                                                      input_ids, 
-                                                                     selection = selection
+                                                                     selection = selection, 
+                                                                     single_id = False
                                                                      )
 
         if error_data is not None:
@@ -116,15 +113,12 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
 
     def plot_data_callback(self):
 
-        self.mesh.nodal_normals_data.clear()
-
         if self.check_inputs():
             return
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
-        app().main_window.update_symbols()
 
     def export_data_callback(self):
         
@@ -135,105 +129,46 @@ class ParticleVelocityFrequencyResponseInputs(ParticleVelocityFrequencyResponseI
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_component_label(self):
-        index = self.comboBox_component_selector.currentIndex()
-        if index == 0:
-            return "Vx"
-        elif index == 1:
-            return "Vy"
-        elif index == 2:
-            return "Vz"
-        else:
-            return "Vn"
+    def get_response(self, selection_type: str, selected_id: int):
 
-    def get_response(self, selected_id):
+        solver = app().project.acoustic_harmonic_solver
 
         def function_callback():
-            
-            selection_type = self.comboBox_selector_filter.currentIndex()
-            logging.info("Processing particle velocity... [15/100]")
 
-            if selection_type == 0:
-                particle_velocity = self.get_surface_particle_velocity(selected_id)
+            if selection_type == "surface":
+                acoustic_impedance = compute_acoustic_impedance(solver, surface_id = selected_id)
 
             else:
-                particle_velocity = self.get_nodal_particle_velocity(selected_id)
+                acoustic_impedance = compute_acoustic_impedance(solver, node_id = selected_id)
 
             logging.info("Processing particle velocity... [95/100]")
 
-            return particle_velocity
+            return acoustic_impedance
 
         return LoadingWindow(function_callback).run()
 
-    def get_surface_particle_velocity(self, surface_id : int):
-
-        component_label = self.get_component_label()
-
-        list_nodes = list()
-        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
-            if self.comboBox_selector_filter.currentIndex() == 0:
-                if tag == surface_id:
-                    list_nodes.extend(surface_nodes)
-
-            rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
-            if rho is None:
-                return np.zeros_like(self.frequencies, dtype=complex)
-
-            self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
-            input_velocities = np.array(list(self.particle_velocity[component_label].values()), dtype=complex)
-
-            return np.average(input_velocities, axis=0)
-
-    def get_nodal_particle_velocity(self, node_id : int):
-
-        component_label = self.get_component_label()
-
-        if self.particle_velocity:
-            if component_label in self.particle_velocity.keys():
-                if node_id in self.particle_velocity[component_label].keys():
-                    return self.particle_velocity[component_label][node_id]
-
-        list_nodes = list()
-        for tag, surface_nodes in self.mesh.nodes_from_surfaces.items():
-            if self.comboBox_selector_filter.currentIndex() == 1:
-                if node_id in surface_nodes:
-                    list_nodes.extend(surface_nodes)
-                    surface_id = tag
-
-        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
-        if rho is None:
-            return np.zeros_like(self.frequencies, dtype=complex)
-        
-        self.particle_velocity = self.project.acoustic_harmonic_solver.get_particle_velocity_from_surface(surface_id, rho)
-
-        return self.particle_velocity[component_label][node_id]
-
     def join_model_data(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
+        if self.comboBox_selector_filter.currentIndex() == 0:
             selection_type = "surface"
         else:
             selection_type = "node"
 
-        component_label = self.get_component_label()
-
         self.model_results = dict()
-        self.title = "Particle velocity frequency response"
+        title = "Specific acoustic impedance"
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Particle velocity at {selection_type} [{selected_id}]"
+            legend_label = f"Specific acoustic impedance at {selection_type} [{selected_id}]"
 
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(selected_id),
+                                        "y_data" : self.get_response(selection_type, selected_id),
                                         "x_label" : "Frequency [Hz]",
-                                        "y_label" : f"Particle velocity {component_label}",
-                                        "title" : self.title,
-                                        "data_type" : "particle velocity",
+                                        "y_label" : "Specific acoustic impedance",
+                                        "title" : title,
+                                        "data_type" : "specific acoustic impedance",
                                         "legend" : legend_label,
                                         "unit" : self.unit_label,
                                         "color" : self.get_color(i),

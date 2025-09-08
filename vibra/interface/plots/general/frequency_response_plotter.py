@@ -143,7 +143,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)
 
-    def imported_dB_data(self):
+    def imported_real_data(self):
         self.imported_dB = True
         self.comboBox_plot_type.setCurrentIndex(2)
         self.comboBox_plot_type.setDisabled(True)

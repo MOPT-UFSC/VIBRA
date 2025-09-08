@@ -1,5 +1,5 @@
 from vibra import SYMBOLS_DIR
-from vibra.utils.polydata_utils import read_obj_file, read_stl_file, transform_polydata
+from vibra.utils.vtk_utils import read_obj_file, read_stl_file, transform_polydata
 
 
 def create_spring_source():

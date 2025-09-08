@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'particle_velocity_frequency_response_inputs.ui'
+## Form generated from reading UI file 'acoustic_impedance_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.0
 ##
@@ -23,7 +23,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(400, 300)
+        Form.resize(351, 252)
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
@@ -134,6 +134,30 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.frame_4, 0, 0, 1, 1)
 
+        self.frame_3 = QFrame(self.frame_2)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setMinimumSize(QSize(0, 52))
+        self.frame_3.setMaximumSize(QSize(16777215, 52))
+        self.frame_3.setFrameShape(QFrame.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.gridLayout_47 = QGridLayout(self.frame_3)
+        self.gridLayout_47.setSpacing(2)
+        self.gridLayout_47.setObjectName(u"gridLayout_47")
+        self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
+        self.pushButton_plot_data = QPushButton(self.frame_3)
+        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
+        self.pushButton_plot_data.setMinimumSize(QSize(120, 32))
+        self.pushButton_plot_data.setMaximumSize(QSize(120, 32))
+        self.pushButton_plot_data.setFont(font2)
+        self.pushButton_plot_data.setStyleSheet(u"")
+        self.pushButton_plot_data.setAutoDefault(False)
+        self.pushButton_plot_data.setFlat(False)
+
+        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_3, 2, 0, 1, 1)
+
         self.frame_5 = QFrame(self.frame_2)
         self.frame_5.setObjectName(u"frame_5")
         self.frame_5.setFrameShape(QFrame.NoFrame)
@@ -183,80 +207,6 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.frame_5, 1, 0, 1, 1)
 
-        self.frame_3 = QFrame(self.frame_2)
-        self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setMinimumSize(QSize(0, 52))
-        self.frame_3.setMaximumSize(QSize(16777215, 52))
-        self.frame_3.setFrameShape(QFrame.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Raised)
-        self.gridLayout_47 = QGridLayout(self.frame_3)
-        self.gridLayout_47.setSpacing(2)
-        self.gridLayout_47.setObjectName(u"gridLayout_47")
-        self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
-        self.pushButton_plot_data = QPushButton(self.frame_3)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(120, 32))
-        self.pushButton_plot_data.setMaximumSize(QSize(120, 32))
-        self.pushButton_plot_data.setFont(font2)
-        self.pushButton_plot_data.setStyleSheet(u"")
-        self.pushButton_plot_data.setFlat(False)
-
-        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_3, 3, 0, 1, 1)
-
-        self.frame_7 = QFrame(self.frame_2)
-        self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.NoFrame)
-        self.frame_7.setFrameShadow(QFrame.Raised)
-        self.gridLayout_8 = QGridLayout(self.frame_7)
-        self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.gridLayout_8.setHorizontalSpacing(6)
-        self.gridLayout_8.setVerticalSpacing(2)
-        self.gridLayout_8.setContentsMargins(2, 2, 2, 2)
-        self.label_4 = QLabel(self.frame_7)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(110, 30))
-        self.label_4.setMaximumSize(QSize(110, 30))
-        self.label_4.setFont(font2)
-        self.label_4.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_8.addWidget(self.label_4, 0, 1, 1, 1)
-
-        self.comboBox_component_selector = QComboBox(self.frame_7)
-        self.comboBox_component_selector.addItem("")
-        self.comboBox_component_selector.addItem("")
-        self.comboBox_component_selector.addItem("")
-        self.comboBox_component_selector.addItem("")
-        self.comboBox_component_selector.setObjectName(u"comboBox_component_selector")
-        self.comboBox_component_selector.setMinimumSize(QSize(110, 30))
-        self.comboBox_component_selector.setMaximumSize(QSize(110, 30))
-        self.comboBox_component_selector.setFont(font2)
-        self.comboBox_component_selector.setStyleSheet(u"")
-
-        self.gridLayout_8.addWidget(self.comboBox_component_selector, 0, 2, 1, 1)
-
-        self.frame_9 = QFrame(self.frame_7)
-        self.frame_9.setObjectName(u"frame_9")
-        self.frame_9.setMinimumSize(QSize(40, 30))
-        self.frame_9.setMaximumSize(QSize(40, 30))
-        self.frame_9.setFrameShape(QFrame.NoFrame)
-        self.frame_9.setFrameShadow(QFrame.Raised)
-
-        self.gridLayout_8.addWidget(self.frame_9, 0, 3, 1, 1)
-
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
-
-        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_8, 0, 4, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_7, 2, 0, 1, 1)
-
 
         self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
 
@@ -264,37 +214,30 @@ class Ui_Form(object):
         self.retranslateUi(Form)
 
         self.comboBox_selector_filter.setCurrentIndex(0)
-        self.comboBox_component_selector.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Form)
     # setupUi
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot particle velocity", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Plot particle velocity frequency response", None))
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot specific acoustic impedance", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Plot the specific acoustic impedance", None))
         self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
         self.lineEdit_selection_id.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_export_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"  Plot data", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
         self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
         self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Nodes", None))
-
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
-        self.label_4.setText(QCoreApplication.translate("Form", u"Component: ", None))
-        self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Form", u"   x-axis", None))
-        self.comboBox_component_selector.setItemText(1, QCoreApplication.translate("Form", u"   y-axis", None))
-        self.comboBox_component_selector.setItemText(2, QCoreApplication.translate("Form", u"   z-axis", None))
-        self.comboBox_component_selector.setItemText(3, QCoreApplication.translate("Form", u"  normal", None))
 
     # retranslateUi
 
 
 
-class ParticleVelocityFrequencyResponseInputs_UI(QWidget, Ui_Form):
+class AcousticImpedanceInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget
@@ -309,19 +252,14 @@ class ParticleVelocityFrequencyResponseInputs_UI(QWidget, Ui_Form):
                                         - label_10: QLabel
                                         - lineEdit_selection_id: QLineEdit
                                         - pushButton_export_data: QPushButton
+                            - frame_3: QFrame
+                                - (Layout): QGridLayout
+                                        - pushButton_plot_data: QPushButton
                             - frame_5: QFrame
                                 - (Layout): QGridLayout
                                         - label_2: QLabel
                                         - comboBox_selector_filter: QComboBox
                                         - frame_6: QFrame
-                            - frame_3: QFrame
-                                - (Layout): QGridLayout
-                                        - pushButton_plot_data: QPushButton
-                            - frame_7: QFrame
-                                - (Layout): QGridLayout
-                                        - label_4: QLabel
-                                        - comboBox_component_selector: QComboBox
-                                        - frame_9: QFrame
     """
 
     def __init__(self, *args, **kwargs):

@@ -1,3 +1,4 @@
-from .acoustic.acoustic_face3_element import ACT_FACE_3
-from .acoustic.acoustic_face4_element import ACT_FACE_4
-from .structural.structural_tria3_element import STRUCT_TRIANGULAR_3
+from .acoustic.acoustic_tria3_element import ACT_TRIANGLE_3
+from .acoustic.acoustic_tria6_element import ACT_TRIANGLE_6
+from .acoustic.acoustic_quad4_element import ACT_QUADRANGLE_4
+from .structural.structural_tria3_element import STRUCT_TRIANGLE_3

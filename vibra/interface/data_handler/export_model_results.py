@@ -1,14 +1,12 @@
-from PySide6.QtWidgets import QDialog, QFileDialog, QLabel, QLineEdit, QPushButton
-from PySide6.QtGui import * 
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog
 
 from vibra import app, UI_DIR
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
-# import openpyxl
 import numpy as np
 import platform
+
 from pathlib import Path
 
 window_title_1 = "Error"
@@ -117,7 +115,7 @@ class ExportModelResults(QFileDialog):
                 directory_path = path
 
             if len(self.data) == 1:
-                _filter = "Text file (*.csv);; Spreadsheet (*.xlsx);; Text file (*.dat);;Text file (*.txt)"
+                _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls);; Text file (*.dat);; Text file (*.txt);; Text file (*.csv)"
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 

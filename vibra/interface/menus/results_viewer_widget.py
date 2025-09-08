@@ -51,7 +51,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
         self.results_viewer_items.item_child_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
-        self.results_viewer_items.item_child_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+        self.results_viewer_items.item_child_acoustic_impedance.clicked.connect(self.add_acoustic_impedance_plot_widget)
+        self.results_viewer_items.item_child_absorption_coefficient.clicked.connect(self.add_absorption_coefficient_plot_widget)
 
     def get_item(self):
         return self.results_viewer_items
@@ -150,12 +151,22 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_acoustic_specific_impedance_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_specific_impedance_from_surface()
+    def add_acoustic_impedance_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_impedance()
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-        
+
+        app().main_window.animation_toolbar.setDisabled(True)
+
+        self.add_widget(self.current_widget)
+
+    def add_absorption_coefficient_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_absorption_coefficient_from_surface()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
         app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)

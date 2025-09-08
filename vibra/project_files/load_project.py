@@ -195,6 +195,7 @@ class LoadProject:
         self.model.mesh.cache_solids_connectivity = mesh_data.get("cache_solids_connectivity")
 
         nodes_from_points = mesh_data.get("nodes_from_points")
+
         if isinstance(nodes_from_points, np.ndarray):
             self.model.mesh.nodes_from_points = {int(key) : int(value) for key, value in nodes_from_points}
             self.model.mesh.points_from_nodes = {value : key for key, value in self.model.mesh.nodes_from_points.items()}
@@ -206,7 +207,7 @@ class LoadProject:
             # keep these lines for backwards compatibility
             if "nodes_from_points_" in key:
                 tag = int(key.split("_")[-1])
-                self.model.mesh.nodes_from_points[tag] = data              
+                self.model.mesh.nodes_from_points[tag] = data
 
             elif "surfaces_from_volume" in key:
                 tag = int(key.split("_")[-1])
@@ -242,15 +243,11 @@ class LoadProject:
 
         self.model.mesh.process_upwards_adjacencies_from_entities()
 
-        logging.info("Loading mesh... [65/100]")
-        self.model.mesh.process_mesh_related_mappings()
+        logging.info("Loading mesh... [68/100]")
+        self.model.mesh.process_mesh_related_mappings("Loading")
 
-        logging.info("Loading mesh... [90/100]")
-        self.model.mesh.process_connectivities_from_lines_and_surfaces(from_cache=True)
+        logging.info("Loading mesh... [99/100]")
         self.model.generated_mesh = True
-
-        logging.info("Loading mesh... [95/100]")
-        self.model.mesh.process_solid_elements_connected_to_nodes()
 
     def load_mesh_setup(self):
 
@@ -281,7 +278,7 @@ class LoadProject:
                 if algorithm_3d is not None:
                     solid_element.algorithm_3d = algorithm_3d
 
-                mesh_setup["element_type"] = solid_element
+                mesh_setup["ElementType"] = solid_element
 
                 app().project.reset_solutions()
                 app().project.set_mesh_setup(mesh_setup)

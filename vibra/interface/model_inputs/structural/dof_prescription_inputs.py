@@ -104,26 +104,26 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                                     "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
                                     "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
                                     "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
-                                    "Ry": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
-                                }
+                                    "Rz": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+                                    }
 
         self.table_line_edits = { 
-                                "Ux" : self.lineEdit_path_table_ux,
-                                "Uy" : self.lineEdit_path_table_uy,
-                                "Uz" : self.lineEdit_path_table_uz,
-                                "Rx" : self.lineEdit_path_table_rx,
-                                "Ry" : self.lineEdit_path_table_ry,
-                                "Rz" : self.lineEdit_path_table_rz,
-                                }
+                                 "Ux" : self.lineEdit_path_table_ux,
+                                 "Uy" : self.lineEdit_path_table_uy,
+                                 "Uz" : self.lineEdit_path_table_uz,
+                                 "Rx" : self.lineEdit_path_table_rx,
+                                 "Ry" : self.lineEdit_path_table_ry,
+                                 "Rz" : self.lineEdit_path_table_rz,
+                                 }
 
         self.dof_setup_combo_boxes = { 
-                                        "Ux" : self.comboBox_displacement_ux,
-                                        "Uy" : self.comboBox_displacement_uy,
-                                        "Uz" : self.comboBox_displacement_uz,
-                                        "Rx" : self.comboBox_rotation_rx,
-                                        "Ry" : self.comboBox_rotation_ry,
-                                        "Rz" : self.comboBox_rotation_rz,
-                                        }
+                                      "Ux" : self.comboBox_displacement_ux,
+                                      "Uy" : self.comboBox_displacement_uy,
+                                      "Uz" : self.comboBox_displacement_uz,
+                                      "Rx" : self.comboBox_rotation_rx,
+                                      "Ry" : self.comboBox_rotation_ry,
+                                      "Rz" : self.comboBox_rotation_rz,
+                                      }
 
     def _config_widgets(self):
         #
@@ -217,10 +217,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         value_based = combo_box.currentIndex() == DOFSetup.VALUE
 
         line_edit_real, line_edit_imag = self.constant_line_edits.get(unit_label, (None, None))
-        line_edit_real.setEnabled(value_based)
-        line_edit_imag.setEnabled(value_based)
+        if (line_edit_real, line_edit_imag).count(None) == 2:
+            return
+
         line_edit_real.setText("")
         line_edit_imag.setText("")
+        line_edit_real.setEnabled(value_based)   
+        line_edit_imag.setEnabled(value_based)
 
         if value_based:
             return
@@ -815,7 +818,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             if selection == "surfaces":
 
-                nodes_from_surface = self.mesh.nodes_from_surfaces[selected_id]
+                nodes_from_surface = self.mesh.get_nodes_from_surface(selected_id)
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
@@ -835,7 +838,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             elif selection == "lines":
 
-                nodes_from_line = self.mesh.nodes_from_lines[selected_id]
+                nodes_from_line = self.mesh.get_nodes_from_line(selected_id)
                 for (property, node_id) in self.properties.nodal_properties.keys():
                     if property == "prescribed_dofs" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
@@ -1238,8 +1241,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 return
             
         if isinstance(line_id, int):
-            for node_id in self.mesh.nodes_from_lines[line_id]:
-                for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.get_nodes_from_line(line_id):
+                for surface_id in self.mesh.get_surfaces_from_node(node_id):
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
@@ -1250,14 +1253,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if node_id is None:
                 return
 
-            for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for surface_id in self.mesh.get_surfaces_from_node(node_id):
                 data = self.properties._get_property("surface_thickness", surface=surface_id)
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                     return
 
         if isinstance(node_id, int):
-            for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for surface_id in self.mesh.get_surfaces_from_node(node_id):
                 data = self.properties._get_property("surface_thickness", surface=surface_id)
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)

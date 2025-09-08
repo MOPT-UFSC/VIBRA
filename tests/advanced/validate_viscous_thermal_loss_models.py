@@ -1,20 +1,19 @@
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
+from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
 
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pandas import read_excel
 from openpyxl import load_workbook
-
 from time import time
 
 def load_external_mesh_and_solve():
@@ -51,18 +50,14 @@ def load_external_mesh_and_solve():
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
-        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
+        mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
         mesh.volumes_from_surface[tag] = [1]
 
     mesh.surfaces_from_volume[1] = [1, 2]
-
-    # for id, elements in mesh.elements_from_volume.items():
-    #     print(id, len(elements))
-    # return
 
     # Define the fluid properties
 
@@ -182,42 +177,44 @@ def load_external_mesh_and_solve():
     element_3d = model.acoustic_element_3d
 
     list_nodes = list()
-    for tag, surface_nodes in mesh.nodes_from_surfaces.items():
+    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
         list_nodes.extend(surface_nodes)
 
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
+    rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(1, rho_eff_v1)
-    output_particle_velocity = harmonic_solver.get_particle_velocity_from_surface(2, rho_eff_v1)
+    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
+    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
 
-    input_Vx = np.average(input_velocities, axis=0)
-    output_Vx = np.average(output_velocities, axis=0)
+    input_face_Vx = np.average(input_velocities, axis=0)
+    output_face_Vx = np.average(output_velocities, axis=0)
+
+    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
 
     particle_velocity = dict()
     for _node_id, element_ids in solid_elements_connected_to_nodes.items():
         Vk = 0.
         for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_eff_v1, frequencies, solution)
+            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_eff_v1, frequencies, solution=solution)
         particle_velocity[_node_id] = Vk / len(element_ids)
 
-    # input_Vx = 0.
-    # for node_id in mesh.nodes_from_surfaces[1]:
-    #     input_Vx += particle_velocity[node_id][0, :]
-    # input_Vx /= len(mesh.nodes_from_surfaces[1])
+    # input_face_Vx = 0.
+    # for node_id in mesh.external_nodes_from_surfaces[1]:
+    #     input_face_Vx += particle_velocity[node_id][0, :]
+    # input_face_Vx /= len(mesh.external_nodes_from_surfaces[1])
 
-    # output_Vx = 0.
-    # for node_id in mesh.nodes_from_surfaces[2]:
-    #     output_Vx += particle_velocity[node_id][0, :]
-    # output_Vx /= len(mesh.nodes_from_surfaces[2])
+    # output_face_Vx = 0.
+    # for node_id in mesh.external_nodes_from_surfaces[2]:
+    #     output_face_Vx += particle_velocity[node_id][0, :]
+    # output_face_Vx /= len(mesh.external_nodes_from_surfaces[2])
 
     mesh._process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
-    freq_TL, TL_model = harmonic_solver.get_transmission_loss(1, 2, surface_integration=False)
+    freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
@@ -239,12 +236,12 @@ def load_external_mesh_and_solve():
         output_ns = "output_face"
 
         if output_ns == "input_face":
-            rows = mesh.nodes_from_surfaces[1]
+            rows = mesh.external_nodes_from_surfaces[1]
             freq_ref = pressure_at_input_face[:, 0]
             results_ref = pressure_at_input_face[:, 1] + 1j*pressure_at_input_face[:, 2]
 
         else:
-            rows = mesh.nodes_from_surfaces[2]
+            rows = mesh.external_nodes_from_surfaces[2]
             freq_ref = pressure_at_output_face[:, 0]
             results_ref = pressure_at_output_face[:, 1] + 1j*pressure_at_output_face[:, 2]
 
@@ -335,7 +332,7 @@ def load_external_mesh_and_solve():
 
         fig8, ax8 = plt.subplots()
         title = "Input face particle velocity - average"
-        ax8.plot(frequencies, data_type(input_Vx), 'r', label='VIBRA')
+        ax8.plot(frequencies, data_type(input_face_Vx), 'r', label='VIBRA')
         ax8.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -348,7 +345,7 @@ def load_external_mesh_and_solve():
 
         fig9, ax9 = plt.subplots()
         title = "Output face particle velocity - average"
-        ax9.plot(frequencies, data_type(output_Vx), 'r', label='VIBRA')
+        ax9.plot(frequencies, data_type(output_face_Vx), 'r', label='VIBRA')
         ax9.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax9.set_xlabel('Frequency [Hz]')
         ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')

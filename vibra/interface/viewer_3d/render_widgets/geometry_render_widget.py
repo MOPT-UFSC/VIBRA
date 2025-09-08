@@ -1,15 +1,17 @@
+import logging
+
+from molde import Color
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
-from molde import Color
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
 from vibra.utils.image_functions import removes_image_background
 
-from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
+from ..actors.multimaterial import MultimaterialGeometryActor
 from ..actors.points_actor import PointsActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
@@ -17,10 +19,21 @@ from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
-
-from .model_info_text import *
-
-import logging
+from .model_info_text import (
+    acoustic_boundary_conditions_info_text,
+    faces_info_text,
+    fluid_info_text,
+    lines_info_text,
+    mass_source_info_text,
+    material_info_text,
+    perforated_plate_info_text,
+    points_info_text,
+    porous_material_info_text,
+    proportional_damping_info_text,
+    structural_boundary_conditions_info_text,
+    viscous_thermal_info_text,
+    volumes_info_text,
+)
 
 
 class GeometryRenderWidget(CommonRenderWidget):
@@ -45,6 +58,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
+        self.renderer.UseFXAAOn()
+
+        # dont't remove, transparency depends on it
+        self.renderer.UseDepthPeelingOn()
 
         self.remove_all_actors()
         self.create_axes()
@@ -117,7 +134,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
-        self.faces_actor = FacesActor(mesh)
+        self.multimaterial = MultimaterialGeometryActor(mesh)
+
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
@@ -126,14 +144,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
 
-        self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.multimaterial.GetBounds())
         self.plane_actor.VisibilityOff()
 
         logging.info("Updating the mesh render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
-            self.faces_actor,
+            self.multimaterial,
             self.selection_spheres_actor,
             self.ghost_actor,
             self.plane_actor,
@@ -155,7 +173,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         if app().project.thumbnail is None:
             self.save_thumbnail()
-    
+
     def save_thumbnail(self):
         thumbnail = app().project.thumbnail
 
@@ -164,13 +182,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         color = Color(247, 0, 255)
         self.renderer.SetBackground(color.to_rgb_f())
         self.renderer.SetBackground2(color.to_rgb_f())
-        self.faces_actor.set_color(Color(255, 255, 255))
         self.lines_actor.set_color(Color(0, 0, 0))
 
         self.disable_scale_bar()
         thumbnail = self.get_thumbnail()
         app().project.thumbnail = removes_image_background(thumbnail)
-        
+
         if app().config.user_preferences.show_reference_scale_bar:
             self.enable_scale_bar()
 
@@ -182,30 +199,24 @@ class GeometryRenderWidget(CommonRenderWidget):
             return
 
         visualization = app().main_window.visualization_filter
-        
+
         # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
             _, physical_domain = app().project.get_analysis_type_and_physical_domain()
-        
-        self.symbols_actor_structural.SetVisibility(
-            visualization.symbols and (physical_domain == "Structural") 
-        )
-        self.symbols_actor_acoustic.SetVisibility(
-            visualization.symbols and (physical_domain == "Acoustic")
-        )
-        self.symbols_actor_acoustic_fixed_size.SetVisibility(
-            visualization.symbols and (physical_domain == "Acoustic")
-        )
+
+        self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
+        self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
+        self.symbols_actor_acoustic_fixed_size.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(visualization.faces)
+        self.multimaterial.SetVisibility(visualization.faces)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.points_actor.SetPickable(visualization.faces)
         self.lines_actor.SetPickable(visualization.faces)
-        self.faces_actor.SetPickable(visualization.faces)
+        self.multimaterial.SetPickable(visualization.faces)
 
         self.update_selection()
         self.update()
@@ -228,15 +239,15 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update_plot()
             return
 
-        self.remove_actors(self.faces_actor)
-        self.faces_actor = FacesActor(mesh)
-        self.add_actors(self.faces_actor)
-
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
+        self.remove_actors(self.multimaterial)
+        self.multimaterial = MultimaterialGeometryActor(mesh)
+        self.add_actors(self.multimaterial)
+
+        self.update_selection()
         self.update_section_plane()
-        # self.update()
 
     def update_symbols(self):
         if not self.actors_exists():
@@ -245,11 +256,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
+        self.remove_actors(
+            self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size
+        )
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
         self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
-        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
+        self.add_actors(
+            self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size
+        )
         self.visualization_changed_callback()
         self.update()
 
@@ -278,7 +293,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             (
                 picked_points,
                 picked_lines,
-                picked_faces,
+                picked_surfaces,
                 picked_volumes,
             ) = self.geometry_selection.area_pick(x0, y0, x, y)
 
@@ -286,7 +301,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             (
                 picked_points,
                 picked_lines,
-                picked_faces,
+                picked_surfaces,
                 picked_volumes,
             ) = self.geometry_selection.pick(x, y)
 
@@ -298,11 +313,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not shift_pressed:
             picked_volumes.clear()
 
-
         app().main_window.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
-            surfaces=picked_faces,
+            surfaces=picked_surfaces,
             volumes=picked_volumes,
             join=ctrl_pressed,
             remove=alt_pressed,
@@ -316,32 +330,16 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
-        self.faces_actor.clear_colors()
+        self.multimaterial.clear_colors()
 
         points = app().main_window.selected_geometry_points
         lines = app().main_window.selected_geometry_lines
-        faces = app().main_window.selected_geometry_surfaces
-        volumes = app().main_window.selected_geometry_volumes
-
-        mesh = app().project.model.mesh
-
-        # Get the face elements of all selected faces
-        all_faces_elements = list()
-        for face in faces:
-            indexes = mesh.elements_from_surface.get(face, [])
-            all_faces_elements.extend(indexes)
-
-        # Get the face elements of all selected volumes
-        for volume in volumes:
-            surfaces = app().project.model.mesh.surfaces_from_volume[volume]
-            for face in surfaces:
-                indexes = app().project.model.mesh.elements_from_surface.get(face, [])
-                all_faces_elements.extend(indexes)
+        surfaces = app().main_window.selected_geometry_surfaces
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
-        self.faces_actor.paint_cells(self.selection_faces_color, all_faces_elements)
-        
+        self.multimaterial.paint_surfaces(self.selection_faces_color, surfaces)
+
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
@@ -391,7 +389,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
         self.lines_actor.disable_cut()
-        self.faces_actor.disable_cut()
+        self.multimaterial.disable_cut()
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
@@ -402,7 +400,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             normal = -normal
 
         self.points_actor.apply_cut(xyz, normal)
-        self.faces_actor.apply_cut(xyz, normal)
+        self.multimaterial.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
         visualization = app().main_window.visualization_filter
@@ -416,8 +414,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         super().remove_all_actors()
         self.nodes_actor = None
         self.edges_actor = None
-        self.faces_actor = None
-        self.solids_actor = None
+        self.multimaterial = None
         self.selection_spheres_actor = None
         self.plane_actor = None
         self.symbols_actor_structural = None
@@ -443,7 +440,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         return analysis_type, physical_domain
 
     def update_info_text(self):
-
         analysis_type, physical_domain = self.get_analysis_type_and_physical_domain()
 
         text = ""

@@ -70,14 +70,7 @@ def lines_info_text():
         tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
 
-        # nodes_from_line = app().project.model.mesh.nodes_from_lines.get(line_ids[0])
-        # if nodes_from_line is not None:
-        #     print()
-        #     print(f"There are {len(nodes_from_line)} nodes in line {line_ids[0]}")
-        #     print(f"Nodes: {[int(node) for node in nodes_from_line]}")
-
     else:
-
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
             sequence = sequence[:20 - 4] + " ..."
@@ -109,12 +102,6 @@ def faces_info_text():
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
-
-        # nodes_from_surface = app().project.model.mesh.nodes_from_surfaces.get(surface_ids[0])
-        # if nodes_from_surface is not None:
-        #     print(f"There are {len(nodes_from_surface)} nodes in surface {surface_ids[0]}")
-        #     print(f"Nodes: {nodes_from_surface}")
-        #     print()
 
         surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
@@ -711,9 +698,9 @@ def mesh_material_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         material = app().project.model.properties._get_property("material", volume=current_solid)
-        if material is None:
+        if not isinstance(material, Material):
             return text
 
         tree = TreeInfo("Material")
@@ -738,9 +725,9 @@ def mesh_fluid_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
-        if fluid is None:
+        if not isinstance(fluid, Fluid):
             return text
 
         tree = TreeInfo("Fluid")
