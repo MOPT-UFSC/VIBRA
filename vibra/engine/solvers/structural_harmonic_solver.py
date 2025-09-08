@@ -218,7 +218,13 @@ class StructuralHarmonicSolver:
             f_eq = self.get_prescribed_dof_model_excitation(index=i)
             f = structural_loads[:, i] - f_eq
 
-            A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K 
+            A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
+
+            is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
+
+            if not is_complex:
+                A.data = np.real(A.data)
+                f = np.real(f)
 
             solution[:, i] = linear_solver.solve(A, f)
 
