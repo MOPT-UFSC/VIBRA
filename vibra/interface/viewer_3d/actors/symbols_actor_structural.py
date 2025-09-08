@@ -141,7 +141,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                         self.add_symbol(sources.create_dof_hexagon_base_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
                     
                 elif index >= 3 and v is not None: 
-                    self.add_symbol(sources.create_dof_cone_arrow_source, coords, (index==3, index==4, index==5), color=color_names.GREEN_2)
+                    self.add_symbol(sources.create_dof_cone_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
                     self.add_symbol(sources.create_dof_base_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
                     
                     if v == 0:
@@ -149,57 +149,44 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
+            coords, _ = self._get_center_coords_and_normals(surface_id)
             surface_properties = app().project.model.properties.surface_properties
             property = surface_properties[property_name, surface_id]
-            coords, _ = self._get_center_coords_and_normals(surface_id)
-            
+
+        if line_id != -1:
+            coords = self._get_center_coords_and_normals_line(line_id)[1]
+            line_properties = app().project.model.properties.line_properties
+            property = line_properties[property_name, line_id]
+
+        if point_id != -1:
+            coords = self._get_center_coords_and_normals_point(point_id)
+            point_properties = app().project.model.properties.point_properties
+            property = point_properties[property_name, point_id]
+
+        if property is not None and coords is not None:
             F_M = [(i if i is not None else 0) for i in property["values"]]
             if len(F_M) == 3:
                 Fx, Fy, Fz = F_M
                 Mx, My, Mz = 0, 0, 0
             else:
                 Fx, Fy, Fz, Mx, My, Mz = F_M
-
+            
             force_orientation = np.real((Fx, Fy, Fz))
             m_orientation = np.real((Mx, My, Mz))
 
             if np.any(force_orientation):
                 self.add_symbol(sources.create_nodal_loads_force_base_source, coords, force_orientation, color=color_names.RED_2)
                 self.add_symbol(sources.create_nodal_loads_force_cone_arrow_source, coords, force_orientation, color=color_names.RED_2)
-            if np.any(m_orientation):
+                
+                if np.any(m_orientation):
+                    self.add_symbol(sources.create_nodal_loads_momentum_base_source, coords, force_orientation, color=color_names.BLUE_5)
+                    self.add_symbol(sources.create_nodal_loads_momentum_cone_arrow_source, coords, force_orientation, color=color_names.BLUE_5)
+            
+            elif np.any(m_orientation):
+                self.add_symbol(sources.create_nodal_loads_force_base_source, coords, m_orientation, color=color_names.BLUE_5)
+                self.add_symbol(sources.create_nodal_loads_force_cone_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
                 self.add_symbol(sources.create_nodal_loads_momentum_base_source, coords, m_orientation, color=color_names.BLUE_5)
                 self.add_symbol(sources.create_nodal_loads_momentum_cone_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
-
-        property = None
-        coord = None
-
-        if line_id != -1:
-            coord = self._get_center_coords_and_normals_line(line_id)[1]
-            line_properties = app().project.model.properties.line_properties
-            property = line_properties[property_name, line_id]
-
-        if point_id != -1:
-            coord = self._get_center_coords_and_normals_point(point_id)
-            point_properties = app().project.model.properties.point_properties
-            property = point_properties[property_name, point_id]
-
-        if property is not None and coord is not None:
-            F_M = [(i if i is not None else 0) for i in property["values"]]
-            if len(F_M) == 3:
-                Fx, Fy, Fz = F_M
-                Mx, My, Mz = 0, 0, 0
-            else:
-                Fx, Fy, Fz, Mx, My, Mz = F_M
-                
-            force_orientation = np.real((Fx, Fy, Fz))
-            m_orientation = np.real((Mx, My, Mz))
-
-            if np.any(force_orientation):
-                self.add_symbol(sources.create_nodal_loads_force_base_source, coord, force_orientation, color=color_names.RED_2)
-                self.add_symbol(sources.create_nodal_loads_force_cone_arrow_source, coord, force_orientation, color=color_names.RED_2)
-            if np.any(m_orientation):
-                self.add_symbol(sources.create_nodal_loads_momentum_base_source, coord, force_orientation, color=color_names.BLUE_5)
-                self.add_symbol(sources.create_nodal_loads_momentum_cone_arrow_source, coord, force_orientation, color=color_names.BLUE_5)
 
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):

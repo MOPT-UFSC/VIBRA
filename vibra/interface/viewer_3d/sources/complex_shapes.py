@@ -128,7 +128,7 @@ def create_dof_cone_arrow_source():
         polydata,
         position=(-1, 0, 0),
         rotation=(0, 90, 0),
-        scale=(.5, .5, .5),
+        scale=(.4, .4, .4),
     )
 
 def create_dof_hexagon_base_source():
@@ -137,7 +137,7 @@ def create_dof_hexagon_base_source():
         polydata,
         position=(-1, 0, 0),
         rotation=(0, 90, 0),
-        scale=(.5, .5, .5),
+        scale=(.4, .4, .4),
     )
 
 def create_dof_base_arrow_source():
@@ -146,7 +146,7 @@ def create_dof_base_arrow_source():
         polydata,
         position=(-1, 0, 0),
         rotation=(0, 90, 0),
-        scale=(.5, .5, .5),
+        scale=(.4, .4, .4),
     )
 
 def create_dof_hexagon_arrow_source():
@@ -155,7 +155,7 @@ def create_dof_hexagon_arrow_source():
         polydata,
         position=(-1, 0, 0),
         rotation=(0, 90, 0),
-        scale=(.5, .5, .5),
+        scale=(.4, .4, .4),
     )
 
 def create_dof_cone_source():
@@ -164,14 +164,14 @@ def create_dof_cone_source():
         polydata,
         position=(-1, 0, 0),
         rotation=(0, 90, 0),
-        scale=(.5, .5, .5),
+        scale=(.4, .4, .4),
     )
 
 def create_nodal_loads_momentum_base_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_base.stl")
     return transform_polydata(
         polydata,
-        position=(-1, 0, 0),
+        position=(-1.2, 0, 0),
         rotation=(90, 0, -90),
         scale=(.3, .3, .3),
     )
@@ -180,7 +180,7 @@ def create_nodal_loads_momentum_cone_arrow_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_cone_arrow.stl")
     return transform_polydata(
         polydata,
-        position=(-1, 0, 0),
+        position=(-1.2, 0, 0),
         rotation=(90, 0, -90),
         scale=(.3, .3, .3),
     )
@@ -189,7 +189,7 @@ def create_nodal_loads_force_cone_arrow_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_cone_arrow.stl")
     return transform_polydata(
         polydata,
-        position=(-1, 0, 0),
+        position=(-1.2, 0, 0),
         rotation=(90, 0, -90),
         scale=(.3, .3, .3),
     )
@@ -198,7 +198,7 @@ def create_nodal_loads_force_base_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_base.stl")
     return transform_polydata(
         polydata,
-        position=(-1, 0, 0),
+        position=(-1.2, 0, 0),
         rotation=(90, 0, -90),
         scale=(.3, .3, .3),
     )
