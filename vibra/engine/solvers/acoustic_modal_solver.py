@@ -108,6 +108,11 @@ class AcousticModalSolver:
             B = block_array([[M, None], [None, M]], format="csr")
             A = block_array([[None, M], [-K, -C_imp]], format="csr")
 
+            is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(B.data))
+            if not is_complex:
+                A.data = np.real(A.data)
+                B.data = np.real(B.data)
+
             opinv = linear_solver.build_linear_operator(A - sigma * B)
 
             eigen_values, eigen_vectors = eigs(A, M=B, k=2*n_modes, sigma=sigma, which=which, OPinv=opinv)
@@ -141,6 +146,11 @@ class AcousticModalSolver:
 
         else:
             try:
+                is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
+                if not is_complex:
+                    K.data = np.real(K.data)
+                    M.data = np.real(M.data)
+
                 opinv = linear_solver.build_linear_operator(K - sigma * M)
 
                 eigen_values, eigen_vectors = eigs(K, M=M, k=n_modes, sigma=sigma, which=which, OPinv=opinv)

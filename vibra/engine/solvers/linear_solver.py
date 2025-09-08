@@ -22,7 +22,7 @@ class MumpsLinearOperator(LinearOperator):
 
 
 class PardisoLinearOperator(LinearOperator):
-    def __init__(self, ps, A, is_symmetric):
+    def __init__(self, ps, A, is_symmetric: bool):
         if is_symmetric:
             A = triu(A, format='csr')
         ps.factorize(A)
@@ -36,7 +36,6 @@ class PardisoLinearOperator(LinearOperator):
 
 class LinearSolver:
     def __init__(self, **kwargs):
-        self.is_complex = False
         self.is_symmetric = False
         self.linear_operator_class = LinearOperator
 
@@ -48,18 +47,10 @@ class LinearSolver:
 
     def build_linear_operator(self, A) -> LinearOperator:
         solver = self.get_solver_instance(A)
-        self.handle_linear_system_data(A)
         return self.linear_operator_class(solver, A, self.is_symmetric)
 
     def get_solver_instance(self, A, f=None):
         pass
-
-    def handle_linear_system_data(self, A, f=None):
-        if not self.is_complex:
-            A.data = np.real(A.data)
-            if f is not None:
-                return np.real(f)
-        return f
 
 
 class PardisoLinearSolver(LinearSolver):
@@ -74,7 +65,6 @@ class PardisoLinearSolver(LinearSolver):
 
     def solve(self, A, F):
         solver = self.get_solver_instance(A, F)
-        F = self.handle_linear_system_data(A, F)
         if self.is_symmetric:
             # convert the symmetric matrix [A] into an upper triangular matrix to enhance the solver's
             # performance and reduce the amount of memory required to compute the solution
@@ -87,19 +77,19 @@ class PardisoLinearSolver(LinearSolver):
     def get_solver_instance(self, A, f=None):
         if self._solver:
             return self._solver
-        self.is_symmetric, self.is_complex = analyse_linear_system(A, f)
+        self.is_symmetric, is_complex = analyse_linear_system(A, f)
         if self.mtype is None:
-            if self.is_complex:
-                if self.is_symmetric:
+            if self.is_symmetric:
+                if is_complex:
                     self.mtype = Matrix_type.CS
                 else:
-                    self.mtype = Matrix_type.CNS
-            else:
-                if self.is_symmetric:
                     self.mtype = Matrix_type.RSI
+            else:
+                if is_complex:
+                    self.mtype = Matrix_type.CNS
                 else:
                     self.mtype = Matrix_type.RNS
-        print(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {self.is_complex}")
+        print(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}, mtype: {self.mtype}")
         self._solver = PyPardisoSolver(self.mtype, self.phase, self.size_limit_storage)
         return self._solver
 
@@ -113,7 +103,6 @@ class MumpsLinearSolver(LinearSolver):
 
     def solve(self, A, F):
         solver = self.get_solver_instance(A, F)
-        F = self.handle_linear_system_data(A, F)
         solver.set_matrix(A, symmetric=self.is_symmetric)
         solver.factor()
         return solver.solve(F)
@@ -123,8 +112,8 @@ class MumpsLinearSolver(LinearSolver):
             return self._solver
         # local import of mumps for backward compatibility with the current build (without conda)
         from mumps import Context
-        self.is_symmetric, self.is_complex = analyse_linear_system(A, f)
-        print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {self.is_complex}")
+        self.is_symmetric, is_complex = analyse_linear_system(A, f)
+        print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
         self._solver = Context(self.verbose)
         return self._solver
 
@@ -134,8 +123,9 @@ def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
         return PardisoLinearSolver(**kwargs)
     elif solver_type == SolverType.MUMPS:
         return MumpsLinearSolver(**kwargs)
-    
-def is_symmetric(matrix, tol=1e-10) -> bool:
+
+
+def is_symmetric(matrix, tol=1e-5) -> bool:
     if matrix.shape[0] != matrix.shape[1]:
         return False
 

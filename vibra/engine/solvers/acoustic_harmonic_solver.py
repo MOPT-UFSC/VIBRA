@@ -198,6 +198,11 @@ class AcousticHarmonicSolver:
             A = K - (omega**2) * M + 1j * omega * C
             f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
 
+            is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
+            if not is_complex:
+                A.data = np.real(A.data)
+                f = np.real(f)
+
             # compute the solution for each frequency step
             solution_freq = linear_solver.solve(A, f)
             if isinstance(solution, LazyHDF5MatrixWriter):
