@@ -211,7 +211,7 @@ def load_external_mesh_and_solve():
     #     output_Vx += particle_velocity[node_id][0, :]
     # output_Vx /= len(mesh.external_nodes_from_surfaces[2])
 
-    mesh._process_face_elements_connected_to_nodes([1, 2])
+    mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
     freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)

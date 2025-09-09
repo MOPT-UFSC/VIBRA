@@ -257,7 +257,7 @@ def load_external_mesh_and_solve():
     #     particle_velocity[_node_id] = Vk / len(element_ids)
 
     # nodal area calculation
-    mesh._process_face_elements_connected_to_nodes([1, 2])
+    mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
     dt = time() - t0

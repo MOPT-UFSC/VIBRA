@@ -381,7 +381,6 @@ class AcousticAssembler:
             data: dict
 
             volume_id = data.get("volume_id")
-            print(volume_id)
             fluid_properties = self.fluid_properties_from_volume.get(volume_id)
 
             mu_0 = fluid_properties.get("mu_0")
@@ -1241,12 +1240,6 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zsi[j] = int2d_NtN / Z_si[:, j].reshape(-1, 1, 1)
 
-        # TODO: remove after confirming that everything is working properly
-        # for i, complex_values in enumerate(surface_data.values()):
-        #     normalized_matrix_Z = self.element_2d.damping_matrix_Ce(i)
-        #     for j in range(self.number_frequencies):
-        #         self.data_Zsi[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
-
 
     def process_incident_plane_wave_data_to_assemble_damping_matrix(self):
         """ 
@@ -1614,7 +1607,7 @@ class AcousticAssembler:
                         continue
 
                     N = len(nodes)
-                    self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
+                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
@@ -1714,7 +1707,7 @@ class AcousticAssembler:
         return output
 
 
-    def process_assemble(self):
+    def process_assemble(self, reorder: bool=True):
 
         self.define_acoustic_elements()
         self.update_number_of_frequencies()
@@ -1722,9 +1715,9 @@ class AcousticAssembler:
         logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
         if self.model.mesh.element_type in [TETRAHEDRON_4, TETRAHEDRON_10] and True:
-            self.compute_data_to_assemble_global_matrices()
+            self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
-            self.compute_data_to_assemble_global_matrices_using_loop()
+            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
         dt = time() - t0
         print(f"Elapsed time to gather data to assemble global matrices: {round(dt, 4)} [s]")
 

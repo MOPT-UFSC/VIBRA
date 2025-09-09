@@ -411,10 +411,6 @@ def compute_transmission_loss(
         W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
 
-        # compute the transmission loss using an alternative surface integration
-        # W_in = integrate_surface_sound_power_from_nodal_sound_intensity(input_surface_id, I_in)
-        # W_out = integrate_surface_sound_power_from_nodal_sound_intensity(output_surface_id, I_out)
-
     transmission_loss = W_in - W_out
 
     if frequencies[0] == 0:
@@ -478,58 +474,6 @@ def integrate_surface_sound_power(
 
         normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
         sound_power += np.real(normalized_data) / 2
-
-    if dB_scale:
-        return 10 * np.log10(sound_power / 1e-12)
-
-    return sound_power
-
-
-def integrate_surface_sound_power_from_nodal_sound_intensity( 
-        hsolver: "AcousticHarmonicSolver",
-        surface_id: int,
-        sound_intensities: np.ndarray,
-        dB_scale: bool = True
-        ) -> np.ndarray:
-    """
-    This method integrates the sound power intensity over the selected surface.
-
-    Parameters
-    ----------
-        surface_id: int
-            The identifier of selected surface.
-
-        sound_intensities: np.ndarray
-            The acoustic sound intensities from selected suraface.
-
-    Returns
-    -------
-    sound_power: np.ndarray
-        The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
-    """
-
-    assembler = hsolver.assembler
-
-    nodes = np.sort(assembler.model.mesh.get_nodes_from_surface(surface_id))
-    surface_connectivities = assembler.model.mesh.get_connectivity_from_surface(surface_id)
-
-    number_nodes = len(nodes)
-    map_nodes = dict(zip(nodes, np.arange(number_nodes)))
-
-    if len(sound_intensities.shape) == 1:
-        sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
-
-    element_2d = assembler.element_2d
-    if element_2d is None:
-        assembler.define_acoustic_elements()
-        element_2d = assembler.element_2d
-
-    sound_power = 0.
-    for i, e_connect in enumerate(surface_connectivities):
-        node_indexes = [map_nodes.get(node) for node in e_connect]
-        sound_intensity = sound_intensities[node_indexes, :]
-        normalized_data = element_2d.elementary_sound_power_from_sound_intensity(e_connect, sound_intensity)
-        sound_power += np.sum(np.real(normalized_data) / 2, axis=0)
 
     if dB_scale:
         return 10 * np.log10(sound_power / 1e-12)

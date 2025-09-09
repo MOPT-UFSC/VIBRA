@@ -1321,7 +1321,7 @@ class Mesh:
             element_ids.extend(self.lines_connectivity[rows, 0])
         return element_ids
 
-    def _process_face_elements_connected_to_nodes(self, selected_ids: int | list):
+    def process_face_elements_connected_to_nodes(self, selected_ids: int | list):
 
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()
@@ -1699,17 +1699,37 @@ class Mesh:
     def process_triangular_area_by_nodal_coordinates(
         self, node_ids: list[int] | np.ndarray
     ) -> np.ndarray | None:
-        """ """
-        if len(node_ids) != 3:
-            return None
+        """
+        """
 
-        coord_A = self.nodal_coordinates[node_ids[0], 1:]
-        coord_B = self.nodal_coordinates[node_ids[1], 1:]
-        coord_C = self.nodal_coordinates[node_ids[2], 1:]
+        if len(node_ids) not in [3, 6]:
+            return 0.
 
-        AB = coord_B - coord_A
-        BC = coord_C - coord_B
-        area = np.linalg.norm(np.cross(AB, BC)) / 2
+        def compute_triangular_area(_coord_A, _coord_B, _coord_C):
+            vect_AB = _coord_B - _coord_A
+            vect_BC = _coord_C - _coord_B
+            area = np.linalg.norm(np.cross(vect_AB, vect_BC)) / 2
+            return area
+
+        if len(node_ids) == 3:
+            # compute the area for TRIA3 element
+            coord_A = self.nodal_coordinates[node_ids[0], 1:]
+            coord_B = self.nodal_coordinates[node_ids[1], 1:]
+            coord_C = self.nodal_coordinates[node_ids[2], 1:]
+            return compute_triangular_area(coord_A, coord_B, coord_C)
+
+        else:
+            # compute the area for TRIA6 element
+            points_nodes = [
+                [node_ids[0], node_ids[3], node_ids[5]],
+                [node_ids[5], node_ids[3], node_ids[1]],
+                [node_ids[1], node_ids[4], node_ids[5]],
+                [node_ids[5], node_ids[4], node_ids[2]],
+            ]
+
+            area = 0.
+            for nodes in points_nodes:
+                area += compute_triangular_area(*nodes)
 
         return area
 
@@ -2063,7 +2083,6 @@ class Mesh:
 
     def get_element_face_normal(self, connect: np.ndarray):
 
-        # ie = self.faces_connectivity[element_id, 4:]
         coords = self.nodal_coordinates[connect, 1:]
 
         P1 = coords[0, :]

@@ -258,7 +258,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 if not integration_method:
 
                     logging.info("Processing the transmission loss... [10/100]")
-                    self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+                    self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
