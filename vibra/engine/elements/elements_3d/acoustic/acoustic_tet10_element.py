@@ -523,13 +523,14 @@ class ACT_TETRAHEDRON_10C(Element3D):
             An array containing the particle velocity components in the
             x, y, and z directions.
         """
-        node_ids = kwargs.get("node_ids")
-        if node_ids is None:
-            node_ids = self.connectivity[element_id, 1:]
 
         solution = kwargs.get("solution")
-        nodal_pressures = kwargs.get("nodal_pressures", )
+        nodal_pressures = kwargs.get("nodal_pressures")
+        node_ids = kwargs.get("node_ids")
 
+        if node_ids is None:
+            node_ids = self.connectivity[element_id, 1:]
+    
         if isinstance(nodal_pressures, np.ndarray):
             Pe = nodal_pressures
         elif isinstance(solution, np.ndarray):

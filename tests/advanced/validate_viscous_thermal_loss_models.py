@@ -3,7 +3,6 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
@@ -151,16 +150,6 @@ def load_external_mesh_and_solve():
 
     # Set the analysis frequency setup
     assembler.process_assemble()
-    
-    # t0 = time()
-    # # Run modal analysis
-    # modal_solver = AcousticModalSolver(assembler)
-    # modal_solver.solve()
-    # natural_frequencies = modal_solver.natural_frequencies
-    # modal_shape = modal_solver.solution
-    # dt = time() - t0
-    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
-    # return
 
     # Define the analysis type and load setup
     harmonic_solver = AcousticHarmonicSolver(assembler)
