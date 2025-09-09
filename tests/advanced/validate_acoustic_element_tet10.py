@@ -1,6 +1,7 @@
+from vibra import PROJECT_DIR
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import TETRAHEDRON_4
+from vibra.engine.mesher.element_type import TETRAHEDRON_4, TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
@@ -21,27 +22,34 @@ import numpy as np
 from pandas import read_excel
 from openpyxl import load_workbook
 from time import time
+from pprint import pprint
 
 # @pytest.mark.slow
 # @pytest.mark.skip
 
-def load_external_mesh_and_solve(assignment_type: str):
+def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/mass_source/mesh/ds_connected_rectangular_cavities_50mm.dat"
+    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
+    results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/"
+
+    # mesh_path = f"data/validation/acoustic/elements/tet4/mesh/ds_Lpipe_act_tet4_30mm.dat"
+    # results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet4/results/"
 
     if not os.path.exists(mesh_path):
+        return
+    
+    if not results_path.exists():
         return
 
     # define the known 'Named selections' from model
     named_selecion_to_tag = { 
                              "input_face" : 1,
                              "output_face" : 2,
-                             "middle_face" : 3,
                             }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 3, 4], 2 : [2, 5]}
+    surfaces_from_volume = { 1 : [1, 2] }
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -54,15 +62,21 @@ def load_external_mesh_and_solve(assignment_type: str):
     # for ns, nodes in nodes_from_named_selection.items():
     #     print(ns, nodes)
 
+    # return
+
     dt = time() - t0
     print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
+    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
+    mesh.import_external_faces_connectivity(external_mesh.faces_connectivities, index_zero=True, etype_tag=9)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_4
+    mesh.export_face_elements_connectivity("faces_connectivity.dat")
+    mesh.element_type = TETRAHEDRON_10
+    # mesh.element_type = TETRAHEDRON_4
+
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 
@@ -76,19 +90,14 @@ def load_external_mesh_and_solve(assignment_type: str):
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
-    # line information
-    line_id = 1
-    mesh.external_nodes_from_lines[line_id] = np.array([86, 116, 115, 114, 28], dtype=int) - 1
-    mesh.elements_from_line[line_id] = np.array([1, 2, 3, 4], dtype=int) - 1
-    mesh.external_connectivity_from_lines[line_id] = np.array([[ 86, 116],
-                                                      [116, 115],
-                                                      [115, 114],
-                                                      [114,  28]], dtype=int) - 1
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
             mesh.volumes_from_surface[surf_id] = [vol_id]
         mesh.surfaces_from_volume[vol_id] = surf_ids
+
+    # check collapsed elements
+    # collapsed_3d_elements, collapsed_2d_elements, collapsed_1d_elements = mesh.get_collapsed_elements()
 
     # return
     # define the fluid properties
@@ -120,10 +129,10 @@ def load_external_mesh_and_solve(assignment_type: str):
     model.mesh =  mesh
     model.generated_mesh = True
 
-    for _vol_id in [1, 2]:
+    for _vol_id in [1]:
         model.properties._set_property("fluid", fluid, volume=_vol_id)
     
-    for _surf_id in [1, 2, 3]:
+    for _surf_id in [1, 2]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
     ## normal surface velocity data
@@ -140,27 +149,12 @@ def load_external_mesh_and_solve(assignment_type: str):
                 "imag_values" : [0],
                 "volume_id" : 1,
                 }
-
-    if assignment_type == "points":
-        for node_id in [8, 86]:
-            model.properties._set_property("mass_source", data_ms, node=node_id-1)
-
-    elif assignment_type == "line":
-        model.properties._set_property("mass_source", data_ms, line=1)
-
-    elif assignment_type == "surface":
-        model.properties._set_property("mass_source", data_ms, surface=1)
-
-    elif assignment_type == "volume":
-        for vol_id in [1]:
-            model.properties._set_property("mass_source", data_ms, volume=vol_id)
-
-    else:
-        model.properties._set_property("surface_velocity", data_Vn, surface=1)
-
+    
+    model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
     ## boundary impedance setup
     Zo = fluid.impedance
+
     data_Z = {  
               "real_values" : [Zo],
               "imag_values" : [0],
@@ -173,11 +167,13 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     df = 5
     f_min = 5
-    f_max = 1400
+    f_max = 600
     frequencies = np.arange(f_min, f_max + df, df)
 
     analysis_setup = {
                       "analisys_id" : 3,
+                    #   "modes": 100,
+                    #   "sigma_factor": 0.01,
                       "f_min" : f_min,
                       "f_max" : f_max,
                       "f_step" : df,
@@ -187,33 +183,32 @@ def load_external_mesh_and_solve(assignment_type: str):
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
 
-    # ## Define the perforated plate setup
-
-    # if interior_impedance:
-    #     pp_data = {
-    #                "formulation" : "circular_hole",
-    #                "plate_thickness" : 0.008,
-    #                "porosity" : 0.26,
-    #                "hole_diameter" : 0.005,
-    #                "discharge_coefficient" : 0.76,
-    #                }
-
-    #     model.properties._set_property("perforated_plate_model", pp_data, surface=3)
-    #     model.process_perforated_plate_impedance(frequencies)
-
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.process_assemble()
+    assembler.process_assemble(reorder=False)
 
     # t0 = time()
     # # Run modal analysis
     # modal_solver = AcousticModalSolver(assembler)
     # modal_solver.solve()
     # natural_frequencies = modal_solver.natural_frequencies
-    # modal_shape = modal_solver.solution
+    # # modal_shape = modal_solver.solution
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+    
+    # modes_indexes = np.arange(natural_frequencies.size)
+    # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
+
+    # natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
+    # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
+
+    # fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
+    # assert np.max(fnat_diff) < 5e-3
+
+    # for i, nfreq in enumerate(natural_frequencies):
+    #     print(f"Mode {i+1}: {nfreq : .8f} Hz")
+
     # return
 
     # Define the analysis type and load setup
@@ -236,30 +231,30 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     element_3d = model.acoustic_element_3d
 
-    list_nodes = list()
-    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
-        list_nodes.extend(surface_nodes)
+    # list_nodes = list()
+    # for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
+    #     list_nodes.extend(surface_nodes)
 
-    rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
-    rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
+    # rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
+    # rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
-    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
+    # input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
+    # output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
 
-    input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
+    # input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
+    # output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
 
-    input_Vx = np.average(input_velocities, axis=0)
-    output_Vx = np.average(output_velocities, axis=0)
+    # input_Vx = np.average(input_velocities, axis=0)
+    # output_Vx = np.average(output_velocities, axis=0)
 
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
+    # solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
 
-    particle_velocity = dict()
-    for _node_id, element_ids in solid_elements_connected_to_nodes.items():
-        Vk = 0.
-        for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution=solution)
-        particle_velocity[_node_id] = Vk / len(element_ids)
+    # particle_velocity = dict()
+    # for _node_id, element_ids in solid_elements_connected_to_nodes.items():
+    #     Vk = 0.
+    #     for _element_id in element_ids:
+    #         Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution=solution)
+    #     particle_velocity[_node_id] = Vk / len(element_ids)
 
     # nodal area calculation
     mesh._process_face_elements_connected_to_nodes([1, 2])
@@ -270,32 +265,17 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     if solution is not None:
 
-        if assignment_type == "points":    
-            node_in = 607
-            node_out = 214
+        # tet10
+        node_in = 898
+        node_out = 907
 
-        elif assignment_type == "line":
-            node_in = 598
-            node_out = 216
-
-        elif assignment_type == "surface":
-            node_in = 608
-            node_out = 222
-
-        elif assignment_type == "volume":
-            node_in = 600
-            node_out = 217
-
-        else:
-            node_in = 608
-            node_out = 222
+        # # tet4
+        # node_in = 2505
+        # node_out = 2549
 
         # Load the external data
-        path = f"data/validation/mass_source/results/{assignment_type}"
-        if not os.path.exists(path):
-            return
 
-        ext_data = LoadExternalData(path, rho_0)
+        ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
@@ -319,11 +299,11 @@ def load_external_mesh_and_solve(assignment_type: str):
         abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - solution[node_out-1, :]) / (output_pressures_WB[node_out]))
         print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
 
-        abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
-        print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
+        # abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
+        # print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
 
-        abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
-        print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
+        # abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
+        # print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
 
         abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
         print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")
@@ -331,11 +311,11 @@ def load_external_mesh_and_solve(assignment_type: str):
         abs_diff_Poutput_face = np.abs((output_pressure_WB - output_pressure) / output_pressure_WB)
         print(f"Deviation of pressure (output face): {100 * np.max(abs_diff_Poutput_face)} %")
 
-        abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
-        print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
+        # abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
+        # print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
 
-        abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
-        print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
+        # abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
+        # print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
 
         title = f"Harmonic response at input face"
 
@@ -394,45 +374,45 @@ def load_external_mesh_and_solve(assignment_type: str):
         ax6.grid()
         ax5.legend()
 
-        fig7, ax7 = plt.subplots()
-        title = f"Particle velocity at node {node_in}"
-        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='Vibra')
-        ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
-        ax7.set_xlabel('Frequency [Hz]')
-        ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax7.set_title(title)
-        ax7.grid()
-        ax7.legend()
+        # fig7, ax7 = plt.subplots()
+        # title = f"Particle velocity at node {node_in}"
+        # ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='Vibra')
+        # ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
+        # ax7.set_xlabel('Frequency [Hz]')
+        # ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax7.set_title(title)
+        # ax7.grid()
+        # ax7.legend()
 
-        fig8, ax8 = plt.subplots()
-        title = f"Particle velocity at node {node_out}"
-        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
-        ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
-        ax8.set_xlabel('Frequency [Hz]')
-        ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax8.set_title(title)
-        ax8.grid()
-        ax8.legend()
+        # fig8, ax8 = plt.subplots()
+        # title = f"Particle velocity at node {node_out}"
+        # ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
+        # ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
+        # ax8.set_xlabel('Frequency [Hz]')
+        # ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax8.set_title(title)
+        # ax8.grid()
+        # ax8.legend()
 
-        fig9, ax9 = plt.subplots()
-        title = "Input face particle velocity - average"
-        ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
-        ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
-        ax9.set_xlabel('Frequency [Hz]')
-        ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax9.set_title(title)
-        ax9.grid()
-        ax9.legend()
+        # fig9, ax9 = plt.subplots()
+        # title = "Input face particle velocity - average"
+        # ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
+        # ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
+        # ax9.set_xlabel('Frequency [Hz]')
+        # ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax9.set_title(title)
+        # ax9.grid()
+        # ax9.legend()
 
-        fig10, ax10 = plt.subplots()
-        title = "Output face particle velocity - average"
-        ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
-        ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
-        ax10.set_xlabel('Frequency [Hz]')
-        ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax10.set_title(title)
-        ax10.grid()
-        ax10.legend()
+        # fig10, ax10 = plt.subplots()
+        # title = "Output face particle velocity - average"
+        # ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
+        # ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
+        # ax10.set_xlabel('Frequency [Hz]')
+        # ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax10.set_title(title)
+        # ax10.grid()
+        # ax10.legend()
 
         plt.show()
 
@@ -473,5 +453,4 @@ def get_external_results(path: str):
 
 if __name__ == "__main__":
 
-    assignment_type = "surface"
-    load_external_mesh_and_solve(assignment_type=assignment_type)
+    load_external_mesh_and_solve()

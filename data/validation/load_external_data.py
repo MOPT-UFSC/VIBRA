@@ -9,8 +9,13 @@ labels = [
           ]
 
 class LoadExternalData:
-    def __init__(self, path: str, fluid_density: float):
-        self.folder_path = Path(path)
+    def __init__(self, path: str | Path, fluid_density: float):
+
+        if isinstance(path, str):
+            self.folder_path = Path(path)
+        else:
+            self.folder_path = path
+
         self.fluid_density = fluid_density
 
     def get_frequencies(self):
