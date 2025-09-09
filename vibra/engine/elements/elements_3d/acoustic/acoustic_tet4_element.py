@@ -373,19 +373,32 @@ class ACT_TETRAHEDRON_4C(Element3D):
                             [ 0, 1, 0 ],
                             [ 0, 0, 1 ] ], dtype=float)
 
-        for i, (ssx, ttx, rrx) in enumerate(p_calc):
-            if node_ids[i] != node_id:
-                continue
+        index = np.where(node_ids==node_id)[0]
+        if index.size != 1:
+            return None
 
-            _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
-            JAC = dphi @ self.nodal_coordinates[node_ids, 1:4]
+        # local coordinates
+        (ssx, ttx, rrx) = p_calc[index[0], :]
 
-            _, invJAC = get_detJAC_and_invJAC(JAC)
-            B = invJAC @ dphi
+        # derivative of the shape function at the selected point
+        _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
 
-            particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
+        # nodal coordinates from element
+        coords = self.nodal_coordinates[node_ids, 1:4]
 
-            return particle_velocity
+        # Jacobian matrix
+        JAC = dphi @ coords
+
+        # inverse of Jacobian matrix
+        _, invJAC = get_detJAC_and_invJAC(JAC)
+        
+        # derivative of shape functions
+        B = invJAC @ dphi
+
+        # calculate the particle velocities components
+        particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
+
+        return particle_velocity
 
 
     def reorder_connect(self):

@@ -222,7 +222,7 @@ def get_particle_velocity_from_surface(
     # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
     node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
     solution = hsolver.solution[filtered_nodes, :]
-    # nodal_pressures = hsolver.solution[:, :]
+    # solution = hsolver.solution[:, :]
 
     pv_data = dict()
     for node_id, solid_element_ids in map_elements_to_nodes.items():
