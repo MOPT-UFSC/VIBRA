@@ -10,9 +10,6 @@ import numpy as np
 
 class ExternalMeshData():
     def __init__(self):
-        self.reset()
-
-    def reset(self):
 
         self.modo = None
         self.type = None
@@ -446,8 +443,6 @@ class ExternalMeshData():
         process the element face connectivity.
         """
 
-        t0 = time()
-
         middle_nodes = dict()
         perm_nodes = np.array(list(permutations(face_connectivity, 3)), dtype=int)
 
@@ -474,8 +469,6 @@ class ExternalMeshData():
                         middle_node = node
 
                 middle_nodes[corner_node] = middle_node
-
-        dt = time() - t0
 
         return list(corner_nodes), middle_nodes
 

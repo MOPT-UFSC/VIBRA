@@ -31,7 +31,6 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     external_mesh = ExternalMeshData()
-    external_mesh.reset()
     external_mesh.read_file(mesh_path)
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
