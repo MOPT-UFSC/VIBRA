@@ -215,9 +215,9 @@ def get_particle_velocity_from_surface(
 
     data_normals = assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
     map_elements_to_nodes, filtered_nodes = assembler.model.mesh.get_solid_elements_connected_to_nodes(
-                                                                                                            surface_id = surface_id, 
-                                                                                                            return_nodes = True
-                                                                                                            )
+                                                                                                        surface_id = surface_id, 
+                                                                                                        return_nodes = True
+                                                                                                        )
 
     # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
     node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))

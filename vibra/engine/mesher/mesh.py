@@ -261,7 +261,8 @@ class Mesh:
         )
 
     def process_downwards_adjacencies_from_mesh_data(self):
-        """This method computes the downwards adjacencies from entities
+        """
+        This method processes the downwards adjacencies from entities
         from the solids, faces and lines connectivities matrices.
         """
 
@@ -1470,7 +1471,7 @@ class Mesh:
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None
     ) -> dict:
         """
-        This method computes the face elements connected to the nodes.
+        This method calculates the face elements connected to the nodes.
 
         Parameters
         ----------
@@ -1697,39 +1698,48 @@ class Mesh:
                     self.nodal_area[node].append(area)
 
     def process_triangular_area_by_nodal_coordinates(
-        self, node_ids: list[int] | np.ndarray
+        self, elem_connect: list[int] | np.ndarray
     ) -> np.ndarray | None:
         """
+        This method calculates the area of triangular elements
+        based on their connectivities.
+
+        Parameters
+        ----------
+        elem_connect: list
+            The element face connectivity.
+
+        Returns
+        -------
+        area: float
+            The area of the triangular element.
+
         """
-
-        if len(node_ids) not in [3, 6]:
-            return 0.
-
-        def compute_triangular_area(_coord_A, _coord_B, _coord_C):
-            vect_AB = _coord_B - _coord_A
-            vect_BC = _coord_C - _coord_B
+        def compute_triangular_area(nodes: list):
+            coord_A = self.nodal_coordinates[nodes[0], 1:]
+            coord_B = self.nodal_coordinates[nodes[1], 1:]
+            coord_C = self.nodal_coordinates[nodes[2], 1:]
+            vect_AB = coord_B - coord_A
+            vect_BC = coord_C - coord_B
             area = np.linalg.norm(np.cross(vect_AB, vect_BC)) / 2
             return area
 
-        if len(node_ids) == 3:
-            # compute the area for TRIA3 element
-            coord_A = self.nodal_coordinates[node_ids[0], 1:]
-            coord_B = self.nodal_coordinates[node_ids[1], 1:]
-            coord_C = self.nodal_coordinates[node_ids[2], 1:]
-            return compute_triangular_area(coord_A, coord_B, coord_C)
+        # compute the area for TRIA3 element
+        if len(elem_connect) == 3:
+            area = compute_triangular_area(elem_connect)
 
-        else:
-            # compute the area for TRIA6 element
+        # compute the area for TRIA6 element
+        elif len(elem_connect) == 6:
             points_nodes = [
-                [node_ids[0], node_ids[3], node_ids[5]],
-                [node_ids[5], node_ids[3], node_ids[1]],
-                [node_ids[1], node_ids[4], node_ids[5]],
-                [node_ids[5], node_ids[4], node_ids[2]],
+                [elem_connect[0], elem_connect[3], elem_connect[5]],
+                [elem_connect[5], elem_connect[3], elem_connect[1]],
+                [elem_connect[1], elem_connect[4], elem_connect[5]],
+                [elem_connect[5], elem_connect[4], elem_connect[2]],
             ]
 
             area = 0.
             for nodes in points_nodes:
-                area += compute_triangular_area(*nodes)
+                area += compute_triangular_area(nodes)
 
         return area
 
@@ -2032,7 +2042,7 @@ class Mesh:
 
     def process_element_average_coordinates(self, element_ids: list[int]) -> dict:
         """
-        This method computes the element average center coordinates of the selected element ID.
+        This method calculates the element average center coordinates of the selected element ID.
 
         Parameters
         ----------
