@@ -814,19 +814,21 @@ class Mesh:
 
     def automatic_mesh_refinement(self):
         refinement_parameters = []
-        detected_surfaces = []
+        detected_surfaces = set()
         for line, length in self.length_from_lines.items():
-            if (length <= self.max_element_size):  # aqui é necessário converter as u1nidades
-                print(":(")
+            if (length <= self.max_element_size/1000):  # aqui é necessário converter as u1nidades
                 vinculated_surfaces = gmsh.model.get_adjacencies(1, line)[0]
+                if len(vinculated_surfaces) != 2:
+                    continue
                 vinculated_surfaces_areas = [self.area_from_surfaces[surface] for surface in vinculated_surfaces]
                 smallest_surface = vinculated_surfaces[np.argmin(vinculated_surfaces_areas)]
 
                 if smallest_surface not in detected_surfaces:
                     refinement_parameters.append(("surfaces", length, [smallest_surface]))
-                    detected_surfaces.append(smallest_surface)
-            print(detected_surfaces)
-            # self.local_mesh_refine(self.max_element_size, refinement_parameters)
+                    detected_surfaces.add(smallest_surface)
+
+        self.detected_surfaces = detected_surfaces
+        # self.local_mesh_refine(self.max_element_size, refinement_parameters)
             
     def _configure_mesh(self, **kwargs):
         size_factor = kwargs.get("size_factor", 0.0)
@@ -837,13 +839,14 @@ class Mesh:
         element_type: ElementType
 
         self.max_element_size = maximum_element_size
-        a = 1
+        a = 0
         if a == 1:
             self.automatic_mesh_refinement()
 
         elif refinement_parameters:
             self.local_mesh_refine(maximum_element_size, refinement_parameters)
         else:
+            self.automatic_mesh_refinement()
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
 
