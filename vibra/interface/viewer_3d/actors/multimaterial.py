@@ -87,13 +87,13 @@ class MultimaterialGeometryActor(vtkPropAssembly):
                 color = Color(*material.color)
                 _, saturation, _ = color.to_hsv()
                 if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(80)
+                    color = color.with_brightness(100).with_saturation(90)
 
             elif fluid is not None:
                 color = Color(*fluid.color)
                 _, saturation, _ = color.to_hsv()
                 if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(40)
+                    color = color.with_brightness(100).with_saturation(75)
 
             else:
                 color = color_names.WHITE
