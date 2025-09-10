@@ -127,7 +127,7 @@ def create_dof_cone_arrow_source():
     return transform_polydata(
         polydata,
         position=(-1, 0, 0),
-        rotation=(0, 90, 0),
+        rotation=(180, 90, 0),
         scale=(.4, .4, .4),
     )
 
@@ -145,7 +145,7 @@ def create_dof_base_arrow_source():
     return transform_polydata(
         polydata,
         position=(-1, 0, 0),
-        rotation=(0, 90, 0),
+        rotation=(180, 90, 0),
         scale=(.4, .4, .4),
     )
 
@@ -154,7 +154,7 @@ def create_dof_hexagon_arrow_source():
     return transform_polydata(
         polydata,
         position=(-1, 0, 0),
-        rotation=(0, 90, 0),
+        rotation=(180, 90, 0),
         scale=(.4, .4, .4),
     )
 
