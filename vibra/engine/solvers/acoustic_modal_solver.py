@@ -107,6 +107,8 @@ class AcousticModalSolver:
         is_C_complex = np.any(np.imag(C_imp.data))
         is_complex = is_M_complex or is_K_complex or is_C_complex
 
+        print(is_complex)
+
         if np.any(C_imp.data):
             if not is_complex:
                 M.data = np.real(M.data)

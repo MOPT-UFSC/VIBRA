@@ -63,6 +63,7 @@ class PardisoLinearSolver(LinearSolver):
                 if is_symmetric:
                     mtype = Matrix_type.RSI
                 else:
+                    print("Real e não simétrico!")
                     mtype = Matrix_type.RNS
 
         phase = kwargs.get('phase', 13)

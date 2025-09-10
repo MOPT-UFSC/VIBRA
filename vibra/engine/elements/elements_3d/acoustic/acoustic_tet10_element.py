@@ -590,6 +590,14 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
 
+        Vp = velpartT4C(element_id, self.nodal_coordinates, self.connectivity, rho, omega, Pe, index=index)
+        # print(node_id)
+        # print(particle_velocity[:, 1])
+        # print(Vp[:, 1])
+
+        # particle_velocity = Vp
+        # print(particle_velocity.shape)
+
         return particle_velocity
 
 
@@ -682,7 +690,7 @@ def shape10TC(l1, l2, l3):
 
 # fmt: on
 
-def velpartT4C(ee, coord, connect, rho, omega, Pe):
+def velpartT4C(ee, coord, connect, rho, omega: np.ndarray, Pe, index=None):
     """ Stiffness and mass matrices.
     """  
     #Connect -- Ansys ---> Gmsh
@@ -720,15 +728,21 @@ def velpartT4C(ee, coord, connect, rho, omega, Pe):
                      [  0,   0, 0.5],
                      [0.5,   0, 0.5],
                      [  0, 0.5, 0.5]])
+    Nf = omega.size
     # 
-    VK = np.zeros((3,10), dtype=complex)
+    # VK = np.zeros((Nf, 3, 10), dtype=complex)
     B = np.zeros((3,10))
     # integration
     for i in range(ncalc):
+
+        if i != index:
+            continue
+
         l1, l2, l3 = pcalc[i, 0], pcalc[i, 1], pcalc[i, 2]
         phi, dphi = shape10TC(l1,l2,l3)
-        ie = connect[ee-1,1:]-1
-        dxdydz = dphi@coord[ie, 1:10] 
+
+        ie = connect[ee, 1:]
+        dxdydz = dphi @ coord[ie, 1:10] 
         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
         JAC = np.array([[dxdydz[0,0], dxdydz[0,1], dxdydz[0,2]],
                         [dxdydz[1,0], dxdydz[1,1], dxdydz[1,2]],
@@ -737,17 +751,23 @@ def velpartT4C(ee, coord, connect, rho, omega, Pe):
         iJAC = np.linalg.inv(JAC) 
         
         dphi_t = iJAC @ dphi
+
+        if i == index:
+            # print(i, dphi_t.shape)
+            pass
         
         for iii in range(10):
             B[0,iii]=dphi_t[0,iii]
             B[1,iii]=dphi_t[1,iii]
             B[2,iii]=dphi_t[2,iii]
 
-        if omega == 0.:
-            omega = 1
-        A = -(1j/(rho*omega))*B@Pe
-        VK[0,i] = A[0,0]
-        VK[1,i] = A[1,0]
-        VK[2,i] = A[2,0]
+        # if omega == 0.:
+        #     omega = 1
+
+        VK = -(1/(1j*rho*omega)) * (B@Pe)
+
+        # VK[:,0,i] = A[:,0,0]
+        # VK[:,1,i] = A[:,1,0]
+        # VK[:,2,i] = A[:,2,0]
 
     return VK

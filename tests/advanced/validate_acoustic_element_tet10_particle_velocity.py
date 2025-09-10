@@ -28,7 +28,8 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
+    # mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
+    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_tet10_one_element.dat"
     results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/"
 
     if not os.path.exists(mesh_path):
@@ -152,7 +153,7 @@ def load_external_mesh_and_solve():
               }
 
     # model.properties._set_property("specific_impedance", data_Z, surface=1)
-    model.properties._set_property("specific_impedance", data_Z, surface=2)
+    # model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis frequency setup
 
@@ -190,6 +191,9 @@ def load_external_mesh_and_solve():
     input_rows = mesh.external_nodes_from_surfaces[1]
     output_rows = mesh.external_nodes_from_surfaces[2]
 
+    print(input_rows)
+    print(output_rows)
+
     input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
 
@@ -217,9 +221,11 @@ def load_external_mesh_and_solve():
 
     particle_velocity = dict()
     for _node_id, element_ids in solid_elements_connected_to_nodes.items():
+
         Vk = 0.
         for _element_id in element_ids:
             Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution=solution)
+
         particle_velocity[_node_id] = Vk / len(element_ids)
 
     # nodal area calculation
@@ -235,8 +241,11 @@ def load_external_mesh_and_solve():
         node_in = 899
         node_out = 908
 
+        node_in = 2
+        node_out = 1
+
         # Load the external data
-        ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)
+        ext_data = LoadExternalData(results_path / "one_element", rho_0)
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
@@ -337,7 +346,10 @@ def load_external_mesh_and_solve():
 
         fig7, ax7 = plt.subplots()
         title = f"Particle velocity at node {node_in}"
-        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='Vibra')
+        
+        for i, _node in enumerate(output_rows):
+            ax7.plot(frequencies, data_type(particle_velocity[_node][0, :]), color=get_color(i), label=f'Vibra {_node+1}')
+        
         ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
         ax7.set_xlabel('Frequency [Hz]')
         ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -347,7 +359,10 @@ def load_external_mesh_and_solve():
 
         fig8, ax8 = plt.subplots()
         title = f"Particle velocity at node {node_out}"
-        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
+
+        for i, _node in enumerate(input_rows):
+            ax8.plot(frequencies, data_type(particle_velocity[_node][0, :]), color=get_color(i), label=f'Vibra {_node+1}')
+
         ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -376,6 +391,23 @@ def load_external_mesh_and_solve():
         ax10.legend()
 
         plt.show()
+
+
+def get_color(index: int):
+    colors = [  
+                (0,0,1), 
+                (0,1,0), 
+                (1,0,0),
+                (0,1,1), 
+                (1,0,1), 
+                (1,1,0),
+                (0.25,0.25,0.25)
+                ]
+
+    if index <= 6:
+        return colors[index]
+    else:
+        return tuple(np.random.randint(0, 255, size=3) / 255)
 
 
 def get_external_results(path: str):
