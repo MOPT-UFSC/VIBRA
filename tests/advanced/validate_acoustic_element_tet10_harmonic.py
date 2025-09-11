@@ -134,6 +134,12 @@ def load_external_mesh_and_solve():
                 "averaged" : False
                 }
 
+    ## normal surface velocity data
+    data_Pa = { 
+                "real_values" : [1],
+                "imag_values" : [0],
+                }
+
     ## mass source data
     data_ms = { 
                 "real_values" : [1],
@@ -142,6 +148,7 @@ def load_external_mesh_and_solve():
                 }
     
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
+    # model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
 
     ## boundary impedance setup
     Zo = fluid.impedance

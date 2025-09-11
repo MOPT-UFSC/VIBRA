@@ -283,42 +283,51 @@ class ACT_TETRAHEDRON_10C(Element3D):
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
         l4 = 1 - l1 - l2 - l3
-        phi[:, 0, 0] = (2 * l2 - 1) * l2
-        phi[:, 0, 1] = (2 * l1 - 1) * l1
-        phi[:, 0, 2] = (2 * l3 - 1) * l3
-        phi[:, 0, 3] = (2 * l4 - 1) * l4
-        phi[:, 0, 4] = 4 * l1 * l2
-        phi[:, 0, 5] = 4 * l1 * l3
-        phi[:, 0, 6] = 4 * l2 * l3
-        phi[:, 0, 7] = 4 * l2 * l4
-        phi[:, 0, 8] = 4 * l1 * l4
-        phi[:, 0, 9] = 4 * l3 * l4
+        phi[:, 0, 0] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
+        phi[:, 0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
+        phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
+        phi[:, 0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
+        phi[:, 0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
+        phi[:, 0, 5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
+        phi[:, 0, 6] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
+        phi[:, 0, 7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
+        phi[:, 0, 8] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
+        phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
 
-        # derivatives
+        # derivatives of shape functions
         dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
 
-        dphi[:, 0, 1] =  4 * l1 - 1
+        dphi[:, 0, 0] =  4 * l1 - 1
+        dphi[:, 0, 1] =  0
+        dphi[:, 0, 2] =  0
         dphi[:, 0, 3] = -4 * l4 + 1
         dphi[:, 0, 4] =  4 * l2
-        dphi[:, 0, 5] =  4 * l3
-        dphi[:, 0, 7] = -4 * l2
-        dphi[:, 0, 8] =  4 * (l4 - l1)
+        dphi[:, 0, 5] =  0
+        dphi[:, 0, 6] =  4 * l3
+        dphi[:, 0, 7] =  4 * (l4 - l1)
+        dphi[:, 0, 8] = -4 * l2
         dphi[:, 0, 9] = -4 * l3
 
-        dphi[:, 1, 0] =  4 * l2 - 1
+        dphi[:, 1, 0] =  0
+        dphi[:, 1, 1] =  4 * l2 - 1
+        dphi[:, 1, 2] =  0
         dphi[:, 1, 3] = -4 * l4 + 1
         dphi[:, 1, 4] =  4 * l1
-        dphi[:, 1, 6] =  4 * l3
-        dphi[:, 1, 8] = -4 * l1
-        dphi[:, 1, 7] =  4 * (l4 - l2)
+        dphi[:, 1, 5] =  4 * l3
+        dphi[:, 1, 6] =  0
+        dphi[:, 1, 7] = -4 * l1
+        dphi[:, 1, 8] =  4 * (l4 - l2)
         dphi[:, 1, 9] = -4 * l3
 
+        dphi[:, 2, 0] =  0
+        dphi[:, 2, 1] =  0
         dphi[:, 2, 2] =  4 * l3 - 1
         dphi[:, 2, 3] = -4 * l4 + 1
-        dphi[:, 2, 5] =  4 * l1
-        dphi[:, 2, 6] =  4 * l2
-        dphi[:, 2, 7] = -4 * l2
-        dphi[:, 2, 8] = -4 * l1
+        dphi[:, 2, 4] =  0
+        dphi[:, 2, 5] =  4 * l2
+        dphi[:, 2, 6] =  4 * l1
+        dphi[:, 2, 7] = -4 * l1
+        dphi[:, 2, 8] = -4 * l2
         dphi[:, 2, 9] =  4 * (l4 - l3)
 
         if Nz == 1:
@@ -551,16 +560,16 @@ class ACT_TETRAHEDRON_10C(Element3D):
         if self.connectivity is None:
             self.reorder_connect()
 
-        p_calc = np.array([ [0.0, 0.0, 0.0],
-                            [1.0, 0.0, 0.0],
+        p_calc = np.array([ [1.0, 0.0, 0.0],
                             [0.0, 1.0, 0.0],
                             [0.0, 0.0, 1.0],
-                            [0.5, 0.0, 0.0],
+                            [0.0, 0.0, 0.0],
                             [0.5, 0.5, 0.0],
-                            [0.0, 0.5, 0.0],
-                            [0.0, 0.0, 0.5],
+                            [0.0, 0.5, 0.5],
                             [0.5, 0.0, 0.5],
-                            [0.0, 0.5, 0.5] ], dtype=float)
+                            [0.5, 0.0, 0.0],
+                            [0.0, 0.5, 0.0],
+                            [0.0, 0.0, 0.5] ], dtype=float)
 
         index = np.where(node_ids==node_id)[0]
         if index.size != 1:
@@ -568,9 +577,6 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         # local coordinates
         (ssx, ttx, rrx) = p_calc[index[0], :]
-
-        # if node_id == 2302:
-        #     print(node_id, element_id, (ssx, ttx, rrx))
 
         # derivative of the shape function at the selected point
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
@@ -589,14 +595,6 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
-
-        Vp = velpartT4C(element_id, self.nodal_coordinates, self.connectivity, rho, omega, Pe, index=index)
-        # print(node_id)
-        # print(particle_velocity[:, 1])
-        # print(Vp[:, 1])
-
-        # particle_velocity = Vp
-        # print(particle_velocity.shape)
 
         return particle_velocity
 
@@ -633,112 +631,88 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
 def shape10TC(l1, l2, l3):
     """This function returns the shape functions and its derivatives."""
+
     # shape functions
     phi = np.zeros(10)
 
     l4 = 1 - l1 - l2 - l3
-    phi[0] = (2 * l2 - 1) * l2
-    phi[1] = (2 * l1 - 1) * l1
-    phi[2] = (2 * l3 - 1) * l3
-    phi[3] = (2 * l4 - 1) * l4
-    phi[4] = 4 * l1 * l2
-    phi[5] = 4 * l1 * l3
-    phi[6] = 4 * l2 * l3
-    phi[7] = 4 * l2 * l4
-    phi[8] = 4 * l1 * l4
-    phi[9] = 4 * l3 * l4
-    #
+    phi[0] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
+    phi[1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
+    phi[2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
+    phi[3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
+    phi[4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
+    phi[5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
+    phi[6] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
+    phi[7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
+    phi[8] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
+    phi[9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
 
-    # derivatives
+    # derivatives of shape functions
     dphi = np.zeros((3, 10))
-    #
-    #########################################################
-    dphi[0, 0] = 0
-    dphi[0, 1] = 4 * l1 - 1
-    dphi[0, 2] = 0
-    dphi[0, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
-    dphi[0, 4] = 4 * l2
-    dphi[0, 5] = 4 * l3
-    dphi[0, 6] = 0
-    dphi[0, 7] = -4 * l2
-    dphi[0, 8] = 4 * ((+1) * l4 + l1 * (-1))
+
+    dphi[0, 0] =  4 * l1 - 1
+    dphi[0, 1] =  0
+    dphi[0, 2] =  0
+    dphi[0, 3] = -4 * l4 + 1
+    dphi[0, 4] =  4 * l2
+    dphi[0, 5] =  0
+    dphi[0, 6] =  4 * l3
+    dphi[0, 7] =  4 * (l4 - l1)
+    dphi[0, 8] = -4 * l2
     dphi[0, 9] = -4 * l3
-    #
-    dphi[1, 0] = (+2) * l2 + (2 * l2 - 1) * (+1)
-    dphi[1, 1] = 0
-    dphi[1, 2] = 0
-    dphi[1, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
-    dphi[1, 4] = 4 * l1
-    dphi[1, 5] = 0
-    dphi[1, 6] = 4 * l3
-    dphi[1, 8] = -4 * l1
-    dphi[1, 7] = 4 * ((+1) * l4 + l2 * (-1))
+
+    dphi[1, 0] =  0
+    dphi[1, 1] =  4 * l2 - 1
+    dphi[1, 2] =  0
+    dphi[1, 3] = -4 * l4 + 1
+    dphi[1, 4] =  4 * l1
+    dphi[1, 5] =  4 * l3
+    dphi[1, 6] =  0
+    dphi[1, 7] = -4 * l1
+    dphi[1, 8] =  4 * (l4 - l2)
     dphi[1, 9] = -4 * l3
-    #
-    dphi[2, 0] = 0
-    dphi[2, 1] = 0
-    dphi[2, 2] = (+2) * l3 + (2 * l3 - 1) * (+1)
-    dphi[2, 3] = (-2) * l4 + (2 * l4 - 1) * (-1)
-    dphi[2, 4] = 0
-    dphi[2, 5] = 4 * l1
-    dphi[2, 6] = 4 * l2
-    dphi[2, 7] = -4 * l2
-    dphi[2, 8] = -4 * l1
-    dphi[2, 9] = 4 * ((+1) * l4 + l3 * (-1))
+
+    dphi[2, 0] =  0
+    dphi[2, 1] =  0
+    dphi[2, 2] =  4 * l3 - 1
+    dphi[2, 3] = -4 * l4 + 1
+    dphi[2, 4] =  0
+    dphi[2, 5] =  4 * l2
+    dphi[2, 6] =  4 * l1
+    dphi[2, 7] = -4 * l1
+    dphi[2, 8] = -4 * l2
+    dphi[2, 9] =  4 * (l4 - l3)
 
     return phi, dphi
 
 # fmt: on
 
 def velpartT4C(ee, coord, connect, rho, omega: np.ndarray, Pe, index=None):
-    """ Stiffness and mass matrices.
+    """ Recovering the particle velocity.
     """  
-    #Connect -- Ansys ---> Gmsh
-    # connect_t  = connect.copy()
-    # connect_t[ee,1] = connect[ee,3]
-    # connect_t[ee,2] = connect[ee,1]
-    # connect_t[ee,3] = connect[ee,2]
-    # connect_t[ee,4] = connect[ee,4]
-    # connect = connect_t.copy()
-    #sugestao: mudar ordenação das funções de forma e derivadas 
-    #
-    # Pe = np.zeros((10,1), dtype=complex)
-
-    # Pe[0,0] = P[connect[ee,1]-1]
-    # Pe[1,0] = P[connect[ee,2]-1]
-    # Pe[2,0] = P[connect[ee,3]-1]
-    # Pe[3,0] = P[connect[ee,4]-1]
-    # Pe[4,0] = P[connect[ee,5]-1]
-    # Pe[5,0] = P[connect[ee,6]-1]
-    # Pe[6,0] = P[connect[ee,7]-1]
-    # Pe[7,0] = P[connect[ee,8]-1]
-    # Pe[8,0] = P[connect[ee,9]-1]
-    # Pe[9,0] = P[connect[ee,10]-1]
-
     # -------
     ncalc = 10
     # Seguir elem. coords. de acordo com connectiv.
-    pcalc = np.array([[0, 0, 0],
-                     [ 1, 0, 0],
-                     [ 0, 1, 0],
-                     [ 0, 0, 1],
-                     [0.5,  0,    0],
-                     [0.5, 0.5,   0],
-                     [  0, 0.5,   0],
-                     [  0,   0, 0.5],
-                     [0.5,   0, 0.5],
-                     [  0, 0.5, 0.5]])
-    Nf = omega.size
-    # 
-    # VK = np.zeros((Nf, 3, 10), dtype=complex)
+    p_calc = np.array([ [1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0],
+                        [0.0, 0.0, 0.0],
+                        [0.5, 0.5, 0.0],
+                        [0.0, 0.5, 0.5],
+                        [0.5, 0.0, 0.5],
+                        [0.5, 0.0, 0.0],
+                        [0.0, 0.5, 0.0],
+                        [0.0, 0.0, 0.5] ], dtype=float)
+
     B = np.zeros((3,10))
+
     # integration
     for i in range(ncalc):
 
         if i != index:
             continue
 
-        l1, l2, l3 = pcalc[i, 0], pcalc[i, 1], pcalc[i, 2]
+        l1, l2, l3 = p_calc[i, 0], p_calc[i, 1], p_calc[i, 2]
         phi, dphi = shape10TC(l1,l2,l3)
 
         ie = connect[ee, 1:]
@@ -747,27 +721,17 @@ def velpartT4C(ee, coord, connect, rho, omega: np.ndarray, Pe, index=None):
         JAC = np.array([[dxdydz[0,0], dxdydz[0,1], dxdydz[0,2]],
                         [dxdydz[1,0], dxdydz[1,1], dxdydz[1,2]],
                         [dxdydz[2,0], dxdydz[2,1], dxdydz[2,2]]], dtype=float) 
+
         #Inverse Jacobian
-        iJAC = np.linalg.inv(JAC) 
-        
+        iJAC = np.linalg.inv(JAC)
+
         dphi_t = iJAC @ dphi
 
-        if i == index:
-            # print(i, dphi_t.shape)
-            pass
-        
         for iii in range(10):
-            B[0,iii]=dphi_t[0,iii]
-            B[1,iii]=dphi_t[1,iii]
-            B[2,iii]=dphi_t[2,iii]
+            B[0,iii] = dphi_t[0,iii]
+            B[1,iii] = dphi_t[1,iii]
+            B[2,iii] = dphi_t[2,iii]
 
-        # if omega == 0.:
-        #     omega = 1
+        Vk = -(1/(1j*rho*omega)) * (B@Pe)
 
-        VK = -(1/(1j*rho*omega)) * (B@Pe)
-
-        # VK[:,0,i] = A[:,0,0]
-        # VK[:,1,i] = A[:,1,0]
-        # VK[:,2,i] = A[:,2,0]
-
-    return VK
+    return Vk
