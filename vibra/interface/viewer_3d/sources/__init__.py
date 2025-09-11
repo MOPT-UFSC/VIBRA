@@ -45,8 +45,6 @@ from .complex_shapes import (
     create_dof_hexagon_arrow_source,
     create_dof_cone_source,
     create_dof_cone_arrow_source,
-    create_nodal_loads_momentum_base_source,
-    create_nodal_loads_momentum_cone_arrow_source,
-    create_nodal_loads_force_cone_arrow_source,
-    create_nodal_loads_force_base_source,
+    create_nodal_loads_momentum_arrow_source,
+    create_nodal_loads_force_arrow_source,
 )
