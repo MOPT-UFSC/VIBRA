@@ -320,7 +320,7 @@ class ACT_TRIANGLE_6(Element2D):
 
             int2d_NtN += - (1 / 2) * N.T @ N * (det_jacs * self.wps)
 
-        return -int2d_NtN
+        return int2d_NtN
 
 
     def stacked_matrices_NtN_and_BtB(self) -> np.ndarray:
@@ -411,7 +411,7 @@ class ACT_TRIANGLE_6(Element2D):
         # Fe_base = forceF6(el_index, self.nodal_coordinates, self.connectivities, 0, 0, 1)
         # print(f"Element index: {el_index} ", np.max(np.abs(Fe-Fe_base)))
 
-        return -Fe
+        return Fe
 
 
     def elementary_sound_power(self, e_connect: np.ndarray, L_sv: np.ndarray, R_sv: np.ndarray) -> np.ndarray:
