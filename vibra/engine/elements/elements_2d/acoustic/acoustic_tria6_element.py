@@ -168,32 +168,59 @@ class ACT_TRIANGLE_6(Element2D):
         derivatives for all integration points.
         """
         ## coordinates from integration points
-        rrx = self.pint[:, 0]
-        ssx = self.pint[:, 1]
+        xi_1 = self.pint[:, 0]
+        xi_2 = self.pint[:, 1]
 
         ## shape functions
-        ttx = 1 - rrx - ssx
+        xi_3 = 1 - xi_1 - xi_2
+        # phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
+        # phi[:, 0, 0] = xi_3*(2*xi_3 - 1)
+        # phi[:, 0, 1] = xi_1*(2*xi_1 - 1)
+        # phi[:, 0, 2] = xi_2*(2*xi_2 - 1)
+        # phi[:, 0, 3] = 4*xi_1*xi_3
+        # phi[:, 0, 4] = 4*xi_1*xi_2
+        # phi[:, 0, 5] = 4*xi_2*xi_3
+
+        # ## shape functions derivatives
+        # dphi = np.zeros((self.nint, 2, self.NODES_PER_ELEMENT), dtype=float)
+        # dphi[:, 0, 0] = -4 * xi_3 + 1
+        # dphi[:, 0, 1] =  4 * xi_1 - 1
+        # dphi[:, 0, 2] =  0
+        # dphi[:, 0, 3] =  4 * (xi_3 - xi_1)
+        # dphi[:, 0, 4] =  4 * xi_2
+        # dphi[:, 0, 5] = -4 * xi_2
+
+        # dphi[:, 1, 0] = -4 * xi_3 + 1
+        # dphi[:, 1, 1] =  0
+        # dphi[:, 1, 2] =  4 * xi_2 - 1
+        # dphi[:, 1, 3] = -4 * xi_1
+        # dphi[:, 1, 4] =  4 * xi_1
+        # dphi[:, 1, 5] =  4 * (xi_3 - xi_2)
+
+        ## shape functions (Atalla, pg. 173)
         phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
-        phi[:, 0, 0] = ttx*(2*ttx - 1)
-        phi[:, 0, 1] = rrx*(2*rrx - 1)
-        phi[:, 0, 2] = ssx*(2*ssx - 1)
-        phi[:, 0, 3] = 4*rrx*ttx
-        phi[:, 0, 4] = 4*rrx*ssx
-        phi[:, 0, 5] = 4*ssx*ttx
+        phi[:, 0, 0] = xi_1*(2*xi_1 - 1)
+        phi[:, 0, 1] = xi_2*(2*xi_2 - 1)
+        phi[:, 0, 2] = xi_3*(2*xi_3 - 1)
+        phi[:, 0, 3] = 4*xi_1*xi_2
+        phi[:, 0, 4] = 4*xi_2*xi_3
+        phi[:, 0, 5] = 4*xi_1*xi_3
 
-        ## shape functions derivatives
+        ## shape functions derivatives (Atalla, pg. 173)
         dphi = np.zeros((self.nint, 2, self.NODES_PER_ELEMENT), dtype=float)
-        dphi[:, 0, 0] = -4*ttx + 1
-        dphi[:, 0, 1] =  4*rrx - 1
-        dphi[:, 0, 3] =  4*(ttx - rrx)
-        dphi[:, 0, 4] =  4*ssx
-        dphi[:, 0, 5] = -4*ssx
+        dphi[:, 0, 0] =  4 * xi_1 - 1
+        dphi[:, 0, 1] =  0
+        dphi[:, 0, 2] = -4 * xi_3 + 1
+        dphi[:, 0, 3] =  4 * xi_2
+        dphi[:, 0, 4] = -4 * xi_2
+        dphi[:, 0, 5] =  4 * (xi_3 - xi_1)
 
-        dphi[:, 1, 0] = -4*ttx + 1
-        dphi[:, 1, 2] =  4*ssx - 1
-        dphi[:, 1, 3] = -4*rrx
-        dphi[:, 1, 4] =  4*rrx
-        dphi[:, 1, 5] = 4*(ttx - ssx)
+        dphi[:, 1, 0] =  0
+        dphi[:, 1, 1] =  4 * xi_2 - 1
+        dphi[:, 1, 2] = -4 * xi_3 + 1
+        dphi[:, 1, 3] =  4 * xi_1
+        dphi[:, 1, 4] =  4 * (xi_3 - xi_2)
+        dphi[:, 1, 5] = -4 * xi_1
 
         self.phi = phi
         self.dphi = dphi

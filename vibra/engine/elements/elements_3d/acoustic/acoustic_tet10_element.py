@@ -186,105 +186,116 @@ class ACT_TETRAHEDRON_10C(Element3D):
         self.connectivity = connectivity
 
 
-    def define_integration_points(self):
+    def define_integration_points(self, integration_points: int=11):
         """ 
         This method defines the integration points and their
         weights for numerical integration.
         """
 
-        self.nint = 15
+        if integration_points == 4:
 
-        ax = 1 / 4
-        bx = (7 + np.sqrt(15)) / 34
-        cx = (7 - np.sqrt(15)) / 34
-        dx = (13 - 3 * np.sqrt(15)) / 34
-        ex = (13 + 3 * np.sqrt(15)) / 34
-        fx = (5 - np.sqrt(15)) / 20
-        gx = (5 + np.sqrt(15)) / 20
+            self.nint = 4
 
-        p1 = 48 / 405
-        p2 = 6 * (2665 - 14 * np.sqrt(15)) / 226800
-        p3 = 6 * (2665 + 14 * np.sqrt(15)) / 226800
-        p4 = 30 / 567
+            ax = (5 - np.sqrt(5)) / 20
+            bx = (5 + 3 * np.sqrt(5)) / 20
 
-        self.pint = np.array([[ax, ax, ax],
-                              [bx, bx, bx],
-                              [bx, bx, dx],
-                              [bx, dx, bx],
-                              [dx, bx, bx],
-                              [cx, cx, cx],
-                              [cx, cx, ex],
-                              [cx, ex, cx],
-                              [ex, cx, cx],
-                              [fx, fx, gx],
-                              [fx, gx, fx],
-                              [gx, fx, fx],
-                              [fx, gx, gx],
-                              [gx, fx, gx],
-                              [gx, gx, fx]], dtype=float)
+            p1 = 1/4
 
-        self.wps = np.array([p1, p2, p2, p2, p2, 
-                             p3, p3, p3, p3, p4, 
-                             p4, p4, p4, p4, p4], dtype=float).reshape(-1, 1, 1)
+            self.pint = np.array([[ax, ax, ax],
+                                  [ax, ax, bx],
+                                  [ax, bx, ax],
+                                  [bx, ax, ax]], dtype=float)
+            
+            self.wps = 6 * np.array([p1, p1, p1, p1], dtype=float).reshape(-1, 1, 1)
 
-        # self.nint = 4
+        elif integration_points == 5:
 
-        # ax = 0.58541019662497
-        # bx = 0.13819660112501
+            self.nint = 5
 
-        # p1 = 1/4
+            ax = 1/4
+            bx = 1/2
+            cx = 1/6
 
-        # self.pint = np.array([[ax, bx, bx],
-        #                       [bx, ax, bx],
-        #                       [bx, bx, ax],
-        #                       [bx, bx, bx]], dtype=float)
+            p1 = -4/5
+            p2 = 9/20
 
-        # self.wps = np.array([p1, p1, p1, p1], dtype=float).reshape(-1, 1, 1)
+            self.pint = np.array([[ax, ax, ax],
+                                  [bx, cx, cx],
+                                  [cx, bx, cx],
+                                  [cx, cx, bx],
+                                  [cx, cx, cx]], dtype=float)
 
-        # self.nint = 5
+            self.wps = 6 * np.array([p1, p2, p2, p2, p2], dtype=float).reshape(-1, 1, 1)
 
-        # ax = 1/4
-        # bx = 1/2
-        # cx = 1/6
+        elif integration_points == 11:
 
-        # p1 = -4/5
-        # p2 = 9/20
+            self.nint = 11
 
-        # self.pint = np.array([[ax, ax, ax],
-        #                       [bx, cx, cx],
-        #                       [cx, bx, cx],
-        #                       [cx, cx, bx],
-        #                       [cx, cx, cx]], dtype=float)
+            ax = 1/4
+            bx = 0.0714285714285714
+            cx = 1 - 3*bx
+            dx = 0.399403576166799
+            ex = 1/2 - dx
 
-        # self.wps = np.array([p1, p2, p2, p2, p2], dtype=float).reshape(-1, 1, 1)
+            p1 = -0.013155555555555
+            p2 = 0.007622222222222
+            p3 = 0.024888888888888
 
-        # self.nint = 11
+            self.pint = np.array([  [ax, ax, ax],
+                                    [bx, bx, bx],
+                                    [bx, bx, cx],
+                                    [bx, cx, bx],
+                                    [cx, bx, bx],
+                                    [dx, dx, ex],
+                                    [dx, ex, dx],
+                                    [dx, ex, ex],
+                                    [ex, dx, ex],
+                                    [ex, dx, dx],
+                                    [ex, ex, dx]  ], dtype=float)
 
-        # ax = 0.250000000000000
-        # bx = 0.0714285714285714
-        # cx = 0.785714285714286
-        # dx = 0.399403576166799
-        # ex = 0.100596423833201
+            self.wps = 6 * np.array([p1,
+                                     p2, p2, p2, p2, 
+                                     p3, p3, p3, p3, p3, p3], dtype=float).reshape(-1, 1, 1)
 
-        # p1 = 0.013155555555555
-        # p2 = 0.007622222222222
-        # p3 = 0.024888888888888
+        else:
 
-        # self.pint = np.array([[ax, ax, ax],
-        #                       [bx, bx, bx],
-        #                       [bx, bx, cx],
-        #                       [bx, cx, bx],
-        #                       [cx, bx, bx],
-        #                       [dx, dx, ex],
-        #                       [dx, ex, dx],
-        #                       [dx, ex, ex],
-        #                       [ex, dx, ex],
-        #                       [ex, dx, dx],
-        #                       [ex, ex, dx]], dtype=float)
+            # Reference: 
 
-        # self.wps = np.array([p1,
-        #                      p2, p2, p2, p2, 
-        #                      p3, p3, p3, p3, p3, p3], dtype=float).reshape(-1, 1, 1)
+            self.nint = 15
+
+            a = 1 / 4
+            b = (7 + np.sqrt(15)) / 34
+            c = (7 - np.sqrt(15)) / 34
+            d = (13 - 3 * np.sqrt(15)) / 34
+            e = (13 + 3 * np.sqrt(15)) / 34
+            f = (5 - np.sqrt(15)) / 20
+            g = (5 + np.sqrt(15)) / 20
+
+            p1 = 8 / 405
+            p2 = (2665 - 14 * np.sqrt(15)) / 226800
+            p3 = (2665 + 14 * np.sqrt(15)) / 226800
+            p4 = 5 / 567
+
+            self.pint = np.array([  [a, a, a],
+                                    [b, b, b],
+                                    [b, b, d],
+                                    [b, d, b],
+                                    [d, b, b],
+                                    [c, c, c],
+                                    [c, c, e],
+                                    [c, e, c],
+                                    [e, c, c],
+                                    [f, f, g],
+                                    [f, g, f],
+                                    [g, f, f],
+                                    [f, g, g],
+                                    [g, f, g],
+                                    [g, g, f]  ], dtype=float)
+
+            self.wps = 6 * np.array([p1, p2, p2, p2, p2, 
+                                     p3, p3, p3, p3, p4, 
+                                     p4, p4, p4, p4, p4], dtype=float).reshape(-1, 1, 1)
+
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -344,16 +355,16 @@ class ACT_TETRAHEDRON_10C(Element3D):
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
         # shape functions (original)
-        phi[:, 0, 0] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
-        phi[:, 0, 1] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
-        phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
-        phi[:, 0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
-        phi[:, 0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
-        phi[:, 0, 5] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
-        phi[:, 0, 6] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
-        phi[:, 0, 7] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
-        phi[:, 0, 8] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
-        phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
+        # phi[:, 0, 0] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
+        # phi[:, 0, 1] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
+        # phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
+        # phi[:, 0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
+        # phi[:, 0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
+        # phi[:, 0, 5] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
+        # phi[:, 0, 6] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
+        # phi[:, 0, 7] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
+        # phi[:, 0, 8] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
+        # phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
 
         # shape functions (new)
         # phi[:, 0, 0] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
@@ -367,33 +378,45 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # phi[:, 0, 8] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
         # phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
 
+        # shape functions (Atalla)
+        phi[:, 0, 0] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0)   Node 1
+        phi[:, 0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0)   Node 2
+        phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0)   Node 3
+        phi[:, 0, 3] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0)   Node 4
+        phi[:, 0, 4] = 4 * l4 * l2             # ->      (0.0, 0.5, 0.0)   Node 5
+        phi[:, 0, 5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5)   Node 6
+        phi[:, 0, 6] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5)   Node 7
+        phi[:, 0, 7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0)   Node 8
+        phi[:, 0, 8] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0)   Node 9
+        phi[:, 0, 9] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5)   Node 10
+
         # derivatives of shape functions
         dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
 
         ## derivatives of shape functions (original)
-        dphi[:, 0, 1] =  4 * l1 - 1
-        dphi[:, 0, 3] = -4 * l4 + 1
-        dphi[:, 0, 4] =  4 * l2
-        dphi[:, 0, 5] =  4 * l3
-        dphi[:, 0, 7] = -4 * l2
-        dphi[:, 0, 8] =  4 * (l4 - l1)
-        dphi[:, 0, 9] = -4 * l3
+        # dphi[:, 0, 1] =  4 * l1 - 1
+        # dphi[:, 0, 3] = -4 * l4 + 1
+        # dphi[:, 0, 4] =  4 * l2
+        # dphi[:, 0, 5] =  4 * l3
+        # dphi[:, 0, 7] = -4 * l2
+        # dphi[:, 0, 8] =  4 * (l4 - l1)
+        # dphi[:, 0, 9] = -4 * l3
 
-        dphi[:, 1, 0] =  4 * l2 - 1
-        dphi[:, 1, 3] = -4 * l4 + 1
-        dphi[:, 1, 4] =  4 * l1
-        dphi[:, 1, 6] =  4 * l3
-        dphi[:, 1, 7] =  4 * (l4 - l2)
-        dphi[:, 1, 8] = -4 * l1
-        dphi[:, 1, 9] = -4 * l3
+        # dphi[:, 1, 0] =  4 * l2 - 1
+        # dphi[:, 1, 3] = -4 * l4 + 1
+        # dphi[:, 1, 4] =  4 * l1
+        # dphi[:, 1, 6] =  4 * l3
+        # dphi[:, 1, 7] =  4 * (l4 - l2)
+        # dphi[:, 1, 8] = -4 * l1
+        # dphi[:, 1, 9] = -4 * l3
 
-        dphi[:, 2, 2] =  4 * l3 - 1
-        dphi[:, 2, 3] = -4 * l4 + 1
-        dphi[:, 2, 5] =  4 * l1
-        dphi[:, 2, 6] =  4 * l2
-        dphi[:, 2, 7] = -4 * l2
-        dphi[:, 2, 8] = -4 * l1
-        dphi[:, 2, 9] =  4 * (l4 - l3)
+        # dphi[:, 2, 2] =  4 * l3 - 1
+        # dphi[:, 2, 3] = -4 * l4 + 1
+        # dphi[:, 2, 5] =  4 * l1
+        # dphi[:, 2, 6] =  4 * l2
+        # dphi[:, 2, 7] = -4 * l2
+        # dphi[:, 2, 8] = -4 * l1
+        # dphi[:, 2, 9] =  4 * (l4 - l3)
 
         ## derivatives of shape functions (new)
         # dphi[:, 0, 0] =  4 * l1 - 1
@@ -429,6 +452,40 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # dphi[:, 2, 8] = -4 * l2
         # dphi[:, 2, 9] =  4 * (l4 - l3)
 
+        ## derivatives of shape functions (Atalla)
+        dphi[:, 0, 0] = -4 * l4 + 1
+        dphi[:, 0, 1] =  0
+        dphi[:, 0, 2] =  0
+        dphi[:, 0, 3] =  4 * l1 - 1
+        dphi[:, 0, 4] = -4 * l2
+        dphi[:, 0, 5] =  0
+        dphi[:, 0, 6] = -4 * l3
+        dphi[:, 0, 7] =  4 * (l4 - l1)
+        dphi[:, 0, 8] =  4 * l2
+        dphi[:, 0, 9] =  4 * l3
+
+        dphi[:, 1, 0] = -4 * l4 + 1
+        dphi[:, 1, 1] =  4 * l2 - 1
+        dphi[:, 1, 2] =  0
+        dphi[:, 1, 3] =  0
+        dphi[:, 1, 4] =  4 * (l4 - l2)
+        dphi[:, 1, 5] =  4 * l3
+        dphi[:, 1, 6] = -4 * l3
+        dphi[:, 1, 7] = -4 * l1
+        dphi[:, 1, 8] =  4 * l1
+        dphi[:, 1, 9] =  0
+
+        dphi[:, 2, 0] = -4 * l4 + 1
+        dphi[:, 2, 1] =  0
+        dphi[:, 2, 2] =  4 * l3 - 1
+        dphi[:, 2, 3] =  0
+        dphi[:, 2, 4] = -4 * l2
+        dphi[:, 2, 5] =  4 * l2
+        dphi[:, 2, 6] =  4 * (l4 - l3)
+        dphi[:, 2, 7] = -4 * l1
+        dphi[:, 2, 8] =  0
+        dphi[:, 2, 9] =  4 * l1
+
         if Nz == 1:
             return phi[0, :, :], dphi[0, :, :]
         else:
@@ -462,13 +519,9 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         else:
 
-            print(self.connectivity[:, 1:])
-
             stacked_coords = np.zeros((nel, self.DOFS_PER_ELEMENT, 3), dtype=float)
             for j in range(self.DOFS_PER_ELEMENT):
                 stacked_coords[:, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
-
-            print(stacked_coords)
 
         return stacked_coords
 
@@ -664,17 +717,17 @@ class ACT_TETRAHEDRON_10C(Element3D):
         if self.connectivity is None:
             self.reorder_connect()
 
-        # ## calculation points (original)
-        p_calc = np.array([ [0.0, 1.0, 0.0],
-                            [1.0, 0.0, 0.0],
-                            [0.0, 0.0, 1.0],
-                            [0.0, 0.0, 0.0],
-                            [0.5, 0.5, 0.0],
-                            [0.5, 0.0, 0.5],
-                            [0.0, 0.5, 0.5],
-                            [0.0, 0.5, 0.0],
-                            [0.5, 0.0, 0.0],
-                            [0.0, 0.0, 0.5] ], dtype=float)
+        ## calculation points (original)
+        # p_calc = np.array([ [0.0, 1.0, 0.0],
+        #                     [1.0, 0.0, 0.0],
+        #                     [0.0, 0.0, 1.0],
+        #                     [0.0, 0.0, 0.0],
+        #                     [0.5, 0.5, 0.0],
+        #                     [0.5, 0.0, 0.5],
+        #                     [0.0, 0.5, 0.5],
+        #                     [0.0, 0.5, 0.0],
+        #                     [0.5, 0.0, 0.0],
+        #                     [0.0, 0.0, 0.5] ], dtype=float)
 
         ## calculation points (new)
         # p_calc = np.array([ [1.0, 0.0, 0.0],
@@ -687,6 +740,18 @@ class ACT_TETRAHEDRON_10C(Element3D):
         #                     [0.5, 0.0, 0.0],
         #                     [0.0, 0.5, 0.0],
         #                     [0.0, 0.0, 0.5] ], dtype=float)
+
+        ## calculation points (Atalla)
+        p_calc = np.array([ [0.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0],
+                            [0.0, 0.0, 1.0],
+                            [1.0, 0.0, 0.0],
+                            [0.0, 0.5, 0.0],
+                            [0.0, 0.5, 0.5],
+                            [0.0, 0.0, 0.5],
+                            [0.5, 0.0, 0.0],
+                            [0.5, 0.5, 0.0],
+                            [0.5, 0.0, 0.5] ], dtype=float)
 
         index = np.where(node_ids==node_id)[0]
         if index.size != 1:

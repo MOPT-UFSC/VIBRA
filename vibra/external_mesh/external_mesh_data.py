@@ -363,6 +363,8 @@ class ExternalMeshData():
                         if middle_nodes:
                             _nodes = [face_nodes[-1]]
                             _nodes.extend(face_nodes[:2])
+                            # _nodes = [face_nodes[-2]]
+                            # _nodes.extend([face_nodes[-1], face_nodes[0]])
                             for _node in _nodes:
                                 face_nodes.append(middle_nodes.get(_node))
 
