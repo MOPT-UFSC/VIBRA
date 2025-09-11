@@ -354,6 +354,11 @@ def load_external_mesh_and_solve():
 
         fig8, ax8 = plt.subplots()
         title = f"Particle velocity at node {node_out}"
+
+        # for index, _node in enumerate(output_rows):
+        #     if  900 < _node < 1000:
+        #         ax8.plot(frequencies, data_type(particle_velocity[_node][0, :]), color=get_color(index), label=f'Vibra - node: {_node+1}')
+
         ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
         ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
         ax8.set_xlabel('Frequency [Hz]')
@@ -383,6 +388,23 @@ def load_external_mesh_and_solve():
         ax10.legend()
 
         plt.show()
+
+
+def get_color(index: int):
+    colors = [  
+                (0,0,1), 
+                (0,1,0), 
+                (1,0,0),
+                (0,1,1), 
+                (1,0,1), 
+                (1,1,0),
+                (0.25,0.25,0.25)
+                ]
+
+    if index <= 6:
+        return colors[index]
+    else:
+        return tuple(np.random.randint(0, 255, size=3) / 255)
 
 
 def get_external_results(path: str):

@@ -107,8 +107,6 @@ class AcousticModalSolver:
         is_C_complex = np.any(np.imag(C_imp.data))
         is_complex = is_M_complex or is_K_complex or is_C_complex
 
-        print(is_complex)
-
         if np.any(C_imp.data):
             if not is_complex:
                 M.data = np.real(M.data)
@@ -158,6 +156,9 @@ class AcousticModalSolver:
             ## symmetrize the global matrices
             # M = (M + M.T) / 2
             # K = (K + K.T) / 2
+
+            # np.savetxt("mass_matrix_base.csv", M.toarray(), delimiter=",", fmt="%.16e")
+            # np.savetxt("stiffness_matrix_base.csv", K.toarray(), delimiter=",", fmt="%.16e")
 
             try:
 

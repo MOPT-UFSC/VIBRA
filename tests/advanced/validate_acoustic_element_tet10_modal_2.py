@@ -23,8 +23,9 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
-    results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/"
+
+    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_tet10_four_elements.dat"
+    results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/four_elements"
 
     if not os.path.exists(mesh_path):
         return
@@ -65,7 +66,6 @@ def load_external_mesh_and_solve():
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
     mesh.element_type = TETRAHEDRON_10
 
-
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 
         if named_selection in ["input_edges", "output_edges"]:
@@ -77,7 +77,6 @@ def load_external_mesh_and_solve():
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
-
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
@@ -123,6 +122,23 @@ def load_external_mesh_and_solve():
     for _surf_id in [1, 2]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
+    ## normal surface velocity data
+    data_Vn = { 
+                "real_values" : [1],
+                "imag_values" : [0],
+                "nodal_attribution" : False,
+                "averaged" : False
+                }
+
+    ## mass source data
+    data_ms = { 
+                "real_values" : [1],
+                "imag_values" : [0],
+                "volume_id" : 1,
+                }
+    
+    # model.properties._set_property("surface_velocity", data_Vn, surface=1)
+
     ## boundary impedance setup
     Zo = fluid.impedance
 
@@ -138,7 +154,7 @@ def load_external_mesh_and_solve():
 
     analysis_setup = {
                       "analisys_id" : 4,
-                      "modes": 100,
+                      "modes": 12,
                       "sigma_factor": 0.01,
                       }
 
@@ -166,10 +182,12 @@ def load_external_mesh_and_solve():
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
     # assert np.max(fnat_diff) < 5e-3
+
     print(fnat_diff)
 
     for i, nfreq in enumerate(natural_frequencies):
         print(f"Mode {i+1}: {nfreq : .8f} Hz")
+
 
 if __name__ == "__main__":
 

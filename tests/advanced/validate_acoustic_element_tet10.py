@@ -191,9 +191,6 @@ def load_external_mesh_and_solve():
     input_rows = mesh.external_nodes_from_surfaces[1]
     output_rows = mesh.external_nodes_from_surfaces[2]
 
-    print(input_rows)
-    print(output_rows)
-
     input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
 
