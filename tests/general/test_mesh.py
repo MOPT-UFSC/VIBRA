@@ -14,7 +14,7 @@ from vibra.engine.mesher.mesh import Mesh
 
 def test_tetrahedron_4_mesh():
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/cilindro.step",
+        "data/examples/geometry_files/cylinder.step",
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
@@ -45,7 +45,7 @@ def test_tetrahedron_10_mesh():
 @pytest.mark.skip
 def test_hexahedron_8_mesh():
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/cilindro.step",
+        "data/examples/geometry_files/cylinder.step",
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,

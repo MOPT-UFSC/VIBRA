@@ -3,7 +3,6 @@ import pytest
 from data import data_test_helper
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.mesher.geometry import Geometry
 import numpy as np
 
 
@@ -27,7 +26,7 @@ def fluid() -> Fluid:
 
 @pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
-    path = data_test_helper.get_data_path("examples/geometry_files/cilindro.step")
+    path = data_test_helper.get_data_path("examples/geometry_files/cylinder.step")
     mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
@@ -42,10 +41,10 @@ def acoustic_model(fluid: Fluid) -> Model:
     model.properties._set_property("fluid", fluid, surface=4)
     model.properties._set_property("surface_velocity", data_Vn, surface=4)
     model.set_geometry_path(path)
-    model.set_mesh_setup(mesh_setup)
     model.set_length_unit()
     model.set_geometry_quality_factor()
     model.initialize_mesh()
+    model.set_mesh_setup(mesh_setup)
     model.process_mesh()
 
     return model
