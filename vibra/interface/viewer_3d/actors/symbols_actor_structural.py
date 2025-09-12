@@ -173,12 +173,14 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             
             force_orientation = np.real((Fx, Fy, Fz))
             m_orientation = np.real((Mx, My, Mz))
-
-            if np.any(force_orientation):
-                self.add_symbol(sources.create_nodal_loads_force_arrow_source, coords, force_orientation, color=color_names.RED_2)
             
-            if np.any(m_orientation):
-                self.add_symbol(sources.create_nodal_loads_momentum_arrow_source, coords, m_orientation, color=color_names.BLUE_5)
+            for index, v in enumerate(force_orientation):
+                if v != 0:
+                    self.add_symbol(sources.create_nodal_loads_force_arrow_source, coords, (index==0, index==1, index==2), color=color_names.RED_2)
+                    
+            for index, v in enumerate(m_orientation):
+                if v != 0: 
+                    self.add_symbol(sources.create_nodal_loads_momentum_arrow_source, coords, (index==0, index==1, index==2), color=color_names.BLUE_5)
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
         if surface_id != -1:
