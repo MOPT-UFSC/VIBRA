@@ -157,8 +157,8 @@ class AcousticModalSolver:
             # M = (M + M.T) / 2
             # K = (K + K.T) / 2
 
-            # np.savetxt("mass_matrix_base.csv", M.toarray(), delimiter=",", fmt="%.16e")
-            # np.savetxt("stiffness_matrix_base.csv", K.toarray(), delimiter=",", fmt="%.16e")
+            # np.savetxt("mass_matrix_base.dat", M.toarray(), delimiter=",", fmt="%.16e")
+            # np.savetxt("stiffness_matrix_base.dat", K.toarray(), delimiter=",", fmt="%.16e")
 
             try:
 

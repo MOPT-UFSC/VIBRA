@@ -361,11 +361,7 @@ class ExternalMeshData():
                             face_nodes = corner_nodes
 
                         if middle_nodes:
-                            _nodes = [face_nodes[-1]]
-                            _nodes.extend(face_nodes[:2])
-                            # _nodes = [face_nodes[-2]]
-                            # _nodes.extend([face_nodes[-1], face_nodes[0]])
-                            for _node in _nodes:
+                            for _node in [face_nodes[2], face_nodes[0], face_nodes[1]]:
                                 face_nodes.append(middle_nodes.get(_node))
 
                         # TODO: implement same structure to other element types

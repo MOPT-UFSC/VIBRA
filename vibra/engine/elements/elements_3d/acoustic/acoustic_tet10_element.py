@@ -192,74 +192,82 @@ class ACT_TETRAHEDRON_10C(Element3D):
         weights for numerical integration.
         """
 
+        # NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+        # The numerical integration points and their respective weights for the 4-, 5-, and 15-point integration rules are found on pages 177 and 178.
+
+        # 4-point integration rule for the quadratic tetrahedron element
         if integration_points == 4:
 
             self.nint = 4
 
-            ax = (5 - np.sqrt(5)) / 20
-            bx = (5 + 3 * np.sqrt(5)) / 20
+            a = (5 - np.sqrt(5)) / 20
+            b = (5 + 3 * np.sqrt(5)) / 20
 
-            p1 = 1/4
+            w1 = 1/24
 
-            self.pint = np.array([[ax, ax, ax],
-                                  [ax, ax, bx],
-                                  [ax, bx, ax],
-                                  [bx, ax, ax]], dtype=float)
-            
-            self.wps = 6 * np.array([p1, p1, p1, p1], dtype=float).reshape(-1, 1, 1)
+            self.pint = np.array([[a, a, a],
+                                  [a, a, b],
+                                  [a, b, a],
+                                  [b, a, a]], dtype=float)
 
+            self.wps = 6 * np.array([w1, w1, w1, w1], dtype=float).reshape(-1, 1, 1)
+
+        # 5-point integration rule for the quadratic tetrahedron element
         elif integration_points == 5:
 
             self.nint = 5
 
-            ax = 1/4
-            bx = 1/2
-            cx = 1/6
+            a = 1/4
+            b = 1/6
+            c = 1/2
 
-            p1 = -4/5
-            p2 = 9/20
+            w1 = -2/15
+            w2 = 3/40
 
-            self.pint = np.array([[ax, ax, ax],
-                                  [bx, cx, cx],
-                                  [cx, bx, cx],
-                                  [cx, cx, bx],
-                                  [cx, cx, cx]], dtype=float)
+            self.pint = np.array([[a, a, a],
+                                  [b, b, b],
+                                  [b, b, c],
+                                  [b, c, b],
+                                  [c, b, b]], dtype=float)
 
-            self.wps = 6 * np.array([p1, p2, p2, p2, p2], dtype=float).reshape(-1, 1, 1)
+            self.wps = 6 * np.array([w1, w2, w2, w2, w2], dtype=float).reshape(-1, 1, 1)
 
+
+        # 11-point integration rule for the quadratic tetrahedron element
         elif integration_points == 11:
+
+            # Reference: Table 12.8 from webpage https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_et1.html
 
             self.nint = 11
 
-            ax = 1/4
-            bx = 0.0714285714285714
-            cx = 1 - 3*bx
-            dx = 0.399403576166799
-            ex = 1/2 - dx
+            a = 1/4
+            b = 0.0714285714285714
+            c = 1 - 3 * b
+            d = 0.399403576166799
+            e = 1/2 - d
 
-            p1 = -0.013155555555555
-            p2 = 0.007622222222222
-            p3 = 0.024888888888888
+            w1 = -0.013155555555555
+            w2 = 0.007622222222222
+            w3 = 0.024888888888888
 
-            self.pint = np.array([  [ax, ax, ax],
-                                    [bx, bx, bx],
-                                    [bx, bx, cx],
-                                    [bx, cx, bx],
-                                    [cx, bx, bx],
-                                    [dx, dx, ex],
-                                    [dx, ex, dx],
-                                    [dx, ex, ex],
-                                    [ex, dx, ex],
-                                    [ex, dx, dx],
-                                    [ex, ex, dx]  ], dtype=float)
+            self.pint = np.array([  [a, a, a],
+                                    [b, b, b],
+                                    [b, b, c],
+                                    [b, c, b],
+                                    [c, b, b],
+                                    [d, d, e],
+                                    [d, e, d],
+                                    [d, e, e],
+                                    [e, d, e],
+                                    [e, d, d],
+                                    [e, e, d],  ], dtype=float)
 
-            self.wps = 6 * np.array([p1,
-                                     p2, p2, p2, p2, 
-                                     p3, p3, p3, p3, p3, p3], dtype=float).reshape(-1, 1, 1)
+            self.wps = 6 * np.array([w1,
+                                     w2, w2, w2, w2, 
+                                     w3, w3, w3, w3, w3, w3], dtype=float).reshape(-1, 1, 1)
 
+        # 15-point integration rule for the quadratic tetrahedron element
         else:
-
-            # Reference: 
 
             self.nint = 15
 
@@ -271,10 +279,10 @@ class ACT_TETRAHEDRON_10C(Element3D):
             f = (5 - np.sqrt(15)) / 20
             g = (5 + np.sqrt(15)) / 20
 
-            p1 = 8 / 405
-            p2 = (2665 - 14 * np.sqrt(15)) / 226800
-            p3 = (2665 + 14 * np.sqrt(15)) / 226800
-            p4 = 5 / 567
+            w1 = 8 / 405
+            w2 = (2665 - 14 * np.sqrt(15)) / 226800
+            w3 = (2665 + 14 * np.sqrt(15)) / 226800
+            w4 = 5 / 567
 
             self.pint = np.array([  [a, a, a],
                                     [b, b, b],
@@ -292,9 +300,9 @@ class ACT_TETRAHEDRON_10C(Element3D):
                                     [g, f, g],
                                     [g, g, f]  ], dtype=float)
 
-            self.wps = 6 * np.array([p1, p2, p2, p2, p2, 
-                                     p3, p3, p3, p3, p4, 
-                                     p4, p4, p4, p4, p4], dtype=float).reshape(-1, 1, 1)
+            self.wps = 6 * np.array([w1, w2, w2, w2, w2, 
+                                     w3, w3, w3, w3, w4, 
+                                     w4, w4, w4, w4, w4], dtype=float).reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -354,31 +362,9 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # shape functions
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
-        # shape functions (original)
-        # phi[:, 0, 0] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
-        # phi[:, 0, 1] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
-        # phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
-        # phi[:, 0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
-        # phi[:, 0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
-        # phi[:, 0, 5] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
-        # phi[:, 0, 6] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
-        # phi[:, 0, 7] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
-        # phi[:, 0, 8] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
-        # phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
-        # shape functions (new)
-        # phi[:, 0, 0] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
-        # phi[:, 0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
-        # phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
-        # phi[:, 0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
-        # phi[:, 0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
-        # phi[:, 0, 5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
-        # phi[:, 0, 6] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
-        # phi[:, 0, 7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
-        # phi[:, 0, 8] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
-        # phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
-
-        # shape functions (Atalla)
+        # shape functions (Atalla and Sgard, 2015, pg. 170)
         phi[:, 0, 0] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0)   Node 1
         phi[:, 0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0)   Node 2
         phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0)   Node 3
@@ -390,69 +376,22 @@ class ACT_TETRAHEDRON_10C(Element3D):
         phi[:, 0, 8] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0)   Node 9
         phi[:, 0, 9] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5)   Node 10
 
+        # shape functions (alternative)
+        # phi[:, 0, 0] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
+        # phi[:, 0, 1] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
+        # phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
+        # phi[:, 0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
+        # phi[:, 0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
+        # phi[:, 0, 5] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
+        # phi[:, 0, 6] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
+        # phi[:, 0, 7] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
+        # phi[:, 0, 8] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
+        # phi[:, 0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
+
         # derivatives of shape functions
         dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
 
-        ## derivatives of shape functions (original)
-        # dphi[:, 0, 1] =  4 * l1 - 1
-        # dphi[:, 0, 3] = -4 * l4 + 1
-        # dphi[:, 0, 4] =  4 * l2
-        # dphi[:, 0, 5] =  4 * l3
-        # dphi[:, 0, 7] = -4 * l2
-        # dphi[:, 0, 8] =  4 * (l4 - l1)
-        # dphi[:, 0, 9] = -4 * l3
-
-        # dphi[:, 1, 0] =  4 * l2 - 1
-        # dphi[:, 1, 3] = -4 * l4 + 1
-        # dphi[:, 1, 4] =  4 * l1
-        # dphi[:, 1, 6] =  4 * l3
-        # dphi[:, 1, 7] =  4 * (l4 - l2)
-        # dphi[:, 1, 8] = -4 * l1
-        # dphi[:, 1, 9] = -4 * l3
-
-        # dphi[:, 2, 2] =  4 * l3 - 1
-        # dphi[:, 2, 3] = -4 * l4 + 1
-        # dphi[:, 2, 5] =  4 * l1
-        # dphi[:, 2, 6] =  4 * l2
-        # dphi[:, 2, 7] = -4 * l2
-        # dphi[:, 2, 8] = -4 * l1
-        # dphi[:, 2, 9] =  4 * (l4 - l3)
-
-        ## derivatives of shape functions (new)
-        # dphi[:, 0, 0] =  4 * l1 - 1
-        # dphi[:, 0, 1] =  0
-        # dphi[:, 0, 2] =  0
-        # dphi[:, 0, 3] = -4 * l4 + 1
-        # dphi[:, 0, 4] =  4 * l2
-        # dphi[:, 0, 5] =  0
-        # dphi[:, 0, 6] =  4 * l3
-        # dphi[:, 0, 7] =  4 * (l4 - l1)
-        # dphi[:, 0, 8] = -4 * l2
-        # dphi[:, 0, 9] = -4 * l3
-
-        # dphi[:, 1, 0] =  0
-        # dphi[:, 1, 1] =  4 * l2 - 1
-        # dphi[:, 1, 2] =  0
-        # dphi[:, 1, 3] = -4 * l4 + 1
-        # dphi[:, 1, 4] =  4 * l1
-        # dphi[:, 1, 5] =  4 * l3
-        # dphi[:, 1, 6] =  0
-        # dphi[:, 1, 7] = -4 * l1
-        # dphi[:, 1, 8] =  4 * (l4 - l2)
-        # dphi[:, 1, 9] = -4 * l3
-
-        # dphi[:, 2, 0] =  0
-        # dphi[:, 2, 1] =  0
-        # dphi[:, 2, 2] =  4 * l3 - 1
-        # dphi[:, 2, 3] = -4 * l4 + 1
-        # dphi[:, 2, 4] =  0
-        # dphi[:, 2, 5] =  4 * l2
-        # dphi[:, 2, 6] =  4 * l1
-        # dphi[:, 2, 7] = -4 * l1
-        # dphi[:, 2, 8] = -4 * l2
-        # dphi[:, 2, 9] =  4 * (l4 - l3)
-
-        ## derivatives of shape functions (Atalla)
+        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi[:, 0, 0] = -4 * l4 + 1
         dphi[:, 0, 1] =  0
         dphi[:, 0, 2] =  0
@@ -485,6 +424,31 @@ class ACT_TETRAHEDRON_10C(Element3D):
         dphi[:, 2, 7] = -4 * l1
         dphi[:, 2, 8] =  0
         dphi[:, 2, 9] =  4 * l1
+
+        ## derivatives of shape functions (alternative)
+        # dphi[:, 0, 1] =  4 * l1 - 1
+        # dphi[:, 0, 3] = -4 * l4 + 1
+        # dphi[:, 0, 4] =  4 * l2
+        # dphi[:, 0, 5] =  4 * l3
+        # dphi[:, 0, 7] = -4 * l2
+        # dphi[:, 0, 8] =  4 * (l4 - l1)
+        # dphi[:, 0, 9] = -4 * l3
+
+        # dphi[:, 1, 0] =  4 * l2 - 1
+        # dphi[:, 1, 3] = -4 * l4 + 1
+        # dphi[:, 1, 4] =  4 * l1
+        # dphi[:, 1, 6] =  4 * l3
+        # dphi[:, 1, 7] =  4 * (l4 - l2)
+        # dphi[:, 1, 8] = -4 * l1
+        # dphi[:, 1, 9] = -4 * l3
+
+        # dphi[:, 2, 2] =  4 * l3 - 1
+        # dphi[:, 2, 3] = -4 * l4 + 1
+        # dphi[:, 2, 5] =  4 * l1
+        # dphi[:, 2, 6] =  4 * l2
+        # dphi[:, 2, 7] = -4 * l2
+        # dphi[:, 2, 8] = -4 * l1
+        # dphi[:, 2, 9] =  4 * (l4 - l3)
 
         if Nz == 1:
             return phi[0, :, :], dphi[0, :, :]
@@ -717,31 +681,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         if self.connectivity is None:
             self.reorder_connect()
 
-        ## calculation points (original)
-        # p_calc = np.array([ [0.0, 1.0, 0.0],
-        #                     [1.0, 0.0, 0.0],
-        #                     [0.0, 0.0, 1.0],
-        #                     [0.0, 0.0, 0.0],
-        #                     [0.5, 0.5, 0.0],
-        #                     [0.5, 0.0, 0.5],
-        #                     [0.0, 0.5, 0.5],
-        #                     [0.0, 0.5, 0.0],
-        #                     [0.5, 0.0, 0.0],
-        #                     [0.0, 0.0, 0.5] ], dtype=float)
-
-        ## calculation points (new)
-        # p_calc = np.array([ [1.0, 0.0, 0.0],
-        #                     [0.0, 1.0, 0.0],
-        #                     [0.0, 0.0, 1.0],
-        #                     [0.0, 0.0, 0.0],
-        #                     [0.5, 0.5, 0.0],
-        #                     [0.0, 0.5, 0.5],
-        #                     [0.5, 0.0, 0.5],
-        #                     [0.5, 0.0, 0.0],
-        #                     [0.0, 0.5, 0.0],
-        #                     [0.0, 0.0, 0.5] ], dtype=float)
-
-        ## calculation points (Atalla)
+        ## calculation points (Atalla and Sgard, 2015, pg. 170)
         p_calc = np.array([ [0.0, 0.0, 0.0],
                             [0.0, 1.0, 0.0],
                             [0.0, 0.0, 1.0],
@@ -752,6 +692,18 @@ class ACT_TETRAHEDRON_10C(Element3D):
                             [0.5, 0.0, 0.0],
                             [0.5, 0.5, 0.0],
                             [0.5, 0.0, 0.5] ], dtype=float)
+
+        ## calculation points (alternative)
+        # p_calc = np.array([ [0.0, 1.0, 0.0],
+        #                     [1.0, 0.0, 0.0],
+        #                     [0.0, 0.0, 1.0],
+        #                     [0.0, 0.0, 0.0],
+        #                     [0.5, 0.5, 0.0],
+        #                     [0.5, 0.0, 0.5],
+        #                     [0.0, 0.5, 0.5],
+        #                     [0.0, 0.5, 0.0],
+        #                     [0.5, 0.0, 0.0],
+        #                     [0.0, 0.0, 0.5] ], dtype=float)
 
         index = np.where(node_ids==node_id)[0]
         if index.size != 1:
@@ -815,55 +767,95 @@ def shape10TC(l1, l2, l3):
     """This function returns the shape functions and its derivatives."""
 
     # shape functions
-    phi = np.zeros(10)
+    phi = np.zeros(10, dtype=float)
 
     l4 = 1 - l1 - l2 - l3
-    phi[0] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
-    phi[1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
-    phi[2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
-    phi[3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
-    phi[4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
-    phi[5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
-    phi[6] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
-    phi[7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
-    phi[8] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
-    phi[9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
+
+    # shape functions (Atalla and Sgard, 2015, pg. 170)
+    phi[0, 0] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0)   Node 1
+    phi[0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0)   Node 2
+    phi[0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0)   Node 3
+    phi[0, 3] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0)   Node 4
+    phi[0, 4] = 4 * l4 * l2             # ->      (0.0, 0.5, 0.0)   Node 5
+    phi[0, 5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5)   Node 6
+    phi[0, 6] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5)   Node 7
+    phi[0, 7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0)   Node 8
+    phi[0, 8] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0)   Node 9
+    phi[0, 9] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5)   Node 10
+
+    # shape functions (alternative)
+    # phi[0, 0] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0, 0.0)   J
+    # phi[0, 1] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0, 0.0)   I
+    # phi[0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0, 0.0)   K
+    # phi[0, 3] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0, 1.0)   L
+    # phi[0, 4] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0, 0.0)   M
+    # phi[0, 5] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5, 0.0)   O
+    # phi[0, 6] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5, 0.0)   N
+    # phi[0, 7] = 4 * l2 * l4             # ->      (0.0, 0.5, 0.0, 0.5)   Q
+    # phi[0, 8] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0, 0.5)   P
+    # phi[0, 9] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5, 0.5)   R
 
     # derivatives of shape functions
-    dphi = np.zeros((3, 10))
+    dphi = np.zeros((3, 10), dtype=float)
 
-    dphi[0, 0] =  4 * l1 - 1
+    ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
+    dphi[0, 0] = -4 * l4 + 1
     dphi[0, 1] =  0
     dphi[0, 2] =  0
-    dphi[0, 3] = -4 * l4 + 1
-    dphi[0, 4] =  4 * l2
+    dphi[0, 3] =  4 * l1 - 1
+    dphi[0, 4] = -4 * l2
     dphi[0, 5] =  0
-    dphi[0, 6] =  4 * l3
+    dphi[0, 6] = -4 * l3
     dphi[0, 7] =  4 * (l4 - l1)
-    dphi[0, 8] = -4 * l2
-    dphi[0, 9] = -4 * l3
+    dphi[0, 8] =  4 * l2
+    dphi[0, 9] =  4 * l3
 
-    dphi[1, 0] =  0
+    dphi[1, 0] = -4 * l4 + 1
     dphi[1, 1] =  4 * l2 - 1
     dphi[1, 2] =  0
-    dphi[1, 3] = -4 * l4 + 1
-    dphi[1, 4] =  4 * l1
+    dphi[1, 3] =  0
+    dphi[1, 4] =  4 * (l4 - l2)
     dphi[1, 5] =  4 * l3
-    dphi[1, 6] =  0
+    dphi[1, 6] = -4 * l3
     dphi[1, 7] = -4 * l1
-    dphi[1, 8] =  4 * (l4 - l2)
-    dphi[1, 9] = -4 * l3
+    dphi[1, 8] =  4 * l1
+    dphi[1, 9] =  0
 
-    dphi[2, 0] =  0
+    dphi[2, 0] = -4 * l4 + 1
     dphi[2, 1] =  0
     dphi[2, 2] =  4 * l3 - 1
-    dphi[2, 3] = -4 * l4 + 1
-    dphi[2, 4] =  0
+    dphi[2, 3] =  0
+    dphi[2, 4] = -4 * l2
     dphi[2, 5] =  4 * l2
-    dphi[2, 6] =  4 * l1
+    dphi[2, 6] =  4 * (l4 - l3)
     dphi[2, 7] = -4 * l1
-    dphi[2, 8] = -4 * l2
-    dphi[2, 9] =  4 * (l4 - l3)
+    dphi[2, 8] =  0
+    dphi[2, 9] =  4 * l1
+
+    ## derivatives of shape functions (alternative)
+    # dphi[0, 1] =  4 * l1 - 1
+    # dphi[0, 3] = -4 * l4 + 1
+    # dphi[0, 4] =  4 * l2
+    # dphi[0, 5] =  4 * l3
+    # dphi[0, 7] = -4 * l2
+    # dphi[0, 8] =  4 * (l4 - l1)
+    # dphi[0, 9] = -4 * l3
+
+    # dphi[1, 0] =  4 * l2 - 1
+    # dphi[1, 3] = -4 * l4 + 1
+    # dphi[1, 4] =  4 * l1
+    # dphi[1, 6] =  4 * l3
+    # dphi[1, 7] =  4 * (l4 - l2)
+    # dphi[1, 8] = -4 * l1
+    # dphi[1, 9] = -4 * l3
+
+    # dphi[2, 2] =  4 * l3 - 1
+    # dphi[2, 3] = -4 * l4 + 1
+    # dphi[2, 5] =  4 * l1
+    # dphi[2, 6] =  4 * l2
+    # dphi[2, 7] = -4 * l2
+    # dphi[2, 8] = -4 * l1
+    # dphi[2, 9] =  4 * (l4 - l3)
 
     return phi, dphi
 
@@ -875,16 +867,30 @@ def velpartT4C(ee, coord, connect, rho, omega: np.ndarray, Pe, index=None):
     # -------
     ncalc = 10
     # Seguir elem. coords. de acordo com connectiv.
-    p_calc = np.array([ [1.0, 0.0, 0.0],
+
+    ## calculation points (Atalla and Sgard, 2015, pg. 170)
+    p_calc = np.array([ [0.0, 0.0, 0.0],
                         [0.0, 1.0, 0.0],
                         [0.0, 0.0, 1.0],
-                        [0.0, 0.0, 0.0],
-                        [0.5, 0.5, 0.0],
-                        [0.0, 0.5, 0.5],
-                        [0.5, 0.0, 0.5],
-                        [0.5, 0.0, 0.0],
+                        [1.0, 0.0, 0.0],
                         [0.0, 0.5, 0.0],
-                        [0.0, 0.0, 0.5] ], dtype=float)
+                        [0.0, 0.5, 0.5],
+                        [0.0, 0.0, 0.5],
+                        [0.5, 0.0, 0.0],
+                        [0.5, 0.5, 0.0],
+                        [0.5, 0.0, 0.5] ], dtype=float)
+
+    ## calculation points (alternative)
+    # p_calc = np.array([ [0.0, 1.0, 0.0],
+    #                     [1.0, 0.0, 0.0],
+    #                     [0.0, 0.0, 1.0],
+    #                     [0.0, 0.0, 0.0],
+    #                     [0.5, 0.5, 0.0],
+    #                     [0.5, 0.0, 0.5],
+    #                     [0.0, 0.5, 0.5],
+    #                     [0.0, 0.5, 0.0],
+    #                     [0.5, 0.0, 0.0],
+    #                     [0.0, 0.0, 0.5] ], dtype=float)
 
     B = np.zeros((3,10))
 
