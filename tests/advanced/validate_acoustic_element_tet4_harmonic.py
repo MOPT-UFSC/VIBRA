@@ -1,4 +1,5 @@
 from vibra import PROJECT_DIR
+from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_4
@@ -208,8 +209,10 @@ def load_external_mesh_and_solve():
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
     rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
-    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
+    acoustic_post = HarmonicAcousticPostprocessing(harmonic_solver)
+
+    input_particle_velocity = acoustic_post.get_particle_velocity_from_surface(1, rho_eff_v1)
+    output_particle_velocity = acoustic_post.get_particle_velocity_from_surface(2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)

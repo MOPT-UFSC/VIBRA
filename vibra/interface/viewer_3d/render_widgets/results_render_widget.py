@@ -12,10 +12,8 @@ from vtkmodules.vtkCommonDataModel import vtkPointData
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import (
-    compute_acoustic_harmonic_field,
-    compute_acoustic_modal_field,
     compute_structural_harmonic_field,
-    compute_structural_modal_field,
+    compute_structural_modal_field, ModalAcousticPostprocessing, HarmonicAcousticPostprocessing,
 )
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
@@ -268,8 +266,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
 
-            data = compute_acoustic_modal_field(
-                app().project.acoustic_modal_solver,
+            data = ModalAcousticPostprocessing(app().project.acoustic_modal_solver).compute_acoustic_modal_field(
                 self.mode_index,
                 phase,
                 plot_type,
@@ -287,8 +284,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.current_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
-            data = compute_acoustic_harmonic_field(
-                app().project.acoustic_harmonic_solver,
+            data = HarmonicAcousticPostprocessing(app().project.acoustic_harmonic_solver).compute_acoustic_harmonic_field(
                 self.frequency_index,
                 phase,
                 plot_type,
