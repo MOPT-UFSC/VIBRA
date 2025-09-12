@@ -3,8 +3,8 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.engine.postprocessing import compute_particle_velocity
 from vibra.interface.ui_generated.plots.acoustic.particle_velocity_inputs_ui import ParticleVelocityInputs_UI
+from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -24,6 +24,8 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+
+        self.acoustic_post = HarmonicAcousticPostprocessing(self.project.acoustic_harmonic_solver)
 
         self._config_window()
         self._reset_variables()
@@ -139,17 +141,16 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
     def get_response(self, selection_type: str, selected_id: int):
 
         component_label = self.get_component_label()
-        solver = app().project.acoustic_harmonic_solver
 
         def function_callback():
 
             logging.info("Processing particle velocity... [15/100]")
 
             if selection_type == "surface":
-                particle_velocity = compute_particle_velocity(solver, component_label, surface_id = selected_id)
+                particle_velocity = self.acoustic_post.compute_particle_velocity(component_label, surface_id = selected_id)
 
             else:
-                particle_velocity = compute_particle_velocity(solver, component_label, node_id = selected_id)
+                particle_velocity = self.acoustic_post.compute_particle_velocity(component_label, node_id = selected_id)
 
             logging.info("Processing particle velocity... [95/100]")
 

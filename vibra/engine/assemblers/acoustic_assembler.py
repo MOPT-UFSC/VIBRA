@@ -163,7 +163,7 @@ class AcousticAssembler:
         return self.unprescribed_indexes, self.prescribed_indexes
 
 
-    def get_prescribed_pressure_model_excitation(self, prescribed_values: np.ndarray, index: int = 0):
+    def get_prescribed_pressure_model_excitation(self, index: int = 0):
         """
         This method computes the equivalent loads resulting from the degrees of freedom 
         prescription to compound the acoustic model excitation vector.
@@ -179,6 +179,7 @@ class AcousticAssembler:
             The equivalent acoustic load vector of complex numbers in which
             each column corresponds to a frequency step of analysis.
         """
+        _, prescribed_values = self.get_prescribed_dofs_values()
 
         if prescribed_values.size == 0:
             return 0.
@@ -1741,3 +1742,106 @@ class AcousticAssembler:
 
         logging.info("Finishing the model building... [98/100]")
         self.mass_flow_vectors = A + B
+
+    def reinsert_the_prescribed_dofs_into_solution_matrix(self, solution: np.ndarray):
+        """
+        This method reinserts the value of the prescribed degree of freedom in the solution array.
+
+        Parameters
+        ----------
+        solution : np.ndarray
+            Solution data obtained from harmonic analysis using the direct method.
+
+        Returns
+        -------
+        full_solution: np.ndarray
+            An array that contains the solution of all the degrees of freedom.
+        """
+        unprescribed_indexes, prescribed_indexes = self.get_matrices_dropping_indexes()
+        _, array_prescribed_values = self.get_prescribed_dofs_values()
+
+        rows = solution.shape[0] + len(prescribed_indexes)
+        cols = solution.shape[1]
+
+        full_solution = np.zeros((rows, cols), dtype=complex)
+        full_solution[unprescribed_indexes, :] = solution
+
+        if len(prescribed_indexes):
+            full_solution[prescribed_indexes, :] = array_prescribed_values[:, 0:cols]
+
+        return full_solution
+
+    def reinsert_the_prescribed_dofs_into_solution_freq(self, solution: np.ndarray, freq_index: int):
+        """
+        This method reinserts the value of the prescribed degree of freedom in the solution array.
+
+        Parameters
+        ----------
+        solution : np.ndarray
+            Solution data obtained from harmonic analysis using the direct method.
+        freq_index: int
+            Frequency index related to the input solution.
+
+        Returns
+        -------
+        full_solution: np.ndarray
+            An array that contains the solution of all the degrees of freedom.
+        """
+        unprescribed_indexes, prescribed_indexes = self.get_matrices_dropping_indexes()
+        _, array_prescribed_values = self.get_prescribed_dofs_values()
+
+        rows = solution.shape[0] + len(prescribed_indexes)
+
+        full_solution = np.zeros(rows, dtype=complex)
+        full_solution[unprescribed_indexes] = solution
+
+        if len(prescribed_indexes):
+            full_solution[prescribed_indexes] = array_prescribed_values[:, freq_index]
+
+        return full_solution
+
+    def build_system(self, freq, i):
+        # mass and stiffness matrices
+        M = self.mass_matrix
+        K = self.stiffness_matrix
+
+        # mass flow load vector
+        f_Q = self.mass_flow_vectors
+
+        # create the frequency vector
+        omega = 2 * np.pi * freq
+
+        # update the damping matrix [C]
+        self.assemble_global_damping_matrix_2d_elements(index=i)
+        
+        # damping matrices
+        C_imp = self.damping_matrix
+        C_visc = self.visc_damping_matrix
+        C = C_imp + C_visc
+
+        if self.frequency_dependent:
+            # reassemble the global mass and stiffness matrices
+            factor_K, factor_M = self.compute_global_matrices_factors(index=i)
+            self.assemble_global_mass_matrix(factor_M)
+            self.assemble_global_stiffness_matrix(factor_K)
+
+            M = self.mass_matrix
+            K = self.stiffness_matrix
+
+            # reassemble the mass source matrices
+            self.assemble_mass_source_matrices_from_surfaces(index=i)
+            self.assemble_mass_source_matrices_from_volumes(index=i)
+
+        # update the prescribed dofs-related load vector for each frequency step
+        f_eq = self.get_prescribed_pressure_model_excitation(index=i)
+
+        # compute the mass source load vector
+        f_Qms = self.compute_mass_source_load_vector(omega, index=i)
+
+        # define the linear system equation terms [A]{x} = {f}
+        A = K - (omega ** 2) * M + 1j * omega * C
+        f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
+
+        return A, f
+
+

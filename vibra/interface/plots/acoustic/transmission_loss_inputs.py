@@ -8,7 +8,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
-from vibra.engine.postprocessing import compute_noise_reduction, compute_transmission_loss
+from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
 
 import logging
 
@@ -26,6 +26,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
+        self.acoustic_post = HarmonicAcousticPostprocessing(self.project.acoustic_harmonic_solver)
 
         self._initialize()
         self._create_connections()
@@ -244,7 +245,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def join_model_data(self):
 
         self.model_results = dict()
-        solver = self.project.acoustic_harmonic_solver
 
         if self.comboBox_processing_selector.currentIndex() == 0:
 
@@ -263,8 +263,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
 
-                x_data, y_data = compute_transmission_loss(
-                    solver,
+                x_data, y_data = self.acoustic_post.compute_transmission_loss(
                     self.input_surface_id,
                     self.output_surface_id,
                     surface_integration = bool(integration_method),
@@ -278,8 +277,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
             plot_type = "Noise reduction"
     
-            x_data, y_data = compute_noise_reduction(
-                solver,
+            x_data, y_data = self.acoustic_post.compute_noise_reduction(
                 self.input_surface_id, 
                 self.output_surface_id,
                 )
