@@ -137,15 +137,15 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                 if index < 3 and v is not None:
                     self.add_symbol(sources.create_dof_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
 
-                    if v == 0:
-                        self.add_symbol(sources.create_dof_hexagon_base_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
+                #     if v == 0:
+                #         self.add_symbol(sources.create_dof_hexagon_base_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
                     
-                elif index >= 3 and v is not None: 
-                    self.add_symbol(sources.create_dof_cone_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
-                    self.add_symbol(sources.create_dof_base_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
+                elif index >= 3 and v is not None:
+                    self.add_symbol(sources.create_dof_cone_rotation_source, coords, (index==3, index==4, index==5), color=color_names.BLUE_6)
+                    self.add_symbol(sources.create_dof_cone_axis_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
                     
-                    if v == 0:
-                        self.add_symbol(sources.create_dof_hexagon_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
+                #     if v == 0:
+                #         self.add_symbol(sources.create_dof_hexagon_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
