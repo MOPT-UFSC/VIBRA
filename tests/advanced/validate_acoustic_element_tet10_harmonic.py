@@ -279,11 +279,11 @@ def load_external_mesh_and_solve():
         abs_diff_Poutput_face = np.abs((output_pressure_WB - output_pressure) / output_pressure_WB)
         print(f"Deviation of pressure (output face): {100 * np.max(abs_diff_Poutput_face)} %")
 
-        abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
-        print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
+        # abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
+        # print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
 
-        abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
-        print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
+        # abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
+        # print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
 
         title = f"Harmonic response at input face"
 
@@ -367,25 +367,25 @@ def load_external_mesh_and_solve():
         ax8.grid()
         ax8.legend()
 
-        fig9, ax9 = plt.subplots()
-        title = "Input face particle velocity - average"
-        ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
-        ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
-        ax9.set_xlabel('Frequency [Hz]')
-        ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax9.set_title(title)
-        ax9.grid()
-        ax9.legend()
+        # fig9, ax9 = plt.subplots()
+        # title = "Input face particle velocity - average"
+        # ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
+        # ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
+        # ax9.set_xlabel('Frequency [Hz]')
+        # ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax9.set_title(title)
+        # ax9.grid()
+        # ax9.legend()
 
-        fig10, ax10 = plt.subplots()
-        title = "Output face particle velocity - average"
-        ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
-        ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
-        ax10.set_xlabel('Frequency [Hz]')
-        ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax10.set_title(title)
-        ax10.grid()
-        ax10.legend()
+        # fig10, ax10 = plt.subplots()
+        # title = "Output face particle velocity - average"
+        # ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
+        # ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
+        # ax10.set_xlabel('Frequency [Hz]')
+        # ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax10.set_title(title)
+        # ax10.grid()
+        # ax10.legend()
 
         plt.show()
 

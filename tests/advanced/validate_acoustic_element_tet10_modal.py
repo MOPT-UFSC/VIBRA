@@ -54,7 +54,7 @@ def load_external_mesh_and_solve():
     # return
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
@@ -165,11 +165,12 @@ def load_external_mesh_and_solve():
     np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
-    # assert np.max(fnat_diff) < 5e-3
-    print(fnat_diff)
+    assert np.max(fnat_diff) < 5e-3
 
-    for i, nfreq in enumerate(natural_frequencies):
-        print(f"Mode {i+1}: {nfreq : .8f} Hz")
+    for i, nat_freq in enumerate(natural_frequencies):
+        print(f"Mode {i+1}: {nat_freq : .8f} Hz")
+
+    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e}")
 
 if __name__ == "__main__":
 
