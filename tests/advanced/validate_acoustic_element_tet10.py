@@ -71,14 +71,14 @@ def load_external_mesh_and_solve():
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
     mesh.element_type = TETRAHEDRON_10
 
-    print()
-    print("Solids connectivity: ")
-    print(mesh.solids_connectivity[:, 4:] + 1)
+    # print()
+    # print("Solids connectivity: ")
+    # print(mesh.solids_connectivity[:, 4:] + 1)
 
-    print()
-    print("Faces connectivity: ")
-    print(mesh.faces_connectivity[:, 4:] + 1)
-    print()
+    # print()
+    # print("Faces connectivity: ")
+    # print(mesh.faces_connectivity[:, 4:] + 1)
+    # print()
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 

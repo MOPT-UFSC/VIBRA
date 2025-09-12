@@ -36,7 +36,7 @@ def load_external_mesh_and_solve():
     external_mesh.decode_mesh_data_from_file()
     
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)

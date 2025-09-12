@@ -185,8 +185,10 @@ def load_external_mesh_and_solve():
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
     assert np.max(fnat_diff) < 5e-3
 
-    for i, nfreq in enumerate(natural_frequencies):
-        print(f"Mode {i+1}: {nfreq : .8f} Hz")
+    for i, nat_freq in enumerate(natural_frequencies):
+        print(f"Mode {i+1}: {nat_freq : .8f} Hz")
+
+    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e}")
 
 
 if __name__ == "__main__":

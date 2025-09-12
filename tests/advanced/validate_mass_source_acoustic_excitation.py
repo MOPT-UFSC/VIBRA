@@ -54,7 +54,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     #     print(ns, nodes)
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
@@ -472,5 +472,5 @@ def get_external_results(path: str):
 
 if __name__ == "__main__":
 
-    assignment_type = "surface"
+    assignment_type = "volume"
     load_external_mesh_and_solve(assignment_type=assignment_type)

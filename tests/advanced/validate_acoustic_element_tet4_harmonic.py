@@ -61,7 +61,7 @@ def load_external_mesh_and_solve():
     # return
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
@@ -317,13 +317,13 @@ def load_external_mesh_and_solve():
 
         # Plot the nodal results for pressure and particle velocity
 
-        data_type = np.real
-        type_label = "real"
+        data_type = np.abs
+        type_label = "absolute"
 
         fig5, ax5 = plt.subplots()
         title = f"Acoustic pressure at node {node_in}"
-        ax5.plot(frequencies, data_type(solution[node_in-1, :]), 'r', label='Vibra')
-        ax5.plot(freq_WB, data_type(input_pressures_WB[node_in]), 'k--', label='Ansys')
+        ax5.semilogy(frequencies, data_type(solution[node_in-1, :]), 'r', label='Vibra')
+        ax5.semilogy(freq_WB, data_type(input_pressures_WB[node_in]), 'k--', label='Ansys')
         ax5.set_xlabel('Frequency [Hz]')
         ax5.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
         ax5.set_title(title)
@@ -332,8 +332,8 @@ def load_external_mesh_and_solve():
 
         fig6, ax6 = plt.subplots()
         title = f"Acoustic pressure at node {node_out}"
-        ax6.plot(frequencies, data_type(solution[node_out-1, :]), 'r', label='Vibra')
-        ax6.plot(freq_WB, data_type(output_pressures_WB[node_out]), 'k--', label='Ansys')
+        ax6.semilogy(frequencies, data_type(solution[node_out-1, :]), 'r', label='Vibra')
+        ax6.semilogy(freq_WB, data_type(output_pressures_WB[node_out]), 'k--', label='Ansys')
         ax6.set_xlabel('Frequency [Hz]')
         ax6.set_ylabel(f'Acoustic Pressure [Pa] - {type_label}')
         ax6.set_title(title)
@@ -342,8 +342,8 @@ def load_external_mesh_and_solve():
 
         fig7, ax7 = plt.subplots()
         title = f"Particle velocity at node {node_in}"
-        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='Vibra')
-        ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
+        ax7.semilogy(frequencies, data_type(particle_velocity[node_in-1][0, :]), 'r', label='Vibra')
+        ax7.semilogy(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
         ax7.set_xlabel('Frequency [Hz]')
         ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
         ax7.set_title(title)
@@ -352,8 +352,9 @@ def load_external_mesh_and_solve():
 
         fig8, ax8 = plt.subplots()
         title = f"Particle velocity at node {node_out}"
-        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
-        ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
+
+        ax8.semilogy(frequencies, data_type(particle_velocity[node_out-1][0, :]), 'r', label='Vibra')
+        ax8.semilogy(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
         ax8.set_title(title)
