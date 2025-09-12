@@ -171,33 +171,12 @@ class ACT_TRIANGLE_6(Element2D):
         xi_1 = self.pint[:, 0]
         xi_2 = self.pint[:, 1]
 
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+
         ## shape functions
         xi_3 = 1 - xi_1 - xi_2
-        # phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
-        # phi[:, 0, 0] = xi_3*(2*xi_3 - 1)
-        # phi[:, 0, 1] = xi_1*(2*xi_1 - 1)
-        # phi[:, 0, 2] = xi_2*(2*xi_2 - 1)
-        # phi[:, 0, 3] = 4*xi_1*xi_3
-        # phi[:, 0, 4] = 4*xi_1*xi_2
-        # phi[:, 0, 5] = 4*xi_2*xi_3
 
-        # ## shape functions derivatives
-        # dphi = np.zeros((self.nint, 2, self.NODES_PER_ELEMENT), dtype=float)
-        # dphi[:, 0, 0] = -4 * xi_3 + 1
-        # dphi[:, 0, 1] =  4 * xi_1 - 1
-        # dphi[:, 0, 2] =  0
-        # dphi[:, 0, 3] =  4 * (xi_3 - xi_1)
-        # dphi[:, 0, 4] =  4 * xi_2
-        # dphi[:, 0, 5] = -4 * xi_2
-
-        # dphi[:, 1, 0] = -4 * xi_3 + 1
-        # dphi[:, 1, 1] =  0
-        # dphi[:, 1, 2] =  4 * xi_2 - 1
-        # dphi[:, 1, 3] = -4 * xi_1
-        # dphi[:, 1, 4] =  4 * xi_1
-        # dphi[:, 1, 5] =  4 * (xi_3 - xi_2)
-
-        ## shape functions (Atalla, pg. 173)
+        ## shape functions (Atalla and Sgard, 2015, pg. 173)
         phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
         phi[:, 0, 0] = xi_1*(2*xi_1 - 1)
         phi[:, 0, 1] = xi_2*(2*xi_2 - 1)
@@ -206,7 +185,7 @@ class ACT_TRIANGLE_6(Element2D):
         phi[:, 0, 4] = 4*xi_2*xi_3
         phi[:, 0, 5] = 4*xi_1*xi_3
 
-        ## shape functions derivatives (Atalla, pg. 173)
+        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((self.nint, 2, self.NODES_PER_ELEMENT), dtype=float)
         dphi[:, 0, 0] =  4 * xi_1 - 1
         dphi[:, 0, 1] =  0
@@ -345,9 +324,9 @@ class ACT_TRIANGLE_6(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            int2d_NtN += - (1 / 2) * N.T @ N * (det_jacs * self.wps)
+            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps)
 
-        return -int2d_NtN
+        return int2d_NtN
 
 
     def stacked_matrices_NtN_and_BtB(self) -> np.ndarray:
@@ -388,8 +367,8 @@ class ACT_TRIANGLE_6(Element2D):
             B = inv_jacs @ self.dphi[i, :, :]
             B_t = np.transpose(B, axes=(0, 2, 1))
 
-            int2d_NtN += - (1 / 2) * N_t @ N * (det_jacs * self.wps)
-            int2d_BtB += - (1 / 2) * B_t @ B * (det_jacs * self.wps)
+            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps)
+            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps)
 
         return int2d_NtN, int2d_BtB
 
@@ -433,15 +412,12 @@ class ACT_TRIANGLE_6(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += -(1 / 2) * load * N.T * (det_JAC * self.wps)
+            Fe += (1 / 2) * load * N.T * (det_JAC * self.wps)
 
-        # Fe_base = forceF6(el_index, self.nodal_coordinates, self.connectivities, 0, 0, 1)
-        # print(f"Element index: {el_index} ", np.max(np.abs(Fe-Fe_base)))
-
-        return -Fe
+        return Fe
 
 
-    def elementary_sound_power(self, e_connect: np.ndarray, L_sv: np.ndarray, R_sv: np.ndarray) -> np.ndarray:
+    def elementary_sound_power(self, e_connect: np.ndarray, P_e: np.ndarray, Vn_e: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -450,28 +426,42 @@ class ACT_TRIANGLE_6(Element2D):
         el_index: int
             The element index.
 
-        L_sv: np.ndarray
-            The left stacked vector (complex-conjugate of particle velocities).
-
-        R_sv: np.ndarray
+        P_e: np.ndarray
             The righ stacked vector (complex-conjugate of pressures).
+    
+        Vn_e: np.ndarray
+            The left stacked vector (complex-conjugate of normal particle velocities).
 
         Returns
         -------
-        Ce: np.ndarray
+        We: np.ndarray
             The elementary sound power vector.
         """
 
+        # element nodal coordinates
         coords = self.nodal_coordinates[e_connect, :]
-        coord_loc = get_local_coordinates(coords)
 
-        JAC = self.dphi @ coord_loc
-        det_jac = get_detJAC(JAC)
+        # nodal coordinates in the local CS
+        local_coords = get_local_coordinates(coords)
 
-        N = self.phi
-        Ce = - (1/2) * L_sv @ (N.T @ N) @ R_sv * (det_jac * self.wps)
+        # intialize variable
+        We = 0.
 
-        return Ce.flatten()
+        # integration loop
+        for i in range(self.nint):
+
+            # Jacobian matrices of all elements
+            JAC = self.dphi[i, :, :] @ local_coords
+
+            # determinant of Jacobian matrix
+            det_jac = get_detJAC(JAC)
+
+            # shape functions
+            N = self.phi[i, :, :]
+
+            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps)
+
+        return We.flatten()
 
 
     def get_stacked_element_face_normals(self) -> np.ndarray:
@@ -659,7 +649,6 @@ def matrices_Z_base(ee, coord, connect_face, rho=1, impedance=1):
     coord_loc = np.array([[x1, y1],
                             [x2, y2],
                             [x3, y3]])
-    # print(f"matricesZ3: index - {ee} \n {coord_loc}")
 
     ################ Definir pontos de integração 2D
     nint = 3
@@ -673,23 +662,25 @@ def matrices_Z_base(ee, coord, connect_face, rho=1, impedance=1):
     ######################## Inicio da integração na face
     Ze = np.zeros((3,3),dtype=complex)
     N = np.zeros((1,3))
+
     # integration
     for i in range(nint):
+
         ssx, ttx = pint[i, 0], pint[i, 1]
         phi, dphi = get_shape_functions_and_derivatives(ssx,ttx)
+
         #ie = connect_face[ee_face,1:]-1
         dxdy = dphi@coord_loc
+
         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
         JAC = np.array([[dxdy[0,0], dxdy[0,1]],
                         [dxdy[1,0], dxdy[1,1]]], dtype=float) 
+
         #Inverse Jacobian
         detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
-        # print(f"matricesZ3: index - {ee} \n {coord_loc} {detJAC} -> {i}")
 
         for iii in range(3):
             N[0, iii] = phi[iii]
-        
-        # print(f"matricesZ3: index - {ee} k - {i} {N}")
         
         Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
 

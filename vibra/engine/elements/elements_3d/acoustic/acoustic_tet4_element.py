@@ -138,23 +138,50 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.connectivity = connectivity
 
 
-    def define_integration_points(self):
+    def define_integration_points(self, integration_points: int=4):
         """ 
         This method defines the integration points and their
         weights for numerical integration.
         """
+        # NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+        # The numerical integration points and their respective weights for the 4- and 5-point integration rules are found on page 177.
 
-        self.nint = 4
+        # 4-point integration rule for unit tetrahedron element
+        if integration_points == 4:
 
-        con1 = (5 - np.sqrt(5)) / 20
-        con2 = (5 + 3 * np.sqrt(5)) / 20
+            self.nint = 4
 
-        self.pint = np.array([[con1, con1, con1], 
-                              [con1, con1, con2], 
-                              [con1, con2, con1], 
-                              [con2, con1, con1]], dtype=float)
+            con1 = (5 - np.sqrt(5)) / 20
+            con2 = (5 + 3 * np.sqrt(5)) / 20
 
-        self.wps = 1 / 4
+            w1 = 1/24
+
+            self.pint = np.array([[con1, con1, con1], 
+                                  [con1, con1, con2], 
+                                  [con1, con2, con1], 
+                                  [con2, con1, con1]], dtype=float)
+
+            self.wps = 6 * np.array([w1, w1, w1, w1], dtype=float).reshape(-1, 1, 1)
+
+        # 5-point integration rule for unit tetrahedron element
+        else:
+
+            self.nint = 5
+
+            a = 1/4
+            b = 1/6
+            c = 1/2
+
+            w1 = -2/15
+            w2 = 3/40
+
+            self.pint = np.array([[a, a, a],
+                                  [b, b, b],
+                                  [b, b, c],
+                                  [b, c, b],
+                                  [c, b, b]], dtype=float)
+
+            self.wps = 6 * np.array([w1, w2, w2, w2, w2], dtype=float).reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -170,20 +197,20 @@ class ACT_TETRAHEDRON_4C(Element3D):
         self.phi, self.dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
 
 
-    def get_shape_functions_and_derivatives(self, ssx: np.ndarray, ttx: np.ndarray, rrx: np.ndarray) -> np.ndarray:
+    def get_shape_functions_and_derivatives(self, xi_1: np.ndarray, xi_2: np.ndarray, xi_3: np.ndarray) -> np.ndarray:
 
         """
         This function returns the shape functions and its derivatives.
         
         Parameters
         ----------
-        ssx: np.ndarray
+        xi_1: np.ndarray
             The x coordinates of the integration points.
         
-        ttx: np.ndarray
+        xi_2: np.ndarray
             The y coordinates of the integration points.
 
-        rrx: np.ndarray
+        xi_3: np.ndarray
             The z coordinates of the integration points.
 
         Returns
@@ -195,13 +222,44 @@ class ACT_TETRAHEDRON_4C(Element3D):
             The shape functions derivatives.
         """
 
-        # shape functions
-        phi = np.array([1 - ssx - ttx - rrx, ttx, rrx, ssx], dtype=float).T
+        if isinstance(xi_1, np.ndarray):
+            Nz = xi_1.size
+        else:
+            Nz = 1
 
-        # derivatives
-        dphi = np.array([[-1, 0, 0, 1], 
-                        [-1, 1, 0, 0], 
-                        [-1, 0, 1, 0]], dtype=float)
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+
+        # intialize the shape function variable
+        phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
+
+        # define coordiante xi_4
+        xi_4 = 1 - xi_1 - xi_2 - xi_3
+
+        # # shape functions
+        # phi = np.array([1 - xi_1 - xi_2 - xi_3, xi_2, xi_3, xi_1], dtype=float).T
+
+        # shape functions (Atalla and Sgard, 2015, pg. 170)
+        phi[:, 0, 0] = xi_4      # ->      (0.0, 0.0, 0.0)   Node 1
+        phi[:, 0, 1] = xi_2      # ->      (0.0, 1.0, 0.0)   Node 2
+        phi[:, 0, 2] = xi_3      # ->      (0.0, 0.0, 1.0)   Node 3
+        phi[:, 0, 3] = xi_1      # ->      (1.0, 0.0, 0.0)   Node 4
+
+        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
+        dphi = np.zeros((3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi[0, 0] = -1
+        dphi[0, 1] =  0
+        dphi[0, 2] =  0
+        dphi[0, 3] =  1
+
+        dphi[1, 0] = -1
+        dphi[1, 1] =  1
+        dphi[1, 2] =  0
+        dphi[1, 3] =  0
+
+        dphi[2, 0] = -1
+        dphi[2, 1] =  0
+        dphi[2, 2] =  1
+        dphi[2, 3] =  0
 
         return phi, dphi
 
@@ -262,18 +320,31 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
-
-        # shape functions
-        N = self.phi
+        det_jac, invJAC = get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
         B = invJAC @ self.dphi
 
-        Ke = (1 / 6) * B.T @ B * (detJAC * self.wps) * self.nint
-        Me = (1 / 6) * N.T @ N * (detJAC * self.wps)
+        # initialize variables
+        int2d_BtB = 0.
+        int2d_NtN = 0.
 
-        return Ke, Me
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :]
+
+            int2d_BtB += (1 / 6) * B.T @ B * (det_jac * self.wps[i])
+            int2d_NtN += (1 / 6) * N.T @ N * (det_jac * self.wps[i])
+
+        # # shape functions
+        # N = self.phi
+
+        # int2d_BtB = (1 / 6) * B.T @ B * (det_jac * self.wps) * self.nint
+        # int2d_NtN = (1 / 6) * N.T @ N * (det_jac * self.wps)
+
+        return int2d_BtB, int2d_NtN
 
 
     def stacked_elementary_matrices_NtN_BtB(self):
@@ -299,18 +370,36 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # Jacobian determinants and inverses of all elements
         det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
 
-        # shape functions
-        N = self.phi
-        N_t = N.T
-
         # derivative of shape functions
         B = inv_jacs @ self.dphi
         B_t = np.transpose(B, axes=(0, 2, 1))
 
-        Ke = (1 / 6) * B_t @ B * (det_jacs * self.wps) * self.nint
-        Me = (1 / 6) * N_t @ N * (det_jacs * self.wps)
+        # initialize variables
+        int2d_BtB = 0.
+        int2d_NtN = 0.
 
-        return Ke, Me
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :]
+            N_t = N.T
+
+            int2d_BtB += (1 / 6) * B_t @ B * (det_jacs * self.wps[i])
+            int2d_NtN += (1 / 6) * N_t @ N * (det_jacs * self.wps[i])
+
+        # # shape functions
+        # N = self.phi
+        # N_t = N.T
+
+        # # derivative of shape functions
+        # B = inv_jacs @ self.dphi
+        # B_t = np.transpose(B, axes=(0, 2, 1))
+
+        # int2d_BtB = (1 / 6) * B_t @ B * (det_jacs * self.wps) * self.nint
+        # int2d_NtN = (1 / 6) * N_t @ N * (det_jacs * self.wps)
+
+        return int2d_BtB, int2d_NtN
 
     
     def process_particle_velocity(  
@@ -368,9 +457,10 @@ class ACT_TETRAHEDRON_4C(Element3D):
         if self.connectivity is None:
             self.reorder_connect()
 
+        ## calculation points (Atalla and Sgard, 2015, pg. 170)
         p_calc = np.array([ [ 0, 0, 0 ],
-                            [ 1, 0, 0 ],
                             [ 0, 1, 0 ],
+                            [ 1, 0, 0 ],
                             [ 0, 0, 1 ] ], dtype=float)
 
         index = np.where(node_ids==node_id)[0]

@@ -152,20 +152,31 @@ class ACT_TRIANGLE_3(Element2D):
         This method processes the shape functions and their
         derivatives for all integration points.
         """
+
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+
         ## coordinates from integration points
-        ssx = self.pint[:, 0]
-        ttx = self.pint[:, 1]
+        xi_1 = self.pint[:, 0]
+        xi_2 = self.pint[:, 1]
 
-        ## shape functions
+        # define coordiante l4
+        xi_3 = 1 - xi_1 - xi_2
+
+        ## shape functions (Atalla and Sgard, 2015, pg. 173)
         phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
-        phi[:, 0, 0] = 1 - ssx - ttx
-        phi[:, 0, 1] = ttx
-        phi[:, 0, 2] = ssx
-        # phi = np.array([1 - ssx - ttx, ttx, ssx], dtype=float).T
+        phi[:, 0, 0] = xi_1      # ->      (1.0, 0.0)   Node 1
+        phi[:, 0, 1] = xi_2      # ->      (0.0, 1.0)   Node 2
+        phi[:, 0, 2] = xi_3      # ->      (0.0, 0.0)   Node 3
 
-        ## shape functions derivatives
-        dphi = np.array([[-1, 0, 1],
-                         [-1, 1, 0]], dtype=float)
+        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
+        dphi = np.zeros((2, self.NODES_PER_ELEMENT), dtype=float)
+        dphi[0, 0] = 1
+        dphi[0, 1] = 0
+        dphi[0, 2] = -1
+
+        dphi[1, 0] = 0
+        dphi[1, 1] = 1
+        dphi[1, 2] = -1
 
         self.phi = phi
         self.dphi = dphi
@@ -295,7 +306,7 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            int2d_NtN += - (1 / 2) * N.T @ N * (det_jacs * self.wps)
+            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps)
 
         return int2d_NtN
 
@@ -342,8 +353,8 @@ class ACT_TRIANGLE_3(Element2D):
             N = self.phi[i, :, :]
             N_t = N.T
 
-            int2d_NtN += - (1 / 2) * N_t @ N * (det_jacs * self.wps)
-            int2d_BtB += - (1 / 2) * B_t @ B * (det_jacs * self.wps)
+            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps)
+            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps)
 
         return int2d_NtN, int2d_BtB
 
@@ -391,12 +402,12 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += -(1 / 2) * load * N.T * (det_jac * self.wps)
+            Fe += (1 / 2) * load * N.T * (det_jac * self.wps)
 
         return Fe
 
 
-    def elementary_sound_power(self, e_connect: np.ndarray, L_sv: np.ndarray, R_sv: np.ndarray) -> np.ndarray:
+    def elementary_sound_power(self, e_connect: np.ndarray, P_e: np.ndarray, Vn_e: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -405,11 +416,11 @@ class ACT_TRIANGLE_3(Element2D):
         el_index: int
             The element index.
 
-        L_sv: np.ndarray
-            The left stacked vector (complex-conjugate of particle velocities).
-
-        R_sv: np.ndarray
+        P_e: np.ndarray
             The righ stacked vector (complex-conjugate of pressures).
+    
+        Vn_e: np.ndarray
+            The left stacked vector (complex-conjugate of normal particle velocities).
 
         Returns
         -------
@@ -442,7 +453,7 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            We += -(1 / 2) * L_sv @ (N.T @ N) @ R_sv * (det_jac * self.wps)
+            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps)
 
         return We.flatten()
 
