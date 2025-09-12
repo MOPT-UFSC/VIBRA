@@ -1,5 +1,3 @@
-
-from vibra.engine.postprocessing import AcousticPostprocessing
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 from typing import TYPE_CHECKING
@@ -24,9 +22,7 @@ class AcousticHarmonicSolver:
 
 
     def reset_variables(self):
-        self.loads = None
         self.solution = None
-        self.analysis_type = "acoustic"
 
     def solve(self, print_log: bool = False, is_resume: bool = False):
         """
@@ -63,8 +59,6 @@ class AcousticHarmonicSolver:
         return self.solution
 
     def compute_frequency_sweep(self, solution, print_log, is_resume):
-        AcousticPostprocessing.get_min_max_values_of_pressures.cache_clear()
-
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
 
@@ -80,12 +74,7 @@ class AcousticHarmonicSolver:
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
 
-            A, f = self.assembler.build_system(freq, i)
-
-            is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
-            if not is_complex:
-                A.data = np.real(A.data)
-                f = np.real(f)
+            A, f = self.assembler.build_harmonic_system(freq, i)
 
             # compute the solution for each frequency step
             solution_freq = linear_solver.solve(A, f)
@@ -98,13 +87,3 @@ class AcousticHarmonicSolver:
             # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
             del A, f
-
-
-    def plot_graph(self, matrix):
-        """
-        """
-        import matplotlib.pyplot as plt
-        plt.ion()
-        plt.cla()
-        plt.spy(matrix, color=(0.25,0.25,0.25))
-        plt.show()
