@@ -519,3 +519,156 @@ class StructuralAssembler:
         # indB = np.arange(0, len(B), 1)
         # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
         # np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")
+
+    def reinsert_prescribed_dofs(self, solution):
+        """
+        This method reinsert the value of the prescribed degree of freedom in the solution.
+
+        Parameters
+        ----------
+        solution : array
+            Solution data from the direct method, modal superposition or modal shapes from modal analysis.
+
+        Returns
+        ----------
+        array
+            Solution of all the degrees of freedom.
+        """
+
+        rows = self.n_dofs
+        cols = solution.shape[1]
+        full_solution = np.zeros((rows, cols), dtype=complex)
+
+        if len(self.prescribed_dofs_indexes):
+            full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_values[:, 0:cols]
+
+        if len(self.active_2d_element_dofs):
+            unprescribed_shell_dofs = self.unprescribed_shell_dofs
+            full_solution[unprescribed_shell_dofs, :] = solution
+            # print("reinserted dofs -> ", len(self.displacement_dofs))
+
+        else:
+            full_solution[self.unprescribed_dofs_indexes, :] = solution
+
+        return full_solution
+
+    def get_prescribed_dofs_model_excitation(self, index: int = 0):
+        """
+        This method adds the effects of prescribed acoustic pressure into mass flow global vector.
+
+        Parameter
+        ---------
+        index: int, optional
+        It corresponds to the frequency index.
+
+        Returns
+        -------
+        f_eq: np.ndarray
+        The array of equivalent prescribed dof model excitation from
+        i-th frequency index.
+        """
+
+        if np.sum(self.prescribed_dofs_values) == 0:
+            return 0.
+
+        alpha, beta, eta = self.model.analysis_setup.get("global_damping", (0, 0, 0))
+
+        frequencies = self.model.frequencies
+        omega = 2 * np.pi * frequencies[index]
+
+        values = self.array_prescribed_values[:, index]
+
+        self.Kr = self.stiffness_matrix_r
+        self.Mr = self.mass_matrix_r
+
+        Kr_add = self.Kr @ values
+        Mr_add = self.Mr @ values
+
+        f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
+
+        if len(self.active_2d_element_dofs):
+            unprescribed_indexes = self.unprescribed_shell_dofs
+        else:
+            unprescribed_indexes = self.unprescribed_dofs_indexes
+
+        return f_eq[unprescribed_indexes]
+
+    def get_prescribed_dofs_model_excitation_reference(self, freq_dependent: bool = False):
+        """
+        This method adds the effects of prescribed acoustic pressure into mass flow global vector.
+
+        Returns
+        ----------
+        array
+            F_eq. Each column corresponds to a frequency of analysis.
+        """
+
+        if np.sum(self.prescribed_dofs_values) == 0:
+            return 0.
+
+        global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
+        alpha_v, beta_v, alpha_h, beta_h = global_damping
+
+        frequencies = self.model.frequencies
+
+        if len(self.active_2d_element_dofs):
+            unprescribed_indexes = self.unprescribed_shell_dofs
+        else:
+            unprescribed_indexes = self.unprescribed_dofs_indexes
+
+        Kr = (self.stiffness_matrix_r.toarray())[unprescribed_indexes, :]
+        Mr = (self.mass_matrix_r.toarray())[unprescribed_indexes, :]
+
+        logging.info(f"Processing prescribed dofs model excitation... [10/{len(frequencies)}]")
+
+        rows = Kr.shape[0]
+        if freq_dependent:
+            cols = 1
+            f_eq = np.zeros(rows, dtype=complex)
+
+        else:
+            cols = len(frequencies)
+            f_eq = np.zeros((rows, cols), dtype=complex)
+
+        if len(self.prescribed_dofs_values):
+
+            for i, freq in enumerate(frequencies):
+                #
+                logging.info(f"Processing prescribed dofs model excitation... [{i + 10}/{len(frequencies) + 10}]")
+                #
+                Kr_add = np.sum((Kr * self.prescribed_dofs_values[:, i]), axis=1)
+                Mr_add = np.sum((Mr * self.prescribed_dofs_values[:, i]), axis=1)
+                #
+                omega = 2 * np.pi * freq
+                f_Kadd = Kr_add
+                f_Madd = -(omega**2) * Mr_add
+                f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
+                f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
+
+            logging.info("Processing prescribed dofs model excitation... [100/100]")
+
+        return f_eq
+
+    def build_harmonic_system(self, freq, i):
+        omega = 2 * np.pi * freq
+
+        global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0))
+        alpha, beta, eta = global_damping
+
+        M = self.mass_matrix
+        K = self.stiffness_matrix
+
+        structural_loads = self.structural_loads
+
+        f_eq = self.get_prescribed_dofs_model_excitation(index=i)
+        f = structural_loads[:, i] - f_eq
+
+        A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
+
+        is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
+        if not is_complex:
+            A.data = np.real(A.data)
+            f = np.real(f)
+
+        return A, f
+
