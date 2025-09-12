@@ -5,6 +5,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
@@ -215,6 +216,7 @@ class Project(QObject):
                 raise NotImplementedError("Not implemented solver")
 
     def solve_acoustic_modal_analysis(self):
+        AcousticPostprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
         t0 = time()
@@ -224,11 +226,13 @@ class Project(QObject):
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
+        StructuralPostprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
+        AcousticPostprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties(self.model.frequencies)
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
@@ -241,6 +245,7 @@ class Project(QObject):
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
+        StructuralPostprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
         t0 = time()
         if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
