@@ -14,7 +14,7 @@ import logging
 import numpy as np
 
 from collections import defaultdict
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, block_array
 from time import time
 
 
@@ -1743,7 +1743,7 @@ class AcousticAssembler:
         logging.info("Finishing the model building... [98/100]")
         self.mass_flow_vectors = A + B
 
-    def reinsert_the_prescribed_dofs_into_solution_matrix(self, solution: np.ndarray):
+    def reinsert_the_prescribed_dofs_into_solution_matrix(self, solution: np.ndarray, modal_analysis=False):
         """
         This method reinserts the value of the prescribed degree of freedom in the solution array.
 
@@ -1758,7 +1758,7 @@ class AcousticAssembler:
             An array that contains the solution of all the degrees of freedom.
         """
         unprescribed_indexes, prescribed_indexes = self.get_matrices_dropping_indexes()
-        _, array_prescribed_values = self.get_prescribed_dofs_values()
+        prescribed_values, array_prescribed_values = self.get_prescribed_dofs_values()
 
         rows = solution.shape[0] + len(prescribed_indexes)
         cols = solution.shape[1]
@@ -1767,7 +1767,10 @@ class AcousticAssembler:
         full_solution[unprescribed_indexes, :] = solution
 
         if len(prescribed_indexes):
-            full_solution[prescribed_indexes, :] = array_prescribed_values[:, 0:cols]
+            if modal_analysis:
+                full_solution[prescribed_indexes, :] = np.zeros((len(prescribed_values), cols))
+            else:
+                full_solution[prescribed_indexes, :] = array_prescribed_values[:, 0:cols]
 
         return full_solution
 
@@ -1800,7 +1803,8 @@ class AcousticAssembler:
 
         return full_solution
 
-    def build_system(self, freq, i):
+
+    def build_harmonic_system(self, freq, i):
         # mass and stiffness matrices
         M = self.mass_matrix
         K = self.stiffness_matrix
@@ -1842,6 +1846,39 @@ class AcousticAssembler:
         A = K - (omega ** 2) * M + 1j * omega * C
         f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
 
+        is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
+        if not is_complex:
+            A.data = np.real(A.data)
+            f = np.real(f)
+
         return A, f
 
+    def build_eigenproblem_system(self):
+        K = self.stiffness_matrix
+        M = self.mass_matrix
 
+        C_imp = self.damping_matrix
+        
+        is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data)) or np.any(np.iscomplex(C_imp.data))
+        if not is_complex:
+            K.data = np.real(K.data)
+            M.data = np.real(M.data)
+            C_imp.data = np.real(C_imp.data)
+
+        if np.any(C_imp.data):
+            B = block_array([[M, None], [None, M]], format="csr")
+            A = block_array([[None, M], [-K, -C_imp]], format="csr")
+
+            return A, B
+
+        return K, M
+
+
+def plot_graph(matrix):
+    """
+    """
+    import matplotlib.pyplot as plt
+    plt.ion()
+    plt.cla()
+    plt.spy(matrix, color=(0.25, 0.25, 0.25))
+    plt.show()
