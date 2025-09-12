@@ -467,12 +467,13 @@ def integrate_surface_sound_power(
         element_2d = assembler.element_2d
 
     sound_power = 0.
+    dofs_per_element = element_2d.DOFS_PER_ELEMENT
     for i, e_connect in enumerate(surface_connectivities):
         node_indexes = [map_nodes.get(node) for node in e_connect]
-        L_sv = pressures[node_indexes, :].T.reshape(-1, 1, 3)
-        R_sv = particle_velocities[node_indexes, :].T.reshape(-1, 3, 1)
+        P_e = pressures[node_indexes, :].T.reshape(-1, 1, dofs_per_element)
+        Vn_e = particle_velocities[node_indexes, :].T.reshape(-1, dofs_per_element, 1)
 
-        normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
+        normalized_data = element_2d.elementary_sound_power(e_connect, P_e, Vn_e)
         sound_power += np.real(normalized_data) / 2
 
     if dB_scale:
