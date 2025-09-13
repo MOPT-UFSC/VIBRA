@@ -1,10 +1,10 @@
-from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
+from vibra.engine.postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
 
@@ -243,7 +243,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
     rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    acoustic_post = HarmonicAcousticPostprocessing(harmonic_solver)
+    acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
 
     input_particle_velocity = acoustic_post.get_particle_velocity_from_surface(1, rho_eff_v1)
     output_particle_velocity = acoustic_post.get_particle_velocity_from_surface(2, rho_eff_v2)

@@ -43,7 +43,7 @@ class StructuralHarmonicSolver:
             linear_solver.clear_memory()
             del A, f
 
-        self.solution = self.assembler.reinsert_prescribed_dofs(solution)
+        self.solution = self.assembler.reinsert_the_prescribed_dofs(solution)
         self.displacement_dofs = self.assembler.displacement_dofs
 
 

@@ -3,10 +3,13 @@ from functools import cache
 
 import numpy as np
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal, TYPE_CHECKING
+
+from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
+from vibra.engine.solvers.modal_solver import ModalSolver
 
 if TYPE_CHECKING:
-    from vibra.engine.solvers import AcousticHarmonicSolver, AcousticModalSolver
+    from vibra.project_files.project import Project
 
 AcousticPlotTypes = Literal[
     "absolute_animation",
@@ -18,11 +21,27 @@ AcousticPlotTypes = Literal[
 
 
 class AcousticPostprocessing:
-    def __init__(self, solver: "AcousticModalSolver|AcousticHarmonicSolver"):
-        self.solver = solver
+    def __init__(self, project: 'Project'=None, acoustic_modal_solver: ModalSolver=None, acoustic_harmonic_solver: AcousticHarmonicSolver=None):
+        if all(v is None for v in [project, acoustic_modal_solver, acoustic_harmonic_solver]):  
+            raise ValueError("At least one of 'project', 'acoustic_modal_solver', or 'acoustic_harmonic_solver' must be provided.")
+        self.project = project
+        self.acoustic_modal_solver = acoustic_modal_solver
+        self.acoustic_harmonic_solver = acoustic_harmonic_solver
+
+    @property
+    def harmonic_solver(self):
+        if self.project is not None:
+            return self.project.acoustic_harmonic_solver
+        return self.acoustic_harmonic_solver
+
+    @property
+    def modal_solver(self):
+        if self.project is not None:
+            return self.project.acoustic_modal_solver
+        return self.acoustic_modal_solver
 
     @cache
-    def get_min_max_values_of_pressures(self, column: int, plot_type: str):
+    def get_min_max_values_of_pressures(self, column: int, plot_type: str, is_modal: bool = False):
         """
         This method returns the minimum and maximum pressure values
         of selected frequency used in the animation processing.
@@ -37,7 +56,10 @@ class AcousticPostprocessing:
 
         """
 
-        data = self.solver.solution[:, column]
+        if is_modal:
+            data = self.modal_solver.solution[:, column]
+        else:
+            data = self.harmonic_solver.solution[:, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -81,22 +103,23 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-
-class ModalAcousticPostprocessing(AcousticPostprocessing):
-    def __init__(self, solver: "AcousticModalSolver"):
-        super().__init__(solver)
-
-    def compute_acoustic_modal_field(
+    def compute_acoustic_pressure_field(
         self,
         index: int,
         phase_rad: float,
         plot_type: AcousticPlotTypes,
+        is_modal: bool = False
     ):
 
-        if self.solver.solution is None:
+        if is_modal:
+            solver = self.modal_solver
+        else:
+            solver = self.harmonic_solver
+
+        if solver.solution is None:
             return None
 
-        selected_mode_shape = self.solver.solution[:, index]
+        selected_mode_shape = solver.solution[:, index]
         amplitudes = np.abs(selected_mode_shape)
         phases = np.angle(selected_mode_shape)
         delta = -phases[np.argmax(amplitudes)]
@@ -110,44 +133,9 @@ class ModalAcousticPostprocessing(AcousticPostprocessing):
         elif plot_type == "absolute_animation":
             acoustic_pressures = np.abs(acoustic_pressures)
 
-        min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type)
+        min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
 
         return acoustic_pressures, min_value, max_value, np.imag(selected_mode_shape).any()
-
-
-class HarmonicAcousticPostprocessing(AcousticPostprocessing):
-    
-    def __init__(self, solver: "AcousticHarmonicSolver"):
-        super().__init__(solver)
-
-    def compute_acoustic_harmonic_field(
-        self,
-        index: int,
-        phase_rad: float,
-        plot_type: AcousticPlotTypes,
-    ):
-
-        if self.solver.solution is None:
-            return None
-
-        selected_results = self.solver.solution[:, index]
-        amplitudes = np.abs(selected_results)
-        phases = np.angle(selected_results)
-        delta = -phases[np.argmax(amplitudes)]
-        acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
-
-        if plot_type == "absolute_values":
-            acoustic_pressures = np.abs(selected_results)
-        elif plot_type == "real_values":
-            acoustic_pressures = np.real(selected_results)
-        elif plot_type == "imag_values":
-            acoustic_pressures = np.imag(selected_results)
-        elif plot_type == "absolute_animation":
-            acoustic_pressures = np.abs(acoustic_pressures)
-
-        min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type)
-
-        return acoustic_pressures, min_value, max_value, np.imag(selected_results).any()
 
     def compute_particle_velocity(
          self,
@@ -155,16 +143,16 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
          node_id: int | None = None,
          surface_id: int | None = None,
     ):
-        frequencies = self.solver.assembler.frequencies
+        frequencies = self.harmonic_solver.assembler.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
-            surface_ids = self.solver.assembler.model.mesh.get_surfaces_from_node(node_id)
+            surface_ids = self.harmonic_solver.assembler.model.mesh.get_surfaces_from_node(node_id)
             if np.unique(surface_ids).size != 1:
                 return zeros, None
             surface_id = surface_ids[0]
 
-        rho, _ = self.solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
         if rho is None:
             return zeros, None
 
@@ -181,23 +169,23 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
             return np.average(array_particle_velocities_Vj, axis=0)
 
     def compute_acoustic_impedance(self, node_id: int | None = None, surface_id: int | None = None):
-        frequencies = self.solver.assembler.frequencies
+        frequencies = self.harmonic_solver.assembler.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
-            surface_ids = self.solver.assembler.model.mesh.get_surfaces_from_node(node_id)
+            surface_ids = self.harmonic_solver.assembler.model.mesh.get_surfaces_from_node(node_id)
             if np.unique(surface_ids).size != 1:
                 return aux_zeros, None
 
             surface_id = surface_ids[0]
 
         elif isinstance(surface_id, int):
-            nodes = self.solver.assembler.model.mesh.get_nodes_from_surface(surface_id)
+            nodes = self.harmonic_solver.assembler.model.mesh.get_nodes_from_surface(surface_id)
 
         else:
             return aux_zeros, None
 
-        rho, _ = self.solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
         if rho is None:
             return aux_zeros, None
         particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, rho)
@@ -207,12 +195,12 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
             return aux_zeros, None
 
         if isinstance(node_id, int):
-            pressure = self.solver.solution[node_id, :]
+            pressure = self.harmonic_solver.solution[node_id, :]
             particle_velocity = particle_velocities_Vj.get(node_id)
             return pressure / particle_velocity
 
         else:
-            pressures = self.solver.solution[nodes, :]
+            pressures = self.harmonic_solver.solution[nodes, :]
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             surface_impedance = pressures / array_particle_velocities_Vj
             return np.average(surface_impedance, axis=0)
@@ -222,10 +210,10 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
         surface_id: int | None = None,
     ):
 
-        frequencies = self.solver.assembler.frequencies
+        frequencies = self.harmonic_solver.assembler.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
-        rho, speed_of_sound = self.solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        rho, speed_of_sound = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
         Z0 = rho * speed_of_sound
 
         Zs = self.compute_acoustic_impedance(surface_id=surface_id)
@@ -258,23 +246,23 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
             the x, y, and z directions, computed in the selected surface.
         """
 
-        frequencies = self.solver.assembler.model.frequencies
-        element_3d = self.solver.assembler.model.acoustic_element_3d
+        frequencies = self.harmonic_solver.assembler.model.frequencies
+        element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
 
         if element_3d is None:
-            self.solver.assembler.define_acoustic_elements()
-            element_3d = self.solver.assembler.element_3d
+            self.harmonic_solver.assembler.define_acoustic_elements()
+            element_3d = self.harmonic_solver.assembler.element_3d
         
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
-        data_normals = self.solver.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
-        map_elements_to_nodes, filtered_nodes = self.solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
+        data_normals = self.harmonic_solver.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
+        map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
             surface_id=surface_id, return_nodes=True)
         
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solver.solution[filtered_nodes, :]
+        solution = self.harmonic_solver.solution[filtered_nodes, :]
 
         pv_data = dict()
         for node_id, solid_element_ids in map_elements_to_nodes.items():
@@ -360,14 +348,14 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
 
         """
 
-        model = self.solver.assembler.model
-        frequencies = self.solver.assembler.model.frequencies
+        model = self.harmonic_solver.assembler.model
+        frequencies = self.harmonic_solver.assembler.model.frequencies
 
         nodes_input = np.sort(model.mesh.get_nodes_from_surface(input_surface_id))
         nodes_output = np.sort(model.mesh.get_nodes_from_surface(output_surface_id))
 
-        P_in = self.solver.solution[nodes_input, :]
-        P_out = self.solver.solution[nodes_output, :]
+        P_in = self.harmonic_solver.solution[nodes_input, :]
+        P_out = self.harmonic_solver.solution[nodes_output, :]
 
         logging.info("Processing the transmission loss... [40/100]")
 
@@ -493,7 +481,7 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
             The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
         """
 
-        assembler = self.solver.assembler
+        assembler = self.harmonic_solver.assembler
 
         nodes = np.sort(assembler.model.mesh.get_nodes_from_surface(surface_id))
         surface_connectivities = assembler.model.mesh.get_connectivity_from_surface(surface_id)
@@ -507,7 +495,7 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
         if len(particle_velocities.shape) == 1:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
-        element_2d = self.solver.assembler.element_2d
+        element_2d = self.harmonic_solver.assembler.element_2d
         if element_2d is None:
             assembler.define_acoustic_elements()
             element_2d = assembler.element_2d
@@ -554,12 +542,12 @@ class HarmonicAcousticPostprocessing(AcousticPostprocessing):
 
         """
 
-        frequencies = self.solver.assembler.model.frequencies
-        rows_input = self.solver.assembler.model.mesh.get_nodes_from_surface(input_surface_id)
-        rows_output = self.solver.assembler.model.mesh.get_nodes_from_surface(output_surface_id)
+        frequencies = self.harmonic_solver.assembler.model.frequencies
+        rows_input = self.harmonic_solver.assembler.model.mesh.get_nodes_from_surface(input_surface_id)
+        rows_output = self.harmonic_solver.assembler.model.mesh.get_nodes_from_surface(output_surface_id)
 
-        P_in = np.average(self.solver.solution[rows_input, :], axis=0)
-        P_out = np.average(self.solver.solution[rows_output, :], axis=0)
+        P_in = np.average(self.harmonic_solver.solution[rows_input, :], axis=0)
+        P_out = np.average(self.harmonic_solver.solution[rows_output, :], axis=0)
 
         # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
         zero_shift = 1e-12

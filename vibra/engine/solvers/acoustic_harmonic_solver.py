@@ -54,7 +54,7 @@ class AcousticHarmonicSolver:
             self.solution = self.project_file.get_solution_loader()
         else:
             # reinsert the prescribed degrees of freedom into the solution vector
-            self.solution = self.assembler.reinsert_the_prescribed_dofs_into_solution_matrix(solution)
+            self.solution = self.assembler.reinsert_the_prescribed_dofs(solution)
 
         return self.solution
 

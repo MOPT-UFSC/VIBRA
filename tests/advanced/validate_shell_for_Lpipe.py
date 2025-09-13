@@ -4,7 +4,7 @@ from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
@@ -172,7 +172,7 @@ def load_external_mesh_and_solve():
     assembler.process_assemble()
 
     # Initialize the solver
-    # modal_solver = StructuralModalSolver(assembler)
+    # modal_solver = ModalSolver(assembler)
     harmonic_solver = StructuralHarmonicSolver(assembler)
 
     # t0 = time()

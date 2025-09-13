@@ -1768,7 +1768,7 @@ class AcousticAssembler:
         logging.info("Finishing the model building... [98/100]")
         self.mass_flow_vectors = A + B
 
-    def reinsert_the_prescribed_dofs_into_solution_matrix(self, solution: np.ndarray, modal_analysis=False):
+    def reinsert_the_prescribed_dofs(self, solution: np.ndarray, modal_analysis=False):
         """
         This method reinserts the value of the prescribed degree of freedom in the solution array.
 
@@ -1894,9 +1894,9 @@ class AcousticAssembler:
             B = block_array([[M, None], [None, M]], format="csr")
             A = block_array([[None, M], [-K, -C_imp]], format="csr")
 
-            return A, B
+            return A, B, False
 
-        return K, M
+        return K, M, True
 
 
 def plot_graph(matrix):

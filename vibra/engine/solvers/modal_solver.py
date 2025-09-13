@@ -1,8 +1,7 @@
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
 import logging
 import numpy as np
@@ -10,8 +9,8 @@ import numpy as np
 from scipy.sparse.linalg import eigs
 
 
-class AcousticModalSolver:
-    def __init__(self, assembler: "AcousticAssembler", **kwargs):
+class ModalSolver:
+    def __init__(self, assembler: "AcousticAssembler|StructuralAssembler", **kwargs):
         self.assembler = assembler
         self.reset_variables()
 
@@ -19,37 +18,34 @@ class AcousticModalSolver:
         self.solution = None
         self.natural_frequencies = np.array([])
         self.complex_natural_frequencies = np.array([])
-        self.analysis_type = "acoustic"
+        self.displacement_dofs = None
 
-    def solve(self, which="LM"):
+    def solve(self, which="LM", full_solution=True):
         """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
         n_modes = self.assembler.model.analysis_setup.get("modes", 40)
         sigma = self.assembler.model.analysis_setup.get("sigma_factor", 0.01)
 
-        C_imp = self.assembler.damping_matrix
-
         logging.info("Solving the eigenproblem... [75/100]")
 
         linear_solver = initialize_solver(SolverType.PARDISO)
 
-        A, B = self.assembler.build_eigenproblem_system()
+        A, B, is_symmetric = self.assembler.build_eigenproblem_system()
 
-        def solve_eigenproblem(n_modes):
-            try:
-                opinv = linear_solver.build_linear_operator(A - sigma * B)
-                eigen_values, eigen_vectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
-                linear_solver.clear_memory()
+        if not is_symmetric:
+            n_modes *= 2
 
-            except Exception as error_log:
-                from traceback import print_exception
-                print_exception(error_log)
-                eigen_values, eigen_vectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which)
+        try:
+            opinv = linear_solver.build_linear_operator(A - sigma * B)
+            eigen_values, eigen_vectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
+            linear_solver.clear_memory()
 
-            return eigen_values, eigen_vectors
+        except Exception as error_log:
+            from traceback import print_exception
+            print_exception(error_log)
+            eigen_values, eigen_vectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which)
 
-        if np.any(C_imp.data):
-            eigen_values, eigen_vectors = solve_eigenproblem(2*n_modes)
+        if not is_symmetric:
             logging.info("Post-processing the solution... [95/100]")
 
             n_dofs = int(eigen_vectors.shape[0] / 2)
@@ -77,8 +73,6 @@ class AcousticModalSolver:
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
-            eigen_values, eigen_vectors = solve_eigenproblem(n_modes)
-
             logging.info("Post-processing the solution... [95/100]")
 
             Wn2 = np.absolute(np.real(eigen_values))
@@ -88,3 +82,9 @@ class AcousticModalSolver:
             index_order = np.argsort(natural_frequencies)
             self.natural_frequencies = natural_frequencies[index_order]
             self.solution = eigen_vectors[:, index_order]
+
+        if full_solution:
+            self.solution = self.assembler.reinsert_the_prescribed_dofs(self.solution)
+        
+        if isinstance(self.assembler, StructuralAssembler):
+            self.displacement_dofs = self.assembler.displacement_dofs

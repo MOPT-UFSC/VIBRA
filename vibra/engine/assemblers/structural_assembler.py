@@ -519,7 +519,7 @@ class StructuralAssembler:
         # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
         # np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")
 
-    def reinsert_prescribed_dofs(self, solution):
+    def reinsert_the_prescribed_dofs(self, solution, modal_analysis=False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution.
 
@@ -527,6 +527,9 @@ class StructuralAssembler:
         ----------
         solution : array
             Solution data from the direct method, modal superposition or modal shapes from modal analysis.
+
+        modal_analysis : boll, optional
+            True if the modal analysis was evaluated.
 
         Returns
         ----------
@@ -539,11 +542,13 @@ class StructuralAssembler:
         full_solution = np.zeros((rows, cols), dtype=complex)
 
         if len(self.prescribed_dofs_indexes):
-            full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_values[:, 0:cols]
+            if modal_analysis:
+                full_solution[self.prescribed_dofs_indexes, :] = np.zeros((len(self.prescribed_dofs_indexes), cols))
+            else:
+                full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_values[:, 0:cols]
 
         if len(self.active_2d_element_dofs):
-            unprescribed_shell_dofs = self.unprescribed_shell_dofs
-            full_solution[unprescribed_shell_dofs, :] = solution
+            full_solution[self.unprescribed_shell_dofs, :] = solution
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
@@ -670,4 +675,15 @@ class StructuralAssembler:
             f = np.real(f)
 
         return A, f
+
+    def build_eigenproblem_system(self):
+        K = self.stiffness_matrix
+        M = self.mass_matrix
+        
+        is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
+        if not is_complex:
+            K.data = np.real(K.data)
+            M.data = np.real(M.data)
+
+        return K, M, True
 

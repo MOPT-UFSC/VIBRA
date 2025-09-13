@@ -8,7 +8,6 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
-from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
 
 import logging
 
@@ -26,7 +25,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        self.acoustic_post = HarmonicAcousticPostprocessing(self.project.acoustic_harmonic_solver)
+        self.acoustic_post = self.project.acoustic_postprocessing
 
         self._initialize()
         self._create_connections()
