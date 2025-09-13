@@ -3,7 +3,6 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -23,7 +22,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
-        self.acoustic_post = HarmonicAcousticPostprocessing(self.project.acoustic_harmonic_solver)
+        self.acoustic_post = self.project.acoustic_postprocessing
 
         self._config_window()
         self._reset_variables()

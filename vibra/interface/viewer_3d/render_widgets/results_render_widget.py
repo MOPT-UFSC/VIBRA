@@ -11,12 +11,6 @@ from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.engine.postprocessing import (
-    ModalAcousticPostprocessing, 
-    HarmonicAcousticPostprocessing,
-    HarmonicStructuralPostprocessing,
-    ModalStructuralPostprocessing
-)
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
 
@@ -40,6 +34,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+
+        self.acoustic_post = app().project.acoustic_postprocessing
+        self.structural_post = app().project.structural_postprocessing
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
@@ -227,10 +224,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            data = ModalStructuralPostprocessing(app().project.structural_modal_solver).compute_structural_modal_field(
+            data = self.structural_post.compute_structural_displacement_field(
                 self.mode_index,
                 phase,
                 displacement_type,
+                is_modal=True
             )
             if data is None:
                 return
@@ -248,7 +246,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            data = HarmonicStructuralPostprocessing(app().project.structural_harmonic_solver).compute_structural_harmonic_field(
+            data = self.structural_post.compute_structural_displacement_field(
                 self.frequency_index,
                 phase,
                 displacement_type,
@@ -266,10 +264,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
 
-            data = ModalAcousticPostprocessing(app().project.acoustic_modal_solver).compute_acoustic_modal_field(
+            data = self.acoustic_post.compute_acoustic_pressure_field(
                 self.mode_index,
                 phase,
                 plot_type,
+                is_modal=True
             )
             if data is None:
                 return
@@ -284,7 +283,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.current_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
-            data = HarmonicAcousticPostprocessing(app().project.acoustic_harmonic_solver).compute_acoustic_harmonic_field(
+            data = self.acoustic_post.compute_acoustic_pressure_field(
                 self.frequency_index,
                 phase,
                 plot_type,

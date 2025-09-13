@@ -4,7 +4,6 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.ui_generated.plots.acoustic.particle_velocity_inputs_ui import ParticleVelocityInputs_UI
-from vibra.engine.postprocessing import HarmonicAcousticPostprocessing
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -25,7 +24,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.model = app().project.model
         self.mesh = app().project.model.mesh
 
-        self.acoustic_post = HarmonicAcousticPostprocessing(self.project.acoustic_harmonic_solver)
+        self.acoustic_post = self.project.acoustic_postprocessing
 
         self._config_window()
         self._reset_variables()
