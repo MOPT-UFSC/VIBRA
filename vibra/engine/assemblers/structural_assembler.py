@@ -555,6 +555,21 @@ class StructuralAssembler:
             full_solution[self.unprescribed_dofs_indexes, :] = solution
 
         return full_solution
+    
+    def reinsert_the_prescribed_dofs_into_solution_freq(self, solution: np.ndarray, freq_index: int):
+        rows = self.n_dofs
+        full_solution = np.zeros(rows, dtype=complex)
+
+        if len(self.prescribed_dofs_indexes):
+            full_solution[self.prescribed_dofs_indexes] = self.prescribed_dofs_values[:, freq_index]
+
+        if len(self.active_2d_element_dofs):
+            full_solution[self.unprescribed_shell_dofs] = solution
+            # print("reinserted dofs -> ", len(self.displacement_dofs))
+        else:
+            full_solution[self.unprescribed_dofs_indexes] = solution
+
+        return full_solution
 
     def get_prescribed_dofs_model_excitation(self, index: int = 0):
         """

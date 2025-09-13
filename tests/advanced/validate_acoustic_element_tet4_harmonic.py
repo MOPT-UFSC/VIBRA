@@ -6,8 +6,7 @@ from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -184,12 +183,12 @@ def load_external_mesh_and_solve():
     assembler.process_assemble(reorder=False)
 
     # Define the analysis type and load setup
-    harmonic_solver = AcousticHarmonicSolver(assembler)
+    harmonic_solver = HarmonicSolver(assembler)
 
     # Run harmonic analysis
 
     t0 = time()
-    solution = harmonic_solver.solve(print_log=True)
+    solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 

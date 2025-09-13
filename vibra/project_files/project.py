@@ -5,11 +5,9 @@ from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
-from vibra.engine.postprocessing.structural_postprocessing import StructuralPostprocessing
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
+from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
-from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
@@ -176,7 +174,7 @@ class Project(QObject):
 
             # structural harmonic analysis - direct method
             if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler)
+                self.structural_harmonic_solver = HarmonicSolver(self.structural_assembler)
                 self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
@@ -191,7 +189,7 @@ class Project(QObject):
 
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, self.project_file)
+                self.acoustic_harmonic_solver = HarmonicSolver(self.acoustic_assembler, self.project_file)
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
 
             # acoustic modal analysis
@@ -241,7 +239,7 @@ class Project(QObject):
         self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
         t0 = time()
-        self.acoustic_harmonic_solver.solve(is_resume=is_resume)
+        self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
@@ -251,9 +249,9 @@ class Project(QObject):
         self.structural_assembler.process_assemble()
         t0 = time()
         if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-            self.structural_harmonic_solver.solve_direct_method()
+            self.structural_harmonic_solver.solve_direct()
         else:
-            self.structural_harmonic_solver.solve_mode_superposition_method()
+            self.structural_harmonic_solver.solve_modal_superposition()
             return
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")

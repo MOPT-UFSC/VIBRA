@@ -1,4 +1,2 @@
-from .acoustic_harmonic_solver import AcousticHarmonicSolver
+from .harmonic_solver import HarmonicSolver
 from .modal_solver import ModalSolver
-
-from .structural_harmonic_solver import StructuralHarmonicSolver
