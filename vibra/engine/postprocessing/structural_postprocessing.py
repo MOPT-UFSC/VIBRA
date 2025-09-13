@@ -6,13 +6,14 @@ from typing import Literal, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vibra.project_files.project import Project
-from vibra.engine.solvers import ModalSolver, StructuralHarmonicSolver
+    
+from vibra.engine.solvers import ModalSolver, HarmonicSolver
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
 
 class StructuralPostprocessing:
-    def __init__(self, project: 'Project'=None, structural_modal_solver: ModalSolver=None, structural_harmonic_solver: StructuralHarmonicSolver=None):
+    def __init__(self, project: 'Project'=None, structural_modal_solver: ModalSolver=None, structural_harmonic_solver: HarmonicSolver=None):
         if all(v is None for v in [project, structural_modal_solver, structural_harmonic_solver]):  
             raise ValueError("At least one of 'project', 'structural_modal_solver', or 'structural_harmonic_solver' must be provided.")
         self.project = project

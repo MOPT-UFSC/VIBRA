@@ -5,8 +5,7 @@ import numpy as np
 
 from typing import Literal, TYPE_CHECKING
 
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.solvers.modal_solver import ModalSolver
+from vibra.engine.solvers import ModalSolver, HarmonicSolver
 
 if TYPE_CHECKING:
     from vibra.project_files.project import Project
@@ -21,7 +20,7 @@ AcousticPlotTypes = Literal[
 
 
 class AcousticPostprocessing:
-    def __init__(self, project: 'Project'=None, acoustic_modal_solver: ModalSolver=None, acoustic_harmonic_solver: AcousticHarmonicSolver=None):
+    def __init__(self, project: 'Project'=None, acoustic_modal_solver: ModalSolver=None, acoustic_harmonic_solver: HarmonicSolver=None):
         if all(v is None for v in [project, acoustic_modal_solver, acoustic_harmonic_solver]):  
             raise ValueError("At least one of 'project', 'acoustic_modal_solver', or 'acoustic_harmonic_solver' must be provided.")
         self.project = project

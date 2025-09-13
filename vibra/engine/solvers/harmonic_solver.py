@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
 from vibra.project_files.project_file import ProjectFile
 
-if TYPE_CHECKING:
-    from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
 import logging
 import numpy as np
@@ -14,8 +14,8 @@ import numpy as np
 from time import time
 
 
-class AcousticHarmonicSolver:
-    def __init__(self, assembler: "AcousticAssembler", project_file: ProjectFile | None = None, **kwargs):
+class HarmonicSolver:
+    def __init__(self, assembler: "AcousticAssembler|StructuralAssembler", project_file: ProjectFile | None = None, **kwargs):
         self.assembler = assembler
         self.project_file = project_file
         self.reset_variables()
@@ -23,8 +23,9 @@ class AcousticHarmonicSolver:
 
     def reset_variables(self):
         self.solution = None
+        self.displacement_dofs = None
 
-    def solve(self, print_log: bool = False, is_resume: bool = False):
+    def solve_direct(self, print_log: bool = False, is_resume: bool = False):
         """
         This method solves the acoustic harmonic analysis using the
         direct method for both damped and undamped problems.
@@ -36,6 +37,9 @@ class AcousticHarmonicSolver:
         """
 
         logging.info(f"Solving harmonic analysis (direct method)... [10/100]")
+
+        if isinstance(self.assembler, StructuralAssembler):
+            self.displacement_dofs = self.assembler.displacement_dofs
 
         frequencies = self.assembler.model.frequencies
 
@@ -87,3 +91,6 @@ class AcousticHarmonicSolver:
             # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
             del A, f
+
+    def solve_modal_superposition(self):
+        pass
