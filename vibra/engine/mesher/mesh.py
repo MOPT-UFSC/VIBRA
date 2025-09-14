@@ -1573,7 +1573,7 @@ class Mesh:
 
         return solid_elements_connected_to_nodes
 
-    def get_average_normals_for_surface_nodes_reference(self, surface_id: int) -> dict:
+    def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
         """
         This method processes the average normals in the surface nodes considering the element faces
         normals connected to same node.
@@ -1610,10 +1610,10 @@ class Mesh:
 
         return data_normals
 
-    def get_average_normals_for_surface_nodes(self, surface_id: int, **kwargs):
+    def get_surface_nodal_normals(self, surface_id: int, **kwargs):
         """
-        This method processes the average normals in the surface nodes considering the element faces
-        normals connected to same node.
+        This method processes the average normals in the surface nodes considering 
+        the element faces normals connected to the same node.
 
         Parameters
         ----------
@@ -1626,22 +1626,45 @@ class Mesh:
             A dictionary mapping the node IDs to the average normal vector.
         """
 
-        num = defaultdict(float)
-        den = defaultdict(int)
-
+        t0 = time()
+       
         face_connectivity = self.get_connectivity_from_surface(surface_id)
-        eface_normals = self.get_stacked_normals_for_surface_elements(surface_id)
-        nodes_from_surface = np.sort(self.get_nodes_from_surface(surface_id))
 
-        for i, connect in enumerate(face_connectivity):
-            e_normal = eface_normals[i, :].flatten()
-            for node in connect:
-                num[node] += e_normal
-                den[node] += 1
+        if face_connectivity is None:
+            return
 
-        avg_node_normals = {node: num[node] / den[node] for node in nodes_from_surface}
+        # noodes per element
+        nodes_per_element = face_connectivity[0, :].size
 
-        return avg_node_normals
+        if nodes_per_element == 3:
+            column_indexes = [(0, 1, 2)]
+
+        elif nodes_per_element == 6:
+            column_indexes = [(3,1,4), (3,4,2), (3,2,5), (3,5,0)]
+
+        else:
+            return NotImplementedError(f"Normal not implemented for surface with {nodes_per_element} nodes")
+
+        Vn_sum = defaultdict(float)
+
+        for indexes in column_indexes:
+            inside_face_connectivity = face_connectivity[:, indexes]
+            norm_cross = self.process_stacked_cross_products(inside_face_connectivity)
+
+            for i, e_nodes in enumerate(inside_face_connectivity):
+                for node in e_nodes:
+                    Vn_sum[node] += norm_cross[i, :]
+
+        nodal_unit_normals = dict()
+
+        for node in self.get_nodes_from_surface(surface_id):
+            Vn = Vn_sum[node]
+            nodal_unit_normals[node] = Vn / np.linalg.norm(Vn)
+
+        dt = time() - t0
+        print(f"Elapsed time - surface #{surface_id}: {dt : .6f} s")
+
+        return nodal_unit_normals
 
     def get_stacked_normals_for_surface_elements(self, surface_id: int):
         """
@@ -1664,30 +1687,56 @@ class Mesh:
         if face_connectivity is None:
             return
 
-        X1 = self.nodal_coordinates[face_connectivity[:, 0], 1]
-        Y1 = self.nodal_coordinates[face_connectivity[:, 0], 2]
-        Z1 = self.nodal_coordinates[face_connectivity[:, 0], 3]
-
-        X2 = self.nodal_coordinates[face_connectivity[:, 1], 1]
-        Y2 = self.nodal_coordinates[face_connectivity[:, 1], 2]
-        Z2 = self.nodal_coordinates[face_connectivity[:, 1], 3]
-
-        X3 = self.nodal_coordinates[face_connectivity[:, 2], 1]
-        Y3 = self.nodal_coordinates[face_connectivity[:, 2], 2]
-        Z3 = self.nodal_coordinates[face_connectivity[:, 2], 3]
-
-        P2P1 = np.array([X2 - X1, Y2 - Y1, Z2 - Z1]).T
-        P3P1 = np.array([X3 - X1, Y3 - Y1, Z3 - Z1]).T
-
-        cross = np.cross(P2P1, P3P1, axis=1)
-        norm_cross = np.linalg.norm(cross, axis=1)
-
-        norm_cross = norm_cross.reshape(-1, 1, 1)
-        cross = cross.reshape(-1, 1, 3)
-
-        stacked_normals = cross / norm_cross
+        stacked_normals = self.process_stacked_cross_products(face_connectivity)
 
         return stacked_normals
+
+    def process_stacked_cross_products(self, connectivities: np.ndarray, normalized: bool=True):
+        """
+        This method processes the stacked cross products for the given
+        triangular connectivities.
+
+        Parameter
+        ---------
+        connectivities: np.ndarray
+            The stacked triangular connectivities.
+
+        normalized: bool, optional
+            This argument controls when the output vectors will be
+            normalized (default is True).
+
+        Returns
+        -------
+        stacked_cross_products: np.ndarray
+            The stacked cross products for each triangular connectivity.
+        """
+
+        nodes_1 = connectivities[:, 0] 
+        nodes_2 = connectivities[:, 1] 
+        nodes_3 = connectivities[:, 2]
+
+        X1 = self.nodal_coordinates[nodes_1, 1]
+        Y1 = self.nodal_coordinates[nodes_1, 2]
+        Z1 = self.nodal_coordinates[nodes_1, 3]
+
+        X2 = self.nodal_coordinates[nodes_2, 1]
+        Y2 = self.nodal_coordinates[nodes_2, 2]
+        Z2 = self.nodal_coordinates[nodes_2, 3]
+
+        X3 = self.nodal_coordinates[nodes_3, 1]
+        Y3 = self.nodal_coordinates[nodes_3, 2]
+        Z3 = self.nodal_coordinates[nodes_3, 3]
+
+        v_21 = np.array([X2 - X1, Y2 - Y1, Z2 - Z1]).T
+        v_31 = np.array([X3 - X1, Y3 - Y1, Z3 - Z1]).T
+
+        stacked_cross_products = np.cross(v_21, v_31, axis=1)
+
+        if normalized:
+            norm_cross = np.linalg.norm(stacked_cross_products, axis=1).reshape(-1, 1)
+            return stacked_cross_products / norm_cross
+
+        return stacked_cross_products
 
     def compute_nodal_areas(self):
         self.nodal_area.clear()
@@ -2112,9 +2161,9 @@ class Mesh:
 
         return normal
 
-    def set_nodal_normals_data(self, normals_data: dict):
+    def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
-            self.nodal_normals_data[node_id] = nodal_normal
+            self.nodal_normals_data[surface_id, node_id] = nodal_normal
 
     def get_principal_diagonal_structure_parallelepiped(self):
         """

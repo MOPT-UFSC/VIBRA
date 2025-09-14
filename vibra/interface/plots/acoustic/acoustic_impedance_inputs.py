@@ -113,6 +113,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def plot_data_callback(self):
 
+        self.mesh.nodal_normals_data.clear()
+
         if self.check_inputs():
             return
 

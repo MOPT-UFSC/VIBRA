@@ -179,7 +179,9 @@ def compute_surface_absorption_coefficient(
 
 def get_particle_velocity_from_surface(
         hsolver: "AcousticHarmonicSolver", 
-        surface_id: int, rho: float | np.ndarray
+        surface_id: int, rho: float | np.ndarray,
+        show_symbols: bool = False,
+        export_nodal_normals: bool = False,
         ):
     """ 
     This method computes the nodal average particle velocity in the selected surface.
@@ -213,13 +215,13 @@ def get_particle_velocity_from_surface(
     if element_3d.connectivity is None:
         element_3d.reorder_connect()
 
-    data_normals = assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
+    data_normals = assembler.model.mesh.get_surface_nodal_normals(surface_id)
     map_elements_to_nodes, filtered_nodes = assembler.model.mesh.get_solid_elements_connected_to_nodes(
                                                                                                         surface_id = surface_id, 
                                                                                                         return_nodes = True
                                                                                                         )
 
-    # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
+    # Load all frequency solutions to optimize multiple load on the 'process_particle_velocity' method below.
     node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
     solution = hsolver.solution[filtered_nodes, :]
     # solution = hsolver.solution[:, :]
@@ -263,18 +265,21 @@ def get_particle_velocity_from_surface(
     particle_velocities["nodal_normals"] = data_normals
 
     ## Uncomment the line below to plot the average normals at the nodes
-    # assembler.model.mesh.set_nodal_normals_data(data_normals)
+    if show_symbols:
+        assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
 
-    ## Only for validation purposes
-    # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
-    # output_data[:, 0] = ordered_nodes
+    if export_nodal_normals:
+        n_nodes = len(assembler.model.mesh.nodal_normals_data)
+        output_data = np.zeros((n_nodes, 5), dtype=float)
 
-    # for row, node_id in enumerate(ordered_nodes):
-    #     output_data[row, 1:] = assembler.model.mesh.nodal_normals_data[node_id]
+        for row, ((surface_id, node_id), normal_data) in enumerate(assembler.model.mesh.nodal_normals_data.items()):
+            output_data[row, 0] = node_id
+            output_data[row, 1] = surface_id
+            output_data[row, 2:] = normal_data
 
-    # fname = f"nodal_normals_data_surface_{surface_id}.dat"
-    # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
-    # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
+        fname = f"nodal_normals_data_surface.dat"
+        header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
+        np.savetxt(fname, output_data, fmt=["%i", "%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
     # dt = time() - t0
     # print(f"Elpased time to get_particle_velocity_from_surface: {dt} s")
