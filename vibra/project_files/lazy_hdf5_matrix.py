@@ -69,6 +69,10 @@ class LazyHDF5MatrixWriter:
         self.solution[:, index] = column
         self.status[index] = True
         self.file.flush()
+    
+    def save_extra_data(self, key: str, data, dtype=None):
+        self.file.create_dataset(key, data=data, dtype=dtype if dtype else None)
+        self.file.flush()
 
     def close(self):
         if self.file:
@@ -124,3 +128,9 @@ class LazyHDF5MatrixLoader:
             status = f[HDF5_SOLUTION_STATUS_KEY][()]
         
         return not all(status)
+    
+    def get_extra_data(self, key: str):
+        with h5py.File(self.filepath, 'r') as f:
+            if key not in f:
+                raise KeyError(f"Dataset '{key}' not found in file.")
+            return f[key][()]

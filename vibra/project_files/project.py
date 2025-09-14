@@ -174,7 +174,7 @@ class Project(QObject):
 
             # structural harmonic analysis - direct method
             if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.structural_harmonic_solver = HarmonicSolver(self.structural_assembler)
+                self.structural_harmonic_solver = HarmonicSolver(self.structural_assembler, self.project_file)
                 self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
