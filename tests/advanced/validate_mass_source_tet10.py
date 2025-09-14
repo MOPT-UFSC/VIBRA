@@ -1,11 +1,10 @@
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import TETRAHEDRON_4
+from vibra.engine.mesher.element_type import TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
+from vibra.engine.postprocessing import get_particle_velocity_from_surface
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -28,7 +27,7 @@ from time import time
 def load_external_mesh_and_solve(assignment_type: str):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/mass_source/mesh/ds_connected_rectangular_cavities_50mm.dat"
+    mesh_path = f"data/validation/mass_source/mesh/ds_mass_source_tet10.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -61,7 +60,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_4
+    mesh.element_type = TETRAHEDRON_10
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 
@@ -77,42 +76,43 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     # line information
     line_id = 1
-    mesh.external_nodes_from_lines[line_id] = np.array([86, 116, 115, 114, 28], dtype=int) - 1
+    mesh.external_nodes_from_lines[line_id] = np.array([86, 116, 115, 114, 28, 2516, 2713, 2705, 2128], dtype=int) - 1
     mesh.elements_from_line[line_id] = np.array([1, 2, 3, 4], dtype=int) - 1
-    mesh.external_connectivity_from_lines[line_id] = np.array([[ 86, 116],
-                                                      [116, 115],
-                                                      [115, 114],
-                                                      [114,  28]], dtype=int) - 1
+    mesh.external_connectivity_from_lines[line_id] = np.array([[ 86, 116, 2516],
+                                                               [116, 115, 2713],
+                                                               [115, 114, 2705],
+                                                               [114,  28, 2128]], dtype=int) - 1
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
             mesh.volumes_from_surface[surf_id] = [vol_id]
         mesh.surfaces_from_volume[vol_id] = surf_ids
 
-    # return
     # define the fluid properties
     temperature = 293.15
     pressure = 101325
     rho_0 = 1.204263
     c_0 = 343.395034
-    mu = 1.8247e-5
+    mu = 0*1.8247e-5
     Cp = 1006.400178
     kt = 2.5503e-02
     gamma = 1.401985
     molar_mass = 28.958601
 
-    fluid = Fluid(  name = "Air_20C",
-                    identifier = 1,
-                    color = (200, 200, 200),
-                    pressure = pressure,
-                    temperature = temperature,
-                    fluid_density = rho_0,
-                    speed_of_sound = c_0,
-                    isentropic_exponent = gamma,
-                    thermal_conductivity = kt,
-                    specific_heat_Cp = Cp,
-                    dynamic_viscosity = mu,
-                    molar_mass = molar_mass  )
+    fluid = Fluid(  
+        name = "Air_20C",
+        identifier = 1,
+        color = (200, 200, 200),
+        pressure = pressure,
+        temperature = temperature,
+        fluid_density = rho_0,
+        speed_of_sound = c_0,
+        isentropic_exponent = gamma,
+        thermal_conductivity = kt,
+        specific_heat_Cp = Cp,
+        dynamic_viscosity = mu,
+        molar_mass = molar_mass
+        )
 
     ## assign the created fluid
     model = Model()
@@ -156,7 +156,6 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     else:
         model.properties._set_property("surface_velocity", data_Vn, surface=1)
-
 
     ## boundary impedance setup
     Zo = fluid.impedance
@@ -204,16 +203,6 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     # Set the analysis frequency setup
     assembler.process_assemble()
-
-    # t0 = time()
-    # # Run modal analysis
-    # modal_solver = AcousticModalSolver(assembler)
-    # modal_solver.solve()
-    # natural_frequencies = modal_solver.natural_frequencies
-    # modal_shape = modal_solver.solution
-    # dt = time() - t0
-    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
-    # return
 
     # Define the analysis type and load setup
     harmonic_solver = AcousticHarmonicSolver(assembler)
@@ -285,12 +274,15 @@ def load_external_mesh_and_solve(assignment_type: str):
             node_in = 600
             node_out = 217
 
-        else:
+        elif assignment_type == "surface_velocity":
             node_in = 608
             node_out = 222
 
+        else:
+            return
+
         # Load the external data
-        path = f"data/validation/mass_source/results/{assignment_type}"
+        path = f"data/validation/mass_source/results/tet10/{assignment_type}"
         if not os.path.exists(path):
             return
 
@@ -313,16 +305,24 @@ def load_external_mesh_and_solve(assignment_type: str):
 
         # Print the nodal results deviations
         abs_diff_node_Pin = np.abs((input_pressures_WB[node_in] - solution[node_in-1, :]) / (input_pressures_WB[node_in]))
+        ind = np.argmax(abs_diff_node_Pin)
         print(f"\nDeviation of pressure (node {node_in}): {100 * np.max(abs_diff_node_Pin)} %")
+        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - solution[node_out-1, :]) / (output_pressures_WB[node_out]))
+        ind = np.argmax(abs_diff_node_Pout)
         print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
+        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
+        ind = np.argmax(abs_diff_node_Vin)
         print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
+        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
+        ind = np.argmax(abs_diff_node_Vout)
         print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
+        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
         print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")
@@ -472,5 +472,5 @@ def get_external_results(path: str):
 
 if __name__ == "__main__":
 
-    assignment_type = "volume"
+    assignment_type = "line"
     load_external_mesh_and_solve(assignment_type=assignment_type)
