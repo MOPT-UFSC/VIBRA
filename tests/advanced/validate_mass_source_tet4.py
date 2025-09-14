@@ -305,24 +305,16 @@ def load_external_mesh_and_solve(assignment_type: str):
 
         # Print the nodal results deviations
         abs_diff_node_Pin = np.abs((input_pressures_WB[node_in] - solution[node_in-1, :]) / (input_pressures_WB[node_in]))
-        ind = np.argmax(abs_diff_node_Pin)
         print(f"\nDeviation of pressure (node {node_in}): {100 * np.max(abs_diff_node_Pin)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - solution[node_out-1, :]) / (output_pressures_WB[node_out]))
-        ind = np.argmax(abs_diff_node_Pout)
         print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
-        ind = np.argmax(abs_diff_node_Vin)
         print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
-        ind = np.argmax(abs_diff_node_Vout)
         print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
         print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")

@@ -192,7 +192,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.plotter.imported_real_data()
+        self.plotter.imported_real_data(decibel_data=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
         app().main_window.update_symbols()
 

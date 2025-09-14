@@ -33,7 +33,7 @@ from vibra.engine.elements.elements_2d import (
 )
 
 #1d elements - acoustic
-from vibra.engine.elements.elements_1d import ACT_LINE_2
+from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
@@ -296,7 +296,7 @@ class Model:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), None
+            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
             return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), None

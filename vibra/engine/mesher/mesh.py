@@ -1626,7 +1626,7 @@ class Mesh:
             A dictionary mapping the node IDs to the average normal vector.
         """
 
-        t0 = time()
+        # t0 = time()
        
         face_connectivity = self.get_connectivity_from_surface(surface_id)
 
@@ -1661,8 +1661,8 @@ class Mesh:
             Vn = Vn_sum[node]
             nodal_unit_normals[node] = Vn / np.linalg.norm(Vn)
 
-        dt = time() - t0
-        print(f"Elapsed time - surface #{surface_id}: {dt : .6f} s")
+        # dt = time() - t0
+        # print(f"Elapsed time - surface #{surface_id}: {dt : .6f} s")
 
         return nodal_unit_normals
 
