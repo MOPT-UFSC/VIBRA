@@ -46,6 +46,8 @@ class HarmonicSolver:
         if self.project_file:
             num_rows = self.assembler.total_dof
             solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
+            if self.displacement_dofs is not None:
+                solution.save_extra_data("displacement_dofs", self.displacement_dofs, dtype=int)
         else:
             num_rows = self.assembler.stiffness_matrix.shape[0]
             solution = np.zeros((num_rows, len(frequencies)), dtype=complex)

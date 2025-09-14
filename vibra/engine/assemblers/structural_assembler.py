@@ -356,7 +356,7 @@ class StructuralAssembler:
         self.ind_cols = np.array([], dtype=int)
         self.ind_rows = np.array([], dtype=int)
 
-        self.active_2d_element_dof, self.n_dof, shift_index = self.process_face_elements_with_thickness(self.element_2d, self.element_3d)
+        self.active_2d_element_dof, self.total_dof, shift_index = self.process_face_elements_with_thickness(self.element_2d, self.element_3d)
 
 
         if self.model.mesh.solids_connectivity.size:
@@ -461,8 +461,8 @@ class StructuralAssembler:
 
     def assemble_global_matrices(self):
 
-        _stiffness_matrix_full = csr_matrix((self.data_K, (self.ind_rows, self.ind_cols)), shape=(self.n_dof, self.n_dof))
-        _mass_matrix_full = csr_matrix((self.data_M, (self.ind_rows, self.ind_cols)), shape=(self.n_dof, self.n_dof))
+        _stiffness_matrix_full = csr_matrix((self.data_K, (self.ind_rows, self.ind_cols)), shape=(self.total_dof, self.total_dof))
+        _mass_matrix_full = csr_matrix((self.data_M, (self.ind_rows, self.ind_cols)), shape=(self.total_dof, self.total_dof))
 
         self.process_prescribed_dof_data()
 
@@ -538,7 +538,7 @@ class StructuralAssembler:
             Solution of all the degrees of freedom.
         """
 
-        rows = self.n_dofs
+        rows = self.total_dofs
         cols = solution.shape[1]
         full_solution = np.zeros((rows, cols), dtype=complex)
 
@@ -558,11 +558,11 @@ class StructuralAssembler:
         return full_solution
     
     def reinsert_the_prescribed_dofs_into_solution_freq(self, solution: np.ndarray, freq_index: int):
-        rows = self.n_dofs
+        rows = self.total_dofs
         full_solution = np.zeros(rows, dtype=complex)
 
         if len(self.prescribed_dofs_indexes):
-            full_solution[self.prescribed_dofs_indexes] = self.prescribed_dofs_values[:, freq_index]
+            full_solution[self.prescribed_dofs_indexes] = self.array_prescribed_values[:, freq_index]
 
         if len(self.active_2d_element_dofs):
             full_solution[self.unprescribed_shell_dofs] = solution
