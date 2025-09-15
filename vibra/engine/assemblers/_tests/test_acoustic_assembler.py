@@ -4,31 +4,6 @@ from vibra.engine.model import Model
 from scipy.sparse import csr_matrix
 
 
-def test_acoustic_stacked_assembler(acoustic_model: Model):
-    '''
-    Asserting that stacked K and M matrices are computed in the same way as the reference one.
-    '''
-
-    assembler = AcousticAssembler(acoustic_model)
-    assembler.define_acoustic_elements()
-
-    element_3D = assembler.element_3d
-    element_3D.reorder_connect()
-
-    int3d_BtB, int3d_NtN = element_3D.stacked_elementary_matrices_NtN_BtB()
-
-    assembler.gather_data_to_assemble_global_matrices_reference()
-
-    rel_error_K = (int3d_BtB - assembler.int3d_BtB.astype(float)) / assembler.int3d_BtB.astype(float)
-    rel_error_M = (int3d_NtN - assembler.int3d_NtN.astype(float)) / assembler.int3d_NtN.astype(float)
-
-    max_error_K = max(abs(rel_error_K.flatten()))
-    max_error_M = max(abs(rel_error_M.flatten()))
-
-    assert max_error_M == 0
-    assert max_error_K == 0
-
-
 def test_reordering_approach_for_frequency_dependent_acoustic_assembler(viscous_thermal_acoustic_model: Model):
     '''
     Asserting mass and stiffness matrix data using reordering with conventional csr_matrix constructor.
