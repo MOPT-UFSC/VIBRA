@@ -57,7 +57,7 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
+    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_10
@@ -88,12 +88,15 @@ def load_external_mesh_and_solve(assignment_type: str):
             mesh.volumes_from_surface[surf_id] = [vol_id]
         mesh.surfaces_from_volume[vol_id] = surf_ids
 
+    # check collapsed elements
+    collapsed_3d_elements, collapsed_2d_elements, collapsed_1d_elements = mesh.get_collapsed_elements()
+
     # define the fluid properties
     temperature = 293.15
     pressure = 101325
     rho_0 = 1.204263
     c_0 = 343.395034
-    mu = 0*1.8247e-5
+    mu = 1.8247e-5
     Cp = 1006.400178
     kt = 2.5503e-02
     gamma = 1.401985
@@ -202,7 +205,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.process_assemble()
+    assembler.process_assemble(reorder=False)
 
     # Define the analysis type and load setup
     harmonic_solver = AcousticHarmonicSolver(assembler)
@@ -305,24 +308,16 @@ def load_external_mesh_and_solve(assignment_type: str):
 
         # Print the nodal results deviations
         abs_diff_node_Pin = np.abs((input_pressures_WB[node_in] - solution[node_in-1, :]) / (input_pressures_WB[node_in]))
-        ind = np.argmax(abs_diff_node_Pin)
         print(f"\nDeviation of pressure (node {node_in}): {100 * np.max(abs_diff_node_Pin)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - solution[node_out-1, :]) / (output_pressures_WB[node_out]))
-        ind = np.argmax(abs_diff_node_Pout)
         print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
-        ind = np.argmax(abs_diff_node_Vin)
         print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
-        ind = np.argmax(abs_diff_node_Vout)
         print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
-        print(f"Frequency: {frequencies[ind]} Hz")
 
         abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
         print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")
@@ -330,11 +325,11 @@ def load_external_mesh_and_solve(assignment_type: str):
         abs_diff_Poutput_face = np.abs((output_pressure_WB - output_pressure) / output_pressure_WB)
         print(f"Deviation of pressure (output face): {100 * np.max(abs_diff_Poutput_face)} %")
 
-        abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
-        print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
+        # abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
+        # print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
 
-        abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
-        print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
+        # abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
+        # print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
 
         title = f"Harmonic response at input face"
 
@@ -413,25 +408,25 @@ def load_external_mesh_and_solve(assignment_type: str):
         ax8.grid()
         ax8.legend()
 
-        fig9, ax9 = plt.subplots()
-        title = "Input face particle velocity - average"
-        ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
-        ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
-        ax9.set_xlabel('Frequency [Hz]')
-        ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax9.set_title(title)
-        ax9.grid()
-        ax9.legend()
+        # fig9, ax9 = plt.subplots()
+        # title = "Input face particle velocity - average"
+        # ax9.plot(frequencies, data_type(input_Vx), 'r', label='Vibra')
+        # ax9.plot(freq_WB, data_type(input_Vx_WB), 'k--', label='Ansys')
+        # ax9.set_xlabel('Frequency [Hz]')
+        # ax9.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax9.set_title(title)
+        # ax9.grid()
+        # ax9.legend()
 
-        fig10, ax10 = plt.subplots()
-        title = "Output face particle velocity - average"
-        ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
-        ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
-        ax10.set_xlabel('Frequency [Hz]')
-        ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
-        ax10.set_title(title)
-        ax10.grid()
-        ax10.legend()
+        # fig10, ax10 = plt.subplots()
+        # title = "Output face particle velocity - average"
+        # ax10.plot(frequencies, data_type(output_Vx), 'r', label='Vibra')
+        # ax10.plot(freq_WB, data_type(output_Vx_WB), 'k--', label='Ansys')
+        # ax10.set_xlabel('Frequency [Hz]')
+        # ax10.set_ylabel(f'Particle velocity [m/s] - {type_label}')
+        # ax10.set_title(title)
+        # ax10.grid()
+        # ax10.legend()
 
         plt.show()
 
