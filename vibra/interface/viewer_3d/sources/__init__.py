@@ -17,6 +17,7 @@ from .arrows import (
 from .simple_shapes import (
     create_cone_source,
     create_cube_source,
+    create_axis_source,
     create_mass_load_first_layer_source,
     create_mass_load_second_layer_source,
     create_mass_load_third_layer_source,
