@@ -140,17 +140,11 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                     axis_function = partial(sources.create_axis_source, shift=-0.8)
                     self.add_symbol(axis_function, coords, (index==0, index==1, index==2), color=colors[index])
 
-                #     if v == 0:
-                #         self.add_symbol(sources.create_dof_hexagon_base_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
-                    
                 elif index >= 3 and v is not None:
                     self.add_symbol(sources.create_dof_cone_rotation_source, coords, (index==3, index==4, index==5), color=color_names.BLUE_6)
                     axis_function = partial(sources.create_axis_source, shift=-1.2)
                     self.add_symbol(axis_function, coords, (index==3, index==4, index==5), color=colors[index - 3])
                     
-                #     if v == 0:
-                #         self.add_symbol(sources.create_dof_hexagon_arrow_source, coords, (index==3, index==4, index==5), color=colors[index - 3])
-
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
             coords, _ = self._get_center_coords_and_normals(surface_id)
