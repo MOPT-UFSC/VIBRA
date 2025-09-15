@@ -284,7 +284,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def check_selection_type(self, surface_ids: list[int]):
+    def check_selection_type(self, surface_ids: list[int]) -> bool:
 
         title = "Invalid selection detected"
 
@@ -297,11 +297,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
                     message += "assignment will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
-                    self.pp_data.clear()
-                    return
+                    return True
 
         else:
-
             for surface_id in surface_ids:
                 if len(self.mesh.volumes_from_surface[surface_id]) != 1:
                     self.hide()
@@ -309,11 +307,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                     message += "Outside surfaces are surfaces associated to only one volume. The perforated plate "
                     message += "attribution will be ignored until all requirements are met."
                     PrintMessageInput([window_title_1, title, message])
-                    self.pp_data.clear()
-                    return
-
-        self.pp_data["coupling_type"] = selection_type.lower().replace(" ", "_")
-
+                    return True
+                
     def load_model_info(self):
         self.map_existing_models()
         self.configure_edit_table_widget()
@@ -699,12 +694,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 PrintMessageInput(error_data)
                 return list()
 
-            self.check_selection_type(surface_ids)
-            if not self.pp_data:
+            selection_type_error = self.check_selection_type(surface_ids)
+            if selection_type_error:
                 return list()
-
-            surface_ids.sort()
-
+            
         else:
 
             input_ids_A = self.lineEdit_selection_id_A.text()
@@ -733,18 +726,18 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 PrintMessageInput(error_data)
                 return list()
 
-            self.check_selection_type(surface_ids_A)
-            if not self.pp_data:
+            selection_type_error = self.check_selection_type(surface_ids_A)
+            if selection_type_error:
                 return list()
 
-            self.check_selection_type(surface_ids_B)
-            if not self.pp_data:
+            selection_type_error = self.check_selection_type(surface_ids_B)
+            if selection_type_error:
                 return list()
 
             surface_ids_A.sort()
             surface_ids_B.sort()
-            self.pp_data["surfaces_A"] = surface_ids_A
-            self.pp_data["surfaces_B"] = surface_ids_B
+            # self.pp_data["surfaces_A"] = surface_ids_A
+            # self.pp_data["surfaces_B"] = surface_ids_B
             surface_ids.extend(surface_ids_A)
             surface_ids.extend(surface_ids_B)
 
@@ -1122,26 +1115,22 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         model = PerforatedPlateModels(self.model)
 
-        tab_index = self.tabWidget_main.currentIndex()
+        pp_data = None
+        pp_data = self.get_inputs_for_perforated_plate_with_circular_holes()
 
-        if tab_index == 0:
-            self.get_inputs_for_perforated_plate_with_circular_holes()
+        if pp_data is None:
+            return None, None
+        
+        U_rms = 0
+        normalized_impedances = model.get_transfer_impedance_for_circular_holes(omega, pp_data.get_data())
+        if normalized_impedances is None:
+            return None, None
 
-        if self.pp_data:
-            if tab_index == 0:
+        z_orifice, z_end, z_nl_urms, z_ud, Z_0 = normalized_impedances
+        Z_tr = Z_0 * (z_orifice + z_end + z_ud + z_nl_urms*U_rms)
 
-                U_rms = 0
-                normalized_impedances = model.get_transfer_impedance_for_circular_holes(omega, self.pp_data)
-                if normalized_impedances is None:
-                    return
-
-                z_orifice, z_end, z_nl_urms, z_ud, Z_0 = normalized_impedances
-                Z_tr = Z_0 * (z_orifice + z_end + z_ud + z_nl_urms*U_rms)
-
-            return freq, Z_tr
-
-        return None, None
-
+        return freq, Z_tr
+    
     def get_perforated_plate_model(self):
         tab_index = self.tabWidget_main.currentIndex()
         
