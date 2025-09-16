@@ -6,6 +6,7 @@ import sys
 
 from collections import defaultdict
 from copy import deepcopy
+from itertools import permutations
 from pathlib import Path
 from time import time
 from traceback import print_exception
@@ -240,6 +241,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
+        self.update_element_type()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -259,6 +261,19 @@ class Mesh:
             f", {len(self.faces_connectivity)} dim 2"
             f"and {len(self.solids_connectivity)} dim 3 elements"
         )
+
+    def update_element_type(self):
+        nodes_per_element = self.solids_connectivity[0, 4:].size
+        if nodes_per_element == 4:
+            self.element_type = TETRAHEDRON_4
+        elif nodes_per_element == 10:
+            self.element_type = TETRAHEDRON_10
+        elif nodes_per_element == 8:
+            self.element_type = HEXAHEDRON_8
+        elif nodes_per_element == 20:
+            self.element_type = HEXAHEDRON_20
+        else:
+            return
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """
@@ -335,9 +350,8 @@ class Mesh:
                 check_overlap_2 = False
 
                 line_nodes = list(set(intersect_nodes))
-                for _line_nodes in self.separate_nodes_from_disconnected_lines(
-                    line_nodes
-                ).values():
+
+                for _line_nodes in self.separate_nodes_from_disconnected_lines(line_nodes).values():
                     _line_nodes.sort()
                     if _line_nodes in self.external_nodes_from_lines.values():
                         continue
@@ -374,10 +388,6 @@ class Mesh:
                 if np.isin(line_nodes, surface_nodes).all():
                     self.lines_from_surface[surf_id].append(line_id)
 
-        # for _id in [17, 18, 19, 20, 22, 23, 24, 25]:
-        #     lines = self.lines_from_surface.get(_id)
-        #     print(f"Surface: {_id} -> {lines}")
-
     def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
         """
         This method group nodes from each line using a
@@ -396,13 +406,21 @@ class Mesh:
             values are the node IDs.
 
         """
+        
+        n_nodes_2d = self.faces_connectivity[0, 4:].size
+
+        if n_nodes_2d in [3, 4]:
+            n_nodes_1d = 2
+
+        elif n_nodes_2d in [6, 8]:
+            n_nodes_1d = 3
+
+        else:
+            return
+
         # get the 2D element connectivities that contains two node_ids inside
-        filt_rows = (
-            np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) == 2
-        )
-        filt_connectivities = deepcopy(
-            [list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]]
-        )
+        filt_rows = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) == n_nodes_1d
+        filt_connectivities = deepcopy([list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]])
 
         if not filt_connectivities:
             return dict()
@@ -460,26 +478,29 @@ class Mesh:
             return
 
         connect_data = self.faces_connectivity[:, 4:]
-        if connect_data.shape[1] in [3, 4]:
-            n_nodes = 2
+        n_nodes_2d = self.faces_connectivity[0, 4:].size
+
+        if n_nodes_2d in [3, 4]:
+            n_nodes_1d = 2
             e_type = 2
 
-        elif connect_data.shape[1] in [6, 8]:
-            n_nodes = 3
+        elif n_nodes_2d in [6, 8]:
+            n_nodes_1d = 3
             e_type = 3
 
         last_index = 0
         first_index = 0
-        self.lines_connectivity = np.empty((0, 4 + n_nodes), dtype=int)
+        self.lines_connectivity = np.empty((0, 4 + n_nodes_1d), dtype=int)
 
         for line_id, node_ids in self.external_nodes_from_lines.items():
 
             connectivity_from_line = list()
-            filt_rows = np.sum(np.isin(connect_data, node_ids), axis=1) == n_nodes
+            filt_rows = np.sum(np.isin(connect_data, node_ids), axis=1) == n_nodes_1d
 
             for _connect in connect_data[filt_rows, :]:
                 edge_connect = [node_id for node_id in _connect if node_id in node_ids]
-                edge_connect.sort()
+                edge_connect = self.reorder_connectivity_based_on_distances(edge_connect)
+
                 if edge_connect in connectivity_from_line:
                     continue
 
@@ -496,11 +517,11 @@ class Mesh:
             last_index += rows
             indexes = np.arange(first_index, last_index, dtype=int)
 
-            connectivity = np.zeros((rows, 4 + n_nodes), dtype=int)
+            connectivity = np.zeros((rows, 4 + n_nodes_1d), dtype=int)
             connectivity[:, 0] = indexes
             connectivity[:, 1] = aux_ones * line_id
             connectivity[:, 2] = aux_ones * e_type
-            connectivity[:, 3] = aux_ones * n_nodes
+            connectivity[:, 3] = aux_ones * n_nodes_1d
             connectivity[:, 4:] = connectivity_array
 
             self.lines_connectivity = np.append(
@@ -513,6 +534,38 @@ class Mesh:
             self.geometry_information["lines"] = list(self.external_nodes_from_lines.keys())
             # np.savetxt("lines_connectivity.dat", self.lines_connectivity, delimiter=",", fmt="%i")
 
+    def reorder_connectivity_based_on_distances(self, el_connect: list[int]):
+        """
+        This method reorders the line element connectivity based on
+        the nodal distances.
+
+        Parameters
+        ----------
+        el_connect: list
+            The initial random element connectivity.
+
+        Returns
+        -------
+        reordered_connect: list
+            The reordered element connectivity (following the order: 
+            corner nodes and middle node, whenever applicable).
+        """
+
+        perm_nodes = np.array(list(permutations(el_connect, 2)), dtype=int)
+
+        P1 = self.nodal_coordinates[perm_nodes[:, 0], 1:]
+        P2 = self.nodal_coordinates[perm_nodes[:, 1], 1:]
+
+        lengths = np.linalg.norm(P2-P1, axis=1)
+        reordered_connect = np.sort(perm_nodes[np.argmax(lengths), :])
+
+        if len(el_connect) == 3:
+            mask = np.isin(el_connect, reordered_connect, invert=True)
+            middle_node = np.array(el_connect, dtype=int)[mask]
+            reordered_connect = np.append(reordered_connect, middle_node, axis=0)
+
+        return list(reordered_connect)
+
     def process_points_from_mesh_data(self):
         """
         This method processes the corner nodes and the
@@ -523,15 +576,16 @@ class Mesh:
         if not self.lines_connectivity.size:
             return
 
-        def get_non_repeated_values(values: list):
+        def get_non_repeated_values(line_connectivities: np.ndarray):
             """
             This function returns the non-repeated values
             from a given input list of values.
 
             Parameters
             ----------
-            values: list
-                The input list of values to be processed.
+            values: np.ndarray
+                An array containing the connectivities
+                of the 1D elements of a line.
 
             Returns
             -------
@@ -539,17 +593,10 @@ class Mesh:
                 The output list of non-repeated values.
 
             """
-            non_repeated_nodes = set()
-            repeated_nodes = set()
-
-            for value in values:
-                if value in non_repeated_nodes:
-                    repeated_nodes.add(value)
-                    non_repeated_nodes.remove(value)
-                else:
-                    non_repeated_nodes.add(value)
-
-            return list(non_repeated_nodes)
+            values = line_connectivities[:, [0, 1]].flatten()
+            _, indexes, count = np.unique(values, return_index=True, return_counts=True)
+            non_repeated_values = list(values[indexes[count==1]])
+            return non_repeated_values
 
         point_id = 0
         self.points_from_line.clear()
@@ -557,7 +604,7 @@ class Mesh:
         for line_id in self.geometry_information.get("lines"):
 
             line_connect = self.get_connectivity_from_line(line_id)
-            corner_nodes = get_non_repeated_values(line_connect.flatten())
+            corner_nodes = get_non_repeated_values(line_connect)
 
             points_from_line = list()
 
