@@ -60,6 +60,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_porous_actor()
         self._create_perforated_actor()
 
+        # The bounds calculated for this actor are not correct
+        # We also cannot correct it, so we have to disable it
+        self.UseBoundsOff()
+        
         self.clear_colors()
 
     def clear_colors(self):
