@@ -30,7 +30,7 @@ from vibra.engine.mesher.element_type import (
     DEFAULT_ELEMENT_TYPE,
 )
 
-type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
+MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:

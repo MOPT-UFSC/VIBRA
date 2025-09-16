@@ -228,6 +228,9 @@ class Geometry:
 
     def is_surface_straight(self, surface_id: int) -> bool:
         return surface_id in self._straight_surfaces
+    
+    def are_there_volumes_in_geometry(self) -> bool:
+        return bool(self.solids) 
 
     def solid_center(self, solid_id: int) -> np.ndarray | None:
         return self._solids_centers.get(solid_id)

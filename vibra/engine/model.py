@@ -36,6 +36,7 @@ from vibra.engine.elements.elements_2d import (
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
 
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.geometry.geometry import Geometry
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
@@ -69,6 +70,7 @@ class Model:
 
         self.mesh = None
         self.mesh_setup = None
+        self.geometry = None
         self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
@@ -112,6 +114,7 @@ class Model:
 
     def set_geometry_path(self, path : str):
         self.geometry_path = path
+        self.load_geometry(path)
 
     def set_properties(self, properties):
         self.properties = properties
@@ -125,6 +128,20 @@ class Model:
                          length_unit = self.length_unit, 
                          geometry_qf = self.geometry_qf
                          )
+    def initialize_geometry(self):
+        self.geometry = Geometry(
+                         length_unit = self.length_unit)
+
+    def load_geometry(self, path : str):
+        try:
+            logging.info("Processing geometry...")
+            self.initialize_geometry()
+            self.geometry.read_file(path)
+            
+            self.initialize_mesh()
+            
+        except Exception as error_log:
+            print(f"Error loading geometry: {error_log}")
 
     def process_visual_geometry_mesh(self, path : str):
 
@@ -400,8 +417,7 @@ class Model:
         density = None
         speed_of_sound = None
 
-        volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
-
+        volumes_from_surface = list(self.geometry.surfaces_to_solids(surface_id))
         if len(volumes_from_surface) == 1:
 
             for key in self.properties.volume_properties.keys():
@@ -619,10 +635,10 @@ class Model:
             if prop != "porous_material_model":
                 continue
 
-            if not volume_id in self.mesh.surfaces_from_volume.keys():
+            if not volume_id in self.geometry._solids_to_surfaces.keys():
                 continue
 
-            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            if surface_id in self.geometry.solids_to_surfaces(volume_id):
                 pm_properties = self.porous_material_properties.get(volume_id)
                 rho_eff = pm_properties["rho_eff"]
                 C_eff = pm_properties["C_eff"]
@@ -670,10 +686,10 @@ class Model:
             if prop != "viscous_thermal_model":
                 continue
 
-            if not volume_id in self.mesh.surfaces_from_volume.keys():
+            if not volume_id in self.geometry._solids_to_surfaces.keys():
                 continue
 
-            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            if surface_id in self.geometry.solids_to_surfaces(volume_id):
                 vt_properties = self.viscous_thermal_model_properties.get(volume_id)
                 rho_eff = vt_properties["rho_eff"]
                 C_eff = vt_properties["C_eff"]
@@ -700,11 +716,11 @@ class Model:
 
     def is_surface_thickness_properly_applied_in_model(self):
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.are_there_volumes_in_geometry()
         if volume_exists:
             return None
 
-        surface_ids = self.mesh.geometry_information.get("surfaces")
+        surface_ids = self.geometry.surfaces
         surface_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
