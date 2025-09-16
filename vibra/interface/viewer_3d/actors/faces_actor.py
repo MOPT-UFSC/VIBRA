@@ -40,7 +40,6 @@ class FacesActor(vtkActor):
 
         self.create_geometry()
         self.configure_appearance()
-        print(self.GetBounds())
 
     def create_geometry(self):
         if self.mesh.nodal_coordinates.size == 0:
