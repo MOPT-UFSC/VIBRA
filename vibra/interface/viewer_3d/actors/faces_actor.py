@@ -1,3 +1,4 @@
+from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
@@ -14,14 +15,13 @@ from vtkmodules.vtkCommonDataModel import (
     vtkUnstructuredGrid,
 )
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkDataSetMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPolyDataMapper
 
 from vibra import app
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.interface_utils import ColorMode
-from molde import Color
 
 
 class FacesActor(vtkActor):
@@ -40,6 +40,7 @@ class FacesActor(vtkActor):
 
         self.create_geometry()
         self.configure_appearance()
+        print(self.GetBounds())
 
     def create_geometry(self):
         if self.mesh.nodal_coordinates.size == 0:
@@ -146,7 +147,7 @@ class FacesActor(vtkActor):
         if color_mode == ColorMode.MATERIAL:
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
-                
+
                 if (material is None) and (surface in mesh.volumes_from_surface):
                     volume = mesh.volumes_from_surface[surface][0]
                     material = properties._get_property("material", volume=volume)
@@ -164,7 +165,7 @@ class FacesActor(vtkActor):
 
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color
                 self.paint_cells(color, face_elements)
-        
+
         elif color_mode == ColorMode.EMPTY:
             color = app().config.user_preferences.faces_color
             self.set_color(color)
@@ -187,7 +188,7 @@ class FacesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_points(self, color : Color, points):
+    def paint_points(self, color: Color, points):
         if self.data is None:
             return
 
