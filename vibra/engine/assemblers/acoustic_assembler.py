@@ -1261,7 +1261,6 @@ class AcousticAssembler:
         logging.info(f"Processing the impedance data to assemble damping matrix... [1/10]")
         _k_wave = self.integration_data_pw.get("k_wave")
         _e_normals = self.integration_data_pw.get("e_normals")
-        _pressures = self.integration_data_pw.get("pressures")
         connectivities = self.integration_data_pw.get("connectivities")
         _pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
 
@@ -1275,21 +1274,18 @@ class AcousticAssembler:
         logging.info(f"Processing the impedance data to assemble damping matrix... [2/10]")
         self.ind_rows_Zpw, self.ind_cols_Zpw = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
-        # eface_normals = self.element_2d.get_stacked_element_face_normals()
 
         e_normals = np.array(list(_e_normals.values())).reshape(-1, 1, 3)
         k_wave = np.array(list(_k_wave.values())).reshape(-1, 3, 1)
-        pressures = np.array(list(_pressures.values()))
         pw_impedances = np.array(list(_pw_impedances.values()))
 
         n_k = e_normals @ k_wave
 
         for j in range(self.number_frequencies):
-            P_inc = pressures[:, j].reshape(-1, 1, 1)
             Z_pw = pw_impedances[:, j].reshape(-1, 1, 1)
 
             # the negative signal is being used to revert the signal from the elementary matrix
-            self.data_Zpw[j] = - int2d_NtN * (P_inc / Z_pw) * n_k
+            self.data_Zpw[j] = - int2d_NtN * (n_k / Z_pw)
 
 
     def process_surface_impedance_data_to_assemble_damping_matrix(self):
