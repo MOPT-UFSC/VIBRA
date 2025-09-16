@@ -122,35 +122,8 @@ def create_acoustic_transfer_element_data_source():
         scale=(1, 1, 1),
     )
 
-# def create_dof_cone_arrow_source():
-#     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_arrow.stl")
-#     return transform_polydata(
-#         polydata,
-#         position=(-1, 0, 0),
-#         rotation=(180, 90, 0),
-#         scale=(.4, .4, .4),
-#     )
-
-# def create_dof_hexagon_base_source():
-#     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_hexagon_base.stl")
-#     return transform_polydata(
-#         polydata,
-#         position=(-0.8, 0, 0),
-#         rotation=(0, 90, 0),
-#         scale=(.4, .4, .4),
-#     )
-
 def create_dof_cone_rotation_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_rotation.stl")
-    return transform_polydata(
-        polydata,
-        position=(0, 0, 0),
-        rotation=(0, 0, -90),
-        scale=(.4, .4, .4),
-    )
-
-def create_dof_cone_axis_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_axis.stl")
     return transform_polydata(
         polydata,
         position=(0, 0, 0),
@@ -173,7 +146,7 @@ def create_nodal_loads_momentum_arrow_source():
         polydata,
         position=(0, 0, 0),
         rotation=(90, 0, -90),
-        scale=(.3, .3, .3),
+        scale=(.15, .15, .15),
     )
 
 def create_nodal_loads_force_arrow_source():
@@ -182,5 +155,5 @@ def create_nodal_loads_force_arrow_source():
         polydata,
         position=(0, 0, 0),
         rotation=(90, 0, -90),
-        scale=(.3, .3, .3),
+        scale=(.15, .15, .15),
     )

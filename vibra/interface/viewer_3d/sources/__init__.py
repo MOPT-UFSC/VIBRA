@@ -41,11 +41,8 @@ from .complex_shapes import (
     create_compressor_suction_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
-    # create_dof_hexagon_base_source,
     create_dof_cone_rotation_source,
-    create_dof_cone_axis_source,
     create_dof_cone_source,
-    # create_dof_cone_arrow_source,
     create_nodal_loads_momentum_arrow_source,
     create_nodal_loads_force_arrow_source,
 )
