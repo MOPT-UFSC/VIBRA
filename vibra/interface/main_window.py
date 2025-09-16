@@ -294,9 +294,8 @@ class MainWindow(MainWindow_UI):
         if volumes is None:
             volumes = set()
 
-        surfaces -= set(self.hidden_surfaces)
-        volumes -= set(self.hidden_volumes)
-
+        surfaces = set(surfaces) - set(self.hidden_surfaces)
+        volumes = set(volumes) - set(self.hidden_volumes)
         mesh = app().project.model.mesh
 
         # Select the surfaces associated to the selected volumes

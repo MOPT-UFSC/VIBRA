@@ -60,6 +60,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_porous_actor()
         self._create_perforated_actor()
 
+        # The bounds calculated for this actor are not correct
+        # We also cannot correct it, so we have to disable it
+        self.UseBoundsOff()
+        
         self.clear_colors()
 
     def clear_colors(self):
@@ -85,15 +89,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             elif material is not None:
                 color = Color(*material.color)
-                _, saturation, _ = color.to_hsv()
-                if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(90)
 
             elif fluid is not None:
                 color = Color(*fluid.color)
-                _, saturation, _ = color.to_hsv()
-                if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(75)
 
             else:
                 color = color_names.WHITE
@@ -155,6 +153,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         array = vtk_to_numpy(self.cell_colors)
         if array.size == 0:
             return
+
+        # Ensure cell ids are valid, ignore otherwise
+        cells = np.array(cells)
+        cells = cells[(0 <= cells) & (cells < array.size)]
 
         array[cells] = color_fmt
         self.data.Modified()

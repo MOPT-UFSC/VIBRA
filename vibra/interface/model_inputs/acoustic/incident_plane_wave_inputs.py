@@ -1,15 +1,14 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 
-import os
 import numpy as np
 
 window_title_1 = "Error"
@@ -32,10 +31,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self._initialize()
         self._configure_qt_variables()
         self._create_connections()
-
         self.load_model_info()
-        self.wave_direction_callback()
-        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -66,6 +62,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.treeWidget_incident_plane_wave.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.wave_direction_callback()
+        self.geometry_selection_callback()
 
     def _configure_qt_variables(self):
         #
@@ -693,6 +692,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 return
 
         self.tabWidget_main.setCurrentIndex(0)
+        self.lineEdit_incident_pressure_real.setFocus()
         self.tabWidget_main.setTabVisible(2, False)
 
     def keyPressEvent(self, event):
