@@ -156,6 +156,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         if array.size == 0:
             return
 
+        # Ensure cell ids are valid, ignore otherwise
+        cells = np.array(cells)
+        cells = cells[(0 <= cells) & (cells < array.size)]
+
         array[cells] = color_fmt
         self.data.Modified()
 
