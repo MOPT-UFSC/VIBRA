@@ -49,7 +49,7 @@ class ViscousThermalLossModels:
                 section_type = data.section_type
                 formulation = data.formulation
 
-                key = (fluid.identifier, model_id, section_type, formulation)
+                key = (fluid.identifier, model_id)
                 rho_eff, C_eff = None, None
 
                 if key in map_volumes_to_effective_properties:
