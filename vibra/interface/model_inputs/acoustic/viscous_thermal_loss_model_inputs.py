@@ -17,7 +17,6 @@ from vibra.interface.model_inputs.acoustic.circular_duct_data import CircularDuc
 
 import warnings
 import numpy as np
-from typing import Dict, List
 from enum import IntEnum
 from collections import defaultdict
 
@@ -74,7 +73,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
-        self.models: List[RectangularDuctData|CircularDuctData] = list()
+        self.models: list[RectangularDuctData|CircularDuctData] = list()
 
     def _create_connections(self):
         #
@@ -320,8 +319,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             app().file.write_model_properties_in_file()
     
     def map_existing_viscous_thermal_loss_models(self):
-        self.map_model_id_to_models: Dict[int, List[RectangularDuctData|CircularDuctData]] = defaultdict(list)
-        self.map_model_id_to_volumes: Dict[int, List[int]] = defaultdict(list)
+        self.map_model_id_to_models: defaultdict[int, RectangularDuctData|CircularDuctData] = defaultdict()
+        self.map_model_id_to_volumes: defaultdict[int, list[int]] = defaultdict(list)
 
         for key, data in self.properties.volume_properties.items():
 
@@ -605,7 +604,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.actions_to_finalize()
         self.load_info()
     
-    def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: List[int]=None):
+    def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: list[int]=None):
         for volume_id in volume_ids:
             for model_id, volumes in self.map_model_id_to_volumes.items():
                 if volume_id in volumes and len(volumes) == 1:

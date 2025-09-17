@@ -2,7 +2,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface.model_inputs.acoustic.rectangular_duct_data import RectangularDuctData
 from vibra.interface.model_inputs.acoustic.circular_duct_data import CircularDuctData
 
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
@@ -21,8 +21,8 @@ class ViscousThermalLossModels:
 
         self.effective_properties = dict()
 
-        self.map_model_id_to_models: Dict[int, RectangularDuctData|CircularDuctData] = defaultdict()
-        self.map_model_id_to_volumes: Dict[int, List[int]] = defaultdict(list)
+        self.map_model_id_to_models: defaultdict[int, RectangularDuctData|CircularDuctData] = defaultdict()
+        self.map_model_id_to_volumes: defaultdict[int, list[int]] = defaultdict(list)
 
     def process_effective_properties(self, frequencies: np.ndarray):
 
