@@ -64,7 +64,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 435, 540))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 431, 552))
         self.gridLayout_5 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
@@ -631,6 +631,7 @@ class Ui_Dialog(object):
         font2.setItalic(False)
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -640,6 +641,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -702,7 +704,7 @@ class Ui_Dialog(object):
 
         self.label_12 = QLabel(self.frame_6)
         self.label_12.setObjectName(u"label_12")
-        self.label_12.setMinimumSize(QSize(60, 28))
+        self.label_12.setMinimumSize(QSize(100, 28))
         self.label_12.setMaximumSize(QSize(120, 28))
         font4 = QFont()
         font4.setFamilies([u"MS Shell Dlg 2"])

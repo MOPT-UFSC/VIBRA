@@ -11,11 +11,13 @@ from .arrows import (
     create_incident_plane_wave_source,
     create_outwards_incident_plane_wave_source,
     create_surface_velocity_source,
+    create_pencil_source,
 ) 
 
 from .simple_shapes import (
     create_cone_source,
     create_cube_source,
+    create_axis_source,
     create_mass_load_first_layer_source,
     create_mass_load_second_layer_source,
     create_mass_load_third_layer_source,
@@ -39,4 +41,8 @@ from .complex_shapes import (
     create_compressor_suction_source,
     create_dissipation_model_source,
     create_acoustic_transfer_element_data_source,
+    create_dof_cone_rotation_source,
+    create_dof_cone_source,
+    create_nodal_loads_momentum_arrow_source,
+    create_nodal_loads_force_arrow_source,
 )
