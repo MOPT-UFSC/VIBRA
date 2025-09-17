@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'viscous_thermal_model_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(559, 513)
+        Dialog.resize(468, 480)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -64,7 +64,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 525, 495))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 435, 540))
         self.gridLayout_5 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
@@ -257,6 +257,7 @@ class Ui_Dialog(object):
 
         self.tabWidget_main = QTabWidget(self.scrollAreaWidgetContents)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
+        self.tabWidget_main.setMinimumSize(QSize(0, 300))
         self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
         self.tabWidget_main.setFont(font1)
         self.tab_rectangular = QWidget()
@@ -676,7 +677,7 @@ class Ui_Dialog(object):
 
         self.frame_6 = QFrame(self.scrollAreaWidgetContents)
         self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setMinimumSize(QSize(400, 75))
+        self.frame_6.setMinimumSize(QSize(400, 48))
         self.frame_6.setMaximumSize(QSize(16777215, 200))
         self.frame_6.setFrameShape(QFrame.NoFrame)
         self.frame_6.setFrameShadow(QFrame.Raised)
@@ -691,7 +692,7 @@ class Ui_Dialog(object):
         self.lineEdit_selection_id = QLineEdit(self.frame_6)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
         self.lineEdit_selection_id.setEnabled(True)
-        self.lineEdit_selection_id.setMinimumSize(QSize(200, 28))
+        self.lineEdit_selection_id.setMinimumSize(QSize(140, 28))
         self.lineEdit_selection_id.setMaximumSize(QSize(200, 28))
         self.lineEdit_selection_id.setFont(font1)
         self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
@@ -701,8 +702,8 @@ class Ui_Dialog(object):
 
         self.label_12 = QLabel(self.frame_6)
         self.label_12.setObjectName(u"label_12")
-        self.label_12.setMinimumSize(QSize(150, 28))
-        self.label_12.setMaximumSize(QSize(150, 28))
+        self.label_12.setMinimumSize(QSize(60, 28))
+        self.label_12.setMaximumSize(QSize(120, 28))
         font4 = QFont()
         font4.setFamilies([u"MS Shell Dlg 2"])
         font4.setPointSize(10)
@@ -786,7 +787,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(3)
+        self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_models.setCurrentIndex(0)
 
 
