@@ -50,22 +50,22 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     external_mesh = ExternalMeshData()
-    external_mesh.reset()
     external_mesh.read_file(mesh_path)
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_solids_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
+    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
+        # print(named_selection, surf_data)
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
@@ -233,7 +233,7 @@ def load_external_mesh_and_solve():
     #     output_Vx += particle_velocity[node_id][0, :]
     # output_Vx /= len(mesh.external_nodes_from_surfaces[2])
 
-    mesh._process_face_elements_connected_to_nodes([1, 2])
+    mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
     freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)

@@ -60,6 +60,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_porous_actor()
         self._create_perforated_actor()
 
+        # The bounds calculated for this actor are not correct
+        # We also cannot correct it, so we have to disable it
+        self.UseBoundsOff()
+        
         self.clear_colors()
 
     def clear_colors(self):
@@ -85,15 +89,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             elif material is not None:
                 color = Color(*material.color)
-                _, saturation, _ = color.to_hsv()
-                if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(80)
 
             elif fluid is not None:
                 color = Color(*fluid.color)
-                _, saturation, _ = color.to_hsv()
-                if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(40)
 
             else:
                 color = color_names.WHITE
@@ -156,6 +154,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         if array.size == 0:
             return
 
+        # Ensure cell ids are valid, ignore otherwise
+        cells = np.array(cells)
+        cells = cells[(0 <= cells) & (cells < array.size)]
+
         array[cells] = color_fmt
         self.data.Modified()
 
@@ -204,8 +206,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return np.where(mask)[0]
 
     def _create_surfaces(self):
-        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
-
         combined_surfaces = vtkAppendPolyData()
         for surface, elements in self.mesh.elements_from_surface.items():
             if surface in app().main_window.hidden_surfaces:
@@ -218,13 +218,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             points = vtkPoints()
             points.SetData(numpy_to_vtk(coords))
-
-            # The format here is [n, p0, p1, ..., pn, n, p0, p1, ..., pn]
-            # Therefore I add a "n" column at the start and then flatten it
-            cells = vtkCellArray()
-            helper = np.insert(connect, 0, nodes_per_element, axis=1)
-            vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
-            cells.SetCells(len(connect), vtk_id_array)
+            cells = self._create_cells(connect)
 
             data = vtkPolyData()
             data.SetPoints(points)
@@ -294,6 +288,30 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         mapping[old_indexes] = new_indexes
 
         return coords[old_indexes], mapping[connectivity]
+
+    def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
+        nodes_per_element = len(connectivity[0, :])
+        triangulated: np.ndarray
+
+        if nodes_per_element in (3, 6):
+            triangulated = connectivity[:, :3]
+
+        elif nodes_per_element in (4, 8):
+            lower = connectivity[:, [0, 1, 3]]
+            upper = connectivity[:, [1, 2, 3]]
+            triangulated = np.append(lower, upper, axis=0)
+
+        else:
+            raise NotImplementedError(f"Elements with {nodes_per_element} nodes are not supported")
+
+        # Add a "3" column at the start, as expected by VTK
+        helper = np.insert(triangulated, 0, 3, axis=1)
+        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+
+        cells = vtkCellArray()
+        cells.SetCells(len(triangulated), vtk_id_array)
+
+        return cells
 
     def _create_empty_actor(self):
         self.empty_actor = self._new_actor_extraction("empty")

@@ -7,79 +7,29 @@ if TYPE_CHECKING:
 
 import numpy as np
 
-ones_31 = np.ones((3, 1), dtype=float)
 
-
-def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
-
-    """
-    This function returns the shape functions and its derivatives.
-
-    Parameters
-    ----------
-    ssx: np.ndarray
-        The x coordinates of the integration points.
-
-    ttx: np.ndarray
-        The y coordinates of the integration points.
-
-    Returns
-    -------
-    phi: np.ndarray
-        The shape functions evaluated in the integration points.
-
-    dphi: np.ndarray
-        The shape functions derivatives.
-    """
-
-    # shape functions
-    phi = np.array([1 - ssx - ttx, ttx, ssx], dtype=float).T
-
-    # shape functions derivatives
-    dphi = np.array([[-1, 0, 1],
-                     [-1, 1, 0]], dtype=float)
-
-    return phi, dphi
-
-
-def get_jacobian_determinant(JAC: np.ndarray) -> float:
+def get_detJAC(JAC: np.ndarray) -> float:
     """
     This function computes the determinant of the Jacobian
-    matrix.
+    matrix in both stacked and non-stacked matrices form.
 
     Parameter
     ---------
     JAC: np.ndarray
-        The Jacobian matrix.
+        The Jacobian 2D or 3D matrix.
     
     Return
     ------
     det_jac: float
         The determinant of the Jacobian matrix.
     """
-    det_jac = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
+    if len(JAC.shape) == 3:
+        det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]
+        return det_jac.reshape(-1, 1, 1)
 
-    return det_jac
-
-
-def get_stacked_detJAC(JAC: np.ndarray) -> float:
-    """
-    This function computes the determinant of the Jacobian
-    matrix.
-
-    Parameter
-    ---------
-    JAC: np.ndarray
-        The Jacobian matrix.
-    
-    Return
-    ------
-    det_jac: float
-        The determinant of the Jacobian matrix.
-    """
-    det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]  
-
-    return det_jac.reshape(-1, 1, 1)
+    else:
+        det_jac = JAC[0, 0] * JAC[1, 1]  - JAC[0, 1] * JAC[1, 0]  
+        return det_jac
 
 
 def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
@@ -102,18 +52,19 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
 
     """
 
+    # determinant of the Jacobian matrix
     det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
     det_jacs = det_jacs.reshape(-1, 1, 1)
 
-    # the adjoint matrix
-    nel = JAC.shape[0]
-    AUJJ = np.zeros((nel, 2, 2), dtype=float)
+    # the adjoint matrix AUJJ
+    AUJJ = np.zeros((JAC.shape[0], 2, 2), dtype=float)
 
     AUJJ[:, 0, 0] =  JAC[:, 1, 1]
     AUJJ[:, 0, 1] = -JAC[:, 0, 1]
     AUJJ[:, 1, 0] = -JAC[:, 1, 0]
     AUJJ[:, 1, 1] =  JAC[:, 0, 0]
 
+    # inverse of the Jacobian matrix
     inv_jacs = (1 / det_jacs) * AUJJ
 
     return det_jacs, inv_jacs
@@ -162,23 +113,21 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
 
 
 class ACT_TRIANGLE_3(Element2D):
-    #
+
     NODES_PER_ELEMENT = 3
     DOFS_PER_NODE = 1
     DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
 
-
     def __init__(self, model: "Model"):
 
         self.model = model
+
         self.initialize_variables()
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
 
     def initialize_variables(self):
-        """
-        """
         self.connectivities = None
         self.element_label = "acoustic_triangular_3"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
@@ -203,10 +152,34 @@ class ACT_TRIANGLE_3(Element2D):
         This method processes the shape functions and their
         derivatives for all integration points.
         """
-        ssx = self.pint[:, 0]
-        ttx = self.pint[:, 1]
-        #
-        self.phi, self.dphi = get_shape_functions_and_derivatives(ssx, ttx)
+
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+
+        ## coordinates from integration points
+        xi_1 = self.pint[:, 0]
+        xi_2 = self.pint[:, 1]
+
+        # define coordiante l4
+        xi_3 = 1 - xi_1 - xi_2
+
+        ## shape functions (Atalla and Sgard, 2015, pg. 173)
+        phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
+        phi[:, 0, 0] = xi_1      # ->      (1.0, 0.0)   Node 1
+        phi[:, 0, 1] = xi_2      # ->      (0.0, 1.0)   Node 2
+        phi[:, 0, 2] = xi_3      # ->      (0.0, 0.0)   Node 3
+
+        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
+        dphi = np.zeros((2, self.NODES_PER_ELEMENT), dtype=float)
+        dphi[0, 0] = 1
+        dphi[0, 1] = 0
+        dphi[0, 2] = -1
+
+        dphi[1, 0] = 0
+        dphi[1, 1] = 1
+        dphi[1, 2] = -1
+
+        self.phi = phi
+        self.dphi = dphi
 
 
     def get_stacked_local_coordinates(self) -> np.ndarray:
@@ -267,7 +240,7 @@ class ACT_TRIANGLE_3(Element2D):
         coord_loc[:, 2, 1] = y3
 
         return coord_loc
-    
+
 
     def get_stacked_element_face_normals(self) -> np.ndarray:
         """
@@ -300,6 +273,44 @@ class ACT_TRIANGLE_3(Element2D):
         return normals
 
 
+    def stacked_matrices_NtN(self) -> np.ndarray:
+        """
+        This method processes all elementary matrices and returns them
+        in the stacked array form.
+
+        Returns
+        -------
+        int2d_NtN: np.ndarray
+            The array containing the stacked elementary matrices.
+        """
+
+        # NOTE: the shape functions' derivatives are constant for all
+        # integration points; this is why the Jacobian matrix-related
+        # calculations are being performed out of the integration loop.
+
+        # compute local coordinates for all elements
+        local_coords = self.get_stacked_local_coordinates()
+
+        # Jacobian matrices of all elements
+        JAC_stacked = self.dphi @ local_coords
+
+        # Jacobian determinants and inverses of all elements
+        det_jacs = get_detJAC(JAC_stacked)
+
+        # initialize variable
+        int2d_NtN = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :, :]
+
+            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps)
+
+        return int2d_NtN
+
+
     def stacked_matrices_NtN_and_BtB(self) -> np.ndarray:
         """
         This method processes all elementary matrices for mass source
@@ -314,114 +325,38 @@ class ACT_TRIANGLE_3(Element2D):
             The array containing the elementary stacked matrices int(Bt @ B, gamma_s).
         """
 
-        nel = self.connectivities.shape[0]
-        aux_ones = np.ones((nel, 1, 1), dtype=float)
+        # NOTE: the shape functions' derivatives are constant for all
+        # integration points; this is why the Jacobian matrix-related
+        # calculations are being performed out of the integration loop.
 
+        # compute local coordinates for all elements
         local_coords = self.get_stacked_local_coordinates()
-        JAC_3d = (self.dphi * aux_ones) @ local_coords
 
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_3d)
-        dphi_t = inv_jacs @ (aux_ones * self.dphi)
+        # Jacobian matrices of all elements
+        JAC_stacked = self.dphi @ local_coords
 
-        # shape functions
-        N = self.phi
+        # Jacobian determinants and inverses of all elements
+        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
 
         # derivative of shape functions
-        B = dphi_t
+        B = inv_jacs @ self.dphi
         B_t = np.transpose(B, axes=(0, 2, 1))
 
-        int2d_NtN = - (1/2) * N.T @ N * (det_jacs * self.wps)
-        int2d_BtB = - (1/2) * B_t @ B * (det_jacs * self.wps)
+        # initialize variables
+        int2d_NtN = 0.
+        int2d_BtB = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :, :]
+            N_t = N.T
+
+            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps)
+            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps)
 
         return int2d_NtN, int2d_BtB
-
-
-    def damping_matrix_Ce(self, el_index: int, rho: float = 1.0, impedance: float = 1.0) -> np.ndarray:
-        """ 
-        This method computes the elementary impedance matrix.
-
-        Parameters
-        ----------
-        el_index: int
-            The element index.
-
-        rho: float, optional
-            The fluid density in kg/m³.
-
-        impedance: float, optional
-            The specific impedance in kg/m².s.
-
-        Returns
-        -------
-        Ze: np.ndarray
-            The elementary impedance matrix.
-        """
-
-        ie = self.connectivities[el_index, :]
-        coords = self.nodal_coordinates[ie, :]
-        coord_loc = get_local_coordinates(coords)
-
-        JAC = self.dphi @ coord_loc
-        detJAC = get_jacobian_determinant(JAC)
-
-        # N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        # N[:, 0, :] = self.phi
-
-        # Ze = 0.
-        # for i in range(self.nint):
-        #     Ze += -(1/2) * (rho/impedance) * N[i, :, :].T @ N[i, :, :] * (detJAC*self.wps)
-        #     # print(f"matrices_Z: index - {el_index} k - {i} {N[i, :, :]}")
-
-        N = self.phi
-        Ze = - (1/2) * (rho / impedance) * N.T @ N * (detJAC * self.wps)
-
-        return Ze
-
-
-    def stacked_matrices_NtN(self) -> np.ndarray:
-        """
-        This method processes all elementary matrices and returns them
-        in the stacked array form.
-
-        Returns
-        -------
-        int2d_NtN: np.ndarray
-            The array containing the stacked elementary matrices.
-        """
-
-        nel = self.connectivities.shape[0]
-        aux_ones = np.ones((nel, 1, 1), dtype=float)
-
-        local_coords = self.get_stacked_local_coordinates()
-        JAC_3d = (self.dphi * aux_ones) @ local_coords
-        det_jacs = get_stacked_detJAC(JAC_3d)
-
-        # shape functions
-        N = self.phi
-
-        int2d_NtN = - (1/2) * N.T @ N * (det_jacs * self.wps)
-
-        # # compute local coordinates for all elements
-        # local_coords = self.get_stacked_local_coordinates()
-
-        # # initialize variable
-        # int2d_NtN = 0.
-
-        # # integration loop
-        # for i in range(self.nint):
-
-        #     # Jacobian matrices of all elements
-        #     JAC_3d = self.dphi @ local_coords
-
-        #     # Jacobian determinants and inverses of all elements
-        #     det_jacs = get_stacked_detJAC(JAC_3d)
-
-        #     # shape functions
-        #     N = self.phi[i, :].reshape(1, -1)
-
-        #     int2d_NtN += - (1 / 2) * N.T @ N * (det_jacs * self.wps)
-
-        return int2d_NtN
 
 
     def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:
@@ -442,48 +377,37 @@ class ACT_TRIANGLE_3(Element2D):
             The elementary load vector.
         """
 
-        ie = self.connectivities[el_index, :]
-        coords = self.nodal_coordinates[ie, :]
-        coord_loc = get_local_coordinates(coords)
+        # NOTE: the shape functions' derivatives are constant for all
+        # integration points; this is why the Jacobian matrix-related
+        # calculations are being performed out of the integration loop.
 
-        JAC = self.dphi @ coord_loc
-        det_jac = get_jacobian_determinant(JAC)
+        # element nodal coordinates
+        coords = self.nodal_coordinates[self.connectivities[el_index, :], :]
 
-        # N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        # N[:, 0, :] = self.phi
+        # nodal coordinates in the local CS
+        coord_lcs = get_local_coordinates(coords)
 
-        # Fe = 0.
-        # for i in range(self.nint):            
-        #     Fe += -(1/2) * load * N[i, :, :].T * (det_jac * self.wps)
+        # Jacobian matrix
+        JAC = self.dphi @ coord_lcs
 
-        N = self.phi
-        Fe = - (1/2) * load * (N @ ones_31) * (det_jac * self.wps)
+        # determinant of Jacobia matrix
+        det_jac = get_detJAC(JAC)
 
-        # # element nodal coordinates
-        # coords = self.nodal_coordinates[self.connectivities[el_index, :], :]
-        
-        # # nodal coordinates in the local CS
-        # coord_lcs = get_local_coordinates(coords)
+        # intialize variable
+        Fe = 0.
 
-        # Fe = 0.
-        # # integration loop
-        # for i in range(self.nint):
+        # integration loop
+        for i in range(self.nint):
 
-        #     # Jacobian matrix
-        #     JAC = self.dphi @ coord_lcs
+            # shape functions
+            N = self.phi[i, :, :]
 
-        #     # determinant of Jacobia matrix
-        #     det_JAC = get_jacobian_determinant(JAC)
-
-        #     # shape functions
-        #     N = self.phi[i, :].reshape(1, -1)
-
-        #     Fe += - (1/2) * load * N.T * (det_JAC * self.wps)
+            Fe += (1 / 2) * load * N.T * (det_jac * self.wps)
 
         return Fe
 
 
-    def surface_integrator(self, e_connect: np.ndarray, sound_intensity: np.ndarray) -> np.ndarray:
+    def elementary_sound_power(self, e_connect: np.ndarray, P_e: np.ndarray, Vn_e: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -492,97 +416,46 @@ class ACT_TRIANGLE_3(Element2D):
         el_index: int
             The element index.
 
-        load: float, optional
-            The load vector.
-
-        Returns
-        -------
-        Fe: np.ndarray
-            The elementary load vector.
-        """
-
-        # e_connect = self.connectivities[el_index, :]
-        coords = self.nodal_coordinates[e_connect, :]
-        coord_loc = get_local_coordinates(coords)
-
-        JAC = self.dphi @ coord_loc
-        det_jac = get_jacobian_determinant(JAC)
-
-        # N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT), dtype=float)
-        # N[:, 0, :] = self.phi
-
-        # Fe = 0.
-        # for i in range(self.nint):            
-        #     Fe += -(1/2) * load * N[i, :, :].T * (det_jac * self.wps)
-
-        N = self.phi
-        Fe = - (1/2) * (N @ sound_intensity) * (det_jac * self.wps)
-
-        return Fe
-
-
-    def elementary_sound_power_from_sound_intensity(self, e_connect: np.ndarray, sound_intensity: np.ndarray) -> np.ndarray:
-        """ 
-        This method computes the elementary load vector.
-
-        Parameters
-        ----------
-        el_index: int
-            The element index.
-
-        sound_intensity: np.ndarray, optional
-            The sound intensity vector.
-
-        Returns
-        -------
-        Fe: np.ndarray
-            The elementary sound power.
-        """
-
-        coords = self.nodal_coordinates[e_connect, :]
-        coord_loc = get_local_coordinates(coords)
-
-        JAC = self.dphi @ coord_loc
-        det_jac = get_jacobian_determinant(JAC)
-
-        N = self.phi
-
-        Fe = - (1/2) * (N @ sound_intensity) * (det_jac * self.wps)
-
-        return Fe
-
-
-    def elementary_sound_power(self, e_connect: np.ndarray, L_sv: np.ndarray, R_sv: np.ndarray) -> np.ndarray:
-        """ 
-        This method computes the elementary load vector.
-
-        Parameters
-        ----------
-        el_index: int
-            The element index.
-
-        L_sv: np.ndarray
-            The left stacked vector (complex-conjugate of particle velocities).
-
-        R_sv: np.ndarray
+        P_e: np.ndarray
             The righ stacked vector (complex-conjugate of pressures).
+    
+        Vn_e: np.ndarray
+            The left stacked vector (complex-conjugate of normal particle velocities).
 
         Returns
         -------
-        Ce: np.ndarray
+        We: np.ndarray
             The elementary sound power vector.
         """
 
+        # NOTE: the shape functions' derivatives are constant for all
+        # integration points; this is why the Jacobian matrix-related
+        # calculations are being performed out of the integration loop.
+
+        # element nodal coordinates
         coords = self.nodal_coordinates[e_connect, :]
-        coord_loc = get_local_coordinates(coords)
 
-        JAC = self.dphi @ coord_loc
-        det_jac = get_jacobian_determinant(JAC)
+        # nodal coordinates in the local CS
+        coord_lcs = get_local_coordinates(coords)
 
-        N = self.phi
-        Ce = - (1/2) * L_sv @ (N.T @ N) @ R_sv * (det_jac * self.wps)
+        # Jacobian matrix
+        JAC = self.dphi @ coord_lcs
 
-        return Ce.flatten()
+        # determinant of Jacobia matrix
+        det_jac = get_detJAC(JAC)
+
+        # intialize variable
+        We = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :, :]
+
+            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps)
+
+        return We.flatten()
 
 
     def reorder_connect(self, connect_face):
@@ -611,139 +484,165 @@ class ACT_TRIANGLE_3(Element2D):
         return ind_rows_face, ind_cols_face
 
 
-    def excitation_F_base(self, ee, Vn=1):
-        """ F3 matrices
-        """
-        #Check Connectivity -- Ansys = Gmsh
+def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
 
-        coord = self.nodal_coordinates
-        connect_face = self.connectivities
+    """
+    This function returns the shape functions and its derivatives.
 
-        ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-        XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-        XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-        XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
+    Parameters
+    ----------
+    ssx: np.ndarray
+        The x coordinates of the integration points.
 
-        vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-        vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+    ttx: np.ndarray
+        The y coordinates of the integration points.
 
-        loc_x_axis = vec21.copy()
-        loc_z_axis = np.cross(loc_x_axis, vec31)
-        loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
+    Returns
+    -------
+    phi: np.ndarray
+        The shape functions evaluated in the integration points.
 
-        unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-        unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
+    dphi: np.ndarray
+        The shape functions derivatives.
+    """
 
-        x1 = 0 
-        x2 = np.dot(vec21,unit_x_axis)
-        x3 = np.dot(vec31,unit_x_axis)
-        y1 = 0 
-        y2 = np.dot(vec21,unit_y_axis)
-        y3 = np.dot(vec31,unit_y_axis)
+    # shape functions
+    phi = np.array([1 - ssx - ttx, ttx, ssx], dtype=float).T
 
-        coord_loc = np.array([[x1, y1],
-                              [x2, y2],
-                              [x3, y3]])
+    # shape functions derivatives
+    dphi = np.array([[-1, 0, 1],
+                     [-1, 1, 0]], dtype=float)
 
-        ################ Definir pontos de integração 2D
-        nint = 3
-        con1 = 1/6
-        con2 = 2/3
-        wps = 1/3
-        pint = np.array([[con1, con1],
-                         [con2, con1],
-                         [con1, con2]])
-
-        ######################## Inicio da integração na face
-        Fe = np.zeros((3,1),dtype=complex)
-        N = np.zeros((1,3))
-        # integration
-        for i in range(nint):
-            ssx, ttx = pint[i, 0], pint[i, 1]
-            phi, dphi = get_shape_functions_and_derivatives(ssx, ttx)
-            #ie = connect_face[ee_face,1:]-1
-            dxdy = dphi@coord_loc
-            # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-            JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                            [dxdy[1,0], dxdy[1,1]]], dtype=float)
-            # print(f"forceF3: index - {ee} : k - {i} JAC {JAC}")
-            #Inverse Jacobian
-            detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
-            # N[0, :] = phi
-            for iii in range(3):
-                N[0,iii]=phi[iii]
-
-            # print(f"forceF3: index - {ee} : k - {i} {N}")           
-            Fe += -(1/2) * Vn * N.T * (detJAC * wps)
-
-        return Fe
+    return phi, dphi
 
 
-    def matrices_Z_base(self, ee, rho=1, impedance=1):
-        """ Z3 matrices
-        """
-        #Check Connectivity -- Ansys = Gmsh
+def forceF3(ee, coord, connect_face, Vn=1):
+    """ F3 matrices
+    """
+    #Check Connectivity -- Ansys = Gmsh
 
-        coord = self.nodal_coordinates
-        connect_face = self.connectivities
+    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
+    XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
+    XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
+    XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
 
-        ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-        XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-        XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-        XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
+    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
 
-        vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-        vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+    loc_x_axis = vec21.copy()
+    loc_z_axis = np.cross(loc_x_axis, vec31)
+    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
-        loc_x_axis = vec21.copy()
-        loc_z_axis = np.cross(loc_x_axis, vec31)
-        loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
+    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
+    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
 
-        unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-        unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
+    x1 = 0 
+    x2 = np.dot(vec21,unit_x_axis)
+    x3 = np.dot(vec31,unit_x_axis)
+    y1 = 0 
+    y2 = np.dot(vec21,unit_y_axis)
+    y3 = np.dot(vec31,unit_y_axis)
 
-        x1 = 0 
-        x2 = np.dot(vec21,unit_x_axis)
-        x3 = np.dot(vec31,unit_x_axis)
-        y1 = 0 
-        y2 = np.dot(vec21,unit_y_axis)
-        y3 = np.dot(vec31,unit_y_axis)
+    coord_loc = np.array([[x1, y1],
+                            [x2, y2],
+                            [x3, y3]])
 
-        coord_loc = np.array([[x1, y1],
-                              [x2, y2],
-                              [x3, y3]])
-        # print(f"matricesZ3: index - {ee} \n {coord_loc}")
+    ################ Definir pontos de integração 2D
+    nint = 3
+    con1 = 1/6
+    con2 = 2/3
+    wps = 1/3
+    pint = np.array([[con1, con1],
+                        [con2, con1],
+                        [con1, con2]])
 
-        ################ Definir pontos de integração 2D
-        nint = 3
-        con1 = 1/6
-        con2 = 2/3
-        wps = 1/3
-        pint = np.array([[con1, con1],
-                         [con2, con1],
-                         [con1, con2]])
+    ######################## Inicio da integração na face
+    Fe = np.zeros((3,1),dtype=complex)
+    N = np.zeros((1,3))
+    # integration
+    for i in range(nint):
+        ssx, ttx = pint[i, 0], pint[i, 1]
+        phi, dphi = get_shape_functions_and_derivatives(ssx, ttx)
+        #ie = connect_face[ee_face,1:]-1
+        dxdy = dphi@coord_loc
+        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
+        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
+                        [dxdy[1,0], dxdy[1,1]]], dtype=float)
+        # print(f"forceF3: index - {ee} : k - {i} JAC {JAC}")
+        #Inverse Jacobian
+        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
+        # N[0, :] = phi
+        for iii in range(3):
+            N[0,iii]=phi[iii]
 
-        ######################## Inicio da integração na face
-        Ze = np.zeros((3,3),dtype=complex)
-        N = np.zeros((1,3))
-        # integration
-        for i in range(nint):
-            ssx, ttx = pint[i, 0], pint[i, 1]
-            phi, dphi = get_shape_functions_and_derivatives(ssx,ttx)
-            #ie = connect_face[ee_face,1:]-1
-            dxdy = dphi@coord_loc
-            # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-            JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                            [dxdy[1,0], dxdy[1,1]]], dtype=float) 
-            #Inverse Jacobian
-            detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
-            # print(f"matricesZ3: index - {ee} \n {coord_loc} {detJAC} -> {i}")
+        # print(f"forceF3: index - {ee} : k - {i} {N}")           
+        Fe += -(1/2) * Vn * N.T * (detJAC * wps)
 
-            for iii in range(3):
-                N[0, iii] = phi[iii]
-            
-            # print(f"matricesZ3: index - {ee} k - {i} {N}")
-            
-            Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
+    return Fe
 
-        return Ze
+
+def impedanceZ3(ee, coord, connect_face, rho=1, impedance=1):
+    """ Z3 matrices
+    """
+    #Check Connectivity -- Ansys = Gmsh
+
+    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
+    XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
+    XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
+    XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
+
+    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+
+    loc_x_axis = vec21.copy()
+    loc_z_axis = np.cross(loc_x_axis, vec31)
+    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
+
+    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
+    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
+
+    x1 = 0 
+    x2 = np.dot(vec21,unit_x_axis)
+    x3 = np.dot(vec31,unit_x_axis)
+    y1 = 0 
+    y2 = np.dot(vec21,unit_y_axis)
+    y3 = np.dot(vec31,unit_y_axis)
+
+    coord_loc = np.array([[x1, y1],
+                            [x2, y2],
+                            [x3, y3]])
+    # print(f"matricesZ3: index - {ee} \n {coord_loc}")
+
+    ################ Definir pontos de integração 2D
+    nint = 3
+    con1 = 1/6
+    con2 = 2/3
+    wps = 1/3
+    pint = np.array([[con1, con1],
+                        [con2, con1],
+                        [con1, con2]])
+
+    ######################## Inicio da integração na face
+    Ze = np.zeros((3,3),dtype=complex)
+    N = np.zeros((1,3))
+    # integration
+    for i in range(nint):
+        ssx, ttx = pint[i, 0], pint[i, 1]
+        phi, dphi = get_shape_functions_and_derivatives(ssx,ttx)
+        #ie = connect_face[ee_face,1:]-1
+        dxdy = dphi@coord_loc
+        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
+        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
+                        [dxdy[1,0], dxdy[1,1]]], dtype=float) 
+        #Inverse Jacobian
+        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
+        # print(f"matricesZ3: index - {ee} \n {coord_loc} {detJAC} -> {i}")
+
+        for iii in range(3):
+            N[0, iii] = phi[iii]
+        
+        # print(f"matricesZ3: index - {ee} k - {i} {N}")
+        
+        Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
+
+    return Ze

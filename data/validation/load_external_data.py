@@ -9,8 +9,13 @@ labels = [
           ]
 
 class LoadExternalData:
-    def __init__(self, path: str, fluid_density: float):
-        self.folder_path = Path(path)
+    def __init__(self, path: str | Path, fluid_density: float):
+
+        if isinstance(path, str):
+            self.folder_path = Path(path)
+        else:
+            self.folder_path = path
+
         self.fluid_density = fluid_density
 
     def get_frequencies(self):
@@ -32,11 +37,10 @@ class LoadExternalData:
 
             data = np.loadtxt(path)
             rows, cols = data.shape
-            # print(labels[i], data.shape)
             
-            node_ids = data[:, 0]
             array_pressures = np.zeros((rows, len(frequencies) + 1), dtype=complex)
 
+            node_ids = data[:, 0]
             array_pressures[:, 0] = node_ids
             array_pressures[:, 1:] = data[:, 1::2] + 1j * data[:, 2::2]
             
@@ -63,13 +67,12 @@ class LoadExternalData:
 
             data = np.loadtxt(path)
             rows, cols = data.shape
-            # print(labels[i], data.shape)
-            node_ids = data[:, 0]
 
             array_Vx = np.zeros((rows, len(frequencies) + 1), dtype=complex)
             array_Vy = np.zeros((rows, len(frequencies) + 1), dtype=complex)
             array_Vz = np.zeros((rows, len(frequencies) + 1), dtype=complex)
 
+            node_ids = data[:, 0]
             array_Vx[:, 0] = node_ids
             array_Vx[:, 1:] = (data[:, 1::6] + 1j * data[:, 2::6]) / den
             dict_Vx = dict(zip(node_ids, array_Vx[:, 1:]))
@@ -95,21 +98,18 @@ class LoadExternalData:
         paths = [
                 self.folder_path / "nodal_area_input_face.dat",
                 self.folder_path / "nodal_area_output_face.dat",
-                # self.folder_path / "cmsel_neigh/nodal_area_input_face.dat",
-                # self.folder_path / "cmsel_neigh/nodal_area_output_face.dat"
                 ]
 
         for i, path in enumerate(paths):
 
             data = np.loadtxt(path)
             rows, cols = data.shape
-            # print(labels[i], data.shape)
-            node_ids = data[:, 0]
 
             array_nodal_area = np.zeros((rows, 2), dtype=float)
             array_nodal_area[:, 0] = data[:, 0]
             array_nodal_area[:, 1] = data[:, 1]
 
+            node_ids = data[:, 0]
             dict_nodal_area = dict(zip(node_ids, array_nodal_area[:, 1:]))
 
             output_data[labels[i]] = [array_nodal_area, dict_nodal_area]

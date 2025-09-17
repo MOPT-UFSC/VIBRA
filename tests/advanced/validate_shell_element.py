@@ -144,5 +144,5 @@ def load_external_mesh_and_solve():
 
     # element_3d = model.acoustic_element_3d
 
-    # mesh._process_face_elements_connected_to_nodes([1, 2])
+    # mesh.process_face_elements_connected_to_nodes([1, 2])
     # mesh.compute_nodal_areas()

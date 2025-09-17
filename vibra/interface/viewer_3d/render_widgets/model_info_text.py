@@ -16,8 +16,10 @@ from numbers import Number
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
 
+    mesh = app().project.model.mesh
+
     selected_points = app().main_window.selected_geometry_points
-    node_ids = [int(point_id)-1 for point_id in selected_points]
+    node_ids = [mesh.nodes_from_points.get(point_id) for point_id in selected_points]
     point_ids = list(selected_points)
 
     if len(node_ids) == 0:
@@ -26,14 +28,14 @@ def points_info_text():
     text = ""
 
     if len(point_ids) == 1:
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+        coords = mesh.nodal_coordinates[node_ids[0], 1:].round(6)
         tree = TreeInfo(f"POINT {point_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
         text += str(tree)
 
     elif len(point_ids) == 2:
-        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        coord_A = mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = mesh.nodal_coordinates[node_ids[1], 1:]
         dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
         distance = np.linalg.norm(coord_A - coord_B)
 

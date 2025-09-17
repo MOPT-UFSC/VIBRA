@@ -381,7 +381,6 @@ class AcousticAssembler:
             data: dict
 
             volume_id = data.get("volume_id")
-            print(volume_id)
             fluid_properties = self.fluid_properties_from_volume.get(volume_id)
 
             mu_0 = fluid_properties.get("mu_0")
@@ -1117,6 +1116,9 @@ class AcousticAssembler:
         self.Qms1_1d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qms2_1d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
 
+        data = np.array([self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d, data_Qms1.flatten(), data_Qms2.flatten()]).T
+        np.savetxt("Qms1_data.dat", data, delimiter=",", fmt=["%i", "%i", "%.16e", "%.16e"])
+
 
     def assemble_mass_source_matrices_from_surfaces(self, index: int = 0):
         """
@@ -1241,12 +1243,6 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zsi[j] = int2d_NtN / Z_si[:, j].reshape(-1, 1, 1)
 
-        # TODO: remove after confirming that everything is working properly
-        # for i, complex_values in enumerate(surface_data.values()):
-        #     normalized_matrix_Z = self.element_2d.damping_matrix_Ce(i)
-        #     for j in range(self.number_frequencies):
-        #         self.data_Zsi[j][i, :, :] = normalized_matrix_Z / complex_values[0, j]
-
 
     def process_incident_plane_wave_data_to_assemble_damping_matrix(self):
         """ 
@@ -1265,7 +1261,6 @@ class AcousticAssembler:
         logging.info(f"Processing the impedance data to assemble damping matrix... [1/10]")
         _k_wave = self.integration_data_pw.get("k_wave")
         _e_normals = self.integration_data_pw.get("e_normals")
-        _pressures = self.integration_data_pw.get("pressures")
         connectivities = self.integration_data_pw.get("connectivities")
         _pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
 
@@ -1279,21 +1274,18 @@ class AcousticAssembler:
         logging.info(f"Processing the impedance data to assemble damping matrix... [2/10]")
         self.ind_rows_Zpw, self.ind_cols_Zpw = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
-        # eface_normals = self.element_2d.get_stacked_element_face_normals()
 
         e_normals = np.array(list(_e_normals.values())).reshape(-1, 1, 3)
         k_wave = np.array(list(_k_wave.values())).reshape(-1, 3, 1)
-        pressures = np.array(list(_pressures.values()))
         pw_impedances = np.array(list(_pw_impedances.values()))
 
         n_k = e_normals @ k_wave
 
         for j in range(self.number_frequencies):
-            P_inc = pressures[:, j].reshape(-1, 1, 1)
             Z_pw = pw_impedances[:, j].reshape(-1, 1, 1)
 
             # the negative signal is being used to revert the signal from the elementary matrix
-            self.data_Zpw[j] = - int2d_NtN * (P_inc / Z_pw) * n_k
+            self.data_Zpw[j] = - int2d_NtN * (n_k / Z_pw)
 
 
     def process_surface_impedance_data_to_assemble_damping_matrix(self):
@@ -1614,7 +1606,7 @@ class AcousticAssembler:
                         continue
 
                     N = len(nodes)
-                    self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
+                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
                     for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
@@ -1714,7 +1706,7 @@ class AcousticAssembler:
         return output
 
 
-    def process_assemble(self):
+    def process_assemble(self, reorder: bool=True):
 
         self.define_acoustic_elements()
         self.update_number_of_frequencies()
@@ -1722,9 +1714,9 @@ class AcousticAssembler:
         logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
         if self.model.mesh.element_type in [TETRAHEDRON_4, TETRAHEDRON_10] and True:
-            self.compute_data_to_assemble_global_matrices()
+            self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
-            self.compute_data_to_assemble_global_matrices_using_loop()
+            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
         dt = time() - t0
         print(f"Elapsed time to gather data to assemble global matrices: {round(dt, 4)} [s]")
 

@@ -97,7 +97,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
-        for node_id, normal_vector in mesh.nodal_normals_data.items():
+        for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
 

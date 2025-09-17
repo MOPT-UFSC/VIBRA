@@ -3,7 +3,6 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
@@ -32,17 +31,16 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     external_mesh = ExternalMeshData()
-    external_mesh.reset()
     external_mesh.read_file(mesh_path)
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
     
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_solids_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
+    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
@@ -151,16 +149,6 @@ def load_external_mesh_and_solve():
 
     # Set the analysis frequency setup
     assembler.process_assemble()
-    
-    # t0 = time()
-    # # Run modal analysis
-    # modal_solver = AcousticModalSolver(assembler)
-    # modal_solver.solve()
-    # natural_frequencies = modal_solver.natural_frequencies
-    # modal_shape = modal_solver.solution
-    # dt = time() - t0
-    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
-    # return
 
     # Define the analysis type and load setup
     harmonic_solver = AcousticHarmonicSolver(assembler)
@@ -211,7 +199,7 @@ def load_external_mesh_and_solve():
     #     output_face_Vx += particle_velocity[node_id][0, :]
     # output_face_Vx /= len(mesh.external_nodes_from_surfaces[2])
 
-    mesh._process_face_elements_connected_to_nodes([1, 2])
+    mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
     freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)

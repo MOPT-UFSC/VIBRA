@@ -774,7 +774,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.parameters['points_per_revolution'] = self.compressor.number_points
             self.compressor.process_state_properties_in_SI_units(self.parameters)
 
-            self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
+            self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
             surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
             freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)

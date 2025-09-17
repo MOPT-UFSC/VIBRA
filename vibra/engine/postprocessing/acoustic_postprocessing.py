@@ -179,7 +179,9 @@ def compute_surface_absorption_coefficient(
 
 def get_particle_velocity_from_surface(
         hsolver: "AcousticHarmonicSolver", 
-        surface_id: int, rho: float | np.ndarray
+        surface_id: int, rho: float | np.ndarray,
+        show_symbols: bool = False,
+        export_nodal_normals: bool = False,
         ):
     """ 
     This method computes the nodal average particle velocity in the selected surface.
@@ -213,16 +215,16 @@ def get_particle_velocity_from_surface(
     if element_3d.connectivity is None:
         element_3d.reorder_connect()
 
-    data_normals = assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
+    data_normals = assembler.model.mesh.get_surface_nodal_normals(surface_id)
     map_elements_to_nodes, filtered_nodes = assembler.model.mesh.get_solid_elements_connected_to_nodes(
-                                                                                                            surface_id = surface_id, 
-                                                                                                            return_nodes = True
-                                                                                                            )
+                                                                                                        surface_id = surface_id, 
+                                                                                                        return_nodes = True
+                                                                                                        )
 
-    # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
+    # Load all frequency solutions to optimize multiple load on the 'process_particle_velocity' method below.
     node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
     solution = hsolver.solution[filtered_nodes, :]
-    # nodal_pressures = hsolver.solution[:, :]
+    # solution = hsolver.solution[:, :]
 
     pv_data = dict()
     for node_id, solid_element_ids in map_elements_to_nodes.items():
@@ -263,18 +265,21 @@ def get_particle_velocity_from_surface(
     particle_velocities["nodal_normals"] = data_normals
 
     ## Uncomment the line below to plot the average normals at the nodes
-    # assembler.model.mesh.set_nodal_normals_data(data_normals)
+    if show_symbols:
+        assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
 
-    ## Only for validation purposes
-    # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
-    # output_data[:, 0] = ordered_nodes
+    if export_nodal_normals:
+        n_nodes = len(assembler.model.mesh.nodal_normals_data)
+        output_data = np.zeros((n_nodes, 5), dtype=float)
 
-    # for row, node_id in enumerate(ordered_nodes):
-    #     output_data[row, 1:] = assembler.model.mesh.nodal_normals_data[node_id]
+        for row, ((surface_id, node_id), normal_data) in enumerate(assembler.model.mesh.nodal_normals_data.items()):
+            output_data[row, 0] = node_id
+            output_data[row, 1] = surface_id
+            output_data[row, 2:] = normal_data
 
-    # fname = f"nodal_normals_data_surface_{surface_id}.dat"
-    # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
-    # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
+        fname = f"nodal_normals_data_surface.dat"
+        header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
+        np.savetxt(fname, output_data, fmt=["%i", "%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
     # dt = time() - t0
     # print(f"Elpased time to get_particle_velocity_from_surface: {dt} s")
@@ -411,10 +416,6 @@ def compute_transmission_loss(
         W_in = 10 * np.log10(np.sum(I_in * Aeff_in, axis=0))
         W_out = 10 * np.log10(np.sum(I_out * Aeff_out, axis=0))
 
-        # compute the transmission loss using an alternative surface integration
-        # W_in = integrate_surface_sound_power_from_nodal_sound_intensity(input_surface_id, I_in)
-        # W_out = integrate_surface_sound_power_from_nodal_sound_intensity(output_surface_id, I_out)
-
     transmission_loss = W_in - W_out
 
     if frequencies[0] == 0:
@@ -471,65 +472,14 @@ def integrate_surface_sound_power(
         element_2d = assembler.element_2d
 
     sound_power = 0.
+    dofs_per_element = element_2d.DOFS_PER_ELEMENT
     for i, e_connect in enumerate(surface_connectivities):
         node_indexes = [map_nodes.get(node) for node in e_connect]
-        L_sv = pressures[node_indexes, :].T.reshape(-1, 1, 3)
-        R_sv = particle_velocities[node_indexes, :].T.reshape(-1, 3, 1)
+        P_e = pressures[node_indexes, :].T.reshape(-1, 1, dofs_per_element)
+        Vn_e = particle_velocities[node_indexes, :].T.reshape(-1, dofs_per_element, 1)
 
-        normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
+        normalized_data = element_2d.elementary_sound_power(e_connect, P_e, Vn_e)
         sound_power += np.real(normalized_data) / 2
-
-    if dB_scale:
-        return 10 * np.log10(sound_power / 1e-12)
-
-    return sound_power
-
-
-def integrate_surface_sound_power_from_nodal_sound_intensity( 
-        hsolver: "AcousticHarmonicSolver",
-        surface_id: int,
-        sound_intensities: np.ndarray,
-        dB_scale: bool = True
-        ) -> np.ndarray:
-    """
-    This method integrates the sound power intensity over the selected surface.
-
-    Parameters
-    ----------
-        surface_id: int
-            The identifier of selected surface.
-
-        sound_intensities: np.ndarray
-            The acoustic sound intensities from selected suraface.
-
-    Returns
-    -------
-    sound_power: np.ndarray
-        The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
-    """
-
-    assembler = hsolver.assembler
-
-    nodes = np.sort(assembler.model.mesh.get_nodes_from_surface(surface_id))
-    surface_connectivities = assembler.model.mesh.get_connectivity_from_surface(surface_id)
-
-    number_nodes = len(nodes)
-    map_nodes = dict(zip(nodes, np.arange(number_nodes)))
-
-    if len(sound_intensities.shape) == 1:
-        sound_intensities = np.tile(sound_intensities, (number_nodes, 1))
-
-    element_2d = assembler.element_2d
-    if element_2d is None:
-        assembler.define_acoustic_elements()
-        element_2d = assembler.element_2d
-
-    sound_power = 0.
-    for i, e_connect in enumerate(surface_connectivities):
-        node_indexes = [map_nodes.get(node) for node in e_connect]
-        sound_intensity = sound_intensities[node_indexes, :]
-        normalized_data = element_2d.elementary_sound_power_from_sound_intensity(e_connect, sound_intensity)
-        sound_power += np.sum(np.real(normalized_data) / 2, axis=0)
 
     if dB_scale:
         return 10 * np.log10(sound_power / 1e-12)

@@ -144,7 +144,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
 
-        self.plane_actor = SectionPlaneActor(self.multimaterial.GetBounds())
+        self.plane_actor = SectionPlaneActor(self.ghost_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
         logging.info("Updating the mesh render... [75/100]")
