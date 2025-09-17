@@ -55,8 +55,8 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-        surface_nodes = mesh.nodes_from_surfaces.get(surface_id)
-        surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
+        nodes = mesh.get_nodes_from_surface(surface_id)
+        surface_coordinates = mesh.nodal_coordinates[nodes, 1:]
 
         surface_normals = mesh.normals_surface.get(surface_id)
         if surface_normals is None:
@@ -80,8 +80,8 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
-        line_nodes = mesh.nodes_from_lines.get(line_id)
-        line_coordinates = mesh.nodal_coordinates[line_nodes, 1:]
+        nodes = mesh.get_nodes_from_line(line_id)
+        line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
         dist = np.linalg.norm(line_coordinates - center_coords, axis=1)
         index = np.argmin(dist)
@@ -98,7 +98,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
-        for node_id, normal_vector in mesh.nodal_normals_data.items():
+        for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
 

@@ -1,9 +1,16 @@
-from pathlib import Path
 
-from PySide6 import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtCore import Signal, Qt
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QLabel,
+    QHBoxLayout,
+    QPushButton,
+    QRadioButton,
+    QSlider,
+    QWidget,
+)
 
 from vibra import app, ICON_DIR, LIGHT_ICON_COLOR
 from vibra.engine import AnalysisID

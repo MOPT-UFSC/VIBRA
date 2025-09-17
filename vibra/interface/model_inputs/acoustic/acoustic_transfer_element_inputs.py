@@ -6,7 +6,7 @@ from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -280,7 +280,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             return   
 
         if not app().project.model.generated_mesh:
-            obj = MeshSetupInputs()
+            obj = MesherSetupInputs()
             if obj.complete:
                 app().main_window.update_plots()
             else:
@@ -351,13 +351,13 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
             logging.info("Processing area... [60/100]")
-            self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+            self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
         LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 
-        surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
+        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
         if rho is None:

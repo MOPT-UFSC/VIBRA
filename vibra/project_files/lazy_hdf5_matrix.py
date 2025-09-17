@@ -71,9 +71,8 @@ class LazyHDF5MatrixWriter:
         self.file.flush()
 
     def close(self):
-        if self.file:
+        if hasattr(self, 'file') and self.file is not None:
             self.file.close()
-            self.file = None
 
     def __del__(self):
         self.close()

@@ -1,13 +1,14 @@
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import TransmissionLossInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.loading_window import LoadingWindow
+from vibra.engine.postprocessing import compute_noise_reduction, compute_transmission_loss
 
 import logging
 
@@ -191,7 +192,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.plotter.imported_dB_data()
+        self.plotter.imported_real_data(decibel_data=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
         app().main_window.update_symbols()
 
@@ -243,8 +244,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def join_model_data(self):
 
         self.model_results = dict()
+        solver = self.project.acoustic_harmonic_solver
 
         if self.comboBox_processing_selector.currentIndex() == 0:
+
             plot_type = "Transmission loss"
 
             def transmission_loss_callback():
@@ -255,27 +258,31 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 if not integration_method:
 
                     logging.info("Processing the transmission loss... [10/100]")
-                    self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+                    self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
 
-                x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(
-                                                                                             self.input_surface_id,
-                                                                                             self.output_surface_id,
-                                                                                             surface_integration = bool(integration_method),
-                                                                                             )
+                x_data, y_data = compute_transmission_loss(
+                    solver,
+                    self.input_surface_id,
+                    self.output_surface_id,
+                    surface_integration = bool(integration_method),
+                    )
 
                 return x_data, y_data
 
             x_data, y_data = LoadingWindow(transmission_loss_callback).run()
 
         else:
+
             plot_type = "Noise reduction"
-            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction(
-                                                                                       self.input_surface_id, 
-                                                                                       self.output_surface_id,
-                                                                                       )
+    
+            x_data, y_data = compute_noise_reduction(
+                solver,
+                self.input_surface_id, 
+                self.output_surface_id,
+                )
 
         if y_data is None:
             title = "Invalid input surface id"

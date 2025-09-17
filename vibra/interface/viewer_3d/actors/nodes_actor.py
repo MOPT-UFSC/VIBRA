@@ -1,7 +1,5 @@
-from time import time
 from molde.colors import Color
 
-import numpy as np
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
@@ -10,7 +8,6 @@ from vtkmodules.vtkCommonCore import (
 from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
-from vibra.engine.mesher.element_type import *
 from vibra import app
 
 

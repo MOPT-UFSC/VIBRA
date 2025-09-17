@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
@@ -7,7 +7,7 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
@@ -427,7 +427,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
-            mesher = MeshSetupInputs(close_after_generate=True)
+            mesher = MesherSetupInputs(close_after_generate=True)
             if not mesher.complete:
                 return True
 
@@ -774,7 +774,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.parameters['points_per_revolution'] = self.compressor.number_points
             self.compressor.process_state_properties_in_SI_units(self.parameters)
 
-            self.model.mesh._process_face_elements_connected_to_nodes(surface_id)
+            self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
             surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
             freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)

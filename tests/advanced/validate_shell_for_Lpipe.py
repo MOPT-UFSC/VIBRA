@@ -1,6 +1,6 @@
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import *
+from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
@@ -46,7 +46,6 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     external_mesh = ExternalMeshData()
-    external_mesh.reset()
     external_mesh.read_file(mesh_path)
     external_mesh.set_named_selections(list(named_selecion_to_tag.keys()))
     external_mesh.decode_mesh_data_from_file()
@@ -58,11 +57,11 @@ def load_external_mesh_and_solve():
     # return
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_faces_connectivity(external_mesh.connectivity_arrays, index_zero=True, etype_tag=4)
+    mesh.import_external_faces_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
@@ -74,10 +73,10 @@ def load_external_mesh_and_solve():
 
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
-        mesh.connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
+        mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
+        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
 
     # # Load the external data
@@ -148,7 +147,7 @@ def load_external_mesh_and_solve():
 
     analysis_setup = {  
                       "analysis_id" : 0,
-                      "global_damping" : (0, 0, 1e-3, 1e-7),
+                      "global_damping" : (1e-3, 1e-7, 0),
                       "f_min" : f_min,
                       "f_max" : f_max,
                       "f_step" : df,
@@ -200,7 +199,7 @@ def load_external_mesh_and_solve():
     # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
-    selected_nodes = mesh.nodes_from_surfaces[3]
+    selected_nodes = mesh.external_nodes_from_surfaces[3]
 
     dofs_index = {
                   "ux" : 0,

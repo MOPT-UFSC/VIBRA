@@ -2,7 +2,7 @@ from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkP
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vibra.utils.polydata_utils import transform_polydata
+from vibra.utils.vtk_utils import transform_polydata
 
 
 def create_arrow_source():

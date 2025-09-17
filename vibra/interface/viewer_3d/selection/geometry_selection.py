@@ -32,11 +32,16 @@ class GeometrySelection:
         point_ids, point_distance = self._pick_point(x, y)
         line_ids, line_distance = self._pick_line(x, y)
         surface_ids, surface_distance = self._pick_surface(x, y)
-        volume_ids, _ = self._pick_volume(x, y)
 
-        # Cheating a bit to prioritize point selection
-        point_distance *= 0.96
-        line_distance *= 0.98
+        volume_ids = set()
+        mesh = app().project.model.mesh
+        for surface in surface_ids:
+            surface_volumes = mesh.volumes_from_surface.get(surface, [])
+            volume_ids.update(surface_volumes)
+
+        # Cheating a bit to prioritize selection of points and lines
+        point_distance *= 0.98
+        line_distance *= 0.99
         closest = min(point_distance, line_distance, surface_distance)
 
         if closest == point_distance:
@@ -99,7 +104,6 @@ class GeometrySelection:
         view_coords = coordinate.GetComputedViewportValue(renderer)
         click = np.array([x, y])
 
-
         node_size = 15
         if np.linalg.norm(click - view_coords) < node_size / 2:
             equivalent_node_index = points_coords[i, 0].astype(int)
@@ -124,7 +128,7 @@ class GeometrySelection:
         surface_id, surface_distance = pick_actor_cell_info(
             x,
             y,
-            self.geometry_render_widget.faces_actor,
+            self.geometry_render_widget.multimaterial,
             "surface_indexes",
             self.geometry_render_widget.renderer,
         )
@@ -137,7 +141,7 @@ class GeometrySelection:
         volume_id, volume_distance = pick_actor_cell_info(
             x,
             y,
-            self.geometry_render_widget.faces_actor,
+            self.geometry_render_widget.multimaterial,
             "volume_indexes",
             self.geometry_render_widget.renderer,
         )

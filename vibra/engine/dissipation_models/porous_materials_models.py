@@ -1,5 +1,3 @@
-# fmt: off
-
 from vibra.engine.properties.fluid import Fluid
 
 from typing import TYPE_CHECKING
@@ -184,5 +182,3 @@ class PorousMaterialModels:
         # alpha_r = 1 - np.abs(R_r)**2
 
         return rho_eff, C_eff
-
-# fmt: on

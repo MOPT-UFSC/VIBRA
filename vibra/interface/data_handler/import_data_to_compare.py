@@ -1,19 +1,19 @@
-from PySide6.QtWidgets import *
-from PySide6.QtGui import *
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
-from pathlib import Path
-
-import numpy as np
-from typing import List
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.data_handler.imported_data import ImportedData
-from typing import TYPE_CHECKING
+
+from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+
+import numpy as np
+
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -48,13 +48,15 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.ids_to_checkBox = dict()
         self.checkButtons_state = dict()
 
-        self.colors = [ [0,0,0],
+        self.colors = ( 
+                        [0,0,0],
                         [1,0,0],
                         [1,0,1],
                         [0,1,1],
                         [0.75,0.75,0.75],
                         [0.5, 0.5, 0.5],
-                        [0.25, 0.25, 0.25] ]
+                        [0.25, 0.25, 0.25]
+                        )
 
     def _create_connections(self):
         #
@@ -69,19 +71,17 @@ class ImportDataToCompare(ImportDataToCompare_UI):
 
     def _config_widgets(self):
 
-        widths_1 = [320, 60]
-        for i, width in enumerate(widths_1):
+        for i, width in enumerate([320, 60]):
             self.treeWidget_import_text_files.setColumnWidth(i, width)
 
-        widths_2 = [180, 180, 60]
-        for i, width in enumerate(widths_2):
+        for i, width in enumerate([180, 180, 60]):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
 
     def update_skiprows_visibility(self):
         self.spinBox_skiprows.setDisabled(not self.checkBox_skiprows.isChecked())
 
     def import_results(self):
-        extensions = ["csv", "txt", "dat", "xls", "xlsx"]
+        extensions = ["xlsx", "xls", "csv", "txt", "dat"]
         self.imported_data = DataImporter.import_multiple_files("imported_data_folder", extensions)
 
         if self.imported_data is None:

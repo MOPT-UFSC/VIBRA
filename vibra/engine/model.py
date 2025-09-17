@@ -1,10 +1,11 @@
 from typing import Optional, Callable
 
 from vibra.engine.mesher.element_type import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
+TETRAHEDRON_4,
+TETRAHEDRON_10,
+HEXAHEDRON_8,
+HEXAHEDRON_20,
+DEFAULT_ELEMENT_TYPE,
 )
 
 from vibra.engine.elements.elements_3d import (
@@ -23,15 +24,16 @@ from vibra.engine.elements.elements_3d import (
 
 from vibra.engine.elements.elements_2d import (
     # 2d elements - acoustic
-    ACT_FACE_3,
-    ACT_FACE_4,
+    ACT_TRIANGLE_3,
+    ACT_TRIANGLE_6,
+    ACT_QUADRANGLE_4,
 
     # 2D elements - structural
-    STRUCT_TRIANGULAR_3
+    STRUCT_TRIANGLE_3
 )
 
 #1d elements - acoustic
-from vibra.engine.elements.elements_1d import ACT_LINE_2
+from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
@@ -102,7 +104,7 @@ class Model:
         self.porous_material_properties = dict()
         self.viscous_thermal_model_properties = dict()
 
-    def set_length_unit(self, length_unit: str = "milimeter"):
+    def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
     def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
@@ -114,8 +116,9 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup):
+    def set_mesh_setup(self, mesh_setup: dict):
         self.mesh_setup = mesh_setup
+        self.mesh.set_element_type(mesh_setup.get("ElementType", DEFAULT_ELEMENT_TYPE))
 
     def initialize_mesh(self):
         self.mesh = Mesh(
@@ -133,9 +136,10 @@ class Model:
                 element_size = self.mesh.compute_initial_mesh_size(path)
                 self.mesh.load_cad(
                     path,
-                    dimension=2,
-                    minimum_element_size=element_size * 0.4,
-                    maximum_element_size=element_size,
+                    dimension = 2,
+                    minimum_element_size = element_size * 0.4,
+                    maximum_element_size = element_size,
+                    ElementType = DEFAULT_ELEMENT_TYPE,
                 )
 
             except:
@@ -144,9 +148,10 @@ class Model:
                 element_size = 10
                 self.mesh.load_cad(
                     path,
-                    dimension=2,
-                    minimum_element_size=element_size * 0.5,
-                    maximum_element_size=element_size,
+                    dimension = 2,
+                    minimum_element_size = element_size * 0.5,
+                    maximum_element_size = element_size,
+                    ElementType = DEFAULT_ELEMENT_TYPE,
                 )
 
             self.generated_mesh = False
@@ -171,9 +176,6 @@ class Model:
             self.mesh.geometry_imported = False
             self.mesh.load_mesh(path)
             self.generated_mesh = True
-
-            logging.info("Processing mesh... [90/100]")
-            self.mesh.process_solid_elements_connected_to_nodes()
 
         except Exception as error_log:
             from traceback import print_exception
@@ -204,9 +206,6 @@ class Model:
         self.generated_mesh = True
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
-
-        logging.info("Processing mesh... [90/100]")
-        self.mesh.process_solid_elements_connected_to_nodes()
 
     def set_mesh(self, mesh):
         self.mesh = mesh
@@ -269,25 +268,13 @@ class Model:
 
         if self.list_frequencies != frequencies:
             return True
-
-    def get_volume(self, **kwargs):
-        """ This method returns the volume based on kwargs. """
-        volume = kwargs.get("volume", None)
-        if volume is None:
-            try:
-                element = kwargs.get("element", None) 
-                volume = self.mesh.volume_from_element[element]
-            except:
-                # temporary solution to allow running external mesh file
-                volume = 1
-        return volume
     
     def get_structural_elements(self):
 
         element_type = self.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGULAR_3(self), None
+            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
         elif element_type == TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self), None, None
@@ -302,16 +289,17 @@ class Model:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
+
         element_type = self.mesh.element_type
 
         if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self), ACT_FACE_3(self), ACT_LINE_2(self)
+            return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return ACT_TETRAHEDRON_10C(self), None, None
+            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_FACE_4(self), None
+            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), None
 
         elif element_type == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self), None, None
@@ -454,6 +442,143 @@ class Model:
 
         return density, speed_of_sound
 
+    def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
+        """
+        It returs the acoustic impedance of selected surface.
+
+        Parameter
+        ---------
+        surface_id: int
+            The selected surface ID.
+
+        Returns
+        -------
+        impedance: np.ndarray, float or None
+            The acoustic impedance of selected surface.
+        """
+
+        impedance = None
+
+        si_data = self.properties._get_property("specific_impedance", surface=surface_id)
+        pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
+
+        if isinstance(si_data, dict):
+            if "real_values" in si_data.keys():
+                real_values = np.array(si_data["real_values"])
+                imag_values = np.array(si_data["imag_values"])
+                impedance = real_values + 1j * imag_values
+
+            elif "anechoic_termination" in si_data.keys():
+                rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+                rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+                if isinstance(rho_eff_pm, np.ndarray):
+                    density = rho_eff_pm
+                    speed_of_sound = C_eff_pm
+
+                elif isinstance(rho_eff_tv, np.ndarray):
+                    density = rho_eff_tv
+                    speed_of_sound = C_eff_tv
+
+                else:
+
+                    fluid = self.properties._get_property("fluid", surface=surface_id)
+                    if not isinstance(fluid, Fluid):
+                        return None
+
+                    density = fluid.fluid_density
+                    speed_of_sound = fluid.speed_of_sound
+
+                impedance = density * speed_of_sound
+
+            elif "values" in si_data.keys():
+                impedance = si_data["values"][0]
+
+        elif isinstance(pw_data, dict):
+            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+            if isinstance(rho_eff_pm, np.ndarray):
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
+
+            elif isinstance(rho_eff_tv, np.ndarray):
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
+
+            else:
+                fluid = self.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    return None
+
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
+
+            impedance = density * speed_of_sound
+
+        return impedance
+
+    def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
+        """
+        This method computes the downstream pressure and particle velocity
+        from the model acoustic excitation.
+
+        Parameters
+        ----------
+        surface_id: int
+            The input surface ID.
+
+        Returns
+        -------
+        P_downstream: np.ndarray
+            The downstream pressure vector or matrix.
+
+        V_downstream: np.ndarray
+            The downstream velocity vector or matrix.
+        """
+
+        frequencies = self.frequencies
+
+        Zo_in = self.get_surface_impedance(surface_id)
+        if Zo_in is None:
+            return None, None
+
+        pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
+        sv_data = self.properties._get_property("surface_velocity", surface=surface_id)
+
+        if not (pw_data or sv_data):
+            return None, None
+
+        if isinstance(pw_data, dict):
+            values = pw_data.get("values")[0]
+            _wave_vector = pw_data.get("wave_vector")
+            wave_vector = np.array(_wave_vector, dtype=float)
+
+            if isinstance(values, complex | float):
+                P_inc = values * np.ones_like(frequencies, dtype=complex)
+            else:
+                P_inc = values
+
+            node_normals = self.mesh.get_stacked_normals_for_surface_elements(surface_id)
+            avg_normal = np.average(node_normals, axis=0).flatten()
+
+            P_downstream = P_inc * (avg_normal @ wave_vector)
+            V_downstream = -P_downstream / Zo_in
+
+        if isinstance(sv_data, dict):
+            if "real_values" in sv_data.keys():
+                real_values = np.array(sv_data["real_values"])
+                imag_values = np.array(sv_data["imag_values"])
+                V_in = real_values + 1j * imag_values
+
+            elif "values" in sv_data.keys():
+                V_in = sv_data["values"]
+
+            P_downstream = V_in * Zo_in / 2
+            V_downstream = P_downstream / Zo_in
+
+        return P_downstream, V_downstream
+
     def process_porous_material_properties(self, frequencies: np.ndarray):
         """
         This method processes the porous material model effective properties.
@@ -579,11 +704,8 @@ class Model:
         if volume_exists:
             return None
 
-        surface_without_thickness = list()
-        for surface_id in self.mesh.geometry_information.get("surfaces", dict()):
-            st_data = self.properties._get_property("surface_thickness", surface=surface_id)
-            if st_data is None:
-                surface_without_thickness.append(surface_id)
+        surface_ids = self.mesh.geometry_information.get("surfaces")
+        surface_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
 
