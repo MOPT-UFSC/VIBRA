@@ -107,6 +107,7 @@
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
    <addaction name="action_import_geometry"/>
+   <addaction name="action_import_mesh"/>
    <addaction name="action_save"/>
    <addaction name="action_save_as"/>
    <addaction name="separator"/>
@@ -668,8 +669,8 @@
   </action>
   <action name="action_import_mesh">
    <property name="icon">
-    <iconset>
-     <normaloff>../icons/mesh.png</normaloff>../icons/mesh.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/mesh.png</normaloff>:/icons/mesh.png</iconset>
    </property>
    <property name="text">
     <string>Import mesh</string>
