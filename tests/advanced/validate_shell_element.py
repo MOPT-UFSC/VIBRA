@@ -3,8 +3,6 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 # from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-# from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
-# from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 

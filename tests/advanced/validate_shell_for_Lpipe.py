@@ -156,7 +156,7 @@ def load_external_mesh_and_solve():
 
     model.set_analysis_setup(analysis_setup)
 
-    # harmonic_solver = StructuralHarmonicSolver(assembler)
+    # harmonic_solver = HarmonicSolver(assembler)
     # # Define the analysis setup
     # analysis_setup = {
     #                   "analysis_id" : 2, 

@@ -1,12 +1,12 @@
 from vibra import PROJECT_DIR
+from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
 
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
 
@@ -188,7 +188,7 @@ def load_external_mesh_and_solve():
     assembler.process_assemble(reorder=False)
 
     # Define the analysis type and load setup
-    harmonic_solver = AcousticHarmonicSolver(assembler)
+    harmonic_solver = HarmonicSolver(assembler)
 
     # Run harmonic analysis
 
@@ -214,8 +214,10 @@ def load_external_mesh_and_solve():
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
     rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
-    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
+    acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
+
+    input_particle_velocity = acoustic_post.get_particle_velocity_from_surface(1, rho_eff_v1)
+    output_particle_velocity = acoustic_post.get_particle_velocity_from_surface(2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)

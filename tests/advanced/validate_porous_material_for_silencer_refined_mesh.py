@@ -153,7 +153,7 @@ def load_external_mesh_and_solve():
     
     # t0 = time()
     # # Run modal analysis
-    # modal_solver = AcousticModalSolver(assembler)
+    # modal_solver = ModalSolver(assembler)
     # modal_solver.solve()
     # natural_frequencies = modal_solver.natural_frequencies
     # modal_shape = modal_solver.solution
