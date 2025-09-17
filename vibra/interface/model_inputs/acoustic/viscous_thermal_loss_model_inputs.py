@@ -503,9 +503,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if self.comboBox_attribution_type.currentIndex() != AttributionType.SELECTED_BODIES:
                 self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
 
-        else:
-            self.lineEdit_selection_id.setText("")
-
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
             self.mesher = MesherSetupInputs(close_after_generate=True)
