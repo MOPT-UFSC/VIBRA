@@ -1,9 +1,12 @@
 from vibra.engine.properties.fluid import Fluid
+from vibra.interface.model_inputs.acoustic.rectangular_duct_data import RectangularDuctData
+from vibra.interface.model_inputs.acoustic.circular_duct_data import CircularDuctData
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+from collections import defaultdict
 import numpy as np
 from scipy.special import jv
 
@@ -18,6 +21,9 @@ class ViscousThermalLossModels:
 
         self.effective_properties = dict()
 
+        self.map_model_id_to_models: Dict[int, RectangularDuctData|CircularDuctData] = defaultdict()
+        self.map_model_id_to_volumes: Dict[int, List[int]] = defaultdict(list)
+
     def process_effective_properties(self, frequencies: np.ndarray):
 
         self.effective_properties = dict()
@@ -30,22 +36,33 @@ class ViscousThermalLossModels:
 
         if not self.properties.is_the_volume_property_present_in_the_model("viscous_thermal_model"):
             return
+        
+        self.map_existing_viscous_thermal_loss_models()
+        map_volumes_to_effective_properties = defaultdict()
 
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "viscous_thermal_model":
+        for model_id, volume_ids in self.map_model_id_to_volumes.items():
+            for volume_id in volume_ids:
 
                 # surfaces_from_volume = self.project.model.mesh.surfaces_from_volume[volume_id]
-                fluid = self.properties._get_property("fluid", volume = volume_id)
+                data = self.map_model_id_to_models[model_id]
+                fluid: Fluid = self.properties._get_property("fluid", volume = volume_id)
+                section_type = data.section_type
+                formulation = data.formulation
 
-                if data["section_type"] in ["Rectangular duct", "Quadrangular duct"]:
+                key = (fluid.identifier, model_id, section_type, formulation)
+                rho_eff, C_eff = None, None
+
+                if key in map_volumes_to_effective_properties:
+                    rho_eff, C_eff = map_volumes_to_effective_properties[key]
+
+                elif section_type in ["Rectangular duct", "Quadrangular duct"]:
                     rho_eff, C_eff = self.get_rectangular_section_effective_properties(omega, fluid, data)
 
-                elif data["section_type"] in ["Narrow slit duct"]:
+                elif section_type in ["Narrow slit duct"]:
                     rho_eff, C_eff = self.get_narrow_slit_section_effective_properties(omega, fluid, data)
 
-                elif data["section_type"] in ["Circular duct"]:
-                    if data["formulation"] == "Stinson model":
+                elif section_type in ["Circular duct"]:
+                    if formulation == "Stinson model":
                         rho_eff, C_eff = self.get_circular_section_effective_properties_for_Stinson_model(omega, fluid, data)
                     else:
                         rho_eff, C_eff = self.get_circular_section_effective_properties_for_LRF_model(omega, fluid, data)
@@ -53,13 +70,15 @@ class ViscousThermalLossModels:
                 else:
                     continue
 
-                self.effective_properties[volume_id] = {   
-                                                       "section_type" : data["section_type"],
-                                                       "rho_eff" : rho_eff,
-                                                       "C_eff" : C_eff   
-                                                       }
+                map_volumes_to_effective_properties[key] = (rho_eff, C_eff)
 
-    def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict, fast_integration: bool=True):
+                self.effective_properties[volume_id] = {   
+                    "section_type" : section_type,
+                    "rho_eff" : rho_eff,
+                    "C_eff" : C_eff   
+                }
+
+    def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: RectangularDuctData, fast_integration: bool=True):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -74,9 +93,9 @@ class ViscousThermalLossModels:
         # K_s = gamma * P_0
         K_s = rho_0 * C_0**2
 
-        width = data["width"]
-        height = data["height"]
-        number_of_terms = data["number_of_terms"]
+        width = data.width
+        height = data.height
+        number_of_terms = data.number_of_terms
         # area = width * height
 
         a = width / 2
@@ -136,7 +155,7 @@ class ViscousThermalLossModels:
         return rho_eff, C_eff
 
 
-    def get_narrow_slit_section_effective_properties(self, omega, fluid, data):
+    def get_narrow_slit_section_effective_properties(self, omega, fluid, data: RectangularDuctData):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -151,7 +170,7 @@ class ViscousThermalLossModels:
         # K_s = gamma * P_0
         K_s = rho_0 * C_0**2
 
-        height = data["height"]
+        height = data.height
 
         G_rho = (height / 2) * np.sqrt(1j * omega * rho_0 / mu)
         G_bulk = (height / 2) * np.sqrt(1j * omega * rho_0 * Pr / mu)
@@ -175,7 +194,7 @@ class ViscousThermalLossModels:
         return rho_eff, C_eff
 
 
-    def get_circular_section_effective_properties_for_Stinson_model(self, omega, fluid, data):
+    def get_circular_section_effective_properties_for_Stinson_model(self, omega, fluid, data: CircularDuctData):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -190,7 +209,7 @@ class ViscousThermalLossModels:
         # K_s = gamma * P_0
         K_s = rho_0 * C_0**2
 
-        diameter = data["diameter"]
+        diameter = data.diameter
 
         radius = diameter / 2
         # area = np.pi * (diameter**2) / 4
@@ -217,7 +236,7 @@ class ViscousThermalLossModels:
         return rho_eff, C_eff
 
 
-    def get_circular_section_effective_properties_for_LRF_model(self, omega, fluid, data):
+    def get_circular_section_effective_properties_for_LRF_model(self, omega, fluid, data: CircularDuctData):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -232,7 +251,7 @@ class ViscousThermalLossModels:
         # K_s = gamma * P_0
         K_s = rho_0 * C_0**2
 
-        diameter = data["diameter"]
+        diameter = data.diameter
 
         radius = diameter / 2
         s = radius * (np.sqrt( omega * rho_0 / mu))
@@ -250,3 +269,28 @@ class ViscousThermalLossModels:
         C_eff = np.sqrt(K_eff / rho_eff)
 
         return rho_eff, C_eff
+    
+    def map_existing_viscous_thermal_loss_models(self):
+        self.map_model_id_to_volumes.clear()
+        self.map_model_id_to_models.clear()
+
+        models = list()
+        for key, data in self.properties.volume_properties.items():
+
+            property, volume_id = key
+            if property == "viscous_thermal_model":
+                
+                model = None
+                section_type = data["section_type"]
+
+                if section_type in ["Rectangular duct", "Quadrangular duct", "Narrow slit duct"]:
+                    model = RectangularDuctData.set_data(data)
+                else:
+                    model = CircularDuctData.set_data(data)
+
+                if model not in models:
+                    models.append(model)
+                
+                model_id = models.index(model) + 1
+                self.map_model_id_to_models[model_id] = model
+                self.map_model_id_to_volumes[model_id].append(volume_id)
