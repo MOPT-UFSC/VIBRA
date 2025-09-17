@@ -59,7 +59,7 @@ class ViscousThermalLossModels:
                                                        "C_eff" : C_eff   
                                                        }
 
-    def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
+    def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict, fast_integration: bool=True):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -90,16 +90,33 @@ class ViscousThermalLossModels:
         aux_rho = np.zeros(len(omega), dtype=complex)
         aux_comp = np.zeros(len(omega), dtype=complex)
 
-        for i, w in enumerate(omega):
+        if fast_integration:
 
-            sum_rho = 0.
-            sum_comp = 0.
+            # define the common terms for the double integration
+            an_bn = np.zeros((number_of_terms, number_of_terms), dtype=complex)
+            an2_bn2 = np.zeros((number_of_terms, number_of_terms), dtype=complex)
             for n, an in enumerate(a_n):
-                sum_rho += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0/mu)))
-                sum_comp += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0*Pr/mu)))
+                an_bn[:, n] = (an*b_m)**2
+                an2_bn2[:, n] = an**2 + b_m**2
 
-            aux_rho[i] = sum_rho
-            aux_comp[i] = sum_comp
+            # efficient way to compute the double integration
+            for i, w in enumerate(omega):
+                aux_rho[i] = np.sum(1 / (an_bn*(an2_bn2 + 1j*w*rho_0/mu)))
+                aux_comp[i] = np.sum(1 / (an_bn*(an2_bn2 + 1j*w*rho_0*Pr/mu)))
+
+        else:
+
+            # compute the double integration using an internal loop
+            for i, w in enumerate(omega):
+                sum_rho = 0.
+                sum_comp = 0.
+
+                for n, an in enumerate(a_n):
+                    sum_rho += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0/mu)))
+                    sum_comp += sum(1 / (((an*b_m)**2)*(an**2 + b_m**2 + 1j*w*rho_0*Pr/mu)))
+
+                aux_rho[i] = sum_rho
+                aux_comp[i] = sum_comp
 
         # Effective complex density (viscous-thermal losses in duct)
         rho_eff = mu * (((a*b)**2) / (4*1j*omega)) * (1/aux_rho)
