@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QTreeWidgetItem, QTableWidgetItem
+from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -59,8 +59,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self._initialize()
         self._config_window()
         self._create_connections()
-        self._config_widgets()
-
         self.load_info()
 
         while self.keep_window_open:
@@ -123,12 +121,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.doubleSpinBox_evaluated_depth.setDisabled(True)
         else:
             self.doubleSpinBox_evaluated_depth.setDisabled(False)
-
-    def _config_widgets(self):
-
-        for i, w in enumerate([250, 250]):
-            self.treeWidget_viscous_thermal_model.setColumnWidth(i, w)
-            self.treeWidget_viscous_thermal_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def update_rectangular_duct_area(self):
         try:
@@ -353,6 +345,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             
     def update_viscous_thermall_loss_tree_widget(self):
         self.treeWidget_viscous_thermal_model.clear()
+        self.treeWidget_viscous_thermal_model.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         for model_id, volumes_ids in self.map_model_id_to_volumes.items():
                 for volume_id in volumes_ids:
@@ -499,10 +492,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
-
-    def highlight_mesh_elements(self, elements):
-        mesh_widget = app().main_window.mesh_widget
-        mesh_widget.select_multiple_volumes(elements)
 
     def geometry_selection_callback(self):
 
@@ -680,7 +669,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def get_effective_properties(self, fluid: Fluid):
         
-        print("get_effective_properties")
         warnings.filterwarnings('ignore')
 
         frequencies = None
