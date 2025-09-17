@@ -112,19 +112,19 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
+        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
         if color_mode == ColorMode.EMPTY:
             self.clear_composition()
             self.default_actor.GetProperty().SetOpacity(1)
             hidden_surfaces = app().main_window.hidden_surfaces
-            visible_surfaces = set(mesh.volumes_from_surface.keys()) - hidden_surfaces
+            visible_surfaces = set(surfaces) - hidden_surfaces
             self.configure_composition("default", visible_surfaces)
             return
 
         self.default_actor.GetProperty().SetOpacity(1e-12)
         composition_to_surfaces = defaultdict(list)
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
-        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
         for surface in surfaces:
             volumes = mesh.volumes_from_surface.get(surface, ())
