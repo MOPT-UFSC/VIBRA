@@ -31,9 +31,9 @@ class ModalSolver:
 
         logging.info("Solving the eigenproblem... [75/100]")
 
-        linear_solver = initialize_solver(SolverType.PARDISO)
-
         A, B, is_symmetric = self.assembler.build_eigenproblem_system()
+
+        linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=is_symmetric)
 
         if not is_symmetric:
             n_modes *= 2

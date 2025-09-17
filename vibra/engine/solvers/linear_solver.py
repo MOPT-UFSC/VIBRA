@@ -38,6 +38,7 @@ class LinearSolver:
     def __init__(self, **kwargs):
         self.is_symmetric = False
         self.linear_operator_class = LinearOperator
+        self.is_symmetric_assumption: bool | None = None
 
     def solve(self, A, F):
         pass
@@ -57,6 +58,7 @@ class PardisoLinearSolver(LinearSolver):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Note: use mtype=3 for full symmetric complex matrix and mtype=6 for upper triangular complex matrix
+        self.is_symmetric_assumption = kwargs.get('is_symmetric')
         self.mtype = kwargs.get('mtype')
         self.phase = kwargs.get('phase', 13)
         self.size_limit_storage = kwargs.get('size_limit_storage', 5e7)
@@ -77,7 +79,11 @@ class PardisoLinearSolver(LinearSolver):
     def get_solver_instance(self, A, f=None):
         if self._solver:
             return self._solver
-        self.is_symmetric, is_complex = analyse_linear_system(A, f)
+        if self.is_symmetric_assumption is not None:
+            self.is_symmetric = self.is_symmetric_assumption
+        else:
+            self.is_symmetric = check_symmetry(A)
+        is_complex = check_complex(A, f)
         if self.mtype is None:
             if self.is_symmetric:
                 if is_complex:
@@ -112,7 +118,8 @@ class MumpsLinearSolver(LinearSolver):
             return self._solver
         # local import of mumps for backward compatibility with the current build (without conda)
         from mumps import Context
-        self.is_symmetric, is_complex = analyse_linear_system(A, f)
+        self.is_symmetric = check_symmetry(A)
+        is_complex = check_complex(A, f)
         print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
         self._solver = Context(self.verbose)
         return self._solver
@@ -125,7 +132,7 @@ def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
         return MumpsLinearSolver(**kwargs)
 
 
-def is_symmetric(matrix, tol=1e-5) -> bool:
+def check_symmetry(matrix, tol=1e-5) -> bool:
     if matrix.shape[0] != matrix.shape[1]:
         return False
 
@@ -138,9 +145,9 @@ def is_symmetric(matrix, tol=1e-5) -> bool:
         return np.allclose(matrix, matrix.T, atol=tol)
 
 
-def analyse_linear_system(A, f=None):
+def check_complex(A, f=None):
     is_A_complex = np.any(np.iscomplex(A.data))
     is_f_complex = np.any(np.iscomplex(f)) if f is not None else False
     is_complex = is_A_complex or is_f_complex
 
-    return is_symmetric(A), is_complex
+    return is_complex

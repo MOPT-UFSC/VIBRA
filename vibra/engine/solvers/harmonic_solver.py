@@ -15,7 +15,7 @@ from time import time
 
 
 class HarmonicSolver:
-    def __init__(self, assembler: "AcousticAssembler|StructuralAssembler", project_file: ProjectFile | None = None, **kwargs):
+    def __init__(self, assembler: AcousticAssembler | StructuralAssembler, project_file: ProjectFile | None = None, **kwargs):
         self.assembler = assembler
         self.project_file = project_file
         self.reset_variables()
@@ -69,7 +69,10 @@ class HarmonicSolver:
         frequencies = self.assembler.model.frequencies
 
         # initialize the solver
-        linear_solver = initialize_solver(SolverType.PARDISO)
+        if isinstance(self.assembler, StructuralAssembler):
+            linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+        else:
+            linear_solver = initialize_solver(SolverType.PARDISO)
         
         for i, freq in enumerate(frequencies):
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
