@@ -336,6 +336,9 @@ class LoadProject:
 
                     if key == "volume_properties":
                         self.properties._set_property(property, prop_data, volume=id)
+                    
+                    elif key == "group_properties":
+                        self.properties._set_property(property, prop_data, group=id)
 
                     elif key == "surface_properties":
                         self.properties._set_property(property, prop_data, surface=id)
