@@ -63,7 +63,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         # The bounds calculated for this actor are not correct
         # We also cannot correct it, so we have to disable it
         self.UseBoundsOff()
-        
+
         self.clear_colors()
 
     def clear_colors(self):
@@ -73,8 +73,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.reload_composition()
 
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
-        for surface, volumes in mesh.volumes_from_surface.items():
+        for surface in surfaces:
+            volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
@@ -107,8 +109,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         composition_to_surfaces = defaultdict(list)
 
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
-        for surface, volumes in mesh.volumes_from_surface.items():
+        for surface in surfaces:
+            volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             if surface in app().main_window.hidden_surfaces:
