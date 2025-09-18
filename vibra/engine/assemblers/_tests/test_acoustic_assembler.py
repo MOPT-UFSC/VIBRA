@@ -2,6 +2,7 @@ from vibra.engine.assemblers import matrix_helper
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.model import Model
 from scipy.sparse import csr_matrix
+import numpy as np
 
 
 def test_reordering_approach_for_frequency_dependent_acoustic_assembler(viscous_thermal_acoustic_model: Model):
@@ -24,11 +25,5 @@ def test_reordering_approach_for_frequency_dependent_acoustic_assembler(viscous_
     full_stiffness = csr_matrix((data_K.flatten(), (assembler.ind_rows, assembler.ind_cols)), shape=(assembler.total_dofs, assembler.total_dofs))
     full_mass = csr_matrix((data_M.flatten(), (assembler.ind_rows, assembler.ind_cols)), shape=(assembler.total_dofs, assembler.total_dofs))
 
-    rel_error_stiffness = (full_stiffness_with_reordering.data - full_stiffness.data) / full_stiffness.data
-    rel_error_mass = (full_mass_with_reordering.data - full_mass.data) / full_mass.data
-
-    max_error_stiffness = max(abs(rel_error_stiffness.flatten()))
-    max_error_mass = max(abs(rel_error_mass.flatten()))
-
-    assert max_error_mass < 1e-15
-    assert max_error_stiffness < 1e-12
+    assert np.allclose(full_stiffness_with_reordering.data, full_stiffness.data)
+    assert np.allclose(full_mass_with_reordering.data, full_mass.data)
