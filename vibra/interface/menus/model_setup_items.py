@@ -79,6 +79,34 @@ class ModelSetupItems(CommonMenuItems):
             self.item_top_structural_model_setup,
             self.item_top_acoustic_model_setup,
         ]
+        
+        # correlate each menu item with the name of the related property.
+        self.property_names = {
+            "item_child_material": "material",
+            "item_child_fluid": "fluid",
+            "item_child_mesh_setup": "mesh_setup",
+            "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
+            "item_child_surface_thickness": "surface_thickness",
+            "item_child_prescribe_dof": "prescribed_dofs",
+            "item_child_nodal_loads": "nodal_loads",
+            "item_child_distributed_loads": "distributed_loads",
+            "item_child_normal_pressure_load": "normal_pressure_load",
+            "item_child_acoustic_pressure": "acoustic_pressure",
+            "item_child_mass_source": "mass_source",
+            "item_child_surface_velocity": "surface_velocity",
+            "item_child_incident_plane_wave": "incident_plane_wave",
+            "item_child_anechoic_termination": "anechoic_termination",
+            "item_child_absorption_surface": "absorption_surface",
+            "item_child_specific_impedance": "specific_impedance",
+            "item_child_transfer_impedance": "transfer_impedance",
+            "item_child_perforated_plate_model": "perforated_plate_model",
+            "item_child_proportional_damping": "proportional_damping",
+            "item_child_porous_material_model": "porous_material_model",
+            "item_child_viscous_thermal_model": "viscous_thermal_model",
+            "item_child_acoustic_properties_gradient": "acoustic_properties_gradient",
+            "item_child_reciprocating_compressor_excitation": "reciprocating_compressor_excitation",
+            "item_child_acoustic_transfer_element_setup": "acoustic_transfer_element_setup",
+        }
 
     def _create_connections(self):
         """
@@ -96,7 +124,9 @@ class ModelSetupItems(CommonMenuItems):
 
                 if item_child_name is None:
                     continue
-
+                
+                item_child.set_property_name(self.property_names[item_child_name])
+                
                 function_name = item_child_name + "_callback"
                 function_exists = hasattr(self, function_name)
 
@@ -317,9 +347,6 @@ class ModelSetupItems(CommonMenuItems):
 
                 if item_child_name is None:
                     continue
-
-                # just to make sure the name is correct (there was a bug in the previous versions)
-                item_child.set_property_name(item_child_name)
 
                 item_child.set_warning(False)
                 item_child.set_tool_tip()
