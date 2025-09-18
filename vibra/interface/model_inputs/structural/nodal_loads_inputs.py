@@ -412,16 +412,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     }
 
             if attribution_type == AssignmetType.SURFACES:
-                self.model.properties._set_property("nodal_loads", data, surface=selected_id)
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
 
             elif attribution_type == AssignmetType.LINES:
-                self.model.properties._set_property("nodal_loads", data, line=selected_id)
+                self.properties._set_property("nodal_loads", data, line=selected_id)
 
             elif attribution_type == AssignmetType.POINTS:
-                self.model.properties._set_property("nodal_loads", data, point=selected_id)
+                self.properties._set_property("nodal_loads", data, point=selected_id)
 
             elif attribution_type == AssignmetType.NODES:
-                self.model.properties._set_property("nodal_loads", data, node=selected_id)
+                self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.actions_to_finalize()
 
@@ -687,16 +687,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     }
 
             if attribution_type == AssignmetType.SURFACES:
-                self.model.properties._set_property("nodal_loads", data, surface=selected_id)
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
 
             elif attribution_type == AssignmetType.LINES:
-                self.model.properties._set_property("nodal_loads", data, line=selected_id)
+                self.properties._set_property("nodal_loads", data, line=selected_id)
 
             elif attribution_type == AssignmetType.POINTS:
-                self.model.properties._set_property("nodal_loads", data, point=selected_id)
+                self.properties._set_property("nodal_loads", data, point=selected_id)
 
             elif attribution_type == AssignmetType.NODES:
-                self.model.properties._set_property("nodal_loads", data, node=selected_id)
+                self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
         self.actions_to_finalize()
