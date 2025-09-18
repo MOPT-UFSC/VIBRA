@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -228,6 +228,7 @@ class Ui_MainWindow(object):
         self.action_show_fluids.setObjectName(u"action_show_fluids")
         self.action_show_empty = QAction(MainWindow)
         self.action_show_empty.setObjectName(u"action_show_empty")
+        self.action_show_empty.setCheckable(True)
         self.action_import_geometry = QAction(MainWindow)
         self.action_import_geometry.setObjectName(u"action_import_geometry")
         icon30 = QIcon()
@@ -247,7 +248,7 @@ class Ui_MainWindow(object):
         icon32 = QIcon()
         icon32.addFile(u":/icons/visibility/ghost.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.action_ghost_view.setIcon(icon32)
-        self.action_ghost_view.setMenuRole(QAction.NoRole)
+        self.action_ghost_view.setMenuRole(QAction.MenuRole.NoRole)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -255,7 +256,7 @@ class Ui_MainWindow(object):
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setLineWidth(1)
-        self.splitter.setOrientation(Qt.Horizontal)
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.splitter.setOpaqueResize(True)
         self.splitter.setHandleWidth(3)
         self.stacked_setup = QStackedWidget(self.splitter)
@@ -265,7 +266,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.stacked_setup.sizePolicy().hasHeightForWidth())
         self.stacked_setup.setSizePolicy(sizePolicy)
-        self.stacked_setup.setContextMenuPolicy(Qt.NoContextMenu)
+        self.stacked_setup.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.stacked_setup.setStyleSheet(u"")
         self.page_3 = QWidget()
         self.page_3.setObjectName(u"page_3")
@@ -308,7 +309,7 @@ class Ui_MainWindow(object):
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1055, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1055, 20))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
@@ -376,8 +377,6 @@ class Ui_MainWindow(object):
         self.menu_view_mode.addAction(self.action_line_view)
         self.menu_view_mode.addAction(self.action_face_view)
         self.menu_view_mode.addSeparator()
-        self.menu_view_mode.addAction(self.action_show_materials)
-        self.menu_view_mode.addAction(self.action_show_fluids)
         self.menu_view_mode.addAction(self.action_show_empty)
         self.menu_help.addAction(self.action_about_vibra)
         self.advanced_results_menu.addAction(self.action_export_element_transfer_data)
