@@ -273,7 +273,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data = add_tcoords.GetOutput()
 
             fill_array(data, "surface_indexes", surface)
-            if isinstance(volumes, np.ndarray | list):
+            if isinstance(volumes, np.ndarray | list) and (len(volumes) != 0):
                 fill_array(data, "volume_indexes", volumes[0])
 
             combined_surfaces.AddInputData(data)
