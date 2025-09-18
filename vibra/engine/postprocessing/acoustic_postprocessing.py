@@ -255,7 +255,7 @@ class AcousticPostprocessing:
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
-        data_normals = self.harmonic_solver.assembler.model.mesh.get_average_normals_for_surface_nodes(surface_id)
+        data_normals = self.harmonic_solver.assembler.model.mesh.get_stacked_normals_for_surface_elements(surface_id)
         map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
             surface_id=surface_id, return_nodes=True)
         
