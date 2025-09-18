@@ -32,6 +32,13 @@ class DOFSetup(IntEnum):
     FIXED = 2
 
 
+class AssignmetType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
+
+
 class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -64,6 +71,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
+        self.assignment_types = {
+            0 : "surfaces",
+            1 : "lines",
+            2 : "points",
+            3 : "nodes",
+        }
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -343,8 +356,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
 
         values = data.get("values", list())
-        # if not are_there_values_different_from_zero(values):
-        #     return
 
         self.reset_input_fields()
 
@@ -459,18 +470,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         attribution_type = self.comboBox_attribution_type.currentIndex()
-
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
+        selection = self.assignment_types.get(attribution_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(
                                                                 input_ids, 
@@ -483,9 +483,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
-        
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
 
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
@@ -519,16 +516,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 return
 
             prescribed_dofs.extend([rx, ry, rz])
+                
+        self.remove_duplicated_attributions(selected_ids, selection)
+        self.remove_conflicting_excitations(selected_ids, selection)
 
         condition_1 = element_type == "2d_element" and prescribed_dofs.count(None) == 6
         condition_2 = element_type == "3d_element" and prescribed_dofs.count(None) == 3
 
         if condition_1 or condition_2:
-            self.hide()
-            title = "Invalid inputs for DOF prescription"
-            message = "You must enter at least one non-zero value or constrain "
-            message += "one dof before confirming the property assignment."
-            PrintMessageInput([error_title, title, message])
+            self.actions_to_finalize()
             return
 
         real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
@@ -543,16 +539,16 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     "imag_values" : imag_values
                     }
 
-            if attribution_type == 0:
+            if attribution_type == AssignmetType.SURFACES:
                 self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
 
-            elif attribution_type == 1:
+            elif attribution_type == AssignmetType.LINES:
                 self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
-            elif attribution_type == 2:
+            elif attribution_type == AssignmetType.POINTS:
                 self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
 
-            elif attribution_type == 3:
+            elif attribution_type == AssignmetType.NODES:
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.actions_to_finalize()
@@ -695,18 +691,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         attribution_type = self.comboBox_attribution_type.currentIndex()
-
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
+        selection = self.assignment_types.get(attribution_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(
                                                                 input_ids, 
@@ -719,9 +704,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
-
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
 
         element_type_index = self.comboBox_element_type.currentIndex()
         if element_type_index == 0:
@@ -786,7 +768,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 message = "It is necessary to enter at least one prescribed dof "
                 message += "before confirming the property assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return 
+                return
+    
+            self.remove_duplicated_attributions(selected_ids, selection)
+            self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
                     "element_type" : element_type,
@@ -795,16 +780,16 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     "values" : prescribed_dofs
                     }
 
-            if attribution_type == 0:
+            if attribution_type == AssignmetType.SURFACES:
                 self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
 
-            elif attribution_type == 1:
+            elif attribution_type == AssignmetType.LINES:
                 self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
 
-            elif attribution_type == 2:
+            elif attribution_type == AssignmetType.POINTS:
                 self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
 
-            elif attribution_type == 3:
+            elif attribution_type == AssignmetType.NODES:
                 self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
 
         self.reset_table_variables()
@@ -903,10 +888,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.process_table_file_removal(table_names)
 
     def attribute_callback(self):
-        index = self.tabWidget_main.currentIndex()
-        if index == 0:
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == 0:
             self.constant_values_attribution()
-        elif index == 1:
+        elif tab_index == 1:
             self.table_values_attribution()
 
     def text_label(self, mask):
@@ -1007,7 +992,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         list_tab = self.tabWidget_main.currentIndex() == 2
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_attribute.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
 
         if list_tab:
             self.lineEdit_selection_id.setText("")
@@ -1021,7 +1006,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def on_click_item(self, item):
 
-        self.pushButton_remove.setDisabled(False)
+        self.pushButton_remove.setEnabled(True)
 
         if item.text(0) != "":
 
@@ -1066,29 +1051,35 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if isinstance(selected_ids, int):
             selected_ids = [selected_ids]
 
-        if selection == "surfaces":
-            remove_function = self.properties._remove_surface_property
-
-        elif selection == "lines":
-            remove_function = self.properties._remove_line_property
-
-        elif selection == "points":
-            remove_function = self.properties._remove_point_property
-
-        elif selection == "nodes":
-            remove_function = self.properties._remove_nodal_property
-
         properties = ["nodal_loads", "prescribed_dofs"]
 
         for selected_id in selected_ids:
             for property in properties:
                 table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
-                remove_function(property, selected_id)
+                self.remove_property_from(property, selected_id, selection)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
         table_names = self.properties.get_property_related_table_names("prescribed_dofs", selected_id, selection)
         self.process_table_file_removal(table_names)
+
+    def remove_property_from(self, property: str, selected_ids: int | list, selection: str):
+        if isinstance(selected_ids, int):
+            selected_ids = [selected_ids]
+
+        if "surface" in selection:
+            remove_function = self.properties._remove_surface_property
+        elif "line" in selection:
+            remove_function = self.properties._remove_line_property
+        elif "point" in selection:
+            remove_function = self.properties._remove_point_property
+        elif "node" in selection:
+            remove_function = self.properties._remove_nodal_property
+        else:
+            return
+
+        for selected_id in selected_ids:
+            remove_function(property, selected_id)
 
     def remove_callback(self):
 
@@ -1096,25 +1087,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if "-" in text:
 
-            selection, _selected_id = text.split("-")
+            _selection, _selected_id = text.split("-")
+            selection = _selection.lower()
             selected_id = int(_selected_id)
 
-            if selection == "Surface":
-                self.properties._remove_surface_property("prescribed_dofs", selected_id)
-
-            elif selection == "Line":
-                self.properties._remove_line_property("prescribed_dofs", selected_id)
-
-            elif selection == "Point":
-                self.properties._remove_point_property("prescribed_dofs", selected_id)
-
-            elif selection == "Node":
-                self.properties._remove_nodal_property("prescribed_dofs", selected_id)
-
-            else:
-                return
-
-            self.remove_table_files_from(selected_id, f"{selection.lower()}s")
+            self.remove_table_files_from(selected_id, f"{selection}s")
+            self.remove_property_from("prescribed_dofs", selected_id, selection)
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -1136,35 +1114,27 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if obj._continue:
 
             properties = {
-                        "surfaces" : self.properties.surface_properties,
-                        "lines" : self.properties.line_properties,
-                        "points" : self.properties.point_properties,
-                        "nodes" : self.properties.nodal_properties,
-                        }
+                "surfaces" : self.properties.surface_properties,
+                "lines" : self.properties.line_properties,
+                "points" : self.properties.point_properties,
+                "nodes" : self.properties.nodal_properties,
+                }
 
             entities_to_remove = defaultdict(list)
 
-            for entity_label, _property in properties.items():
+            for key, _property in properties.items():
                 for (property_label, *args), data in _property.items():
                     if property_label != "prescribed_dofs":
                         continue
     
-                    # if not are_there_values_different_from_zero(data.get("values")):
-                    #     continue
-    
-                    entities_to_remove[entity_label].append(args[0])
+                    entities_to_remove[key].append(args[0])
 
-            for entity, selected_ids in entities_to_remove.items():
+            for selection, selected_ids in entities_to_remove.items():
                 for selected_id in selected_ids:
-                    if entity == "surfaces":
-                        self.properties._remove_surface_property("prescribed_dofs", selected_id)
-                    elif entity == "lines":
-                        self.properties._remove_line_property("prescribed_dofs", selected_id)
-                    elif entity == "points":
-                        self.properties._remove_point_property("prescribed_dofs", selected_id)
-                    elif entity == "nodes":
-                        self.properties._remove_nodal_property("prescribed_dofs", selected_id)
+                    table_name = self.properties.get_property_related_table_names("prescribed_dofs", selected_id, selection)
+                    self.process_table_file_removal(table_name)
 
+            self.properties._reset_property("prescribed_dofs")
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -1172,7 +1142,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def actions_to_finalize(self):
         self.load_model_info()
-        self.set_index_for_all_dof_combo_boxes(DOFSetup.VALUE)
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -1204,12 +1173,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for combo_box in self.dof_setup_combo_boxes.values():
-            combo_box.setCurrentIndex(DOFSetup.VALUE)
-
-        for lineEdit_real, lineEdit_imag in self.constant_line_edits.values():
-            lineEdit_real.setText("")
-            lineEdit_imag.setText("")
+        for key, combo_box in self.dof_setup_combo_boxes.items():
+            if combo_box.currentIndex() == DOFSetup.VALUE:
+                line_edit_real, line_edit_imag = self.constant_line_edits.get(key)
+                line_edit_real.setText("")
+                line_edit_imag.setText("")
 
         for lineEdit_table in self.table_line_edits.values():
             lineEdit_table.setText("")
