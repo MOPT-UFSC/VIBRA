@@ -595,6 +595,15 @@ class MainWindow(MainWindow_UI):
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
 
+        if not mesh.are_there_volumes_in_geometry():
+            PrintMessageInput(
+                [
+                    "Warning",
+                    "No volumes were found in the geometry",
+                    "Since the current geometry does not contains volumes, the operation can not be performed.",
+                ]
+            )
+
         volumes_to_hide = set()
         if self.selected_geometry_volumes:
             volumes_to_hide |= self.selected_geometry_volumes
