@@ -517,13 +517,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             prescribed_dofs.extend([rx, ry, rz])
                 
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
-
         condition_1 = element_type == "2d_element" and prescribed_dofs.count(None) == 6
         condition_2 = element_type == "3d_element" and prescribed_dofs.count(None) == 3
+        all_dof_free = condition_1 or condition_2
 
-        if condition_1 or condition_2:
+        self.remove_duplicated_attributions(selected_ids, selection)
+        self.remove_conflicting_excitations(selected_ids, selection, all_dof_free=all_dof_free)
+
+        if all_dof_free:
             self.actions_to_finalize()
             return
 
@@ -1046,7 +1047,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         app().file.write_imported_table_data_in_file()
 
-    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
+    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str, all_dof_free: bool=False):
 
         if isinstance(selected_ids, int):
             selected_ids = [selected_ids]
@@ -1054,9 +1055,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         properties = ["nodal_loads", "prescribed_dofs"]
 
         for selected_id in selected_ids:
-            for property in properties:
-                table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
-                self.remove_property_from(property, selected_id, selection)
+            for _property in properties:
+                if all_dof_free and _property == "nodal_loads":
+                    continue
+
+                table_names = self.properties.get_property_related_table_names(_property, selected_id, selection)
+                self.remove_property_from(_property, selected_id, selection)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
