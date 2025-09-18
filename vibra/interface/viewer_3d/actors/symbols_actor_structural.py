@@ -162,7 +162,13 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if property is not None and coords is not None:
+
             F_M = [(i if i is not None else 0) for i in property["values"]]
+
+            # handle table attributed values
+            for index, i in enumerate(F_M):
+                F_M[index] = i[0] if isinstance(i, np.ndarray) else i
+
             if len(F_M) == 3:
                 Fx, Fy, Fz = F_M
                 Mx, My, Mz = 0, 0, 0
