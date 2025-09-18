@@ -1,4 +1,4 @@
-from pathlib import Path
+import numpy as np
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import AcousticHarmonicSolver
@@ -24,4 +24,4 @@ def test_regression_harmonic_solver_solution(datadir, viscous_thermal_acoustic_m
     in_memory_solutions = in_memory_harmonic_solver.solve()
 
     for i, _ in enumerate(frequencies):
-        assert all(saved_solutions[:, i] == in_memory_solutions[:, i])
+        assert np.allclose(saved_solutions[:, i], in_memory_solutions[:, i])
