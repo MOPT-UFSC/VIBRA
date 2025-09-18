@@ -32,7 +32,7 @@ class MeshSelection:
         faces_connectivity = mesh.faces_connectivity[:, 4:]
         nodal_coordinates = mesh.nodal_coordinates[:, 1:]
 
-        if mesh.solids_connectivity.size > 0:
+        if mesh.are_there_volumes_in_geometry():
             self.solid_elements_center = np.average(
                 nodal_coordinates[solids_connectivity],
                 axis=1,
