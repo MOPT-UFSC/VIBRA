@@ -87,6 +87,8 @@ class AcousticModalSolver:
         """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
 
+        self.reset_variables()
+
         n_modes = self.assembler.model.analysis_setup.get("modes", 40)
         self.get_min_max_values_of_pressures.cache_clear()
 

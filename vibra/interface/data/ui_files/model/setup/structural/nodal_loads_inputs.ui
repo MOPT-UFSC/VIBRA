@@ -1518,7 +1518,7 @@
                 <item row="3" column="2">
                  <widget class="QLineEdit" name="lineEdit_path_table_Mx">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
@@ -1534,6 +1534,9 @@
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -1728,7 +1731,7 @@
                 <item row="0" column="2">
                  <widget class="QLineEdit" name="lineEdit_path_table_Fx">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
@@ -1748,12 +1751,15 @@
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
                   </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
                  </widget>
                 </item>
                 <item row="2" column="2">
                  <widget class="QLineEdit" name="lineEdit_path_table_Fz">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
@@ -1769,13 +1775,16 @@
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
                 <item row="5" column="2">
                  <widget class="QLineEdit" name="lineEdit_path_table_Mz">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
@@ -1791,6 +1800,9 @@
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -1827,7 +1839,7 @@
                 <item row="1" column="2">
                  <widget class="QLineEdit" name="lineEdit_path_table_Fy">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
@@ -1846,6 +1858,9 @@
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -2010,7 +2025,7 @@
                 <item row="4" column="2">
                  <widget class="QLineEdit" name="lineEdit_path_table_My">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="minimumSize">
                    <size>
@@ -2026,6 +2041,9 @@
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>

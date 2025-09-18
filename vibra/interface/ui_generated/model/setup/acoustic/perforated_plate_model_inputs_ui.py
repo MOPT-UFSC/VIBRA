@@ -688,6 +688,7 @@ class Ui_Dialog(object):
         font5.setItalic(False)
         self.pushButton_reset.setFont(font5)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -697,6 +698,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font5)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 

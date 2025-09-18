@@ -528,10 +528,11 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_Mx = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Mx.setObjectName(u"lineEdit_path_table_Mx")
-        self.lineEdit_path_table_Mx.setEnabled(False)
+        self.lineEdit_path_table_Mx.setEnabled(True)
         self.lineEdit_path_table_Mx.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_Mx.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_Mx.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_Mx.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_Mx, 3, 2, 1, 1)
 
@@ -597,29 +598,32 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_Fx = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fx.setObjectName(u"lineEdit_path_table_Fx")
-        self.lineEdit_path_table_Fx.setEnabled(False)
+        self.lineEdit_path_table_Fx.setEnabled(True)
         self.lineEdit_path_table_Fx.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_Fx.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_Fx.setStyleSheet(u"")
         self.lineEdit_path_table_Fx.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_Fx.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_Fx, 0, 2, 1, 1)
 
         self.lineEdit_path_table_Fz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fz.setObjectName(u"lineEdit_path_table_Fz")
-        self.lineEdit_path_table_Fz.setEnabled(False)
+        self.lineEdit_path_table_Fz.setEnabled(True)
         self.lineEdit_path_table_Fz.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_Fz.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_Fz.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_Fz.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_Fz, 2, 2, 1, 1)
 
         self.lineEdit_path_table_Mz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Mz.setObjectName(u"lineEdit_path_table_Mz")
-        self.lineEdit_path_table_Mz.setEnabled(False)
+        self.lineEdit_path_table_Mz.setEnabled(True)
         self.lineEdit_path_table_Mz.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_Mz.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_Mz.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_Mz.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_Mz, 5, 2, 1, 1)
 
@@ -635,11 +639,12 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_Fy = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fy.setObjectName(u"lineEdit_path_table_Fy")
-        self.lineEdit_path_table_Fy.setEnabled(False)
+        self.lineEdit_path_table_Fy.setEnabled(True)
         self.lineEdit_path_table_Fy.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_Fy.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_Fy.setStyleSheet(u"")
         self.lineEdit_path_table_Fy.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_Fy.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_Fy, 1, 2, 1, 1)
 
@@ -695,10 +700,11 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_My = QLineEdit(self.frame_9)
         self.lineEdit_path_table_My.setObjectName(u"lineEdit_path_table_My")
-        self.lineEdit_path_table_My.setEnabled(False)
+        self.lineEdit_path_table_My.setEnabled(True)
         self.lineEdit_path_table_My.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_My.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_My.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_My.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_My, 4, 2, 1, 1)
 
