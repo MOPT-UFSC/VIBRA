@@ -24,7 +24,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(554, 552)
+        Dialog.resize(554, 558)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setVerticalSpacing(4)
@@ -721,7 +721,7 @@ class Ui_Dialog(object):
         self.label_18.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.label_17.setText(QCoreApplication.translate("Dialog", u"Min. element size:", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_syncrhonize.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Synchronize the sizes of elements</p></body></html>", None))
+        self.pushButton_syncrhonize.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Synchronize the minimum and maximum sizes</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_syncrhonize.setText("")
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Geometry tolerance:", None))

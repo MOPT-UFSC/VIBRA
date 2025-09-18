@@ -186,10 +186,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.synchronize_sizes = not self.synchronize_sizes
         if self.synchronize_sizes:
             icon = QIcon(str(ICON_DIR / "sync_disabled.png"))
-            tool_tip = "Desynchronize the sizes of elements"
+            tool_tip = "Desynchronize the minimum and maximum sizes"
         else:
             icon = QIcon(str(ICON_DIR / "sync_enabled.png"))
-            tool_tip = "Synchronize the sizes of elements"
+            tool_tip = "Synchronize the minimum and maximum sizes"
 
         self.pushButton_syncrhonize.setIcon(icon)
         self.pushButton_syncrhonize.setToolTip(tool_tip)

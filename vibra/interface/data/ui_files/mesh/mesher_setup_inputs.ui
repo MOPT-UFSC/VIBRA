@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>554</width>
-    <height>552</height>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -752,7 +752,7 @@
                     <item row="1" column="4">
                      <widget class="QPushButton" name="pushButton_syncrhonize">
                       <property name="toolTip">
-                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Synchronize the sizes of elements&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Synchronize the minimum and maximum sizes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                       </property>
                       <property name="text">
                        <string/>
