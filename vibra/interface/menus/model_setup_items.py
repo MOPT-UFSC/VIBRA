@@ -88,7 +88,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_mesh_setup": "mesh_setup",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_surface_thickness": "surface_thickness",
-            "item_child_prescribe_dof": "prescribed_dofs",
+            "item_child_prescribed_dof": "prescribed_dofs",
             "item_child_nodal_loads": "nodal_loads",
             "item_child_distributed_loads": "distributed_loads",
             "item_child_normal_pressure_load": "normal_pressure_load",
