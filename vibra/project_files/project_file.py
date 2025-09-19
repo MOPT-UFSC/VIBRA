@@ -419,6 +419,8 @@ class ProjectFile:
                         for _key, _data in data.items():
                             if _key in ["values"]:
                                 continue
+                            elif isinstance(_data, Fluid):
+                                aux[_key] = _data.get_data()
                             else:
                                 aux[_key] = _data
 
@@ -438,6 +440,7 @@ class ProjectFile:
                 return output
 
             properties = app().project.model.properties
+
             data = dict(
                         # global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
@@ -448,7 +451,7 @@ class ProjectFile:
                         nodal_properties = normalize(properties.nodal_properties),
                         group_properties = normalize(properties.group_properties)
                         )
-
+                                        
             write_json(self.model_properties_filepath, data)
             app().main_window.project_data_modified = True
 
@@ -468,15 +471,19 @@ class ProjectFile:
             for key, val in prop.items():
 
                 key: str
-                p, *_ids = key.split()
-                p = p.strip()
+                property, *_ids = key.split()
+                property = property.strip()
+
+                if property == "perforated_plate_model":
+                    fluid = Fluid(**val["fluid"])
+                    val["fluid"] = fluid
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])
                 else:
                     ids = tuple([int(_id) for _id in _ids])
 
-                new_prop[p, ids] = val
+                new_prop[property, ids] = val
 
             return new_prop
 

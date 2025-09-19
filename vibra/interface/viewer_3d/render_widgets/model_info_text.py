@@ -322,7 +322,7 @@ def perforated_plate_info_text():
     tree.add_item("Formulation", pp_data["formulation"].replace("_", " "))
     if pp_data["formulation"] == "circular_hole":
 
-        tree.add_item("Coupling type", pp_data.get("coupling_type").replace("_", " "))
+        # tree.add_item("Coupling type", pp_data.get("coupling_type").replace("_", " "))
         tree.add_item("Plate thickness", pp_data.get("plate_thickness"), "m")
         tree.add_item("Hole diameter", pp_data.get("hole_diameter"), "m")
         tree.add_item("Porosity", pp_data.get("porosity"), "--")
