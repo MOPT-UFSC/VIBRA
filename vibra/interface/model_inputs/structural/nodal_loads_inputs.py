@@ -846,9 +846,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             values = data["values"]
             element_type = data["element_type"]
             constrained_dof_mask = [False if value is None else True for value in values]
-            dofs_labels = str(self.text_label(constrained_dof_mask))
+            dof_labels = str(self.text_label(constrained_dof_mask))
 
-            new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dofs_labels, element_type])
+            new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
             for i in range(3):
                 new.setTextAlignment(i, Qt.AlignCenter)
 

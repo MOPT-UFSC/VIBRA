@@ -4,8 +4,8 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
 
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 from typing import TYPE_CHECKING
@@ -152,7 +152,7 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # Run modal analysis
-    modal_solver = AcousticModalSolver(assembler)
+    modal_solver = ModalSolver(assembler)
     modal_solver.solve()
     natural_frequencies = modal_solver.natural_frequencies
     dt = time() - t0

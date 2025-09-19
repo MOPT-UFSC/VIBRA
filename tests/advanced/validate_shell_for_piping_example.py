@@ -4,8 +4,8 @@ from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
+from vibra.engine.solvers.modal_solver import ModalSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -118,7 +118,7 @@ def load_external_mesh_and_solve():
     model.properties._set_property("material", material, surface=1)
 
 
-    # Prescribed dofs data
+    # Prescribed dof data
     prescribed_dof_data = {
                             "element_type": "2d_element",
                             "real_values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -162,7 +162,7 @@ def load_external_mesh_and_solve():
 
     model.set_analysis_setup(analysis_setup)
 
-    # harmonic_solver = StructuralHarmonicSolver(assembler)
+    # harmonic_solver = HarmonicSolver(assembler)
     # # Define the analysis setup
     # analysis_setup = {
     #                   "analysis_id" : 2, 
@@ -178,8 +178,8 @@ def load_external_mesh_and_solve():
     assembler.process_assemble()
 
     # Initialize the solver
-    # modal_solver = StructuralModalSolver(assembler)
-    harmonic_solver = StructuralHarmonicSolver(assembler)
+    # modal_solver = ModalSolver(assembler)
+    harmonic_solver = HarmonicSolver(assembler)
 
     # t0 = time()
     # # solution = modal_solver.solve()
@@ -210,7 +210,7 @@ def load_external_mesh_and_solve():
     top_right_face_nodes = mesh.external_nodes_from_surfaces[5]
     branch2_top_face_nodes = mesh.external_nodes_from_surfaces[7]
 
-    dofs_index = {
+    dof_index = {
                   "ux" : 0,
                   "uy" : 1,
                   "uz" : 2,
@@ -219,20 +219,20 @@ def load_external_mesh_and_solve():
                   "rz" : 5
                   }
     
-    dofs_per_node = model.structural_element_2d.DOF_PER_NODE
+    dof_per_node = model.structural_element_2d.DOF_PER_NODE
     
-    gdofs = dofs_per_node * top_right_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
+    gdof = dof_per_node * top_right_face_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
-    ux_rows = gdofs[:, dofs_index["ux"]]
-    uy_rows = gdofs[:, dofs_index["uy"]]
+    ux_rows = gdof[:, dof_index["ux"]]
+    uy_rows = gdof[:, dof_index["uy"]]
 
     top_right_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
     top_right_face_response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
 
-    gdofs = dofs_per_node * branch2_top_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
+    gdof = dof_per_node * branch2_top_face_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
-    ux_rows = gdofs[:, dofs_index["ux"]]
-    uy_rows = gdofs[:, dofs_index["uy"]]
+    ux_rows = gdof[:, dof_index["ux"]]
+    uy_rows = gdof[:, dof_index["uy"]]
     solution = harmonic_solver.solution
 
     branch2_top_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()

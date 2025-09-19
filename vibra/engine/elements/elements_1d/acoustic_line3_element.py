@@ -205,7 +205,7 @@ class ACT_LINE_3(Element1D):
 
     def generate_ind_rows_cols(self, connect_line: np.ndarray):
         """
-        This method processess the dofs indices (rows and columns) 
+        This method processess the dof indices (rows and columns) 
         for assembly.
 
         Parameter
@@ -214,12 +214,12 @@ class ACT_LINE_3(Element1D):
             An array containing the lines connectivities.
         """
         self.reorder_connect(connect_line)
-        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        ind_dof = dofs * self.connect_line[:, :]
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dof * self.connect_line[:, :]
 
         ind_dof_flat = ind_dof.flatten()
-        ind_rows = ((np.tile(ind_dof_flat, (edofs,1))).T).flatten()
-        ind_cols = (np.tile(ind_dof, edofs)).flatten()
+        ind_rows = ((np.tile(ind_dof_flat, (edof,1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return ind_rows, ind_cols
     

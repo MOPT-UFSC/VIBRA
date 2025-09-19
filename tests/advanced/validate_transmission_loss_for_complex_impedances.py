@@ -1,11 +1,11 @@
+from vibra.engine.postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_4
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.postprocessing import get_particle_velocity_from_surface, compute_transmission_loss
+from vibra.engine.solvers.modal_solver import ModalSolver
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from data.validation.load_external_data import LoadExternalData
@@ -176,7 +176,7 @@ def load_external_mesh_and_solve():
     
     # t0 = time()
     ## Run modal analysis
-    # modal_solver = AcousticModalSolver(assembler)
+    # modal_solver = ModalSolver(assembler)
     # modal_solver.solve()
     # natural_frequencies = modal_solver.natural_frequencies
     # modal_shape = modal_solver.solution
@@ -185,12 +185,12 @@ def load_external_mesh_and_solve():
     # return
     
     # Define the analysis type and load setup
-    harmonic_solver = AcousticHarmonicSolver(assembler)
+    harmonic_solver = HarmonicSolver(assembler)
 
     # Run harmonic analysis
 
     t0 = time()
-    solution = harmonic_solver.solve(print_log=True)
+    solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
@@ -205,8 +205,10 @@ def load_external_mesh_and_solve():
     rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
     rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
 
-    input_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 1, rho_eff_v1)
-    output_particle_velocity = get_particle_velocity_from_surface(harmonic_solver, 2, rho_eff_v2)
+    acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
+
+    input_particle_velocity = acoustic_post.get_particle_velocity_from_surface(1, rho_eff_v1)
+    output_particle_velocity = acoustic_post.get_particle_velocity_from_surface(2, rho_eff_v2)
 
     input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
@@ -236,7 +238,7 @@ def load_external_mesh_and_solve():
     mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
 
-    freq_TL, TL_model = compute_transmission_loss(harmonic_solver, 1, 2, surface_integration=False)
+    freq_TL, TL_model = acoustic_post.compute_transmission_loss(1, 2, surface_integration=False)
 
     # mask = TL_model <= 0
     # TL_model[mask] = np.zeros(sum(mask), dtype=float)
