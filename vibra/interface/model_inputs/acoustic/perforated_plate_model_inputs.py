@@ -396,6 +396,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         try:
             input_value = item.text().replace(",", ".")
             new_item_value = float(input_value)
+            if new_item_value <= 0.:
+                new_item_value = None
+                unnaceptable_value_error = True
+
         except:
             unnaceptable_value_error = True
 
