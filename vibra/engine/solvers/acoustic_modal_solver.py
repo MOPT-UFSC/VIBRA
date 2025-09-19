@@ -93,7 +93,7 @@ class AcousticModalSolver:
         self.get_min_max_values_of_pressures.cache_clear()
 
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dof_values()
 
         if K == [] and M == []:
             K = self.assembler.stiffness_matrix
@@ -186,7 +186,7 @@ class AcousticModalSolver:
             self.solution = eigen_vectors[:, index_order]
 
 
-    def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
+    def _reinsert_prescribed_dof(self, solution, modal_analysis=False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution. If modal analysis is performed, the values are zeros.
 

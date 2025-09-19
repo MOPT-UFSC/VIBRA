@@ -2295,7 +2295,7 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_2">
                 <item row="0" column="0">
-                 <widget class="QTreeWidget" name="treeWidget_prescribed_dofs">
+                 <widget class="QTreeWidget" name="treeWidget_prescribed_dof">
                   <property name="minimumSize">
                    <size>
                     <width>320</width>

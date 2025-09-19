@@ -63,7 +63,7 @@ class AcousticAssembler:
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
 
-    def get_prescribed_dofs_values(self):
+    def get_prescribed_dof_values(self):
         """
         This method returns all the values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
@@ -80,7 +80,7 @@ class AcousticAssembler:
         """
 
         global_prescribed = list()
-        list_prescribed_dofs = list()
+        list_prescribed_dof = list()
 
         aux_ones = np.ones(self.number_frequencies, dtype=complex)
 
@@ -109,14 +109,14 @@ class AcousticAssembler:
 
             for value in global_prescribed:
                 if isinstance(value, complex):
-                    list_prescribed_dofs.append(aux_ones * value)
+                    list_prescribed_dof.append(aux_ones * value)
                 elif isinstance(value, np.ndarray):
                     if len(value) == 1:
-                       list_prescribed_dofs.append(aux_ones * value)
+                       list_prescribed_dof.append(aux_ones * value)
                     else: 
-                        list_prescribed_dofs.append(value[0:self.number_frequencies])
+                        list_prescribed_dof.append(value[0:self.number_frequencies])
 
-            array_prescribed_values = np.array(list_prescribed_dofs)
+            array_prescribed_values = np.array(list_prescribed_dof)
 
         except Exception as _error_log:
             print(str(_error_log))

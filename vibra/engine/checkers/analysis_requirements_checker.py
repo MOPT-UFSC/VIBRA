@@ -123,7 +123,7 @@ class AnalysisRequirementsChecker:
     def check_structural_harmonic_excitations(self):
 
         prop_labels = [
-                       "prescribed_dofs", 
+                       "prescribed_dof", 
                        "nodal_loads", 
                        "distributed_loads", 
                        "normal_pressure_load",

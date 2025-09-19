@@ -23,7 +23,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
-            "prescribed_dofs": self._build_prescribed_dofs,
+            "prescribed_dof": self._build_prescribed_dof,
             "nodal_loads": self._build_nodal_loads,
             "distributed_loads": self._build_distributed_loads,
             "normal_pressure_load": self._build_normal_pressure_load,
@@ -102,7 +102,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
 
-    def _build_prescribed_dofs(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
+    def _build_prescribed_dof(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         coords = None
         property = None
 

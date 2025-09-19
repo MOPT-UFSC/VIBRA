@@ -952,7 +952,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if isinstance(selected_ids, int):
             selected_ids = [selected_ids]
 
-        properties = ["nodal_loads", "prescribed_dofs"]
+        properties = ["nodal_loads", "prescribed_dof"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -1060,7 +1060,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["nodal_loads", "prescribed_dofs"]:
+            if property in ["nodal_loads", "prescribed_dof"]:
                 if "table_names" in data.keys():
                     return
 

@@ -127,7 +127,7 @@ class AcousticHarmonicSolver:
             self.solution = self.project_file.get_solution_loader()
         else:
             # reinsert the prescribed degrees of freedom into the solution vector
-            self.solution = self.reinsert_the_prescribed_dofs_into_solution_matrix(solution)
+            self.solution = self.reinsert_the_prescribed_dof_into_solution_matrix(solution)
 
         return self.solution
 
@@ -152,7 +152,7 @@ class AcousticHarmonicSolver:
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
 
         # process the prescribed values
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dof_values()
 
         frequency_dependent = self.assembler.frequency_dependent
 
@@ -238,7 +238,7 @@ class AcousticHarmonicSolver:
             solution_freq = linear_solver.solve(A, f)
             if isinstance(solution, LazyHDF5MatrixWriter):
                 # reinsert the prescribed degrees of freedom into the solution vector
-                solution_freq = self.reinsert_the_prescribed_dofs_into_solution_freq(solution_freq, i)
+                solution_freq = self.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
 
             solution[:, i] = solution_freq
 
@@ -246,7 +246,7 @@ class AcousticHarmonicSolver:
             linear_solver.clear_memory()
             del A, f
 
-    def reinsert_the_prescribed_dofs_into_solution_matrix(self, solution: np.ndarray):
+    def reinsert_the_prescribed_dof_into_solution_matrix(self, solution: np.ndarray):
         """
         This method reinserts the value of the prescribed degree of freedom in the solution array.
 
@@ -271,7 +271,7 @@ class AcousticHarmonicSolver:
 
         return full_solution
 
-    def reinsert_the_prescribed_dofs_into_solution_freq(self, solution: np.ndarray, freq_index: int):
+    def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
         """
         This method reinserts the value of the prescribed degree of freedom in the solution array.
 
