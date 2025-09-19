@@ -219,7 +219,7 @@ def load_external_mesh_and_solve():
                   "rz" : 5
                   }
     
-    dofs_per_node = model.structural_element_2d.DOFS_PER_NODE
+    dofs_per_node = model.structural_element_2d.DOF_PER_NODE
     
     gdofs = dofs_per_node * top_right_face_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 

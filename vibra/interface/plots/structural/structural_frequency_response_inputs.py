@@ -199,12 +199,12 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             if isinstance(surf_data, dict):
                 if self.model.structural_element_2d is None:
                     self.model.set_structural_elements()
-                dofs_per_node = self.model.structural_element_2d.DOFS_PER_NODE
+                dofs_per_node = self.model.structural_element_2d.DOF_PER_NODE
 
             else:
                 if self.model.structural_element_3d is None:
                     self.model.set_structural_elements()
-                dofs_per_node = self.model.structural_element_3d.DOFS_PER_NODE
+                dofs_per_node = self.model.structural_element_3d.DOF_PER_NODE
 
             gdofs = dofs_per_node * nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
             rows = gdofs[:, dof_index]

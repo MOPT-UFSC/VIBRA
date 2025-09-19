@@ -845,8 +845,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             values = data["values"]
             element_type = data["element_type"]
-            constrained_dofs_mask = [False if value is None else True for value in values]
-            dofs_labels = str(self.text_label(constrained_dofs_mask))
+            constrained_dof_mask = [False if value is None else True for value in values]
+            dofs_labels = str(self.text_label(constrained_dof_mask))
 
             new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dofs_labels, element_type])
             for i in range(3):

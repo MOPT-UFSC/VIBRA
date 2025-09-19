@@ -34,8 +34,8 @@ def get_detJAC_and_invJAC(JAC):
 class STRUCT_HEXAHEDRON_20(Element3D):
     #
     NODES_PER_ELEMENT = 20
-    DOFS_PER_NODE = 3
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 3
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -121,7 +121,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         phit[:, 19] = div4 * (1 - ssx) * (1 + ttx) * (1 - rrx**2)
         #
         # derivatives
-        dphit = np.zeros((self.nint, self.DOFS_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
+        dphit = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
         #
         dphit[:, 0, 0] = div8 * (1 - ttx) * (1 - rrx) * (-(-ssx - ttx - rrx - 2) + (1 - ssx) * (-1))
         dphit[:, 0, 1] = div8 * (1 - ttx) * (1 - rrx) * (+(ssx - ttx - rrx - 2) + (1 + ssx) * (1))
@@ -230,7 +230,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -241,7 +241,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
-        N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
@@ -264,8 +264,8 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         """This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = (
+        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = (
             np.array(
                 [
                     dofs * self.connectivity[:, 1] - 1,
@@ -334,8 +334,8 @@ class STRUCT_HEXAHEDRON_20(Element3D):
             + 1
         ).T
 
-        vect_indices = ind_dofs.flatten()
+        vect_indices = ind_dof.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+        self.ind_cols = (np.tile(ind_dof, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols

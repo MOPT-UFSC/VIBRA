@@ -113,7 +113,7 @@ class AcousticHarmonicSolver:
         frequencies = self.assembler.model.frequencies
 
         if self.project_file:
-            num_rows = self.assembler.total_dofs
+            num_rows = self.assembler.total_dof
             solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
         else:
             num_rows = self.assembler.stiffness_matrix.shape[0]

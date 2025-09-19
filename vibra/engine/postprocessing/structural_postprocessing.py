@@ -17,8 +17,8 @@ def compute_structural_modal_field(
     if solver.solution is None:
         return
 
-    disp_dofs = solver.displacement_dofs
-    results_complex: np.ndarray = solver.solution[disp_dofs, index]
+    disp_dof = solver.displacement_dof
+    results_complex: np.ndarray = solver.solution[disp_dof, index]
 
     amplitudes = np.abs(results_complex)
     phases = np.angle(results_complex)
@@ -56,8 +56,8 @@ def compute_structural_harmonic_field(
     if solver.solution is None:
         return
 
-    disp_dofs = solver.displacement_dofs
-    results_complex: np.ndarray = solver.solution[disp_dofs, index]
+    disp_dof = solver.displacement_dof
+    results_complex: np.ndarray = solver.solution[disp_dof, index]
 
     amplitudes = np.abs(results_complex)
     phases = np.angle(results_complex)

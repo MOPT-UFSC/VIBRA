@@ -126,7 +126,7 @@ class AcousticModalSolver:
 
             logging.info("Post-processing the solution... [95/100]")
 
-            n_dofs = int(eigen_vectors.shape[0] / 2)
+            n_dof = int(eigen_vectors.shape[0] / 2)
 
             # filtering the eigenvalues with positive imaginary part
             mask = np.imag(eigen_values) > 0
@@ -147,7 +147,7 @@ class AcousticModalSolver:
             mask_dmp = np.round(np.abs(damping_ratio), 6) < 1
             damping_ratio = damping_ratio[mask_dmp]
             self.natural_frequencies = natural_frequencies[mask_dmp]
-            self.solution = eigen_vectors[:n_dofs, index_order][:, mask_dmp]
+            self.solution = eigen_vectors[:n_dof, index_order][:, mask_dmp]
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:

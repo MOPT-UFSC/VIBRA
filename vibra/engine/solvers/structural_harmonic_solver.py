@@ -21,7 +21,7 @@ class StructuralHarmonicSolver:
 
 
     def reset_variables(self):
-        self.disp_dofs = None
+        self.disp_dof = None
         self.solution = None
         self.loads = None
 
@@ -62,8 +62,8 @@ class StructuralHarmonicSolver:
 
         f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 
-        if len(self.assembler.active_2d_element_dofs):
-            unprescribed_indexes = self.assembler.unprescribed_shell_dofs
+        if len(self.assembler.active_2d_element_dof):
+            unprescribed_indexes = self.assembler.unprescribed_shell_dof
         else:
             unprescribed_indexes = self.unprescribed_dof_indexes
 
@@ -87,8 +87,8 @@ class StructuralHarmonicSolver:
 
         frequencies = self.assembler.model.frequencies
 
-        if len(self.assembler.active_2d_element_dofs):
-            unprescribed_indexes = self.assembler.unprescribed_shell_dofs
+        if len(self.assembler.active_2d_element_dof):
+            unprescribed_indexes = self.assembler.unprescribed_shell_dof
         else:
             unprescribed_indexes = self.unprescribed_dof_indexes
 
@@ -138,7 +138,7 @@ class StructuralHarmonicSolver:
 
         """
 
-        data = self.solution[self.displacement_dofs, column]
+        data = self.solution[self.displacement_dof, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -265,20 +265,20 @@ class StructuralHarmonicSolver:
             Solution of all the degrees of freedom.
         """
 
-        rows = self.assembler.n_dofs
+        rows = self.assembler.n_dof
         cols = solution.shape[1]
         full_solution = np.zeros((rows, cols), dtype=complex)
 
-        self.displacement_dofs = self.assembler.displacement_dofs
+        self.displacement_dof = self.assembler.displacement_dof
 
         if len(self.prescribed_dof_indexes):
             full_solution[self.prescribed_dof_indexes, :] = self.array_prescribed_dof_values[:, 0:cols]
 
-        if len(self.assembler.active_2d_element_dofs):
-            unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
-            full_solution[unprescribed_shell_dofs, :] = solution
+        if len(self.assembler.active_2d_element_dof):
+            unprescribed_shell_dof = self.assembler.unprescribed_shell_dof
+            full_solution[unprescribed_shell_dof, :] = solution
             self.solution = full_solution
-            # print("reinserted dofs -> ", len(self.displacement_dofs))
+            # print("reinserted dofs -> ", len(self.displacement_dof))
 
         else:
             full_solution[self.unprescribed_dof_indexes, :] = solution

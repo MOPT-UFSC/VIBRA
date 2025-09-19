@@ -472,7 +472,7 @@ def integrate_surface_sound_power(
         element_2d = assembler.element_2d
 
     sound_power = 0.
-    dofs_per_element = element_2d.DOFS_PER_ELEMENT
+    dofs_per_element = element_2d.DOF_PER_ELEMENT
     for i, e_connect in enumerate(surface_connectivities):
         node_indexes = [map_nodes.get(node) for node in e_connect]
         P_e = pressures[node_indexes, :].T.reshape(-1, 1, dofs_per_element)

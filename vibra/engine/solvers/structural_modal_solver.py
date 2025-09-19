@@ -37,7 +37,7 @@ class StructuralModalSolver:
 
         """
 
-        data = self.solution[self.displacement_dofs, column]
+        data = self.solution[self.displacement_dof, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -151,17 +151,17 @@ class StructuralModalSolver:
             Solution of all the degrees of freedom.
         """
 
-        rows = self.assembler.n_dofs
+        rows = self.assembler.n_dof
         cols = solution.shape[1]
-        self.displacement_dofs = self.assembler.displacement_dofs
+        self.displacement_dof = self.assembler.displacement_dof
 
         solution_full = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.assembler.active_2d_element_dofs):
-            unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
-            solution_full[unprescribed_shell_dofs, :] = solution
+        if len(self.assembler.active_2d_element_dof):
+            unprescribed_shell_dof = self.assembler.unprescribed_shell_dof
+            solution_full[unprescribed_shell_dof, :] = solution
             self.solution = solution_full
-            # print("reinserted dofs -> ", len(self.displacement_dofs))
+            # print("reinserted dofs -> ", len(self.displacement_dof))
 
         else:
             solution_full[self.unprescribed_dof_indexes, :] = solution

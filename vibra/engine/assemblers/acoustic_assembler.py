@@ -138,7 +138,7 @@ class AcousticAssembler:
             if nodes is None:
                 continue
 
-            for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+            for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
                 _prescribed_indexes.append(index)
 
         return _prescribed_indexes
@@ -148,8 +148,8 @@ class AcousticAssembler:
         """ 
         Returns the unprescribed dof indexes.
         """
-        total_dofs = self.element_3d.DOFS_PER_NODE * len(self.element_3d.nodal_coordinates)
-        all_indexes = np.arange(total_dofs, dtype=int)
+        total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
+        all_indexes = np.arange(total_dof, dtype=int)
         prescribed_indexes = self.get_prescribed_indexes()
         return np.delete(all_indexes, prescribed_indexes)
 
@@ -733,7 +733,7 @@ class AcousticAssembler:
                     continue
 
                 if not self.mass_source_vector_points.any():
-                    self.mass_source_vector_points = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                    self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
                 if "values" in data.keys():
                     _complex_values = data.get("values")[0]
@@ -768,7 +768,7 @@ class AcousticAssembler:
                 continue
 
             if not self.mass_source_vector_lines.any():
-                self.mass_source_vector_lines = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                self.mass_source_vector_lines = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             if "values" in data.keys():
                 _complex_values = data.get("values")[0]
@@ -799,7 +799,7 @@ class AcousticAssembler:
                 continue
 
             if not self.mass_source_vector_surfaces.any():
-                self.mass_source_vector_surfaces = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             if "values" in data.keys():
                 _complex_values = data.get("values")[0]
@@ -830,7 +830,7 @@ class AcousticAssembler:
                 continue
 
             if not self.mass_source_vector_volumes.any():
-                self.mass_source_vector_volumes = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                self.mass_source_vector_volumes = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             if "values" in data.keys():
                 _complex_values = data.get("values")[0]
@@ -949,12 +949,12 @@ class AcousticAssembler:
 
         self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
-        self.dofs = self.element_3d.DOFS_PER_ELEMENT
+        self.dofs = self.element_3d.DOF_PER_ELEMENT
         self.number_3d_elements = len(self.element_3d.connectivity)
-        self.total_dofs = self.element_3d.DOFS_PER_NODE * len(self.element_3d.nodal_coordinates)
+        self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
 
         # global_matrices shape
-        self.gm_shape = (self.total_dofs, self.total_dofs)
+        self.gm_shape = (self.total_dof, self.total_dof)
 
         self.int3d_BtB, self.int3d_NtN = self.element_3d.stacked_elementary_matrices_NtN_BtB()
         self.data_Cvisc = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
@@ -976,12 +976,12 @@ class AcousticAssembler:
 
         self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
-        self.dofs = self.element_3d.DOFS_PER_ELEMENT
+        self.dofs = self.element_3d.DOF_PER_ELEMENT
         self.number_3d_elements = len(self.element_3d.connectivity)
-        self.total_dofs = self.element_3d.DOFS_PER_NODE * len(self.element_3d.nodal_coordinates)
+        self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
 
         # global_matrices shape
-        self.gm_shape = (self.total_dofs, self.total_dofs)
+        self.gm_shape = (self.total_dof, self.total_dof)
 
         self.int3d_BtB = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dofs, self.dofs), dtype=complex)
@@ -1221,8 +1221,8 @@ class AcousticAssembler:
         self.ind_rows_Zsi = np.array([], dtype=int)
         self.ind_cols_Zsi = np.array([], dtype=int)
 
-        dofs = self.element_2d.DOFS_PER_ELEMENT
-        self.total_dofs_2d = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dofs = self.element_2d.DOF_PER_ELEMENT
+        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zsi = self.get_surface_data_for_element_integration_by_property("specific_impedance")
         if not self.integration_data_Zsi:
@@ -1264,8 +1264,8 @@ class AcousticAssembler:
         connectivities = self.integration_data_pw.get("connectivities")
         _pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
 
-        dofs = self.element_2d.DOFS_PER_ELEMENT
-        self.total_dofs_2d = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dofs = self.element_2d.DOF_PER_ELEMENT
+        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
         nel = connectivities.shape[0]
         for j in range(self.number_frequencies):
@@ -1298,8 +1298,8 @@ class AcousticAssembler:
         self.ind_rows_Zas = np.array([])
         self.ind_cols_Zas = np.array([])
 
-        dofs = self.element_2d.DOFS_PER_ELEMENT
-        self.total_dofs_2d = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dofs = self.element_2d.DOF_PER_ELEMENT
+        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zas = self.get_surface_data_for_element_integration_by_property("absorption_surface")
         if not self.integration_data_Zas:
@@ -1335,8 +1335,8 @@ class AcousticAssembler:
         self.ind_rows_Zti_B = np.array([])
         self.ind_cols_Zti_B = np.array([])
 
-        dofs = self.element_2d.DOFS_PER_ELEMENT
-        self.total_dofs_2d = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dofs = self.element_2d.DOF_PER_ELEMENT
+        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zti = self.get_transfer_impedance_data_for_element_integration()
         if not self.integration_data_Zti:
@@ -1388,8 +1388,8 @@ class AcousticAssembler:
         self.ind_rows_Zpp_B = np.array([])
         self.ind_cols_Zpp_B = np.array([])
 
-        dofs = self.element_2d.DOFS_PER_ELEMENT
-        self.total_dofs_2d = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dofs = self.element_2d.DOF_PER_ELEMENT
+        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zpp = self.get_perforated_plate_data_for_element_integration(solution)
         if not self.integration_data_Zpp:
@@ -1486,7 +1486,7 @@ class AcousticAssembler:
             It corresponds to the frequency step index.
         """
 
-        N_dofs = self.total_dofs_2d
+        N_dof = self.total_dof_2d
         rows_Zout = np.array([], dtype=int)
         cols_Zout = np.array([], dtype=int)
         data_Zout = np.array([], dtype=complex)
@@ -1507,10 +1507,10 @@ class AcousticAssembler:
             data_Zout = np.append(data_Zout, self.data_Zas[index].flatten())
 
         if data_Zout.size:
-            _matrix_full_A = csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=(N_dofs, N_dofs))
+            _matrix_full_A = csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=(N_dof, N_dof))
 
         else:
-            _matrix_full_A = csr_matrix((N_dofs, N_dofs))
+            _matrix_full_A = csr_matrix((N_dof, N_dof))
 
         rows_A = np.array([], dtype=int)
         rows_B = np.array([], dtype=int)
@@ -1539,10 +1539,10 @@ class AcousticAssembler:
             values_Zin = np.concatenate((Zin_A, -Zin_A, -Zin_B, Zin_B))
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))
             cols_Zin = np.concatenate((cols_A, cols_B, cols_A, cols_B))
-            _matrix_full_B = csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=(N_dofs, N_dofs))
+            _matrix_full_B = csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=(N_dof, N_dof))
 
         else:
-            _matrix_full_B = csr_matrix((N_dofs, N_dofs))
+            _matrix_full_B = csr_matrix((N_dof, N_dof))
 
         _matrix_full = _matrix_full_A + _matrix_full_B
 
@@ -1579,7 +1579,7 @@ class AcousticAssembler:
                         continue
 
                     N = len(nodes)
-                    for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
                         if data["averaged"]:
                             acoustic_excitation[index] += complex_values / N
                         else:
@@ -1609,14 +1609,14 @@ class AcousticAssembler:
                     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-                    for index in self.model.get_acoustic_global_dofs_from_nodes(nodes):
+                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
                         if data["averaged"]:
                             acoustic_excitation[index] += (complex_values * area) / N
                         else:
                             acoustic_excitation[index] += complex_values * area
 
-        total_dofs = self.element_3d.DOFS_PER_NODE * len(self.element_3d.nodal_coordinates)
-        output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
+        total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
+        output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         if acoustic_excitation:
             indexes = list(acoustic_excitation.keys())
@@ -1635,8 +1635,8 @@ class AcousticAssembler:
         returns the output data in the form of mass flow rate.
         """
 
-        total_dofs = self.element_2d.DOFS_PER_NODE * len(self.element_2d.nodal_coordinates)
-        output = np.zeros((total_dofs, self.number_frequencies), dtype=complex)
+        total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         integration_data_mf = self.get_surface_data_for_element_integration_by_property("mass_flow_rate")
         if integration_data_mf:
