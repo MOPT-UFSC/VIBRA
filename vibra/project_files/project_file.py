@@ -624,7 +624,7 @@ class ProjectFile:
             # Converting Harmonic solution in the old form.
             analysis = f_src.get(solver_tag)
             if analysis:
-                displacement_dof = analysis.get("displacement_dof")
+                displacement_dof = analysis.get("displacement_dofs")
                 frequencies = analysis.get("frequencies")
                 solution_dset = analysis["solution"]
                 if frequencies:
