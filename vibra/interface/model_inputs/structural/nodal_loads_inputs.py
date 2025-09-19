@@ -412,16 +412,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     }
 
             if attribution_type == AssignmetType.SURFACES:
-                self.model.properties._set_property("nodal_loads", data, surface=selected_id)
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
 
             elif attribution_type == AssignmetType.LINES:
-                self.model.properties._set_property("nodal_loads", data, line=selected_id)
+                self.properties._set_property("nodal_loads", data, line=selected_id)
 
             elif attribution_type == AssignmetType.POINTS:
-                self.model.properties._set_property("nodal_loads", data, point=selected_id)
+                self.properties._set_property("nodal_loads", data, point=selected_id)
 
             elif attribution_type == AssignmetType.NODES:
-                self.model.properties._set_property("nodal_loads", data, node=selected_id)
+                self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.actions_to_finalize()
 
@@ -687,16 +687,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     }
 
             if attribution_type == AssignmetType.SURFACES:
-                self.model.properties._set_property("nodal_loads", data, surface=selected_id)
+                self.properties._set_property("nodal_loads", data, surface=selected_id)
 
             elif attribution_type == AssignmetType.LINES:
-                self.model.properties._set_property("nodal_loads", data, line=selected_id)
+                self.properties._set_property("nodal_loads", data, line=selected_id)
 
             elif attribution_type == AssignmetType.POINTS:
-                self.model.properties._set_property("nodal_loads", data, point=selected_id)
+                self.properties._set_property("nodal_loads", data, point=selected_id)
 
             elif attribution_type == AssignmetType.NODES:
-                self.model.properties._set_property("nodal_loads", data, node=selected_id)
+                self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
         self.actions_to_finalize()
@@ -845,8 +845,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             values = data["values"]
             element_type = data["element_type"]
-            constrained_dofs_mask = [False if value is None else True for value in values]
-            dofs_labels = str(self.text_label(constrained_dofs_mask))
+            constrained_dof_mask = [False if value is None else True for value in values]
+            dofs_labels = str(self.text_label(constrained_dof_mask))
 
             new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dofs_labels, element_type])
             for i in range(3):
@@ -952,7 +952,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if isinstance(selected_ids, int):
             selected_ids = [selected_ids]
 
-        properties = ["nodal_loads", "prescribed_dofs"]
+        properties = ["nodal_loads", "prescribed_dof"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -1060,7 +1060,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["nodal_loads", "prescribed_dofs"]:
+            if property in ["nodal_loads", "prescribed_dof"]:
                 if "table_names" in data.keys():
                     return
 

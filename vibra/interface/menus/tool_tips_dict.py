@@ -56,7 +56,7 @@ tool_tips["surface_thickness"] = (
     "This is used to indicate that a portion of the model is a shell."
 )
 
-tool_tips["prescribed_dofs"] = (
+tool_tips["prescribed_dof"] = (
     # "### Set prescribed DOFs\n\n"
     "Configure previously known degrees of freedom.\n\n"
     "This option can be used to indicate that some region can not move by setting 0 to all degrees of freedom."

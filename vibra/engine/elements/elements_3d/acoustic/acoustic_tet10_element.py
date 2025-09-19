@@ -158,8 +158,8 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
 class ACT_TETRAHEDRON_10C(Element3D):
 
     NODES_PER_ELEMENT = 10
-    DOFS_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 1
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model: "Model"):
 
@@ -186,7 +186,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         self.connectivity = connectivity
 
 
-    def define_integration_points(self, integration_points: int=15):
+    def define_integration_points(self, integration_points: int=11):
         """ 
         This method defines the integration points and their
         weights for numerical integration.
@@ -440,14 +440,14 @@ class ACT_TETRAHEDRON_10C(Element3D):
         """
         nel = self.connectivity.shape[0]
         if all_int_points:
-            stacked_coords = np.zeros((nel, 1, self.DOFS_PER_ELEMENT, 3), dtype=float)
-            for j in range(self.DOFS_PER_ELEMENT):
+            stacked_coords = np.zeros((nel, 1, self.DOF_PER_ELEMENT, 3), dtype=float)
+            for j in range(self.DOF_PER_ELEMENT):
                 stacked_coords[:, 0, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
 
         else:
 
-            stacked_coords = np.zeros((nel, self.DOFS_PER_ELEMENT, 3), dtype=float)
-            for j in range(self.DOFS_PER_ELEMENT):
+            stacked_coords = np.zeros((nel, self.DOF_PER_ELEMENT, 3), dtype=float)
+            for j in range(self.DOF_PER_ELEMENT):
                 stacked_coords[:, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
 
         return stacked_coords
@@ -704,12 +704,12 @@ class ACT_TETRAHEDRON_10C(Element3D):
         else:
             self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]]
 
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs * self.connectivity[:, 1:]
+        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dofs * self.connectivity[:, 1:]
 
-        vect_indices = ind_dofs.flatten()
+        vect_indices = ind_dof.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+        self.ind_cols = (np.tile(ind_dof, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
 

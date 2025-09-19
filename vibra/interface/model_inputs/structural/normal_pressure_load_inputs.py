@@ -499,7 +499,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         if selection == "surfaces":
             remove_function = self.properties._remove_surface_property
 
-        properties = ["nodal_loads", "prescribed_dofs"]
+        properties = ["nodal_loads", "prescribed_dof"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -576,7 +576,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["nodal_loads", "prescribed_dofs"]:
+            if property in ["nodal_loads", "prescribed_dof"]:
                 if "table_names" in data.keys():
                     return
 
