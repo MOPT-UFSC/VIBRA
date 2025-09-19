@@ -21,7 +21,7 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, List
 
-import logging, os, warnings
+import logging, warnings
 import numpy as np
 
 error_title = "Error"
@@ -364,13 +364,15 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if row == 1:
             self.get_fluid_callback()
- 
+
             if self.selected_fluid:
                 setattr(model, "fluid", self.selected_fluid)
 
             for surface_id in surface_ids:
                 self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
         else:
+
             for surface_id in surface_ids:
                 self.include_user_defined_transfer_impedance(model, surface_id)
                 self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
@@ -378,8 +380,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.imported_values = None
             app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
 
+        app().file.write_model_properties_in_file()
+        if row == 11:
+            app().file.write_imported_table_data_in_file()
+
         self.load_model_info()
-    
+
     def edit_table_widget_item(self, row, column):
         item = self.edit_tableWidget.item(row, column)
         model_id = int(self.edit_tableWidget.item(0, column).text())
@@ -388,24 +394,28 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         unnaceptable_value_error = False
 
         try:
-            new_item_value = float(item.text())
+            input_value = item.text().replace(",", ".")
+            new_item_value = float(input_value)
         except:
             unnaceptable_value_error = True
 
         model = self.map_model_id_to_model[model_id]
         indexed_attributes = model.get_indexed_attributes()
 
-        attribute = indexed_attributes[row - 1]
+        attribute = indexed_attributes[row - 3]
 
         if unnaceptable_value_error:
             new_item_value = getattr(model, attribute)
             item.setText(str(new_item_value))
         else:
             setattr(model, attribute, new_item_value)
-                
+
         surfaces_ids = self.map_model_id_to_surfaces[model_id]
         for surface_id in surfaces_ids:
             self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
+        app().file.write_model_properties_in_file()
+        self.load_model_info()
     
     def update_tabs_visibility(self):
 
