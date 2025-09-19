@@ -5,8 +5,8 @@ class RectangularDuctData:
     section_type: str
     formulation: str
     height: float
-    width: float|None
-    number_of_terms: int|None
+    width: float | None = None
+    number_of_terms: int | None = 200
 
     def get_data(self) -> dict:
         data = dict()

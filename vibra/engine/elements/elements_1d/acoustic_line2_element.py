@@ -11,8 +11,8 @@ import numpy as np
 class ACT_LINE_2(Element1D):
     #
     NODES_PER_ELEMENT = 2
-    DOFS_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 1
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
 
     def __init__(self, model: "Model"):
@@ -221,11 +221,11 @@ class ACT_LINE_2(Element1D):
             An array containing the lines connectivities.
         """
         self.reorder_connect(connect_line)
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs * self.connect_line[:, :]
+        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dofs * self.connect_line[:, :]
 
-        ind_dofs_flat = ind_dofs.flatten()
-        ind_rows = ((np.tile(ind_dofs_flat, (edofs,1))).T).flatten()
-        ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+        ind_dof_flat = ind_dof.flatten()
+        ind_rows = ((np.tile(ind_dof_flat, (edofs,1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edofs)).flatten()
 
         return ind_rows, ind_cols

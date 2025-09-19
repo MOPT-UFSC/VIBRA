@@ -538,7 +538,7 @@ def mass_source_info_text():
 def structural_boundary_conditions_info_text():
     text = ""
     distributed_loads_line = None
-    prescribed_dofs = None
+    prescribed_dof = None
     nodal_loads = None
     distributed_loads_area = None
     normal_pressure_load = None
@@ -547,8 +547,8 @@ def structural_boundary_conditions_info_text():
     selected_lines = list(app().main_window.selected_geometry_lines)
 
     if len(selected_faces) == 1:
-        prescribed_dofs = app().project.model.properties._get_property(
-            "prescribed_dofs", surface=selected_faces[0]
+        prescribed_dof = app().project.model.properties._get_property(
+            "prescribed_dof", surface=selected_faces[0]
         )
         nodal_loads = app().project.model.properties._get_property(
             "nodal_loads", surface=selected_faces[0]
@@ -569,7 +569,7 @@ def structural_boundary_conditions_info_text():
         return text
 
     boundary_conditions = [
-        prescribed_dofs,
+        prescribed_dof,
         nodal_loads,
         distributed_loads_area,
         normal_pressure_load,
@@ -579,9 +579,9 @@ def structural_boundary_conditions_info_text():
     if all(bc is None for bc in boundary_conditions):
         return text
 
-    if prescribed_dofs is not None:
-        values = prescribed_dofs["values"]
-        loaded_table = "table_names" in prescribed_dofs.keys()
+    if prescribed_dof is not None:
+        values = prescribed_dof["values"]
+        loaded_table = "table_names" in prescribed_dof.keys()
         if are_there_values_different_from_zero(values):
             property_label = "Prescribed DOF"
         else:
@@ -752,20 +752,20 @@ def mesh_structural_boundary_conditions_info_text():
     if len(selected_nodes) != 1:
         return text
 
-    prescribed_dofs = app().project.model.properties._get_property(
-        "prescribed_dofs", node=selected_nodes[0]
+    prescribed_dof = app().project.model.properties._get_property(
+        "prescribed_dof", node=selected_nodes[0]
     )
     nodal_loads = app().project.model.properties._get_property(
         "nodal_loads", node=selected_nodes[0]
     )
-    boundary_conditions_list = [prescribed_dofs, nodal_loads]
+    boundary_conditions_list = [prescribed_dof, nodal_loads]
 
     if all(condition is None for condition in boundary_conditions_list):
         return text
 
-    if prescribed_dofs is not None:
-        values = prescribed_dofs["values"]
-        loaded_table = "table_names" in prescribed_dofs.keys()
+    if prescribed_dof is not None:
+        values = prescribed_dof["values"]
+        loaded_table = "table_names" in prescribed_dof.keys()
         text += structural_format(
             "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
         )

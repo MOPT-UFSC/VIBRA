@@ -117,13 +117,13 @@ def load_external_mesh_and_solve():
 
 
     # Prescribed dofs data
-    prescribed_dofs_data = {
+    prescribed_dof_data = {
                             "element_type": "2d_element",
                             "real_values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                             "imag_values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                             }
 
-    model.properties._set_property("prescribed_dofs", prescribed_dofs_data, surface=2)
+    model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=2)
 
 
     # Nodal loads data
@@ -214,7 +214,7 @@ def load_external_mesh_and_solve():
     if element_2d is None:
         return
 
-    dofs_per_node = element_2d.DOFS_PER_NODE
+    dofs_per_node = element_2d.DOF_PER_NODE
     gdofs = dofs_per_node * selected_nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
 
     ux_rows = gdofs[:, dofs_index["ux"]]

@@ -159,26 +159,26 @@ class Ui_Dialog(object):
 
         self.gridLayout_9.addWidget(self.frame_3, 1, 0, 1, 1)
 
-        self.treeWidget_dofs_decoupling = QTreeWidget(self.tab_list)
+        self.treeWidget_dof_decoupling = QTreeWidget(self.tab_list)
         __qtreewidgetitem1 = QTreeWidgetItem()
         __qtreewidgetitem1.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem1.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_dofs_decoupling.setHeaderItem(__qtreewidgetitem1)
-        self.treeWidget_dofs_decoupling.setObjectName(u"treeWidget_dofs_decoupling")
-        self.treeWidget_dofs_decoupling.setMinimumSize(QSize(320, 0))
-        self.treeWidget_dofs_decoupling.setMaximumSize(QSize(320, 200))
+        self.treeWidget_dof_decoupling.setHeaderItem(__qtreewidgetitem1)
+        self.treeWidget_dof_decoupling.setObjectName(u"treeWidget_dof_decoupling")
+        self.treeWidget_dof_decoupling.setMinimumSize(QSize(320, 0))
+        self.treeWidget_dof_decoupling.setMaximumSize(QSize(320, 200))
         font4 = QFont()
         font4.setFamilies([u"MS Shell Dlg 2"])
         font4.setPointSize(9)
         font4.setItalic(False)
-        self.treeWidget_dofs_decoupling.setFont(font4)
-        self.treeWidget_dofs_decoupling.setIndentation(1)
-        self.treeWidget_dofs_decoupling.setHeaderHidden(False)
-        self.treeWidget_dofs_decoupling.header().setHighlightSections(False)
-        self.treeWidget_dofs_decoupling.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_dofs_decoupling.header().setStretchLastSection(True)
+        self.treeWidget_dof_decoupling.setFont(font4)
+        self.treeWidget_dof_decoupling.setIndentation(1)
+        self.treeWidget_dof_decoupling.setHeaderHidden(False)
+        self.treeWidget_dof_decoupling.header().setHighlightSections(False)
+        self.treeWidget_dof_decoupling.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_dof_decoupling.header().setStretchLastSection(True)
 
-        self.gridLayout_9.addWidget(self.treeWidget_dofs_decoupling, 0, 0, 1, 1)
+        self.gridLayout_9.addWidget(self.treeWidget_dof_decoupling, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_list, "")
 
@@ -287,11 +287,11 @@ class Ui_Dialog(object):
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
-        ___qtreewidgetitem1 = self.treeWidget_dofs_decoupling.headerItem()
+        ___qtreewidgetitem1 = self.treeWidget_dof_decoupling.headerItem()
         ___qtreewidgetitem1.setText(1, QCoreApplication.translate("Dialog", u"Volume to decouple", None));
         ___qtreewidgetitem1.setText(0, QCoreApplication.translate("Dialog", u"Surface", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_dofs_decoupling.setToolTip("")
+        self.treeWidget_dof_decoupling.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.lineEdit_selection_id.setText("")
@@ -323,7 +323,7 @@ class DegreesOfFreedomDecouplingInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - pushButton_reset: QPushButton
                                                         - pushButton_remove: QPushButton
-                                            - treeWidget_dofs_decoupling: QTreeWidget
+                                            - treeWidget_dof_decoupling: QTreeWidget
                             - frame_8: QFrame
                                 - (Layout): QGridLayout
                                         - lineEdit_selection_id: QLineEdit

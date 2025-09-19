@@ -93,7 +93,7 @@ class AcousticModalSolver:
         self.get_min_max_values_of_pressures.cache_clear()
 
         self.unprescribed_indexes, self.prescribed_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dofs_values()
+        self.prescribed_values, self.array_prescribed_values = self.assembler.get_prescribed_dof_values()
 
         if K == [] and M == []:
             K = self.assembler.stiffness_matrix
@@ -126,7 +126,7 @@ class AcousticModalSolver:
 
             logging.info("Post-processing the solution... [95/100]")
 
-            n_dofs = int(eigen_vectors.shape[0] / 2)
+            n_dof = int(eigen_vectors.shape[0] / 2)
 
             # filtering the eigenvalues with positive imaginary part
             mask = np.imag(eigen_values) > 0
@@ -147,7 +147,7 @@ class AcousticModalSolver:
             mask_dmp = np.round(np.abs(damping_ratio), 6) < 1
             damping_ratio = damping_ratio[mask_dmp]
             self.natural_frequencies = natural_frequencies[mask_dmp]
-            self.solution = eigen_vectors[:n_dofs, index_order][:, mask_dmp]
+            self.solution = eigen_vectors[:n_dof, index_order][:, mask_dmp]
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
@@ -186,7 +186,7 @@ class AcousticModalSolver:
             self.solution = eigen_vectors[:, index_order]
 
 
-    def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
+    def _reinsert_prescribed_dof(self, solution, modal_analysis=False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution. If modal analysis is performed, the values are zeros.
 

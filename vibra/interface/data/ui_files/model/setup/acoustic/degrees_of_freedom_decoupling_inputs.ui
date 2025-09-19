@@ -398,7 +398,7 @@
            </widget>
           </item>
           <item row="0" column="0">
-           <widget class="QTreeWidget" name="treeWidget_dofs_decoupling">
+           <widget class="QTreeWidget" name="treeWidget_dof_decoupling">
             <property name="minimumSize">
              <size>
               <width>320</width>
