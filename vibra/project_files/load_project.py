@@ -405,16 +405,18 @@ class LoadProject:
 
             elif key == "modal_structural" and project.structural_modal_solver is not None:
                 project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                project.structural_modal_solver.solution = data.get("solution")
-                project.structural_modal_solver.displacement_dof = data["displacement_dof"]
+                project.structural_modal_solver.displacement_dof = data.get("displacement_dof")
+                if isinstance(data.get("displacement_dof"), np.ndarray):
+                    project.structural_modal_solver.solution = data.get("solution")
 
             elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
                 project.acoustic_harmonic_solver.solution = data.get("solution")
                 app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
             elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
-                project.structural_harmonic_solver.solution = data.get("solution")
-                project.structural_harmonic_solver.displacement_dof = data["displacement_dof"]
+                project.structural_harmonic_solver.displacement_dof = data.get("displacement_dof")
+                if isinstance(data.get("displacement_dof"), np.ndarray):
+                    project.structural_harmonic_solver.solution = data.get("solution")
 
             else:
                 continue

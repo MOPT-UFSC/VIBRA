@@ -150,8 +150,6 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         name = name.lower()
         name = re.match(r"item_child_(?:set_|add_)*(.+)", name).group(1)
         name = name.strip()
-        # temporary fix, I need to untie the name from variable name
-        name = name + "s" if name == "prescribed_dof" else name
         self.property_name = name
 
     def set_warning(self, cond):
