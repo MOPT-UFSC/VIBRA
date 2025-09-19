@@ -155,7 +155,7 @@ class DegreesOfFreedomDecoupling:
 
         """
         new_surface_nodes = list()
-        for node_id in self.mesh.nodes_from_surfaces.get(surface_id):
+        for node_id in self.mesh.get_nodes_from_surface(surface_id):
 
             new_node_id = self.nodes_mapping.get(node_id)
             if new_node_id is None:
@@ -194,8 +194,8 @@ class DegreesOfFreedomDecoupling:
         # process all non-repeated nodes from decoupled surfaces
         nodes_from_surfaces = set()
         for surface_id in self.decouple_info.keys():
-            nodes_from_surface = self.mesh.nodes_from_surfaces[surface_id]
-            nodes_from_surfaces |= set(nodes_from_surface)
+            nodes = self.mesh.get_nodes_from_surface(surface_id)
+            nodes_from_surfaces |= set(nodes)
 
         nodes_from_surfaces = list(nodes_from_surfaces)
 
@@ -210,16 +210,7 @@ class DegreesOfFreedomDecoupling:
         coords_from_twin_nodes[:, 0 ] = twin_nodes
         coords_from_twin_nodes[:, 1:] = self.mesh.nodal_coordinates[nodes_from_surfaces, 1:] 
 
-        for surface_id, vol_id in self.decouple_info.items():
-
-            # add the twin nodes from the new surface
-            new_surface_id = self.surfaces_mapping.get(surface_id)
-            self.mesh.nodes_from_surfaces[new_surface_id] = self.get_nodes_from_new_surface(surface_id)
-
-            # update the nodes from volume
-            nodes_from_volume = deepcopy(self.mesh.nodes_from_volumes[vol_id])
-            self.mesh.nodes_from_volumes[vol_id] = self.update_nodes_from_array(nodes_from_volume)
-
+        # append the twin nodes data in the nodal coordinates matrix
         self.mesh.nodal_coordinates = np.append(nodal_coordinates, coords_from_twin_nodes, axis=0)
 
 
@@ -252,8 +243,11 @@ class DegreesOfFreedomDecoupling:
             surfaces_to_remove.append(surface_id)
 
             for i, line_id in enumerate(lines_from_surface[surface_id]):
-                nodes_from_line = self.mesh.nodes_from_lines.get(line_id)
-                nodes_from_lines |= set(nodes_from_line)
+                nodes = self.mesh.get_nodes_from_line(line_id)
+                if nodes is None:
+                    continue
+
+                nodes_from_lines |= set(nodes)
 
         valid_surface_ids -= set(surfaces_to_remove)
 
@@ -344,16 +338,13 @@ class DegreesOfFreedomDecoupling:
 
         for i, line_id in enumerate(lines_from_surface):
 
-            line_connectivity = self.mesh.cache_connectivity_from_lines[line_id]
+            line_connectivity = self.mesh.get_connectivity_from_line(line_id, from_cache=True)
             new_connectivity = np.zeros_like(line_connectivity, dtype=int)
 
             for j, connect in enumerate(line_connectivity):
                 new_connectivity[j, :] = self.update_nodes_from_array(connect)
 
             new_line_id = self.lines_mapping.get(line_id)
-            self.mesh.connectivity_from_lines[new_line_id] = new_connectivity
-            self.mesh.nodes_from_lines[new_line_id] = np.array([*set(new_connectivity.flatten())], dtype=int)
-
             etag, nodes_per_element = self.get_line_element_tag_and_nodes_number(line_id)
 
             rows = new_connectivity.shape[0]
@@ -383,14 +374,13 @@ class DegreesOfFreedomDecoupling:
         """
 
         cols = self.mesh.faces_connectivity.shape[1]
-        face_connectivity = self.mesh.cache_connectivity_from_surfaces[surface_id]
+        face_connectivity = self.mesh.get_connectivity_from_surface(surface_id, from_cache=True)
         new_connectivity = np.zeros_like(face_connectivity, dtype=int)
 
         for j, connect in enumerate(face_connectivity):
             new_connectivity[j, :] = self.update_nodes_from_array(connect)
 
         new_surface_id = self.surfaces_mapping.get(surface_id)
-        self.mesh.connectivity_from_surfaces[new_surface_id] = new_connectivity
         etag, nodes_per_element = self.get_surface_element_tag_and_nodes_number(surface_id)
 
         rows = new_connectivity.shape[0]
@@ -427,7 +417,10 @@ class DegreesOfFreedomDecoupling:
             line_ids -= set(lines_from_surface)
 
         for line_id in line_ids:
-            lines_nodes |= set(self.mesh.nodes_from_lines[line_id])
+            nodes = self.mesh.get_nodes_from_line(line_id)
+            if nodes is None:
+                continue
+            lines_nodes |= set(nodes)
 
         return list(line_ids), list(lines_nodes)
 
@@ -466,7 +459,7 @@ class DegreesOfFreedomDecoupling:
             if line_id in valid_line_ids:
                 self.mesh.lines_connectivity[elem1d_id, 4:] = self.update_nodes_from_array(connect_1d)
 
-        for surf_id in self.mesh.nodes_from_surfaces.keys():
+        for surf_id in self.mesh.geometry_information.get("surfaces"):
             for surface_id in self.decouple_info.keys():
                 if surf_id == surface_id:
                     self.modify_the_connectivities_from_lines(surface_id)
@@ -474,7 +467,8 @@ class DegreesOfFreedomDecoupling:
                     break
 
         self.update_nodes_from_points()
-        self.mesh.process_mesh_related_mappings()
+        self.mesh.process_mesh_related_mappings("Post-processing")
+
 
     def update_nodes_from_points(self):
         """ This method updates the nodes from created points.
@@ -490,7 +484,6 @@ class DegreesOfFreedomDecoupling:
         
             self.mesh.nodes_from_points[new_point_id] = int(new_node_id)
             self.mesh.points_from_nodes[int(new_node_id)] = new_point_id
-            self.mesh.decoupled_points.append(new_point_id)
 
 
     def mimetize_the_fluid_from_decoupling_surfaces(self):

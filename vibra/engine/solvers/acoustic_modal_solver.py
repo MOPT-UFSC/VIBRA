@@ -87,6 +87,8 @@ class AcousticModalSolver:
         """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
 
+        self.reset_variables()
+
         n_modes = self.assembler.model.analysis_setup.get("modes", 40)
         self.get_min_max_values_of_pressures.cache_clear()
 
@@ -157,6 +159,9 @@ class AcousticModalSolver:
             # M = (M + M.T) / 2
             # K = (K + K.T) / 2
 
+            # np.savetxt("mass_matrix_base.dat", M.toarray(), delimiter=",", fmt="%.16e")
+            # np.savetxt("stiffness_matrix_base.dat", K.toarray(), delimiter=",", fmt="%.16e")
+
             try:
 
                 linear_solver = initialize_solver(SolverType.PARDISO, is_complex=is_complex, is_symmetric=True)
@@ -179,6 +184,7 @@ class AcousticModalSolver:
             index_order = np.argsort(natural_frequencies)
             self.natural_frequencies = natural_frequencies[index_order]
             self.solution = eigen_vectors[:, index_order]
+
 
     def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
         """

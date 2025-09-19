@@ -20,6 +20,9 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
+      <property name="orientation">
+       <enum>Qt::Orientation::Horizontal</enum>
+      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -34,7 +37,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::NoContextMenu</enum>
+        <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -103,6 +106,8 @@
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
+   <addaction name="action_import_geometry"/>
+   <addaction name="action_import_mesh"/>
    <addaction name="action_save"/>
    <addaction name="action_save_as"/>
    <addaction name="separator"/>
@@ -136,7 +141,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -172,8 +177,6 @@
     <addaction name="action_line_view"/>
     <addaction name="action_face_view"/>
     <addaction name="separator"/>
-    <addaction name="action_show_materials"/>
-    <addaction name="action_show_fluids"/>
     <addaction name="action_show_empty"/>
    </widget>
    <widget class="QMenu" name="menu_help">
@@ -640,6 +643,9 @@
    </property>
   </action>
   <action name="action_show_empty">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Show Empty</string>
    </property>
@@ -664,8 +670,8 @@
   </action>
   <action name="action_import_mesh">
    <property name="icon">
-    <iconset>
-     <normaloff>../icons/mesh.png</normaloff>../icons/mesh.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/mesh.png</normaloff>:/icons/mesh.png</iconset>
    </property>
    <property name="text">
     <string>Import mesh</string>
@@ -683,7 +689,7 @@
     <string>Ghost</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::NoRole</enum>
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

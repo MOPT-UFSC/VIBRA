@@ -9,8 +9,8 @@ from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 def getColorRGB(color):
     color = color.replace(" ", "")
@@ -133,7 +133,8 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def reset_fluid_library_callback(self):
         self.hide()
-        self.fluid_widget.reset_library_callback()
+        if self.fluid_widget.reset_library_callback():
+            self.actions_to_finalize()
 
     def geometry_selection_callback(self):
 
@@ -186,7 +187,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.hide()
             self.title = "No fluids selected"
             self.message = "Select a fluid in the list before confirming the fluid attribution."
-            PrintMessageInput([window_title_1, self.title, self.message])
+            PrintMessageInput([error_title, self.title, self.message])
             return
 
         volume_ids = list()
@@ -276,9 +277,9 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.load_model_info()
         app().main_window.update_info_text()
         app().main_window.clear_selection()  # this also updates
-        app().file.write_model_properties_in_file()
         app().main_window.update_symbols()
-        
+        app().file.write_model_properties_in_file()
+
         self.complete = True
 
     def load_model_info(self):

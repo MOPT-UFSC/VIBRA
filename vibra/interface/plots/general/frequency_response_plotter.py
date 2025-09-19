@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QComboBox, QCheckBox, QDialog, QFrame, QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QToolButton, QWidget
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QToolButton
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
@@ -32,7 +32,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
     def _initialize(self):
 
         self.keep_window_open = True
-        self.imported_dB = False
+        self.decibel_data = False
         self._layout = None
         self.x_data = None
         self.y_data = None
@@ -143,8 +143,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)
 
-    def imported_dB_data(self):
-        self.imported_dB = True
+    def imported_real_data(self, decibel_data: bool=False):
+        self.decibel_data = decibel_data
         self.comboBox_plot_type.setCurrentIndex(2)
         self.comboBox_plot_type.setDisabled(True)
         self.radioButton_absolute.setDisabled(True)
@@ -207,7 +207,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         else:
             type_label = "absolute"
 
-        if self.imported_dB:
+        if self.decibel_data:
             return f"{label} [dB]"
 
         unit = self.get_unit_considering_differentiation()

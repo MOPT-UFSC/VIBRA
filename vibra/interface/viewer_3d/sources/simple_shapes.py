@@ -1,10 +1,11 @@
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vibra.utils.polydata_utils import transform_polydata
+from vibra.utils.vtk_utils import transform_polydata
 from vtkmodules.vtkFiltersSources import (
     vtkConeSource,
     vtkCubeSource,
     vtkSphereSource,
+    vtkCylinderSource,
 )
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 
@@ -19,6 +20,18 @@ def create_cone_source():
         source.GetOutput(),
         position=(-s/2, 0, 0),
         scale=(s, s, s)
+    )
+
+def create_axis_source(shift=0):
+    source = vtkCylinderSource()
+    source.SetResolution(12)
+    source.SetRadius(0.15)
+    source.SetHeight(0.1)
+    source.Update()
+    return transform_polydata(
+        source.GetOutput(),
+        rotation=(0, 0, 90),
+        position=(shift, 0, 0),
     )
 
 def create_double_cone_source():

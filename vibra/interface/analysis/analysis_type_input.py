@@ -1,10 +1,7 @@
-from PySide6.QtWidgets import QDialog, QPushButton
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-
-from vibra.engine import AnalysisID
+from PySide6.QtGui import Qt
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput

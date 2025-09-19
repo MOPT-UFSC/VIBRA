@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'acoustic_properties_gradient_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(559, 666)
+        Dialog.resize(512, 676)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -64,7 +64,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 539, 542))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 492, 552))
         self.gridLayout_5 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
@@ -219,16 +219,16 @@ class Ui_Dialog(object):
         self.gridLayout_7.setSpacing(6)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.gridLayout_7.setContentsMargins(6, 6, 6, 6)
-        self.comboBox_interpolation_direction = QComboBox(self.frame_4)
-        self.comboBox_interpolation_direction.addItem("")
-        self.comboBox_interpolation_direction.addItem("")
-        self.comboBox_interpolation_direction.addItem("")
-        self.comboBox_interpolation_direction.setObjectName(u"comboBox_interpolation_direction")
-        self.comboBox_interpolation_direction.setMinimumSize(QSize(0, 28))
-        self.comboBox_interpolation_direction.setMaximumSize(QSize(200, 28))
-        self.comboBox_interpolation_direction.setFont(font1)
+        self.comboBox_gradient_direction = QComboBox(self.frame_4)
+        self.comboBox_gradient_direction.addItem("")
+        self.comboBox_gradient_direction.addItem("")
+        self.comboBox_gradient_direction.addItem("")
+        self.comboBox_gradient_direction.setObjectName(u"comboBox_gradient_direction")
+        self.comboBox_gradient_direction.setMinimumSize(QSize(0, 28))
+        self.comboBox_gradient_direction.setMaximumSize(QSize(200, 28))
+        self.comboBox_gradient_direction.setFont(font1)
 
-        self.gridLayout_7.addWidget(self.comboBox_interpolation_direction, 0, 3, 1, 1)
+        self.gridLayout_7.addWidget(self.comboBox_gradient_direction, 0, 3, 1, 1)
 
         self.label_50 = QLabel(self.frame_4)
         self.label_50.setObjectName(u"label_50")
@@ -248,8 +248,8 @@ class Ui_Dialog(object):
         self.doubleSpinBox_selection_radius.setFont(font2)
         self.doubleSpinBox_selection_radius.setAlignment(Qt.AlignCenter)
         self.doubleSpinBox_selection_radius.setDecimals(0)
-        self.doubleSpinBox_selection_radius.setMinimum(1.000000000000000)
-        self.doubleSpinBox_selection_radius.setMaximum(20.000000000000000)
+        self.doubleSpinBox_selection_radius.setMinimum(2.000000000000000)
+        self.doubleSpinBox_selection_radius.setMaximum(50.000000000000000)
         self.doubleSpinBox_selection_radius.setSingleStep(1.000000000000000)
         self.doubleSpinBox_selection_radius.setValue(10.000000000000000)
 
@@ -319,49 +319,14 @@ class Ui_Dialog(object):
         self.frame.setFrameShadow(QFrame.Raised)
         self.gridLayout_10 = QGridLayout(self.frame)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.label_15 = QLabel(self.frame)
-        self.label_15.setObjectName(u"label_15")
-        self.label_15.setMinimumSize(QSize(100, 0))
-        self.label_15.setMaximumSize(QSize(100, 16777215))
-        self.label_15.setFont(font1)
-        self.label_15.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_24 = QLabel(self.frame)
+        self.label_24.setObjectName(u"label_24")
+        self.label_24.setMinimumSize(QSize(0, 28))
+        self.label_24.setMaximumSize(QSize(200, 28))
+        self.label_24.setFont(font1)
+        self.label_24.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_10.addWidget(self.label_15, 2, 0, 1, 1)
-
-        self.label_18 = QLabel(self.frame)
-        self.label_18.setObjectName(u"label_18")
-        self.label_18.setMinimumSize(QSize(40, 0))
-        self.label_18.setMaximumSize(QSize(40, 16777215))
-        self.label_18.setFont(font1)
-
-        self.gridLayout_10.addWidget(self.label_18, 2, 4, 1, 1)
-
-        self.label_17 = QLabel(self.frame)
-        self.label_17.setObjectName(u"label_17")
-        self.label_17.setMinimumSize(QSize(40, 0))
-        self.label_17.setMaximumSize(QSize(40, 16777215))
-        self.label_17.setFont(font1)
-
-        self.gridLayout_10.addWidget(self.label_17, 1, 4, 1, 1)
-
-        self.label_20 = QLabel(self.frame)
-        self.label_20.setObjectName(u"label_20")
-        self.label_20.setMinimumSize(QSize(100, 0))
-        self.label_20.setMaximumSize(QSize(100, 16777215))
-        self.label_20.setFont(font1)
-        self.label_20.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_10.addWidget(self.label_20, 3, 0, 1, 1)
-
-        self.lineEdit_end_pressure = QLineEdit(self.frame)
-        self.lineEdit_end_pressure.setObjectName(u"lineEdit_end_pressure")
-        self.lineEdit_end_pressure.setEnabled(True)
-        self.lineEdit_end_pressure.setMinimumSize(QSize(0, 28))
-        self.lineEdit_end_pressure.setMaximumSize(QSize(180, 28))
-        self.lineEdit_end_pressure.setFont(font1)
-        self.lineEdit_end_pressure.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_10.addWidget(self.lineEdit_end_pressure, 3, 3, 1, 1)
+        self.gridLayout_10.addWidget(self.label_24, 0, 3, 1, 1)
 
         self.lineEdit_end_temperature = QLineEdit(self.frame)
         self.lineEdit_end_temperature.setObjectName(u"lineEdit_end_temperature")
@@ -373,41 +338,42 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_end_temperature, 2, 3, 1, 1)
 
-        self.label_23 = QLabel(self.frame)
-        self.label_23.setObjectName(u"label_23")
-        self.label_23.setMinimumSize(QSize(40, 0))
-        self.label_23.setMaximumSize(QSize(40, 16777215))
-        self.label_23.setFont(font1)
-
-        self.gridLayout_10.addWidget(self.label_23, 3, 4, 1, 1)
-
         self.label_16 = QLabel(self.frame)
         self.label_16.setObjectName(u"label_16")
         self.label_16.setMinimumSize(QSize(100, 0))
-        self.label_16.setMaximumSize(QSize(100, 16777215))
+        self.label_16.setMaximumSize(QSize(140, 16777215))
         self.label_16.setFont(font1)
         self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_10.addWidget(self.label_16, 1, 0, 1, 1)
 
-        self.lineEdit_start_pressure = QLineEdit(self.frame)
-        self.lineEdit_start_pressure.setObjectName(u"lineEdit_start_pressure")
-        self.lineEdit_start_pressure.setEnabled(True)
-        self.lineEdit_start_pressure.setMinimumSize(QSize(0, 28))
-        self.lineEdit_start_pressure.setMaximumSize(QSize(180, 28))
-        self.lineEdit_start_pressure.setFont(font1)
-        self.lineEdit_start_pressure.setAlignment(Qt.AlignCenter)
+        self.lineEdit_end_pressure = QLineEdit(self.frame)
+        self.lineEdit_end_pressure.setObjectName(u"lineEdit_end_pressure")
+        self.lineEdit_end_pressure.setEnabled(True)
+        self.lineEdit_end_pressure.setMinimumSize(QSize(0, 28))
+        self.lineEdit_end_pressure.setMaximumSize(QSize(180, 28))
+        self.lineEdit_end_pressure.setFont(font1)
+        self.lineEdit_end_pressure.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_10.addWidget(self.lineEdit_start_pressure, 3, 1, 1, 1)
+        self.gridLayout_10.addWidget(self.lineEdit_end_pressure, 3, 3, 1, 1)
 
-        self.lineEdit_start_coords = QLineEdit(self.frame)
-        self.lineEdit_start_coords.setObjectName(u"lineEdit_start_coords")
-        self.lineEdit_start_coords.setMinimumSize(QSize(0, 28))
-        self.lineEdit_start_coords.setMaximumSize(QSize(180, 28))
-        self.lineEdit_start_coords.setFont(font1)
-        self.lineEdit_start_coords.setAlignment(Qt.AlignCenter)
+        self.label_20 = QLabel(self.frame)
+        self.label_20.setObjectName(u"label_20")
+        self.label_20.setMinimumSize(QSize(100, 0))
+        self.label_20.setMaximumSize(QSize(140, 16777215))
+        self.label_20.setFont(font1)
+        self.label_20.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_10.addWidget(self.lineEdit_start_coords, 1, 1, 1, 1)
+        self.gridLayout_10.addWidget(self.label_20, 3, 0, 1, 1)
+
+        self.label_11 = QLabel(self.frame)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMinimumSize(QSize(0, 28))
+        self.label_11.setMaximumSize(QSize(200, 28))
+        self.label_11.setFont(font1)
+        self.label_11.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.label_11, 0, 1, 1, 1)
 
         self.lineEdit_end_coords = QLineEdit(self.frame)
         self.lineEdit_end_coords.setObjectName(u"lineEdit_end_coords")
@@ -428,23 +394,77 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_start_temperature, 2, 1, 1, 1)
 
-        self.label_11 = QLabel(self.frame)
-        self.label_11.setObjectName(u"label_11")
-        self.label_11.setMinimumSize(QSize(0, 28))
-        self.label_11.setMaximumSize(QSize(200, 28))
-        self.label_11.setFont(font1)
-        self.label_11.setAlignment(Qt.AlignCenter)
+        self.lineEdit_start_pressure = QLineEdit(self.frame)
+        self.lineEdit_start_pressure.setObjectName(u"lineEdit_start_pressure")
+        self.lineEdit_start_pressure.setEnabled(True)
+        self.lineEdit_start_pressure.setMinimumSize(QSize(0, 28))
+        self.lineEdit_start_pressure.setMaximumSize(QSize(180, 28))
+        self.lineEdit_start_pressure.setFont(font1)
+        self.lineEdit_start_pressure.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_10.addWidget(self.label_11, 0, 1, 1, 1)
+        self.gridLayout_10.addWidget(self.lineEdit_start_pressure, 3, 1, 1, 1)
 
-        self.label_24 = QLabel(self.frame)
-        self.label_24.setObjectName(u"label_24")
-        self.label_24.setMinimumSize(QSize(0, 28))
-        self.label_24.setMaximumSize(QSize(200, 28))
-        self.label_24.setFont(font1)
-        self.label_24.setAlignment(Qt.AlignCenter)
+        self.lineEdit_start_coords = QLineEdit(self.frame)
+        self.lineEdit_start_coords.setObjectName(u"lineEdit_start_coords")
+        self.lineEdit_start_coords.setMinimumSize(QSize(0, 28))
+        self.lineEdit_start_coords.setMaximumSize(QSize(180, 28))
+        self.lineEdit_start_coords.setFont(font1)
+        self.lineEdit_start_coords.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_10.addWidget(self.label_24, 0, 3, 1, 1)
+        self.gridLayout_10.addWidget(self.lineEdit_start_coords, 1, 1, 1, 1)
+
+        self.comboBox_temperature_units = QComboBox(self.frame)
+        self.comboBox_temperature_units.addItem("")
+        self.comboBox_temperature_units.addItem("")
+        self.comboBox_temperature_units.addItem("")
+        self.comboBox_temperature_units.setObjectName(u"comboBox_temperature_units")
+        self.comboBox_temperature_units.setMinimumSize(QSize(100, 28))
+        self.comboBox_temperature_units.setMaximumSize(QSize(100, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setItalic(False)
+        self.comboBox_temperature_units.setFont(font3)
+
+        self.gridLayout_10.addWidget(self.comboBox_temperature_units, 2, 4, 1, 1)
+
+        self.comboBox_pressure_units = QComboBox(self.frame)
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.setObjectName(u"comboBox_pressure_units")
+        self.comboBox_pressure_units.setMinimumSize(QSize(100, 28))
+        self.comboBox_pressure_units.setMaximumSize(QSize(100, 28))
+        self.comboBox_pressure_units.setFont(font3)
+
+        self.gridLayout_10.addWidget(self.comboBox_pressure_units, 3, 4, 1, 1)
+
+        self.label_17 = QLabel(self.frame)
+        self.label_17.setObjectName(u"label_17")
+        self.label_17.setMinimumSize(QSize(100, 28))
+        self.label_17.setMaximumSize(QSize(100, 28))
+        self.label_17.setFont(font1)
+
+        self.gridLayout_10.addWidget(self.label_17, 1, 4, 1, 1)
+
+        self.label_15 = QLabel(self.frame)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setMinimumSize(QSize(100, 0))
+        self.label_15.setMaximumSize(QSize(140, 16777215))
+        self.label_15.setFont(font1)
+        self.label_15.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_10.addWidget(self.label_15, 2, 0, 1, 1)
 
 
         self.gridLayout_6.addWidget(self.frame, 1, 0, 1, 1)
@@ -467,11 +487,11 @@ class Ui_Dialog(object):
         self.treeWidget_viscous_thermal_model.setObjectName(u"treeWidget_viscous_thermal_model")
         self.treeWidget_viscous_thermal_model.setMinimumSize(QSize(320, 100))
         self.treeWidget_viscous_thermal_model.setMaximumSize(QSize(16777215, 16777215))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setItalic(False)
-        self.treeWidget_viscous_thermal_model.setFont(font3)
+        font4 = QFont()
+        font4.setFamilies([u"MS Shell Dlg 2"])
+        font4.setPointSize(10)
+        font4.setItalic(False)
+        self.treeWidget_viscous_thermal_model.setFont(font4)
         self.treeWidget_viscous_thermal_model.setAutoScroll(True)
         self.treeWidget_viscous_thermal_model.setAlternatingRowColors(True)
         self.treeWidget_viscous_thermal_model.setIndentation(1)
@@ -498,12 +518,12 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(10)
-        font4.setBold(False)
-        font4.setItalic(False)
-        self.pushButton_reset.setFont(font4)
+        font5 = QFont()
+        font5.setFamilies([u"MS Shell Dlg 2"])
+        font5.setPointSize(10)
+        font5.setBold(False)
+        font5.setItalic(False)
+        self.pushButton_reset.setFont(font5)
         self.pushButton_reset.setStyleSheet(u"")
 
         self.gridLayout_15.addWidget(self.pushButton_reset, 0, 0, 1, 1)
@@ -512,7 +532,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setObjectName(u"pushButton_remove")
         self.pushButton_remove.setMinimumSize(QSize(100, 28))
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
-        self.pushButton_remove.setFont(font4)
+        self.pushButton_remove.setFont(font5)
         self.pushButton_remove.setStyleSheet(u"")
 
         self.gridLayout_15.addWidget(self.pushButton_remove, 0, 1, 1, 1)
@@ -569,11 +589,11 @@ class Ui_Dialog(object):
         self.label_12.setObjectName(u"label_12")
         self.label_12.setMinimumSize(QSize(150, 28))
         self.label_12.setMaximumSize(QSize(150, 28))
-        font5 = QFont()
-        font5.setFamilies([u"MS Shell Dlg 2"])
-        font5.setPointSize(10)
-        font5.setBold(False)
-        self.label_12.setFont(font5)
+        font6 = QFont()
+        font6.setFamilies([u"MS Shell Dlg 2"])
+        font6.setPointSize(10)
+        font6.setBold(False)
+        self.label_12.setFont(font6)
         self.label_12.setTextFormat(Qt.AutoText)
         self.label_12.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
@@ -628,6 +648,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
+        self.comboBox_temperature_units.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -649,9 +670,9 @@ class Ui_Dialog(object):
         self.comboBox_fluid_point_selector.setItemText(0, QCoreApplication.translate("Dialog", u" Start point", None))
         self.comboBox_fluid_point_selector.setItemText(1, QCoreApplication.translate("Dialog", u" End point", None))
 
-        self.comboBox_interpolation_direction.setItemText(0, QCoreApplication.translate("Dialog", u" x-axis", None))
-        self.comboBox_interpolation_direction.setItemText(1, QCoreApplication.translate("Dialog", u" y-axis", None))
-        self.comboBox_interpolation_direction.setItemText(2, QCoreApplication.translate("Dialog", u" z-axis", None))
+        self.comboBox_gradient_direction.setItemText(0, QCoreApplication.translate("Dialog", u" x-axis", None))
+        self.comboBox_gradient_direction.setItemText(1, QCoreApplication.translate("Dialog", u" y-axis", None))
+        self.comboBox_gradient_direction.setItemText(2, QCoreApplication.translate("Dialog", u" z-axis", None))
 
         self.label_50.setText(QCoreApplication.translate("Dialog", u"Refinement regions:", None))
         self.label_51.setText(QCoreApplication.translate("Dialog", u"RefProp refinement:", None))
@@ -662,15 +683,32 @@ class Ui_Dialog(object):
         self.comboBox_beyond_bounds_values.setItemText(0, QCoreApplication.translate("Dialog", u" keep constant", None))
         self.comboBox_beyond_bounds_values.setItemText(1, QCoreApplication.translate("Dialog", u" extrapolate", None))
 
-        self.label_13.setText(QCoreApplication.translate("Dialog", u"Interpolation direction:", None))
-        self.label_15.setText(QCoreApplication.translate("Dialog", u"Temperature:", None))
-        self.label_18.setText(QCoreApplication.translate("Dialog", u"[\u00baC]", None))
-        self.label_17.setText(QCoreApplication.translate("Dialog", u"[m]", None))
-        self.label_20.setText(QCoreApplication.translate("Dialog", u"Pressure:", None))
-        self.label_23.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Coords.:", None))
-        self.label_11.setText(QCoreApplication.translate("Dialog", u"Start point", None))
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"Gradient direction:", None))
         self.label_24.setText(QCoreApplication.translate("Dialog", u"End point", None))
+        self.label_16.setText(QCoreApplication.translate("Dialog", u"Coords.:", None))
+        self.label_20.setText(QCoreApplication.translate("Dialog", u"Pressure:", None))
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"Start point", None))
+        self.comboBox_temperature_units.setItemText(0, QCoreApplication.translate("Dialog", u"  K", None))
+        self.comboBox_temperature_units.setItemText(1, QCoreApplication.translate("Dialog", u"  \u00baC", None))
+        self.comboBox_temperature_units.setItemText(2, QCoreApplication.translate("Dialog", u"  \u00baF", None))
+
+        self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Dialog", u" Pa (a)", None))
+        self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Dialog", u" kPa (a)", None))
+        self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Dialog", u" atm (a)", None))
+        self.comboBox_pressure_units.setItemText(3, QCoreApplication.translate("Dialog", u" bar (a)", None))
+        self.comboBox_pressure_units.setItemText(4, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2 (a)", None))
+        self.comboBox_pressure_units.setItemText(5, QCoreApplication.translate("Dialog", u" psi (a)", None))
+        self.comboBox_pressure_units.setItemText(6, QCoreApplication.translate("Dialog", u" ksi (a)", None))
+        self.comboBox_pressure_units.setItemText(7, QCoreApplication.translate("Dialog", u" Pa (g)", None))
+        self.comboBox_pressure_units.setItemText(8, QCoreApplication.translate("Dialog", u" kPa (g)", None))
+        self.comboBox_pressure_units.setItemText(9, QCoreApplication.translate("Dialog", u" atm (g)", None))
+        self.comboBox_pressure_units.setItemText(10, QCoreApplication.translate("Dialog", u" bar (g)", None))
+        self.comboBox_pressure_units.setItemText(11, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2 (g)", None))
+        self.comboBox_pressure_units.setItemText(12, QCoreApplication.translate("Dialog", u" psi (g)", None))
+        self.comboBox_pressure_units.setItemText(13, QCoreApplication.translate("Dialog", u" ksi (g)", None))
+
+        self.label_17.setText(QCoreApplication.translate("Dialog", u"[m]", None))
+        self.label_15.setText(QCoreApplication.translate("Dialog", u"Temperature:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_rectangular), QCoreApplication.translate("Dialog", u"Setup", None))
         ___qtreewidgetitem = self.treeWidget_viscous_thermal_model.headerItem()
         ___qtreewidgetitem.setText(4, QCoreApplication.translate("Dialog", u"Parameters", None));
@@ -726,7 +764,7 @@ class AcousticPropertiesGradientInputs_UI(QDialog, Ui_Dialog):
                                                     - (Layout): QGridLayout
                                                             - frame_4: QFrame
                                                                 - (Layout): QGridLayout
-                                                                        - comboBox_interpolation_direction: QComboBox
+                                                                        - comboBox_gradient_direction: QComboBox
                                                                         - label_50: QLabel
                                                                         - doubleSpinBox_selection_radius: QDoubleSpinBox
                                                                         - label_51: QLabel
@@ -736,20 +774,20 @@ class AcousticPropertiesGradientInputs_UI(QDialog, Ui_Dialog):
                                                                         - label_13: QLabel
                                                             - frame: QFrame
                                                                 - (Layout): QGridLayout
-                                                                        - label_15: QLabel
-                                                                        - label_18: QLabel
-                                                                        - label_17: QLabel
-                                                                        - label_20: QLabel
-                                                                        - lineEdit_end_pressure: QLineEdit
+                                                                        - label_24: QLabel
                                                                         - lineEdit_end_temperature: QLineEdit
-                                                                        - label_23: QLabel
                                                                         - label_16: QLabel
-                                                                        - lineEdit_start_pressure: QLineEdit
-                                                                        - lineEdit_start_coords: QLineEdit
+                                                                        - lineEdit_end_pressure: QLineEdit
+                                                                        - label_20: QLabel
+                                                                        - label_11: QLabel
                                                                         - lineEdit_end_coords: QLineEdit
                                                                         - lineEdit_start_temperature: QLineEdit
-                                                                        - label_11: QLabel
-                                                                        - label_24: QLabel
+                                                                        - lineEdit_start_pressure: QLineEdit
+                                                                        - lineEdit_start_coords: QLineEdit
+                                                                        - comboBox_temperature_units: QComboBox
+                                                                        - comboBox_pressure_units: QComboBox
+                                                                        - label_17: QLabel
+                                                                        - label_15: QLabel
                                                 - tab_list: QWidget
                                                     - (Layout): QGridLayout
                                                             - treeWidget_viscous_thermal_model: QTreeWidget

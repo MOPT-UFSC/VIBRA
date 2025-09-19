@@ -14,6 +14,8 @@ class Fluid:
     temperature: float = 0.0
     pressure: float = 0.0
     molar_mass: float = 0.0
+    key_mixture: str | None = None
+    molar_fractions: list | None = None
 
     @property
     def impedance(self):

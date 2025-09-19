@@ -1,11 +1,10 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import *
+from PySide6.QtGui import Qt
 
-from vibra.engine import AnalysisID
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-window_title = "Error"
+error_title = "Error"
 
 
 class AnalysisSetupInput():
@@ -72,7 +71,7 @@ class AnalysisSetupInput():
         f_max = analysis_setup.get("f_max", 600)
         f_step = analysis_setup.get("f_step", 5)
         self.analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        global_damping = analysis_setup.get("global_damping", (0., 0., 0., 0.))
+        global_damping = analysis_setup.get("global_damping", (0, 0, 0))
 
         self.load_damping_inputs(self.analysis_id, global_damping)
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
@@ -86,16 +85,13 @@ class AnalysisSetupInput():
         ]:
 
             if global_damping[0]:
-                self.lineEdit_av.setText(str(global_damping[0]))
+                self.lineEdit_mass_multiplier.setText(str(global_damping[0]))
 
             if global_damping[1]:
-                self.lineEdit_bv.setText(str(global_damping[1]))
+                self.lineEdit_stiffness_multiplier.setText(str(global_damping[1]))
 
             if global_damping[2]:
-                self.lineEdit_ah.setText(str(global_damping[2]))
-
-            if global_damping[3]:
-                self.lineEdit_bh.setText(str(global_damping[3]))
+                self.lineEdit_constant_structural_coefficient.setText(str(global_damping[2]))
 
     def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
         self.lineEdit_fmin.setText(str(round(f_min, 6)))
@@ -142,22 +138,22 @@ class AnalysisSetupInput():
                 AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
             ]:
                 number_of_modes = self.check_inputs(self.lineEdit_modes, "'number of modes'")
-                if self.stop:
+                if number_of_modes is None:
                     self.lineEdit_modes.setFocus()
                     return True
 
             f_min = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=True, _float=True)
-            if self.stop:
+            if f_min is None:
                 self.lineEdit_fmin.setFocus()
                 return True
 
             f_max = self.check_inputs(self.lineEdit_fmax, "'maximum frequency'", _float=True)
-            if self.stop:
+            if f_max is None:
                 self.lineEdit_fmax.setFocus()
                 return True
 
             f_step = self.check_inputs(self.lineEdit_fstep, "'frequency resolution (df)'", _float=True)
-            if self.stop:
+            if f_step is None:
                 self.lineEdit_fstep.setFocus()
                 return True
 
@@ -167,42 +163,37 @@ class AnalysisSetupInput():
                 message = "The maximum frequency (fmax) must be greater than \n"
                 message += "the sum between minimum frequency (fmin) and \n"
                 message += "frequency resolution (df)."
-                PrintMessageInput([window_title, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
             
             analysis_setup["f_min"] = f_min
             analysis_setup["f_max"] = f_max
             analysis_setup["f_step"] = f_step
 
-        alpha_v = beta_v = alpha_h = beta_h = 0.0
-        
+        alpha = beta = eta = 0.0
+
         if self.analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
             AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
             AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
             AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
         ]:
-            alpha_v = self.check_inputs(self.lineEdit_av, "'proportional viscous damping (alpha_v)'", zero_included=True, _float=True)
-            if self.stop:
-                self.lineEdit_av.setFocus()
+            alpha = self.check_inputs(self.lineEdit_mass_multiplier, "mass matrix multiplier (α)", zero_included=True, _float=True)
+            if alpha is None:
+                self.lineEdit_mass_multiplier.setFocus()
                 return True
 
-            beta_v = self.check_inputs(self.lineEdit_bv, "'proportional viscous damping (beta_v)'", zero_included=True,  _float=True)
-            if self.stop:
-                self.lineEdit_bv.setFocus()
+            beta = self.check_inputs(self.lineEdit_stiffness_multiplier, "stiffness matrix multiplier (β)", zero_included=True,  _float=True)
+            if beta is None:
+                self.lineEdit_stiffness_multiplier.setFocus()
                 return True
 
-            alpha_h = self.check_inputs(self.lineEdit_ah, "'proportional hysteretic damping (alpha_h)'", zero_included=True, _float=True)
-            if self.stop:
-                self.lineEdit_ah.setFocus()
+            eta = self.check_inputs(self.lineEdit_constant_structural_coefficient, "'proportional hysteretic damping (η)'", zero_included=True, _float=True)
+            if eta is None:
+                self.lineEdit_constant_structural_coefficient.setFocus()
                 return True
 
-            beta_h = self.check_inputs(self.lineEdit_bh, "'proportional hysteretic damping (beta_h)'", zero_included=True,  _float=True)
-            if self.stop:
-                self.lineEdit_bh.setFocus()
-                return True
-
-        analysis_setup["global_damping"] = [alpha_v, beta_v, alpha_h, beta_h]
+        analysis_setup["global_damping"] = [alpha, beta, eta]
         # self.model.set_global_damping(analysis_setup)
 
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
@@ -228,7 +219,6 @@ class AnalysisSetupInput():
         return False
 
     def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=False):
-        self.stop = False
         message = ""
         title = "Invalid input to the analysis setup"
         if lineEdit.text() != "":
@@ -261,8 +251,7 @@ class AnalysisSetupInput():
 
         if message != "":
             self.hide()
-            PrintMessageInput([window_title, title, message])
-            self.stop = True
+            PrintMessageInput([error_title, title, message])
             return None
         return out
 

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'incident_plane_wave_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -204,14 +204,15 @@ class Ui_Dialog(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
         self.pushButton_load_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_table.setMinimumSize(QSize(65, 28))
-        self.pushButton_load_table.setMaximumSize(QSize(65, 28))
+        self.pushButton_load_table.setMinimumSize(QSize(40, 28))
+        self.pushButton_load_table.setMaximumSize(QSize(40, 28))
         self.pushButton_load_table.setFont(font2)
         self.pushButton_load_table.setStyleSheet(u"")
         icon = QIcon()
         icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_load_table.setIcon(icon)
         self.pushButton_load_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_table.setAutoDefault(False)
 
         self.gridLayout_2.addWidget(self.pushButton_load_table, 2, 2, 1, 1)
 
@@ -257,6 +258,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -266,6 +268,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -533,6 +536,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font2)
         self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 
@@ -542,6 +546,7 @@ class Ui_Dialog(object):
         self.pushButton_attribute.setMaximumSize(QSize(100, 28))
         self.pushButton_attribute.setFont(font2)
         self.pushButton_attribute.setStyleSheet(u"")
+        self.pushButton_attribute.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_attribute, 0, 1, 1, 1)
 
@@ -564,7 +569,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(1)
+        self.tabWidget_main.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -580,7 +585,7 @@ class Ui_Dialog(object):
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
-        self.pushButton_load_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
+        self.pushButton_load_table.setText("")
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Choose a table file to import the data", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))

@@ -186,8 +186,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 return
             
         if isinstance(line_id, int):
-            for node_id in self.mesh.nodes_from_lines[line_id]:
-                for surface_id in self.mesh.surfaces_from_node[node_id]:
+            for node_id in self.mesh.get_nodes_from_line(line_id):
+                for surface_id in self.mesh.get_surfaces_from_node(node_id):
                     data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)

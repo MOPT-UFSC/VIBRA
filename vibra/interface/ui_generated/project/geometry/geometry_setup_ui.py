@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'geometry_setup.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -151,7 +151,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.comboBox_length_units.setItemText(0, QCoreApplication.translate("Dialog", u"milimeter", None))
+        self.comboBox_length_units.setItemText(0, QCoreApplication.translate("Dialog", u"millimeter", None))
         self.comboBox_length_units.setItemText(1, QCoreApplication.translate("Dialog", u"meter", None))
         self.comboBox_length_units.setItemText(2, QCoreApplication.translate("Dialog", u"inch", None))
 

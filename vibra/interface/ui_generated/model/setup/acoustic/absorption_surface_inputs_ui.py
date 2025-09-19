@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'absorption_surface_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -227,6 +227,7 @@ class Ui_Dialog(object):
         icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_load_table.setIcon(icon)
         self.pushButton_load_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_table.setAutoDefault(False)
 
         self.gridLayout_2.addWidget(self.pushButton_load_table, 1, 2, 1, 1)
 
@@ -251,6 +252,7 @@ class Ui_Dialog(object):
         icon1.addFile(u":/icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_change_frequency_setup.setIcon(icon1)
         self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
+        self.pushButton_change_frequency_setup.setAutoDefault(False)
 
         self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 1, 3, 1, 1)
 
@@ -296,6 +298,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -305,6 +308,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -383,6 +387,7 @@ class Ui_Dialog(object):
         self.pushButton_attribute.setMaximumSize(QSize(100, 28))
         self.pushButton_attribute.setFont(font2)
         self.pushButton_attribute.setStyleSheet(u"")
+        self.pushButton_attribute.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_attribute, 0, 1, 1, 1)
 
@@ -392,6 +397,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font2)
         self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 
@@ -401,7 +407,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(1)
+        self.tabWidget_main.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)

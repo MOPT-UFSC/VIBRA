@@ -45,6 +45,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cache_lock = Lock()
         self.min_value = 0
         self.max_value = 0
+        self.complex_result = False
         self.frequency_index = None
         self.mode_index = None
 
@@ -145,6 +146,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             with self._animation_cache_lock:
                 if self.timestamp != timestamp:
                     break
+                
+                if frame in self._animation_cached_data:
+                    continue
+
                 self.cache_frame(frame)
 
     def cache_frame(self, frame):
@@ -162,6 +167,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             point_data,
             point_position,
         )
+        if not self.complex_result:
+            mirrored_frame = self._animation_total_frames - frame - 1
+            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
@@ -228,7 +236,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            displacements, color_scalars, min_value, max_value = data
+            displacements, color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -250,7 +258,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            displacements, color_scalars, min_value, max_value = data
+            displacements, color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -269,7 +277,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            color_scalars, min_value, max_value = data
+            color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -288,7 +296,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if data is None:
                 return
 
-            color_scalars, min_value, max_value = data
+            color_scalars, min_value, max_value, self.complex_result = data
             if clear_cache:
                 self.min_value = min_value
                 self.max_value = max_value
@@ -375,11 +383,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         mesh = app().project.model.mesh
         actor_is_hollow = isinstance(self.analysis_actor, HollowAnalysisActor)
-        mesh_is_hollow = mesh.solids_connectivity.size <= 0
 
         self.clear_cache()
 
-        if actor_is_hollow and not mesh_is_hollow:
+        if actor_is_hollow and mesh.are_there_volumes_in_geometry():
             self.remove_actors(self.analysis_actor, self.edges_actor)
             self.analysis_actor = AnalysisActor(mesh)
             self.edges_actor = EdgesActor(self.analysis_actor.data)

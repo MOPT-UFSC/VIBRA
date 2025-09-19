@@ -2,7 +2,7 @@ from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkP
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vibra.utils.polydata_utils import transform_polydata
+from vibra.utils.vtk_utils import transform_polydata
 
 
 def create_arrow_source():
@@ -14,6 +14,19 @@ def create_arrow_source():
         source.GetOutput(),
         position=(-1.5, 0, 0),
         scale=(1.5, 1.5, 1.5),
+    )
+
+def create_pencil_source():
+    source = vtkArrowSource()
+    source.SetTipLength(0.25)
+    source.SetTipRadius(.06)
+    source.SetShaftRadius(.06)
+    source.Update()
+
+    return transform_polydata(
+        source.GetOutput(),
+        position=(-1, 0, 0),
+        scale=(1, 1, 1),
     )
 
 def create_quadruple_arrow_source():

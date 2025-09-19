@@ -343,7 +343,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
+                <iconset resource="../../../../icons/resources.qrc">
                  <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
                </property>
                <property name="iconSize">
@@ -351,6 +351,9 @@
                  <width>20</width>
                  <height>20</height>
                 </size>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -858,7 +861,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset>
+                <iconset resource="../../../../icons/resources.qrc">
                  <normaloff>:/icons/invert_icon.png</normaloff>:/icons/invert_icon.png</iconset>
                </property>
                <property name="iconSize">
@@ -866,6 +869,9 @@
                  <width>22</width>
                  <height>22</height>
                 </size>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
                </property>
                <property name="flat">
                 <bool>false</bool>
@@ -1049,6 +1055,9 @@
                  <height>20</height>
                 </size>
                </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
                <property name="flat">
                 <bool>false</bool>
                </property>
@@ -1089,6 +1098,9 @@
                  <height>20</height>
                 </size>
                </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
                <property name="flat">
                 <bool>false</bool>
                </property>
@@ -1124,6 +1136,8 @@
   <tabstop>pushButton_process_data</tabstop>
   <tabstop>pushButton_exit</tabstop>
  </tabstops>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

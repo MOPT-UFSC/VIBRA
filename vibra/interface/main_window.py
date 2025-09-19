@@ -44,6 +44,7 @@ from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
+import gmsh
 
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
@@ -135,7 +136,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
-        self.splitter.widget(0).setMinimumWidth(360)
+        self.splitter.widget(0).setMinimumWidth(360)        
 
     def _config_window(self):
         self.setMinimumSize(800, 600)
@@ -293,6 +294,8 @@ class MainWindow(MainWindow_UI):
         if volumes is None:
             volumes = set()
 
+        surfaces = set(surfaces) - set(self.hidden_surfaces)
+        volumes = set(volumes) - set(self.hidden_volumes)
         mesh = app().project.model.mesh
 
         # Select the surfaces associated to the selected volumes
@@ -419,17 +422,12 @@ class MainWindow(MainWindow_UI):
             self.action_theme.setIcon(self.theme_moon_icon)
 
         app().config.update_config_file()
-    
-    def action_show_materials_callback(self):
-        self.visualization_filter.color_mode = ColorMode.MATERIAL
-        self.visualization_changed.emit()
 
-    def action_show_fluids_callback(self):
-        self.visualization_filter.color_mode = ColorMode.FLUID
-        self.visualization_changed.emit()
-
-    def action_show_empty_callback(self):
-        self.visualization_filter.color_mode = ColorMode.EMPTY
+    def action_show_empty_callback(self, condition: bool):
+        if condition:
+            self.visualization_filter.color_mode = ColorMode.EMPTY
+        else:
+            self.visualization_filter.color_mode = ColorMode.COLORED        
         self.visualization_changed.emit()
 
     def action_user_preferences_callback(self):
@@ -597,15 +595,26 @@ class MainWindow(MainWindow_UI):
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
 
+        if not mesh.are_there_volumes_in_geometry():
+            PrintMessageInput(
+                [
+                    "Warning",
+                    "No volumes were found in the geometry",
+                    "Since the current geometry does not contains volumes, the operation can not be performed.",
+                ]
+            )
+
         volumes_to_hide = set()
         if self.selected_geometry_volumes:
             volumes_to_hide |= self.selected_geometry_volumes
+
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
                 volumes_to_hide |= set(mesh.volumes_from_surface[surface])
+
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
-                volumes_to_hide.add(mesh.volume_from_element[element])
+                volumes_to_hide.add(mesh.get_volume_from_element(element))
 
         self.hide_volumes(volumes_to_hide)
         self.clear_selection()
@@ -641,13 +650,15 @@ class MainWindow(MainWindow_UI):
             ]
         )
 
-    def distinguish_mesh_solids(self, solids):
-        if not solids:
-            return
+    def distinguish_mesh_solids(self, solid_elements):
 
-        self.distinguished_solids = set(solids)
-        self.show_mesh_render_widget()
-        self.action_line_view_callback(False)
+        self.distinguished_solids = set(solid_elements)
+        if solid_elements:
+            self.show_mesh_render_widget()
+        else:
+            self.show_geometry_render_widget()
+
+        self.action_line_view_callback(not solid_elements)
         self.update_visualization_filter()
         self.visualization_changed.emit()
 
@@ -941,7 +952,7 @@ class MainWindow(MainWindow_UI):
                 self.update_mesh_information()
                 app().file.write_geometry_data_in_file()
                 app().file.write_mesh_data_in_file()
-                app().main_window.project_data_modified = False
+                self.project_data_modified = False
 
             self.update_geometry_information()
             self.update_toolbar_and_menu_items_after_load_project()
@@ -1030,7 +1041,7 @@ class MainWindow(MainWindow_UI):
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed.emit() 
 
     def action_line_view_callback(self, clicked: bool):
         self.visualization_filter.lines = clicked
@@ -1137,6 +1148,12 @@ class MainWindow(MainWindow_UI):
                 return
 
         self.reset_temporary_vibra_folder()
+
+        # finalize the gmsh before closing the application
+        if gmsh.isInitialized():
+            gmsh.finalize()
+            app().processEvents()
+
         app().quit()
 
     def close_dialogs(self):

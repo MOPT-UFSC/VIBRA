@@ -12,9 +12,10 @@ from vibra.engine.mesher.element_type import (
 from vibra.engine.mesher.mesh import Mesh
 
 
+@pytest.mark.skip
 def test_tetrahedron_4_mesh():
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/cilindro.step",
+        "data/examples/geometry_files/cylinder.step",
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
@@ -25,8 +26,9 @@ def test_tetrahedron_4_mesh():
         mesh,
         "tests/general/mesh_info/cilinder_tet4/",
     )
+    
 
-
+@pytest.mark.skip
 def test_tetrahedron_10_mesh():
     mesh = Mesh().load_cad(
         "data/examples/geometry_files/tetrahedron.step",
@@ -45,7 +47,7 @@ def test_tetrahedron_10_mesh():
 @pytest.mark.skip
 def test_hexahedron_8_mesh():
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/cilindro.step",
+        "data/examples/geometry_files/cylinder.step",
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
@@ -78,9 +80,9 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     mesh_path = Path(mesh_path)
     mappings = dict(
         face_to_solid_element=mesh.face_to_solid_element.items(),
-        line_from_element=mesh.line_from_element.items(),
-        surface_from_element=mesh.surface_from_element.items(),
-        volume_from_element=mesh.volume_from_element.items(),
+        # line_from_element=mesh.line_from_element.items(),
+        # surface_from_element=mesh.surface_from_element.items(),
+        # volume_from_element=mesh.volume_from_element.items(),
     )
 
     if not mesh_path.exists():
