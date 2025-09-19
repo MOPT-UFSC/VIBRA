@@ -383,11 +383,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
         mesh = app().project.model.mesh
         actor_is_hollow = isinstance(self.analysis_actor, HollowAnalysisActor)
-        mesh_is_hollow = mesh.solids_connectivity.size <= 0
 
         self.clear_cache()
 
-        if actor_is_hollow and not mesh_is_hollow:
+        if actor_is_hollow and mesh.are_there_volumes_in_geometry():
             self.remove_actors(self.analysis_actor, self.edges_actor)
             self.analysis_actor = AnalysisActor(mesh)
             self.edges_actor = EdgesActor(self.analysis_actor.data)

@@ -9,6 +9,7 @@ window_title = "Error"
 
 class ColorMode(IntEnum):
     EMPTY = auto()
+    COLORED = auto()
     MATERIAL = auto()
     FLUID = auto()
     MESH_QUALITY_VOLUME = auto()
@@ -26,18 +27,18 @@ class VisualizationFilter:
     solids: bool = False
     symbols: bool = False
     ghost: bool = True
-    color_mode: ColorMode = ColorMode.EMPTY
+    color_mode: ColorMode = ColorMode.COLORED
 
     @classmethod
     def all_false(cls):
         # It is dumb, but it works
-        args = [False] * 7
+        args = [False] * 6
         return cls(*args)
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
-        args = [True] * 7
+        args = [True] * 6
         return cls(*args)
 
 
