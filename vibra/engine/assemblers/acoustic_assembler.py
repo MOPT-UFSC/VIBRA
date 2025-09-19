@@ -550,28 +550,16 @@ class AcousticAssembler:
             else:
                 continue
 
-            if p_data.get("coupling_type") == "inside_surfaces":
+            decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
+            if not isinstance(decouple_data, dict):
+                continue
 
-                decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
-                if not isinstance(decouple_data, dict):
-                    continue
+            new_surface_id = decouple_data.get("new_surface_id")
+            if new_surface_id is None:
+                continue
 
-                new_surface_id = decouple_data.get("new_surface_id")
-                if new_surface_id is None:
-                    continue
-
-                surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
-                surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
-
-            else:
-
-                surf_elements_A = list()
-                for surface_id_A in p_data.get("surfaces_A"):
-                    surf_elements_A.extend(list(self.model.mesh.elements_from_surface.get(surface_id_A)))
-
-                surf_elements_B = list()
-                for surface_id_B in p_data.get("surfaces_B"):
-                    surf_elements_B.extend(list(self.model.mesh.elements_from_surface.get(surface_id_B)))
+            surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
+            surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
 
             for i, el in enumerate(surf_elements_A):
                 nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
@@ -637,29 +625,17 @@ class AcousticAssembler:
                 Z_0 = pp_model.get("Z_0", 0)
 
                 non_linear = z_nl_urms != 0
-                
-                if pp_data.get("coupling_type") == "Inside surfaces":
+    
+                decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
+                if not isinstance(decouple_data, dict):
+                    continue
 
-                    decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
-                    if not isinstance(decouple_data, dict):
-                        continue
+                new_surface_id = decouple_data.get("new_surface_id")
+                if new_surface_id is None:
+                    continue
 
-                    new_surface_id = decouple_data.get("new_surface_id")
-                    if new_surface_id is None:
-                        continue
-
-                    surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
-                    surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
-
-                else:
-
-                    surf_elements_A = list()
-                    for surface_id_A in pp_data.get("surfaces_A"):
-                        surf_elements_A.extend(list(self.model.mesh.elements_from_surface.get(surface_id_A)))
-
-                    surf_elements_B = list()
-                    for surface_id_B in pp_data.get("surfaces_B"):
-                        surf_elements_B.extend(list(self.model.mesh.elements_from_surface.get(surface_id_B)))
+                surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
+                surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
 
                 for i, el in enumerate(surf_elements_A):
 
@@ -1360,14 +1336,14 @@ class AcousticAssembler:
         int2d_NtN_A = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
-            self.data_Zti_A[j] = int2d_NtN_A / Zti_A[j].reshape(-1, 1, 1)
+            self.data_Zti_A[j] = int2d_NtN_A / Zti_A[:, j].reshape(-1, 1, 1)
 
         logging.info(f"Processing the impedance data to assemble damping matrix... [7/10]")
         self.ind_rows_Zti_B, self.ind_cols_Zti_B = self.element_2d.generate_ind_rows_cols(connectivities_B)
         int2d_NtN_B = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
-            self.data_Zti_B[j] = int2d_NtN_B / Zti_B[j].reshape(-1, 1, 1)
+            self.data_Zti_B[j] = int2d_NtN_B / Zti_B[:, j].reshape(-1, 1, 1)
 
 
     def process_perforated_plate_impedance_data_to_assemble_damping_matrix(self, solution: np.ndarray | None = None):

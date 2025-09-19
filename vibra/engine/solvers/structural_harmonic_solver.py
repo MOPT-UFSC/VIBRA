@@ -24,10 +24,10 @@ class StructuralHarmonicSolver:
         self.disp_dof = None
         self.solution = None
         self.loads = None
-
         self.analysis_type = "structural"
+        self.prescribed_dof_values = dict()
 
-        
+
     def get_prescribed_dof_model_excitation(self, index: int = 0):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
@@ -44,7 +44,7 @@ class StructuralHarmonicSolver:
         i-th frequency index.
         """
 
-        if np.sum(self.prescribed_dof_values) == 0:
+        if not self.prescribed_dof_values:
             return 0.
 
         alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
@@ -80,7 +80,7 @@ class StructuralHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
-        if np.sum(self.prescribed_dof_values) == 0:
+        if not self.prescribed_dof_values:
             return 0.
 
         alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
@@ -106,7 +106,7 @@ class StructuralHarmonicSolver:
             cols = len(frequencies)
             f_eq = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.prescribed_dof_values):
+        if self.prescribed_dof_values:
 
             for i, freq in enumerate(frequencies):
                 #

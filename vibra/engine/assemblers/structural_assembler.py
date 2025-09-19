@@ -22,8 +22,9 @@ class StructuralAssembler:
         self.mass_matrix = None
         self.frequencies = None
 
+        self.prescribed_dof_values = dict()
+
         self.displacement_dof = np.array([])
-        self.prescribed_dof_values = np.array([])
         self.prescribed_dof_indexes = np.array([])
         self.unprescribed_dof_indexes = np.array([])
 
