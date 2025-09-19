@@ -57,6 +57,7 @@
         <file>model_setup_items/material.png</file>
         <file>model_setup_items/distributed_loads3.png</file>
         <file>model_setup_items/fluid.png</file>
+        <file>model_setup_items/prescribed_dof.png</file>
         <file>model_setup_items/mesh_setup1.png</file>
         <file>model_setup_items/transfer_impedance.png</file>
         <file>model_setup_items/incident_plane_wave.png</file>
@@ -72,7 +73,6 @@
         <file>model_setup_items/structural_help.png</file>
         <file>model_setup_items/absorption_surface1.png</file>
         <file>model_setup_items/mass_flow_rate.png</file>
-        <file>model_setup_items/prescribed_dofs.png</file>
         <file>model_setup_items/normal_pressure_load.png</file>
         <file>model_setup_items/weight.png</file>
         <file>model_setup_items/proportional_damping.png</file>

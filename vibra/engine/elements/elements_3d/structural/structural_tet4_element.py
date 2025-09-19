@@ -50,8 +50,8 @@ def get_detJAC_and_invJAC(JAC):
 class STRUCT_TETRAHEDRON_4S(Element3D):
     #
     NODES_PER_ELEMENT = 4
-    DOFS_PER_NODE = 3
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 3
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model: "Model"):
         #
@@ -138,7 +138,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((6, self.DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
         B[0, 0::3] = dphi_t[0, :]
         B[1, 1::3] = dphi_t[1, :]
         B[2, 2::3] = dphi_t[2, :]
@@ -149,7 +149,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         B[5, 1::3] = dphi_t[2, :]
         B[5, 2::3] = dphi_t[1, :]
 
-        N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
@@ -169,30 +169,30 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
     def get_rows_and_cols_indexes(self, el_index: int, shift_index: int):
 
-        edofs = self.DOFS_PER_ELEMENT
+        edofs = self.DOF_PER_ELEMENT
         node_ids = self.connectivity[el_index, 1:]
-        local_dofs = np.arange(self.DOFS_PER_NODE, dtype=int)
+        local_dof = np.arange(self.DOF_PER_NODE, dtype=int)
 
-        _dofs = np.zeros(len(node_ids), dtype=int)
+        _dof = np.zeros(len(node_ids), dtype=int)
         _shifts = np.zeros(len(node_ids), dtype=int)
 
         for i, node_id in enumerate(node_ids):
 
             shift = shift_index
-            dofs_node = self.DOFS_PER_NODE
+            dofs_node = self.DOF_PER_NODE
             surface_ids = self.model.mesh.get_surfaces_from_node(node_id)
 
             for surface_id in surface_ids:
                 shell_data = self.model.properties._get_property("surface_thickness", surface=surface_id)
                 if isinstance(shell_data, dict):
-                    dofs_node = 2 * self.DOFS_PER_NODE
+                    dofs_node = 2 * self.DOF_PER_NODE
                     shift = 0
                     break
 
-            _dofs[i] = dofs_node
+            _dof[i] = dofs_node
             _shifts[i] = shift
 
-        _indexes = (_dofs * node_ids + _shifts).reshape(-1, 1) + local_dofs
+        _indexes = (_dof * node_ids + _shifts).reshape(-1, 1) + local_dof
         aux = np.tile(_indexes.flatten(), (edofs, 1))
         ind_rows = aux.T
         ind_cols = aux
@@ -207,10 +207,10 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         else:
             self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7]]
 
-        dofs = self.DOFS_PER_NODE
-        edofs = self.DOFS_PER_ELEMENT
+        dofs = self.DOF_PER_NODE
+        edofs = self.DOF_PER_ELEMENT
 
-        # ind_dofs = np.array([  dofs * self.connectivity[:, 1] + 0,
+        # ind_dof = np.array([  dofs * self.connectivity[:, 1] + 0,
         #                        dofs * self.connectivity[:, 1] + 1,
         #                        dofs * self.connectivity[:, 1] + 2,
         #                        dofs * self.connectivity[:, 2] + 0,
@@ -223,15 +223,15 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         #                        dofs * self.connectivity[:, 4] + 1,
         #                        dofs * self.connectivity[:, 4] + 2  ], dtype=int).T
 
-        local_dofs = np.arange(dofs, dtype=int)
+        local_dof = np.arange(dofs, dtype=int)
 
-        ind_dofs = np.array([dofs * self.connectivity[:, 1].reshape(-1, 1) + local_dofs,
-                             dofs * self.connectivity[:, 2].reshape(-1, 1) + local_dofs,
-                             dofs * self.connectivity[:, 3].reshape(-1, 1) + local_dofs,
-                             dofs * self.connectivity[:, 4].reshape(-1, 1) + local_dofs], dtype=int)
+        ind_dof = np.array([dofs * self.connectivity[:, 1].reshape(-1, 1) + local_dof,
+                            dofs * self.connectivity[:, 2].reshape(-1, 1) + local_dof,
+                            dofs * self.connectivity[:, 3].reshape(-1, 1) + local_dof,
+                            dofs * self.connectivity[:, 4].reshape(-1, 1) + local_dof], dtype=int)
 
-        self.ind_rows = ((np.tile(ind_dofs.flatten(), (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+        self.ind_rows = ((np.tile(ind_dof.flatten(), (edofs, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, edofs)).flatten()
 
         return self.ind_rows, self.ind_cols
 

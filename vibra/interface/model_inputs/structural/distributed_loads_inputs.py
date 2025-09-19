@@ -715,7 +715,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         elif selection == "lines":
             remove_function = self.properties._remove_line_property
 
-        properties = ["distributed_loads", "prescribed_dofs"]
+        properties = ["distributed_loads", "prescribed_dof"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -802,7 +802,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["distributed_loads", "prescribed_dofs"]:
+            if property in ["distributed_loads", "prescribed_dof"]:
                 if "table_names" in data.keys():
                     return
 

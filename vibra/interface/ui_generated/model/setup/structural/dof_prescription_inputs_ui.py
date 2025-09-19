@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'dof_prescription_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -534,11 +534,12 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_ux = QLineEdit(self.frame_9)
         self.lineEdit_path_table_ux.setObjectName(u"lineEdit_path_table_ux")
-        self.lineEdit_path_table_ux.setEnabled(False)
+        self.lineEdit_path_table_ux.setEnabled(True)
         self.lineEdit_path_table_ux.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_ux.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_ux.setStyleSheet(u"")
         self.lineEdit_path_table_ux.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_ux.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_ux, 0, 2, 1, 1)
 
@@ -559,10 +560,11 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_ry = QLineEdit(self.frame_9)
         self.lineEdit_path_table_ry.setObjectName(u"lineEdit_path_table_ry")
-        self.lineEdit_path_table_ry.setEnabled(False)
+        self.lineEdit_path_table_ry.setEnabled(True)
         self.lineEdit_path_table_ry.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_ry.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_ry.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_ry.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_ry, 4, 2, 1, 1)
 
@@ -593,20 +595,22 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_rz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_rz.setObjectName(u"lineEdit_path_table_rz")
-        self.lineEdit_path_table_rz.setEnabled(False)
+        self.lineEdit_path_table_rz.setEnabled(True)
         self.lineEdit_path_table_rz.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_rz.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_rz.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_rz.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_rz, 5, 2, 1, 1)
 
         self.lineEdit_path_table_uy = QLineEdit(self.frame_9)
         self.lineEdit_path_table_uy.setObjectName(u"lineEdit_path_table_uy")
-        self.lineEdit_path_table_uy.setEnabled(False)
+        self.lineEdit_path_table_uy.setEnabled(True)
         self.lineEdit_path_table_uy.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_uy.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_uy.setStyleSheet(u"")
         self.lineEdit_path_table_uy.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_uy.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_uy, 1, 2, 1, 1)
 
@@ -632,10 +636,11 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_rx = QLineEdit(self.frame_9)
         self.lineEdit_path_table_rx.setObjectName(u"lineEdit_path_table_rx")
-        self.lineEdit_path_table_rx.setEnabled(False)
+        self.lineEdit_path_table_rx.setEnabled(True)
         self.lineEdit_path_table_rx.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_rx.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_rx.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_rx.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_rx, 3, 2, 1, 1)
 
@@ -706,10 +711,11 @@ class Ui_Dialog(object):
 
         self.lineEdit_path_table_uz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_uz.setObjectName(u"lineEdit_path_table_uz")
-        self.lineEdit_path_table_uz.setEnabled(False)
+        self.lineEdit_path_table_uz.setEnabled(True)
         self.lineEdit_path_table_uz.setMinimumSize(QSize(300, 26))
         self.lineEdit_path_table_uz.setMaximumSize(QSize(300, 26))
         self.lineEdit_path_table_uz.setAlignment(Qt.AlignCenter)
+        self.lineEdit_path_table_uz.setClearButtonEnabled(True)
 
         self.gridLayout_3.addWidget(self.lineEdit_path_table_uz, 2, 2, 1, 1)
 
@@ -793,27 +799,27 @@ class Ui_Dialog(object):
         self.frame_5.setFrameShadow(QFrame.Raised)
         self.gridLayout_2 = QGridLayout(self.frame_5)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.treeWidget_prescribed_dofs = QTreeWidget(self.frame_5)
+        self.treeWidget_prescribed_dof = QTreeWidget(self.frame_5)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_prescribed_dofs.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_prescribed_dofs.setObjectName(u"treeWidget_prescribed_dofs")
-        self.treeWidget_prescribed_dofs.setMinimumSize(QSize(320, 170))
-        self.treeWidget_prescribed_dofs.setMaximumSize(QSize(380, 200))
+        self.treeWidget_prescribed_dof.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_prescribed_dof.setObjectName(u"treeWidget_prescribed_dof")
+        self.treeWidget_prescribed_dof.setMinimumSize(QSize(320, 170))
+        self.treeWidget_prescribed_dof.setMaximumSize(QSize(380, 200))
         font6 = QFont()
         font6.setFamilies([u"MS Shell Dlg 2"])
         font6.setPointSize(10)
         font6.setItalic(False)
-        self.treeWidget_prescribed_dofs.setFont(font6)
-        self.treeWidget_prescribed_dofs.setIndentation(1)
-        self.treeWidget_prescribed_dofs.setHeaderHidden(False)
-        self.treeWidget_prescribed_dofs.header().setHighlightSections(False)
-        self.treeWidget_prescribed_dofs.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_prescribed_dofs.header().setStretchLastSection(True)
+        self.treeWidget_prescribed_dof.setFont(font6)
+        self.treeWidget_prescribed_dof.setIndentation(1)
+        self.treeWidget_prescribed_dof.setHeaderHidden(False)
+        self.treeWidget_prescribed_dof.header().setHighlightSections(False)
+        self.treeWidget_prescribed_dof.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_prescribed_dof.header().setStretchLastSection(True)
 
-        self.gridLayout_2.addWidget(self.treeWidget_prescribed_dofs, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.treeWidget_prescribed_dof, 0, 0, 1, 1)
 
 
         self.gridLayout_9.addWidget(self.frame_5, 0, 0, 1, 1)
@@ -979,12 +985,12 @@ class Ui_Dialog(object):
 
         self.label_linear.setText(QCoreApplication.translate("Dialog", u"Linear:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
-        ___qtreewidgetitem = self.treeWidget_prescribed_dofs.headerItem()
+        ___qtreewidgetitem = self.treeWidget_prescribed_dof.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Prescribed DOF", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Selection-ID", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_prescribed_dofs.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
+        self.treeWidget_prescribed_dof.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -1081,7 +1087,7 @@ class DofPrescriptionInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - frame_5: QFrame
                                                             - (Layout): QGridLayout
-                                                                    - treeWidget_prescribed_dofs: QTreeWidget
+                                                                    - treeWidget_prescribed_dof: QTreeWidget
                                                         - frame_3: QFrame
                                                             - (Layout): QGridLayout
                                                                     - pushButton_reset: QPushButton

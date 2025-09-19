@@ -84,8 +84,8 @@ def get_local_coordinates(coords):
 class ACT_QUADRANGLE_4(Element2D):
     #
     NODES_PER_ELEMENT = 4
-    DOFS_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 1
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model: "Model"):
         #
@@ -152,12 +152,12 @@ class ACT_QUADRANGLE_4(Element2D):
         """ This method processess the dofs indices (rows and columns) for assembly"""
 
         self.reorder_connect(connect_face)
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs * self.connectivities[:, :]
+        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dofs * self.connectivities[:, :]
 
-        vect_indices = ind_dofs.flatten()
+        vect_indices = ind_dof.flatten()
         ind_rows_face = ((np.tile(vect_indices, (edofs,1))).T).flatten()
-        ind_cols_face = (np.tile(ind_dofs, edofs)).flatten()
+        ind_cols_face = (np.tile(ind_dof, edofs)).flatten()
 
         return ind_rows_face, ind_cols_face
 

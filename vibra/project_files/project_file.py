@@ -419,6 +419,8 @@ class ProjectFile:
                         for _key, _data in data.items():
                             if _key in ["values"]:
                                 continue
+                            elif isinstance(_data, Fluid):
+                                aux[_key] = _data.get_data()
                             else:
                                 aux[_key] = _data
 
@@ -438,6 +440,7 @@ class ProjectFile:
                 return output
 
             properties = app().project.model.properties
+
             data = dict(
                         # global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
@@ -448,7 +451,7 @@ class ProjectFile:
                         nodal_properties = normalize(properties.nodal_properties),
                         group_properties = normalize(properties.group_properties)
                         )
-
+                                        
             write_json(self.model_properties_filepath, data)
             app().main_window.project_data_modified = True
 
@@ -468,15 +471,19 @@ class ProjectFile:
             for key, val in prop.items():
 
                 key: str
-                p, *_ids = key.split()
-                p = p.strip()
+                property, *_ids = key.split()
+                property = property.strip()
+
+                if property == "perforated_plate_model":
+                    fluid = Fluid(**val["fluid"])
+                    val["fluid"] = fluid
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])
                 else:
                     ids = tuple([int(_id) for _id in _ids])
 
-                new_prop[p, ids] = val
+                new_prop[property, ids] = val
 
             return new_prop
 
@@ -585,10 +592,10 @@ class ProjectFile:
                 if structural_modal_solver.solution is not None:
                     natural_frequencies = structural_modal_solver.natural_frequencies
                     solution_full = structural_modal_solver.solution
-                    displacement_dofs = structural_modal_solver.displacement_dofs
+                    displacement_dof = structural_modal_solver.displacement_dof
                     f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
                     f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
-                    f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+                    f.create_dataset("modal_structural/displacement_dof", data=displacement_dof, dtype=int)
 
             # acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
             # if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
@@ -603,10 +610,10 @@ class ProjectFile:
                 if structural_harmonic_solver.solution is not None:
                     frequencies = app().project.model.frequencies
                     solution = structural_harmonic_solver.solution
-                    displacement_dofs = structural_harmonic_solver.displacement_dofs
+                    displacement_dof = structural_harmonic_solver.displacement_dof
                     f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
                     f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
-                    f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+                    f.create_dataset("harmonic_structural/displacement_dof", data=displacement_dof, dtype=int)
 
             app().main_window.project_data_modified = True
 
