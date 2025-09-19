@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from data.data_test_helper import get_data_path
 from vibra import PROJECT_DIR
 from vibra.engine.postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
@@ -31,8 +34,8 @@ def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
 
-    mesh_path = f"data/validation/acoustic/elements/tet4/mesh/ds_Lpipe_act_tet4_30mm.dat"
-    results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet4/results/"
+    mesh_path = get_data_path("validation/acoustic/elements/tet4/mesh/ds_Lpipe_act_tet4_30mm.dat")
+    results_path = Path(get_data_path("validation/acoustic/elements/tet4/results/"))
 
     if not os.path.exists(mesh_path):
         return
