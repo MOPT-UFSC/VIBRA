@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'dof_prescription_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -799,27 +799,27 @@ class Ui_Dialog(object):
         self.frame_5.setFrameShadow(QFrame.Raised)
         self.gridLayout_2 = QGridLayout(self.frame_5)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.treeWidget_prescribed_dofs = QTreeWidget(self.frame_5)
+        self.treeWidget_prescribed_dof = QTreeWidget(self.frame_5)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_prescribed_dofs.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_prescribed_dofs.setObjectName(u"treeWidget_prescribed_dofs")
-        self.treeWidget_prescribed_dofs.setMinimumSize(QSize(320, 170))
-        self.treeWidget_prescribed_dofs.setMaximumSize(QSize(380, 200))
+        self.treeWidget_prescribed_dof.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_prescribed_dof.setObjectName(u"treeWidget_prescribed_dof")
+        self.treeWidget_prescribed_dof.setMinimumSize(QSize(320, 170))
+        self.treeWidget_prescribed_dof.setMaximumSize(QSize(380, 200))
         font6 = QFont()
         font6.setFamilies([u"MS Shell Dlg 2"])
         font6.setPointSize(10)
         font6.setItalic(False)
-        self.treeWidget_prescribed_dofs.setFont(font6)
-        self.treeWidget_prescribed_dofs.setIndentation(1)
-        self.treeWidget_prescribed_dofs.setHeaderHidden(False)
-        self.treeWidget_prescribed_dofs.header().setHighlightSections(False)
-        self.treeWidget_prescribed_dofs.header().setProperty(u"showSortIndicator", False)
-        self.treeWidget_prescribed_dofs.header().setStretchLastSection(True)
+        self.treeWidget_prescribed_dof.setFont(font6)
+        self.treeWidget_prescribed_dof.setIndentation(1)
+        self.treeWidget_prescribed_dof.setHeaderHidden(False)
+        self.treeWidget_prescribed_dof.header().setHighlightSections(False)
+        self.treeWidget_prescribed_dof.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_prescribed_dof.header().setStretchLastSection(True)
 
-        self.gridLayout_2.addWidget(self.treeWidget_prescribed_dofs, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.treeWidget_prescribed_dof, 0, 0, 1, 1)
 
 
         self.gridLayout_9.addWidget(self.frame_5, 0, 0, 1, 1)
@@ -985,12 +985,12 @@ class Ui_Dialog(object):
 
         self.label_linear.setText(QCoreApplication.translate("Dialog", u"Linear:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
-        ___qtreewidgetitem = self.treeWidget_prescribed_dofs.headerItem()
+        ___qtreewidgetitem = self.treeWidget_prescribed_dof.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Prescribed DOF", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Selection-ID", None));
 #if QT_CONFIG(tooltip)
-        self.treeWidget_prescribed_dofs.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
+        self.treeWidget_prescribed_dof.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -1087,7 +1087,7 @@ class DofPrescriptionInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - frame_5: QFrame
                                                             - (Layout): QGridLayout
-                                                                    - treeWidget_prescribed_dofs: QTreeWidget
+                                                                    - treeWidget_prescribed_dof: QTreeWidget
                                                         - frame_3: QFrame
                                                             - (Layout): QGridLayout
                                                                     - pushButton_reset: QPushButton
