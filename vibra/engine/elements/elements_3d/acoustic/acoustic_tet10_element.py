@@ -695,7 +695,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
     def generate_ind_rows_cols(self, reorder: bool = True):
         """ 
-        This method processess the dofs indices (rows and columns) 
+        This method processess the dof indices (rows and columns) 
         for assembly
         """
 
@@ -704,12 +704,12 @@ class ACT_TETRAHEDRON_10C(Element3D):
         else:
             self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]]
 
-        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        ind_dof = dofs * self.connectivity[:, 1:]
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dof * self.connectivity[:, 1:]
 
         vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, edofs)).flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return self.ind_rows, self.ind_cols
 

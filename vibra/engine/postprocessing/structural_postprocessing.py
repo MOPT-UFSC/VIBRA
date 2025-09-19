@@ -48,9 +48,9 @@ class StructuralPostprocessing:
         """
 
         if is_modal:
-            data = self.modal_solver.solution[self.modal_solver.displacement_dofs, column]
+            data = self.modal_solver.solution[self.modal_solver.displacement_dof, column]
         else:
-            data = self.harmonic_solver.solution[self.harmonic_solver.displacement_dofs, column]
+            data = self.harmonic_solver.solution[self.harmonic_solver.displacement_dof, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -109,8 +109,8 @@ class StructuralPostprocessing:
         if solver.solution is None:
             return
 
-        disp_dofs = solver.displacement_dofs
-        results_complex: np.ndarray = solver.solution[disp_dofs, index]
+        disp_dof = solver.displacement_dof
+        results_complex: np.ndarray = solver.solution[disp_dof, index]
 
         amplitudes = np.abs(results_complex)
         phases = np.angle(results_complex)

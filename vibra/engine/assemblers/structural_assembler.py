@@ -167,11 +167,11 @@ class StructuralAssembler:
         prescribed_indexes = np.array([*set(self.prescribed_dof_indexes)], dtype=int)
         return np.delete(self.all_dof, prescribed_indexes)
 
-    def reorder_property_data_based_on_gdofs(self, input_property_data: dict):
+    def reorder_property_data_based_on_gdof(self, input_property_data: dict):
 
         output_property_data = dict()
-        ordered_gdofs = np.sort(list(input_property_data.keys()))
-        for gdof in ordered_gdofs:
+        ordered_gdof = np.sort(list(input_property_data.keys()))
+        for gdof in ordered_gdof:
             output_property_data[gdof] = input_property_data[gdof]
 
         return output_property_data
@@ -179,7 +179,7 @@ class StructuralAssembler:
     def process_prescribed_dof_data(self):
 
         input_prescribed_dof_data = self.get_property_data_for_selected_property("prescribed_dof")
-        output_prescribed_dof_data = self.reorder_property_data_based_on_gdofs(input_prescribed_dof_data)
+        output_prescribed_dof_data = self.reorder_property_data_based_on_gdof(input_prescribed_dof_data)
         self.prescribed_dof_values, self.array_prescribed_values = self.process_property_arrays(output_prescribed_dof_data)
 
         self.prescribed_dof_indexes = list(output_prescribed_dof_data.keys())
@@ -188,7 +188,7 @@ class StructuralAssembler:
     def process_structural_nodal_loads(self):
 
         input_nodal_loads_data = self.get_property_data_for_selected_property("nodal_loads")
-        output_nodal_loads_data = self.reorder_property_data_based_on_gdofs(input_nodal_loads_data)
+        output_nodal_loads_data = self.reorder_property_data_based_on_gdof(input_nodal_loads_data)
         nodal_loads, _ = self.process_property_arrays(output_nodal_loads_data)
 
         # self.nodal_loads_indexes = list(output_nodal_loads_data.keys())
@@ -284,16 +284,16 @@ class StructuralAssembler:
         local_dof_3d = np.arange(element_3D.DOF_PER_NODE)
         rotation_local_dof_2d = local_dof_2d[int(element_2D.DOF_PER_NODE / 2):]
 
-        dofs_from_2d_elements = element_2D.DOF_PER_NODE * nodes_from_2d_elements.reshape(-1, 1) + local_dof_2d
-        dofs_from_3d_elements = element_3D.DOF_PER_NODE * nodes_from_3d_elements.reshape(-1, 1) + local_dof_3d
+        dof_from_2d_elements = element_2D.DOF_PER_NODE * nodes_from_2d_elements.reshape(-1, 1) + local_dof_2d
+        dof_from_3d_elements = element_3D.DOF_PER_NODE * nodes_from_3d_elements.reshape(-1, 1) + local_dof_3d
         rotation_dof_from_2d_elements = element_2D.DOF_PER_NODE * nodes_from_2d_elements.reshape(-1, 1) + rotation_local_dof_2d
 
-        self.dofs_from_2d_elements = dofs_from_2d_elements.flatten()
-        self.dofs_from_3d_elements = dofs_from_3d_elements.flatten()
+        self.dof_from_2d_elements = dof_from_2d_elements.flatten()
+        self.dof_from_3d_elements = dof_from_3d_elements.flatten()
         self.rotation_dof_from_2d_elements = rotation_dof_from_2d_elements.flatten()
 
-        # print(f"dofs_from_2d_elements: {len(self.dofs_from_2d_elements)}")
-        # print(f"dofs_from_3d_elements: {len(self.dofs_from_3d_elements)}")
+        # print(f"dof_from_2d_elements: {len(self.dof_from_2d_elements)}")
+        # print(f"dof_from_3d_elements: {len(self.dof_from_3d_elements)}")
         # print(f"rotation_dof_from_2d_elements: {len(self.rotation_dof_from_2d_elements)}")
 
         shift_index = 0
@@ -302,12 +302,12 @@ class StructuralAssembler:
         if len(active_2d_dof):
 
             if len(nodes_from_3d_elements):
-                shift_index = int((np.max(dofs_from_2d_elements) + 1) / 2)
+                shift_index = int((np.max(dof_from_2d_elements) + 1) / 2)
                 internal_nodes = np.delete(nodes_from_3d_elements, nodes_from_2d_elements)
                 internal_dof_from_3d_elements = element_3D.DOF_PER_NODE * internal_nodes.reshape(-1, 1) + local_dof_3d + shift_index
                 internal_dof_from_3d_elements = internal_dof_from_3d_elements.flatten()
 
-            total_dof_apd = np.append(self.dofs_from_2d_elements, internal_dof_from_3d_elements)
+            total_dof_apd = np.append(self.dof_from_2d_elements, internal_dof_from_3d_elements)
             all_dof = np.array([*set(total_dof_apd)], dtype=int)
             self.displacement_dof = np.delete(all_dof, self.rotation_dof_from_2d_elements)
             # print(f"total_dof_apd: {len(total_dof_apd)}")
@@ -318,8 +318,8 @@ class StructuralAssembler:
 
         else:
 
-            self.displacement_dof = self.dofs_from_3d_elements.copy()
-            return self.dofs_from_3d_elements, shift_index
+            self.displacement_dof = self.dof_from_3d_elements.copy()
+            return self.dof_from_3d_elements, shift_index
 
     def process_face_elements_with_thickness(self, element_2D, element_3D):
 
@@ -365,13 +365,13 @@ class StructuralAssembler:
             # self.ind_rows = np.append(self.ind_rows, rows_se)
             # self.ind_cols = np.append(self.ind_cols, cols_se)
 
-            dofs = self.element_3d.DOF_PER_ELEMENT
+            dof = self.element_3d.DOF_PER_ELEMENT
             nel = len(self.element_3d.connectivity)
 
-            ind_rows = np.zeros((nel, dofs, dofs), dtype=int)
-            ind_cols = np.zeros((nel, dofs, dofs), dtype=int)
-            data_K_se = np.zeros((nel, dofs, dofs), dtype=complex)
-            data_M_se = np.zeros((nel, dofs, dofs), dtype=complex)
+            ind_rows = np.zeros((nel, dof, dof), dtype=int)
+            ind_cols = np.zeros((nel, dof, dof), dtype=int)
+            data_K_se = np.zeros((nel, dof, dof), dtype=complex)
+            data_M_se = np.zeros((nel, dof, dof), dtype=complex)
 
             last_progress = 0
 
@@ -410,15 +410,15 @@ class StructuralAssembler:
 
             rows_fe, cols_fe = self.element_2d.generate_ind_rows_cols()
 
-            dofs = self.element_2d.DOF_PER_ELEMENT
+            dof = self.element_2d.DOF_PER_ELEMENT
             nel = len(self.element_2d.connectivity)
 
             self.ind_rows = np.append(self.ind_rows, rows_fe)
             self.ind_cols = np.append(self.ind_cols, cols_fe)
             # np.savetxt("indexes.dat", np.array([ind_rows, ind_cols], dtype=int).T, fmt="%i")
 
-            data_K_fe = np.zeros((nel, dofs, dofs), dtype=complex)
-            data_M_fe = np.zeros((nel, dofs, dofs), dtype=complex)
+            data_K_fe = np.zeros((nel, dof, dof), dtype=complex)
+            data_M_fe = np.zeros((nel, dof, dof), dtype=complex)
 
             last_progress = 0
 
@@ -473,7 +473,7 @@ class StructuralAssembler:
 
         else:
 
-            # self.unprescribed_dof_indexes = self.dofs_from_3d_elements
+            # self.unprescribed_dof_indexes = self.dof_from_3d_elements
             self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
             self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
             
@@ -520,7 +520,7 @@ class StructuralAssembler:
         # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
         # np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")
 
-    def reinsert_the_prescribed_dofs(self, solution, modal_analysis=False):
+    def reinsert_the_prescribed_dof(self, solution, modal_analysis=False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution.
 
@@ -538,41 +538,41 @@ class StructuralAssembler:
             Solution of all the degrees of freedom.
         """
 
-        rows = self.total_dofs
+        rows = self.total_dof
         cols = solution.shape[1]
         full_solution = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.prescribed_dofs_indexes):
+        if len(self.prescribed_dof_indexes):
             if modal_analysis:
-                full_solution[self.prescribed_dofs_indexes, :] = np.zeros((len(self.prescribed_dofs_indexes), cols))
+                full_solution[self.prescribed_dof_indexes, :] = np.zeros((len(self.prescribed_dof_indexes), cols))
             else:
-                full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_values[:, 0:cols]
+                full_solution[self.prescribed_dof_indexes, :] = self.array_prescribed_values[:, 0:cols]
 
-        if len(self.active_2d_element_dofs):
-            full_solution[self.unprescribed_shell_dofs, :] = solution
-            # print("reinserted dofs -> ", len(self.displacement_dofs))
+        if len(self.active_2d_element_dof):
+            full_solution[self.unprescribed_shell_dof, :] = solution
+            # print("reinserted dof -> ", len(self.displacement_dof))
 
         else:
-            full_solution[self.unprescribed_dofs_indexes, :] = solution
+            full_solution[self.unprescribed_dof_indexes, :] = solution
 
         return full_solution
     
-    def reinsert_the_prescribed_dofs_into_solution_freq(self, solution: np.ndarray, freq_index: int):
-        rows = self.total_dofs
+    def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
+        rows = self.total_dof
         full_solution = np.zeros(rows, dtype=complex)
 
-        if len(self.prescribed_dofs_indexes):
-            full_solution[self.prescribed_dofs_indexes] = self.array_prescribed_values[:, freq_index]
+        if len(self.prescribed_dof_indexes):
+            full_solution[self.prescribed_dof_indexes] = self.array_prescribed_values[:, freq_index]
 
-        if len(self.active_2d_element_dofs):
-            full_solution[self.unprescribed_shell_dofs] = solution
-            # print("reinserted dofs -> ", len(self.displacement_dofs))
+        if len(self.active_2d_element_dof):
+            full_solution[self.unprescribed_shell_dof] = solution
+            # print("reinserted dof -> ", len(self.displacement_dof))
         else:
-            full_solution[self.unprescribed_dofs_indexes] = solution
+            full_solution[self.unprescribed_dof_indexes] = solution
 
         return full_solution
 
-    def get_prescribed_dofs_model_excitation(self, index: int = 0):
+    def get_prescribed_dof_model_excitation(self, index: int = 0):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -588,7 +588,7 @@ class StructuralAssembler:
         i-th frequency index.
         """
 
-        if np.sum(self.prescribed_dofs_values) == 0:
+        if np.sum(self.prescribed_dof_values) == 0:
             return 0.
 
         alpha, beta, eta = self.model.analysis_setup.get("global_damping", (0, 0, 0))
@@ -606,14 +606,14 @@ class StructuralAssembler:
 
         f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 
-        if len(self.active_2d_element_dofs):
-            unprescribed_indexes = self.unprescribed_shell_dofs
+        if len(self.active_2d_element_dof):
+            unprescribed_indexes = self.unprescribed_shell_dof
         else:
-            unprescribed_indexes = self.unprescribed_dofs_indexes
+            unprescribed_indexes = self.unprescribed_dof_indexes
 
         return f_eq[unprescribed_indexes]
 
-    def get_prescribed_dofs_model_excitation_reference(self, freq_dependent: bool = False):
+    def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -623,7 +623,7 @@ class StructuralAssembler:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
-        if np.sum(self.prescribed_dofs_values) == 0:
+        if np.sum(self.prescribed_dof_values) == 0:
             return 0.
 
         global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
@@ -631,15 +631,15 @@ class StructuralAssembler:
 
         frequencies = self.model.frequencies
 
-        if len(self.active_2d_element_dofs):
-            unprescribed_indexes = self.unprescribed_shell_dofs
+        if len(self.active_2d_element_dof):
+            unprescribed_indexes = self.unprescribed_shell_dof
         else:
-            unprescribed_indexes = self.unprescribed_dofs_indexes
+            unprescribed_indexes = self.unprescribed_dof_indexes
 
         Kr = (self.stiffness_matrix_r.toarray())[unprescribed_indexes, :]
         Mr = (self.mass_matrix_r.toarray())[unprescribed_indexes, :]
 
-        logging.info(f"Processing prescribed dofs model excitation... [10/{len(frequencies)}]")
+        logging.info(f"Processing prescribed dof model excitation... [10/{len(frequencies)}]")
 
         rows = Kr.shape[0]
         if freq_dependent:
@@ -650,14 +650,14 @@ class StructuralAssembler:
             cols = len(frequencies)
             f_eq = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.prescribed_dofs_values):
+        if len(self.prescribed_dof_values):
 
             for i, freq in enumerate(frequencies):
                 #
-                logging.info(f"Processing prescribed dofs model excitation... [{i + 10}/{len(frequencies) + 10}]")
+                logging.info(f"Processing prescribed dof model excitation... [{i + 10}/{len(frequencies) + 10}]")
                 #
-                Kr_add = np.sum((Kr * self.prescribed_dofs_values[:, i]), axis=1)
-                Mr_add = np.sum((Mr * self.prescribed_dofs_values[:, i]), axis=1)
+                Kr_add = np.sum((Kr * self.prescribed_dof_values[:, i]), axis=1)
+                Mr_add = np.sum((Mr * self.prescribed_dof_values[:, i]), axis=1)
                 #
                 omega = 2 * np.pi * freq
                 f_Kadd = Kr_add
@@ -665,7 +665,7 @@ class StructuralAssembler:
                 f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
                 f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
 
-            logging.info("Processing prescribed dofs model excitation... [100/100]")
+            logging.info("Processing prescribed dof model excitation... [100/100]")
 
         return f_eq
 
@@ -680,7 +680,7 @@ class StructuralAssembler:
 
         structural_loads = self.structural_loads
 
-        f_eq = self.get_prescribed_dofs_model_excitation(index=i)
+        f_eq = self.get_prescribed_dof_model_excitation(index=i)
         f = structural_loads[:, i] - f_eq
 
         A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K

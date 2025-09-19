@@ -280,44 +280,44 @@ class STRUCT_TETRAHEDRON_10S(Element3D):
         self.connectivity = self.connectivity[:, [0, 6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]
 
     def generate_ind_rows_cols(self):
-        """This method processess the dofs indices (rows and columns) for assembly"""
+        """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
 
         ind_dof = (
             np.array(
                 [
-                    dofs * self.connectivity[:, 1] - 1,
-                    dofs * self.connectivity[:, 1],
-                    dofs * self.connectivity[:, 1] + 1,
-                    dofs * self.connectivity[:, 2] - 1,
-                    dofs * self.connectivity[:, 2],
-                    dofs * self.connectivity[:, 2] + 1,
-                    dofs * self.connectivity[:, 3] - 1,
-                    dofs * self.connectivity[:, 3],
-                    dofs * self.connectivity[:, 3] + 1,
-                    dofs * self.connectivity[:, 4] - 1,
-                    dofs * self.connectivity[:, 4],
-                    dofs * self.connectivity[:, 4] + 1,
-                    dofs * self.connectivity[:, 5] - 1,
-                    dofs * self.connectivity[:, 5],
-                    dofs * self.connectivity[:, 5] + 1,
-                    dofs * self.connectivity[:, 6] - 1,
-                    dofs * self.connectivity[:, 6],
-                    dofs * self.connectivity[:, 6] + 1,
-                    dofs * self.connectivity[:, 7] - 1,
-                    dofs * self.connectivity[:, 7],
-                    dofs * self.connectivity[:, 7] + 1,
-                    dofs * self.connectivity[:, 8] - 1,
-                    dofs * self.connectivity[:, 8],
-                    dofs * self.connectivity[:, 8] + 1,
-                    dofs * self.connectivity[:, 9] - 1,
-                    dofs * self.connectivity[:, 9],
-                    dofs * self.connectivity[:, 9] + 1,
-                    dofs * self.connectivity[:, 10] - 1,
-                    dofs * self.connectivity[:, 10],
-                    dofs * self.connectivity[:, 10] + 1,
+                    dof * self.connectivity[:, 1] - 1,
+                    dof * self.connectivity[:, 1],
+                    dof * self.connectivity[:, 1] + 1,
+                    dof * self.connectivity[:, 2] - 1,
+                    dof * self.connectivity[:, 2],
+                    dof * self.connectivity[:, 2] + 1,
+                    dof * self.connectivity[:, 3] - 1,
+                    dof * self.connectivity[:, 3],
+                    dof * self.connectivity[:, 3] + 1,
+                    dof * self.connectivity[:, 4] - 1,
+                    dof * self.connectivity[:, 4],
+                    dof * self.connectivity[:, 4] + 1,
+                    dof * self.connectivity[:, 5] - 1,
+                    dof * self.connectivity[:, 5],
+                    dof * self.connectivity[:, 5] + 1,
+                    dof * self.connectivity[:, 6] - 1,
+                    dof * self.connectivity[:, 6],
+                    dof * self.connectivity[:, 6] + 1,
+                    dof * self.connectivity[:, 7] - 1,
+                    dof * self.connectivity[:, 7],
+                    dof * self.connectivity[:, 7] + 1,
+                    dof * self.connectivity[:, 8] - 1,
+                    dof * self.connectivity[:, 8],
+                    dof * self.connectivity[:, 8] + 1,
+                    dof * self.connectivity[:, 9] - 1,
+                    dof * self.connectivity[:, 9],
+                    dof * self.connectivity[:, 9] + 1,
+                    dof * self.connectivity[:, 10] - 1,
+                    dof * self.connectivity[:, 10],
+                    dof * self.connectivity[:, 10] + 1,
                 ],
                 dtype=int,
             )
@@ -325,7 +325,7 @@ class STRUCT_TETRAHEDRON_10S(Element3D):
         ).T
 
         vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, edofs)).flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return self.ind_rows, self.ind_cols

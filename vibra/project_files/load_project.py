@@ -440,7 +440,7 @@ class LoadProject:
             if structural_harmonic_solver.solution is None:
                 return
             solution = structural_harmonic_solver.solution
-            structural_harmonic_solver.displacement_dofs = solution.get_extra_data("displacement_dofs")
+            structural_harmonic_solver.displacement_dof = solution.get_extra_data("displacement_dof")
             if solution.has_partial_solutions():
                 structural_harmonic_solver.solution = None
                 project.can_resume_solution = True

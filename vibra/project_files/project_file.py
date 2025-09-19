@@ -624,14 +624,14 @@ class ProjectFile:
             # Converting Harmonic solution in the old form.
             analysis = f_src.get(solver_tag)
             if analysis:
-                displacement_dofs = analysis.get("displacement_dofs")
+                displacement_dof = analysis.get("displacement_dof")
                 frequencies = analysis.get("frequencies")
                 solution_dset = analysis["solution"]
                 if frequencies:
                     solution = solution_dset[()]
                     writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
-                    if displacement_dofs is not None:
-                        writer.save_extra_data("displacement_dofs", displacement_dofs, dtype=int)
+                    if displacement_dof is not None:
+                        writer.save_extra_data("displacement_dof", displacement_dof, dtype=int)
                     for i, freq in enumerate(frequencies):
                         writer[:, i] = solution[:, i]
 

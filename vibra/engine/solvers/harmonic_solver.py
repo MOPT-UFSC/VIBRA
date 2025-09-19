@@ -23,7 +23,7 @@ class HarmonicSolver:
 
     def reset_variables(self):
         self.solution = None
-        self.displacement_dofs = None
+        self.displacement_dof = None
 
     def solve_direct(self, print_log: bool = False, is_resume: bool = False):
         """
@@ -39,15 +39,15 @@ class HarmonicSolver:
         logging.info(f"Solving harmonic analysis (direct method)... [10/100]")
 
         if isinstance(self.assembler, StructuralAssembler):
-            self.displacement_dofs = self.assembler.displacement_dofs
+            self.displacement_dof = self.assembler.displacement_dof
 
         frequencies = self.assembler.model.frequencies
 
         if self.project_file:
             num_rows = self.assembler.total_dof
             solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
-            if self.displacement_dofs is not None:
-                solution.save_extra_data("displacement_dofs", self.displacement_dofs, dtype=int)
+            if self.displacement_dof is not None:
+                solution.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
         else:
             num_rows = self.assembler.stiffness_matrix.shape[0]
             solution = np.zeros((num_rows, len(frequencies)), dtype=complex)
@@ -60,7 +60,7 @@ class HarmonicSolver:
             self.solution = self.project_file.get_solution_loader()
         else:
             # reinsert the prescribed degrees of freedom into the solution vector
-            self.solution = self.assembler.reinsert_the_prescribed_dofs(solution)
+            self.solution = self.assembler.reinsert_the_prescribed_dof(solution)
 
         return self.solution
 
@@ -89,7 +89,7 @@ class HarmonicSolver:
             solution_freq = linear_solver.solve(A, f)
             if isinstance(solution, LazyHDF5MatrixWriter):
                 # reinsert the prescribed degrees of freedom into the solution vector
-                solution_freq = self.assembler.reinsert_the_prescribed_dofs_into_solution_freq(solution_freq, i)
+                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
 
             solution[:, i] = solution_freq
 
