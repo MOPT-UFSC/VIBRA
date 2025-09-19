@@ -23,9 +23,9 @@ class StructuralAssembler:
         self.frequencies = None
 
         self.displacement_dofs = np.array([])
-        self.prescribed_dofs_values = np.array([])
-        self.prescribed_dofs_indexes = np.array([])
-        self.unprescribed_dofs_indexes = np.array([])
+        self.prescribed_dof_values = np.array([])
+        self.prescribed_dof_indexes = np.array([])
+        self.unprescribed_dof_indexes = np.array([])
 
     def define_structural_elements(self):
         self.model.set_structural_elements()
@@ -163,7 +163,7 @@ class StructuralAssembler:
         return np.array(loads_list, dtype=complex)
 
     def get_unprescribed_indexes(self):
-        prescribed_indexes = np.array([*set(self.prescribed_dofs_indexes)], dtype=int)
+        prescribed_indexes = np.array([*set(self.prescribed_dof_indexes)], dtype=int)
         return np.delete(self.all_dofs, prescribed_indexes)
 
     def reorder_property_data_based_on_gdofs(self, input_property_data: dict):
@@ -175,14 +175,14 @@ class StructuralAssembler:
 
         return output_property_data
 
-    def process_prescribed_dofs_data(self):
+    def process_prescribed_dof_data(self):
 
-        input_prescribed_dofs_data = self.get_property_data_for_selected_property("prescribed_dofs")
-        output_prescribed_dofs_data = self.reorder_property_data_based_on_gdofs(input_prescribed_dofs_data)
-        self.prescribed_dofs_values, self.array_prescribed_values = self.process_property_arrays(output_prescribed_dofs_data)
+        input_prescribed_dof_data = self.get_property_data_for_selected_property("prescribed_dof")
+        output_prescribed_dof_data = self.reorder_property_data_based_on_gdofs(input_prescribed_dof_data)
+        self.prescribed_dof_values, self.array_prescribed_values = self.process_property_arrays(output_prescribed_dof_data)
 
-        self.prescribed_dofs_indexes = list(output_prescribed_dofs_data.keys())
-        self.unprescribed_dofs_indexes = self.get_unprescribed_indexes()
+        self.prescribed_dof_indexes = list(output_prescribed_dof_data.keys())
+        self.unprescribed_dof_indexes = self.get_unprescribed_indexes()
 
     def process_structural_nodal_loads(self):
 
@@ -198,11 +198,11 @@ class StructuralAssembler:
             excitation = list(nodal_loads.values())
             output[indexes, :] = np.array(excitation)
 
-        if self.prescribed_dofs_indexes:
+        if self.prescribed_dof_indexes:
             if len(self.active_2d_element_dofs):
                 return output[self.unprescribed_shell_dofs, :]
             else:
-                return output[self.unprescribed_dofs_indexes, :]
+                return output[self.unprescribed_dof_indexes, :]
         else:
             return output
 
@@ -252,19 +252,19 @@ class StructuralAssembler:
                         g_dofs, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dofs, :] += F_elem
 
-        if self.prescribed_dofs_indexes:
+        if self.prescribed_dof_indexes:
             if len(self.active_2d_element_dofs):
                 return output[self.unprescribed_shell_dofs, :]
             else:
-                return output[self.unprescribed_dofs_indexes, :]
+                return output[self.unprescribed_dof_indexes, :]
         else:
             return output
 
     def get_matrices_dropping_indexes(self):
-        return self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes
+        return self.unprescribed_dof_indexes, self.prescribed_dof_indexes
 
-    def get_prescribed_dofs_values(self):
-        return self.prescribed_dofs_values, self.array_prescribed_values
+    def get_prescribed_dof_values(self):
+        return self.prescribed_dof_values, self.array_prescribed_values
 
     def get_all_degrees_of_freedom(self, element_2D, element_3D, active_2d_dofs):
 
@@ -463,29 +463,29 @@ class StructuralAssembler:
         _stiffness_matrix_full = csr_matrix((self.data_K, (self.ind_rows, self.ind_cols)), shape=(self.n_dofs, self.n_dofs))
         _mass_matrix_full = csr_matrix((self.data_M, (self.ind_rows, self.ind_cols)), shape=(self.n_dofs, self.n_dofs))
 
-        self.process_prescribed_dofs_data()
+        self.process_prescribed_dof_data()
 
         if len(self.active_2d_element_dofs):
-            self.unprescribed_shell_dofs = np.intersect1d(self.unprescribed_dofs_indexes, self.active_2d_element_dofs)
+            self.unprescribed_shell_dofs = np.intersect1d(self.unprescribed_dof_indexes, self.active_2d_element_dofs)
             self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_shell_dofs, :][:, self.unprescribed_shell_dofs]
             self.mass_matrix = _mass_matrix_full[self.unprescribed_shell_dofs, :][:, self.unprescribed_shell_dofs]
 
         else:
 
-            # self.unprescribed_dofs_indexes = self.dofs_from_3d_elements
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
+            # self.unprescribed_dof_indexes = self.dofs_from_3d_elements
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
             
-            if self.prescribed_dofs_indexes:
-                self.mass_matrix = _mass_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
-                self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dofs_indexes, :][:, self.unprescribed_dofs_indexes]
+            if self.prescribed_dof_indexes:
+                self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+                self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
 
             else:
                 self.mass_matrix = _mass_matrix_full
                 self.stiffness_matrix = _stiffness_matrix_full
 
-        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dofs_indexes]
-        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dofs_indexes]
+        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
+        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
     def process_assemble(self):
 

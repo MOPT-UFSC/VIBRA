@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QPen, QColor
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QToolTip
 
-from vibra import ICON_DIR, app
+from vibra import app, DEVELOPER_MODE, ICON_DIR
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
 from molde import Color
@@ -24,6 +24,7 @@ class ModelSetupItems(CommonMenuItems):
         self._create_items()
         self._create_connections()
         self._initial_configuration()
+        self._filter_visible_items_based_on_current_mode()
         self.update_items_appearance()
     
     def _create_items(self):
@@ -116,6 +117,11 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup.setDisabled(True)
         self.item_child_material.setDisabled(True)
         self.item_child_fluid.setDisabled(True)
+
+    def _filter_visible_items_based_on_current_mode(self):
+        self.item_child_incident_plane_wave.setHidden(not DEVELOPER_MODE)
+        self.item_child_acoustic_properties_gradient.setHidden(not DEVELOPER_MODE)
+        self.item_child_acoustic_transfer_element_setup.setHidden(not DEVELOPER_MODE)
 
     def _find_qtree_widget_item_name(self, qtree_widet_item):
         for attr_name, attr_value in self.__dict__.items():

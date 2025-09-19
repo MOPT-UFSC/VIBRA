@@ -120,12 +120,12 @@ class StructuralModalSolver:
         modal_shape = modal_shape[:, index_order]
 
         self.natural_frequencies = natural_frequencies
-        self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
+        self.unprescribed_dof_indexes, self.prescribed_dof_indexes = self.assembler.get_matrices_dropping_indexes()
+        self.prescribed_dof_values, self.array_prescribed_dof_values = self.assembler.get_prescribed_dof_values()
 
         if not harmonic_analysis:
-            modal_shape = self._reinsert_prescribed_dofs(modal_shape, modal_analysis=True)
-            for value in self.prescribed_dofs_values:
+            modal_shape = self._reinsert_prescribed_dof(modal_shape, modal_analysis=True)
+            for value in self.prescribed_dof_values:
                 if value is not None:
                     if (isinstance(value, complex) and value != complex(0)) or (isinstance(value, np.ndarray) and sum(value) != complex(0)):
                         self.warning_modal = "The Prescribed DOFs of non-zero values have been ignored in the modal analysis. "
@@ -133,7 +133,7 @@ class StructuralModalSolver:
 
         return natural_frequencies, modal_shape
 
-    def _reinsert_prescribed_dofs(self, solution, modal_analysis=False):
+    def _reinsert_prescribed_dof(self, solution, modal_analysis=False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution. If modal analysis is performed, the values are zeros.
 
@@ -164,5 +164,5 @@ class StructuralModalSolver:
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
-            solution_full[self.unprescribed_dofs_indexes, :] = solution
+            solution_full[self.unprescribed_dof_indexes, :] = solution
             self.solution = solution_full

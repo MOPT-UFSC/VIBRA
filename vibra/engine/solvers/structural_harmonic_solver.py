@@ -28,7 +28,7 @@ class StructuralHarmonicSolver:
         self.analysis_type = "structural"
 
         
-    def get_prescribed_dofs_model_excitation(self, index: int = 0):
+    def get_prescribed_dof_model_excitation(self, index: int = 0):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -44,7 +44,7 @@ class StructuralHarmonicSolver:
         i-th frequency index.
         """
 
-        if np.sum(self.prescribed_dofs_values) == 0:
+        if np.sum(self.prescribed_dof_values) == 0:
             return 0.
 
         alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
@@ -52,7 +52,7 @@ class StructuralHarmonicSolver:
         frequencies = self.assembler.model.frequencies
         omega = 2 * np.pi * frequencies[index]
 
-        values = self.array_prescribed_dofs_values[:, index]
+        values = self.array_prescribed_dof_values[:, index]
 
         self.Kr = self.assembler.stiffness_matrix_r
         self.Mr = self.assembler.mass_matrix_r
@@ -65,12 +65,12 @@ class StructuralHarmonicSolver:
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_indexes = self.assembler.unprescribed_shell_dofs
         else:
-            unprescribed_indexes = self.unprescribed_dofs_indexes
+            unprescribed_indexes = self.unprescribed_dof_indexes
 
         return f_eq[unprescribed_indexes]
 
 
-    def get_prescribed_dofs_model_excitation_reference(self, freq_dependent: bool = False):
+    def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
 
@@ -80,7 +80,7 @@ class StructuralHarmonicSolver:
             F_eq. Each column corresponds to a frequency of analysis.
         """
 
-        if np.sum(self.prescribed_dofs_values) == 0:
+        if np.sum(self.prescribed_dof_values) == 0:
             return 0.
 
         alpha, beta, eta = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
@@ -90,7 +90,7 @@ class StructuralHarmonicSolver:
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_indexes = self.assembler.unprescribed_shell_dofs
         else:
-            unprescribed_indexes = self.unprescribed_dofs_indexes
+            unprescribed_indexes = self.unprescribed_dof_indexes
 
         Kr = (self.assembler.stiffness_matrix_r.toarray())[unprescribed_indexes, :]
         Mr = (self.assembler.mass_matrix_r.toarray())[unprescribed_indexes, :]
@@ -106,14 +106,14 @@ class StructuralHarmonicSolver:
             cols = len(frequencies)
             f_eq = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.prescribed_dofs_values):
+        if len(self.prescribed_dof_values):
 
             for i, freq in enumerate(frequencies):
                 #
                 logging.info(f"Processing prescribed dofs model excitation... [{i + 10}/{len(frequencies) + 10}]")
                 #
-                Kr_add = np.sum((Kr * self.array_prescribed_dofs_values[:, i]), axis=1)
-                Mr_add = np.sum((Mr * self.array_prescribed_dofs_values[:, i]), axis=1)
+                Kr_add = np.sum((Kr * self.array_prescribed_dof_values[:, i]), axis=1)
+                Mr_add = np.sum((Mr * self.array_prescribed_dof_values[:, i]), axis=1)
                 #
                 omega = 2 * np.pi * freq
                 f_eq[:, i] = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
@@ -192,8 +192,8 @@ class StructuralHarmonicSolver:
 
         self.get_max_min_values_of_displacements.cache_clear()
 
-        self.unprescribed_dofs_indexes, self.prescribed_dofs_indexes = self.assembler.get_matrices_dropping_indexes()
-        self.prescribed_dofs_values, self.array_prescribed_dofs_values = self.assembler.get_prescribed_dofs_values()
+        self.unprescribed_dof_indexes, self.prescribed_dof_indexes = self.assembler.get_matrices_dropping_indexes()
+        self.prescribed_dof_values, self.array_prescribed_dof_values = self.assembler.get_prescribed_dof_values()
 
         M = self.assembler.mass_matrix
         K = self.assembler.stiffness_matrix
@@ -214,7 +214,7 @@ class StructuralHarmonicSolver:
             if print_log:
                 print(f"Solution step {i} -> frequency {freq} Hz")
 
-            f_eq = self.get_prescribed_dofs_model_excitation(index=i)
+            f_eq = self.get_prescribed_dof_model_excitation(index=i)
             f = structural_loads[:, i] - f_eq
 
             if i == 0:
@@ -240,7 +240,7 @@ class StructuralHarmonicSolver:
             linear_solver.clear_memory()
             del A, f
 
-        self._reinsert_prescribed_dofs(solution)
+        self._reinsert_prescribed_dof(solution)
 
 
     def solve_mode_superposition_method(self, print_log=False):
@@ -250,7 +250,7 @@ class StructuralHarmonicSolver:
         #TODO: to be implemented
 
 
-    def _reinsert_prescribed_dofs(self, solution):
+    def _reinsert_prescribed_dof(self, solution):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution.
 
@@ -271,8 +271,8 @@ class StructuralHarmonicSolver:
 
         self.displacement_dofs = self.assembler.displacement_dofs
 
-        if len(self.prescribed_dofs_indexes):
-            full_solution[self.prescribed_dofs_indexes, :] = self.array_prescribed_dofs_values[:, 0:cols]
+        if len(self.prescribed_dof_indexes):
+            full_solution[self.prescribed_dof_indexes, :] = self.array_prescribed_dof_values[:, 0:cols]
 
         if len(self.assembler.active_2d_element_dofs):
             unprescribed_shell_dofs = self.assembler.unprescribed_shell_dofs
@@ -281,7 +281,7 @@ class StructuralHarmonicSolver:
             # print("reinserted dofs -> ", len(self.displacement_dofs))
 
         else:
-            full_solution[self.unprescribed_dofs_indexes, :] = solution
+            full_solution[self.unprescribed_dof_indexes, :] = solution
             self.solution = full_solution
 
 
