@@ -624,16 +624,25 @@ class ProjectFile:
             # Converting Harmonic solution in the old form.
             analysis = f_src.get(solver_tag)
             if analysis:
-                displacement_dof = analysis.get("displacement_dofs")
+                for key in ["displacement_dofs", "displacement_dof"]:
+                    displacement_dof = analysis.get(key)
+                    if isinstance(displacement_dof, np.ndarray):
+                        break
+
                 frequencies = analysis.get("frequencies")
-                solution_dset = analysis["solution"]
-                if frequencies:
-                    solution = solution_dset[()]
-                    writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
-                    if displacement_dof is not None:
-                        writer.save_extra_data("displacement_dof", displacement_dof, dtype=int)
-                    for i, freq in enumerate(frequencies):
-                        writer[:, i] = solution[:, i]
+                solution_dset = analysis.get("solution")
+
+                if (displacement_dof, frequencies, solution).count(None):
+                    return
+
+                solution = solution_dset[()]
+                writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
+
+                if displacement_dof is not None:
+                    writer.save_extra_data("displacement_dof", displacement_dof, dtype=int)
+
+                for i in range(frequencies.size):
+                    writer[:, i] = solution[:, i]
 
         self.remove_results_data_from_project_file()
 
@@ -692,6 +701,7 @@ class ProjectFile:
 
     def remove_results_data_from_project_file(self):
         self.results_data_filepath.unlink(missing_ok=True)
+        self.harmonic_solution_filepath.unlink(missing_ok=True)
 
     def archive_project(self, zip_path: Path):
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:

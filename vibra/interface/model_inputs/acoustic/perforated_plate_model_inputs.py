@@ -84,8 +84,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_perforated_plate_model.itemClicked.connect(self.on_click_item)
-        self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_perforated_plate_model.itemClicked.connect(self.on_tree_widget_click_item)
+        self.treeWidget_perforated_plate_model.itemDoubleClicked.connect(self.on_tree_widget_doubleclick_item)
         #
         self.edit_tableWidget.cellChanged.connect(self.edit_table_widget_item)
         self.edit_tableWidget.cellDoubleClicked.connect(self.edit_fluid_or_transfer_impedance)
@@ -239,19 +239,23 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.geometry_selection_callback()
         self.lineEdit_selection_id.setEnabled(True)
 
-    def on_click_item(self, item):
+    def on_tree_widget_click_item(self, item):
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(item.text(0))
 
-        text = item.text(0).replace("(", "").replace(")", "").replace(",", "")
-        str_surface_ids = text.split()
-        surface_ids = [int(surf_id) for surf_id in str_surface_ids]
+        text = item.text(0).replace(",", "")
+        surface_ids = [int(surf_id) for surf_id in text.split()]
 
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids[0])
+        if isinstance(decoupling_data, dict):
+            new_surface_id = decoupling_data.get("new_surface_id")
+            surface_ids.append(new_surface_id)
 
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
+            app().main_window.set_geometry_selection(surfaces=surface_ids)
+
+    def on_tree_widget_doubleclick_item(self, item):
+        self.on_tree_widget_click_item(item)
 
     def check_selection_type(self, surface_ids: list[int]) -> bool:
 
@@ -267,32 +271,39 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 return True
 
     def load_model_info(self):
-        self.map_existing_models()
+        self.map_existing_perforated_plate_models()
         self.configure_edit_table_widget()
-
         self.update_pp_model_tree_widget()
         self.update_edit_table_widget()
-
         self.update_tabs_visibility()
     
-    def map_existing_models(self):
+    def map_existing_perforated_plate_models(self):
         self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
         self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
 
         models = list()
         for key, data in deepcopy(self.properties.surface_properties).items():
             property, surface_id = key
-            if property == "perforated_plate_model":
+            if property != "perforated_plate_model":
+                continue
 
-                model = PerforatedPlateData.set_data(data)
-                
-                if model not in models:
-                    models.append(model)
+            model = PerforatedPlateData.set_data(data)
+            model_aux = deepcopy(model)
 
-                model_id = models.index(model) + 1
+            # NOTE: we must convert the values from np.ndarray into 
+            # a list of values and remove the table_names to get 
+            # the expected model mapping 
+            if isinstance(model_aux.values, list) and len(model_aux.values) == 1:
+                model_aux.values = [complex(value) for value in model.values[0]]
+                model_aux.table_names = None
 
-                self.map_model_id_to_model[model_id] = model
-                self.map_model_id_to_surfaces[model_id].append(surface_id)
+            if model_aux not in models:
+                models.append(model_aux)
+
+            model_id = models.index(model_aux) + 1
+
+            self.map_model_id_to_model[model_id] = model
+            self.map_model_id_to_surfaces[model_id].append(surface_id)
 
     def update_pp_model_tree_widget(self):
         self.treeWidget_perforated_plate_model.clear()
@@ -303,7 +314,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 for i in range(2):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-            self.treeWidget_perforated_plate_model.addTopLevelItem(new)
+                self.treeWidget_perforated_plate_model.addTopLevelItem(new)
     
     def configure_edit_table_widget(self):
         self.edit_tableWidget.clearContents()
@@ -355,12 +366,19 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.edit_tableWidget.blockSignals(False)
     
     def edit_fluid_or_transfer_impedance(self, row, column):
-        if row not in [1, 11]:
+        if row not in [1, 12]:
             return
 
         model_id = int(self.edit_tableWidget.item(0, column).text())
         model = self.map_model_id_to_model[model_id]
         surface_ids = self.map_model_id_to_surfaces[model_id]
+
+        map_table_names = dict()
+        for surface_id in surface_ids:
+            pp_data = self.properties._get_property("perforated_plate_model", surface=surface_id)
+            if pp_data.get("table_names") is None:
+                continue
+            map_table_names[surface_id] = pp_data.get("table_names")
 
         if row == 1:
             self.get_fluid_callback()
@@ -369,19 +387,28 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 setattr(model, "fluid", self.selected_fluid)
 
             for surface_id in surface_ids:
-                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+                pp_model_data = deepcopy(model.get_data())
+                if surface_id in map_table_names.keys():
+                    pp_model_data["table_names"] = map_table_names.get(surface_id)
+
+                self.properties._set_property("perforated_plate_model", pp_model_data, surface=surface_id)
 
         else:
 
             for surface_id in surface_ids:
                 self.include_user_defined_transfer_impedance(model, surface_id)
-                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+                pp_model_data = deepcopy(model.get_data())
+                if surface_id in map_table_names.keys():
+                    pp_model_data["table_names"] = map_table_names.get(surface_id)
+
+                self.properties._set_property("perforated_plate_model", pp_model_data, surface=surface_id)
 
             self.imported_values = None
+            self.lineEdit_user_defined_transfer_impedance_path.setText("")
             app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
 
         app().file.write_model_properties_in_file()
-        if row == 11:
+        if row == 12:
             app().file.write_imported_table_data_in_file()
 
         self.load_model_info()
@@ -620,7 +647,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         for surface_id in surface_ids:
             if "User-defined" in self.comboBox_include_effects.currentText():
                 self.include_user_defined_transfer_impedance(model, surface_id)
-            
+
             self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
             self.decouple_degrees_of_freedom(surface_id)
 
@@ -647,10 +674,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if self.imported_values[0, 0] == 0:
             self.imported_values = self.imported_values[1:, :]
 
-        if isinstance(surface_id, int):
-            table_name = f"user_defined_transfer_impedance_at_surface_{surface_id}"
-        else:
-            table_name = f"user_defined_transfer_impedance_between_surfaces_{surface_id[0]}_{surface_id[1]}"
+        table_name = f"user_defined_transfer_impedance_at_surface_{surface_id}"
 
         if self.save_table_values(table_name, self.imported_values):
             self.lineEdit_user_defined_transfer_impedance_path.setFocus()
@@ -661,7 +685,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
 
         model.set_table_data([table_name], [table_path], [complex_values])
-        self.lineEdit_user_defined_transfer_impedance_path.setText("")
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
@@ -836,6 +859,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().main_window.set_geometry_selection()
 
             logging.info("Processing the post-assignment actions... [100/100]")
+            app().main_window.action_results_workspace.setEnabled(False)
             app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
 
         LoadingWindow(callback).run()
