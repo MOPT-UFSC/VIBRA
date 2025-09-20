@@ -293,10 +293,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             # NOTE: we must convert the values from np.ndarray into 
             # a list of values and remove the table_names to get 
             # the expected model mapping 
-            if isinstance(model_aux.values, list):
+            if isinstance(model_aux.values, list) and len(model_aux.values) == 1:
                 model_aux.values = [complex(value) for value in model.values[0]]
                 model_aux.table_names = None
-            
+
             if model_aux not in models:
                 models.append(model_aux)
 
