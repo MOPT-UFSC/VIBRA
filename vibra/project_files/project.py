@@ -219,6 +219,9 @@ class Project(QObject):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
+        if self.model.stop_processing:
+            return
+
         t0 = time()
         self.acoustic_modal_solver.solve()
         dt = time() - t0
@@ -228,7 +231,13 @@ class Project(QObject):
     def solve_structural_modal_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+        if self.model.stop_processing:
+            return
+
+        t0 = time()
         self.structural_modal_solver.solve()
+        dt = time() - t0
+        print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
@@ -238,6 +247,9 @@ class Project(QObject):
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
         self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
+        if self.model.stop_processing:
+            return
+
         t0 = time()
         self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
         dt = time() - t0
@@ -247,6 +259,9 @@ class Project(QObject):
     def solve_structural_harmonic_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+        if self.model.stop_processing:
+            return
+
         t0 = time()
         if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
             self.structural_harmonic_solver.solve_direct()

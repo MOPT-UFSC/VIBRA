@@ -69,6 +69,7 @@ class Model:
 
         self.mesh = None
         self.mesh_setup = None
+        self.stop_processing = False
         self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
@@ -736,3 +737,6 @@ class Model:
     def process_degrees_of_freedom_decoupling(self):
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
+
+    def stop_processing_callback(self):
+        self.stop_processing = not self.stop_processing

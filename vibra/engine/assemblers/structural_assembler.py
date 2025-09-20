@@ -345,7 +345,7 @@ class StructuralAssembler:
 
         return active_dof, len(self.all_dof), shift_index
 
-    def get_data_to_process_global_matrices(self):
+    def compute_data_to_process_global_matrices(self):
         """
         Calculates global matrices.
         """
@@ -357,7 +357,6 @@ class StructuralAssembler:
         self.ind_rows = np.array([], dtype=int)
 
         self.active_2d_element_dof, self.total_dof, shift_index = self.process_face_elements_with_thickness(self.element_2d, self.element_3d)
-
 
         if self.model.mesh.solids_connectivity.size:
             self.element_3d.reorder_connect()
@@ -377,6 +376,9 @@ class StructuralAssembler:
 
             # loop for 3d elements
             for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
+
+                if self.model.stop_processing:
+                    return True
 
                 progress = 100 * np.round(el_index/nel, 2)
                 if progress != last_progress:
@@ -424,6 +426,9 @@ class StructuralAssembler:
 
             # loop for 2d elements
             for el_index, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
+
+                if self.model.stop_processing:
+                    return True
 
                 progress = 100 * np.round(el_index/nel, 2)
                 if progress != last_progress:
@@ -496,7 +501,8 @@ class StructuralAssembler:
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
-        self.get_data_to_process_global_matrices()
+        if self.compute_data_to_process_global_matrices():
+            return
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} [s]")
 
@@ -510,15 +516,6 @@ class StructuralAssembler:
         B = self.process_distributed_loads()
 
         self.structural_loads = A + B
-
-        # A = self.get_structural_excitations_by_nodal_attribution()
-        # B = self.get_structural_excitations_by_element_integration()
-        # self.flow_mass_vectors = A + B
-        #
-        # indA = np.arange(0, len(A), 1)
-        # indB = np.arange(0, len(B), 1)
-        # np.savetxt("excitation_nodal.dat", np.array([indA, A[:,-1]]).T, delimiter=",")
-        # np.savetxt("excitation_element.dat", np.array([indB, B[:,-1]]).T, delimiter=",")
 
     def reinsert_the_prescribed_dof(self, solution, modal_analysis=False):
         """
