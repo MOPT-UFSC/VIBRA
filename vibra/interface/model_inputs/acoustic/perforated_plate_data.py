@@ -19,16 +19,16 @@ class PerforatedPlateData:
     table_names : List[str] | None = None
     table_paths : List[str] | None = None
     values : List[np.ndarray] | None = None
-        
+
     def set_general_data(self, data: dict):
         for field in fields(PerforatedPlateData):
             if field.name in data:
                 setattr(self, field.name, data[field.name])
-    
+
     def set_non_linear_data(self, non_linear_discharge_coefficient: float, non_linear_correction_factor: float):
         self.non_linear_discharge_coefficient = non_linear_discharge_coefficient
         self.non_linear_correction_factor = non_linear_correction_factor
-    
+
     def set_table_data(self, names: List[str], paths: List[str], values: List[np.ndarray]):
         self.table_names = names
         self.table_paths = paths
@@ -44,7 +44,7 @@ class PerforatedPlateData:
             data[attr] = value
     
         return data
-    
+
     def get_data_to_fill_edit_table_widget(self) -> list:
         data = list()
         new_value = None
@@ -91,7 +91,7 @@ class PerforatedPlateData:
            string += attr + ": " + str(value) + " "
         
         return string
-    
+
     @classmethod
     def set_data(cls, data: dict):
         

@@ -117,7 +117,7 @@ class PerforatedPlateModels:
         # user-defined normalized transfer impedance
         z_ud = 0.
         if "table_names" in pp_data.keys():
-            values = pp_data.get("values")[0]
+            values = pp_data.get("values")
             if isinstance(values, list) and len(values) == 1:
                 z_ud = values[0]
 
