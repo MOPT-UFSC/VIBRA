@@ -7,7 +7,6 @@ import numpy as np
 
 @dataclass
 class PerforatedPlateData:
-    coupling_type: str = None 
     fluid : Fluid = None
     formulation : str = None
     plate_thickness : float = None
@@ -51,7 +50,7 @@ class PerforatedPlateData:
         new_value = None
 
         for attr, value in self.__dict__.items():
-            if attr in ["fluid", "formulation", "coupling_type", "values", "table_names"]:
+            if attr in ["fluid", "formulation", "values", "table_names"]:
                 continue
 
             if value is None:
@@ -69,8 +68,14 @@ class PerforatedPlateData:
         if not self.fluid:
             return list()
 
-        return [self.fluid.name, self.fluid.fluid_density, 
-                self.fluid.speed_of_sound]
+        fluid_data = [
+            self.fluid.name,
+            self.fluid.identifier,
+            self.fluid.fluid_density,
+            self.fluid.speed_of_sound
+        ]
+
+        return fluid_data
 
     def get_indexed_attributes(self) -> dict:
         indexed_attr = dict()

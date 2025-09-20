@@ -149,15 +149,15 @@ class ACT_QUADRANGLE_4(Element2D):
 
 
     def generate_ind_rows_cols(self, connect_face):
-        """ This method processess the dofs indices (rows and columns) for assembly"""
+        """ This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect(connect_face)
-        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        ind_dof = dofs * self.connectivities[:, :]
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dof * self.connectivities[:, :]
 
         vect_indices = ind_dof.flatten()
-        ind_rows_face = ((np.tile(vect_indices, (edofs,1))).T).flatten()
-        ind_cols_face = (np.tile(ind_dof, edofs)).flatten()
+        ind_rows_face = ((np.tile(vect_indices, (edof,1))).T).flatten()
+        ind_cols_face = (np.tile(ind_dof, edof)).flatten()
 
         return ind_rows_face, ind_cols_face
 

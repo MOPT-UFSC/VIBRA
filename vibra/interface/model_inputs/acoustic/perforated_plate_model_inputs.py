@@ -1,31 +1,31 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem, QTableWidgetItem
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QTableWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.perforated_plate_data import PerforatedPlateData
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.model.setup.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 
 from pathlib import Path
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, List
 
-import logging, os, warnings
+import logging, warnings
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 
 class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
@@ -46,7 +46,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self._config_widgets()
         self._create_connections()
         self._paint_icons()
-
         self.load_model_info()
 
         while self.keep_window_open:
@@ -73,7 +72,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         #
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         self.comboBox_include_effects.currentIndexChanged.connect(self.include_effects_callback)
-        self.comboBox_selection_type.currentIndexChanged.connect(self.selection_type_callback)
         #
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_confirm.clicked.connect(self.attribute_callback)
@@ -95,384 +93,30 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
-        self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
-        self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
-        #
         self.geometry_selection_callback()
         self.include_effects_callback()
-        self.selection_type_callback()
-
-    def clickable(self, widget: QLineEdit):
-        class Filter(QObject):
-            clicked = Signal()
-
-            def eventFilter(self, obj, event):
-                if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
-                    self.clicked.emit()
-                    return True
-                else:
-                    return False
-
-        filter = Filter(widget)
-        widget.installEventFilter(filter)
-        return filter.clicked
-
-    def lineEdit_selection_A_clicked(self):
-        app().main_window.set_geometry_selection()
-        self.current_line_edit = self.lineEdit_selection_id_A
-        self.highlight_line_edit()
-
-    def lineEdit_selection_B_clicked(self):
-        app().main_window.set_geometry_selection()
-        if self.lineEdit_selection_id_B.isEnabled():
-            self.current_line_edit = self.lineEdit_selection_id_B
-            self.highlight_line_edit()
-
-    def highlight_line_edit(self):
-        self.current_line_edit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
-        if self.current_line_edit == self.lineEdit_selection_id_A:
-            self.lineEdit_selection_id_B.setStyleSheet("")
-        else:
-            self.lineEdit_selection_id_A.setStyleSheet("")
 
     def geometry_selection_callback(self):
 
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() != 0:
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
         if surfaces:
+            surface_ids = list(surfaces)
+            surface_ids.sort()
 
-            if len(surfaces) == 1:
-                surface_ids = list(surfaces)[0]
-            elif len(surfaces) > 1:
-                surface_ids = list(surfaces)
-                surface_ids.sort()
-                surface_ids = tuple(surface_ids)
-            else:
-                return
+            text = ", ".join([str(i) for i in surface_ids])
+            self.lineEdit_selection_id.setText(text)
 
-            self.update_selected_ids(surface_ids)
-            # self.update_selection_type_based_on_surface_ids(surface_ids)
+            if len(surface_ids) == 1:
+                pp_data = self.properties._get_property("perforated_plate_model", surface=surface_ids[0])
+                if pp_data is None:
+                    return
 
-            pp_data = self.properties._get_property("perforated_plate_model", surface=surface_ids)
-            if pp_data is None:
-                return
-
-            self.load_perforated_plate_inputs(pp_data)
-
-    def update_selection_type_based_on_surface_ids(self, surface_ids: int | tuple[int]):
-
-        if isinstance(surface_ids, int | np.int64):
-            if len(self.mesh.volumes_from_surface[surface_ids]) == 2:
-                self.comboBox_selection_type.setCurrentIndex(0)
-
-        elif isinstance(surface_ids, tuple):
-            if len(surface_ids) == 2:
-                volumes_from_surface_A = self.mesh.volumes_from_surface[surface_ids[0]]
-                volumes_from_surface_B = self.mesh.volumes_from_surface[surface_ids[1]]
-                if len(volumes_from_surface_A) == len(volumes_from_surface_B) == 1:
-                    self.comboBox_selection_type.setCurrentIndex(1)
-
-        else:
-            return
-
-    def update_selected_ids(self, surface_ids: int | tuple[int]):
-
-        if isinstance(surface_ids, int | np.int64):
-            surface_ids = [surface_ids]
-
-        text = ", ".join([str(i) for i in surface_ids])
-        self.current_line_edit.setText(text)
-
-    def clear_all_inputs(self):
-        self.lineEdit_plate_thickness.setText("")
-        self.lineEdit_hole_diameter.setText("")
-        self.lineEdit_porosity.setText("")
-        self.lineEdit_linear_discharge_coefficient.setText("")
-        self.lineEdit_non_linear_discharge_coefficient.setText("")
-        self.lineEdit_non_linear_correction_factor.setText("")
-        self.lineEdit_user_defined_transfer_impedance_path.setText("")
-
-    def update_plot_buttons_access(self):
-        state = self.selected_fluid is None
-        self.comboBox_plot_type.setDisabled(state)
-        self.plot_type_callback()
-
-    def selection_type_callback(self):
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
-            self.label_selection_B.setEnabled(False)
-            self.lineEdit_selection_id_B.setEnabled(False)
-        else:
-            self.label_selection_B.setEnabled(True)
-            self.lineEdit_selection_id_B.setEnabled(True)
-
-    def plot_type_callback(self):
-        return
-
-    def include_effects_callback(self):
-
-        self.lineEdit_non_linear_discharge_coefficient.setDisabled(True)
-        self.lineEdit_non_linear_correction_factor.setDisabled(True)
-        self.lineEdit_user_defined_transfer_impedance_path.setDisabled(True)
-        self.pushButton_load_path.setDisabled(True)
-
-        included_effects = self.comboBox_include_effects.currentText()
-        if included_effects == "None":
-            return
-
-        if "Non-linear" in included_effects:
-            self.lineEdit_non_linear_discharge_coefficient.setEnabled(True)
-            self.lineEdit_non_linear_correction_factor.setEnabled(True)
-
-        if "User-defined" in included_effects:
-            self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
-            self.pushButton_load_path.setEnabled(True)
-
-    def _config_widgets(self):
-        #
-        self.current_line_edit = self.lineEdit_selection_id_A
-        #
-        for i, w in enumerate([290, 290]):
-            self.treeWidget_perforated_plate_model.setColumnWidth(i, w)
-            self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
-        
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_clean_inputs, self.pushButton_load_path]
-        change_icon_color_for_widgets(widgets, icon_color)
-
-
-    def tab_event_callback(self):
-
-        self.pushButton_remove.setDisabled(True)
-        if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id_A.setText("")
-            self.lineEdit_selection_id_B.setText("")
-            self.lineEdit_selection_id_A.setDisabled(True)
-
-        else:
-
-            if ("(" or ")") in self.lineEdit_selection_id_A.text():
-                self.lineEdit_selection_id_A.setText("")
-                self.lineEdit_selection_id_B.setText("")
-                app().main_window.set_geometry_selection()
-
-            else:
-                self.geometry_selection_callback()
-
-            self.lineEdit_selection_id_A.setDisabled(False)
-
-    def on_click_item(self, item):
-
-        self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id_A.setText(item.text(0))
-
-        text = item.text(0).replace("(", "").replace(")", "").replace(",", "")
-        str_surface_ids = text.split()
-        surface_ids = [int(surf_id) for surf_id in str_surface_ids]
-
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
-
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
-
-    def check_selection_type(self, surface_ids: list[int]) -> bool:
-
-        title = "Invalid selection detected"
-
-        selection_type = self.comboBox_selection_type.currentText()
-        if selection_type == "Inside surfaces":
-            for surface_id in surface_ids:
-                if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                    self.hide()
-                    message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
-                    message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
-                    message += "assignment will be ignored until all requirements are met."
-                    PrintMessageInput([window_title_1, title, message])
-                    return True
-
-        else:
-            for surface_id in surface_ids:
-                if len(self.mesh.volumes_from_surface[surface_id]) != 1:
-                    self.hide()
-                    message = f"The selected surface ID #{surface_id} does not correspond to an outside surface. "
-                    message += "Outside surfaces are surfaces associated to only one volume. The perforated plate "
-                    message += "attribution will be ignored until all requirements are met."
-                    PrintMessageInput([window_title_1, title, message])
-                    return True
-                
-    def load_model_info(self):
-        self.map_existing_models()
-        self.configure_edit_table_widget()
-
-        self.update_pp_model_tree_widget()
-        self.update_edit_table_widget()
-
-        self.update_tabs_visibility()
-    
-    def map_existing_models(self):
-        self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
-        self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
-
-        models = list()
-        for key, data in deepcopy(self.properties.surface_properties).items():
-            property, surface_id = key
-            if property == "perforated_plate_model":
-
-                model = PerforatedPlateData.set_data(data)
-                
-                if model not in models:
-                    models.append(model)
-
-                model_id = models.index(model) + 1
-
-                self.map_model_id_to_model[model_id] = model
-                self.map_model_id_to_surfaces[model_id].append(surface_id)
-
-    def update_pp_model_tree_widget(self):
-        self.treeWidget_perforated_plate_model.clear()
-
-        for model_id, surface_ids in self.map_model_id_to_surfaces.items():
-            for surface_id in surface_ids:
-                new = QTreeWidgetItem([str(surface_id), str(model_id)])
-                for i in range(2):
-                    new.setTextAlignment(i, Qt.AlignCenter)
-
-            self.treeWidget_perforated_plate_model.addTopLevelItem(new)
-    
-    def configure_edit_table_widget(self):
-        self.edit_tableWidget.clearContents()
-        self.edit_tableWidget.blockSignals(True)
-        self.edit_tableWidget.setRowCount(12)
-        self.edit_tableWidget.setColumnCount(len(self.map_model_id_to_model))
-    
-    def update_edit_table_widget(self):
-        for column, model_info in enumerate(self.map_model_id_to_model.items()):
-            model_id, model = model_info
-        
-            model_id_item = QTableWidgetItem(str(model_id))
-            model_id_item.setTextAlignment(Qt.AlignCenter)
-            model_id_item.setFlags(Qt.ItemIsSelectable)
-
-            self.edit_tableWidget.setItem(0, column, model_id_item)
-
-            for row, fluid_data in enumerate(model.get_fluid_data_to_fill_edit_table_widget()):
-                item_text = str(fluid_data)
-
-                fluid_item = QTableWidgetItem(item_text)
-                fluid_item.setTextAlignment(Qt.AlignCenter)
-
-                if not isinstance(fluid_data, str):
-                    fluid_item.setFlags(Qt.ItemIsSelectable)
-
-                if isinstance(fluid_data, str):
-                    tool_tip = f"{item_text} \n\nDouble click to choose a new fluid"
-                    fluid_item.setToolTip(tool_tip)
-
-                self.edit_tableWidget.setItem(row + 1, column, fluid_item)
-            
-            for row, pp_data in enumerate(model.get_data_to_fill_edit_table_widget()):
-                item_text = str(pp_data) if not isinstance(pp_data, Path) else pp_data.name
-
-                pp_item = QTableWidgetItem(item_text)
-                pp_item.setTextAlignment(Qt.AlignCenter)
-
-                if isinstance(pp_data, str):
-                    pp_item.setFlags(Qt.ItemIsSelectable)
-                    pp_item.setToolTip(item_text)
-
-                elif isinstance(pp_data, Path):
-                    tool_tip = f"{str(pp_data)} \n\nDouble click to import a new transfer impedance file"
-                    pp_item.setToolTip(tool_tip)
-
-                self.edit_tableWidget.setItem(row + 4, column, pp_item)
-        
-        self.edit_tableWidget.blockSignals(False)
-    
-    def edit_fluid_or_transfer_impedance(self, row, column):
-        if row not in [1, 11]:
-            return
-
-        model_id = int(self.edit_tableWidget.item(0, column).text())
-        model = self.map_model_id_to_model[model_id]
-        surface_ids = self.map_model_id_to_surfaces[model_id]
-
-        if row == 1:
-            self.get_fluid_callback()
- 
-            if self.selected_fluid:
-                setattr(model, "fluid", self.selected_fluid)
-
-            for surface_id in surface_ids:
-                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
-        else:
-            for surface_id in surface_ids:
-                self.include_user_defined_transfer_impedance(model, surface_id)
-                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
-
-            self.imported_values = None
-            app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
-
-        self.load_model_info()
-    
-    def edit_table_widget_item(self, row, column):
-        item = self.edit_tableWidget.item(row, column)
-        model_id = int(self.edit_tableWidget.item(0, column).text())
-
-        new_item_value = None
-        unnaceptable_value_error = False
-
-        try:
-            new_item_value = float(item.text())
-        except:
-            unnaceptable_value_error = True
-
-        model = self.map_model_id_to_model[model_id]
-        indexed_attributes = model.get_indexed_attributes()
-
-        attribute = indexed_attributes[row - 1]
-
-        if unnaceptable_value_error:
-            new_item_value = getattr(model, attribute)
-            item.setText(str(new_item_value))
-        else:
-            setattr(model, attribute, new_item_value)
-                
-        surfaces_ids = self.map_model_id_to_surfaces[model_id]
-        for surface_id in surfaces_ids:
-            self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
-    
-    def update_tabs_visibility(self):
-
-        if len(self.map_model_id_to_model) > 0:
-            self.tabWidget_main.setTabVisible(1, True)
-            self.tabWidget_main.setTabVisible(2, True)
-
-            return
-
-        self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(1, False)
-        self.tabWidget_main.setTabVisible(2, False)
+                self.load_perforated_plate_inputs(pp_data)
 
     def load_perforated_plate_inputs(self, data: dict):
-
-        surfaces_A = data.get("surfaces_A")
-        if isinstance(surfaces_A, list):
-            self.current_line_edit = self.lineEdit_selection_id_A
-            self.update_selected_ids(surfaces_A)
-
-        surfaces_B = data.get("surfaces_B")
-        if isinstance(surfaces_B, list):
-            self.current_line_edit = self.lineEdit_selection_id_B
-            self.update_selected_ids(surfaces_B)
 
         formulation = data.get("formulation")
         if formulation == "circular_hole":
@@ -529,6 +173,266 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_user_defined_transfer_impedance_path.setText(table_path[0])
             self.lineEdit_user_defined_transfer_impedance_path.setToolTip(table_path[0])
 
+    def clear_all_inputs(self):
+        self.lineEdit_plate_thickness.setText("")
+        self.lineEdit_hole_diameter.setText("")
+        self.lineEdit_porosity.setText("")
+        self.lineEdit_linear_discharge_coefficient.setText("")
+        self.lineEdit_non_linear_discharge_coefficient.setText("")
+        self.lineEdit_non_linear_correction_factor.setText("")
+        self.lineEdit_user_defined_transfer_impedance_path.setText("")
+
+    def update_plot_buttons_access(self):
+        state = self.selected_fluid is None
+        self.comboBox_plot_type.setDisabled(state)
+        self.plot_type_callback()
+
+    def plot_type_callback(self):
+        return
+
+    def include_effects_callback(self):
+
+        self.lineEdit_non_linear_discharge_coefficient.setDisabled(True)
+        self.lineEdit_non_linear_correction_factor.setDisabled(True)
+        self.lineEdit_user_defined_transfer_impedance_path.setDisabled(True)
+        self.pushButton_load_path.setDisabled(True)
+
+        included_effects = self.comboBox_include_effects.currentText()
+        if included_effects == "None":
+            return
+
+        if "Non-linear" in included_effects:
+            self.lineEdit_non_linear_discharge_coefficient.setEnabled(True)
+            self.lineEdit_non_linear_correction_factor.setEnabled(True)
+
+        if "User-defined" in included_effects:
+            self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
+            self.pushButton_load_path.setEnabled(True)
+
+    def _config_widgets(self):
+
+        for i in range(2):
+            self.treeWidget_perforated_plate_model.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+        self.treeWidget_perforated_plate_model.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        widgets = [self.pushButton_clean_inputs, self.pushButton_load_path]
+        change_icon_color_for_widgets(widgets, icon_color)
+
+    def tab_event_callback(self):
+
+        self.pushButton_remove.setDisabled(True)
+        if self.tabWidget_main.currentIndex() == 2:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            return
+
+        self.geometry_selection_callback()
+        self.lineEdit_selection_id.setEnabled(True)
+
+    def on_click_item(self, item):
+
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(item.text(0))
+
+        text = item.text(0).replace("(", "").replace(")", "").replace(",", "")
+        str_surface_ids = text.split()
+        surface_ids = [int(surf_id) for surf_id in str_surface_ids]
+
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
+
+    def on_doubleclick_item(self, item):
+        self.on_click_item(item)
+
+    def check_selection_type(self, surface_ids: list[int]) -> bool:
+
+        title = "Invalid selection detected"
+
+        for surface_id in surface_ids:
+            if len(self.mesh.volumes_from_surface[surface_id]) != 2:
+                self.hide()
+                message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
+                message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
+                message += "assignment will be ignored until all requirements are met."
+                PrintMessageInput([error_title, title, message])
+                return True
+
+    def load_model_info(self):
+        self.map_existing_models()
+        self.configure_edit_table_widget()
+
+        self.update_pp_model_tree_widget()
+        self.update_edit_table_widget()
+
+        self.update_tabs_visibility()
+    
+    def map_existing_models(self):
+        self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
+        self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
+
+        models = list()
+        for key, data in deepcopy(self.properties.surface_properties).items():
+            property, surface_id = key
+            if property == "perforated_plate_model":
+
+                model = PerforatedPlateData.set_data(data)
+                
+                if model not in models:
+                    models.append(model)
+
+                model_id = models.index(model) + 1
+
+                self.map_model_id_to_model[model_id] = model
+                self.map_model_id_to_surfaces[model_id].append(surface_id)
+
+    def update_pp_model_tree_widget(self):
+        self.treeWidget_perforated_plate_model.clear()
+
+        for model_id, surface_ids in self.map_model_id_to_surfaces.items():
+            for surface_id in surface_ids:
+                new = QTreeWidgetItem([str(surface_id), str(model_id)])
+                for i in range(2):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+            self.treeWidget_perforated_plate_model.addTopLevelItem(new)
+    
+    def configure_edit_table_widget(self):
+        self.edit_tableWidget.clearContents()
+        self.edit_tableWidget.blockSignals(True)
+        self.edit_tableWidget.setRowCount(13)
+        self.edit_tableWidget.setColumnCount(len(self.map_model_id_to_model))
+    
+    def update_edit_table_widget(self):
+        for column, model_info in enumerate(self.map_model_id_to_model.items()):
+            model_id, model = model_info
+        
+            model_id_item = QTableWidgetItem(str(model_id))
+            model_id_item.setTextAlignment(Qt.AlignCenter)
+            model_id_item.setFlags(Qt.ItemIsSelectable)
+
+            self.edit_tableWidget.setItem(0, column, model_id_item)
+
+            for row, fluid_data in enumerate(model.get_fluid_data_to_fill_edit_table_widget()):
+                item_text = str(fluid_data)
+
+                fluid_item = QTableWidgetItem(item_text)
+                fluid_item.setTextAlignment(Qt.AlignCenter)
+
+                if not isinstance(fluid_data, str):
+                    fluid_item.setFlags(Qt.ItemIsSelectable)
+
+                if isinstance(fluid_data, str):
+                    tool_tip = f"{item_text} \n\nDouble click to choose a new fluid"
+                    fluid_item.setToolTip(tool_tip)
+
+                self.edit_tableWidget.setItem(row + 1, column, fluid_item)
+            
+            for row, pp_data in enumerate(model.get_data_to_fill_edit_table_widget()):
+                item_text = str(pp_data) if not isinstance(pp_data, Path) else pp_data.name
+
+                pp_item = QTableWidgetItem(item_text)
+                pp_item.setTextAlignment(Qt.AlignCenter)
+
+                if isinstance(pp_data, str):
+                    pp_item.setFlags(Qt.ItemIsSelectable)
+                    pp_item.setToolTip(item_text)
+
+                elif isinstance(pp_data, Path):
+                    tool_tip = f"{str(pp_data)} \n\nDouble click to import a new transfer impedance file"
+                    pp_item.setToolTip(tool_tip)
+
+                self.edit_tableWidget.setItem(row + 5, column, pp_item)
+        
+        self.edit_tableWidget.blockSignals(False)
+    
+    def edit_fluid_or_transfer_impedance(self, row, column):
+        if row not in [1, 11]:
+            return
+
+        model_id = int(self.edit_tableWidget.item(0, column).text())
+        model = self.map_model_id_to_model[model_id]
+        surface_ids = self.map_model_id_to_surfaces[model_id]
+
+        if row == 1:
+            self.get_fluid_callback()
+
+            if self.selected_fluid:
+                setattr(model, "fluid", self.selected_fluid)
+
+            for surface_id in surface_ids:
+                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
+        else:
+
+            for surface_id in surface_ids:
+                self.include_user_defined_transfer_impedance(model, surface_id)
+                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
+            self.imported_values = None
+            app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
+
+        app().file.write_model_properties_in_file()
+        if row == 11:
+            app().file.write_imported_table_data_in_file()
+
+        self.load_model_info()
+
+    def edit_table_widget_item(self, row, column):
+        item = self.edit_tableWidget.item(row, column)
+        model_id = int(self.edit_tableWidget.item(0, column).text())
+
+        new_item_value = None
+        unnaceptable_value_error = False
+
+        try:
+            input_value = item.text().replace(",", ".")
+            new_item_value = float(input_value)
+            if new_item_value <= 0.:
+                new_item_value = None
+                unnaceptable_value_error = True
+
+        except:
+            unnaceptable_value_error = True
+
+        model = self.map_model_id_to_model[model_id]
+        indexed_attributes = model.get_indexed_attributes()
+
+        attribute = indexed_attributes[row - 3]
+
+        if unnaceptable_value_error:
+            new_item_value = getattr(model, attribute)
+            item.setText(str(new_item_value))
+        else:
+            setattr(model, attribute, new_item_value)
+
+        surfaces_ids = self.map_model_id_to_surfaces[model_id]
+        for surface_id in surfaces_ids:
+            self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+
+        app().file.write_model_properties_in_file()
+        self.load_model_info()
+    
+    def update_tabs_visibility(self):
+
+        if len(self.map_model_id_to_model) > 0:
+            self.tabWidget_main.setTabVisible(1, True)
+            self.tabWidget_main.setTabVisible(2, True)
+
+            return
+
+        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setTabVisible(2, False)
+
     def load_table(self, lineEdit : QLineEdit = None, direct_load: bool=False) -> np.ndarray:
 
         title = "Error reached while loading 'user-defined transfer impedance' table"
@@ -552,14 +456,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
             return imported_file
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None
 
@@ -577,7 +481,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -646,7 +550,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         model = PerforatedPlateData()
 
         pp_data_general = dict(
-                                coupling_type = self.comboBox_selection_type.currentText(),
                                 fluid = self.selected_fluid,
                                 formulation = "circular_hole",
                                 plate_thickness = plate_thickness,
@@ -679,67 +582,22 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def check_selected_surfaces(self):
 
         surface_ids = list()
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
 
-            input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids_A,
-                                                                    selection = "surfaces",
-                                                                    single_id = False,
-                                                                    )
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids,
+                                                                selection = "surfaces",
+                                                                single_id = False,
+                                                                )
 
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id_A.setFocus()
-                PrintMessageInput(error_data)
-                return list()
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return list()
 
-            selection_type_error = self.check_selection_type(surface_ids)
-            if selection_type_error:
-                return list()
-            
-        else:
-
-            input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A, error_data = self.mesh.check_selected_ids(
-                                                                     input_ids_A, 
-                                                                     selection = "surfaces", 
-                                                                     single_id = False,
-                                                                     )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id_A.setFocus()
-                PrintMessageInput(error_data)
-                return list()
-
-            input_ids_B = self.lineEdit_selection_id_B.text()
-            surface_ids_B, error_data = self.mesh.check_selected_ids(
-                                                                     input_ids_B, 
-                                                                     selection = "surfaces", 
-                                                                     single_id = False,
-                                                                     )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id_B.setFocus()
-                PrintMessageInput(error_data)
-                return list()
-
-            selection_type_error = self.check_selection_type(surface_ids_A)
-            if selection_type_error:
-                return list()
-
-            selection_type_error = self.check_selection_type(surface_ids_B)
-            if selection_type_error:
-                return list()
-
-            surface_ids_A.sort()
-            surface_ids_B.sort()
-            # self.pp_data["surfaces_A"] = surface_ids_A
-            # self.pp_data["surfaces_B"] = surface_ids_B
-            surface_ids.extend(surface_ids_A)
-            surface_ids.extend(surface_ids_B)
+        if self.check_selection_type(surface_ids):
+            return list()
 
         surface_ids.sort()
 
@@ -759,28 +617,15 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not model:
             return
 
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
-
-            for surface_id in surface_ids:
-                if "User-defined" in self.comboBox_include_effects.currentText():
-                   self.include_user_defined_transfer_impedance(model, surface_id)
-                
-                self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
-                self.decouple_degrees_of_freedom(surface_id)
-
-        # else:
-
-        #     if "User-defined" in self.comboBox_include_effects.currentText():
-        #         self.include_user_defined_transfer_impedance(surface_ids)
-        #         if not self.pp_data:
-        #             return
-
-        #     pp_data = deepcopy(self.pp_data)
-        #     self.properties._set_property("perforated_plate_model", self.pp_data, surface=tuple(surface_ids))
+        for surface_id in surface_ids:
+            if "User-defined" in self.comboBox_include_effects.currentText():
+                self.include_user_defined_transfer_impedance(model, surface_id)
+            
+            self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
+            self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id_A.setText("")
-        self.lineEdit_selection_id_B.setText("")
+        self.lineEdit_selection_id.setText("")
 
         self.hide()
         self.actions_to_finalize()
@@ -836,11 +681,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
-            if isinstance(surface_ids, int):
-                surface_ids = [surface_ids]
-        else:
-            surface_ids = [tuple(surface_ids)]
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
 
         labels = ["perforated_plate_model", "interior_impedance"]
 
@@ -881,7 +723,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def remove_callback(self):
 
-        input_ids = self.lineEdit_selection_id_A.text()
+        input_ids = self.lineEdit_selection_id.text()
 
         if input_ids != "":
             input_ids = input_ids.replace("(", "").replace(")", "")
@@ -893,7 +735,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
             if error_data is not None:
                 self.hide()
-                self.lineEdit_selection_id_A.setFocus()
+                self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return
 
@@ -1069,7 +911,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if message != "":
             self.hide()
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
         else:
             return out
@@ -1088,6 +930,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.fluid_dialog.close()
             self.update_plot_buttons_access()
             self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
+            self.lineEdit_fluid_identifier.setText(f"{self.selected_fluid.identifier}")
             self.lineEdit_fluid_density.setText(f"{self.selected_fluid.fluid_density}")
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
 

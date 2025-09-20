@@ -5,10 +5,9 @@ from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solvers.acoustic_harmonic_solver import AcousticHarmonicSolver
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
-from vibra.engine.solvers.structural_modal_solver import StructuralModalSolver
-from vibra.engine.solvers.structural_harmonic_solver import StructuralHarmonicSolver
+from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
+from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
@@ -55,6 +54,8 @@ class Project(QObject):
         self.model = Model(disable_resume_callback)
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
+        self.acoustic_postprocessing = AcousticPostprocessing(self)
+        self.structural_postprocessing = StructuralPostprocessing(self)
 
         self.static_solver = None
         self.acoustic_modal_solver = None
@@ -173,7 +174,7 @@ class Project(QObject):
 
             # structural harmonic analysis - direct method
             if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.structural_harmonic_solver = StructuralHarmonicSolver(self.structural_assembler)
+                self.structural_harmonic_solver = HarmonicSolver(self.structural_assembler, self.project_file)
                 self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
 
             # structural harmonic analysis - mode superposition method
@@ -183,17 +184,17 @@ class Project(QObject):
 
             # structural modal analysis
             elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
-                self.structural_modal_solver = StructuralModalSolver(self.structural_assembler)
+                self.structural_modal_solver = ModalSolver(self.structural_assembler)
                 self.analysis_id = AnalysisID.STRUCTURAL_MODAL
 
             # acoustic harmonic analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.acoustic_harmonic_solver = AcousticHarmonicSolver(self.acoustic_assembler, self.project_file)
+                self.acoustic_harmonic_solver = HarmonicSolver(self.acoustic_assembler, self.project_file)
                 self.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
 
             # acoustic modal analysis
             elif data["analysis_id"] == AnalysisID.ACOUSTIC_MODAL:
-                self.acoustic_modal_solver = AcousticModalSolver(self.acoustic_assembler)
+                self.acoustic_modal_solver = ModalSolver(self.acoustic_assembler)
                 self.analysis_id = AnalysisID.ACOUSTIC_MODAL
 
             # coupled harmonic analysis (direct method)
@@ -215,6 +216,7 @@ class Project(QObject):
                 raise NotImplementedError("Not implemented solver")
 
     def solve_acoustic_modal_analysis(self):
+        self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
         t0 = time()
@@ -224,29 +226,32 @@ class Project(QObject):
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
+        self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
         self.structural_modal_solver.solve()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
+        self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties(self.model.frequencies)
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
         self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
         t0 = time()
-        self.acoustic_harmonic_solver.solve(is_resume=is_resume)
+        self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
+        self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
         t0 = time()
         if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-            self.structural_harmonic_solver.solve_direct_method()
+            self.structural_harmonic_solver.solve_direct()
         else:
-            self.structural_harmonic_solver.solve_mode_superposition_method()
+            self.structural_harmonic_solver.solve_modal_superposition()
             return
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")

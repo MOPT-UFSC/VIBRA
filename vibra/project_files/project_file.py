@@ -605,33 +605,35 @@ class ProjectFile:
             #         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
             #         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
 
-            structural_harmonic_solver = app().project.structural_harmonic_solver
-            if structural_harmonic_solver is not None:
-                if structural_harmonic_solver.solution is not None:
-                    frequencies = app().project.model.frequencies
-                    solution = structural_harmonic_solver.solution
-                    displacement_dof = structural_harmonic_solver.displacement_dof
-                    f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
-                    f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
-                    f.create_dataset("harmonic_structural/displacement_dof", data=displacement_dof, dtype=int)
+            # structural_harmonic_solver = app().project.structural_harmonic_solver
+            # if structural_harmonic_solver is not None:
+            #     if structural_harmonic_solver.solution is not None:
+            #         frequencies = app().project.model.frequencies
+            #         solution = structural_harmonic_solver.solution
+            #         displacement_dof = structural_harmonic_solver.displacement_dof
+            #         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+            #         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+            #         f.create_dataset("harmonic_structural/displacement_dof", data=displacement_dof, dtype=int)
 
             app().main_window.project_data_modified = True
 
-    def handling_harmonic_solution_results(self):
+    def handling_harmonic_solution_results(self, solver_tag: str):
         if not self.results_data_filepath.exists():
             return
         with h5py.File(self.results_data_filepath, "r") as f_src:
-            # Converting Acoustic Harmonic solution in the old form.
-            analysis = f_src.get("harmonic_acoustic")
+            # Converting Harmonic solution in the old form.
+            analysis = f_src.get(solver_tag)
             if analysis:
+                displacement_dof = analysis.get("displacement_dofs")
                 frequencies = analysis.get("frequencies")
+                solution_dset = analysis["solution"]
                 if frequencies:
-                    solution_dset = analysis["solution"]
-                    if solution_dset.chunks is None:
-                        solution = solution_dset[()]
-                        writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
-                        for i, freq in enumerate(frequencies):
-                            writer[:, i] = solution[:, i]
+                    solution = solution_dset[()]
+                    writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
+                    if displacement_dof is not None:
+                        writer.save_extra_data("displacement_dof", displacement_dof, dtype=int)
+                    for i, freq in enumerate(frequencies):
+                        writer[:, i] = solution[:, i]
 
         self.remove_results_data_from_project_file()
 

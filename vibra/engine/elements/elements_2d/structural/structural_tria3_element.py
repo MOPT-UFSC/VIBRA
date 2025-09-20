@@ -410,7 +410,7 @@ class STRUCT_TRIANGLE_3(Element2D):
         Ke[np.ix_(index, index)] = K_memb
         Me[np.ix_(index, index)] = M_memb
 
-        # Indexing drilling dofs
+        # Indexing drilling dof
         index = [5, 11, 17]
         Ke[np.ix_(index, index)] = 1e-5  # drill
         Me[np.ix_(index, index)] = 1e-18
@@ -456,37 +456,37 @@ class STRUCT_TRIANGLE_3(Element2D):
         self.connectivity = self.connectivity[:, [0, 4, 5, 6]]
 
     def generate_ind_rows_cols(self):
-        """This method processess the dofs indices (rows and columns) for assembly"""
+        """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
 
         ind_dof = (
-            np.array([  dofs * self.connectivity[:, 1] + 0,
-                        dofs * self.connectivity[:, 1] + 1,
-                        dofs * self.connectivity[:, 1] + 2,
-                        dofs * self.connectivity[:, 1] + 3,
-                        dofs * self.connectivity[:, 1] + 4,
-                        dofs * self.connectivity[:, 1] + 5,
-                        dofs * self.connectivity[:, 2] + 0,
-                        dofs * self.connectivity[:, 2] + 1,
-                        dofs * self.connectivity[:, 2] + 2,
-                        dofs * self.connectivity[:, 2] + 3,
-                        dofs * self.connectivity[:, 2] + 4,
-                        dofs * self.connectivity[:, 2] + 5,
-                        dofs * self.connectivity[:, 3] + 0,
-                        dofs * self.connectivity[:, 3] + 1,
-                        dofs * self.connectivity[:, 3] + 2,
-                        dofs * self.connectivity[:, 3] + 3,
-                        dofs * self.connectivity[:, 3] + 4,
-                        dofs * self.connectivity[:, 3] + 5  ], dtype=int)).T
+            np.array([  dof * self.connectivity[:, 1] + 0,
+                        dof * self.connectivity[:, 1] + 1,
+                        dof * self.connectivity[:, 1] + 2,
+                        dof * self.connectivity[:, 1] + 3,
+                        dof * self.connectivity[:, 1] + 4,
+                        dof * self.connectivity[:, 1] + 5,
+                        dof * self.connectivity[:, 2] + 0,
+                        dof * self.connectivity[:, 2] + 1,
+                        dof * self.connectivity[:, 2] + 2,
+                        dof * self.connectivity[:, 2] + 3,
+                        dof * self.connectivity[:, 2] + 4,
+                        dof * self.connectivity[:, 2] + 5,
+                        dof * self.connectivity[:, 3] + 0,
+                        dof * self.connectivity[:, 3] + 1,
+                        dof * self.connectivity[:, 3] + 2,
+                        dof * self.connectivity[:, 3] + 3,
+                        dof * self.connectivity[:, 3] + 4,
+                        dof * self.connectivity[:, 3] + 5  ], dtype=int)).T
 
         vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, (1, edofs))).flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, (1, edof))).flatten()
 
-        # linhas = np.tile(vect_indices, (edofs, 1)).T
-        # colunas = (np.tile(ind_dof, (1, edofs))).reshape(-1, self.DOF_PER_ELEMENT)
+        # linhas = np.tile(vect_indices, (edof, 1)).T
+        # colunas = (np.tile(ind_dof, (1, edof))).reshape(-1, self.DOF_PER_ELEMENT)
 
         # np.savetxt("linhas.dat", linhas, delimiter=",", fmt="%i")
         # np.savetxt("colunas.dat", colunas, delimiter=",", fmt="%i")
