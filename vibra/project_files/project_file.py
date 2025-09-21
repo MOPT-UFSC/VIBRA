@@ -632,7 +632,7 @@ class ProjectFile:
                 frequencies = analysis.get("frequencies")
                 solution_dset = analysis.get("solution")
 
-                if (displacement_dof, frequencies, solution).count(None):
+                if (displacement_dof, frequencies, solution_dset).count(None):
                     return
 
                 solution = solution_dset[()]
