@@ -155,11 +155,16 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data: dict):
+
         self.x_data = data.get("x_data")
-        self.y_data = self.get_y_axis_data(data.get("y_data"))
-        self.unit = data.get("unit")
         self.x_label = data.get("x_label")
+
+        if data.get("type") != "imported_data":
+            self.unit = data.get("unit", "?")
+
+        self.y_data = self.get_y_axis_data(data.get("y_data"))
         self.y_label = self.get_y_axis_label(data.get("y_label"))
+
         self.color = data.get("color")
         self.title = data.get("title")
         self.legend = data.get("legend")
