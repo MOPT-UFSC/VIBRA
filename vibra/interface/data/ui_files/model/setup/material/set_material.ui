@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>720</width>
+    <width>900</width>
     <height>500</height>
    </rect>
   </property>
@@ -340,7 +340,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>690</width>
+               <width>870</width>
                <height>323</height>
               </rect>
              </property>
@@ -582,6 +582,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
