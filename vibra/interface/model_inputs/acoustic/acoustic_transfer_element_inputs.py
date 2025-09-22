@@ -351,7 +351,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
             logging.info("Processing area... [60/100]")
-            self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+            self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
         LoadingWindow(function_callback).run()
 
@@ -443,19 +443,25 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
             for key, data in self.element_transfer_data.items():
 
+                if not isinstance(data, dict):
+                    continue
+
                 selection_type, selection_id = key
                 sheet_name = f"{selection_type}_{selection_id}"
 
+                unit = data["unit"]
                 x_data = data["x_data"]
                 y_data = data["y_data"]
-                unit = data["unit"]
+                x_label = data.get("x_label")
+                y_label = data.get("y_label")
 
                 if isinstance(y_data[0], complex):
-                    header = ["Frequency[Hz]", f"Real part [{unit}]", f"Imaginary part [{unit}]", f"Absolute [{unit}]"]
-                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T 
+                    header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
+                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
+ 
                 else:
                     data_type = data["data_type"]
-                    header = ["Frequency[Hz]", f"{data_type.capitalize()} [{unit}]"]
+                    header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
                 df = DataFrame(data_to_export, columns=header)

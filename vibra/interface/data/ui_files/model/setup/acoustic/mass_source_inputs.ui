@@ -520,6 +520,9 @@
                  <height>20</height>
                 </size>
                </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
              <item row="1" column="0">
@@ -652,6 +655,9 @@
                  <width>20</width>
                  <height>20</height>
                 </size>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -800,6 +806,9 @@
                </property>
                <property name="text">
                 <string>Get node</string>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -1219,6 +1228,9 @@
                <property name="text">
                 <string>Reset</string>
                </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
              <item row="0" column="1">
@@ -1249,6 +1261,9 @@
                </property>
                <property name="text">
                 <string>Remove</string>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -1729,6 +1744,9 @@
         <property name="text">
          <string>Exit</string>
         </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
       <item row="0" column="2">
@@ -1759,6 +1777,9 @@
         </property>
         <property name="text">
          <string>Attribute</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

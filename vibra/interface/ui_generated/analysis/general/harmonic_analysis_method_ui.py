@@ -228,7 +228,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(tooltip)
         self.pushButton_proceed.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Go to the analysis setup</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_proceed.setText(QCoreApplication.translate("Dialog", u"Procced", None))
+        self.pushButton_proceed.setText(QCoreApplication.translate("Dialog", u"Proceed", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_cancel.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Go to the analysis setup</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)

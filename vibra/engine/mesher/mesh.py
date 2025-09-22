@@ -7,6 +7,7 @@ from vibra import app
 
 from collections import defaultdict
 from copy import deepcopy
+from itertools import permutations
 from pathlib import Path
 from traceback import print_exception
 from typing import Literal
@@ -40,7 +41,6 @@ class Mesh:
 
         self.geometry_setup = None
         self.geometry_imported = True
-
         self.reset_variables()
 
     def reset_variables(self):
@@ -142,6 +142,9 @@ class Mesh:
         else:
             return 1
 
+    def set_element_type(self, element_type: ElementType):
+        self.element_type = element_type
+
     def load_cad(self, path: str | Path, **kwargs):
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
         mesh_connection = kwargs.get("mesh_connection", True)
@@ -150,8 +153,8 @@ class Mesh:
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
  
-        self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        self.element_type: ElementType
+        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        # self.element_type: ElementType
 
         if not gmsh.isInitialized():
             gmsh.initialize("", False, interruptible=False)
@@ -221,8 +224,8 @@ class Mesh:
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
 
-        self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        self.element_type: ElementType
+        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        # self.element_type: ElementType
 
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
@@ -238,6 +241,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
+        self.update_element_type()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -258,8 +262,22 @@ class Mesh:
             f"and {len(self.solids_connectivity)} dim 3 elements"
         )
 
+    def update_element_type(self):
+        nodes_per_element = self.solids_connectivity[0, 4:].size
+        if nodes_per_element == 4:
+            self.element_type = TETRAHEDRON_4
+        elif nodes_per_element == 10:
+            self.element_type = TETRAHEDRON_10
+        elif nodes_per_element == 8:
+            self.element_type = HEXAHEDRON_8
+        elif nodes_per_element == 20:
+            self.element_type = HEXAHEDRON_20
+        else:
+            return
+
     def process_downwards_adjacencies_from_mesh_data(self):
-        """This method computes the downwards adjacencies from entities
+        """
+        This method processes the downwards adjacencies from entities
         from the solids, faces and lines connectivities matrices.
         """
 
@@ -332,9 +350,8 @@ class Mesh:
                 check_overlap_2 = False
 
                 line_nodes = list(set(intersect_nodes))
-                for _line_nodes in self.separate_nodes_from_disconnected_lines(
-                    line_nodes
-                ).values():
+
+                for _line_nodes in self.separate_nodes_from_disconnected_lines(line_nodes).values():
                     _line_nodes.sort()
                     if _line_nodes in self.external_nodes_from_lines.values():
                         continue
@@ -371,10 +388,6 @@ class Mesh:
                 if np.isin(line_nodes, surface_nodes).all():
                     self.lines_from_surface[surf_id].append(line_id)
 
-        # for _id in [17, 18, 19, 20, 22, 23, 24, 25]:
-        #     lines = self.lines_from_surface.get(_id)
-        #     print(f"Surface: {_id} -> {lines}")
-
     def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
         """
         This method group nodes from each line using a
@@ -393,13 +406,21 @@ class Mesh:
             values are the node IDs.
 
         """
+        
+        n_nodes_2d = self.faces_connectivity[0, 4:].size
+
+        if n_nodes_2d in [3, 4]:
+            n_nodes_1d = 2
+
+        elif n_nodes_2d in [6, 8]:
+            n_nodes_1d = 3
+
+        else:
+            return
+
         # get the 2D element connectivities that contains two node_ids inside
-        filt_rows = (
-            np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) == 2
-        )
-        filt_connectivities = deepcopy(
-            [list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]]
-        )
+        filt_rows = np.sum(np.isin(self.faces_connectivity[:, 4:], node_ids), axis=1) == n_nodes_1d
+        filt_connectivities = deepcopy([list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]])
 
         if not filt_connectivities:
             return dict()
@@ -457,26 +478,29 @@ class Mesh:
             return
 
         connect_data = self.faces_connectivity[:, 4:]
-        if connect_data.shape[1] in [3, 4]:
-            n_nodes = 2
+        n_nodes_2d = self.faces_connectivity[0, 4:].size
+
+        if n_nodes_2d in [3, 4]:
+            n_nodes_1d = 2
             e_type = 2
 
-        elif connect_data.shape[1] in [6, 8]:
-            n_nodes = 3
+        elif n_nodes_2d in [6, 8]:
+            n_nodes_1d = 3
             e_type = 3
 
         last_index = 0
         first_index = 0
-        self.lines_connectivity = np.empty((0, 4 + n_nodes), dtype=int)
+        self.lines_connectivity = np.empty((0, 4 + n_nodes_1d), dtype=int)
 
         for line_id, node_ids in self.external_nodes_from_lines.items():
 
             connectivity_from_line = list()
-            filt_rows = np.sum(np.isin(connect_data, node_ids), axis=1) == n_nodes
+            filt_rows = np.sum(np.isin(connect_data, node_ids), axis=1) == n_nodes_1d
 
             for _connect in connect_data[filt_rows, :]:
                 edge_connect = [node_id for node_id in _connect if node_id in node_ids]
-                edge_connect.sort()
+                edge_connect = self.reorder_connectivity_based_on_distances(edge_connect)
+
                 if edge_connect in connectivity_from_line:
                     continue
 
@@ -493,11 +517,11 @@ class Mesh:
             last_index += rows
             indexes = np.arange(first_index, last_index, dtype=int)
 
-            connectivity = np.zeros((rows, 4 + n_nodes), dtype=int)
+            connectivity = np.zeros((rows, 4 + n_nodes_1d), dtype=int)
             connectivity[:, 0] = indexes
             connectivity[:, 1] = aux_ones * line_id
             connectivity[:, 2] = aux_ones * e_type
-            connectivity[:, 3] = aux_ones * n_nodes
+            connectivity[:, 3] = aux_ones * n_nodes_1d
             connectivity[:, 4:] = connectivity_array
 
             self.lines_connectivity = np.append(
@@ -510,6 +534,38 @@ class Mesh:
             self.geometry_information["lines"] = list(self.external_nodes_from_lines.keys())
             # np.savetxt("lines_connectivity.dat", self.lines_connectivity, delimiter=",", fmt="%i")
 
+    def reorder_connectivity_based_on_distances(self, el_connect: list[int]):
+        """
+        This method reorders the line element connectivity based on
+        the nodal distances.
+
+        Parameters
+        ----------
+        el_connect: list
+            The initial random element connectivity.
+
+        Returns
+        -------
+        reordered_connect: list
+            The reordered element connectivity (following the order: 
+            corner nodes and middle node, whenever applicable).
+        """
+
+        perm_nodes = np.array(list(permutations(el_connect, 2)), dtype=int)
+
+        P1 = self.nodal_coordinates[perm_nodes[:, 0], 1:]
+        P2 = self.nodal_coordinates[perm_nodes[:, 1], 1:]
+
+        lengths = np.linalg.norm(P2-P1, axis=1)
+        reordered_connect = np.sort(perm_nodes[np.argmax(lengths), :])
+
+        if len(el_connect) == 3:
+            mask = np.isin(el_connect, reordered_connect, invert=True)
+            middle_node = np.array(el_connect, dtype=int)[mask]
+            reordered_connect = np.append(reordered_connect, middle_node, axis=0)
+
+        return list(reordered_connect)
+
     def process_points_from_mesh_data(self):
         """
         This method processes the corner nodes and the
@@ -520,15 +576,16 @@ class Mesh:
         if not self.lines_connectivity.size:
             return
 
-        def get_non_repeated_values(values: list):
+        def get_non_repeated_values(line_connectivities: np.ndarray):
             """
             This function returns the non-repeated values
             from a given input list of values.
 
             Parameters
             ----------
-            values: list
-                The input list of values to be processed.
+            values: np.ndarray
+                An array containing the connectivities
+                of the 1D elements of a line.
 
             Returns
             -------
@@ -536,17 +593,10 @@ class Mesh:
                 The output list of non-repeated values.
 
             """
-            non_repeated_nodes = set()
-            repeated_nodes = set()
-
-            for value in values:
-                if value in non_repeated_nodes:
-                    repeated_nodes.add(value)
-                    non_repeated_nodes.remove(value)
-                else:
-                    non_repeated_nodes.add(value)
-
-            return list(non_repeated_nodes)
+            values = line_connectivities[:, [0, 1]].flatten()
+            _, indexes, count = np.unique(values, return_index=True, return_counts=True)
+            non_repeated_values = list(values[indexes[count==1]])
+            return non_repeated_values
 
         point_id = 0
         self.points_from_line.clear()
@@ -554,7 +604,7 @@ class Mesh:
         for line_id in self.geometry_information.get("lines"):
 
             line_connect = self.get_connectivity_from_line(line_id)
-            corner_nodes = get_non_repeated_values(line_connect.flatten())
+            corner_nodes = get_non_repeated_values(line_connect)
 
             points_from_line = list()
 
@@ -1366,7 +1416,7 @@ class Mesh:
             element_ids.extend(self.lines_connectivity[rows, 0])
         return element_ids
 
-    def _process_face_elements_connected_to_nodes(self, selected_ids: int | list):
+    def process_face_elements_connected_to_nodes(self, selected_ids: int | list):
 
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()
@@ -1515,7 +1565,7 @@ class Mesh:
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None
     ) -> dict:
         """
-        This method computes the face elements connected to the nodes.
+        This method calculates the face elements connected to the nodes.
 
         Parameters
         ----------
@@ -1617,7 +1667,7 @@ class Mesh:
 
         return solid_elements_connected_to_nodes
 
-    def get_average_normals_for_surface_nodes_reference(self, surface_id: int) -> dict:
+    def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
         """
         This method processes the average normals in the surface nodes considering the element faces
         normals connected to same node.
@@ -1654,10 +1704,10 @@ class Mesh:
 
         return data_normals
 
-    def get_average_normals_for_surface_nodes(self, surface_id: int, **kwargs):
+    def get_surface_nodal_normals(self, surface_id: int, **kwargs):
         """
-        This method processes the average normals in the surface nodes considering the element faces
-        normals connected to same node.
+        This method processes the average normals in the surface nodes considering 
+        the element faces normals connected to the same node.
 
         Parameters
         ----------
@@ -1670,22 +1720,45 @@ class Mesh:
             A dictionary mapping the node IDs to the average normal vector.
         """
 
-        num = defaultdict(float)
-        den = defaultdict(int)
-
+        # t0 = time()
+       
         face_connectivity = self.get_connectivity_from_surface(surface_id)
-        eface_normals = self.get_stacked_normals_for_surface_elements(surface_id)
-        nodes_from_surface = np.sort(self.get_nodes_from_surface(surface_id))
 
-        for i, connect in enumerate(face_connectivity):
-            e_normal = eface_normals[i, :].flatten()
-            for node in connect:
-                num[node] += e_normal
-                den[node] += 1
+        if face_connectivity is None:
+            return
 
-        avg_node_normals = {node: num[node] / den[node] for node in nodes_from_surface}
+        # noodes per element
+        nodes_per_element = face_connectivity[0, :].size
 
-        return avg_node_normals
+        if nodes_per_element == 3:
+            column_indexes = [(0, 1, 2)]
+
+        elif nodes_per_element == 6:
+            column_indexes = [(3,1,4), (3,4,2), (3,2,5), (3,5,0)]
+
+        else:
+            return NotImplementedError(f"Normal not implemented for surface with {nodes_per_element} nodes")
+
+        Vn_sum = defaultdict(float)
+
+        for indexes in column_indexes:
+            inside_face_connectivity = face_connectivity[:, indexes]
+            norm_cross = self.process_stacked_cross_products(inside_face_connectivity)
+
+            for i, e_nodes in enumerate(inside_face_connectivity):
+                for node in e_nodes:
+                    Vn_sum[node] += norm_cross[i, :]
+
+        nodal_unit_normals = dict()
+
+        for node in self.get_nodes_from_surface(surface_id):
+            Vn = Vn_sum[node]
+            nodal_unit_normals[node] = Vn / np.linalg.norm(Vn)
+
+        # dt = time() - t0
+        # print(f"Elapsed time - surface #{surface_id}: {dt : .6f} s")
+
+        return nodal_unit_normals
 
     def get_stacked_normals_for_surface_elements(self, surface_id: int):
         """
@@ -1708,30 +1781,56 @@ class Mesh:
         if face_connectivity is None:
             return
 
-        X1 = self.nodal_coordinates[face_connectivity[:, 0], 1]
-        Y1 = self.nodal_coordinates[face_connectivity[:, 0], 2]
-        Z1 = self.nodal_coordinates[face_connectivity[:, 0], 3]
-
-        X2 = self.nodal_coordinates[face_connectivity[:, 1], 1]
-        Y2 = self.nodal_coordinates[face_connectivity[:, 1], 2]
-        Z2 = self.nodal_coordinates[face_connectivity[:, 1], 3]
-
-        X3 = self.nodal_coordinates[face_connectivity[:, 2], 1]
-        Y3 = self.nodal_coordinates[face_connectivity[:, 2], 2]
-        Z3 = self.nodal_coordinates[face_connectivity[:, 2], 3]
-
-        P2P1 = np.array([X2 - X1, Y2 - Y1, Z2 - Z1]).T
-        P3P1 = np.array([X3 - X1, Y3 - Y1, Z3 - Z1]).T
-
-        cross = np.cross(P2P1, P3P1, axis=1)
-        norm_cross = np.linalg.norm(cross, axis=1)
-
-        norm_cross = norm_cross.reshape(-1, 1, 1)
-        cross = cross.reshape(-1, 1, 3)
-
-        stacked_normals = cross / norm_cross
+        stacked_normals = self.process_stacked_cross_products(face_connectivity)
 
         return stacked_normals
+
+    def process_stacked_cross_products(self, connectivities: np.ndarray, normalized: bool=True):
+        """
+        This method processes the stacked cross products for the given
+        triangular connectivities.
+
+        Parameter
+        ---------
+        connectivities: np.ndarray
+            The stacked triangular connectivities.
+
+        normalized: bool, optional
+            This argument controls when the output vectors will be
+            normalized (default is True).
+
+        Returns
+        -------
+        stacked_cross_products: np.ndarray
+            The stacked cross products for each triangular connectivity.
+        """
+
+        nodes_1 = connectivities[:, 0] 
+        nodes_2 = connectivities[:, 1] 
+        nodes_3 = connectivities[:, 2]
+
+        X1 = self.nodal_coordinates[nodes_1, 1]
+        Y1 = self.nodal_coordinates[nodes_1, 2]
+        Z1 = self.nodal_coordinates[nodes_1, 3]
+
+        X2 = self.nodal_coordinates[nodes_2, 1]
+        Y2 = self.nodal_coordinates[nodes_2, 2]
+        Z2 = self.nodal_coordinates[nodes_2, 3]
+
+        X3 = self.nodal_coordinates[nodes_3, 1]
+        Y3 = self.nodal_coordinates[nodes_3, 2]
+        Z3 = self.nodal_coordinates[nodes_3, 3]
+
+        v_21 = np.array([X2 - X1, Y2 - Y1, Z2 - Z1]).T
+        v_31 = np.array([X3 - X1, Y3 - Y1, Z3 - Z1]).T
+
+        stacked_cross_products = np.cross(v_21, v_31, axis=1)
+
+        if normalized:
+            norm_cross = np.linalg.norm(stacked_cross_products, axis=1).reshape(-1, 1)
+            return stacked_cross_products / norm_cross
+
+        return stacked_cross_products
 
     def compute_nodal_areas(self):
         self.nodal_area.clear()
@@ -1742,19 +1841,48 @@ class Mesh:
                     self.nodal_area[node].append(area)
 
     def process_triangular_area_by_nodal_coordinates(
-        self, node_ids: list[int] | np.ndarray
+        self, elem_connect: list[int] | np.ndarray
     ) -> np.ndarray | None:
-        """ """
-        if len(node_ids) != 3:
-            return None
+        """
+        This method calculates the area of triangular elements
+        based on their connectivities.
 
-        coord_A = self.nodal_coordinates[node_ids[0], 1:]
-        coord_B = self.nodal_coordinates[node_ids[1], 1:]
-        coord_C = self.nodal_coordinates[node_ids[2], 1:]
+        Parameters
+        ----------
+        elem_connect: list
+            The element face connectivity.
 
-        AB = coord_B - coord_A
-        BC = coord_C - coord_B
-        area = np.linalg.norm(np.cross(AB, BC)) / 2
+        Returns
+        -------
+        area: float
+            The area of the triangular element.
+
+        """
+        def compute_triangular_area(nodes: list):
+            coord_A = self.nodal_coordinates[nodes[0], 1:]
+            coord_B = self.nodal_coordinates[nodes[1], 1:]
+            coord_C = self.nodal_coordinates[nodes[2], 1:]
+            vect_AB = coord_B - coord_A
+            vect_BC = coord_C - coord_B
+            area = np.linalg.norm(np.cross(vect_AB, vect_BC)) / 2
+            return area
+
+        # compute the area for TRIA3 element
+        if len(elem_connect) == 3:
+            area = compute_triangular_area(elem_connect)
+
+        # compute the area for TRIA6 element
+        elif len(elem_connect) == 6:
+            points_nodes = [
+                [elem_connect[0], elem_connect[3], elem_connect[5]],
+                [elem_connect[5], elem_connect[3], elem_connect[1]],
+                [elem_connect[1], elem_connect[4], elem_connect[5]],
+                [elem_connect[5], elem_connect[4], elem_connect[2]],
+            ]
+
+            area = 0.
+            for nodes in points_nodes:
+                area += compute_triangular_area(nodes)
 
         return area
 
@@ -2057,7 +2185,7 @@ class Mesh:
 
     def process_element_average_coordinates(self, element_ids: list[int]) -> dict:
         """
-        This method computes the element average center coordinates of the selected element ID.
+        This method calculates the element average center coordinates of the selected element ID.
 
         Parameters
         ----------
@@ -2108,7 +2236,6 @@ class Mesh:
 
     def get_element_face_normal(self, connect: np.ndarray):
 
-        # ie = self.faces_connectivity[element_id, 4:]
         coords = self.nodal_coordinates[connect, 1:]
 
         P1 = coords[0, :]
@@ -2128,9 +2255,9 @@ class Mesh:
 
         return normal
 
-    def set_nodal_normals_data(self, normals_data: dict):
+    def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
-            self.nodal_normals_data[node_id] = nodal_normal
+            self.nodal_normals_data[surface_id, node_id] = nodal_normal
 
     def get_principal_diagonal_structure_parallelepiped(self):
         """

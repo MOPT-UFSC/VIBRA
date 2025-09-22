@@ -3,7 +3,7 @@ import pytest
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.engine.solvers.acoustic_modal_solver import AcousticModalSolver
+from vibra.engine.solvers.modal_solver import ModalSolver
 
 @pytest.mark.skip
 def test_modal_structural():
@@ -21,7 +21,7 @@ def test_modal_structural():
     modal_assembler = AcousticAssembler(model)
     modal_assembler.process_assemble()
 
-    modal_solver = AcousticModalSolver(modal_assembler)
+    modal_solver = ModalSolver(modal_assembler)
     modal_solver.solve()
 
     # Não sei o que seria legal de verificar aqui

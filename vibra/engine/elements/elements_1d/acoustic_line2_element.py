@@ -8,97 +8,24 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-def get_shape_functions_and_derivatives(ksi: np.ndarray):
-
-    """
-    This function returns the shape functions and its derivatives.
-    
-    Parameters
-    ----------
-    ksi: np.ndarray
-        The x coordinates of the integration points.
-
-    Returns
-    -------
-    phi: np.ndarray
-        The shape functions evaluated in the integration points.
-
-    dphi: np.ndarray
-        The shape functions derivatives.
-    """
-
-    # shape functions
-    phi = np.array([(1 - ksi)/2, (1 + ksi)/2], dtype=float).T
-
-    # shape functions derivatives
-    dphi = np.array([[-0.5, 0.5]], dtype=float)
-
-    return phi, dphi
-
-
-def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
-    """
-    This funtion computes the local coordinates from global coordinates.
-
-    Parameter
-    ---------
-    coords: np.ndarray
-        An array containing the global coordinates to be converted.
-
-    Returns
-    -------
-    coord_loc: np.ndarray
-        The array of coordinates in the local coordinate system.
-    """
-    
-    XX1, XX2, XX3 = coords[:, 1]
-    YY1, YY2, YY3 = coords[:, 2]
-    ZZ1, ZZ2, ZZ3 = coords[:, 3]
-
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)
-    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
-
-    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-
-    x1 = 0. 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
-    y1 = 0.
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
-    #
-    coord_loc = np.array([[x1, y1],
-                          [x2, y2],
-                          [x3, y3]], dtype=float)
-    return coord_loc
-
-
 class ACT_LINE_2(Element1D):
     #
     NODES_PER_ELEMENT = 2
-    DOFS_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 1
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
 
     def __init__(self, model: "Model"):
 
         self.model = model
 
-        self.initialize_variables()
-        self.define_integration_points()
-        self.process_shape_functions_and_derivatives()
-
-
-    def initialize_variables(self):
         self.element_label = "acoustic_line_2"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
         self.connectivity = self.model.mesh.solids_connectivity
         self.faces_connectivity = self.model.mesh.faces_connectivity
+
+        self.define_integration_points()
+        self.process_shape_functions_and_derivatives()
 
 
     def define_integration_points(self):
@@ -108,8 +35,71 @@ class ACT_LINE_2(Element1D):
         """
         self.nint = 2
         con = 1 / np.sqrt(3)
-        self.wps = 1
-        self.pint = np.array([-con, con], dtype=float)
+        self.wps2 = 1
+        self.pint2 = np.array([-con, con], dtype=float)
+
+
+    def get_shape_functions_and_derivatives(self, xi: np.ndarray):
+
+        """
+        This method returns the shape functions and its derivatives.
+        
+        Parameters
+        ----------
+        xi: np.ndarray
+            The x coordinates of the integration points.
+
+        Returns
+        -------
+        phi: np.ndarray
+            The shape functions evaluated in the integration points.
+
+        dphi: np.ndarray
+            The shape functions derivatives.
+        """
+
+        # shape functions
+        phi = np.zeros((xi.size, 1, self.NODES_PER_ELEMENT), dtype=float)
+
+        phi[:, 0, 0] = 0.5*(1 - xi)
+        phi[:, 0, 1] = 0.5*(1 + xi)
+
+        # shape functions derivatives
+        dphi = np.zeros((xi.size, 1, self.NODES_PER_ELEMENT), dtype=float)
+
+        dphi[:, 0, 0] = -0.5
+        dphi[:, 0, 1] =  0.5
+
+        return phi, dphi
+
+
+    def get_integration_points_data(self, integration_points: int=3):
+        """ 
+        Defines the integration points and their respective weights
+        for the numerical integration processing.
+        """
+
+        if integration_points == 1:
+            p_int = np.array([0], dtype=float)
+            wps = np.array([2], dtype=float)
+
+        elif integration_points == 2:
+            a = 1 / np.sqrt(3)
+            p_int = np.array([-a, a], dtype=float)
+            wps = np.array([1, 1], dtype=float)
+
+        elif integration_points == 3:
+            a = np.sqrt(15) / 5
+            w1 = 5/9
+            w2 = 8/9
+            p_int = np.array([-a, a, 0.0], dtype=float)
+            wps = np.array([w1, w1, w2], dtype=float)
+
+        else:
+            NotImplementedError(f"Non-implement integration points for {integration_points}.")
+            return (None, None)
+
+        return (p_int, wps.reshape(-1, 1, 1))
 
 
     def process_shape_functions_and_derivatives(self):
@@ -117,8 +107,13 @@ class ACT_LINE_2(Element1D):
         This method processes the shape functions and their
         derivatives for all integration points.
         """
-        ksi = self.pint
-        self.phi, self.dphi = get_shape_functions_and_derivatives(ksi)
+        # calculate the shape functions and derivatives for stiffness matrix
+        pint_K, self.wps_K = self.get_integration_points_data(integration_points=2)
+        self.phi_K, self.dphi_K = self.get_shape_functions_and_derivatives(pint_K)
+
+        # calculate the shape functions and derivatives for mass matrix
+        pint_M, self.wps_M = self.get_integration_points_data(integration_points=3)
+        self.phi_M, self.dphi_M = self.get_shape_functions_and_derivatives(pint_M)
 
 
     def get_stacked_local_coordinates(self) -> np.ndarray:
@@ -165,24 +160,39 @@ class ACT_LINE_2(Element1D):
         Bt_B_stacked: np.ndarray
             The array containing the elementary stacked matrices int(Bt @ B, gamma_L).
         """
-        nel = self.connect_line.shape[0]
-        aux_ones = np.ones((nel, 1, 1), dtype=float)
 
+        # local coordinates
         local_coords = self.get_stacked_local_coordinates()
-        det_jacs = (self.dphi * aux_ones) @ local_coords
 
-        inv_jacs = 1 / det_jacs
-        dphi_t = inv_jacs @ (aux_ones * self.dphi)
+        # initialize variables
+        int1d_NtN = 0.
+        int1d_BtB = 0.
 
-        # shape functions
-        N = self.phi
+        # integration loop for stiffness matrix
+        for i in range(self.wps_K.size):
 
-        # derivative of shape functions
-        B = dphi_t
-        B_t = np.transpose(B, axes=(0, 2, 1))
+            # determinant of Jacobian
+            det_jacs = self.dphi_K[i, :, :] @ local_coords
 
-        int1d_NtN = N.T @ N * (det_jacs * self.wps)
-        int1d_BtB = B_t @ B * (det_jacs * self.wps)
+            # inverse of Jacobian
+            inv_jacs = 1 / det_jacs
+
+            # derivative of shape functions
+            B = inv_jacs @ self.dphi_K[i, :, :]
+            B_t = np.transpose(B, axes=(0, 2, 1))
+
+            int1d_BtB += B_t @ B * (det_jacs * self.wps_K[i])
+
+        # integration loop for mass matrix
+        for i in range(self.wps_M.size):
+
+            # determinant of Jacobian
+            det_jacs = self.dphi_M[i, :, :] @ local_coords
+
+            # shape functions
+            N = self.phi_M[i, :, :]
+
+            int1d_NtN += N.T @ N * (det_jacs * self.wps_M[i])
 
         return int1d_NtN, int1d_BtB
 
@@ -202,7 +212,7 @@ class ACT_LINE_2(Element1D):
 
     def generate_ind_rows_cols(self, connect_line: np.ndarray):
         """
-        This method processess the dofs indices (rows and columns) 
+        This method processess the dof indices (rows and columns) 
         for assembly.
 
         Parameter
@@ -211,11 +221,11 @@ class ACT_LINE_2(Element1D):
             An array containing the lines connectivities.
         """
         self.reorder_connect(connect_line)
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs * self.connect_line[:, :]
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dof * self.connect_line[:, :]
 
-        vect_indices = ind_dofs.flatten()
-        ind_rows_face = ((np.tile(vect_indices, (edofs,1))).T).flatten()
-        ind_cols_face = (np.tile(ind_dofs, edofs)).flatten()
+        ind_dof_flat = ind_dof.flatten()
+        ind_rows = ((np.tile(ind_dof_flat, (edof,1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
 
-        return ind_rows_face, ind_cols_face
+        return ind_rows, ind_cols

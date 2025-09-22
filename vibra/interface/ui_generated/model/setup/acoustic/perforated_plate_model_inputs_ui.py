@@ -18,15 +18,17 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QGridLayout, QHeaderView, QLabel, QLineEdit,
     QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
-    QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget)
+    QTabWidget, QTableWidget, QTableWidgetItem, QTreeWidget,
+    QTreeWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(636, 650)
+        Dialog.resize(576, 603)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setVerticalSpacing(4)
         self.gridLayout.setContentsMargins(4, 4, 4, 4)
         self.frame_top = QFrame(Dialog)
         self.frame_top.setObjectName(u"frame_top")
@@ -57,91 +59,49 @@ class Ui_Dialog(object):
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
         self.frame_6 = QFrame(self.frame)
         self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setMinimumSize(QSize(400, 110))
-        self.frame_6.setMaximumSize(QSize(16777215, 110))
+        self.frame_6.setMinimumSize(QSize(400, 48))
+        self.frame_6.setMaximumSize(QSize(16777215, 48))
         self.frame_6.setFrameShape(QFrame.NoFrame)
         self.frame_6.setFrameShadow(QFrame.Raised)
         self.frame_6.setLineWidth(1)
         self.gridLayout_8 = QGridLayout(self.frame_6)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setContentsMargins(6, 6, 6, 6)
-        self.label_16 = QLabel(self.frame_6)
-        self.label_16.setObjectName(u"label_16")
-        self.label_16.setMinimumSize(QSize(100, 28))
-        self.label_16.setMaximumSize(QSize(120, 28))
+        self.label_selection_A = QLabel(self.frame_6)
+        self.label_selection_A.setObjectName(u"label_selection_A")
+        self.label_selection_A.setMinimumSize(QSize(140, 28))
+        self.label_selection_A.setMaximumSize(QSize(140, 28))
         font1 = QFont()
         font1.setFamilies([u"MS Shell Dlg 2"])
         font1.setPointSize(10)
         font1.setBold(False)
-        self.label_16.setFont(font1)
-        self.label_16.setTextFormat(Qt.AutoText)
-        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_8.addWidget(self.label_16, 2, 1, 1, 1)
-
-        self.comboBox_selection_type = QComboBox(self.frame_6)
-        self.comboBox_selection_type.addItem("")
-        self.comboBox_selection_type.addItem("")
-        self.comboBox_selection_type.setObjectName(u"comboBox_selection_type")
-        self.comboBox_selection_type.setMinimumSize(QSize(160, 28))
-        self.comboBox_selection_type.setMaximumSize(QSize(160, 28))
-        font2 = QFont()
-        font2.setPointSize(10)
-        self.comboBox_selection_type.setFont(font2)
-
-        self.gridLayout_8.addWidget(self.comboBox_selection_type, 2, 2, 1, 2)
-
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_6, 0, 4, 1, 1)
-
-        self.lineEdit_selection_id_A = QLineEdit(self.frame_6)
-        self.lineEdit_selection_id_A.setObjectName(u"lineEdit_selection_id_A")
-        self.lineEdit_selection_id_A.setEnabled(True)
-        self.lineEdit_selection_id_A.setMinimumSize(QSize(160, 28))
-        self.lineEdit_selection_id_A.setMaximumSize(QSize(160, 28))
-        self.lineEdit_selection_id_A.setFont(font2)
-        self.lineEdit_selection_id_A.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selection_id_A.setStyleSheet(u"")
-        self.lineEdit_selection_id_A.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_8.addWidget(self.lineEdit_selection_id_A, 0, 2, 1, 2)
-
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
-
-        self.label_selection_A = QLabel(self.frame_6)
-        self.label_selection_A.setObjectName(u"label_selection_A")
-        self.label_selection_A.setMinimumSize(QSize(132, 28))
-        self.label_selection_A.setMaximumSize(QSize(132, 28))
         self.label_selection_A.setFont(font1)
         self.label_selection_A.setTextFormat(Qt.AutoText)
         self.label_selection_A.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_8.addWidget(self.label_selection_A, 0, 1, 1, 1)
 
-        self.label_selection_B = QLabel(self.frame_6)
-        self.label_selection_B.setObjectName(u"label_selection_B")
-        self.label_selection_B.setMinimumSize(QSize(132, 28))
-        self.label_selection_B.setMaximumSize(QSize(132, 28))
-        self.label_selection_B.setFont(font1)
-        self.label_selection_B.setTextFormat(Qt.AutoText)
-        self.label_selection_B.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_8.addWidget(self.label_selection_B, 1, 1, 1, 1)
+        self.gridLayout_8.addItem(self.horizontalSpacer_6, 0, 4, 1, 1)
 
-        self.lineEdit_selection_id_B = QLineEdit(self.frame_6)
-        self.lineEdit_selection_id_B.setObjectName(u"lineEdit_selection_id_B")
-        self.lineEdit_selection_id_B.setEnabled(True)
-        self.lineEdit_selection_id_B.setMinimumSize(QSize(160, 28))
-        self.lineEdit_selection_id_B.setMaximumSize(QSize(160, 28))
-        self.lineEdit_selection_id_B.setFont(font2)
-        self.lineEdit_selection_id_B.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selection_id_B.setStyleSheet(u"")
-        self.lineEdit_selection_id_B.setAlignment(Qt.AlignCenter)
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_8.addWidget(self.lineEdit_selection_id_B, 1, 2, 1, 1)
+        self.gridLayout_8.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
+
+        self.lineEdit_selection_id = QLineEdit(self.frame_6)
+        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
+        self.lineEdit_selection_id.setEnabled(True)
+        self.lineEdit_selection_id.setMinimumSize(QSize(160, 28))
+        self.lineEdit_selection_id.setMaximumSize(QSize(160, 28))
+        font2 = QFont()
+        font2.setPointSize(10)
+        self.lineEdit_selection_id.setFont(font2)
+        self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_8.addWidget(self.lineEdit_selection_id, 0, 2, 1, 2)
 
 
         self.gridLayout_3.addWidget(self.frame_6, 0, 0, 1, 1)
@@ -159,171 +119,66 @@ class Ui_Dialog(object):
         self.tabWidget_perforated_plate_models = QTabWidget(self.tab_setup)
         self.tabWidget_perforated_plate_models.setObjectName(u"tabWidget_perforated_plate_models")
         self.tabWidget_perforated_plate_models.setMinimumSize(QSize(0, 80))
-        self.tab = QWidget()
-        self.tab.setObjectName(u"tab")
-        self.gridLayout_6 = QGridLayout(self.tab)
+        self.tab_circular_holes_setup = QWidget()
+        self.tab_circular_holes_setup.setObjectName(u"tab_circular_holes_setup")
+        self.gridLayout_6 = QGridLayout(self.tab_circular_holes_setup)
         self.gridLayout_6.setSpacing(4)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setContentsMargins(4, 4, 4, 4)
-        self.scrollArea = QScrollArea(self.tab)
+        self.scrollArea = QScrollArea(self.tab_circular_holes_setup)
         self.scrollArea.setObjectName(u"scrollArea")
         self.scrollArea.setFrameShape(QFrame.NoFrame)
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 571, 568))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 511, 592))
         self.gridLayout_12 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.frame_fluid_info = QFrame(self.scrollAreaWidgetContents)
-        self.frame_fluid_info.setObjectName(u"frame_fluid_info")
-        self.frame_fluid_info.setMaximumSize(QSize(16777215, 160))
-        self.frame_fluid_info.setFrameShape(QFrame.NoFrame)
-        self.frame_fluid_info.setFrameShadow(QFrame.Raised)
-        self.gridLayout_18 = QGridLayout(self.frame_fluid_info)
-        self.gridLayout_18.setObjectName(u"gridLayout_18")
-        self.gridLayout_18.setContentsMargins(6, 6, 6, 6)
-        self.pushButton_get_fluid = QPushButton(self.frame_fluid_info)
-        self.pushButton_get_fluid.setObjectName(u"pushButton_get_fluid")
-        self.pushButton_get_fluid.setMinimumSize(QSize(80, 28))
-        self.pushButton_get_fluid.setMaximumSize(QSize(80, 28))
-        self.pushButton_get_fluid.setFont(font2)
-        self.pushButton_get_fluid.setAutoDefault(False)
+        self.gridLayout_12.setContentsMargins(4, 4, 4, 4)
+        self.frame_plot_buttons = QFrame(self.scrollAreaWidgetContents)
+        self.frame_plot_buttons.setObjectName(u"frame_plot_buttons")
+        self.frame_plot_buttons.setMaximumSize(QSize(16777215, 48))
+        self.frame_plot_buttons.setFrameShape(QFrame.NoFrame)
+        self.frame_plot_buttons.setFrameShadow(QFrame.Raised)
+        self.gridLayout_19 = QGridLayout(self.frame_plot_buttons)
+        self.gridLayout_19.setObjectName(u"gridLayout_19")
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_18.addWidget(self.pushButton_get_fluid, 0, 3, 1, 1)
+        self.gridLayout_19.addItem(self.horizontalSpacer_5, 0, 4, 1, 1)
 
-        self.label_36 = QLabel(self.frame_fluid_info)
-        self.label_36.setObjectName(u"label_36")
-        self.label_36.setMinimumSize(QSize(200, 28))
-        self.label_36.setMaximumSize(QSize(200, 28))
-        self.label_36.setFont(font2)
-        self.label_36.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.comboBox_plot_type = QComboBox(self.frame_plot_buttons)
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
+        self.comboBox_plot_type.setMinimumSize(QSize(160, 28))
+        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
+        self.comboBox_plot_type.setFont(font2)
 
-        self.gridLayout_18.addWidget(self.label_36, 1, 1, 1, 1)
+        self.gridLayout_19.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
 
-        self.lineEdit_fluid_density = QLineEdit(self.frame_fluid_info)
-        self.lineEdit_fluid_density.setObjectName(u"lineEdit_fluid_density")
-        self.lineEdit_fluid_density.setEnabled(False)
-        self.lineEdit_fluid_density.setMinimumSize(QSize(200, 28))
-        self.lineEdit_fluid_density.setMaximumSize(QSize(200, 28))
-        self.lineEdit_fluid_density.setFont(font2)
-        self.lineEdit_fluid_density.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_fluid_density.setStyleSheet(u"")
-        self.lineEdit_fluid_density.setAlignment(Qt.AlignCenter)
+        self.pushButton_plot_data = QPushButton(self.frame_plot_buttons)
+        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
+        self.pushButton_plot_data.setMinimumSize(QSize(80, 28))
+        self.pushButton_plot_data.setMaximumSize(QSize(220, 28))
+        self.pushButton_plot_data.setFont(font2)
+        self.pushButton_plot_data.setAutoDefault(False)
 
-        self.gridLayout_18.addWidget(self.lineEdit_fluid_density, 1, 2, 1, 1)
+        self.gridLayout_19.addWidget(self.pushButton_plot_data, 0, 3, 1, 1)
 
-        self.label_31 = QLabel(self.frame_fluid_info)
-        self.label_31.setObjectName(u"label_31")
-        self.label_31.setMinimumSize(QSize(200, 28))
-        self.label_31.setMaximumSize(QSize(200, 28))
-        self.label_31.setFont(font2)
-        self.label_31.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_18.addWidget(self.label_31, 0, 1, 1, 1)
+        self.gridLayout_19.addItem(self.horizontalSpacer_9, 0, 0, 1, 1)
 
-        self.lineEdit_selected_fluid = QLineEdit(self.frame_fluid_info)
-        self.lineEdit_selected_fluid.setObjectName(u"lineEdit_selected_fluid")
-        self.lineEdit_selected_fluid.setEnabled(False)
-        self.lineEdit_selected_fluid.setMinimumSize(QSize(200, 28))
-        self.lineEdit_selected_fluid.setMaximumSize(QSize(200, 28))
-        self.lineEdit_selected_fluid.setFont(font2)
-        self.lineEdit_selected_fluid.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selected_fluid.setStyleSheet(u"")
-        self.lineEdit_selected_fluid.setAlignment(Qt.AlignCenter)
+        self.label_18 = QLabel(self.frame_plot_buttons)
+        self.label_18.setObjectName(u"label_18")
+        self.label_18.setMinimumSize(QSize(200, 0))
+        self.label_18.setMaximumSize(QSize(200, 16777215))
+        self.label_18.setFont(font2)
+        self.label_18.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_18.addWidget(self.lineEdit_selected_fluid, 0, 2, 1, 1)
-
-        self.lineEdit_speed_of_sound = QLineEdit(self.frame_fluid_info)
-        self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
-        self.lineEdit_speed_of_sound.setEnabled(False)
-        self.lineEdit_speed_of_sound.setMinimumSize(QSize(200, 28))
-        self.lineEdit_speed_of_sound.setMaximumSize(QSize(200, 28))
-        self.lineEdit_speed_of_sound.setFont(font2)
-        self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_speed_of_sound.setStyleSheet(u"")
-        self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_18.addWidget(self.lineEdit_speed_of_sound, 2, 2, 1, 1)
-
-        self.label_47 = QLabel(self.frame_fluid_info)
-        self.label_47.setObjectName(u"label_47")
-        self.label_47.setMinimumSize(QSize(200, 28))
-        self.label_47.setMaximumSize(QSize(200, 28))
-        self.label_47.setFont(font2)
-        self.label_47.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_47, 2, 1, 1, 1)
-
-        self.label_48 = QLabel(self.frame_fluid_info)
-        self.label_48.setObjectName(u"label_48")
-        self.label_48.setMinimumSize(QSize(0, 28))
-        self.label_48.setMaximumSize(QSize(16777215, 28))
-        self.label_48.setFont(font2)
-        self.label_48.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_48, 1, 3, 1, 1)
-
-        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_18.addItem(self.horizontalSpacer_14, 0, 0, 1, 1)
-
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_18.addItem(self.horizontalSpacer_18, 0, 4, 1, 1)
-
-        self.label_49 = QLabel(self.frame_fluid_info)
-        self.label_49.setObjectName(u"label_49")
-        self.label_49.setMinimumSize(QSize(0, 28))
-        self.label_49.setMaximumSize(QSize(16777215, 28))
-        self.label_49.setFont(font2)
-        self.label_49.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
-
-        self.gridLayout_18.addWidget(self.label_49, 2, 3, 1, 1)
+        self.gridLayout_19.addWidget(self.label_18, 0, 1, 1, 1)
 
 
-        self.gridLayout_12.addWidget(self.frame_fluid_info, 1, 0, 1, 1)
-
-        self.frame_5 = QFrame(self.scrollAreaWidgetContents)
-        self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setMaximumSize(QSize(16777215, 48))
-        self.frame_5.setFrameShape(QFrame.NoFrame)
-        self.frame_5.setFrameShadow(QFrame.Raised)
-        self.gridLayout_10 = QGridLayout(self.frame_5)
-        self.gridLayout_10.setSpacing(4)
-        self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
-        self.label_2 = QLabel(self.frame_5)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setMinimumSize(QSize(340, 30))
-        self.label_2.setMaximumSize(QSize(340, 30))
-        self.label_2.setFrameShape(QFrame.Box)
-        self.label_2.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_10.addWidget(self.label_2, 0, 0, 1, 1)
-
-
-        self.gridLayout_12.addWidget(self.frame_5, 0, 0, 1, 1)
-
-        self.frame_4 = QFrame(self.scrollAreaWidgetContents)
-        self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMaximumSize(QSize(16777215, 48))
-        self.frame_4.setFrameShape(QFrame.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Raised)
-        self.gridLayout_11 = QGridLayout(self.frame_4)
-        self.gridLayout_11.setSpacing(4)
-        self.gridLayout_11.setObjectName(u"gridLayout_11")
-        self.gridLayout_11.setContentsMargins(4, 4, 4, 4)
-        self.label_3 = QLabel(self.frame_4)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(340, 30))
-        self.label_3.setMaximumSize(QSize(340, 30))
-        self.label_3.setFrameShape(QFrame.Box)
-        self.label_3.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_11.addWidget(self.label_3, 0, 0, 1, 1)
-
-
-        self.gridLayout_12.addWidget(self.frame_4, 4, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.frame_plot_buttons, 6, 0, 1, 1)
 
         self.frame_2 = QFrame(self.scrollAreaWidgetContents)
         self.frame_2.setObjectName(u"frame_2")
@@ -444,6 +299,27 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_2, 5, 0, 1, 1)
 
+        self.frame_4 = QFrame(self.scrollAreaWidgetContents)
+        self.frame_4.setObjectName(u"frame_4")
+        self.frame_4.setMaximumSize(QSize(16777215, 48))
+        self.frame_4.setFrameShape(QFrame.NoFrame)
+        self.frame_4.setFrameShadow(QFrame.Raised)
+        self.gridLayout_11 = QGridLayout(self.frame_4)
+        self.gridLayout_11.setSpacing(4)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setContentsMargins(4, 4, 4, 4)
+        self.label_3 = QLabel(self.frame_4)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setMinimumSize(QSize(340, 30))
+        self.label_3.setMaximumSize(QSize(340, 30))
+        self.label_3.setFrameShape(QFrame.Box)
+        self.label_3.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_11.addWidget(self.label_3, 0, 0, 1, 1)
+
+
+        self.gridLayout_12.addWidget(self.frame_4, 4, 0, 1, 1)
+
         self.frame_7 = QFrame(self.scrollAreaWidgetContents)
         self.frame_7.setObjectName(u"frame_7")
         self.frame_7.setFrameShape(QFrame.NoFrame)
@@ -472,7 +348,7 @@ class Ui_Dialog(object):
         self.lineEdit_porosity = QLineEdit(self.frame_7)
         self.lineEdit_porosity.setObjectName(u"lineEdit_porosity")
         self.lineEdit_porosity.setEnabled(True)
-        self.lineEdit_porosity.setMinimumSize(QSize(200, 28))
+        self.lineEdit_porosity.setMinimumSize(QSize(160, 28))
         self.lineEdit_porosity.setMaximumSize(QSize(200, 28))
         self.lineEdit_porosity.setFont(font2)
         self.lineEdit_porosity.setAlignment(Qt.AlignCenter)
@@ -508,7 +384,7 @@ class Ui_Dialog(object):
         self.lineEdit_linear_discharge_coefficient = QLineEdit(self.frame_7)
         self.lineEdit_linear_discharge_coefficient.setObjectName(u"lineEdit_linear_discharge_coefficient")
         self.lineEdit_linear_discharge_coefficient.setEnabled(True)
-        self.lineEdit_linear_discharge_coefficient.setMinimumSize(QSize(200, 28))
+        self.lineEdit_linear_discharge_coefficient.setMinimumSize(QSize(160, 28))
         self.lineEdit_linear_discharge_coefficient.setMaximumSize(QSize(200, 28))
         self.lineEdit_linear_discharge_coefficient.setFont(font2)
         self.lineEdit_linear_discharge_coefficient.setAlignment(Qt.AlignCenter)
@@ -522,7 +398,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_hole_diameter = QLineEdit(self.frame_7)
         self.lineEdit_hole_diameter.setObjectName(u"lineEdit_hole_diameter")
-        self.lineEdit_hole_diameter.setMinimumSize(QSize(200, 28))
+        self.lineEdit_hole_diameter.setMinimumSize(QSize(160, 28))
         self.lineEdit_hole_diameter.setMaximumSize(QSize(200, 28))
         self.lineEdit_hole_diameter.setFont(font2)
         self.lineEdit_hole_diameter.setAlignment(Qt.AlignCenter)
@@ -559,7 +435,7 @@ class Ui_Dialog(object):
         self.lineEdit_plate_thickness = QLineEdit(self.frame_7)
         self.lineEdit_plate_thickness.setObjectName(u"lineEdit_plate_thickness")
         self.lineEdit_plate_thickness.setEnabled(True)
-        self.lineEdit_plate_thickness.setMinimumSize(QSize(200, 28))
+        self.lineEdit_plate_thickness.setMinimumSize(QSize(160, 28))
         self.lineEdit_plate_thickness.setMaximumSize(QSize(200, 28))
         self.lineEdit_plate_thickness.setFont(font2)
         self.lineEdit_plate_thickness.setAlignment(Qt.AlignCenter)
@@ -586,60 +462,228 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_7, 3, 0, 1, 1)
 
-        self.frame_plot_buttons = QFrame(self.scrollAreaWidgetContents)
-        self.frame_plot_buttons.setObjectName(u"frame_plot_buttons")
-        self.frame_plot_buttons.setMaximumSize(QSize(16777215, 48))
-        self.frame_plot_buttons.setFrameShape(QFrame.NoFrame)
-        self.frame_plot_buttons.setFrameShadow(QFrame.Raised)
-        self.gridLayout_19 = QGridLayout(self.frame_plot_buttons)
-        self.gridLayout_19.setObjectName(u"gridLayout_19")
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.frame_fluid_info = QFrame(self.scrollAreaWidgetContents)
+        self.frame_fluid_info.setObjectName(u"frame_fluid_info")
+        self.frame_fluid_info.setMaximumSize(QSize(16777215, 160))
+        self.frame_fluid_info.setFrameShape(QFrame.NoFrame)
+        self.frame_fluid_info.setFrameShadow(QFrame.Raised)
+        self.gridLayout_18 = QGridLayout(self.frame_fluid_info)
+        self.gridLayout_18.setObjectName(u"gridLayout_18")
+        self.gridLayout_18.setContentsMargins(6, 6, 6, 6)
+        self.pushButton_get_fluid = QPushButton(self.frame_fluid_info)
+        self.pushButton_get_fluid.setObjectName(u"pushButton_get_fluid")
+        self.pushButton_get_fluid.setMinimumSize(QSize(80, 28))
+        self.pushButton_get_fluid.setMaximumSize(QSize(80, 28))
+        self.pushButton_get_fluid.setFont(font2)
+        self.pushButton_get_fluid.setAutoDefault(False)
 
-        self.gridLayout_19.addItem(self.horizontalSpacer_5, 0, 4, 1, 1)
+        self.gridLayout_18.addWidget(self.pushButton_get_fluid, 0, 3, 1, 1)
 
-        self.comboBox_plot_type = QComboBox(self.frame_plot_buttons)
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
-        self.comboBox_plot_type.setMinimumSize(QSize(160, 28))
-        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
-        self.comboBox_plot_type.setFont(font2)
+        self.label_36 = QLabel(self.frame_fluid_info)
+        self.label_36.setObjectName(u"label_36")
+        self.label_36.setMinimumSize(QSize(200, 28))
+        self.label_36.setMaximumSize(QSize(200, 28))
+        self.label_36.setFont(font2)
+        self.label_36.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_19.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
+        self.gridLayout_18.addWidget(self.label_36, 2, 1, 1, 1)
 
-        self.pushButton_plot_data = QPushButton(self.frame_plot_buttons)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(80, 28))
-        self.pushButton_plot_data.setMaximumSize(QSize(220, 28))
-        self.pushButton_plot_data.setFont(font2)
-        self.pushButton_plot_data.setAutoDefault(False)
+        self.lineEdit_selected_fluid = QLineEdit(self.frame_fluid_info)
+        self.lineEdit_selected_fluid.setObjectName(u"lineEdit_selected_fluid")
+        self.lineEdit_selected_fluid.setEnabled(False)
+        self.lineEdit_selected_fluid.setMinimumSize(QSize(160, 28))
+        self.lineEdit_selected_fluid.setMaximumSize(QSize(200, 28))
+        self.lineEdit_selected_fluid.setFont(font2)
+        self.lineEdit_selected_fluid.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selected_fluid.setStyleSheet(u"")
+        self.lineEdit_selected_fluid.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_19.addWidget(self.pushButton_plot_data, 0, 3, 1, 1)
+        self.gridLayout_18.addWidget(self.lineEdit_selected_fluid, 0, 2, 1, 1)
 
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_speed_of_sound = QLineEdit(self.frame_fluid_info)
+        self.lineEdit_speed_of_sound.setObjectName(u"lineEdit_speed_of_sound")
+        self.lineEdit_speed_of_sound.setEnabled(False)
+        self.lineEdit_speed_of_sound.setMinimumSize(QSize(160, 28))
+        self.lineEdit_speed_of_sound.setMaximumSize(QSize(200, 28))
+        self.lineEdit_speed_of_sound.setFont(font2)
+        self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_speed_of_sound.setStyleSheet(u"")
+        self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_19.addItem(self.horizontalSpacer_9, 0, 0, 1, 1)
+        self.gridLayout_18.addWidget(self.lineEdit_speed_of_sound, 3, 2, 1, 1)
 
-        self.label_18 = QLabel(self.frame_plot_buttons)
-        self.label_18.setObjectName(u"label_18")
-        self.label_18.setMinimumSize(QSize(200, 0))
-        self.label_18.setMaximumSize(QSize(200, 16777215))
-        self.label_18.setFont(font2)
-        self.label_18.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.lineEdit_fluid_density = QLineEdit(self.frame_fluid_info)
+        self.lineEdit_fluid_density.setObjectName(u"lineEdit_fluid_density")
+        self.lineEdit_fluid_density.setEnabled(False)
+        self.lineEdit_fluid_density.setMinimumSize(QSize(160, 28))
+        self.lineEdit_fluid_density.setMaximumSize(QSize(200, 28))
+        self.lineEdit_fluid_density.setFont(font2)
+        self.lineEdit_fluid_density.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_fluid_density.setStyleSheet(u"")
+        self.lineEdit_fluid_density.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_19.addWidget(self.label_18, 0, 1, 1, 1)
+        self.gridLayout_18.addWidget(self.lineEdit_fluid_density, 2, 2, 1, 1)
+
+        self.label_31 = QLabel(self.frame_fluid_info)
+        self.label_31.setObjectName(u"label_31")
+        self.label_31.setMinimumSize(QSize(200, 28))
+        self.label_31.setMaximumSize(QSize(200, 28))
+        self.label_31.setFont(font2)
+        self.label_31.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_31, 0, 1, 1, 1)
+
+        self.label_48 = QLabel(self.frame_fluid_info)
+        self.label_48.setObjectName(u"label_48")
+        self.label_48.setMinimumSize(QSize(0, 28))
+        self.label_48.setMaximumSize(QSize(16777215, 28))
+        self.label_48.setFont(font2)
+        self.label_48.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_48, 2, 3, 1, 1)
+
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_18.addItem(self.horizontalSpacer_18, 0, 4, 1, 1)
+
+        self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_18.addItem(self.horizontalSpacer_14, 0, 0, 1, 1)
+
+        self.label_47 = QLabel(self.frame_fluid_info)
+        self.label_47.setObjectName(u"label_47")
+        self.label_47.setMinimumSize(QSize(200, 28))
+        self.label_47.setMaximumSize(QSize(200, 28))
+        self.label_47.setFont(font2)
+        self.label_47.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_47, 3, 1, 1, 1)
+
+        self.label_49 = QLabel(self.frame_fluid_info)
+        self.label_49.setObjectName(u"label_49")
+        self.label_49.setMinimumSize(QSize(0, 28))
+        self.label_49.setMaximumSize(QSize(16777215, 28))
+        self.label_49.setFont(font2)
+        self.label_49.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_49, 3, 3, 1, 1)
+
+        self.label_37 = QLabel(self.frame_fluid_info)
+        self.label_37.setObjectName(u"label_37")
+        self.label_37.setMinimumSize(QSize(200, 28))
+        self.label_37.setMaximumSize(QSize(200, 28))
+        self.label_37.setFont(font2)
+        self.label_37.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_18.addWidget(self.label_37, 1, 1, 1, 1)
+
+        self.lineEdit_fluid_identifier = QLineEdit(self.frame_fluid_info)
+        self.lineEdit_fluid_identifier.setObjectName(u"lineEdit_fluid_identifier")
+        self.lineEdit_fluid_identifier.setEnabled(False)
+        self.lineEdit_fluid_identifier.setMinimumSize(QSize(160, 28))
+        self.lineEdit_fluid_identifier.setMaximumSize(QSize(200, 28))
+        self.lineEdit_fluid_identifier.setFont(font2)
+        self.lineEdit_fluid_identifier.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_fluid_identifier.setStyleSheet(u"")
+        self.lineEdit_fluid_identifier.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_18.addWidget(self.lineEdit_fluid_identifier, 1, 2, 1, 1)
 
 
-        self.gridLayout_12.addWidget(self.frame_plot_buttons, 6, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.frame_fluid_info, 1, 0, 1, 1)
+
+        self.frame_5 = QFrame(self.scrollAreaWidgetContents)
+        self.frame_5.setObjectName(u"frame_5")
+        self.frame_5.setMaximumSize(QSize(16777215, 48))
+        self.frame_5.setFrameShape(QFrame.NoFrame)
+        self.frame_5.setFrameShadow(QFrame.Raised)
+        self.gridLayout_10 = QGridLayout(self.frame_5)
+        self.gridLayout_10.setSpacing(4)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
+        self.label_2 = QLabel(self.frame_5)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(340, 30))
+        self.label_2.setMaximumSize(QSize(340, 30))
+        self.label_2.setFrameShape(QFrame.Box)
+        self.label_2.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.label_2, 0, 0, 1, 1)
+
+
+        self.gridLayout_12.addWidget(self.frame_5, 0, 0, 1, 1)
 
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_6.addWidget(self.scrollArea, 1, 0, 1, 1)
 
-        self.tabWidget_perforated_plate_models.addTab(self.tab, "")
+        self.tabWidget_perforated_plate_models.addTab(self.tab_circular_holes_setup, "")
 
         self.gridLayout_5.addWidget(self.tabWidget_perforated_plate_models, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_setup, "")
+        self.tab_edit = QWidget()
+        self.tab_edit.setObjectName(u"tab_edit")
+        self.gridLayout_13 = QGridLayout(self.tab_edit)
+        self.gridLayout_13.setObjectName(u"gridLayout_13")
+        self.edit_tabWidget = QTabWidget(self.tab_edit)
+        self.edit_tabWidget.setObjectName(u"edit_tabWidget")
+        self.tab_circular_holes_edit = QWidget()
+        self.tab_circular_holes_edit.setObjectName(u"tab_circular_holes_edit")
+        self.gridLayout_14 = QGridLayout(self.tab_circular_holes_edit)
+        self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.edit_tableWidget = QTableWidget(self.tab_circular_holes_edit)
+        if (self.edit_tableWidget.rowCount() < 13):
+            self.edit_tableWidget.setRowCount(13)
+        __qtablewidgetitem = QTableWidgetItem()
+        __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(4, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(5, __qtablewidgetitem5)
+        __qtablewidgetitem6 = QTableWidgetItem()
+        __qtablewidgetitem6.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(6, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        __qtablewidgetitem7.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(7, __qtablewidgetitem7)
+        __qtablewidgetitem8 = QTableWidgetItem()
+        __qtablewidgetitem8.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(8, __qtablewidgetitem8)
+        __qtablewidgetitem9 = QTableWidgetItem()
+        __qtablewidgetitem9.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(9, __qtablewidgetitem9)
+        __qtablewidgetitem10 = QTableWidgetItem()
+        __qtablewidgetitem10.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(10, __qtablewidgetitem10)
+        __qtablewidgetitem11 = QTableWidgetItem()
+        __qtablewidgetitem11.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(11, __qtablewidgetitem11)
+        __qtablewidgetitem12 = QTableWidgetItem()
+        __qtablewidgetitem12.setTextAlignment(Qt.AlignCenter);
+        self.edit_tableWidget.setVerticalHeaderItem(12, __qtablewidgetitem12)
+        self.edit_tableWidget.setObjectName(u"edit_tableWidget")
+        self.edit_tableWidget.horizontalHeader().setVisible(False)
+
+        self.gridLayout_14.addWidget(self.edit_tableWidget, 0, 0, 1, 1)
+
+        self.edit_tabWidget.addTab(self.tab_circular_holes_edit, "")
+
+        self.gridLayout_13.addWidget(self.edit_tabWidget, 0, 0, 1, 1)
+
+        self.tabWidget_main.addTab(self.tab_edit, "")
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_16 = QGridLayout(self.tab_list)
@@ -647,7 +691,6 @@ class Ui_Dialog(object):
         self.gridLayout_16.setContentsMargins(9, -1, -1, -1)
         self.treeWidget_perforated_plate_model = QTreeWidget(self.tab_list)
         __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
         self.treeWidget_perforated_plate_model.setHeaderItem(__qtreewidgetitem)
@@ -688,6 +731,7 @@ class Ui_Dialog(object):
         font5.setItalic(False)
         self.pushButton_reset.setFont(font5)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -697,6 +741,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font5)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -742,9 +787,9 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.comboBox_selection_type.setCurrentIndex(0)
         self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_perforated_plate_models.setCurrentIndex(0)
+        self.edit_tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -753,25 +798,12 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Perforated plate model setup", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Perforated plate model setup", None))
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Selection type:", None))
-        self.comboBox_selection_type.setItemText(0, QCoreApplication.translate("Dialog", u"Inside surfaces", None))
-        self.comboBox_selection_type.setItemText(1, QCoreApplication.translate("Dialog", u"Outside surfaces", None))
+        self.label_selection_A.setText(QCoreApplication.translate("Dialog", u"Selected surfaces:", None))
+        self.lineEdit_selection_id.setText("")
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u"Acoustic impedance", None))
 
-        self.lineEdit_selection_id_A.setText("")
-        self.label_selection_A.setText(QCoreApplication.translate("Dialog", u"Selected surfaces A:", None))
-        self.label_selection_B.setText(QCoreApplication.translate("Dialog", u"Selected surfaces B:", None))
-        self.lineEdit_selection_id_B.setText("")
-        self.pushButton_get_fluid.setText(QCoreApplication.translate("Dialog", u"Get fluid", None))
-        self.label_36.setText(QCoreApplication.translate("Dialog", u"Fluid density", None))
-        self.lineEdit_fluid_density.setText("")
-        self.label_31.setText(QCoreApplication.translate("Dialog", u"Selected fluid:", None))
-        self.lineEdit_selected_fluid.setText("")
-        self.lineEdit_speed_of_sound.setText("")
-        self.label_47.setText(QCoreApplication.translate("Dialog", u"Speed of sound:", None))
-        self.label_48.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3]", None))
-        self.label_49.setText(QCoreApplication.translate("Dialog", u"[m/s]", None))
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"General options for perforate plate model", None))
-        self.label_3.setText(QCoreApplication.translate("Dialog", u"Advanced options for perforated plate model", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Dialog", u"Plot data", None))
+        self.label_18.setText(QCoreApplication.translate("Dialog", u"Plot selector:", None))
         self.label_23.setText("")
         self.pushButton_load_path.setText("")
 #if QT_CONFIG(tooltip)
@@ -795,6 +827,7 @@ class Ui_Dialog(object):
         self.label_11.setText(QCoreApplication.translate("Dialog", u"Non-linear discharge coefficient:", None))
         self.label_15.setText(QCoreApplication.translate("Dialog", u"Include effects:", None))
         self.label_17.setText(QCoreApplication.translate("Dialog", u"User-defined transfer impedance:", None))
+        self.label_3.setText(QCoreApplication.translate("Dialog", u"Advanced options for perforated plate model", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Hole diameter:", None))
         self.label_20.setText(QCoreApplication.translate("Dialog", u"[--]", None))
         self.lineEdit_porosity.setText(QCoreApplication.translate("Dialog", u"0.23", None))
@@ -811,15 +844,50 @@ class Ui_Dialog(object):
         self.label_22.setText(QCoreApplication.translate("Dialog", u"[m]", None))
         self.lineEdit_plate_thickness.setText(QCoreApplication.translate("Dialog", u"0.003", None))
         self.pushButton_clean_inputs.setText("")
-        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u"Acoustic impedance", None))
-
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Dialog", u"Plot data", None))
-        self.label_18.setText(QCoreApplication.translate("Dialog", u"Plot selector:", None))
-        self.tabWidget_perforated_plate_models.setTabText(self.tabWidget_perforated_plate_models.indexOf(self.tab), QCoreApplication.translate("Dialog", u"Circular holes", None))
+        self.pushButton_get_fluid.setText(QCoreApplication.translate("Dialog", u"Get fluid", None))
+        self.label_36.setText(QCoreApplication.translate("Dialog", u"Fluid density", None))
+        self.lineEdit_selected_fluid.setText("")
+        self.lineEdit_speed_of_sound.setText("")
+        self.lineEdit_fluid_density.setText("")
+        self.label_31.setText(QCoreApplication.translate("Dialog", u"Selected fluid:", None))
+        self.label_48.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3]", None))
+        self.label_47.setText(QCoreApplication.translate("Dialog", u"Speed of sound:", None))
+        self.label_49.setText(QCoreApplication.translate("Dialog", u"[m/s]", None))
+        self.label_37.setText(QCoreApplication.translate("Dialog", u"Fluid identifier:", None))
+        self.lineEdit_fluid_identifier.setText("")
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"General options for perforate plate model", None))
+        self.tabWidget_perforated_plate_models.setTabText(self.tabWidget_perforated_plate_models.indexOf(self.tab_circular_holes_setup), QCoreApplication.translate("Dialog", u"Circular holes", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
+        ___qtablewidgetitem = self.edit_tableWidget.verticalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Perforated Plate ID", None));
+        ___qtablewidgetitem1 = self.edit_tableWidget.verticalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Fluid", None));
+        ___qtablewidgetitem2 = self.edit_tableWidget.verticalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Fuid identifier", None));
+        ___qtablewidgetitem3 = self.edit_tableWidget.verticalHeaderItem(3)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Fluid density", None));
+        ___qtablewidgetitem4 = self.edit_tableWidget.verticalHeaderItem(4)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Speed of sound", None));
+        ___qtablewidgetitem5 = self.edit_tableWidget.verticalHeaderItem(5)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Plate thickness", None));
+        ___qtablewidgetitem6 = self.edit_tableWidget.verticalHeaderItem(6)
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Hole diameter", None));
+        ___qtablewidgetitem7 = self.edit_tableWidget.verticalHeaderItem(7)
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Porosity", None));
+        ___qtablewidgetitem8 = self.edit_tableWidget.verticalHeaderItem(8)
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"Linear discharge coefficient", None));
+        ___qtablewidgetitem9 = self.edit_tableWidget.verticalHeaderItem(9)
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"Include effects", None));
+        ___qtablewidgetitem10 = self.edit_tableWidget.verticalHeaderItem(10)
+        ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Non-linear discharge coefficient", None));
+        ___qtablewidgetitem11 = self.edit_tableWidget.verticalHeaderItem(11)
+        ___qtablewidgetitem11.setText(QCoreApplication.translate("Dialog", u"Non-linear correction factor", None));
+        ___qtablewidgetitem12 = self.edit_tableWidget.verticalHeaderItem(12)
+        ___qtablewidgetitem12.setText(QCoreApplication.translate("Dialog", u"User-defined transfer impedance file", None));
+        self.edit_tabWidget.setTabText(self.edit_tabWidget.indexOf(self.tab_circular_holes_edit), QCoreApplication.translate("Dialog", u"Circular holes", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_edit), QCoreApplication.translate("Dialog", u"Edit", None))
         ___qtreewidgetitem = self.treeWidget_perforated_plate_model.headerItem()
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Perforated plate parameters", None));
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Coupling type", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Model ID", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surfaces", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_perforated_plate_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
@@ -845,38 +913,22 @@ class PerforatedPlateModelInputs_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
-                                        - label_16: QLabel
-                                        - comboBox_selection_type: QComboBox
-                                        - lineEdit_selection_id_A: QLineEdit
                                         - label_selection_A: QLabel
-                                        - label_selection_B: QLabel
-                                        - lineEdit_selection_id_B: QLineEdit
+                                        - lineEdit_selection_id: QLineEdit
                             - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget
                                     - (Layout): QGridLayout
                                             - tabWidget_perforated_plate_models: QTabWidget
-                                                - tab: QWidget
+                                                - tab_circular_holes_setup: QWidget
                                                     - (Layout): QGridLayout
                                                             - scrollArea: QScrollArea
                                                                 - scrollAreaWidgetContents: QWidget
                                                                     - (Layout): QGridLayout
-                                                                            - frame_fluid_info: QFrame
+                                                                            - frame_plot_buttons: QFrame
                                                                                 - (Layout): QGridLayout
-                                                                                        - pushButton_get_fluid: QPushButton
-                                                                                        - label_36: QLabel
-                                                                                        - lineEdit_fluid_density: QLineEdit
-                                                                                        - label_31: QLabel
-                                                                                        - lineEdit_selected_fluid: QLineEdit
-                                                                                        - lineEdit_speed_of_sound: QLineEdit
-                                                                                        - label_47: QLabel
-                                                                                        - label_48: QLabel
-                                                                                        - label_49: QLabel
-                                                                            - frame_5: QFrame
-                                                                                - (Layout): QGridLayout
-                                                                                        - label_2: QLabel
-                                                                            - frame_4: QFrame
-                                                                                - (Layout): QGridLayout
-                                                                                        - label_3: QLabel
+                                                                                        - comboBox_plot_type: QComboBox
+                                                                                        - pushButton_plot_data: QPushButton
+                                                                                        - label_18: QLabel
                                                                             - frame_2: QFrame
                                                                                 - (Layout): QGridLayout
                                                                                         - label_23: QLabel
@@ -889,6 +941,9 @@ class PerforatedPlateModelInputs_UI(QDialog, Ui_Dialog):
                                                                                         - label_11: QLabel
                                                                                         - label_15: QLabel
                                                                                         - label_17: QLabel
+                                                                            - frame_4: QFrame
+                                                                                - (Layout): QGridLayout
+                                                                                        - label_3: QLabel
                                                                             - frame_7: QFrame
                                                                                 - (Layout): QGridLayout
                                                                                         - label_8: QLabel
@@ -904,11 +959,28 @@ class PerforatedPlateModelInputs_UI(QDialog, Ui_Dialog):
                                                                                         - label_22: QLabel
                                                                                         - lineEdit_plate_thickness: QLineEdit
                                                                                         - pushButton_clean_inputs: QPushButton
-                                                                            - frame_plot_buttons: QFrame
+                                                                            - frame_fluid_info: QFrame
                                                                                 - (Layout): QGridLayout
-                                                                                        - comboBox_plot_type: QComboBox
-                                                                                        - pushButton_plot_data: QPushButton
-                                                                                        - label_18: QLabel
+                                                                                        - pushButton_get_fluid: QPushButton
+                                                                                        - label_36: QLabel
+                                                                                        - lineEdit_selected_fluid: QLineEdit
+                                                                                        - lineEdit_speed_of_sound: QLineEdit
+                                                                                        - lineEdit_fluid_density: QLineEdit
+                                                                                        - label_31: QLabel
+                                                                                        - label_48: QLabel
+                                                                                        - label_47: QLabel
+                                                                                        - label_49: QLabel
+                                                                                        - label_37: QLabel
+                                                                                        - lineEdit_fluid_identifier: QLineEdit
+                                                                            - frame_5: QFrame
+                                                                                - (Layout): QGridLayout
+                                                                                        - label_2: QLabel
+                                - tab_edit: QWidget
+                                    - (Layout): QGridLayout
+                                            - edit_tabWidget: QTabWidget
+                                                - tab_circular_holes_edit: QWidget
+                                                    - (Layout): QGridLayout
+                                                            - edit_tableWidget: QTableWidget
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - treeWidget_perforated_plate_model: QTreeWidget

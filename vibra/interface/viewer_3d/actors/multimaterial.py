@@ -26,6 +26,7 @@ from vtkmodules.vtkRenderingCore import (
 
 from vibra import TEXTURE_DIR, app
 from vibra.engine.mesher.mesh import Mesh
+from vibra.utils.interface_utils import ColorMode
 from vibra.utils.vtk_utils import fill_array, read_texture
 
 
@@ -52,7 +53,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_textures()
         self._create_surfaces()
 
-        self._create_selection_actor()
+        self._create_default_actor()
         self._create_empty_actor()
         self._create_material_volume_actor()
         self._create_material_wall_actor()
@@ -60,17 +61,27 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self._create_porous_actor()
         self._create_perforated_actor()
 
+        # The bounds calculated for this actor are not correct
+        # We also cannot correct it, so we have to disable it
+        self.UseBoundsOff()
         self.clear_colors()
 
     def clear_colors(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
+        color_mode = app().main_window.visualization_filter.color_mode
+
+        if color_mode == ColorMode.EMPTY:
+            self.reload_composition()
+            return self.set_color(color_names.WHITE)
+
         color_to_surfaces = defaultdict(list)
         self.reload_composition()
-
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
-        for surface, volumes in mesh.volumes_from_surface.items():
+        for surface in surfaces:
+            volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
@@ -85,15 +96,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             elif material is not None:
                 color = Color(*material.color)
-                _, saturation, _ = color.to_hsv()
-                if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(80)
 
             elif fluid is not None:
                 color = Color(*fluid.color)
-                _, saturation, _ = color.to_hsv()
-                if saturation != 0:
-                    color = color.with_brightness(100).with_saturation(40)
 
             else:
                 color = color_names.WHITE
@@ -106,17 +111,29 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def reload_composition(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
-        composition_to_surfaces = defaultdict(list)
+        color_mode = app().main_window.visualization_filter.color_mode
+        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
+        if color_mode == ColorMode.EMPTY:
+            self.clear_composition()
+            self.default_actor.GetProperty().SetOpacity(1)
+            hidden_surfaces = app().main_window.hidden_surfaces
+            visible_surfaces = set(surfaces) - hidden_surfaces
+            self.configure_composition("default", visible_surfaces)
+            return
+
+        self.default_actor.GetProperty().SetOpacity(1e-12)
+        composition_to_surfaces = defaultdict(list)
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
 
-        for surface, volumes in mesh.volumes_from_surface.items():
+        for surface in surfaces:
+            volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             if surface in app().main_window.hidden_surfaces:
                 continue
             else:
-                composition_to_surfaces["selection"].append(surface)
+                composition_to_surfaces["default"].append(surface)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material_wall = properties._get_property("material", surface=surface)
@@ -155,6 +172,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         array = vtk_to_numpy(self.cell_colors)
         if array.size == 0:
             return
+
+        # Ensure cell ids are valid, ignore otherwise
+        cells = np.array(cells)
+        cells = cells[(0 <= cells) & (cells < array.size)]
 
         array[cells] = color_fmt
         self.data.Modified()
@@ -204,8 +225,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return np.where(mask)[0]
 
     def _create_surfaces(self):
-        nodes_per_element = len(self.mesh.faces_connectivity[0, 4:])
-
         combined_surfaces = vtkAppendPolyData()
         for surface, elements in self.mesh.elements_from_surface.items():
             if surface in app().main_window.hidden_surfaces:
@@ -218,19 +237,13 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             points = vtkPoints()
             points.SetData(numpy_to_vtk(coords))
-
-            # The format here is [n, p0, p1, ..., pn, n, p0, p1, ..., pn]
-            # Therefore I add a "n" column at the start and then flatten it
-            cells = vtkCellArray()
-            helper = np.insert(connect, 0, nodes_per_element, axis=1)
-            vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
-            cells.SetCells(len(connect), vtk_id_array)
+            cells = self._create_cells(connect)
 
             data = vtkPolyData()
             data.SetPoints(points)
             data.SetPolys(cells)
 
-            volume = self.mesh.volumes_from_surface[surface][0]
+            volumes = self.mesh.volumes_from_surface.get(surface)
 
             # Every surface have its own plane defining
             # how to project the texture coordinates on it
@@ -260,7 +273,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data = add_tcoords.GetOutput()
 
             fill_array(data, "surface_indexes", surface)
-            fill_array(data, "volume_indexes", volume)
+            if isinstance(volumes, np.ndarray | list) and (len(volumes) != 0):
+                fill_array(data, "volume_indexes", volumes[0])
 
             combined_surfaces.AddInputData(data)
 
@@ -294,11 +308,35 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         return coords[old_indexes], mapping[connectivity]
 
+    def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
+        nodes_per_element = len(connectivity[0, :])
+        triangulated: np.ndarray
+
+        if nodes_per_element in (3, 6):
+            triangulated = connectivity[:, :3]
+
+        elif nodes_per_element in (4, 8):
+            lower = connectivity[:, [0, 1, 3]]
+            upper = connectivity[:, [1, 2, 3]]
+            triangulated = np.append(lower, upper, axis=0)
+
+        else:
+            raise NotImplementedError(f"Elements with {nodes_per_element} nodes are not supported")
+
+        # Add a "3" column at the start, as expected by VTK
+        helper = np.insert(triangulated, 0, 3, axis=1)
+        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+
+        cells = vtkCellArray()
+        cells.SetCells(len(triangulated), vtk_id_array)
+
+        return cells
+
     def _create_empty_actor(self):
         self.empty_actor = self._new_actor_extraction("empty")
         self.empty_actor.SetTexture(self.chess_texture)
 
-    def _create_selection_actor(self):
+    def _create_default_actor(self):
         """
         This is the only pickable actor that extracts all cells.
 
@@ -307,9 +345,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         The selection actor has opacity 0 so it is "rendered" but is not visible.
         """
-        self.ghost_actor = self._new_actor_extraction("selection")
-        self.ghost_actor.GetProperty().SetOpacity(1e-12)
-        self.ghost_actor.PickableOn()
+        self.default_actor = self._new_actor_extraction("default")
+        self.default_actor.GetProperty().SetOpacity(1e-12)
+        self.default_actor.PickableOn()
 
     def _create_material_volume_actor(self):
         self.material_actor = self._new_actor_extraction("material_volume")

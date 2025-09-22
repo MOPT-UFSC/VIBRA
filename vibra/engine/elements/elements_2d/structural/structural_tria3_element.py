@@ -211,11 +211,11 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class STRUCT_TRIANGULAR_3(Element2D):
+class STRUCT_TRIANGLE_3(Element2D):
 
     NODES_PER_ELEMENT = 3
-    DOFS_PER_NODE = 6
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 6
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model: "Model"):
         self.model = model
@@ -233,7 +233,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.connectivity)
         #
-        self.local_dofs = np.arange(self.DOFS_PER_NODE, dtype=int)
+        self.local_dof = np.arange(self.DOF_PER_NODE, dtype=int)
 
     def define_integration_points_for_bending(self):
         """ This method computes the integration points for the bending effects. """
@@ -321,8 +321,8 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
         """
 
-        Ke = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
-        Me = np.zeros([self.DOFS_PER_ELEMENT, self.DOFS_PER_ELEMENT], dtype=float)
+        Ke = np.zeros([self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT], dtype=float)
+        Me = np.zeros([self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT], dtype=float)
 
         ie = self.connectivity[el_index, 1:]
         nodal_coords = self.nodal_coordinates[ie, 1:4]
@@ -379,14 +379,14 @@ class STRUCT_TRIANGULAR_3(Element2D):
         #               [dphi_t[0, 2],            0, dphi_t[1, 2]],
         #               [           0, dphi_t[1, 2], dphi_t[0, 2]]], dtype=float).T
 
-        # B = np.zeros((self.nint_memb, self.DOFS_PER_NODE), dtype=float)
+        # B = np.zeros((self.nint_memb, self.DOF_PER_NODE), dtype=float)
         # B[0, 0::2] = B[2, 1::2] = dphi_t[0, :]
         # B[1, 1::2] = B[2, 0::2] = dphi_t[1, :]
 
         # Element membrane stiffness matrix
         K_memb = 0.5 * detJAC * t * B.T @ Dm @ B
 
-        N = np.zeros((self.nint_memb, 2, self.DOFS_PER_NODE))
+        N = np.zeros((self.nint_memb, 2, self.DOF_PER_NODE))
         N[:, 0, 0::2] = self.phi_memb
         N[:, 1, 1::2] = self.phi_memb
 
@@ -410,7 +410,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
         Ke[np.ix_(index, index)] = K_memb
         Me[np.ix_(index, index)] = M_memb
 
-        # Indexing drilling dofs
+        # Indexing drilling dof
         index = [5, 11, 17]
         Ke[np.ix_(index, index)] = 1e-5  # drill
         Me[np.ix_(index, index)] = 1e-18
@@ -426,8 +426,8 @@ class STRUCT_TRIANGULAR_3(Element2D):
         # detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         # dphi_t = invJAC @ self.dphi
         # #
-        # B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)
-        # N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
+        # B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
+        # N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
         # #
         # B[:, 0, 0::3] = dphi_t[:, 0, :]
         # B[:, 1, 1::3] = dphi_t[:, 1, :]
@@ -456,37 +456,37 @@ class STRUCT_TRIANGULAR_3(Element2D):
         self.connectivity = self.connectivity[:, [0, 4, 5, 6]]
 
     def generate_ind_rows_cols(self):
-        """This method processess the dofs indices (rows and columns) for assembly"""
+        """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
 
-        ind_dofs = (
-            np.array([  dofs * self.connectivity[:, 1] + 0,
-                        dofs * self.connectivity[:, 1] + 1,
-                        dofs * self.connectivity[:, 1] + 2,
-                        dofs * self.connectivity[:, 1] + 3,
-                        dofs * self.connectivity[:, 1] + 4,
-                        dofs * self.connectivity[:, 1] + 5,
-                        dofs * self.connectivity[:, 2] + 0,
-                        dofs * self.connectivity[:, 2] + 1,
-                        dofs * self.connectivity[:, 2] + 2,
-                        dofs * self.connectivity[:, 2] + 3,
-                        dofs * self.connectivity[:, 2] + 4,
-                        dofs * self.connectivity[:, 2] + 5,
-                        dofs * self.connectivity[:, 3] + 0,
-                        dofs * self.connectivity[:, 3] + 1,
-                        dofs * self.connectivity[:, 3] + 2,
-                        dofs * self.connectivity[:, 3] + 3,
-                        dofs * self.connectivity[:, 3] + 4,
-                        dofs * self.connectivity[:, 3] + 5  ], dtype=int)).T
+        ind_dof = (
+            np.array([  dof * self.connectivity[:, 1] + 0,
+                        dof * self.connectivity[:, 1] + 1,
+                        dof * self.connectivity[:, 1] + 2,
+                        dof * self.connectivity[:, 1] + 3,
+                        dof * self.connectivity[:, 1] + 4,
+                        dof * self.connectivity[:, 1] + 5,
+                        dof * self.connectivity[:, 2] + 0,
+                        dof * self.connectivity[:, 2] + 1,
+                        dof * self.connectivity[:, 2] + 2,
+                        dof * self.connectivity[:, 2] + 3,
+                        dof * self.connectivity[:, 2] + 4,
+                        dof * self.connectivity[:, 2] + 5,
+                        dof * self.connectivity[:, 3] + 0,
+                        dof * self.connectivity[:, 3] + 1,
+                        dof * self.connectivity[:, 3] + 2,
+                        dof * self.connectivity[:, 3] + 3,
+                        dof * self.connectivity[:, 3] + 4,
+                        dof * self.connectivity[:, 3] + 5  ], dtype=int)).T
 
-        vect_indices = ind_dofs.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dofs, (1, edofs))).flatten()
+        vect_indices = ind_dof.flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, (1, edof))).flatten()
 
-        # linhas = np.tile(vect_indices, (edofs, 1)).T
-        # colunas = (np.tile(ind_dofs, (1, edofs))).reshape(-1, self.DOFS_PER_ELEMENT)
+        # linhas = np.tile(vect_indices, (edof, 1)).T
+        # colunas = (np.tile(ind_dof, (1, edof))).reshape(-1, self.DOF_PER_ELEMENT)
 
         # np.savetxt("linhas.dat", linhas, delimiter=",", fmt="%i")
         # np.savetxt("colunas.dat", colunas, delimiter=",", fmt="%i")
@@ -505,7 +505,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
         normal_pressure_load = kwargs.get("normal_pressure_load", None)
         normal_unit_vector = kwargs.get("normal_unit_vector", None)
 
-        loads = np.zeros(int(self.DOFS_PER_ELEMENT / 2), dtype=float)
+        loads = np.zeros(int(self.DOF_PER_ELEMENT / 2), dtype=float)
 
         # Local coordinate system definition
         node_ids = self.connectivity[element_id, 1:]
@@ -615,7 +615,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
 
         force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
-        F_elem = np.zeros(self.DOFS_PER_ELEMENT, dtype=float)
+        F_elem = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
         F_elem[force_indexes] = loads
 
         return F_elem
@@ -671,12 +671,12 @@ class STRUCT_TRIANGULAR_3(Element2D):
         force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         number_of_frequencies = distributed_load.shape[1]
-        F_elem = np.zeros((self.DOFS_PER_ELEMENT, number_of_frequencies), dtype=complex)
+        F_elem = np.zeros((self.DOF_PER_ELEMENT, number_of_frequencies), dtype=complex)
         F_elem[force_indexes, :] = loads
 
-        g_dofs = self.DOFS_PER_NODE * connect.reshape(-1, 1) + self.local_dofs
+        g_dof = self.DOF_PER_NODE * connect.reshape(-1, 1) + self.local_dof
 
-        return g_dofs.flatten(), F_elem
+        return g_dof.flatten(), F_elem
 
     def process_forces_for_distributed_load_over_area(self, connect: np.ndarray, distributed_load: np.ndarray):
 
@@ -706,12 +706,12 @@ class STRUCT_TRIANGULAR_3(Element2D):
         force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         number_of_frequencies = distributed_load.shape[1]
-        F_elem = np.zeros((self.DOFS_PER_ELEMENT, number_of_frequencies), dtype=complex)
+        F_elem = np.zeros((self.DOF_PER_ELEMENT, number_of_frequencies), dtype=complex)
         F_elem[force_indexes, :] = loads
 
-        g_dofs = self.DOFS_PER_NODE * connect.reshape(-1, 1) + self.local_dofs
+        g_dof = self.DOF_PER_NODE * connect.reshape(-1, 1) + self.local_dof
 
-        return g_dofs.flatten(), F_elem
+        return g_dof.flatten(), F_elem
 
     def process_forces_for_normal_pressure_load(self, connect: np.ndarray, normal_pressure_load: np.ndarray):
 
@@ -720,7 +720,7 @@ class STRUCT_TRIANGULAR_3(Element2D):
         normal_unit_vector = self.model.mesh.get_element_face_normal(connect)
 
         number_of_frequencies = normal_pressure_load.shape[1]
-        F_elem = np.zeros((self.DOFS_PER_ELEMENT, number_of_frequencies), dtype=complex)
+        F_elem = np.zeros((self.DOF_PER_ELEMENT, number_of_frequencies), dtype=complex)
 
         if normal_unit_vector is None:
             return F_elem
@@ -749,9 +749,9 @@ class STRUCT_TRIANGULAR_3(Element2D):
         force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
         F_elem[force_indexes, :] = loads
 
-        g_dofs = self.DOFS_PER_NODE * connect.reshape(-1, 1) + self.local_dofs
+        g_dof = self.DOF_PER_NODE * connect.reshape(-1, 1) + self.local_dof
 
-        return g_dofs.flatten(), F_elem
+        return g_dof.flatten(), F_elem
 
 
 def elementary_matrices(nodal_coords: np.ndarray):
@@ -879,7 +879,7 @@ def elementary_matrices(nodal_coords: np.ndarray):
     # Element membrane mass matrix
     M_memb = 0.5 * weight_memb * detJAC * rho * t * NTN.sum(axis=0)
 
-    # N = np.zeros((self.nint_memb, 2, self.DOFS_PER_ELEMENT), dtype=float)
+    # N = np.zeros((self.nint_memb, 2, self.DOF_PER_ELEMENT), dtype=float)
     # N[:, 0, 0::6] = self.phi_memb 
     # N[:, 1, 1::6] = self.phi_memb
 

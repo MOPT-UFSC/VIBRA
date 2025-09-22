@@ -336,6 +336,9 @@ class LoadProject:
 
                     if key == "volume_properties":
                         self.properties._set_property(property, prop_data, volume=id)
+                    
+                    elif key == "group_properties":
+                        self.properties._set_property(property, prop_data, group=id)
 
                     elif key == "surface_properties":
                         self.properties._set_property(property, prop_data, surface=id)
@@ -402,16 +405,18 @@ class LoadProject:
 
             elif key == "modal_structural" and project.structural_modal_solver is not None:
                 project.structural_modal_solver.natural_frequencies = data.get("natural_frequencies", np.array([]))
-                project.structural_modal_solver.solution = data.get("solution")
-                project.structural_modal_solver.displacement_dofs = data["displacement_dofs"]
+                project.structural_modal_solver.displacement_dof = data.get("displacement_dof")
+                if isinstance(data.get("displacement_dof"), np.ndarray):
+                    project.structural_modal_solver.solution = data.get("solution")
 
             elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
                 project.acoustic_harmonic_solver.solution = data.get("solution")
                 app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
-            elif key == "harmonic_structural" and project.structural_harmonic_solver is not None:
-                project.structural_harmonic_solver.solution = data.get("solution")
-                project.structural_harmonic_solver.displacement_dofs = data["displacement_dofs"]
+            elif key == "harmonic_structural" and project.structural_harmonic_solver is not None and project.structural_harmonic_solver.project_file is None:
+                project.structural_harmonic_solver.displacement_dof = data.get("displacement_dof")
+                if isinstance(data.get("displacement_dof"), np.ndarray):
+                    project.structural_harmonic_solver.solution = data.get("solution")
 
             else:
                 continue
@@ -419,21 +424,28 @@ class LoadProject:
         logging.info("Updating analysis render... [85/100]")
 
         acoustic_harmonic_solver = project.acoustic_harmonic_solver
-        if acoustic_harmonic_solver is None:
-            return
-
-        if acoustic_harmonic_solver.project_file is None:
-            return
-
-        self.file.handling_harmonic_solution_results()          
-        acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
-        if acoustic_harmonic_solver.solution is None:
-            return
+        if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
+            self.file.handling_harmonic_solution_results("harmonic_acoustic")          
+            acoustic_harmonic_solver.solution = acoustic_harmonic_solver.project_file.get_solution_loader()
+            if acoustic_harmonic_solver.solution is None:
+                return
+            if acoustic_harmonic_solver.solution.has_partial_solutions():
+                acoustic_harmonic_solver.solution = None
+                project.can_resume_solution = True
+        
+        structural_harmonic_solver = project.structural_harmonic_solver
+        if structural_harmonic_solver is not None and structural_harmonic_solver.project_file is not None:
+            self.file.handling_harmonic_solution_results("harmonic_structural")
+            structural_harmonic_solver.solution = structural_harmonic_solver.project_file.get_solution_loader()
+            if structural_harmonic_solver.solution is None:
+                return
+            solution = structural_harmonic_solver.solution
+            structural_harmonic_solver.displacement_dof = solution.get_extra_data("displacement_dof")
+            if solution.has_partial_solutions():
+                structural_harmonic_solver.solution = None
+                project.can_resume_solution = True
 
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
-        if acoustic_harmonic_solver.solution.has_partial_solutions():
-            acoustic_harmonic_solver.solution = None
-            project.can_resume_solution = True
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

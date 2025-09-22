@@ -32,6 +32,13 @@ class DOFSetup(IntEnum):
     FIXED = 2
 
 
+class AssignmetType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
+
+
 class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -64,6 +71,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
+        self.assignment_types = {
+            0 : "surfaces",
+            1 : "lines",
+            2 : "points",
+            3 : "nodes",
+        }
         self.reset_table_variables()
 
     def reset_table_variables(self):
@@ -130,8 +143,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.comboBox_element_type.setEnabled(False)
         #
         for i, w in enumerate([110, 150, 100]):
-            self.treeWidget_prescribed_dofs.setColumnWidth(i, w)
-            self.treeWidget_prescribed_dofs.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_prescribed_dof.setColumnWidth(i, w)
+            self.treeWidget_prescribed_dof.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -159,8 +172,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        self.treeWidget_prescribed_dofs.itemClicked.connect(self.on_click_item)
-        self.treeWidget_prescribed_dofs.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_prescribed_dof.itemClicked.connect(self.on_click_item)
+        self.treeWidget_prescribed_dof.itemDoubleClicked.connect(self.on_double_click_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
@@ -290,7 +303,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             if len(surfaces) == 1:
                 surface_id = list(surfaces)[0]
-                data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                data = self.properties._get_property("prescribed_dof", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
@@ -303,7 +316,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
-                data = self.properties._get_property("prescribed_dofs", line=line_id)
+                data = self.properties._get_property("prescribed_dof", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
@@ -316,7 +329,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             if len(points) == 1:
                 point_id = list(points)[0]
-                data = self.properties._get_property("prescribed_dofs", point=point_id)
+                data = self.properties._get_property("prescribed_dof", point=point_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(point_id=point_id)
@@ -329,7 +342,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             if len(nodes) == 1:
                 node_id = list(nodes)[0]
-                data = self.properties._get_property("prescribed_dofs", node=node_id)
+                data = self.properties._get_property("prescribed_dof", node=node_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(node_id=node_id)
@@ -343,8 +356,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
 
         values = data.get("values", list())
-        # if not are_there_values_different_from_zero(values):
-        #     return
 
         self.reset_input_fields()
 
@@ -459,18 +470,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         attribution_type = self.comboBox_attribution_type.currentIndex()
-
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
+        selection = self.assignment_types.get(attribution_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(
                                                                 input_ids, 
@@ -483,9 +483,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
-        
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
 
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
@@ -502,7 +499,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if stop:
             return
 
-        prescribed_dofs = [ux, uy, uz]
+        prescribed_dof = [ux, uy, uz]
 
         if element_type == "2d_element":
 
@@ -518,42 +515,42 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if stop:
                 return
 
-            prescribed_dofs.extend([rx, ry, rz])
+            prescribed_dof.extend([rx, ry, rz])
+                
+        condition_1 = element_type == "2d_element" and prescribed_dof.count(None) == 6
+        condition_2 = element_type == "3d_element" and prescribed_dof.count(None) == 3
+        all_dof_free = condition_1 or condition_2
 
-        condition_1 = element_type == "2d_element" and prescribed_dofs.count(None) == 6
-        condition_2 = element_type == "3d_element" and prescribed_dofs.count(None) == 3
+        self.remove_duplicated_attributions(selected_ids, selection)
+        self.remove_conflicting_excitations(selected_ids, selection, all_dof_free=all_dof_free)
 
-        if condition_1 or condition_2:
-            self.hide()
-            title = "Invalid inputs for DOF prescription"
-            message = "You must enter at least one non-zero value or constrain "
-            message += "one dof before confirming the property assignment."
-            PrintMessageInput([error_title, title, message])
+        if all_dof_free:
+            self.actions_to_finalize()
             return
 
-        real_values = [value if value is None else np.real(value) for value in prescribed_dofs]
-        imag_values = [value if value is None else np.imag(value) for value in prescribed_dofs]
+        real_values = [value if value is None else np.real(value) for value in prescribed_dof]
+        imag_values = [value if value is None else np.imag(value) for value in prescribed_dof]
 
         for selected_id in selected_ids:
 
             data = {
                     "element_type" : element_type,
-                    "values" : prescribed_dofs,
+                    "values" : prescribed_dof,
                     "real_values" : real_values,
                     "imag_values" : imag_values
                     }
 
-            if attribution_type == 0:
-                self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
+            if attribution_type == AssignmetType.SURFACES:
+                self.properties._set_property("prescribed_dof", data, surface=selected_id)
 
-            elif attribution_type == 1:
-                self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
+            elif attribution_type == AssignmetType.LINES:
+                self.properties._set_property("prescribed_dof", data, line=selected_id)
 
-            elif attribution_type == 2:
-                self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
+            elif attribution_type == AssignmetType.POINTS:
+                self.properties._set_property("prescribed_dof", data, point=selected_id)
 
-            elif attribution_type == 3:
-                self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
+            elif attribution_type == AssignmetType.NODES:
+                self.properties._set_property("prescribed_dof", data, node=selected_id)
 
         self.actions_to_finalize()
 
@@ -695,18 +692,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         attribution_type = self.comboBox_attribution_type.currentIndex()
-
-        if attribution_type == 0:
-            selection = "surfaces"
-
-        elif attribution_type == 1:
-            selection = "lines"
-
-        elif attribution_type == 2:
-            selection = "points"
-
-        else:
-            selection = "nodes"
+        selection = self.assignment_types.get(attribution_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(
                                                                 input_ids, 
@@ -719,9 +705,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
-
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
 
         element_type_index = self.comboBox_element_type.currentIndex()
         if element_type_index == 0:
@@ -760,7 +743,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
-            prescribed_dofs = [self.ux_table_values, self.uy_table_values, self.uz_table_values]
+            prescribed_dof = [self.ux_table_values, self.uy_table_values, self.uz_table_values]
 
             if element_type_index == 0:
 
@@ -775,7 +758,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
                 table_names.extend([self.rx_table_name, self.ry_table_name, self.rz_table_name])
                 table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])
-                prescribed_dofs.extend([self.rx_table_values, self.ry_table_values, self.rz_table_values])
+                prescribed_dof.extend([self.rx_table_values, self.ry_table_values, self.rz_table_values])
 
             condition_1 = element_type_index == 0 and table_names.count(None) == 6
             condition_2 = element_type_index == 1 and table_names.count(None) == 3
@@ -786,26 +769,29 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 message = "It is necessary to enter at least one prescribed dof "
                 message += "before confirming the property assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return 
+                return
+    
+            self.remove_duplicated_attributions(selected_ids, selection)
+            self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
                     "element_type" : element_type,
                     "table_names" : table_names,
                     "table_paths" : table_paths,
-                    "values" : prescribed_dofs
+                    "values" : prescribed_dof
                     }
 
-            if attribution_type == 0:
-                self.model.properties._set_property("prescribed_dofs", data, surface=selected_id)
+            if attribution_type == AssignmetType.SURFACES:
+                self.properties._set_property("prescribed_dof", data, surface=selected_id)
 
-            elif attribution_type == 1:
-                self.model.properties._set_property("prescribed_dofs", data, line=selected_id)
+            elif attribution_type == AssignmetType.LINES:
+                self.properties._set_property("prescribed_dof", data, line=selected_id)
 
-            elif attribution_type == 2:
-                self.model.properties._set_property("prescribed_dofs", data, point=selected_id)
+            elif attribution_type == AssignmetType.POINTS:
+                self.properties._set_property("prescribed_dof", data, point=selected_id)
 
-            elif attribution_type == 3:
-                self.model.properties._set_property("prescribed_dofs", data, node=selected_id)
+            elif attribution_type == AssignmetType.NODES:
+                self.properties._set_property("prescribed_dof", data, node=selected_id)
 
         self.reset_table_variables()
         self.actions_to_finalize()
@@ -820,104 +806,104 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
                 nodes_from_surface = self.mesh.get_nodes_from_surface(selected_id)
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "prescribed_dofs" and node_id in nodes_from_surface:
+                    if property == "prescribed_dof" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for line_id in self.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("prescribed_dofs", line=line_id)
+                    data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("prescribed_dofs", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
+                        self.properties._remove_line_property("prescribed_dof", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
                     for point_id in self.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("prescribed_dofs", point=point_id)
+                        data = self.properties._get_property("prescribed_dof", point=point_id)
                         if isinstance(data, dict):
-                            self.properties._remove_point_property("prescribed_dofs", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
+                            self.properties._remove_point_property("prescribed_dof", point_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
             elif selection == "lines":
 
                 nodes_from_line = self.mesh.get_nodes_from_line(selected_id)
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "prescribed_dofs" and node_id in nodes_from_line:
+                    if property == "prescribed_dof" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for surface_id in self.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                    data = self.properties._get_property("prescribed_dof", surface=surface_id)
                     if isinstance(data, dict):
-                        self.properties._remove_surface_property("prescribed_dofs", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
+                        self.properties._remove_surface_property("prescribed_dof", surface_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", surface_id, "surfaces"))
 
                 for point_id in self.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("prescribed_dofs", point=point_id)
+                    data = self.properties._get_property("prescribed_dof", point=point_id)
                     if isinstance(data, dict):
-                        self.properties._remove_point_property("prescribed_dofs", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
+                        self.properties._remove_point_property("prescribed_dof", point_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
             elif selection == "points":
 
                 nodes_from_point = self.mesh.nodes_from_points[selected_id]
                 for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "prescribed_dofs" and node_id in nodes_from_point:
+                    if property == "prescribed_dof" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
                 for line_id in self.mesh.lines_from_point[selected_id]:
-                    data = self.properties._get_property("prescribed_dofs", line=line_id)
+                    data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("prescribed_dofs", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
+                        self.properties._remove_line_property("prescribed_dof", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
                     for surface_id in self.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                        data = self.properties._get_property("prescribed_dof", surface=surface_id)
                         if isinstance(data, dict):
-                            self.properties._remove_surface_property("prescribed_dofs", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
+                            self.properties._remove_surface_property("prescribed_dof", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", surface_id, "surfaces"))
 
             elif selection == "nodes":
 
                 point_id = selected_id + 1
-                data = self.properties._get_property("prescribed_dofs", point=point_id)
+                data = self.properties._get_property("prescribed_dof", point=point_id)
                 if isinstance(data, dict):
-                    self.properties._remove_point_property("prescribed_dofs", point_id)
-                    table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", point_id, "points"))
+                    self.properties._remove_point_property("prescribed_dof", point_id)
+                    table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
                 for line_id in self.mesh.lines_from_point[point_id]:
-                    data = self.properties._get_property("prescribed_dofs", line=line_id)
+                    data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("prescribed_dofs", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", line_id, "lines"))
+                        self.properties._remove_line_property("prescribed_dof", line_id)
+                        table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
                     for surface_id in self.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("prescribed_dofs", surface=surface_id)
+                        data = self.properties._get_property("prescribed_dof", surface=surface_id)
                         if isinstance(data, dict):
-                            self.properties._remove_surface_property("prescribed_dofs", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", surface_id, "surfaces"))
+                            self.properties._remove_surface_property("prescribed_dof", surface_id)
+                            table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", surface_id, "surfaces"))
 
             for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("prescribed_dofs", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("prescribed_dofs", node_id, "nodes"))
+                self.properties._remove_nodal_property("prescribed_dof", node_id)
+                table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", node_id, "nodes"))
 
             self.process_table_file_removal(table_names)
 
     def attribute_callback(self):
-        index = self.tabWidget_main.currentIndex()
-        if index == 0:
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == 0:
             self.constant_values_attribution()
-        elif index == 1:
+        elif tab_index == 1:
             self.table_values_attribution()
 
     def text_label(self, mask):
 
         if len(mask) == 6:
-            dofs_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
+            dof_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
 
         elif len(mask) == 3:
-            dofs_labels = np.array(['Ux','Uy','Uz'])
+            dof_labels = np.array(['Ux','Uy','Uz'])
 
-        labels = dofs_labels[mask]
+        labels = dof_labels[mask]
 
         text = ""
         if list(mask).count(True) == 6:
@@ -949,7 +935,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
         
         for (property, *args), data in _property.items():
-            if property != "prescribed_dofs":
+            if property != "prescribed_dof":
                 continue
 
             values = data["values"]
@@ -957,18 +943,18 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             #     continue
 
             element_type = data["element_type"]
-            constrained_dofs_mask = [False if value is None else True for value in values]
-            dofs_labels = str(self.text_label(constrained_dofs_mask))
+            constrained_dof_mask = [False if value is None else True for value in values]
+            dof_labels = str(self.text_label(constrained_dof_mask))
 
-            new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dofs_labels, element_type])
+            new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
             for i in range(3):
                 new.setTextAlignment(i, Qt.AlignCenter)
 
-            self.treeWidget_prescribed_dofs.addTopLevelItem(new)
+            self.treeWidget_prescribed_dof.addTopLevelItem(new)
 
     def load_model_info(self):
 
-        self.treeWidget_prescribed_dofs.clear()
+        self.treeWidget_prescribed_dof.clear()
 
         self.add_model_info_in_tree_widget("surface")
         self.add_model_info_in_tree_widget("line")
@@ -987,7 +973,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         for current_property in properties_to_check:
             for (property, _), data in current_property.items():
-                if property != "prescribed_dofs":
+                if property != "prescribed_dof":
                     continue
 
                 # if not are_there_values_different_from_zero(data.get("values")):
@@ -1007,7 +993,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         list_tab = self.tabWidget_main.currentIndex() == 2
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_attribute.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
 
         if list_tab:
             self.lineEdit_selection_id.setText("")
@@ -1021,7 +1007,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def on_click_item(self, item):
 
-        self.pushButton_remove.setDisabled(False)
+        self.pushButton_remove.setEnabled(True)
 
         if item.text(0) != "":
 
@@ -1061,34 +1047,43 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         app().file.write_imported_table_data_in_file()
 
-    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
+    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str, all_dof_free: bool=False):
 
         if isinstance(selected_ids, int):
             selected_ids = [selected_ids]
 
-        if selection == "surfaces":
-            remove_function = self.properties._remove_surface_property
-
-        elif selection == "lines":
-            remove_function = self.properties._remove_line_property
-
-        elif selection == "points":
-            remove_function = self.properties._remove_point_property
-
-        elif selection == "nodes":
-            remove_function = self.properties._remove_nodal_property
-
-        properties = ["nodal_loads", "prescribed_dofs"]
+        properties = ["nodal_loads", "prescribed_dof"]
 
         for selected_id in selected_ids:
-            for property in properties:
-                table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
-                remove_function(property, selected_id)
+            for _property in properties:
+                if all_dof_free and _property == "nodal_loads":
+                    continue
+
+                table_names = self.properties.get_property_related_table_names(_property, selected_id, selection)
+                self.remove_property_from(_property, selected_id, selection)
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("prescribed_dofs", selected_id, selection)
+        table_names = self.properties.get_property_related_table_names("prescribed_dof", selected_id, selection)
         self.process_table_file_removal(table_names)
+
+    def remove_property_from(self, property: str, selected_ids: int | list, selection: str):
+        if isinstance(selected_ids, int):
+            selected_ids = [selected_ids]
+
+        if "surface" in selection:
+            remove_function = self.properties._remove_surface_property
+        elif "line" in selection:
+            remove_function = self.properties._remove_line_property
+        elif "point" in selection:
+            remove_function = self.properties._remove_point_property
+        elif "node" in selection:
+            remove_function = self.properties._remove_nodal_property
+        else:
+            return
+
+        for selected_id in selected_ids:
+            remove_function(property, selected_id)
 
     def remove_callback(self):
 
@@ -1096,25 +1091,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if "-" in text:
 
-            selection, _selected_id = text.split("-")
+            _selection, _selected_id = text.split("-")
+            selection = _selection.lower()
             selected_id = int(_selected_id)
 
-            if selection == "Surface":
-                self.properties._remove_surface_property("prescribed_dofs", selected_id)
-
-            elif selection == "Line":
-                self.properties._remove_line_property("prescribed_dofs", selected_id)
-
-            elif selection == "Point":
-                self.properties._remove_point_property("prescribed_dofs", selected_id)
-
-            elif selection == "Node":
-                self.properties._remove_nodal_property("prescribed_dofs", selected_id)
-
-            else:
-                return
-
-            self.remove_table_files_from(selected_id, f"{selection.lower()}s")
+            self.remove_table_files_from(selected_id, f"{selection}s")
+            self.remove_property_from("prescribed_dof", selected_id, selection)
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -1136,35 +1118,27 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if obj._continue:
 
             properties = {
-                        "surfaces" : self.properties.surface_properties,
-                        "lines" : self.properties.line_properties,
-                        "points" : self.properties.point_properties,
-                        "nodes" : self.properties.nodal_properties,
-                        }
+                "surfaces" : self.properties.surface_properties,
+                "lines" : self.properties.line_properties,
+                "points" : self.properties.point_properties,
+                "nodes" : self.properties.nodal_properties,
+                }
 
             entities_to_remove = defaultdict(list)
 
-            for entity_label, _property in properties.items():
+            for key, _property in properties.items():
                 for (property_label, *args), data in _property.items():
-                    if property_label != "prescribed_dofs":
+                    if property_label != "prescribed_dof":
                         continue
     
-                    # if not are_there_values_different_from_zero(data.get("values")):
-                    #     continue
-    
-                    entities_to_remove[entity_label].append(args[0])
+                    entities_to_remove[key].append(args[0])
 
-            for entity, selected_ids in entities_to_remove.items():
+            for selection, selected_ids in entities_to_remove.items():
                 for selected_id in selected_ids:
-                    if entity == "surfaces":
-                        self.properties._remove_surface_property("prescribed_dofs", selected_id)
-                    elif entity == "lines":
-                        self.properties._remove_line_property("prescribed_dofs", selected_id)
-                    elif entity == "points":
-                        self.properties._remove_point_property("prescribed_dofs", selected_id)
-                    elif entity == "nodes":
-                        self.properties._remove_nodal_property("prescribed_dofs", selected_id)
+                    table_name = self.properties.get_property_related_table_names("prescribed_dof", selected_id, selection)
+                    self.process_table_file_removal(table_name)
 
+            self.properties._reset_property("prescribed_dof")
             self.actions_to_finalize()
 
             app().main_window.set_geometry_selection()
@@ -1172,7 +1146,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def actions_to_finalize(self):
         self.load_model_info()
-        self.set_index_for_all_dof_combo_boxes(DOFSetup.VALUE)
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
@@ -1190,7 +1163,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["nodal_loads", "prescribed_dofs"]:
+            if property in ["nodal_loads", "prescribed_dof"]:
                 if "table_names" in data.keys():
                     return
 
@@ -1204,12 +1177,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for combo_box in self.dof_setup_combo_boxes.values():
-            combo_box.setCurrentIndex(DOFSetup.VALUE)
-
-        for lineEdit_real, lineEdit_imag in self.constant_line_edits.values():
-            lineEdit_real.setText("")
-            lineEdit_imag.setText("")
+        for key, combo_box in self.dof_setup_combo_boxes.items():
+            if combo_box.currentIndex() == DOFSetup.VALUE:
+                line_edit_real, line_edit_imag = self.constant_line_edits.get(key)
+                line_edit_real.setText("")
+                line_edit_imag.setText("")
 
         for lineEdit_table in self.table_line_edits.values():
             lineEdit_table.setText("")

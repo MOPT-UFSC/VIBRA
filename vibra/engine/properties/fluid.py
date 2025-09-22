@@ -1,11 +1,10 @@
-from dataclasses import dataclass
-
+from dataclasses import dataclass, asdict
 
 @dataclass
 class Fluid:
-    name: str
-    fluid_density: float
-    speed_of_sound: float
+    name: str = None
+    fluid_density: float = 0.0
+    speed_of_sound: float = 0.0
     color: tuple = (0, 0, 0)
     identifier: int = 0
     isentropic_exponent: float = 0.0
@@ -33,6 +32,9 @@ class Fluid:
     @property
     def pressure_state(self):
         return self.fluid_density*(self.speed_of_sound**2)/self.isentropic_exponent
+
+    def get_data(self) -> dict:
+        return asdict(self)
     
     def get_lrf_properties(self):
         c_0 = self.speed_of_sound

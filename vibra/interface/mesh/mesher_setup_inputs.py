@@ -186,10 +186,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.synchronize_sizes = not self.synchronize_sizes
         if self.synchronize_sizes:
             icon = QIcon(str(ICON_DIR / "sync_disabled.png"))
-            tool_tip = "Desynchronize the sizes of elements"
+            tool_tip = "Desynchronize the minimum and maximum sizes"
         else:
             icon = QIcon(str(ICON_DIR / "sync_enabled.png"))
-            tool_tip = "Synchronize the sizes of elements"
+            tool_tip = "Synchronize the minimum and maximum sizes"
 
         self.pushButton_syncrhonize.setIcon(icon)
         self.pushButton_syncrhonize.setToolTip(tool_tip)
@@ -323,20 +323,19 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if isinstance(mesh_setup, dict):
             try:
-                element_type = mesh_setup["element_type"]
+
                 geometry_tolerance = mesh_setup["geometry_tolerance"]
                 minimum_element_size = mesh_setup["minimum_element_size"]
                 maximum_element_size = mesh_setup["maximum_element_size"]
                 size_factor = mesh_setup["size_factor"]
                 mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
                 mesh_connection = mesh_setup.get("mesh_connection", True)
-                # mesh_quality_metrics = mesh_setup.get("mesh_quality_metrics", False)
 
                 gmsh_algorithm_3d = mesh_setup.get("algorithm_3d")
                 if gmsh_algorithm_3d is not None:
                     self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[gmsh_algorithm_3d])
 
-                self.update_element_type(element_type)
+                self.update_element_type(mesh_setup["ElementType"])
 
                 self.doubleSpinBox_maximum_element_size.setValue(maximum_element_size)
                 self.doubleSpinBox_minimum_element_size.setValue(minimum_element_size)
@@ -344,7 +343,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
 
                 self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_connection))
-                # self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_quality_metrics))
                 
                 for selection_type, e_size, selected_ids in mesh_refinement_parameters:
                     self.mesh_refinement_data[(selection_type, e_size)].extend(selected_ids)
@@ -393,20 +391,21 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             message = str(error_log)
             PrintMessageInput([error_title, title, message])
 
-    def update_element_type(self, element_type: ElementType):
-        if element_type == TETRAHEDRON_4:
+    def update_element_type(self, ElementType: ElementType):
+
+        if ElementType == TETRAHEDRON_4:
             self.comboBox_element_type.setCurrentText("Tetrahedral")
             self.comboBox_shape_function.setCurrentText("Linear")
 
-        elif element_type == TETRAHEDRON_10:
+        elif ElementType == TETRAHEDRON_10:
             self.comboBox_element_type.setCurrentText("Tetrahedral")
             self.comboBox_shape_function.setCurrentText("Quadratic")
 
-        elif element_type == HEXAHEDRON_8:
+        elif ElementType == HEXAHEDRON_8:
             self.comboBox_element_type.setCurrentText("Hexahedral")
             self.comboBox_shape_function.setCurrentText("Linear")
 
-        elif element_type == HEXAHEDRON_20:
+        elif ElementType == HEXAHEDRON_20:
             self.comboBox_element_type.setCurrentText("Hexahedral")
             self.comboBox_shape_function.setCurrentText("Quadratic")
 

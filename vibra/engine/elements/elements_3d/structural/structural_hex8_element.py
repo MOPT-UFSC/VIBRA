@@ -35,8 +35,8 @@ def get_detJAC_and_invJAC(JAC):
 class STRUCT_HEXAHEDRON_8(Element3D):
     #
     NODES_PER_ELEMENT = 8
-    DOFS_PER_NODE = 3
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 3
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -96,7 +96,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         phi = phi / denominator
         #
         # derivatives
-        dphi = np.zeros((self.nint, self.DOFS_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
         #
         dphi[:, 0, 0] = (-1.0) * (1.0 - ttx) * (1.0 - rrx)
         dphi[:, 0, 1] = (1.0) * (1.0 - ttx) * (1.0 - rrx)
@@ -170,7 +170,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 6, self.DOFS_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -181,7 +181,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
-        N = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
@@ -199,46 +199,46 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.connectivity = self.connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
 
     def generate_ind_rows_cols(self):
-        """This method processess the dofs indices (rows and columns) for assembly"""
+        """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
 
-        ind_dofs = (
+        ind_dof = (
             np.array(
                 [
-                    dofs * self.connectivity[:, 1] - 1,
-                    dofs * self.connectivity[:, 1],
-                    dofs * self.connectivity[:, 1] + 1,
-                    dofs * self.connectivity[:, 2] - 1,
-                    dofs * self.connectivity[:, 2],
-                    dofs * self.connectivity[:, 2] + 1,
-                    dofs * self.connectivity[:, 3] - 1,
-                    dofs * self.connectivity[:, 3],
-                    dofs * self.connectivity[:, 3] + 1,
-                    dofs * self.connectivity[:, 4] - 1,
-                    dofs * self.connectivity[:, 4],
-                    dofs * self.connectivity[:, 4] + 1,
-                    dofs * self.connectivity[:, 5] - 1,
-                    dofs * self.connectivity[:, 5],
-                    dofs * self.connectivity[:, 5] + 1,
-                    dofs * self.connectivity[:, 6] - 1,
-                    dofs * self.connectivity[:, 6],
-                    dofs * self.connectivity[:, 6] + 1,
-                    dofs * self.connectivity[:, 7] - 1,
-                    dofs * self.connectivity[:, 7],
-                    dofs * self.connectivity[:, 7] + 1,
-                    dofs * self.connectivity[:, 8] - 1,
-                    dofs * self.connectivity[:, 8],
-                    dofs * self.connectivity[:, 8] + 1,
+                    dof * self.connectivity[:, 1] - 1,
+                    dof * self.connectivity[:, 1],
+                    dof * self.connectivity[:, 1] + 1,
+                    dof * self.connectivity[:, 2] - 1,
+                    dof * self.connectivity[:, 2],
+                    dof * self.connectivity[:, 2] + 1,
+                    dof * self.connectivity[:, 3] - 1,
+                    dof * self.connectivity[:, 3],
+                    dof * self.connectivity[:, 3] + 1,
+                    dof * self.connectivity[:, 4] - 1,
+                    dof * self.connectivity[:, 4],
+                    dof * self.connectivity[:, 4] + 1,
+                    dof * self.connectivity[:, 5] - 1,
+                    dof * self.connectivity[:, 5],
+                    dof * self.connectivity[:, 5] + 1,
+                    dof * self.connectivity[:, 6] - 1,
+                    dof * self.connectivity[:, 6],
+                    dof * self.connectivity[:, 6] + 1,
+                    dof * self.connectivity[:, 7] - 1,
+                    dof * self.connectivity[:, 7],
+                    dof * self.connectivity[:, 7] + 1,
+                    dof * self.connectivity[:, 8] - 1,
+                    dof * self.connectivity[:, 8],
+                    dof * self.connectivity[:, 8] + 1,
                 ],
                 dtype=int,
             )
             + 1
         ).T
 
-        vect_indices = ind_dofs.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+        vect_indices = ind_dof.flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return self.ind_rows, self.ind_cols

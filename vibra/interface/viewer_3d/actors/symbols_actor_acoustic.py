@@ -24,7 +24,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "specific_impedance": self._build_specific_impedance,
             "transfer_impedance": self._build_transfer_impedance,
             "mass_flow_rate": self._build_mass_flow_rate,
-            "degrees_of_freedom_decoupling": self._build_dofs_decoupling,
+            "degrees_of_freedom_decoupling": self._build_dof_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,
             "dissipation_model": self._build_dissipation_model,
@@ -115,7 +115,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
     
     def _build_nodal_normals(self):
         mesh = app().project.model.mesh
-        for node_id, normal_vector in mesh.nodal_normals_data.items():
+        for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
     
@@ -163,7 +163,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(sources.create_mass_flow_rate_source, coords, normal, color=color_names.PINK)
 
-    def _build_dofs_decoupling(self, surface_id: int = -1, *args, **kwargs):
+    def _build_dof_decoupling(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
         

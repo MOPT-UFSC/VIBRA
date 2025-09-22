@@ -3,7 +3,6 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.engine.postprocessing import compute_acoustic_impedance
 from vibra.interface.ui_generated.plots.acoustic.acoustic_impedance_inputs_ui import AcousticImpedanceInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -24,6 +23,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+
+        self.acoustic_post = self.project.acoustic_postprocessing
 
         self._config_window()
         self._reset_variables()
@@ -113,6 +114,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def plot_data_callback(self):
 
+        self.mesh.nodal_normals_data.clear()
+
         if self.check_inputs():
             return
 
@@ -131,15 +134,13 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def get_response(self, selection_type: str, selected_id: int):
 
-        solver = app().project.acoustic_harmonic_solver
-
         def function_callback():
 
             if selection_type == "surface":
-                acoustic_impedance = compute_acoustic_impedance(solver, surface_id = selected_id)
+                acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(surface_id = selected_id)
 
             else:
-                acoustic_impedance = compute_acoustic_impedance(solver, node_id = selected_id)
+                acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(node_id = selected_id)
 
             logging.info("Processing particle velocity... [95/100]")
 

@@ -1,23 +1,11 @@
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QComboBox,
-    QFrame,
-    QLineEdit,
-    QPushButton,
-    QSlider,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QWidget,
-)
+from PySide6.QtWidgets import QHeaderView, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -54,14 +42,13 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.load_user_preference_colormap()
 
     def _config_widgets(self):
-        # self.comboBox_colormaps.setDisabled(True)
-        self.slider_transparency.setDisabled(True)
 
         self.frame_button.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
+        self.slider_transparency.setDisabled(True)
 
-        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
+        if app().project.acoustic_modal_solver.complex_natural_frequencies.size:
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -71,6 +58,8 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         font = QFont()
         font.setPointSize(9)
+
+        self.treeWidget_frequencies.setColumnCount(len(headers))
 
         for i, header in enumerate(headers):
             self.treeWidget_frequencies.headerItem().setFont(i, font)
@@ -199,6 +188,8 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             self.treeWidget_frequencies.addTopLevelItem(new)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)
+        self.treeWidget_frequencies.scrollToTop()
+
         if first_item is not None:
             first_item.setSelected(True)
             self.treeWidget_frequencies.itemClicked.emit(first_item, 0)

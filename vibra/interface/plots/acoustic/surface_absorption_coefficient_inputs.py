@@ -3,7 +3,6 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.engine.postprocessing import compute_surface_absorption_coefficient
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -23,6 +22,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.acoustic_post = self.project.acoustic_postprocessing
 
         self._config_window()
         self._reset_variables()
@@ -84,6 +84,8 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def plot_data_callback(self):
 
+        self.mesh.nodal_normals_data.clear()
+
         if self.check_inputs():
             return
 
@@ -103,12 +105,10 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def get_response(self, selected_id: int):
 
-        solver = app().project.acoustic_harmonic_solver
-
         def function_callback():
 
             logging.info("Processing surface absorption coefficient... [15/100]")
-            absorption_coefficient = compute_surface_absorption_coefficient(solver, surface_id = selected_id)
+            absorption_coefficient = self.acoustic_post.compute_surface_absorption_coefficient(surface_id = selected_id)
 
             logging.info("Processing surface absorption coefficient... [95/100]")
             return absorption_coefficient

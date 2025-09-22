@@ -299,7 +299,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        if mesh.solids_connectivity.size <= 0:
+        if not mesh.are_there_volumes_in_geometry():
             return
 
         self.remove_actors(self.solids_actor, self.edges_actor)

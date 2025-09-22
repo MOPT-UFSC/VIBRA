@@ -1,13 +1,15 @@
+from collections import defaultdict
+from copy import deepcopy
+from itertools import permutations
+from pathlib import Path
+from time import time
+
 import os
 import numpy as np
-from collections import defaultdict
-from pathlib import Path
+
 
 class ExternalMeshData():
     def __init__(self):
-        self.reset()
-
-    def reset(self):
 
         self.modo = None
         self.type = None
@@ -15,12 +17,22 @@ class ExternalMeshData():
         self.skip_format_row = False
 
         self.nodal_coordinates = list()
+        self.faces_connectivities = dict()
+        self.solids_connectivities = dict()
 
         self.connectivity = defaultdict(list)
         self.nodes_from_named_selection = defaultdict(list)
 
         self.file_path = ""
         self.folder_name = "exported_mesh_files"
+
+    def set_element_type(self, element_type: str):
+        if element_type == "tetrahedron_4":
+            self.nodes_from_face_element = 3
+        elif element_type == "tetrahedron_10":
+            self.nodes_from_face_element = 6
+        else:
+            return
 
     def set_named_selections(self, named_selections):
         self.named_selections = named_selections
@@ -130,7 +142,15 @@ class ExternalMeshData():
                             body_id = connect_data[1]
                             element_id = connect_data[10]
                             _connect_data = self.filter_collapsed_nodes(connect_data[11:])
-                            nodes_per_element = len(_connect_data)
+
+                            if connect_data[8] > 8:
+                                nodes_per_element = connect_data[8]
+
+                            elif connect_data[8] != len(_connect_data):
+                                nodes_per_element = len(_connect_data)
+
+                            else:
+                                nodes_per_element = connect_data[8]
 
                         else:
                             _connect_data = connect_data
@@ -160,6 +180,7 @@ class ExternalMeshData():
                                 self.connectivity[body_id, "solid185_hex8"].append(_connect_data)
 
                         elif nodes_per_element == 10:
+
                             if len(connect_data) == number_of_cols:
                                 cache_nodes = _connect_data
                             else:
@@ -172,9 +193,9 @@ class ExternalMeshData():
                                     cache_nodes.insert(1, body_id)
                                     cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid187 - tet10: {cache_nodes}")
-                                    self.connectivity[body_id, "solid187_tet10"].append(cache_nodes)    
+                                    self.connectivity[body_id, "solid187_tet10"].append(cache_nodes)
                                     cache_nodes = list()
-                        
+
                         elif nodes_per_element == 20:
                             if len(connect_data) == number_of_cols:
                                 cache_nodes = _connect_data
@@ -208,14 +229,15 @@ class ExternalMeshData():
                 try:
                     for ns_node_id in [int(valor) for valor in line.split()]:
                         self.nodes_from_named_selection[self.named_selection].append(ns_node_id)
-                    
+
                 except:
 
                     self.modo = None
-        
-        self.process_array_coordinates()
+
+        self.post_process_nodal_coordinates()
         self.post_process_connectivities()
         self.process_named_selection_elements(export=True)
+        self.post_process_faces_connectivities()
 
     def get_named_selection_format_info(self, line):
         str_format = line[1:-2].split(",")
@@ -246,9 +268,9 @@ class ExternalMeshData():
         return number_of_cols, spacing_cols
 
     def post_process_connectivities(self):
-        self.connectivity_arrays = dict()
+        self.solids_connectivities.clear()
         for key, data in self.connectivity.items():
-            self.connectivity_arrays[key] = np.array(data, dtype=int)
+            self.solids_connectivities[key] = np.array(data, dtype=int)
 
     def export_nodal_coordinates(self):
         self.create_output_data_folder()
@@ -260,12 +282,18 @@ class ExternalMeshData():
 
     def export_connectivities(self):
         self.create_output_data_folder()
-        if self.connectivity_arrays:
+        if self.solids_connectivities:
             header = "Element ID || Nodes"
-            for key, data in self.connectivity_arrays.items():
+            for key, data in self.solids_connectivities.items():
                 # filename = f"{self.folder_name}/connectivity_matrix_{key}.dat"
                 filename = f"{self.folder_name}/connectivity_matrix.dat"
                 np.savetxt(filename, data, header=header, fmt="%i", delimiter=",")
+
+    def get_nodes_from_face_element(self, element_type: str):
+        if element_type == "solid187_tet10":
+            return 6
+        if element_type in ["solid285_tet4", "solid181_tria3"]:
+            return 3
 
     def process_named_selection_elements(self, export=False):
 
@@ -273,11 +301,17 @@ class ExternalMeshData():
         self.elements_from_named_selection = dict()
 
         for key, data in self.connectivity.items():
+            vol_id, element_type = key
+            nodes_face_element = self.get_nodes_from_face_element(element_type)
+            
+            surface_id = 0
             connect = np.array(data, dtype=int)
             for ns_key, ns_nodes in self.nodes_from_named_selection.items():
- 
+
                 other_nodes = list()
                 face_connectivity = list()
+
+                surface_id += 1
 
                 #TODO: remove the commented lines as soon as possible
                 # filt_1 = 0
@@ -285,42 +319,55 @@ class ExternalMeshData():
                 #     filt_1 += np.sum((connect[:, 3:] == ns_node), axis=1)
                 # mask = filt_1 == 3
 
-                mask = np.sum(np.isin(connect[:, 3:], ns_nodes), axis=1) == 3
+                mask = np.sum(np.isin(connect[:, 3:], ns_nodes), axis=1) == nodes_face_element
 
                 if np.sum(mask) == 0:
                     continue
 
-                for _nodes in connect[mask, 3:]:
+                for jj, _nodes in enumerate(connect[mask, 3:]):
 
-                    face_elements = list()
+                    face_nodes = list()
+                    # mask = np.isin(ns_nodes, _nodes)
+                    # face_nodes = np.array(ns_nodes, dtype=int)[mask]
+                    # other_nodes = [_node for _node in _nodes if _node not in face_nodes]
                     for _node in _nodes:
                         if _node in ns_nodes:
-                            face_elements.append(_node)
+                            face_nodes.append(_node)
                         else:
                             other_nodes.append(_node)
+
+                    corner_nodes, middle_nodes = self.get_corner_and_middle_nodes(face_nodes, print_data=jj==1)
 
                     # verifies if the surface normals are pointed out to the
                     # outside of the solid element and revert it otherwise
 
-                    if len(face_elements) == 3: # tet4/face3 elements
+                    if len(face_nodes) == nodes_face_element: # tet4/face3 elements
                         
-                        normal_vector = self.get_element_face_normal(face_elements)
+                        normal_vector = self.get_element_face_normal(corner_nodes)
 
                         if other_nodes:
-                            edge_vector = self.get_edge_vector(face_elements, other_nodes[-1])
+                            edge_vector = self.get_edge_vector(corner_nodes, other_nodes[-1])
                         else:
                             edge_vector = np.array([0, 0, 0], dtype=float)
 
                         if np.dot(normal_vector, edge_vector) > 0:
-                            node_2 = face_elements[1]
-                            face_elements.remove(node_2)
-                            face_elements.append(node_2)
+                            face_nodes = corner_nodes
+                            node_2 = face_nodes[1]
+                            face_nodes.remove(node_2)
+                            face_nodes.append(node_2)
                             normal_vector *= -1
 
-                        # TODO: implement same structure to other element types
-                        # print("processed data: ", ns_key, normal_vector, face_elements, other_nodes)
+                        else:
+                            face_nodes = corner_nodes
 
-                        face_connectivity.append(face_elements)
+                        if middle_nodes:
+                            for _node in [face_nodes[2], face_nodes[0], face_nodes[1]]:
+                                face_nodes.append(middle_nodes.get(_node))
+
+                        # TODO: implement same structure to other element types
+                        # print("processed data: ", ns_key, normal_vector, face_nodes, other_nodes)
+
+                        face_connectivity.append(face_nodes)
 
                 if face_connectivity:
 
@@ -339,10 +386,11 @@ class ExternalMeshData():
                     self.elements_from_named_selection[ns_key] = {  
                                                                   "element_indexes" : indexes,
                                                                   "connectivity" : connect_data,
-                                                                  "outer_nodes" : other_data
+                                                                  "outer_nodes" : other_data,
+                                                                  "surface_id" : surface_id,
                                                                   }
 
-                    if export:
+                    if export and False:
 
                         if other_nodes:
                             add_col = 2
@@ -366,6 +414,63 @@ class ExternalMeshData():
                         filename = f"{self.folder_name}/elements_from_{ns_key}.dat"
                         np.savetxt(filename, exp_data, header=header, fmt="%i", delimiter=",")
 
+    def post_process_faces_connectivities(self):
+
+        faces_connectivity = list()
+        self.faces_connectivities.clear()
+
+        for ns_key, data in self.elements_from_named_selection.items():
+            surface_id = data.get("surface_id", -1)
+            connect_data = data.get("connectivity")
+            indexes = np.arange(1, len(connect_data)+1, dtype=int) + len(faces_connectivity)
+            surface_ids = np.ones_like(indexes, dtype=int) * surface_id
+            nodes_per_element = np.ones_like(indexes, dtype=int) * len(connect_data[0])
+
+            faces_connectivity = np.array(connect_data, dtype=int)
+            faces_connectivity = np.insert(faces_connectivity, 0, indexes, axis=1)
+            faces_connectivity = np.insert(faces_connectivity, 1, surface_ids, axis=1)
+            faces_connectivity = np.insert(faces_connectivity, 2, nodes_per_element, axis=1)
+
+            self.faces_connectivities[surface_id, "tria3/6"] = faces_connectivity
+
+        np.savetxt("teste.dat", faces_connectivity, delimiter=",", fmt="%i")
+
+    def get_corner_and_middle_nodes(self, face_connectivity: list, print_data: bool=False):
+        """
+        This method returns the corner and middle nodes to
+        process the element face connectivity.
+        """
+
+        middle_nodes = dict()
+        perm_nodes = np.array(list(permutations(face_connectivity, 3)), dtype=int)
+
+        P1 = self.array_nodal_coordinates[perm_nodes[:, 0]-1, 1:]
+        P2 = self.array_nodal_coordinates[perm_nodes[:, 1]-1, 1:]
+        P3 = self.array_nodal_coordinates[perm_nodes[:, 2]-1, 1:]
+
+        areas = np.linalg.norm(np.cross(P2-P1, P3-P1, axis=1), axis=1) / 2
+        corner_nodes = perm_nodes[np.argmax(areas), :]
+
+        if len(corner_nodes) != len(face_connectivity):
+            for corner_node in corner_nodes:
+
+                dist = 0.
+                Pc = self.array_nodal_coordinates[corner_node-1, 1:]
+                for node in face_connectivity:
+                    if node in corner_nodes:
+                        continue
+
+                    Pm = self.array_nodal_coordinates[node-1, 1:]
+                    Pm_Pc = np.linalg.norm(Pm-Pc)
+                    if Pm_Pc > dist:
+                        dist = Pm_Pc
+                        middle_node = node
+
+                middle_nodes[corner_node] = middle_node
+
+        return list(corner_nodes), middle_nodes
+
+
     def export_named_selection_nodes(self, folder_path : str):
 
         for ns_key, ns_nodes in self.nodes_from_named_selection.items():
@@ -384,7 +489,7 @@ class ExternalMeshData():
         if not os.path.exists(self.folder_name):
             os.makedirs(self.folder_name)
     
-    def process_array_coordinates(self, index_zero=True):
+    def post_process_nodal_coordinates(self, index_zero=True):
 
         data = np.array(self.nodal_coordinates)
 
@@ -399,8 +504,6 @@ class ExternalMeshData():
         self.array_nodal_coordinates[ :, 1:] = data[:, 1:]
 
     def get_element_face_normal(self, connect):
-        
-        # ie = self.faces_connectivity[element_id, 4:]
 
         connect = np.array(connect) - 1
         coords = self.array_nodal_coordinates[connect, 1:]

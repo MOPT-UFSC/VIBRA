@@ -588,8 +588,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                dofs_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Surface-{args[0]}", dofs_labels, element_type])
+                dof_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Surface-{args[0]}", dof_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -601,8 +601,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                dofs_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Line-{args[0]}", dofs_labels, element_type])
+                dof_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Line-{args[0]}", dof_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -614,8 +614,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                dofs_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Point-{args[0]}", dofs_labels, element_type])
+                dof_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Point-{args[0]}", dof_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -627,8 +627,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 values = data["values"]
                 element_type = data["element_type"]
                 constrained_loads_mask = [False if value is None else True for value in values]
-                dofs_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Node-{args[0]}", dofs_labels, element_type])
+                dof_labels = str(self.text_label(constrained_loads_mask))
+                new = QTreeWidgetItem([f"Node-{args[0]}", dof_labels, element_type])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -715,7 +715,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         elif selection == "lines":
             remove_function = self.properties._remove_line_property
 
-        properties = ["distributed_loads", "prescribed_dofs"]
+        properties = ["distributed_loads", "prescribed_dof"]
 
         for selected_id in selected_ids:
             for property in properties:
@@ -802,7 +802,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["distributed_loads", "prescribed_dofs"]:
+            if property in ["distributed_loads", "prescribed_dof"]:
                 if "table_names" in data.keys():
                     return
 
