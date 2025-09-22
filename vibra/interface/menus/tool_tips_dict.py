@@ -86,13 +86,11 @@ tool_tips["acoustic_pressure"] = (
     "This load simulates the effects of sound waves or other acoustic phenomena acting on the structure."
     )
 
-tool_tips["mass_flow_rate"] = (
-    # "### Mass Flow Rate (Acoustics)\n\n"
-    "The rate of mass flow associated with the oscillatory motion of particles in the medium.\n\n"
-    "It represents the amount of mass passing through a surface per unit time due to acoustic "
-    "fluctuations. Mass flow rate is directly related to particle velocity and the medium's density.\n\n"
-    "It is a fundamental quantity in acoustic network elements such as ducts, tubes, and dissipative "
-    "components, and is typically expressed in kg/s."
+tool_tips["mass_source"] = (
+    # "### Mass Source\n\n"
+    "Applies a distributed mass source or sink to a geometric entity (point, line, or surface).\n\n"
+    "A positive value represents mass injection into the domain (e.g., fluid feed).\n\n"
+    "A negative value represents mass removal (e.g., outflow or drain)."
     )
 
 tool_tips["surface_velocity"] = (
