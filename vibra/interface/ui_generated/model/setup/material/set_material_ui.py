@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(720, 500)
+        Dialog.resize(900, 500)
         Dialog.setMinimumSize(QSize(600, 500))
         Dialog.setMaximumSize(QSize(900, 600))
         self.gridLayout = QGridLayout(Dialog)
@@ -136,7 +136,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 690, 323))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 870, 323))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
