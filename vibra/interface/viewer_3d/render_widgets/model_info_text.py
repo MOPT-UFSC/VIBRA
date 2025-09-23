@@ -829,10 +829,10 @@ def analysis_info_text(frequency_index: int):
         return ""
 
     display_name = {
-                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
-                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
-                    AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD : "Structural Harmonic Analysis",
                     AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
+                    AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
+                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
+                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
                     }
 
     analysis_id = project.analysis_id

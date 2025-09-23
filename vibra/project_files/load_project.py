@@ -361,19 +361,11 @@ class LoadProject:
     def load_analysis_setup(self):
 
         analysis_setup = self.file.read_analysis_setup_from_file()
-        if analysis_setup:
 
-            f_min = None
-            if "f_min" in analysis_setup.keys():
-                f_min = analysis_setup["f_min"]
-
-            f_max = None
-            if "f_max" in analysis_setup.keys():
-                f_max = analysis_setup["f_max"]
-
-            f_step = None
-            if "f_step" in analysis_setup.keys():
-                f_step = analysis_setup["f_step"]
+        if isinstance(analysis_setup, dict):
+            f_min = analysis_setup.get("f_min")
+            f_max = analysis_setup.get("f_max")
+            f_step = analysis_setup.get("f_step")
 
             if ([f_min, f_max, f_step]).count(None) == 0:
                 analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)

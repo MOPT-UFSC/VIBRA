@@ -214,13 +214,14 @@ class Model:
     def set_analysis_setup(self, analysis_setup: dict):
 
         self.frequencies = None
+        self.analysis_setup = analysis_setup
+
         self.f_min = analysis_setup.get("f_min", None)
         self.f_max = analysis_setup.get("f_max", None)
         self.f_step = analysis_setup.get("f_step", None)
 
-        self.analysis_setup = analysis_setup
-
         self.frequency_setup.clear()
+
         if "frequencies" in analysis_setup.keys():
             self.frequencies = analysis_setup.get("frequencies", None)
 
