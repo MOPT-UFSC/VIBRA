@@ -357,7 +357,6 @@ class StructuralAssembler:
 
             # loop for 3d elements
             for el_index, vol_id, *_ in self.model.mesh.solids_connectivity:
-
                 progress = 100 * np.round(el_index/nel, 2)
                 if progress != last_progress:
                     logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
@@ -404,7 +403,6 @@ class StructuralAssembler:
 
             # loop for 2d elements
             for el_index, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
-
                 progress = 100 * np.round(el_index/nel, 2)
                 if progress != last_progress:
                     logging.info(f"Processing the elementary matrices data for face elements... [{int(progress)}/100]")

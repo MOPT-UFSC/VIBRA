@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
+from data import data_test_helper
 
 from vibra.engine.mesher.element_type import (
     HEXAHEDRON_8,
@@ -12,10 +12,12 @@ from vibra.engine.mesher.element_type import (
 from vibra.engine.mesher.mesh import Mesh
 
 
-@pytest.mark.skip
 def test_tetrahedron_4_mesh():
+    geometry_path = data_test_helper.get_data_path("examples/geometry_files/cylinder.step")
+    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/cilinder_tet4/")
+
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/cylinder.step",
+        geometry_path,
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
@@ -24,14 +26,16 @@ def test_tetrahedron_4_mesh():
 
     _compare_mesh(
         mesh,
-        "tests/general/mesh_info/cilinder_tet4/",
+        mesh_test_path,
     )
     
 
-@pytest.mark.skip
 def test_tetrahedron_10_mesh():
+    geometry_path = data_test_helper.get_data_path("examples/geometry_files/tetrahedron.step")
+    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/tetrahedron_tet10/")
+
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/tetrahedron.step",
+        geometry_path,
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
@@ -40,14 +44,16 @@ def test_tetrahedron_10_mesh():
 
     _compare_mesh(
         mesh,
-        "tests/general/mesh_info/tetrahedron_tet10/",
+        mesh_test_path,
     )
 
 
-@pytest.mark.skip
 def test_hexahedron_8_mesh():
+    geometry_path = data_test_helper.get_data_path("examples/geometry_files/cylinder.step")
+    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/cilinder_hex8/")
+
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/cylinder.step",
+        geometry_path,
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
@@ -56,14 +62,16 @@ def test_hexahedron_8_mesh():
 
     _compare_mesh(
         mesh,
-        "tests/general/mesh_info/cilinder_hex8/",
+        mesh_test_path,
     )
 
 
-@pytest.mark.skip
 def test_hexahedron_20_mesh():
+    geometry_path = data_test_helper.get_data_path("examples/geometry_files/parallelepiped.step")
+    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/parallelepiped_hex20/")
+
     mesh = Mesh().load_cad(
-        "data/examples/geometry_files/parallelepiped.step",
+        geometry_path,
         minimum_element_size=300,
         maximum_element_size=300,
         threads=1,
@@ -72,7 +80,7 @@ def test_hexahedron_20_mesh():
 
     _compare_mesh(
         mesh,
-        "tests/general/mesh_info/parallelepiped_hex20/",
+        mesh_test_path,
     )
 
 
