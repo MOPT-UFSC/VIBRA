@@ -228,7 +228,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label_title.setText(QCoreApplication.translate("Dialog", u"Structural modal analysis", None))
+        self.label_title.setText(QCoreApplication.translate("Dialog", u"Structural modal analysis setup", None))
         self.label_modes.setText(QCoreApplication.translate("Dialog", u"Modes:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_number_modes.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Number of modes to find in acoustic modal analysis</p></body></html>", None))
