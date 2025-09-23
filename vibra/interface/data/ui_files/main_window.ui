@@ -107,6 +107,7 @@
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
    <addaction name="action_import_geometry"/>
+   <addaction name="action_geometry_editor"/>
    <addaction name="action_import_mesh"/>
    <addaction name="action_save"/>
    <addaction name="action_save_as"/>
@@ -141,7 +142,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>20</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -687,6 +688,18 @@
    </property>
    <property name="text">
     <string>Ghost</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_geometry_editor">
+   <property name="icon">
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/geometry_editor.png</normaloff>:/icons/geometry_editor.png</iconset>
+   </property>
+   <property name="text">
+    <string>Geometry Editor</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
