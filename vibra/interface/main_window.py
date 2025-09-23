@@ -950,9 +950,10 @@ class MainWindow(MainWindow_UI):
                     return
 
                 self.update_mesh_information()
-                app().file.write_geometry_data_in_file()
                 app().file.write_mesh_data_in_file()
                 self.project_data_modified = False
+
+            app().file.write_geometry_data_in_file()
 
             self.update_geometry_information()
             self.update_toolbar_and_menu_items_after_load_project()
