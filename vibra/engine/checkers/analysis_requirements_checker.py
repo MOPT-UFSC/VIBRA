@@ -1,6 +1,7 @@
 
 from vibra import app
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
@@ -120,7 +121,7 @@ class AnalysisRequirementsChecker:
 
         return True
 
-    def check_structural_harmonic_excitations(self):
+    def check_structural_harmonic_excitations(self, _property: str | None = None):
 
         prop_labels = [
                        "prescribed_dof", 
@@ -139,6 +140,10 @@ class AnalysisRequirementsChecker:
         for property in properties:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
+                    if isinstance(_property, str):
+                        if prop_label != _property:
+                            continue
+
                     values = [0 if value is None else value for value in data["values"]]
                     if np.array(sum(values)).any():
                         return False
@@ -175,3 +180,38 @@ class AnalysisRequirementsChecker:
 
         if self.check_materials():
             return True
+        
+    def check_mode_superposition_prescribed_dof_criterion(self):
+
+        if self.check_structural_harmonic_excitations("prescribed_dof"):
+            return False
+
+        title = "Invalid model excitation for harmonic analysis"    
+        message = "Harmonic analysis using the modal superposition method cannot be solved if "
+        message += "there are any nonzero prescribed degrees of freedom. Would you like to solve "
+        message += "the model using the direct method?"
+
+        tool_tip = "Press this button to proceed with the harmonic \n"
+        tool_tip += "analysis solution using the direct method"
+
+        buttons_config = {
+                        "left_button_label": "Cancel", 
+                        "right_button_label": "Solve (direct)",
+                        "right_toolTip" : tool_tip
+                        }
+
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
+        if read._cancel:
+            return True
+
+        if not read._continue:
+            return True
+        
+        # change the analysis type
+        analysis_setup = app().file.read_analysis_setup_from_file()
+        if isinstance(analysis_setup, dict):
+            analysis_setup["analysis_method"] = "direct"
+            analysis_setup.pop("modes_number")
+
+            app().file.write_analysis_setup_in_file(analysis_setup)
+            app().project.set_analysis_setup(analysis_setup)

@@ -467,11 +467,12 @@ class StructuralAssembler:
 
     def process_assemble(self):
 
+        logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
         self.update_number_of_frequencies()
         self.model.process_surface_thickness()
 
-        logging.info("Gathering data to assemble global matrices... [10/100]")
+        logging.info("Gathering data to assemble global matrices... [20/100]")
         t0 = time()
         if self.compute_data_to_process_global_matrices():
             return

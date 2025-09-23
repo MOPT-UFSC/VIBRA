@@ -108,7 +108,12 @@ class HarmonicSolver:
         logging.info(f"Solving harmonic analysis (mode superposition method)... [25/100]")
 
         modal_solver = ModalSolver(self.assembler)
-        natural_frequencies, eigen_vectors = modal_solver.solve(full_solution=False, harmonic_analysis=True)
+        natural_frequencies, Phi = modal_solver.solve(full_solution=False, harmonic_analysis=True)
+
+        # Phi is the matrix of the eigenvectors
+        Phi_t = Phi.T
+
+        # omega_n is the vector of natural frequencies in rad/s
         omega_n = 2*np.pi*natural_frequencies
 
         logging.info(f"Solving harmonic analysis (mode superposition method)... [50/100]")
@@ -138,7 +143,7 @@ class HarmonicSolver:
             diag = np.diag(1 / A)
 
             # compute the solution for each frequency step
-            solution_freq = eigen_vectors @ (diag @ (eigen_vectors.T @ f))
+            solution_freq = Phi @ (diag @ (Phi_t @ f))
 
             if isinstance(solution, LazyHDF5MatrixWriter):
                 # reinsert the prescribed degrees of freedom into the solution vector

@@ -268,21 +268,29 @@ class Project(QObject):
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             if checker.check_structural_harmonic_analysis():
                 return True
+
+            if self.analysis_setup.get("analysis_method") == "mode_superposition":
+                if checker.check_mode_superposition_prescribed_dof_criterion():
+                    return True
+
             LoadingWindow(analysis.process_structural_harmonic_analysis).run()
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             if checker.check_structural_modal_analysis():
                 return True
+
             LoadingWindow(analysis.process_structural_modal_analysis).run()
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
+
             LoadingWindow(lambda: analysis.process_acoustic_harmonic_analysis(is_resume)).run()
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
                 return True
+
             LoadingWindow(analysis.process_acoustic_modal_analysis).run()
 
         else:
