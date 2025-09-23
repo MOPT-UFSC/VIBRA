@@ -2,6 +2,7 @@
 
 import sys
 import platform
+from PyInstaller.utils.hooks import collect_data_files
 
 os = platform.system()
 
@@ -16,14 +17,16 @@ elif os == "Linux":
 else:
     current_system_binaries = []
 
+datas = [
+    ("vibra/interface/data/", "vibra/interface/data/"),
+]
+datas += collect_data_files('molde')
 
 a = Analysis(
     ['vibra/launch.py'],
     pathex=[],
     binaries=current_system_binaries,
-    datas=[
-        ("vibra/interface/data/", "vibra/interface/data/")
-    ],
+    datas=datas,
     hiddenimports=[
         "vtk"
     ],
