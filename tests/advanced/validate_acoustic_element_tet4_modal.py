@@ -156,7 +156,7 @@ def load_external_mesh_and_solve():
 
     analysis_setup = {
                       "analisys_id" : 4,
-                      "modes": 100,
+                      "modes_number": 100,
                       "sigma_factor": 0.01,
                       }
 
