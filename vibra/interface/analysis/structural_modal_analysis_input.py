@@ -47,7 +47,7 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
                 AnalysisID.STRUCTURAL_MODAL,
                 AnalysisID.ACOUSTIC_MODAL,
             ]:
-                modes = analysis_setup["modes"]
+                modes = analysis_setup["modes_number"]
                 sigma = analysis_setup["sigma_factor"]
                 self.lineEdit_number_modes.setText(str(modes))
                 self.lineEdit_sigma_factor.setText(str(sigma))
@@ -99,7 +99,7 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
 
         self.analysis_setup = {
             "analysis_id": AnalysisID.STRUCTURAL_MODAL,
-            "modes": self.modes,
+            "modes_number": self.modes,
             "sigma_factor": self.sigma_factor,
         }
 

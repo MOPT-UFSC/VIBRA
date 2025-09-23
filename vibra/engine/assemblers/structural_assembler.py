@@ -637,6 +637,16 @@ class StructuralAssembler:
 
         return f_eq
 
+    
+    def get_combined_nodal_loads_vector(self, index: int):
+
+        structural_loads = self.structural_loads
+        
+        f_eq = self.get_prescribed_dof_model_excitation(index=index)
+        f = structural_loads[:, index] - f_eq
+
+        return f
+
     def build_harmonic_system(self, freq, i):
         omega = 2 * np.pi * freq
 
@@ -646,10 +656,7 @@ class StructuralAssembler:
         M = self.mass_matrix
         K = self.stiffness_matrix
 
-        structural_loads = self.structural_loads
-
-        f_eq = self.get_prescribed_dof_model_excitation(index=i)
-        f = structural_loads[:, i] - f_eq
+        f = self.get_combined_nodal_loads_vector(index=i)
 
         A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
 

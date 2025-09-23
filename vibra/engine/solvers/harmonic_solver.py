@@ -7,6 +7,7 @@ from vibra.project_files.project_file import ProjectFile
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.solvers import ModalSolver
 
 import logging
 import numpy as np
@@ -97,5 +98,58 @@ class HarmonicSolver:
             linear_solver.clear_memory()
             del A, f
 
-    def solve_modal_superposition(self):
-        pass
+    def solve_mode_superposition(self, print_log: bool = False, is_resume: bool = False):
+
+        logging.info(f"Solving harmonic analysis (mode superposition method)... [10/100]")
+
+        if isinstance(self.assembler, StructuralAssembler):
+            self.displacement_dof = self.assembler.displacement_dof
+
+        logging.info(f"Solving harmonic analysis (mode superposition method)... [25/100]")
+
+        modal_solver = ModalSolver(self.assembler)
+        natural_frequencies, eigen_vectors = modal_solver.solve(full_solution=False, harmonic_analysis=True)
+        omega_n = 2*np.pi*natural_frequencies
+
+        logging.info(f"Solving harmonic analysis (mode superposition method)... [50/100]")
+
+        num_freq = len(self.assembler.frequencies)
+        frequencies = self.assembler.frequencies       
+
+        if self.project_file:
+            num_rows = self.assembler.total_dof
+            solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
+            if self.displacement_dof is not None:
+                solution.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
+        else:
+            num_rows = self.assembler.stiffness_matrix.shape[0]
+            solution = np.zeros((num_rows, num_freq), dtype=complex)
+
+        (alpha, beta, eta) = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
+
+        for i, freq in enumerate(frequencies):
+
+            logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{num_freq}]")
+
+            f = self.assembler.get_combined_nodal_loads_vector(index=i)
+
+            omega = 2*np.pi*freq
+            A =  omega_n**2 - omega**2 + 1j*(omega*(beta*(omega_n**2) + alpha) + eta*(omega_n**2))
+            diag = np.diag(1 / A)
+
+            # compute the solution for each frequency step
+            solution_freq = eigen_vectors @ (diag @ (eigen_vectors.T @ f))
+
+            if isinstance(solution, LazyHDF5MatrixWriter):
+                # reinsert the prescribed degrees of freedom into the solution vector
+                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+
+            solution[:, i] = solution_freq
+
+        logging.info(f"Solving harmonic analysis (mode superposition method)... [99/100]")
+        if isinstance(solution, LazyHDF5MatrixWriter):
+            solution.close()
+            self.solution = self.project_file.get_solution_loader()
+        else:
+            # reinsert the prescribed degrees of freedom into the solution vector
+            self.solution = self.assembler.reinsert_the_prescribed_dof(solution)
