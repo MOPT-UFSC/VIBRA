@@ -121,7 +121,7 @@ class AnalysisRequirementsChecker:
 
         return True
 
-    def check_structural_harmonic_excitations(self, _property: str | None = None):
+    def check_structural_harmonic_excitations(self):
 
         prop_labels = [
                        "prescribed_dof", 
@@ -139,19 +139,37 @@ class AnalysisRequirementsChecker:
 
         for property in properties:
             for (prop_label, *_), data in property.items():
-                if prop_label in prop_labels:
-                    if isinstance(_property, str):
-                        if prop_label != _property:
-                            continue
+                if prop_label not in prop_labels:
+                    continue
 
-                    values = [0 if value is None else value for value in data["values"]]
-                    if np.array(sum(values)).any():
-                        return False
+                values = [0 if value is None else value for value in data["values"]]
+                if np.array(sum(values)).any():
+                    return False
 
         title = "Invalid model excitation"    
         message = "Enter a valid structural model excitation to proceed "
         message += "with the structural harmonic analysis solution."
         PrintMessageInput([error_title, title, message])
+
+        return True
+
+    def check_nonzero_prescribed_dof_for_mode_superposition_method(self):
+
+        properties = [
+                      self.properties.surface_properties, 
+                      self.properties.line_properties, 
+                      self.properties.point_properties, 
+                      self.properties.nodal_properties,
+                      ]
+
+        for property in properties:
+            for (prop_label, *_), data in property.items():
+                if prop_label != "prescribed_dof":
+                    continue
+
+                values = [0 if value is None else value for value in data["values"]]
+                if np.array(sum(values)).any():
+                    return False
 
         return True
 
@@ -183,7 +201,7 @@ class AnalysisRequirementsChecker:
         
     def check_mode_superposition_prescribed_dof_criterion(self):
 
-        if self.check_structural_harmonic_excitations("prescribed_dof"):
+        if self.check_nonzero_prescribed_dof_for_mode_superposition_method():
             return False
 
         title = "Invalid model excitation for harmonic analysis"    
