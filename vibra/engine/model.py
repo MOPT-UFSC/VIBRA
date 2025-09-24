@@ -336,9 +336,9 @@ class Model:
         self.acoustic_element_2d = element_2d
         self.acoustic_element_3d = element_3d
 
-    def get_acoustic_global_dofs_from_nodes(self, node_ids: np.ndarray):
+    def get_acoustic_global_dof_from_nodes(self, node_ids: np.ndarray):
         """
-        This method returns the global dofs for the entered nodes.
+        This method returns the global dof for the entered nodes.
 
         Parameter
         ---------
@@ -347,16 +347,16 @@ class Model:
 
         Return
         ------
-        global_dofs: np.array
-            An array containing the global dofs from input nodes.
+        global_dof: np.array
+            An array containing the global dof from input nodes.
         """
         _nodes = node_ids.reshape(-1, 1)
-        _dofs_per_node = self.acoustic_element_3d.DOFS_PER_NODE
+        _dof_per_node = self.acoustic_element_3d.DOF_PER_NODE
 
-        global_dofs = _dofs_per_node * _nodes + np.arange(_dofs_per_node)
-        global_dofs = np.array(global_dofs.flatten(), dtype=int)
+        global_dof = _dof_per_node * _nodes + np.arange(_dof_per_node)
+        global_dof = np.array(global_dof.flatten(), dtype=int)
 
-        return global_dofs
+        return global_dof
 
     def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
 
@@ -366,7 +366,7 @@ class Model:
             if element_2d is None:
                 return output_data
 
-            dofs_per_node = element_2d.DOFS_PER_NODE
+            dof_per_node = element_2d.DOF_PER_NODE
 
         else:
             
@@ -374,10 +374,10 @@ class Model:
             if element_3d is None:
                 return output_data
 
-            dofs_per_node = element_3d.DOFS_PER_NODE
+            dof_per_node = element_3d.DOF_PER_NODE
 
-        local_dofs = np.arange(dofs_per_node, dtype=int)
-        global_dofs = dofs_per_node * nodes.reshape(-1, 1) + local_dofs
+        local_dof = np.arange(dof_per_node, dtype=int)
+        global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
 
         den = 1
         if "nodal_attribution" in data.keys():
@@ -398,8 +398,8 @@ class Model:
                 else:
                     pass
 
-        for node_gdofs in global_dofs:
-            for j, gdof in enumerate(node_gdofs):
+        for node_gdof in global_dof:
+            for j, gdof in enumerate(node_gdof):
 
                 values = data["values"][j]
                 if values is None:
@@ -750,5 +750,5 @@ class Model:
         return False
 
     def process_degrees_of_freedom_decoupling(self):
-        self.dofs_decoupling = DegreesOfFreedomDecoupling(self)
-        self.dofs_decoupling.process_degrees_of_freedom_decoupling()
+        self.dof_decoupling = DegreesOfFreedomDecoupling(self)
+        self.dof_decoupling.process_degrees_of_freedom_decoupling()

@@ -355,6 +355,9 @@
                <property name="text">
                 <string>Reset</string>
                </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
              <item row="0" column="1">
@@ -386,13 +389,16 @@
                <property name="text">
                 <string>Remove</string>
                </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
               </widget>
              </item>
             </layout>
            </widget>
           </item>
           <item row="0" column="0">
-           <widget class="QTreeWidget" name="treeWidget_dofs_decoupling">
+           <widget class="QTreeWidget" name="treeWidget_dof_decoupling">
             <property name="minimumSize">
              <size>
               <width>320</width>
@@ -652,6 +658,9 @@
         <property name="text">
          <string>Attribute</string>
         </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
        </widget>
       </item>
       <item row="0" column="0">
@@ -682,6 +691,9 @@
         </property>
         <property name="text">
          <string>Exit</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

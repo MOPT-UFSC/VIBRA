@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'transfer_impedance_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -15,17 +15,17 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
-    QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
-    QTreeWidget, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+    QHeaderView, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QTabWidget, QTreeWidget,
+    QTreeWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModal)
-        Dialog.resize(420, 477)
+        Dialog.resize(420, 423)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -206,6 +206,7 @@ class Ui_Dialog(object):
         icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_load_table.setIcon(icon)
         self.pushButton_load_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_table.setAutoDefault(False)
 
         self.gridLayout_2.addWidget(self.pushButton_load_table, 2, 2, 1, 1)
 
@@ -244,6 +245,7 @@ class Ui_Dialog(object):
         icon1.addFile(u":/icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_change_frequency_setup.setIcon(icon1)
         self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
+        self.pushButton_change_frequency_setup.setAutoDefault(False)
 
         self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 3, 2, 1, 1)
 
@@ -254,13 +256,14 @@ class Ui_Dialog(object):
         self.tab_list = QWidget()
         self.tab_list.setObjectName(u"tab_list")
         self.gridLayout_9 = QGridLayout(self.tab_list)
-        self.gridLayout_9.setSpacing(2)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.gridLayout_9.setContentsMargins(2, 8, 2, 2)
+        self.gridLayout_9.setHorizontalSpacing(2)
+        self.gridLayout_9.setVerticalSpacing(6)
+        self.gridLayout_9.setContentsMargins(8, 8, 8, 8)
         self.frame_3 = QFrame(self.tab_list)
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(320, 40))
-        self.frame_3.setMaximumSize(QSize(320, 40))
+        self.frame_3.setMaximumSize(QSize(16777215, 40))
         self.frame_3.setFrameShape(QFrame.NoFrame)
         self.frame_3.setFrameShadow(QFrame.Raised)
         self.gridLayout_8 = QGridLayout(self.frame_3)
@@ -273,6 +276,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -282,6 +286,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -295,7 +300,7 @@ class Ui_Dialog(object):
         self.treeWidget_transfer_impedance.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_transfer_impedance.setObjectName(u"treeWidget_transfer_impedance")
         self.treeWidget_transfer_impedance.setMinimumSize(QSize(320, 70))
-        self.treeWidget_transfer_impedance.setMaximumSize(QSize(320, 200))
+        self.treeWidget_transfer_impedance.setMaximumSize(QSize(16777215, 200))
         font4 = QFont()
         font4.setFamilies([u"MS Shell Dlg 2"])
         font4.setPointSize(9)
@@ -316,89 +321,47 @@ class Ui_Dialog(object):
 
         self.frame_6 = QFrame(self.frame_2)
         self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setMinimumSize(QSize(400, 110))
-        self.frame_6.setMaximumSize(QSize(16777215, 110))
+        self.frame_6.setMinimumSize(QSize(400, 48))
+        self.frame_6.setMaximumSize(QSize(16777215, 48))
         self.frame_6.setFrameShape(QFrame.NoFrame)
         self.frame_6.setFrameShadow(QFrame.Raised)
         self.frame_6.setLineWidth(1)
         self.gridLayout_10 = QGridLayout(self.frame_6)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setContentsMargins(6, 6, 6, 6)
-        self.label_16 = QLabel(self.frame_6)
-        self.label_16.setObjectName(u"label_16")
-        self.label_16.setMinimumSize(QSize(100, 28))
-        self.label_16.setMaximumSize(QSize(120, 28))
-        font5 = QFont()
-        font5.setFamilies([u"MS Shell Dlg 2"])
-        font5.setPointSize(10)
-        font5.setBold(False)
-        self.label_16.setFont(font5)
-        self.label_16.setTextFormat(Qt.AutoText)
-        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_10.addWidget(self.label_16, 2, 1, 1, 1)
-
-        self.comboBox_selection_type = QComboBox(self.frame_6)
-        self.comboBox_selection_type.addItem("")
-        self.comboBox_selection_type.addItem("")
-        self.comboBox_selection_type.setObjectName(u"comboBox_selection_type")
-        self.comboBox_selection_type.setMinimumSize(QSize(160, 28))
-        self.comboBox_selection_type.setMaximumSize(QSize(160, 28))
-        self.comboBox_selection_type.setFont(font1)
-
-        self.gridLayout_10.addWidget(self.comboBox_selection_type, 2, 2, 1, 2)
-
         self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_10.addItem(self.horizontalSpacer_6, 0, 4, 1, 1)
-
-        self.lineEdit_selection_id_A = QLineEdit(self.frame_6)
-        self.lineEdit_selection_id_A.setObjectName(u"lineEdit_selection_id_A")
-        self.lineEdit_selection_id_A.setEnabled(True)
-        self.lineEdit_selection_id_A.setMinimumSize(QSize(160, 28))
-        self.lineEdit_selection_id_A.setMaximumSize(QSize(160, 28))
-        self.lineEdit_selection_id_A.setFont(font1)
-        self.lineEdit_selection_id_A.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selection_id_A.setStyleSheet(u"")
-        self.lineEdit_selection_id_A.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_10.addWidget(self.lineEdit_selection_id_A, 0, 2, 1, 2)
 
         self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_10.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
 
+        self.lineEdit_selection_id = QLineEdit(self.frame_6)
+        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
+        self.lineEdit_selection_id.setEnabled(True)
+        self.lineEdit_selection_id.setMinimumSize(QSize(160, 28))
+        self.lineEdit_selection_id.setMaximumSize(QSize(160, 28))
+        self.lineEdit_selection_id.setFont(font1)
+        self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_10.addWidget(self.lineEdit_selection_id, 0, 2, 1, 2)
+
         self.label_selection_A = QLabel(self.frame_6)
         self.label_selection_A.setObjectName(u"label_selection_A")
         self.label_selection_A.setMinimumSize(QSize(100, 28))
         self.label_selection_A.setMaximumSize(QSize(120, 28))
+        font5 = QFont()
+        font5.setFamilies([u"MS Shell Dlg 2"])
+        font5.setPointSize(10)
+        font5.setBold(False)
         self.label_selection_A.setFont(font5)
         self.label_selection_A.setTextFormat(Qt.AutoText)
         self.label_selection_A.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_10.addWidget(self.label_selection_A, 0, 1, 1, 1)
-
-        self.label_selection_B = QLabel(self.frame_6)
-        self.label_selection_B.setObjectName(u"label_selection_B")
-        self.label_selection_B.setMinimumSize(QSize(100, 28))
-        self.label_selection_B.setMaximumSize(QSize(120, 28))
-        self.label_selection_B.setFont(font5)
-        self.label_selection_B.setTextFormat(Qt.AutoText)
-        self.label_selection_B.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_10.addWidget(self.label_selection_B, 1, 1, 1, 1)
-
-        self.lineEdit_selection_id_B = QLineEdit(self.frame_6)
-        self.lineEdit_selection_id_B.setObjectName(u"lineEdit_selection_id_B")
-        self.lineEdit_selection_id_B.setEnabled(True)
-        self.lineEdit_selection_id_B.setMinimumSize(QSize(160, 28))
-        self.lineEdit_selection_id_B.setMaximumSize(QSize(160, 28))
-        self.lineEdit_selection_id_B.setFont(font1)
-        self.lineEdit_selection_id_B.setFocusPolicy(Qt.ClickFocus)
-        self.lineEdit_selection_id_B.setStyleSheet(u"")
-        self.lineEdit_selection_id_B.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_10.addWidget(self.lineEdit_selection_id_B, 1, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_6, 0, 0, 1, 1)
@@ -449,6 +412,7 @@ class Ui_Dialog(object):
         self.pushButton_attribute.setMaximumSize(QSize(100, 28))
         self.pushButton_attribute.setFont(font2)
         self.pushButton_attribute.setStyleSheet(u"")
+        self.pushButton_attribute.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_attribute, 0, 1, 1, 1)
 
@@ -458,6 +422,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font2)
         self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 
@@ -467,8 +432,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(1)
-        self.comboBox_selection_type.setCurrentIndex(0)
+        self.tabWidget_main.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -500,14 +464,8 @@ class Ui_Dialog(object):
         self.treeWidget_transfer_impedance.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Selection type:", None))
-        self.comboBox_selection_type.setItemText(0, QCoreApplication.translate("Dialog", u"Inside surfaces", None))
-        self.comboBox_selection_type.setItemText(1, QCoreApplication.translate("Dialog", u"Outside surfaces", None))
-
-        self.lineEdit_selection_id_A.setText("")
-        self.label_selection_A.setText(QCoreApplication.translate("Dialog", u"Selected surfaces A:", None))
-        self.label_selection_B.setText(QCoreApplication.translate("Dialog", u"Selected surfaces B:", None))
-        self.lineEdit_selection_id_B.setText("")
+        self.lineEdit_selection_id.setText("")
+        self.label_selection_A.setText(QCoreApplication.translate("Dialog", u"Selected surfaces:", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Set the transfer impedance", None))
         self.pushButton_attribute.setText(QCoreApplication.translate("Dialog", u"Attribute", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
@@ -550,12 +508,8 @@ class TransferImpedanceInputs_UI(QDialog, Ui_Dialog):
                                             - treeWidget_transfer_impedance: QTreeWidget
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
-                                        - label_16: QLabel
-                                        - comboBox_selection_type: QComboBox
-                                        - lineEdit_selection_id_A: QLineEdit
+                                        - lineEdit_selection_id: QLineEdit
                                         - label_selection_A: QLabel
-                                        - label_selection_B: QLabel
-                                        - lineEdit_selection_id_B: QLineEdit
                 - frame: QFrame
                     - (Layout): QGridLayout
                             - label: QLabel

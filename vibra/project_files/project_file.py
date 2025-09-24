@@ -419,6 +419,8 @@ class ProjectFile:
                         for _key, _data in data.items():
                             if _key in ["values"]:
                                 continue
+                            elif isinstance(_data, Fluid):
+                                aux[_key] = _data.get_data()
                             else:
                                 aux[_key] = _data
 
@@ -438,6 +440,7 @@ class ProjectFile:
                 return output
 
             properties = app().project.model.properties
+
             data = dict(
                         # global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
@@ -446,8 +449,9 @@ class ProjectFile:
                         point_properties = normalize(properties.point_properties),
                         element_properties = normalize(properties.element_properties),
                         nodal_properties = normalize(properties.nodal_properties),
+                        group_properties = normalize(properties.group_properties)
                         )
-
+                                        
             write_json(self.model_properties_filepath, data)
             app().main_window.project_data_modified = True
 
@@ -467,15 +471,19 @@ class ProjectFile:
             for key, val in prop.items():
 
                 key: str
-                p, *_ids = key.split()
-                p = p.strip()
+                property, *_ids = key.split()
+                property = property.strip()
+
+                if property == "perforated_plate_model":
+                    fluid = Fluid(**val["fluid"])
+                    val["fluid"] = fluid
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])
                 else:
                     ids = tuple([int(_id) for _id in _ids])
 
-                new_prop[p, ids] = val
+                new_prop[property, ids] = val
 
             return new_prop
 
@@ -492,6 +500,7 @@ class ProjectFile:
                                 point_properties = denormalize(data.get("point_properties")),
                                 element_properties = denormalize(data.get("element_properties")),
                                 nodal_properties = denormalize(data.get("nodal_properties")),
+                                group_properties = denormalize(data.get("group_properties"))
                                 )
 
         return model_properties
@@ -583,10 +592,10 @@ class ProjectFile:
                 if structural_modal_solver.solution is not None:
                     natural_frequencies = structural_modal_solver.natural_frequencies
                     solution_full = structural_modal_solver.solution
-                    displacement_dofs = structural_modal_solver.displacement_dofs
+                    displacement_dof = structural_modal_solver.displacement_dof
                     f.create_dataset("modal_structural/natural_frequencies", data=natural_frequencies, dtype=float)
                     f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
-                    f.create_dataset("modal_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+                    f.create_dataset("modal_structural/displacement_dof", data=displacement_dof, dtype=int)
 
             # acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
             # if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
@@ -596,33 +605,44 @@ class ProjectFile:
             #         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
             #         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
 
-            structural_harmonic_solver = app().project.structural_harmonic_solver
-            if structural_harmonic_solver is not None:
-                if structural_harmonic_solver.solution is not None:
-                    frequencies = app().project.model.frequencies
-                    solution = structural_harmonic_solver.solution
-                    displacement_dofs = structural_harmonic_solver.displacement_dofs
-                    f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
-                    f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
-                    f.create_dataset("harmonic_structural/displacement_dofs", data=displacement_dofs, dtype=int)
+            # structural_harmonic_solver = app().project.structural_harmonic_solver
+            # if structural_harmonic_solver is not None:
+            #     if structural_harmonic_solver.solution is not None:
+            #         frequencies = app().project.model.frequencies
+            #         solution = structural_harmonic_solver.solution
+            #         displacement_dof = structural_harmonic_solver.displacement_dof
+            #         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+            #         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+            #         f.create_dataset("harmonic_structural/displacement_dof", data=displacement_dof, dtype=int)
 
             app().main_window.project_data_modified = True
 
-    def handling_harmonic_solution_results(self):
+    def handling_harmonic_solution_results(self, solver_tag: str):
         if not self.results_data_filepath.exists():
             return
         with h5py.File(self.results_data_filepath, "r") as f_src:
-            # Converting Acoustic Harmonic solution in the old form.
-            analysis = f_src.get("harmonic_acoustic")
+            # Converting Harmonic solution in the old form.
+            analysis = f_src.get(solver_tag)
             if analysis:
+                for key in ["displacement_dofs", "displacement_dof"]:
+                    displacement_dof = analysis.get(key)
+                    if isinstance(displacement_dof, np.ndarray):
+                        break
+
                 frequencies = analysis.get("frequencies")
-                if frequencies:
-                    solution_dset = analysis["solution"]
-                    if solution_dset.chunks is None:
-                        solution = solution_dset[()]
-                        writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
-                        for i, freq in enumerate(frequencies):
-                            writer[:, i] = solution[:, i]
+                solution_dset = analysis.get("solution")
+
+                if (displacement_dof, frequencies, solution_dset).count(None):
+                    return
+
+                solution = solution_dset[()]
+                writer = LazyHDF5MatrixWriter(self.harmonic_solution_filepath, solution.shape[0], frequencies, solution.dtype)
+
+                if displacement_dof is not None:
+                    writer.save_extra_data("displacement_dof", displacement_dof, dtype=int)
+
+                for i in range(frequencies.size):
+                    writer[:, i] = solution[:, i]
 
         self.remove_results_data_from_project_file()
 
@@ -681,6 +701,7 @@ class ProjectFile:
 
     def remove_results_data_from_project_file(self):
         self.results_data_filepath.unlink(missing_ok=True)
+        self.harmonic_solution_filepath.unlink(missing_ok=True)
 
     def archive_project(self, zip_path: Path):
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_STORED) as zipf:

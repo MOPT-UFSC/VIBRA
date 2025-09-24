@@ -121,3 +121,39 @@ def create_acoustic_transfer_element_data_source():
         rotation=(0, 90, 180),
         scale=(1, 1, 1),
     )
+
+def create_dof_cone_rotation_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_rotation.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, -90),
+        scale=(.4, .4, .4),
+    )
+
+def create_dof_cone_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, -90),
+        scale=(.4, .4, .4),
+    )
+
+def create_nodal_loads_momentum_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_double_arrow.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.15, .15, .15),
+    )
+
+def create_nodal_loads_force_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_arrow.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.15, .15, .15),
+    )

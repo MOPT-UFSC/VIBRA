@@ -132,8 +132,8 @@ def get_detJAC_and_invJAC_3D(JAC):
 class ACT_HEXAHEDRON_20C(Element3D):
     #
     NODES_PER_ELEMENT = 20
-    DOFS_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 1
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model):
         self.model = model
@@ -331,12 +331,12 @@ class ACT_HEXAHEDRON_20C(Element3D):
         detJAC, invJAC = get_detJAC_and_invJAC_3D(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 3, self.DOFS_PER_ELEMENT_3D), dtype=float)
+        B = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT_3D), dtype=float)
         B[:, 0, :] = dphi_t[:, 0, :]
         B[:, 1, :] = dphi_t[:, 1, :]
         B[:, 2, :] = dphi_t[:, 2, :]
 
-        N = np.zeros((self.nint, 1, self.DOFS_PER_ELEMENT_3D), dtype=float)
+        N = np.zeros((self.nint, 1, self.DOF_PER_ELEMENT_3D), dtype=float)
         N[:, 0, :] = self.phi
 
         # integration loop
@@ -355,14 +355,14 @@ class ACT_HEXAHEDRON_20C(Element3D):
         ]
 
     def generate_ind_rows_cols(self):
-        """This method processess the dofs indices (rows and columns) for assembly"""
+        """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT_3D
-        ind_dofs = dofs * self.connectivity[:, 1:]
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT_3D
+        ind_dof = dof * self.connectivity[:, 1:]
 
-        vect_indices = ind_dofs.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edofs, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dofs, edofs)).flatten()
+        vect_indices = ind_dof.flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return self.ind_rows, self.ind_cols

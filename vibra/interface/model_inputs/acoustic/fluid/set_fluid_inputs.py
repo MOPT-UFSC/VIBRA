@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QAbstractItemView, QDialog, QComboBox, QGridLayout, QHeaderView, QLineEdit, QPushButton, QScrollArea, QTableWidget, QTabWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidget, QTableWidgetItem
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
@@ -151,7 +151,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def _config_widgets(self):
         self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
-        self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.tableWidget_model_fluids.setEditTriggers(QAbstractItemView.EditTrigger(0))
 
     def update_fluid_selection(self):
