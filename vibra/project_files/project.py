@@ -310,9 +310,9 @@ class Project(QObject):
             if checker.check_acoustic_harmonic_analysis():
                 return True
             LoadingWindow(
-                lambda: analysis.process_acoustic_harmonic_analysis(is_resume),
+                analysis.process_acoustic_harmonic_analysis,
                 interrupt_function,    
-            ).run()
+            ).run(is_resume)
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
