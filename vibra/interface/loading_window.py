@@ -57,10 +57,11 @@ class LoadingWindow(LoadingWindow_UI):
     update the progress bar and progress label.
     """
 
-    def __init__(self, _function):
+    def __init__(self, _function, _interrupt=None):
         super().__init__()
 
         self._function = _function
+        self._interrupt = _interrupt
 
         self._config_window()
         self._create_connections()
@@ -72,13 +73,14 @@ class LoadingWindow(LoadingWindow_UI):
         self.setWindowModality(Qt.ApplicationModal)
         self.update_position()
         self.progress_bar.setValue(0)
-        self.push_button_stop_processing.setEnabled(False)
+        self.push_button_stop_processing.setVisible(self._interrupt is not None)
 
     def _create_connections(self):
         self.push_button_stop_processing.clicked.connect(self.stop_processing_callback)
 
     def stop_processing_callback(self):
-        app().project.model.stop_processing_callback()
+        if self._interrupt is not None:
+            self._interrupt()
 
     def update_position(self):
         """
@@ -164,10 +166,6 @@ class ProgressBarLogUpdater(logging.Handler):
 
         elif "..." in record.msg:
             self.loading_window.progress_label.setText(record.msg)
-
-        assemble_stage = "Processing the elementary matrices data" in record.message
-        solution_stage = "Solution step" in record.message
-        self.loading_window.push_button_stop_processing.setEnabled(assemble_stage or solution_stage)
 
         # Updates QT to show the window modifications
         QApplication.processEvents()

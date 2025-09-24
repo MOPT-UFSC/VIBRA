@@ -287,6 +287,7 @@ class Project(QObject):
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
+        interrupt_function = app().project.model.stop_processing_callback
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
@@ -294,7 +295,11 @@ class Project(QObject):
         ]:
             if checker.check_structural_harmonic_analysis():
                 return True
-            LoadingWindow(analysis.process_structural_harmonic_analysis).run()
+
+            LoadingWindow(
+                analysis.process_structural_harmonic_analysis,
+                interrupt_function,
+            ).run()
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             if checker.check_structural_modal_analysis():
@@ -304,7 +309,10 @@ class Project(QObject):
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
-            LoadingWindow(lambda: analysis.process_acoustic_harmonic_analysis(is_resume)).run()
+            LoadingWindow(
+                lambda: analysis.process_acoustic_harmonic_analysis(is_resume),
+                interrupt_function,    
+            ).run()
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
