@@ -738,5 +738,5 @@ class Model:
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
 
-    def stop_processing_callback(self):
+    def toggle_processing_callback(self):
         self.stop_processing = not self.stop_processing

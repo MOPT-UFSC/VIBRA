@@ -287,7 +287,7 @@ class Project(QObject):
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
-        interrupt_function = app().project.model.stop_processing_callback
+        interrupt_function = app().project.model.toggle_processing_callback
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,

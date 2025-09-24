@@ -253,7 +253,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if app().project.model.stop_processing:
-            app().project.model.stop_processing_callback()
+            app().project.model.toggle_processing_callback()
             app().file.remove_results_data_from_project_file()
             return
 
