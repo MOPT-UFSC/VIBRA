@@ -180,7 +180,7 @@ class Model:
             title = "Error while processing geometry"
             message = str(error_log)
             PrintMessageInput([window_title_1, title, message])
-            return -1       
+            return -1      
 
     def process_mesh_data(self, path : str):
 
@@ -715,7 +715,6 @@ class Model:
                 self.mesh.set_face_element_thickness(surface_id, data)
 
     def is_surface_thickness_properly_applied_in_model(self):
-
         volume_exists = self.geometry.are_there_volumes_in_geometry()
         if volume_exists:
             return None
