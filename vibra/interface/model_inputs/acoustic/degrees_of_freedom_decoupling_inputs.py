@@ -54,9 +54,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         #
         for i, width in enumerate([140]):
             self.treeWidget_selection_info.setColumnWidth(i, width)
-            self.treeWidget_dofs_decoupling.setColumnWidth(i, width)
+            self.treeWidget_dof_decoupling.setColumnWidth(i, width)
             self.treeWidget_selection_info.headerItem().setTextAlignment(i, Qt.AlignCenter)           
-            self.treeWidget_dofs_decoupling.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_dof_decoupling.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -66,8 +66,8 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        self.treeWidget_dofs_decoupling.itemClicked.connect(self.on_click_item)
-        self.treeWidget_dofs_decoupling.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_dof_decoupling.itemClicked.connect(self.on_click_item)
+        self.treeWidget_dof_decoupling.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
@@ -314,7 +314,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.on_click_item(item)
 
     def load_model_info(self):
-        self.treeWidget_dofs_decoupling.clear()
+        self.treeWidget_dof_decoupling.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "degrees_of_freedom_decoupling":
@@ -331,7 +331,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 new = QTreeWidgetItem([str(surface_id), str(volume_id)])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_dofs_decoupling.addTopLevelItem(new)
+                self.treeWidget_dof_decoupling.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 

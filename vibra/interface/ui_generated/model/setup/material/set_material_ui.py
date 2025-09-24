@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'set_material.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(720, 500)
+        Dialog.resize(900, 500)
         Dialog.setMinimumSize(QSize(600, 500))
         Dialog.setMaximumSize(QSize(900, 600))
         self.gridLayout = QGridLayout(Dialog)
@@ -136,7 +136,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 690, 323))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 870, 323))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
@@ -167,6 +167,7 @@ class Ui_Dialog(object):
         font2.setItalic(False)
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -176,6 +177,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 

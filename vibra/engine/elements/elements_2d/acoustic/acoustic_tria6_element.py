@@ -130,8 +130,8 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
 class ACT_TRIANGLE_6(Element2D):
 
     NODES_PER_ELEMENT = 6
-    DOFS_PER_NODE = 1
-    DOFS_PER_ELEMENT = NODES_PER_ELEMENT * DOFS_PER_NODE
+    DOF_PER_NODE = 1
+    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model: "Model"):
 
@@ -506,17 +506,17 @@ class ACT_TRIANGLE_6(Element2D):
 
     def generate_ind_rows_cols(self, connectivities: np.ndarray):
         """
-        This method processess the dofs indices (rows and columns) 
+        This method processess the dof indices (rows and columns) 
         for assembly
         """
 
         self.reorder_connect(connectivities)
-        dofs, edofs = self.DOFS_PER_NODE, self.DOFS_PER_ELEMENT
-        ind_dofs = dofs * self.connectivities[:, :]
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        ind_dof = dof * self.connectivities[:, :]
 
-        vect_indices = ind_dofs.flatten()
-        ind_rows_face = ((np.tile(vect_indices, (edofs,1))).T).flatten()
-        ind_cols_face = (np.tile(ind_dofs, edofs)).flatten()
+        vect_indices = ind_dof.flatten()
+        ind_rows_face = ((np.tile(vect_indices, (edof,1))).T).flatten()
+        ind_cols_face = (np.tile(ind_dof, edof)).flatten()
 
         return ind_rows_face, ind_cols_face
 

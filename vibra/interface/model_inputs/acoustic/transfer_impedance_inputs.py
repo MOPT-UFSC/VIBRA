@@ -1,22 +1,22 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
 
 from vibra import app, UI_DIR
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 
 from copy import deepcopy
 
 import logging, os, warnings
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 
 class TransferImpedanceInputs(TransferImpedanceInputs_UI):
@@ -56,16 +56,14 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def _configure_qt_variables(self):
         #
-        self.current_lineEdit = self.lineEdit_selection_id_A
         self.pushButton_change_frequency_setup.setDisabled(True)
         #
-        for i, w in enumerate([120]):
-            self.treeWidget_transfer_impedance.setColumnWidth(i, w)
+        for i in range(2):
             self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
+        self.treeWidget_transfer_impedance.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
     def _create_connections(self):
-        #
-        self.comboBox_selection_type.currentIndexChanged.connect(self.selection_type_callback)
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
@@ -81,11 +79,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
-        self.clickable(self.lineEdit_selection_id_A).connect(self.lineEdit_selection_A_clicked)
-        self.clickable(self.lineEdit_selection_id_B).connect(self.lineEdit_selection_B_clicked)
-        #
         self.geometry_selection_callback()
-        self.selection_type_callback()
     
     def _paint_icons(self):
         icon_color = None
@@ -99,98 +93,25 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         widgets = [self.pushButton_load_table]
         change_icon_color_for_widgets(widgets, icon_color)
 
-    def clickable(self, widget: QLineEdit):
-        class Filter(QObject):
-            clicked = Signal()
-
-            def eventFilter(self, obj, event):
-                if obj == widget and event.type() == QEvent.MouseButtonRelease and obj.rect().contains(event.pos()):
-                    self.clicked.emit()
-                    return True
-                else:
-                    return False
-
-        filter = Filter(widget)
-        widget.installEventFilter(filter)
-        return filter.clicked
-
-    def lineEdit_selection_A_clicked(self):
-        app().main_window.set_geometry_selection()
-        self.current_lineEdit = self.lineEdit_selection_id_A
-        self.highlight_line_edit()
-
-    def lineEdit_selection_B_clicked(self):
-        app().main_window.set_geometry_selection()
-        if self.lineEdit_selection_id_B.isEnabled():
-            self.current_lineEdit = self.lineEdit_selection_id_B
-            self.highlight_line_edit()
-
-    def highlight_line_edit(self):
-        self.current_lineEdit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
-        if self.current_lineEdit == self.lineEdit_selection_id_A:
-            self.lineEdit_selection_id_B.setStyleSheet("")
-        else:
-            self.lineEdit_selection_id_A.setStyleSheet("")
-
     def geometry_selection_callback(self):
 
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() != 0:
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
         if surfaces:
+            surface_ids = list(surfaces)
+            surface_ids.sort()
 
-            if len(surfaces) == 1:
-                surface_ids = list(surfaces)[0]
-            elif len(surfaces) > 1:
-                surface_ids = list(surfaces)
-                surface_ids.sort()
-                surface_ids = tuple(surface_ids)
-            else:
-                return
+            text = ", ".join([str(i) for i in surface_ids])
+            self.lineEdit_selection_id.setText(text)
 
-            self.update_selected_ids(surface_ids)
-            # self.update_selection_type_based_on_surface_ids(surface_ids)
+            if len(surface_ids) == 1:
+                pp_data = self.properties._get_property("transfer_impedance", surface=surface_ids[0])
+                if pp_data is None:
+                    return
 
-            pp_data = self.properties._get_property("transfer_impedance", surface=surface_ids)
-            if pp_data is None:
-                return
-
-            self.load_property_data(pp_data)
-
-    def update_selection_type_based_on_surface_ids(self, surface_ids: int | tuple[int]):
-
-        if isinstance(surface_ids, int | np.int64):
-            if len(self.mesh.volumes_from_surface[surface_ids]) == 2:
-                self.update_selected_ids(surface_ids)
-                self.comboBox_selection_type.setCurrentIndex(0)
-
-        elif isinstance(surface_ids, tuple):
-            if len(surface_ids) == 2:
-                volumes_from_surface_A = self.mesh.volumes_from_surface[surface_ids[0]]
-                volumes_from_surface_B = self.mesh.volumes_from_surface[surface_ids[1]]
-                if len(volumes_from_surface_A) == len(volumes_from_surface_B) == 1:
-                    self.update_selected_ids(surface_ids)
-                    self.comboBox_selection_type.setCurrentIndex(1)
-
-        else:
-            return
-
-    def update_selected_ids(self, surface_ids: int | tuple[int]):
-
-        if isinstance(surface_ids, int | np.int64):
-            surface_ids = [surface_ids]
-
-        text = ", ".join([str(i) for i in surface_ids])
-        self.current_lineEdit.setText(text)
-
-    def selection_type_callback(self):
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
-            self.label_selection_B.setEnabled(False)
-            self.lineEdit_selection_id_B.setEnabled(False)
-        else:
-            self.label_selection_B.setEnabled(True)
-            self.lineEdit_selection_id_B.setEnabled(True)
+                self.load_property_data(pp_data)
 
     def load_property_data(self, pp_data: dict):
 
@@ -200,16 +121,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not isinstance(pp_data, dict):
             return
         
-        surfaces_A = pp_data.get("surfaces_A")
-        if isinstance(surfaces_A, list):
-            self.current_lineEdit = self.lineEdit_selection_id_A
-            self.update_selected_ids(surfaces_A)
-
-        surfaces_B = pp_data.get("surfaces_B")
-        if isinstance(surfaces_B, list):
-            self.current_lineEdit = self.lineEdit_selection_id_B
-            self.update_selected_ids(surfaces_B)
-
         if "table_paths" in pp_data.keys():
             self.tabWidget_main.setCurrentIndex(1)
             self.lineEdit_table_path.setText(pp_data["table_paths"][0])
@@ -219,71 +130,22 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
 
     def check_selected_surfaces(self):
-        
-        surface_ids = list()
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
-        
-            input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids_A,
-                                                                    selection = "surfaces",
-                                                                    single_id = False,
-                                                                    )
 
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id_A.setFocus()
-                PrintMessageInput(error_data)
-                return list()
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids,
+                                                                selection = "surfaces",
+                                                                single_id = False,
+                                                                )
 
-            self.check_selection_type(surface_ids)
-            if not self.ti_data:
-                return list()
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return list()
 
-            surface_ids.sort()
-
-        else:
-
-            input_ids_A = self.lineEdit_selection_id_A.text()
-            surface_ids_A, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids_A, 
-                                                                    selection = "surfaces", 
-                                                                    single_id = False,
-                                                                    )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id_A.setFocus()
-                PrintMessageInput(error_data)
-                return list()
-
-            input_ids_B = self.lineEdit_selection_id_B.text()
-            surface_ids_B, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids_B, 
-                                                                    selection = "surfaces", 
-                                                                    single_id = False,
-                                                                    )
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id_B.setFocus()
-                PrintMessageInput(error_data)
-                return list()
-
-            self.check_selection_type(surface_ids_A)
-            if not self.ti_data:
-                return list()
-
-            self.check_selection_type(surface_ids_B)
-            if not self.ti_data:
-                return list()
-
-            surface_ids_A.sort()
-            surface_ids_B.sort()
-            self.ti_data["surfaces_A"] = surface_ids_A
-            self.ti_data["surfaces_B"] = surface_ids_B
-            surface_ids.extend(surface_ids_A)
-            surface_ids.extend(surface_ids_B)
+        if self.check_selection_type(surface_ids):
+            return list()
 
         surface_ids.sort()
 
@@ -298,7 +160,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         surface_ids = self.check_selected_surfaces()
         if not surface_ids:
             return
-        
+
         self.remove_conflicting_excitations(surface_ids)
 
         if tab_index == 0:
@@ -307,8 +169,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         elif tab_index == 1:
             self.process_assignment_for_table_values(surface_ids)
 
-        self.lineEdit_selection_id_A.setText("")
-        self.lineEdit_selection_id_B.setText("")
+        self.lineEdit_selection_id.setText("")
 
     def process_assignment_for_constant_values(self, surface_ids: int | tuple[int]):
         
@@ -323,7 +184,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             title = "Additional inputs required"
             message = "You must enter a non-null transfer impedance "
             message += "to proceed with the assignment."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return
 
@@ -332,19 +193,12 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                              "imag_values" : [imag_value],
                              })
 
-        data = deepcopy(self.ti_data)
-
-        if self.ti_data.get("coupling_type") == "inside_surfaces":
-            for surface_id in surface_ids:
-                self.properties._set_property("transfer_impedance", data, surface=surface_id)
-                self.decouple_degrees_of_freedom(surface_id)
-
-        else:
-            self.properties._set_property("transfer_impedance", data, surface=tuple(surface_ids))
+        for surface_id in surface_ids:
+            self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
+            self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id_A.setText("")
-        self.lineEdit_selection_id_B.setText("")
+        self.lineEdit_selection_id.setText("")
 
         self.hide()
         self.actions_to_finalize()
@@ -371,14 +225,14 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
             return imported_file
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -393,7 +247,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -434,7 +288,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             title = "Additional inputs required"
             message = "You must inform a valid transfer impedance "
             message += "table path before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return
 
@@ -445,21 +299,13 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if self.imported_values is None:
             return
 
-        if self.ti_data.get("coupling_type") == "inside_surfaces":
-            for surface_id in surface_ids:
-                self.include_transfer_impedance_table_data(surface_id)
-                data = deepcopy(self.ti_data)
-                self.properties._set_property("transfer_impedance", data, surface=surface_id)
-                self.decouple_degrees_of_freedom(surface_id)
-
-        else:
-            data = deepcopy(self.ti_data)
-            self.include_transfer_impedance_table_data(surface_ids)
-            self.properties._set_property("transfer_impedance", data, surface=tuple(surface_ids))
+        for surface_id in surface_ids:
+            self.include_transfer_impedance_table_data(surface_id)
+            self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
+            self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id_A.setText("")
-        self.lineEdit_selection_id_B.setText("")
+        self.lineEdit_selection_id.setText("")
 
         self.hide()
         self.actions_to_finalize()
@@ -478,25 +324,17 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.pushButton_remove.setDisabled(True)
         if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id_A.setText("")
-            self.lineEdit_selection_id_B.setText("")
-            self.lineEdit_selection_id_A.setDisabled(True)
-        else:
+            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.setDisabled(True)
+            return
 
-            if ("(" or ")") in self.lineEdit_selection_id_A.text():
-                self.lineEdit_selection_id_A.setText("")
-                self.lineEdit_selection_id_B.setText("")
-                app().main_window.set_geometry_selection()
-
-            else:
-                self.geometry_selection_callback()
-
-            self.lineEdit_selection_id_A.setDisabled(False)
+        self.geometry_selection_callback()
+        self.lineEdit_selection_id.setEnabled(True)
 
     def on_click_item(self, item):
 
         self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id_A.setText(item.text(0))
+        self.lineEdit_selection_id.setText(item.text(0))
 
         text = item.text(0).replace("(", "").replace(")", "").replace(",", "")
         str_surface_ids = text.split()
@@ -516,31 +354,15 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         title = "Invalid selection detected"
 
-        selection_type = self.comboBox_selection_type.currentText()
-        if selection_type == "Inside surfaces":
-            for surface_id in surface_ids:
-                if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                    self.hide()
-                    message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
-                    message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
-                    message += "assignment will be ignored until all requirements are met."
-                    PrintMessageInput([window_title_1, title, message])
-                    self.ti_data.clear()
-                    return True
-
-        else:
-
-            for surface_id in surface_ids:
-                if len(self.mesh.volumes_from_surface[surface_id]) != 1:
-                    self.hide()
-                    message = f"The selected surface ID #{surface_id} does not correspond to an outside surface "
-                    message += "(surfaces associated to only one volume). The transfer impedance assignment "
-                    message += "will be ignored until all requirements are met."
-                    PrintMessageInput([window_title_1, title, message])
-                    self.ti_data.clear()
-                    return True
-
-        self.ti_data["coupling_type"] = selection_type.lower().replace(" ", "_")
+        for surface_id in surface_ids:
+            if len(self.mesh.volumes_from_surface[surface_id]) != 2:
+                self.hide()
+                message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
+                message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
+                message += "assignment will be ignored until all requirements are met."
+                PrintMessageInput([error_title, title, message])
+                self.ti_data.clear()
+                return True
 
     def load_model_info(self):
 
@@ -591,7 +413,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -660,11 +482,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
-        if self.comboBox_selection_type.currentText() == "Inside surfaces":
-            if isinstance(surface_ids, int):
-                surface_ids = [surface_ids]
-        else:
-            surface_ids = [tuple(surface_ids)]
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
 
         labels = ["transfer_impedance", "interior_impedance"]
 
@@ -705,7 +524,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def remove_callback(self):
         
-        input_ids = self.lineEdit_selection_id_A.text()
+        input_ids = self.lineEdit_selection_id.text()
 
         if input_ids != "":
             input_ids = input_ids.replace("(", "").replace(")", "")
@@ -717,7 +536,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
             if error_data is not None:
                 self.hide()
-                self.lineEdit_selection_id_A.setFocus()
+                self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return
 
@@ -894,7 +713,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if message != "":
             self.hide()
             line_edit.setFocus()
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
 
         return out

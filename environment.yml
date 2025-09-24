@@ -20,5 +20,5 @@ dependencies:
       - pandas==2.2.3
       - fileboxes==0.1.4
       - pypardiso-mopt==0.1.0
-      - pyside6==6.8.2.1
+      - pyside6==6.9.2
       - vtk==9.4.1

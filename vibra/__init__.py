@@ -16,6 +16,8 @@ from molde import Color
 VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
 
+DEVELOPER_MODE = False
+
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
 UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
