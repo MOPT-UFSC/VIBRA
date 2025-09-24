@@ -178,7 +178,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         analysis_setup["analysis_method"] = analysis_method
 
         if analysis_method == "mode_superposition":
-            modes_number = self.check_inputs(self.lineEdit_modes_to_expand, "'modes number'")
+            modes_number = self.check_inputs(self.lineEdit_modes_to_expand, "'modes to expand'")
             if modes_number is None:
                 self.lineEdit_modes_to_expand.setFocus()
                 return True
