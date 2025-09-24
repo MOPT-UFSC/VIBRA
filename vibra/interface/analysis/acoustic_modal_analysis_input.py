@@ -25,7 +25,7 @@ class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
         self.exec()
 
     def _initialize(self):
-        self.modes = None
+        self.modes_number = None
         self.setup_defined = False
         self.proceed_solution = False
 
@@ -50,9 +50,9 @@ class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
                 AnalysisID.STRUCTURAL_MODAL,
                 AnalysisID.ACOUSTIC_MODAL,
             ]:
-                modes = analysis_setup["number_of_modes"]
+                modes_number = analysis_setup["modes_number"]
                 sigma = analysis_setup["sigma_factor"]
-                self.lineEdit_number_modes.setText(str(modes))
+                self.lineEdit_number_modes.setText(str(modes_number))
                 self.lineEdit_sigma_factor.setText(str(sigma))
 
     def check_for_collapsed_elements(self):
@@ -80,7 +80,7 @@ class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
         else:
 
             try:
-                self.modes = int(self.lineEdit_number_modes.text())
+                self.modes_number = int(self.lineEdit_number_modes.text())
             except Exception:
                 message = "Invalid input value for number of modes."
                 PrintMessageInput([window_title_1, title, message])
@@ -102,7 +102,7 @@ class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
 
         self.analysis_setup = {
             "analysis_id": AnalysisID.ACOUSTIC_MODAL,
-            "modes_number": self.modes,
+            "modes_number": self.modes_number,
             "sigma_factor": self.sigma_factor,
         }
 
