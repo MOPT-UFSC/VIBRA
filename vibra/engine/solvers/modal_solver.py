@@ -20,7 +20,7 @@ class ModalSolver:
         self.complex_natural_frequencies = np.array([])
         self.displacement_dof = None
 
-    def solve(self, which="LM", full_solution: bool = True, harmonic_analysis: bool=False):
+    def solve(self, which="LM", full_solution: bool = True):
         """ This method solves the acoustic modal analysis for both damped and undamped problems.
         """
 
@@ -92,5 +92,5 @@ class ModalSolver:
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
 
-        if harmonic_analysis:
-            return self.natural_frequencies, self.solution
+
+        return self.natural_frequencies, self.solution
