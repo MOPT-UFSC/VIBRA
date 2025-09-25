@@ -1,4 +1,4 @@
-from .acoustic.acoustic_hex8_element import ACT_HEXAHEDRON_8C
+from .acoustic.acoustic_hex8_element_new import ACT_HEXAHEDRON_8C
 from .acoustic.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 from .acoustic.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from .acoustic.acoustic_tet10_element import ACT_TETRAHEDRON_10C

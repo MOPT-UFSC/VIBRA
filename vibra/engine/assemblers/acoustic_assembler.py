@@ -1690,7 +1690,7 @@ class AcousticAssembler:
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
-        if self.model.mesh.element_type in [TETRAHEDRON_4, TETRAHEDRON_10] and True:
+        if self.model.mesh.element_type in [TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8] and True:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
             self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)

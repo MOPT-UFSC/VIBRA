@@ -662,6 +662,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         # local coordinates
         (ssx, ttx, rrx) = p_calc[index[0], :]
+        # ssx, ttx, rrx = p_calc[:, 0], p_calc[:, 1], p_calc[:, 2]
 
         # derivative of the shape function at the selected point
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
@@ -671,12 +672,14 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         # Jacobian matrix
         JAC = dphi @ coords
+        # JAC = dphi[index[0], :, :] @ coords
 
         # inverse of Jacobian matrix
         _, invJAC = get_detJAC_and_invJAC(JAC)
-        
+
         # derivative of shape functions
         B = invJAC @ dphi
+        # B = invJAC @ dphi[index[0], :, :]
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
