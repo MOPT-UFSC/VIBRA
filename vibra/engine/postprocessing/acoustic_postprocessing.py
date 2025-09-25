@@ -218,6 +218,7 @@ class AcousticPostprocessing:
         Zs = self.compute_acoustic_impedance(surface_id=surface_id)
         if not Zs.any():
             return aux_zeros
+
         # R is the sound reflection coefficient
         R = (Zs - Z0) / (Zs + Z0)
 
@@ -225,6 +226,7 @@ class AcousticPostprocessing:
         alpha = 1 - (np.abs(R))**2
 
         return alpha
+
     def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray):
         """
         This method computes the nodal average particle velocity in the selected surface.
@@ -289,10 +291,15 @@ class AcousticPostprocessing:
         particle_velocities = dict()
 
         for i, _node_id in enumerate(np.sort(list(pv_data.keys()))):
-            Vx[_node_id] = pv_data[_node_id][0, :]
-            Vy[_node_id] = pv_data[_node_id][1, :]
-            Vz[_node_id] = pv_data[_node_id][2, :]
-            Vn[_node_id] = pv_data[_node_id].T @ data_normals[_node_id]
+
+            nodal_velocities = pv_data.get(_node_id)
+            if nodal_velocities is None:
+                continue
+
+            Vx[_node_id] = nodal_velocities[0, :]
+            Vy[_node_id] = nodal_velocities[1, :]
+            Vz[_node_id] = nodal_velocities[2, :]
+            Vn[_node_id] = nodal_velocities.T @ data_normals[_node_id]
 
         particle_velocities["Vx"] = Vx
         particle_velocities["Vy"] = Vy
@@ -301,7 +308,7 @@ class AcousticPostprocessing:
         particle_velocities["nodal_normals"] = data_normals
 
         ## Uncomment the line below to plot the average normals at the nodes
-        # self.assembler.model.mesh.set_nodal_normals_data(data_normals)
+        self.harmonic_solver.assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
 
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
@@ -502,8 +509,8 @@ class AcousticPostprocessing:
         sound_power = 0.
         for i, e_connect in enumerate(surface_connectivities):
             node_indexes = [map_nodes.get(node) for node in e_connect]
-            L_sv = pressures[node_indexes, :].T.reshape(-1, 1, 3)
-            R_sv = particle_velocities[node_indexes, :].T.reshape(-1, 3, 1)
+            L_sv = pressures[node_indexes, :].T.reshape(-1, 1, element_2d.DOF_PER_ELEMENT)
+            R_sv = particle_velocities[node_indexes, :].T.reshape(-1, element_2d.DOF_PER_ELEMENT, 1)
 
             normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
             sound_power += np.real(normalized_data) / 2
