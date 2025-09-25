@@ -6,6 +6,7 @@
         <file>delete.png</file>
         <file>import.png</file>
         <file>broom.png</file>
+        <file>import_geometry.png</file>
         <file>geometry_icon.png</file>
         <file>save.png</file>
         <file>pause.png</file>
@@ -30,6 +31,7 @@
         <file>reset-image (2).png</file>
         <file>png.png</file>
         <file>get_fuid_light_blue.png</file>
+        <file>import_mesh.png</file>
         <file>resume_icon.png</file>
         <file>sun_icon.png</file>
         <file>image-plus.png</file>
