@@ -1683,11 +1683,21 @@ class Mesh:
         # noodes per element
         nodes_per_element = face_connectivity[0, :].size
 
+        # tria3 surface element
         if nodes_per_element == 3:
-            column_indexes = [(0, 1, 2)]
+            column_indexes = [(0,1,2)]
 
+        # quad4 surface element
+        elif nodes_per_element == 4:
+            column_indexes = [(0,1,2), (0,2,3)]
+
+        # tria6 surface element
         elif nodes_per_element == 6:
             column_indexes = [(3,1,4), (3,4,2), (3,2,5), (3,5,0)]
+
+        # quad8 surface element
+        elif nodes_per_element == 8:
+            column_indexes = [(0,4,7), (4,1,5), (5,2,6), (6,3,7), (4,6,7), (4,5,6)]
 
         else:
             return NotImplementedError(f"Normal not implemented for surface with {nodes_per_element} nodes")
