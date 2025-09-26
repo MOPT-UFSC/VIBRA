@@ -162,7 +162,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
         return Ke, Me
 
-    def reorder_connect(self):
+    def reorder_connect(self, reorder: bool = True):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
             self.connectivity = self.solids_connectivity[:, [0, 6, 4, 5, 7]]

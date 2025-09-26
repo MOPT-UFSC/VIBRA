@@ -89,33 +89,33 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     YY1, YY2, YY3, YY4, YY5, YY6 = coords[:, 2]
     ZZ1, ZZ2, ZZ3, ZZ4, ZZ5, ZZ6 = coords[:, 3]
 
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-    vec41 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
-    vec51 = np.array([XX5-XX1, YY5-YY1, ZZ5-ZZ1]).T
-    vec61 = np.array([XX6-XX1, YY6-YY1, ZZ6-ZZ1]).T
+    vec_12 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+    vec_13 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+    vec_14 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
+    vec_15 = np.array([XX5-XX1, YY5-YY1, ZZ5-ZZ1]).T
+    vec_16 = np.array([XX6-XX1, YY6-YY1, ZZ6-ZZ1]).T
 
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)   # ---> normal
+    loc_x_axis = vec_12.copy()
+    loc_z_axis = np.cross(loc_x_axis, vec_13)   # ---> normal
     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
     unit_x_axis = loc_x_axis / np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis / np.linalg.norm(loc_y_axis)
     unit_z_axis = loc_z_axis / np.linalg.norm(loc_z_axis)
 
-    x1 = 0 
-    x2 = np.dot(vec21, unit_x_axis)
-    x3 = np.dot(vec31, unit_x_axis)
-    x4 = np.dot(vec41, unit_x_axis)
-    x5 = np.dot(vec51, unit_x_axis)
-    x6 = np.dot(vec61, unit_x_axis)
+    x1 = 0.
+    x2 = np.dot(vec_12, unit_x_axis)
+    x3 = np.dot(vec_13, unit_x_axis)
+    x4 = np.dot(vec_14, unit_x_axis)
+    x5 = np.dot(vec_15, unit_x_axis)
+    x6 = np.dot(vec_16, unit_x_axis)
 
-    y1 = 0 
-    y2 = np.dot(vec21, unit_y_axis)
-    y3 = np.dot(vec31, unit_y_axis)
-    y4 = np.dot(vec41, unit_y_axis)
-    y5 = np.dot(vec51, unit_y_axis)
-    y6 = np.dot(vec61, unit_y_axis)
+    y1 = 0.
+    y2 = np.dot(vec_12, unit_y_axis)
+    y3 = np.dot(vec_13, unit_y_axis)
+    y4 = np.dot(vec_14, unit_y_axis)
+    y5 = np.dot(vec_15, unit_y_axis)
+    y6 = np.dot(vec_16, unit_y_axis)
 
     coord_loc = np.array([[x1, y1],
                           [x2, y2],
@@ -244,14 +244,14 @@ class ACT_TRIANGLE_6(Element2D):
         Y6 = self.nodal_coordinates[self.connectivities[:, 5], 2]
         Z6 = self.nodal_coordinates[self.connectivities[:, 5], 3]
 
-        vec_21 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
-        vec_31 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
-        vec_41 = np.array([X4-X1, Y4-Y1, Z4-Z1]).T
-        vec_51 = np.array([X5-X1, Y5-Y1, Z5-Z1]).T
-        vec_61 = np.array([X6-X1, Y6-Y1, Z6-Z1]).T
+        vec_12 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+        vec_13 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
+        vec_14 = np.array([X4-X1, Y4-Y1, Z4-Z1]).T
+        vec_15 = np.array([X5-X1, Y5-Y1, Z5-Z1]).T
+        vec_16 = np.array([X6-X1, Y6-Y1, Z6-Z1]).T
 
-        loc_x_axis = vec_21.copy()
-        loc_z_axis = np.cross(loc_x_axis, vec_31, axis=1)   # ---> normal
+        loc_x_axis = vec_12.copy()
+        loc_z_axis = np.cross(loc_x_axis, vec_13, axis=1)   # ---> normal
         loc_y_axis = np.cross(loc_z_axis, loc_x_axis, axis=1)
 
         nx = np.linalg.norm(loc_x_axis, axis=1).reshape(-1, 1, 1)
@@ -266,17 +266,17 @@ class ACT_TRIANGLE_6(Element2D):
         unit_y_axis = unit_y_axis.reshape(-1, 3)
         # unit_z_axis = unit_z_axis.reshape(-1, 3)
 
-        x2 = np.sum(vec_21 * unit_x_axis, axis=1)
-        x3 = np.sum(vec_31 * unit_x_axis, axis=1)
-        x4 = np.sum(vec_41 * unit_x_axis, axis=1)
-        x5 = np.sum(vec_51 * unit_x_axis, axis=1)
-        x6 = np.sum(vec_61 * unit_x_axis, axis=1)
+        x2 = np.sum(vec_12 * unit_x_axis, axis=1)
+        x3 = np.sum(vec_13 * unit_x_axis, axis=1)
+        x4 = np.sum(vec_14 * unit_x_axis, axis=1)
+        x5 = np.sum(vec_15 * unit_x_axis, axis=1)
+        x6 = np.sum(vec_16 * unit_x_axis, axis=1)
 
-        y2 = np.sum(vec_21 * unit_y_axis, axis=1)
-        y3 = np.sum(vec_31 * unit_y_axis, axis=1)
-        y4 = np.sum(vec_41 * unit_y_axis, axis=1)
-        y5 = np.sum(vec_51 * unit_y_axis, axis=1)
-        y6 = np.sum(vec_61 * unit_y_axis, axis=1)
+        y2 = np.sum(vec_12 * unit_y_axis, axis=1)
+        y3 = np.sum(vec_13 * unit_y_axis, axis=1)
+        y4 = np.sum(vec_14 * unit_y_axis, axis=1)
+        y5 = np.sum(vec_15 * unit_y_axis, axis=1)
+        y6 = np.sum(vec_16 * unit_y_axis, axis=1)
 
         nel = self.connectivities.shape[0]
         coord_loc = np.zeros((nel, self.NODES_PER_ELEMENT, 2), dtype=float)
@@ -292,7 +292,7 @@ class ACT_TRIANGLE_6(Element2D):
         coord_loc[:, 5, 0] = x6
         coord_loc[:, 5, 1] = y6
 
-        return coord_loc    
+        return coord_loc
 
 
     def stacked_matrices_NtN(self) -> np.ndarray:
@@ -397,7 +397,7 @@ class ACT_TRIANGLE_6(Element2D):
         # nodal coordinates in the local CS
         coord_lcs = get_local_coordinates(coords)
 
-        # intialize variable
+        # initialize the variable Fe
         Fe = 0.
 
         # integration loop
@@ -444,7 +444,7 @@ class ACT_TRIANGLE_6(Element2D):
         # nodal coordinates in the local CS
         local_coords = get_local_coordinates(coords)
 
-        # intialize variable
+        # initialize variable We
         We = 0.
 
         # integration loop

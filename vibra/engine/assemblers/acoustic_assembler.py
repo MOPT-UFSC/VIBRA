@@ -1683,14 +1683,14 @@ class AcousticAssembler:
         return output
 
 
-    def process_assemble(self, reorder: bool=True):
+    def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
 
         self.define_acoustic_elements()
         self.update_number_of_frequencies()
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         t0 = time()
-        if self.model.mesh.element_type in [TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8] and True:
+        if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
             self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)

@@ -53,8 +53,7 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
     """
 
     # determinant of the Jacobian matrix
-    det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
-    det_jacs = det_jacs.reshape(-1, 1, 1)
+    det_jacs = get_detJAC(JAC)
 
     # the adjoint matrix AUJJ
     AUJJ = np.zeros((JAC.shape[0], 2, 2), dtype=float)
@@ -85,13 +84,17 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
         The array of coordinates in the local coordinate system.
     """
     
-    X1, X2, X3, X4 = coords[:, 1]
-    Y1, Y2, Y3, Y4 = coords[:, 2]
-    Z1, Z2, Z3, Z4 = coords[:, 3]
+    X1, X2, X3, X4, X5, X6, X7, X8 = coords[:, 1]
+    Y1, Y2, Y3, Y4, Y5, Y6, Y7, Y8 = coords[:, 2]
+    Z1, Z2, Z3, Z4, Z5, Z6, Z7, Z8 = coords[:, 3]
 
     vec_12 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
     vec_13 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
     vec_14 = np.array([X4-X1, Y4-Y1, Z4-Z1]).T
+    vec_15 = np.array([X5-X1, Y5-Y1, Z5-Z1]).T
+    vec_16 = np.array([X6-X1, Y6-Y1, Z6-Z1]).T
+    vec_17 = np.array([X7-X1, Y7-Y1, Z7-Z1]).T
+    vec_18 = np.array([X8-X1, Y8-Y1, Z8-Z1]).T
 
     loc_x_axis = vec_12.copy()
     loc_z_axis = np.cross(loc_x_axis, vec_14)
@@ -100,37 +103,39 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     unit_x_axis = loc_x_axis / np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis / np.linalg.norm(loc_y_axis)
 
-    x1 = np.dot(vec_13, unit_x_axis)
-    x2 = np.dot(vec_14, unit_x_axis)
-    x3 = 0.
-    x4 = np.dot(vec_12, unit_x_axis)
+    x1 = 0.
+    x2 = np.dot(vec_12, unit_x_axis)
+    x3 = np.dot(vec_13, unit_x_axis)
+    x4 = np.dot(vec_14, unit_x_axis)
+    x5 = np.dot(vec_15, unit_x_axis)
+    x6 = np.dot(vec_16, unit_x_axis)
+    x7 = np.dot(vec_17, unit_x_axis)
+    x8 = np.dot(vec_18, unit_x_axis)
 
-    y1 = np.dot(vec_13, unit_y_axis)
-    y2 = np.dot(vec_14, unit_y_axis)
-    y3 = 0.
-    y4 = np.dot(vec_12, unit_y_axis)
-
-    # x1 = 0.
-    # x2 = np.dot(vec_12, unit_x_axis)
-    # x3 = np.dot(vec_13, unit_x_axis)
-    # x4 = np.dot(vec_14, unit_x_axis)
-
-    # y1 = 0.
-    # y2 = np.dot(vec_12, unit_y_axis)
-    # y3 = np.dot(vec_13, unit_y_axis)
-    # y4 = np.dot(vec_14, unit_y_axis)
+    y1 = 0.
+    y2 = np.dot(vec_12, unit_y_axis)
+    y3 = np.dot(vec_13, unit_y_axis)
+    y4 = np.dot(vec_14, unit_y_axis)
+    y5 = np.dot(vec_15, unit_y_axis)
+    y6 = np.dot(vec_16, unit_y_axis)
+    y7 = np.dot(vec_17, unit_y_axis)
+    y8 = np.dot(vec_18, unit_y_axis)
 
     coord_loc = np.array([[x1, y1],
                           [x2, y2],
                           [x3, y3],
-                          [x4, y4]], dtype=float)
+                          [x4, y4],
+                          [x5, y5],
+                          [x6, y6],
+                          [x7, y7],
+                          [x8, y8]], dtype=float)
 
     return coord_loc
 
 
-class ACT_QUADRANGLE_4(Element2D):
+class ACT_QUADRANGLE_8(Element2D):
 
-    NODES_PER_ELEMENT = 4
+    NODES_PER_ELEMENT = 8
     DOF_PER_NODE = 1
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
@@ -139,14 +144,14 @@ class ACT_QUADRANGLE_4(Element2D):
         self.model = model
 
         self.connectivities = None
-        self.element_label = "acoustic_quadrangular_4"
+        self.element_label = "acoustic_quadrangular_8"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
 
-    def define_integration_points(self, integration_points: int = 4):
+    def define_integration_points(self, integration_points: int = 9):
         """ 
         Defines the integration points and their respective weights
         for the numerical integration processing.
@@ -228,22 +233,34 @@ class ACT_QUADRANGLE_4(Element2D):
 
         ## shape functions (Atalla and Sgard, 2015, pg. 174)
         phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
-        phi[:, 0, 0] = (1 - xi_1)*(1 - xi_2) / 4      # ->      (-1.0, -1.0)   Node 1
-        phi[:, 0, 1] = (1 + xi_1)*(1 - xi_2) / 4      # ->      ( 1.0, -1.0)   Node 2
-        phi[:, 0, 2] = (1 + xi_1)*(1 + xi_2) / 4      # ->      ( 1.0,  1.0)   Node 3
-        phi[:, 0, 3] = (1 - xi_1)*(1 + xi_2) / 4      # ->      (-1.0,  1.0)   Node 4
+        phi[:, 0, 0] = -(1 - xi_1)*(1 - xi_2)*(1 + xi_1 + xi_2) / 4      # ->      (-1.0, -1.0)   Node 1
+        phi[:, 0, 1] = -(1 + xi_1)*(1 - xi_2)*(1 - xi_1 + xi_2) / 4      # ->      ( 1.0, -1.0)   Node 2
+        phi[:, 0, 2] = -(1 + xi_1)*(1 + xi_2)*(1 - xi_1 - xi_2) / 4      # ->      ( 1.0,  1.0)   Node 3
+        phi[:, 0, 3] = -(1 - xi_1)*(1 + xi_2)*(1 + xi_1 - xi_2) / 4      # ->      (-1.0,  1.0)   Node 4
+        phi[:, 0, 4] =  (1 - xi_1**2)*(1 - xi_2) / 2                     # ->      ( 0.0, -1.0)   Node 5
+        phi[:, 0, 5] =  (1 + xi_1)*(1 - xi_2**2) / 2                     # ->      ( 1.0,  0.0)   Node 6
+        phi[:, 0, 6] =  (1 - xi_1**2)*(1 + xi_2) / 2                     # ->      ( 0.0,  1.0)   Node 7
+        phi[:, 0, 7] =  (1 - xi_1)*(1 - xi_2**2) / 2                     # ->      (-1.0,  0.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((self.nint, self.pint.shape[1], self.NODES_PER_ELEMENT), dtype=float)
-        dphi[:, 0, 0] = -(1 - xi_2) / 4 
-        dphi[:, 0, 1] =  (1 - xi_2) / 4
-        dphi[:, 0, 2] =  (1 + xi_2) / 4
-        dphi[:, 0, 3] = -(1 + xi_2) / 4
+        dphi[:, 0, 0] = -(1 - xi_2)*(-2*xi_1 - xi_2) / 4 
+        dphi[:, 0, 1] = -(1 - xi_2)*(-2*xi_1 + xi_2) / 4
+        dphi[:, 0, 2] = -(1 + xi_2)*(-2*xi_1 - xi_2) / 4
+        dphi[:, 0, 3] = -(1 + xi_2)*(-2*xi_1 + xi_2) / 4
+        dphi[:, 0, 4] = -(2*xi_1)*(1 - xi_2) / 2 
+        dphi[:, 0, 5] =  (1 - xi_2**2) / 2
+        dphi[:, 0, 6] = -(2*xi_1)*(1 + xi_2) / 2
+        dphi[:, 0, 7] = -(1 - xi_2**2) / 2
 
-        dphi[:, 1, 0] = -(1 - xi_1) / 4
-        dphi[:, 1, 1] = -(1 + xi_1) / 4
-        dphi[:, 1, 2] =  (1 + xi_1) / 4
-        dphi[:, 1, 3] =  (1 - xi_1) / 4
+        dphi[:, 1, 0] = -(1 - xi_1)*(-xi_1 - 2*xi_2) / 4
+        dphi[:, 1, 1] = -(1 + xi_1)*( xi_1 - 2*xi_2) / 4
+        dphi[:, 1, 2] = -(1 + xi_1)*(-xi_1 - 2*xi_2) / 4
+        dphi[:, 1, 3] = -(1 - xi_1)*( xi_1 - 2*xi_2) / 4
+        dphi[:, 1, 4] = -(1 - xi_2**2) / 2 
+        dphi[:, 1, 5] = -(1 + xi_1)*(2*xi_2) / 2
+        dphi[:, 1, 6] =  (1 - xi_2**2) / 2
+        dphi[:, 1, 7] = -(1 - xi_1)*(2*xi_2) / 2
 
         self.phi = phi
         self.dphi = dphi
@@ -280,9 +297,29 @@ class ACT_QUADRANGLE_4(Element2D):
         Y4 = self.nodal_coordinates[self.connectivities[:, 3], 2]
         Z4 = self.nodal_coordinates[self.connectivities[:, 3], 3]
 
+        X5 = self.nodal_coordinates[self.connectivities[:, 4], 1]
+        Y5 = self.nodal_coordinates[self.connectivities[:, 4], 2]
+        Z5 = self.nodal_coordinates[self.connectivities[:, 4], 3]
+
+        X6 = self.nodal_coordinates[self.connectivities[:, 5], 1]
+        Y6 = self.nodal_coordinates[self.connectivities[:, 5], 2]
+        Z6 = self.nodal_coordinates[self.connectivities[:, 5], 3]
+
+        X7 = self.nodal_coordinates[self.connectivities[:, 6], 1]
+        Y7 = self.nodal_coordinates[self.connectivities[:, 6], 2]
+        Z7 = self.nodal_coordinates[self.connectivities[:, 6], 3]
+
+        X8 = self.nodal_coordinates[self.connectivities[:, 7], 1]
+        Y8 = self.nodal_coordinates[self.connectivities[:, 7], 2]
+        Z8 = self.nodal_coordinates[self.connectivities[:, 7], 3]
+
         vec_12 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
         vec_13 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
         vec_14 = np.array([X4-X1, Y4-Y1, Z4-Z1]).T
+        vec_15 = np.array([X5-X1, Y5-Y1, Z5-Z1]).T
+        vec_16 = np.array([X6-X1, Y6-Y1, Z6-Z1]).T
+        vec_17 = np.array([X7-X1, Y7-Y1, Z7-Z1]).T
+        vec_18 = np.array([X8-X1, Y8-Y1, Z8-Z1]).T
 
         loc_x_axis = vec_12.copy()
         loc_z_axis = np.cross(loc_x_axis, vec_14, axis=1)
@@ -297,25 +334,23 @@ class ACT_QUADRANGLE_4(Element2D):
         unit_x_axis = unit_x_axis.reshape(-1, 3)
         unit_y_axis = unit_y_axis.reshape(-1, 3)
 
-        x1 = np.sum(vec_13 * unit_x_axis, axis=1)
-        x2 = np.sum(vec_14 * unit_x_axis, axis=1)
-        x3 = 0.
-        x4 = np.sum(vec_12 * unit_x_axis, axis=1)
+        x1 = 0.
+        x2 = np.sum(vec_12 * unit_x_axis, axis=1)
+        x3 = np.sum(vec_13 * unit_x_axis, axis=1)
+        x4 = np.sum(vec_14 * unit_x_axis, axis=1)
+        x5 = np.sum(vec_15 * unit_x_axis, axis=1)
+        x6 = np.sum(vec_16 * unit_x_axis, axis=1)
+        x7 = np.sum(vec_17 * unit_x_axis, axis=1)
+        x8 = np.sum(vec_18 * unit_x_axis, axis=1)
 
-        y1 = np.sum(vec_13 * unit_y_axis, axis=1)
-        y2 = np.sum(vec_14 * unit_y_axis, axis=1)
-        y3 = 0.
-        y4 = np.sum(vec_12 * unit_y_axis, axis=1)
-
-        # x1 = 0.
-        # x2 = np.sum(vec_12 * unit_x_axis, axis=1)
-        # x3 = np.sum(vec_13 * unit_x_axis, axis=1)
-        # x4 = np.sum(vec_14 * unit_x_axis, axis=1)
-
-        # y1 = 0.
-        # y2 = np.sum(vec_12 * unit_y_axis, axis=1)
-        # y3 = np.sum(vec_13 * unit_y_axis, axis=1)
-        # y4 = np.sum(vec_14 * unit_y_axis, axis=1)
+        y1 = 0.
+        y2 = np.sum(vec_12 * unit_y_axis, axis=1)
+        y3 = np.sum(vec_13 * unit_y_axis, axis=1)
+        y4 = np.sum(vec_14 * unit_y_axis, axis=1)
+        y5 = np.sum(vec_15 * unit_y_axis, axis=1)
+        y6 = np.sum(vec_16 * unit_y_axis, axis=1)
+        y7 = np.sum(vec_17 * unit_y_axis, axis=1)
+        y8 = np.sum(vec_18 * unit_y_axis, axis=1)
 
         nel = self.connectivities.shape[0]
         coord_loc = np.zeros((nel, self.DOF_PER_ELEMENT, 2), dtype=float)
@@ -328,6 +363,14 @@ class ACT_QUADRANGLE_4(Element2D):
         coord_loc[:, 2, 1] = y3
         coord_loc[:, 3, 0] = x4
         coord_loc[:, 3, 1] = y4
+        coord_loc[:, 4, 0] = x5
+        coord_loc[:, 4, 1] = y5
+        coord_loc[:, 5, 0] = x6
+        coord_loc[:, 5, 1] = y6
+        coord_loc[:, 6, 0] = x7
+        coord_loc[:, 6, 1] = y7
+        coord_loc[:, 7, 0] = x8
+        coord_loc[:, 7, 1] = y8
 
         return coord_loc
 
@@ -503,7 +546,7 @@ class ACT_QUADRANGLE_4(Element2D):
 
     def reorder_connect(self, connect_face: np.ndarray):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        self.connectivities = connect_face[:, [0, 1, 2, 3]]
+        self.connectivities = connect_face[:, [0, 1, 2, 3, 4, 5, 6, 7]]
 
 
     def generate_ind_rows_cols(self, connect_face):
@@ -518,162 +561,3 @@ class ACT_QUADRANGLE_4(Element2D):
         ind_cols_face = (np.tile(ind_dof, edof)).flatten()
 
         return ind_rows_face, ind_cols_face
-
-
-    # def excitation_F_base(self, ee, Vn=1):
-    #     """ F4 matrices
-    #     """
-    #     #Check Connectivity -- Ansys = Gmsh
-
-    #     coord = self.nodal_coordinates
-    #     connect_face = self.connectivities
-
-    #     ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    #     XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-    #     XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-    #     XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
-    #     XX4, YY4, ZZ4 = coord[connect_face[ee,3],1], coord[connect_face[ee,3],2], coord[connect_face[ee,3],3]
-
-    #     vec13 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-    #     vec14 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
-    #     vec12 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-
-    #     #Cosseno de direção
-    #     XX = vec12/np.linalg.norm(vec12)
-    #     vecZZ = np.cross(XX,vec14)
-    #     ZZ = vecZZ/np.linalg.norm(vecZZ)
-    #     vecYY = np.cross(ZZ,XX)
-    #     YY = vecYY/np.linalg.norm(vecYY)
-    #     COSDIR = np.array([XX,YY,ZZ]) 
-
-    #     loc_x_axis = vec12.copy()
-    #     loc_z_axis = np.cross(loc_x_axis, vec14)
-    #     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
-
-    #     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    #     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-
-    #     x1 = np.dot(vec13,unit_x_axis)
-    #     x2 = np.dot(vec14,unit_x_axis)
-    #     x3 = 0
-    #     x4 = np.dot(vec12,unit_x_axis)
-    #     y1 = np.dot(vec13,unit_y_axis)
-    #     y2 = np.dot(vec14,unit_y_axis)
-    #     y3 = 0
-    #     y4 = np.dot(vec12,unit_y_axis)
-
-    #     coord_loc = np.array([[x1, y1],
-    #                           [x2, y2],
-    #                           [x3, y3],
-    #                           [x4, y4]])
-        
-    #     # print(f"base: {coord_loc}")
-
-    #     ################ Definir pontos de integração 2D
-    #     nint, con, wps = 4, 1/np.sqrt(3), 1
-    #     pint = np.array([[ con,  con],
-    #                      [-con,  con],
-    #                      [-con, -con],
-    #                      [ con, -con]])
-
-    #     ######################## Inicio da integração na face
-    #     # Fe = np.zeros((4,1),dtype=complex)
-    #     Fe = 0.
-    #     N = np.zeros((1,4))
-    #     # integration
-    #     for i in range(nint):
-    #         ssx, ttx = pint[i, 0], pint[i, 1]
-    #         phi, dphi = shapeFZ4(ssx,ttx)
-    #         #ie = connect_face[ee_face,1:]-1
-    #         dxdy = dphi@coord_loc
-    #         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-    #         JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-    #                         [dxdy[1,0], dxdy[1,1]]], dtype=float) 
-    #         #Inverse Jacobian
-    #         detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
-
-    #         for iii in range(4):
-    #             N[0,iii]=phi[iii]
-            
-    #         Fe += -(1/4) * Vn * N.T * (detJAC * wps)
-    #         # print(f"base detJAC: {detJAC}")     
-
-    #     return Fe
-
-    # def matrices_Z_base(self, ee, rho=1, impedance=1):
-    #     """ Z4 matrices
-    #     """
-    #     #Check Connectivity -- Ansys = Gmsh
-
-    #     coord = self.nodal_coordinates
-    #     connect_face = self.connectivities
-
-    #     ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    #     XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-    #     XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-    #     XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
-    #     XX4, YY4, ZZ4 = coord[connect_face[ee,3],1], coord[connect_face[ee,3],2], coord[connect_face[ee,3],3]
-
-    #     vec13 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-    #     vec14 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
-    #     vec12 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-
-    #     #Cosseno de direção
-    #     XX = vec12/np.linalg.norm(vec12)
-    #     vecZZ = np.cross(XX,vec14)
-    #     ZZ = vecZZ/np.linalg.norm(vecZZ)
-    #     vecYY = np.cross(ZZ,XX)
-    #     YY = vecYY/np.linalg.norm(vecYY)
-    #     COSDIR = np.array([XX,YY,ZZ])
-
-    #     loc_x_axis = vec12.copy()
-    #     loc_z_axis = np.cross(loc_x_axis, vec14)
-    #     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
-
-    #     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    #     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-
-    #     x1 = np.dot(vec13,unit_x_axis)
-    #     x2 = np.dot(vec14,unit_x_axis)
-    #     x3 = 0
-    #     x4 = np.dot(vec12,unit_x_axis)
-    #     y1 = np.dot(vec13,unit_y_axis)
-    #     y2 = np.dot(vec14,unit_y_axis)
-    #     y3 = 0
-    #     y4 = np.dot(vec12,unit_y_axis)
-
-    #     coord_loc = np.array([[x1, y1],
-    #                           [x2, y2],
-    #                           [x3, y3],
-    #                           [x4, y4]])
-
-    #     ################ Definir pontos de integração 2D
-    #     nint, con, wps = 4, 1/np.sqrt(3), 1
-    #     pint = np.array([[ con,  con],
-    #                      [-con,  con],
-    #                      [-con, -con],
-    #                      [ con, -con]])
-
-    #     ######################## Inicio da integração na face
-    #     Area = 0
-    #     Ze = 0.
-    #     # Ze = np.zeros((4,4),dtype=complex)
-    #     N = np.zeros((1,4))
-    #     # integration
-    #     for i in range(nint):
-    #         ssx, ttx = pint[i, 0], pint[i, 1]
-    #         phi, dphi = shapeFZ4(ssx,ttx)
-    #         #ie = connect_face[ee_face,1:]-1
-    #         dxdy = dphi@coord_loc
-    #         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-    #         JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-    #                         [dxdy[1,0], dxdy[1,1]]], dtype=float) 
-    #         #Inverse Jacobian
-    #         detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
-
-    #         for iii in range(4):
-    #             N[0,iii]=phi[iii]
-            
-    #         Ze += -(rho/impedance) * N.T@N * (detJAC * wps)
-
-    #     return Ze

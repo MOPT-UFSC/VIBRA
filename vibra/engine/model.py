@@ -27,6 +27,7 @@ from vibra.engine.elements.elements_2d import (
     ACT_TRIANGLE_3,
     ACT_TRIANGLE_6,
     ACT_QUADRANGLE_4,
+    ACT_QUADRANGLE_8,
 
     # 2D elements - structural
     STRUCT_TRIANGLE_3
@@ -300,10 +301,10 @@ class Model:
             return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), None
+            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
         elif element_type == HEXAHEDRON_20:
-            return ACT_HEXAHEDRON_20C(self), None, None
+            return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')

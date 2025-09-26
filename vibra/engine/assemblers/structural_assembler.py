@@ -329,7 +329,7 @@ class StructuralAssembler:
 
         return active_dof, len(self.all_dof), shift_index
 
-    def compute_data_to_process_global_matrices(self):
+    def compute_data_to_process_global_matrices(self, reorder: bool = True):
         """
         Calculates global matrices.
         """
@@ -465,7 +465,7 @@ class StructuralAssembler:
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
-    def process_assemble(self):
+    def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
@@ -474,7 +474,7 @@ class StructuralAssembler:
 
         logging.info("Gathering data to assemble global matrices... [20/100]")
         t0 = time()
-        if self.compute_data_to_process_global_matrices():
+        if self.compute_data_to_process_global_matrices(reorder=reorder):
             return
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {round(dt, 4)} [s]")

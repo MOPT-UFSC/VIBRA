@@ -358,13 +358,12 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
-        # intialize the shape function variable
+        # define the shape functions (Atalla and Sgard, 2015, pg. 170)
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
-        # define coordiante l4
+        # define the isoparametric coordiante l4
         l4 = 1 - l1 - l2 - l3
 
-        # shape functions (Atalla and Sgard, 2015, pg. 170)
         phi[:, 0, 0] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0)   Node 1
         phi[:, 0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0)   Node 2
         phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0)   Node 3
@@ -376,10 +375,9 @@ class ACT_TETRAHEDRON_10C(Element3D):
         phi[:, 0, 8] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0)   Node 9
         phi[:, 0, 9] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5)   Node 10
 
-        # derivatives of shape functions
+        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
 
-        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi[:, 0, 0] = -4 * l4 + 1
         dphi[:, 0, 1] =  0
         dphi[:, 0, 2] =  0

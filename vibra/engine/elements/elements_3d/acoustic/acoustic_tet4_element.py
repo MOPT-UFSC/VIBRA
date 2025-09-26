@@ -229,16 +229,15 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
-        # intialize the shape function variable
+        # define the shape functions (Atalla and Sgard, 2015, pg. 170)
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
-        # define coordiante xi_4
+        # define isoparametric coordiante xi_4
         xi_4 = 1 - xi_1 - xi_2 - xi_3
 
         # # shape functions
         # phi = np.array([1 - xi_1 - xi_2 - xi_3, xi_2, xi_3, xi_1], dtype=float).T
 
-        # shape functions (Atalla and Sgard, 2015, pg. 170)
         phi[:, 0, 0] = xi_4      # ->      (0.0, 0.0, 0.0)   Node 1
         phi[:, 0, 1] = xi_2      # ->      (0.0, 1.0, 0.0)   Node 2
         phi[:, 0, 2] = xi_3      # ->      (0.0, 0.0, 1.0)   Node 3

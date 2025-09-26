@@ -178,7 +178,7 @@ class ACT_QUADRANGLE_4(Element2D):
         # determinant of the Jacobian matrix
         detJAC = get_detJAC_3D(JAC)
         
-        # intialize the variable Ze
+        # initialize the variable Ze
         Ze = 0.
 
         # integration loop

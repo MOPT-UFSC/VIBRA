@@ -88,22 +88,22 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     YY1, YY2, YY3 = coords[:, 2]
     ZZ1, ZZ2, ZZ3 = coords[:, 3]
 
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+    vec_12 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+    vec_13 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
 
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)
+    loc_x_axis = vec_12.copy()
+    loc_z_axis = np.cross(loc_x_axis, vec_13)
     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
 
     x1 = 0. 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
+    x2 = np.dot(vec_12,unit_x_axis)
+    x3 = np.dot(vec_13,unit_x_axis)
     y1 = 0.
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
+    y2 = np.dot(vec_12,unit_y_axis)
+    y3 = np.dot(vec_13,unit_y_axis)
 
     coord_loc = np.array([[x1, y1],
                           [x2, y2],
@@ -393,7 +393,7 @@ class ACT_TRIANGLE_3(Element2D):
         # determinant of Jacobia matrix
         det_jac = get_detJAC(JAC)
 
-        # intialize variable
+        # initialize the variable Fe
         Fe = 0.
 
         # integration loop
@@ -444,7 +444,7 @@ class ACT_TRIANGLE_3(Element2D):
         # determinant of Jacobia matrix
         det_jac = get_detJAC(JAC)
 
-        # intialize variable
+        # initialize the variable We
         We = 0.
 
         # integration loop
