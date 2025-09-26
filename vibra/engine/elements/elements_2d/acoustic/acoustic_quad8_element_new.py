@@ -157,37 +157,44 @@ class ACT_QUADRANGLE_8(Element2D):
         for the numerical integration processing.
         """
         if integration_points == 4:
+
             self.nint = 4
             a = 1 / np.sqrt(3)
             w1 = 1
 
-            self.pint = np.array([[-a, -a],
-                                  [ a, -a],
-                                  [ a,  a],
-                                  [-a,  a]], dtype=float)
+            self.num_int_data = np.array([
+                [-a, -a, w1],
+                [ a, -a, w1],
+                [ a,  a, w1],
+                [-a,  a, w1],
+                ], dtype=float)
 
-            self.wps = 2 * np.array([w1, w1, w1, w1], dtype=float).reshape(-1, 1, 1)
+            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
         
         elif integration_points == 9:
+
             self.nint = 9
             a = np.sqrt(3/5)
             w1 = 25/81
             w2 = 40/81
             w3 = 64/81
 
-            self.pint = np.array([[-a, -a],
-                                  [ a, -a],
-                                  [ a,  a],
-                                  [-a,  a],
-                                  [ 0, -a],
-                                  [ a,  0],
-                                  [ 0,  a],
-                                  [-a,  0],
-                                  [ 0,  0]], dtype=float)
+            self.num_int_data = np.array([
+                [-a, -a, w1],
+                [ a, -a, w1],
+                [ a,  a, w1],
+                [-a,  a, w1],
+                [ 0, -a, w2],
+                [ a,  0, w2],
+                [ 0,  a, w2],
+                [-a,  0, w2],
+                [ 0,  0, w3],
+                ], dtype=float)
 
-            self.wps = 2 * np.array([w1, w1, w1, w1, w2, w2, w2, w2, w3], dtype=float).reshape(-1, 1, 1)
+            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
         else:
+
             self.nint = 16
             a = np.sqrt((3 + 2*np.sqrt(6/5)) / 7)
             b = np.sqrt((3 - 2*np.sqrt(6/5)) / 7)
@@ -196,27 +203,26 @@ class ACT_QUADRANGLE_8(Element2D):
             w2 = 0.4252933030106942
             w3 = 0.2268518518518519
 
-            self.pint = np.array([[-a, -a],
-                                  [-a,  a],
-                                  [ a,  a],
-                                  [ a, -a],
-                                  [-b, -b],
-                                  [-b,  b],
-                                  [ b,  b],
-                                  [ b, -b],
-                                  [-a, -b],
-                                  [-a,  b],
-                                  [ a, -b],
-                                  [ a,  b],
-                                  [-b, -a],
-                                  [-b,  a],
-                                  [ b,  a],
-                                  [ b, -a]], dtype=float)
+            self.num_int_data = np.array([
+                [-a, -a, w1],
+                [-a,  a, w1],
+                [ a,  a, w1],
+                [ a, -a, w1],
+                [-b, -b, w2],
+                [-b,  b, w2],
+                [ b,  b, w2],
+                [ b, -b, w2],
+                [-a, -b, w3],
+                [-a,  b, w3],
+                [ a, -b, w3],
+                [ a,  b, w3],
+                [-b, -a, w3],
+                [-b,  a, w3],
+                [ b,  a, w3],
+                [ b, -a, w3],
+                ], dtype=float)
 
-            self.wps = 2 * np.array([w1, w1, w1, w1, 
-                                     w2, w2, w2, w2, 
-                                     w3, w3, w3, w3,
-                                     w3, w3, w3, w3], dtype=float).reshape(-1, 1, 1)
+            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -228,8 +234,8 @@ class ACT_QUADRANGLE_8(Element2D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         ## coordinates from integration points
-        xi_1 = self.pint[:, 0]
-        xi_2 = self.pint[:, 1]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
 
         ## shape functions (Atalla and Sgard, 2015, pg. 174)
         phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
@@ -243,7 +249,7 @@ class ACT_QUADRANGLE_8(Element2D):
         phi[:, 0, 7] =  (1 - xi_1)*(1 - xi_2**2) / 2                     # ->      (-1.0,  0.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((self.nint, self.pint.shape[1], self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
         dphi[:, 0, 0] = -(1 - xi_2)*(-2*xi_1 - xi_2) / 4 
         dphi[:, 0, 1] = -(1 - xi_2)*(-2*xi_1 + xi_2) / 4
         dphi[:, 0, 2] = -(1 + xi_2)*(-2*xi_1 - xi_2) / 4
@@ -404,7 +410,7 @@ class ACT_QUADRANGLE_8(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps[i])
+            int2d_NtN += N.T @ N * (det_jacs * self.wps[i])
 
         return int2d_NtN
 
@@ -447,8 +453,8 @@ class ACT_QUADRANGLE_8(Element2D):
             B = inv_jacs @ self.dphi[i, :, :]
             B_t = np.transpose(B, axes=(0, 2, 1))
 
-            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps[i])
-            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps[i])
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
 
         return int2d_NtN, int2d_BtB
 
@@ -492,7 +498,7 @@ class ACT_QUADRANGLE_8(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += (1 / 2) * load * N.T * (det_JAC * self.wps[i])
+            Fe += load * N.T * (det_JAC * self.wps[i])
 
         return Fe
 
@@ -539,7 +545,7 @@ class ACT_QUADRANGLE_8(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
+            We += P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
 
         return We.flatten()
 
