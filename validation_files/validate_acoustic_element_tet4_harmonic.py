@@ -76,19 +76,15 @@ def load_external_mesh_and_solve():
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
     mesh.element_type = TETRAHEDRON_4
 
-
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
-
         if named_selection in ["input_edges", "output_edges"]:
             continue
 
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
-
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
@@ -246,7 +242,6 @@ def load_external_mesh_and_solve():
         node_out = 2549
 
         # Load the external data
-
         ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)
 
         WB_pressure_data = ext_data.load_nodal_pressures()

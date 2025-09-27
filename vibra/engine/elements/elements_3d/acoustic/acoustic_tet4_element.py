@@ -477,14 +477,14 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
         # Jacobian matrix
         # JAC = dphi @ coords
-        JAC = dphi[index[0], :, :] @ coords
+        JAC = dphi[:, :] @ coords
 
         # inverse of Jacobian matrix
         _, invJAC = get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
         # B = invJAC @ dphi
-        B = invJAC @ dphi[index[0], :, :]
+        B = invJAC @ dphi[:, :]
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)

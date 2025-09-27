@@ -59,7 +59,7 @@ def load_external_mesh_and_solve():
     # return
 
     dt = time() - t0
-    print(f"\n\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
+    print(f"\nElapsed time to decode the external mesh data: {round(dt, 4)} s")
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
@@ -78,7 +78,6 @@ def load_external_mesh_and_solve():
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
