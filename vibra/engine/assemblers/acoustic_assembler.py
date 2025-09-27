@@ -934,7 +934,6 @@ class AcousticAssembler:
         self.gm_shape = (self.total_dof, self.total_dof)
 
         self.int3d_BtB, self.int3d_NtN = self.element_3d.stacked_elementary_matrices_NtN_BtB()
-        self.data_Cvisc = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         self.process_fluid_properties_from_volumes()
         self.process_indexes()
@@ -962,7 +961,6 @@ class AcousticAssembler:
 
         self.int3d_BtB = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
-        self.data_Cvisc = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         last_progress = 0
         for element_id in range(self.number_3d_elements):
@@ -1002,6 +1000,9 @@ class AcousticAssembler:
         factor_K = np.zeros(self.number_3d_elements, complex)
         factor_M = np.zeros(self.number_3d_elements, complex)
 
+        factor_Cvisc = np.zeros(self.number_3d_elements, complex)
+        factor_fvisc = np.zeros(self.number_3d_elements, complex)
+
         for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
             fluid_data = self.fluid_properties_from_volume.get(vol_id)
             if not isinstance(fluid_data, dict):
@@ -1017,12 +1018,15 @@ class AcousticAssembler:
 
             factor_K[elements_from_volume] = aux_ones / (rho_f)
             factor_M[elements_from_volume] = aux_ones / (rho_f * C_f**2)
+            factor_Cvisc[elements_from_volume] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2)))
+            factor_fvisc[elements_from_volume] = ((4 * mu_0) / (3 * (rho_0**2)))
 
-            if not self.frequency_dependent and index == 0:
-                int3d_BtB = self.int3d_BtB[elements_from_volume, :, :]
-                self.data_Cvisc[elements_from_volume, :, :] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2))) * int3d_BtB
+        factor_K = factor_K.reshape(-1, 1, 1)
+        factor_M = factor_M.reshape(-1, 1, 1)
+        factor_Cvisc = factor_Cvisc.reshape(-1, 1, 1)
+        factor_fvisc = factor_fvisc.reshape(-1, 1, 1)
 
-        return factor_K.reshape(-1, 1, 1), factor_M.reshape(-1, 1, 1)
+        return factor_K, factor_M, factor_Cvisc, factor_fvisc
 
 
     def compute_mass_source_load_factors_for_volumes(self, index: int = 0):
@@ -1442,15 +1446,24 @@ class AcousticAssembler:
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
 
 
-    def assemble_global_damping_matrix_3d_elements(self):
+    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray):
         """
         This method assembles the global damping matrix to account
         the bulk damping effects.
+        https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_acou2.html#thyeqacous-75
         """
-        _visc_damping_matrix_full = csr_matrix((self.data_Cvisc.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
+        data_C = self.int3d_BtB * factor_Cvsic
+        _visc_damping_matrix_full = csr_matrix((data_C.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
         self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_indexes]
+
+        data_f = self.int3d_BtB * factor_fvsic
+        _load_vector_viscous_full = csr_matrix((data_f.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
+        self.load_vector_viscous = _load_vector_viscous_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        # self.load_vector_viscous_r = _load_vector_viscous_full[:, self.prescribed_indexes]
 
 
     def assemble_global_damping_matrix_2d_elements(self, index: int = 0):
@@ -1705,7 +1718,7 @@ class AcousticAssembler:
 
         logging.info("Computing the global matrices factors... [45/100]")
         t0 = time()
-        factor_K, factor_M = self.compute_global_matrices_factors()
+        factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors()
         dt = time() - t0
         print(f"Elapsed time to compute global matrices factor: {round(dt, 4)} [s]")
 
@@ -1723,7 +1736,7 @@ class AcousticAssembler:
 
         logging.info("Assembling global mass matrix... [70/100]")
         t0 = time()
-        self.assemble_global_damping_matrix_3d_elements()
+        self.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
         print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)} [s]\n")
@@ -1805,12 +1818,10 @@ class AcousticAssembler:
 
 
     def build_harmonic_system(self, freq, i):
+
         # mass and stiffness matrices
         M = self.mass_matrix
         K = self.stiffness_matrix
-
-        # mass flow load vector
-        f_Q = self.mass_flow_vectors
 
         # create the frequency vector
         omega = 2 * np.pi * freq
@@ -1825,7 +1836,7 @@ class AcousticAssembler:
 
         if self.frequency_dependent:
             # reassemble the global mass and stiffness matrices
-            factor_K, factor_M = self.compute_global_matrices_factors(index=i)
+            factor_K, factor_M, _, _ = self.compute_global_matrices_factors(index=i)
             self.assemble_global_mass_matrix(factor_M)
             self.assemble_global_stiffness_matrix(factor_K)
 
@@ -1839,12 +1850,18 @@ class AcousticAssembler:
         # update the prescribed dof-related load vector for each frequency step
         f_eq = self.get_prescribed_pressure_model_excitation(index=i)
 
-        # compute the mass source load vector
-        f_Qms = self.compute_mass_source_load_vector(omega, index=i)
+        # mass source-related load vector
+        f_ms = self.compute_mass_source_load_vector(omega, index=i)
+
+        # viscous damping-related load vector 
+        f_visc = self.load_vector_viscous @ self.mass_flow_vectors[:, i]
+
+        # mass flow-related load vector
+        f_mf = 1j * omega * self.mass_flow_vectors[:, i]
 
         # define the linear system equation terms [A]{x} = {f}
         A = K - (omega ** 2) * M + 1j * omega * C
-        f = f_Qms - 1j * omega * f_Q[:, i] - f_eq
+        f = f_ms + f_visc - f_mf - f_eq
 
         is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
         if not is_complex:
