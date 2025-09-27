@@ -151,17 +151,17 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
             self.nint = 4
 
-            con1 = (5 - np.sqrt(5)) / 20
-            con2 = (5 + 3 * np.sqrt(5)) / 20
+            a = (5 - np.sqrt(5)) / 20
+            b = (5 + 3 * np.sqrt(5)) / 20
 
             w1 = 1/24
 
-            self.pint = np.array([[con1, con1, con1], 
-                                  [con1, con1, con2], 
-                                  [con1, con2, con1], 
-                                  [con2, con1, con1]], dtype=float)
-
-            self.wps = 6 * np.array([w1, w1, w1, w1], dtype=float).reshape(-1, 1, 1)
+            self.num_int_data = np.array([
+                [a, a, a, w1], 
+                [a, a, b, w1], 
+                [a, b, a, w1], 
+                [b, a, a, w1],
+                ], dtype=float)
 
         # 5-point integration rule for unit tetrahedron element
         else:
@@ -175,13 +175,15 @@ class ACT_TETRAHEDRON_4C(Element3D):
             w1 = -2/15
             w2 = 3/40
 
-            self.pint = np.array([[a, a, a],
-                                  [b, b, b],
-                                  [b, b, c],
-                                  [b, c, b],
-                                  [c, b, b]], dtype=float)
+            self.num_int_data = np.array([
+                [a, a, a, w1],
+                [b, b, b, w2],
+                [b, b, c, w2],
+                [b, c, b, w2],
+                [c, b, b, w2],
+                ], dtype=float)
 
-            self.wps = 6 * np.array([w1, w2, w2, w2, w2], dtype=float).reshape(-1, 1, 1)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -190,11 +192,11 @@ class ACT_TETRAHEDRON_4C(Element3D):
         derivatives for all integration points.
         """
 
-        ssx = self.pint[:, 0]
-        ttx = self.pint[:, 1]
-        rrx = self.pint[:, 2]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
+        xi_3 = self.num_int_data[:, 2]
 
-        self.phi, self.dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
+        self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
 
     def get_shape_functions_and_derivatives(self, xi_1: np.ndarray, xi_2: np.ndarray, xi_3: np.ndarray) -> np.ndarray:
@@ -234,9 +236,6 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
         # define isoparametric coordiante xi_4
         xi_4 = 1 - xi_1 - xi_2 - xi_3
-
-        # # shape functions
-        # phi = np.array([1 - xi_1 - xi_2 - xi_3, xi_2, xi_3, xi_1], dtype=float).T
 
         phi[:, 0, 0] = xi_4      # ->      (0.0, 0.0, 0.0)   Node 1
         phi[:, 0, 1] = xi_2      # ->      (0.0, 1.0, 0.0)   Node 2
@@ -334,14 +333,14 @@ class ACT_TETRAHEDRON_4C(Element3D):
             # shape functions
             N = self.phi[i, :]
 
-            int2d_BtB += (1 / 6) * B.T @ B * (det_jac * self.wps[i])
-            int2d_NtN += (1 / 6) * N.T @ N * (det_jac * self.wps[i])
+            int2d_BtB += B.T @ B * (det_jac * self.wps[i])
+            int2d_NtN += N.T @ N * (det_jac * self.wps[i])
 
         # # shape functions
         # N = self.phi
 
-        # int2d_BtB = (1 / 6) * B.T @ B * (det_jac * self.wps) * self.nint
-        # int2d_NtN = (1 / 6) * N.T @ N * (det_jac * self.wps)
+        # int2d_BtB = B.T @ B * (det_jac * self.wps) * self.nint
+        # int2d_NtN = N.T @ N * (det_jac * self.wps)
 
         return int2d_BtB, int2d_NtN
 
@@ -384,8 +383,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
             N = self.phi[i, :]
             N_t = N.T
 
-            int2d_BtB += (1 / 6) * B_t @ B * (det_jacs * self.wps[i])
-            int2d_NtN += (1 / 6) * N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
 
         # # shape functions
         # N = self.phi
@@ -395,8 +394,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # B = inv_jacs @ self.dphi
         # B_t = np.transpose(B, axes=(0, 2, 1))
 
-        # int2d_BtB = (1 / 6) * B_t @ B * (det_jacs * self.wps) * self.nint
-        # int2d_NtN = (1 / 6) * N_t @ N * (det_jacs * self.wps)
+        # int2d_BtB = B_t @ B * (det_jacs * self.wps) * self.nint
+        # int2d_NtN = N_t @ N * (det_jacs * self.wps)
 
         return int2d_BtB, int2d_NtN
 
@@ -467,7 +466,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
             return None
 
         # local coordinates
-        (ssx, ttx, rrx) = p_calc[index[0], :]
+        # (ssx, ttx, rrx) = p_calc[index[0], :]
+        ssx, ttx, rrx = p_calc[:, 0], p_calc[:, 1], p_calc[:, 2]
 
         # derivative of the shape function at the selected point
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
@@ -476,13 +476,15 @@ class ACT_TETRAHEDRON_4C(Element3D):
         coords = self.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
-        JAC = dphi @ coords
+        # JAC = dphi @ coords
+        JAC = dphi[index[0], :, :] @ coords
 
         # inverse of Jacobian matrix
         _, invJAC = get_detJAC_and_invJAC(JAC)
-        
+
         # derivative of shape functions
-        B = invJAC @ dphi
+        # B = invJAC @ dphi
+        B = invJAC @ dphi[index[0], :, :]
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
@@ -536,8 +538,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
     #     # integration loop
     #     Ke, Me = 0, 0
     #     for i in range(self.nint):
-    #         Ke += (1 / 6) * B.T @ B * (detJAC * self.wps)
-    #         Me += (1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+    #         Ke += B.T @ B * (detJAC * self.wps)
+    #         Me += N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
 
     #     return Ke, Me
 
