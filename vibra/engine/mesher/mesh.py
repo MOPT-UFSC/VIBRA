@@ -109,16 +109,13 @@ class Mesh:
         self.external_connectivity_from_lines = dict()
         self.external_connectivity_from_surfaces = dict()
 
-        self.solid_elements_center = dict()
-
-        self.nodes_out_of_face_element = dict()
-        self.surface_area_from_element_integration = dict()
-
-        self.nodal_area = defaultdict(list)
-
         self.normals_surface = dict()
         self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
+        self.solid_elements_center = dict()
+        self.surface_area_from_element_integration = dict()
+
+        self.nodal_area = defaultdict(list)
 
         self.nodes_collapsed_elements = None
 
