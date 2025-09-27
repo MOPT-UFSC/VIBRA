@@ -153,13 +153,19 @@ class ACT_TRIANGLE_6(Element2D):
         Defines the integration points and their respective weights
         for the numerical integration processing.
         """
+
         self.nint = 3
-        con1 = 1/6
-        con2 = 2/3
-        self.wps = 1/3
-        self.pint = np.array([[con1, con1],
-                              [con2, con1],
-                              [con1, con2]], dtype=float)
+        a = 1/6
+        b = 2/3
+        w1 = 1/6
+
+        self.num_int_data = np.array([
+            [a, a, w1],
+            [b, a, w1],
+            [a, b, w1],
+            ], dtype=float)
+
+        self.wps = self.num_int_data[:, -1]
 
 
     def process_shape_functions_and_derivatives(self):
@@ -168,8 +174,8 @@ class ACT_TRIANGLE_6(Element2D):
         derivatives for all integration points.
         """
         ## coordinates from integration points
-        xi_1 = self.pint[:, 0]
-        xi_2 = self.pint[:, 1]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
 
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
@@ -324,7 +330,7 @@ class ACT_TRIANGLE_6(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps)
+            int2d_NtN += N.T @ N * (det_jacs * self.wps[i])
 
         return int2d_NtN
 
@@ -367,8 +373,8 @@ class ACT_TRIANGLE_6(Element2D):
             B = inv_jacs @ self.dphi[i, :, :]
             B_t = np.transpose(B, axes=(0, 2, 1))
 
-            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps)
-            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps)
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
 
         return int2d_NtN, int2d_BtB
 
@@ -412,7 +418,7 @@ class ACT_TRIANGLE_6(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += (1 / 2) * load * N.T * (det_JAC * self.wps)
+            Fe += load * N.T * (det_JAC * self.wps[i])
 
         return Fe
 
@@ -459,7 +465,7 @@ class ACT_TRIANGLE_6(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps)
+            We += P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
 
         return We.flatten()
 

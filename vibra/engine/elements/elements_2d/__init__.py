@@ -1,5 +1,6 @@
 from .acoustic.acoustic_tria3_element import ACT_TRIANGLE_3
 from .acoustic.acoustic_tria6_element import ACT_TRIANGLE_6
-from .acoustic.acoustic_quad4_element_new import ACT_QUADRANGLE_4
-from .acoustic.acoustic_quad8_element_new import ACT_QUADRANGLE_8
+from .acoustic.acoustic_quad4_element import ACT_QUADRANGLE_4
+from .acoustic.acoustic_quad8_element import ACT_QUADRANGLE_8
+
 from .structural.structural_tria3_element import STRUCT_TRIANGLE_3

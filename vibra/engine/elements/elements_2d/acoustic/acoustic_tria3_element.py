@@ -138,14 +138,19 @@ class ACT_TRIANGLE_3(Element2D):
         Defines the integration points and their respective weights
         for the numerical integration processing.
         """
-        self.nint = 3
-        con1 = 1/6
-        con2 = 2/3
-        self.wps = 1/3
-        self.pint = np.array([[con1, con1],
-                              [con2, con1],
-                              [con1, con2]], dtype=float)
 
+        self.nint = 3
+        a = 1/6
+        b = 2/3
+        w1 = 1/6
+
+        self.num_int_data = np.array([
+            [a, a, w1],
+            [b, a, w1],
+            [a, b, w1],
+            ], dtype=float)
+
+        self.wps = self.num_int_data[:, -1]
 
     def process_shape_functions_and_derivatives(self):
         """
@@ -156,8 +161,8 @@ class ACT_TRIANGLE_3(Element2D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         ## coordinates from integration points
-        xi_1 = self.pint[:, 0]
-        xi_2 = self.pint[:, 1]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
 
         # define coordiante l4
         xi_3 = 1 - xi_1 - xi_2
@@ -306,7 +311,7 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps)
+            int2d_NtN += N.T @ N * (det_jacs * self.wps[i])
 
         return int2d_NtN
 
@@ -353,8 +358,8 @@ class ACT_TRIANGLE_3(Element2D):
             N = self.phi[i, :, :]
             N_t = N.T
 
-            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps)
-            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps)
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
 
         return int2d_NtN, int2d_BtB
 
@@ -402,7 +407,7 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += (1 / 2) * load * N.T * (det_jac * self.wps)
+            Fe += load * N.T * (det_jac * self.wps[i])
 
         return Fe
 
@@ -453,7 +458,7 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps)
+            We += P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
 
         return We.flatten()
 
@@ -514,135 +519,3 @@ def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
                      [-1, 1, 0]], dtype=float)
 
     return phi, dphi
-
-
-def forceF3(ee, coord, connect_face, Vn=1):
-    """ F3 matrices
-    """
-    #Check Connectivity -- Ansys = Gmsh
-
-    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-    XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-    XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
-
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)
-    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
-
-    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-
-    x1 = 0 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
-    y1 = 0 
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
-
-    coord_loc = np.array([[x1, y1],
-                            [x2, y2],
-                            [x3, y3]])
-
-    ################ Definir pontos de integração 2D
-    nint = 3
-    con1 = 1/6
-    con2 = 2/3
-    wps = 1/3
-    pint = np.array([[con1, con1],
-                        [con2, con1],
-                        [con1, con2]])
-
-    ######################## Inicio da integração na face
-    Fe = np.zeros((3,1),dtype=complex)
-    N = np.zeros((1,3))
-    # integration
-    for i in range(nint):
-        ssx, ttx = pint[i, 0], pint[i, 1]
-        phi, dphi = get_shape_functions_and_derivatives(ssx, ttx)
-        #ie = connect_face[ee_face,1:]-1
-        dxdy = dphi@coord_loc
-        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                        [dxdy[1,0], dxdy[1,1]]], dtype=float)
-        # print(f"forceF3: index - {ee} : k - {i} JAC {JAC}")
-        #Inverse Jacobian
-        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
-        # N[0, :] = phi
-        for iii in range(3):
-            N[0,iii]=phi[iii]
-
-        # print(f"forceF3: index - {ee} : k - {i} {N}")           
-        Fe += -(1/2) * Vn * N.T * (detJAC * wps)
-
-    return Fe
-
-
-def impedanceZ3(ee, coord, connect_face, rho=1, impedance=1):
-    """ Z3 matrices
-    """
-    #Check Connectivity -- Ansys = Gmsh
-
-    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-    XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-    XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
-
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)
-    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
-
-    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-
-    x1 = 0 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
-    y1 = 0 
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
-
-    coord_loc = np.array([[x1, y1],
-                            [x2, y2],
-                            [x3, y3]])
-    # print(f"matricesZ3: index - {ee} \n {coord_loc}")
-
-    ################ Definir pontos de integração 2D
-    nint = 3
-    con1 = 1/6
-    con2 = 2/3
-    wps = 1/3
-    pint = np.array([[con1, con1],
-                        [con2, con1],
-                        [con1, con2]])
-
-    ######################## Inicio da integração na face
-    Ze = np.zeros((3,3),dtype=complex)
-    N = np.zeros((1,3))
-    # integration
-    for i in range(nint):
-        ssx, ttx = pint[i, 0], pint[i, 1]
-        phi, dphi = get_shape_functions_and_derivatives(ssx,ttx)
-        #ie = connect_face[ee_face,1:]-1
-        dxdy = dphi@coord_loc
-        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                        [dxdy[1,0], dxdy[1,1]]], dtype=float) 
-        #Inverse Jacobian
-        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
-        # print(f"matricesZ3: index - {ee} \n {coord_loc} {detJAC} -> {i}")
-
-        for iii in range(3):
-            N[0, iii] = phi[iii]
-        
-        # print(f"matricesZ3: index - {ee} k - {i} {N}")
-        
-        Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
-
-    return Ze

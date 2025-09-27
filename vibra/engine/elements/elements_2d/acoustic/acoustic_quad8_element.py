@@ -151,7 +151,7 @@ class ACT_QUADRANGLE_8(Element2D):
         self.process_shape_functions_and_derivatives()
 
 
-    def define_integration_points(self, integration_points: int = 9):
+    def define_integration_points(self, integration_points: int = 4):
         """ 
         Defines the integration points and their respective weights
         for the numerical integration processing.
@@ -169,8 +169,6 @@ class ACT_QUADRANGLE_8(Element2D):
                 [-a,  a, w1],
                 ], dtype=float)
 
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
-        
         elif integration_points == 9:
 
             self.nint = 9
@@ -190,8 +188,6 @@ class ACT_QUADRANGLE_8(Element2D):
                 [-a,  0, w2],
                 [ 0,  0, w3],
                 ], dtype=float)
-
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
         else:
 
@@ -222,7 +218,7 @@ class ACT_QUADRANGLE_8(Element2D):
                 [ b, -a, w3],
                 ], dtype=float)
 
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -239,31 +235,31 @@ class ACT_QUADRANGLE_8(Element2D):
 
         ## shape functions (Atalla and Sgard, 2015, pg. 174)
         phi = np.zeros((self.nint, 1, self.NODES_PER_ELEMENT), dtype=float)
-        phi[:, 0, 0] = -(1 - xi_1)*(1 - xi_2)*(1 + xi_1 + xi_2) / 4      # ->      (-1.0, -1.0)   Node 1
-        phi[:, 0, 1] = -(1 + xi_1)*(1 - xi_2)*(1 - xi_1 + xi_2) / 4      # ->      ( 1.0, -1.0)   Node 2
-        phi[:, 0, 2] = -(1 + xi_1)*(1 + xi_2)*(1 - xi_1 - xi_2) / 4      # ->      ( 1.0,  1.0)   Node 3
-        phi[:, 0, 3] = -(1 - xi_1)*(1 + xi_2)*(1 + xi_1 - xi_2) / 4      # ->      (-1.0,  1.0)   Node 4
-        phi[:, 0, 4] =  (1 - xi_1**2)*(1 - xi_2) / 2                     # ->      ( 0.0, -1.0)   Node 5
-        phi[:, 0, 5] =  (1 + xi_1)*(1 - xi_2**2) / 2                     # ->      ( 1.0,  0.0)   Node 6
-        phi[:, 0, 6] =  (1 - xi_1**2)*(1 + xi_2) / 2                     # ->      ( 0.0,  1.0)   Node 7
-        phi[:, 0, 7] =  (1 - xi_1)*(1 - xi_2**2) / 2                     # ->      (-1.0,  0.0)   Node 8
+        phi[:, 0, 0] = (1 - xi_1)*(1 - xi_2)*(-xi_1 - xi_2 - 1) / 4      # ->      (-1.0, -1.0)   Node 1
+        phi[:, 0, 1] = (1 + xi_1)*(1 - xi_2)*( xi_1 - xi_2 - 1) / 4      # ->      ( 1.0, -1.0)   Node 2
+        phi[:, 0, 2] = (1 + xi_1)*(1 + xi_2)*( xi_1 + xi_2 - 1) / 4      # ->      ( 1.0,  1.0)   Node 3
+        phi[:, 0, 3] = (1 - xi_1)*(1 + xi_2)*(-xi_1 + xi_2 - 1) / 4      # ->      (-1.0,  1.0)   Node 4
+        phi[:, 0, 4] = (1 - xi_1**2)*(1 - xi_2) / 2                      # ->      ( 0.0, -1.0)   Node 5
+        phi[:, 0, 5] = (1 + xi_1)*(1 - xi_2**2) / 2                      # ->      ( 1.0,  0.0)   Node 6
+        phi[:, 0, 6] = (1 - xi_1**2)*(1 + xi_2) / 2                      # ->      ( 0.0,  1.0)   Node 7
+        phi[:, 0, 7] = (1 - xi_1)*(1 - xi_2**2) / 2                      # ->      (-1.0,  0.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
-        dphi[:, 0, 0] = -(1 - xi_2)*(-2*xi_1 - xi_2) / 4 
-        dphi[:, 0, 1] = -(1 - xi_2)*(-2*xi_1 + xi_2) / 4
-        dphi[:, 0, 2] = -(1 + xi_2)*(-2*xi_1 - xi_2) / 4
-        dphi[:, 0, 3] = -(1 + xi_2)*(-2*xi_1 + xi_2) / 4
-        dphi[:, 0, 4] = -(2*xi_1)*(1 - xi_2) / 2 
+        dphi[:, 0, 0] = (1 - xi_2)*(2*xi_1 + xi_2) / 4 
+        dphi[:, 0, 1] = (1 - xi_2)*(2*xi_1 - xi_2) / 4
+        dphi[:, 0, 2] = (1 + xi_2)*(2*xi_1 + xi_2) / 4
+        dphi[:, 0, 3] = (1 + xi_2)*(2*xi_1 - xi_2) / 4
+        dphi[:, 0, 4] = -(2*xi_1)*(1 - xi_2) / 2
         dphi[:, 0, 5] =  (1 - xi_2**2) / 2
         dphi[:, 0, 6] = -(2*xi_1)*(1 + xi_2) / 2
         dphi[:, 0, 7] = -(1 - xi_2**2) / 2
 
-        dphi[:, 1, 0] = -(1 - xi_1)*(-xi_1 - 2*xi_2) / 4
-        dphi[:, 1, 1] = -(1 + xi_1)*( xi_1 - 2*xi_2) / 4
-        dphi[:, 1, 2] = -(1 + xi_1)*(-xi_1 - 2*xi_2) / 4
-        dphi[:, 1, 3] = -(1 - xi_1)*( xi_1 - 2*xi_2) / 4
-        dphi[:, 1, 4] = -(1 - xi_2**2) / 2 
+        dphi[:, 1, 0] = (1 - xi_1)*( xi_1 + 2*xi_2) / 4
+        dphi[:, 1, 1] = (1 + xi_1)*(-xi_1 + 2*xi_2) / 4
+        dphi[:, 1, 2] = (1 + xi_1)*( xi_1 + 2*xi_2) / 4
+        dphi[:, 1, 3] = (1 - xi_1)*(-xi_1 + 2*xi_2) / 4
+        dphi[:, 1, 4] = -(1 - xi_2**2) / 2
         dphi[:, 1, 5] = -(1 + xi_1)*(2*xi_2) / 2
         dphi[:, 1, 6] =  (1 - xi_2**2) / 2
         dphi[:, 1, 7] = -(1 - xi_1)*(2*xi_2) / 2
