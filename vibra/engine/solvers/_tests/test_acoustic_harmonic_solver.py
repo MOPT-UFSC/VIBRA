@@ -5,7 +5,7 @@ from vibra.engine.solvers import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
 
 
-def test_regression_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model):
+def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model):
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
     assembler.process_assemble()
     project_file = ProjectFile(str(datadir))
