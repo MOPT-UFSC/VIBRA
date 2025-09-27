@@ -96,7 +96,7 @@ def load_external_mesh_and_solve():
     pressure = 101325
     rho_0 = 1.204263
     c_0 = 343.395034
-    mu = 1.8247e-5
+    mu = 0*1.8247e-5
     Cp = 1006.400178
     kt = 2.5503e-02
     gamma = 1.401985
@@ -147,8 +147,8 @@ def load_external_mesh_and_solve():
                 "volume_id" : 1,
                 }
     
-    # model.properties._set_property("surface_velocity", data_Vn, surface=1)
-    model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
+    model.properties._set_property("surface_velocity", data_Vn, surface=1)
+    # model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
 
     ## boundary impedance setup
     Zo = fluid.impedance
@@ -159,7 +159,7 @@ def load_external_mesh_and_solve():
               }
 
     # model.properties._set_property("specific_impedance", data_Z, surface=1)
-    # model.properties._set_property("specific_impedance", data_Z, surface=2)
+    model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis frequency setup
 
@@ -245,7 +245,7 @@ def load_external_mesh_and_solve():
         node_out = 2280
 
         # Load the external data
-        ext_data = LoadExternalData(results_path / "Pa", rho_0)
+        ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()
