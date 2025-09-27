@@ -289,11 +289,53 @@ class ExternalMeshData():
                 filename = f"{self.folder_name}/connectivity_matrix.dat"
                 np.savetxt(filename, data, header=header, fmt="%i", delimiter=",")
 
+    def get_face_connectivity_indexes(self, element_type: str):
+
+        indexes = np.array([])
+
+        if element_type == "solid187_tet10":
+            indexes = np.array([
+                [2, 1, 3, 5,  7,  6],
+                [1, 2, 4, 5,  9,  8],
+                [2, 3, 4, 6, 10,  9],
+                [3, 1, 4, 7,  8, 10],
+                ], dtype=int) - 1
+
+        if element_type == "solid185_hex8":
+            indexes = np.array([
+                [2, 1, 4, 3],
+                [1, 2, 6, 5],
+                [2, 3, 7, 6],
+                [3, 4, 8, 7],
+                [4, 1, 5, 8],
+                [5, 6, 7, 8],
+                ], dtype=int) - 1
+            
+        elif element_type == "solid186_hex20":
+            indexes = np.array([
+                [2, 1, 4, 3,  9, 12, 11, 10],
+                [1, 2, 6, 5,  9, 18, 13, 17],
+                [2, 3, 7, 6, 10, 19, 14, 18],
+                [3, 4, 8, 7, 11, 20, 15, 19],
+                [4, 1, 5, 8, 12, 17, 16, 20],
+                [5, 6, 7, 8, 13, 14, 15, 16],
+                ], dtype=int) - 1
+
+        return indexes
+
+
     def get_nodes_from_face_element(self, element_type: str):
         if element_type == "solid187_tet10":
-            return 6
-        if element_type in ["solid285_tet4", "solid181_tria3"]:
-            return 3
+            return 10, 6
+
+        elif element_type in ["solid285_tet4", "solid181_tria3"]:
+            return 4, 3
+        
+        elif element_type == "solid185_hex8":
+            return 8, 4
+
+        elif element_type == "solid186_hex20":
+            return 20, 8
 
     def process_named_selection_elements(self, export=False):
 
@@ -302,22 +344,18 @@ class ExternalMeshData():
 
         for key, data in self.connectivity.items():
             vol_id, element_type = key
-            nodes_face_element = self.get_nodes_from_face_element(element_type)
-            
+            nodes_solid_element, nodes_face_element = self.get_nodes_from_face_element(element_type)
+
+            faces_connect_indexes = self.get_face_connectivity_indexes(element_type)
+            aux_indexes = np.arange(nodes_solid_element, dtype=int)
+
             surface_id = 0
             connect = np.array(data, dtype=int)
             for ns_key, ns_nodes in self.nodes_from_named_selection.items():
 
+                surface_id += 1
                 other_nodes = list()
                 face_connectivity = list()
-
-                surface_id += 1
-
-                #TODO: remove the commented lines as soon as possible
-                # filt_1 = 0
-                # for ns_node in ns_nodes:
-                #     filt_1 += np.sum((connect[:, 3:] == ns_node), axis=1)
-                # mask = filt_1 == 3
 
                 mask = np.sum(np.isin(connect[:, 3:], ns_nodes), axis=1) == nodes_face_element
 
@@ -326,23 +364,21 @@ class ExternalMeshData():
 
                 for jj, _nodes in enumerate(connect[mask, 3:]):
 
-                    face_nodes = list()
-                    # mask = np.isin(ns_nodes, _nodes)
-                    # face_nodes = np.array(ns_nodes, dtype=int)[mask]
-                    # other_nodes = [_node for _node in _nodes if _node not in face_nodes]
-                    for _node in _nodes:
-                        if _node in ns_nodes:
-                            face_nodes.append(_node)
-                        else:
-                            other_nodes.append(_node)
+                    if nodes_face_element in [3]: # tria3 or tet4 elements
 
-                    corner_nodes, middle_nodes = self.get_corner_and_middle_nodes(face_nodes, print_data=jj==1)
+                        face_nodes = list()
 
-                    # verifies if the surface normals are pointed out to the
-                    # outside of the solid element and revert it otherwise
+                        for _node in _nodes:
+                            if _node in ns_nodes:
+                                face_nodes.append(_node)
+                            else:
+                                other_nodes.append(_node)
 
-                    if len(face_nodes) == nodes_face_element: # tet4/face3 elements
-                        
+                        corner_nodes, middle_nodes = self.get_corner_and_middle_nodes(face_nodes, print_data=jj==1)
+
+                        # verifies if the surface normals are pointed out to the
+                        # outside of the solid element and revert it otherwise
+                           
                         normal_vector = self.get_element_face_normal(corner_nodes)
 
                         if other_nodes:
@@ -366,6 +402,22 @@ class ExternalMeshData():
 
                         # TODO: implement same structure to other element types
                         # print("processed data: ", ns_key, normal_vector, face_nodes, other_nodes)
+
+                        face_connectivity.append(face_nodes)
+
+                    else:
+
+                        indexes = aux_indexes[np.isin(_nodes, ns_nodes)]
+
+                        row = np.sum(np.isin(faces_connect_indexes, indexes), axis=1) == nodes_face_element
+                        face_nodes = _nodes[faces_connect_indexes[row, :]].flatten()
+
+                        # print()
+                        # print(_nodes)
+                        # print(face_nodes)
+                        # print(indexes)
+                        # if len(face_nodes) == 0:
+                        #     print(np.isin(faces_connect_indexes, indexes))
 
                         face_connectivity.append(face_nodes)
 
