@@ -38,6 +38,7 @@ class AcousticAssembler:
         self.prescribed_values = list()
         self.prescribed_indexes = list()
         self.unprescribed_indexes = list()
+        self.fluid_properties_from_volume = dict()
 
         self.element_1d = None
         self.element_2d = None
@@ -874,7 +875,7 @@ class AcousticAssembler:
         aux_nf = np.ones(nf, dtype=float)
 
         self.frequency_dependent = False
-        self.fluid_properties_from_volume = dict()
+        self.fluid_properties_from_volume.clear()
 
         for vol_id in self.model.mesh.elements_from_volume.keys():
 

@@ -3,15 +3,16 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.interface.ui_generated.plots.acoustic.acoustic_impedance_inputs_ui import AcousticImpedanceInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.acoustic_impedance_inputs_ui import AcousticImpedanceInputs_UI
 
 import logging
 import numpy as np
+
+error_title = "Error"
 
 
 class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
@@ -29,9 +30,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self._config_window()
         self._reset_variables()
         self._create_connections()
-
         self._load_analysis_setup_and_solution()
-        self.geometry_selection_callback()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -50,45 +49,126 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _reset_variables(self):
-        self.exporter = None
-        self.plotter = None
         self.unit_label = "Pa/m/s"
         self.keep_window_open = True
+        self.exporter = None
+        self.plotter = None
 
     def _create_connections(self):
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+        self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-    
+        #
+        self.geometry_selection_callback()
+
+    def update_render_according_to_selector(self):
+        self.geometry_selection_callback()
+        if self.comboBox_selector_filter.currentIndex() == 0:
+            app().main_window.show_geometry_render_widget()           
+        else:
+            app().main_window.show_mesh_render_widget()
+
+    def volume_selector_callback(self):
+        if self.comboBox_volumes.currentText() != "":
+            volume_id = int(self.comboBox_volumes.currentText())
+            app().main_window.set_geometry_selection(volumes=[volume_id])
+
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selected_geometry_volumes
+        surfaces = app().main_window.selected_geometry_surfaces
         nodes = app().main_window.selected_mesh_nodes
 
+        if volumes:
+            if len(volumes) == 1:
+                try:
+                    self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
+                except:
+                    pass
+            return
+
+        if not (surfaces or nodes):
+            return
+
         index = self.comboBox_selector_filter.currentIndex()
-        if faces and index == 0:
-            text = ", ".join([str(i) for i in faces])
+        if surfaces and index == 0:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
+            
+            self.check_volumes_from_surfaces(surfaces)
 
         elif nodes and index == 1:
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
 
-        else:
+            self.check_volumes_from_nodes(nodes)
+
+    def check_volumes_from_nodes(self, node_ids: list[int]):
+
+        self.comboBox_volumes.blockSignals(True)
+
+        surfaces_from_node = dict()
+        for node_id in node_ids:
+            surface_ids = self.mesh.get_surfaces_from_node(node_id)
+            if len(surface_ids) == 2:
+                surfaces_from_node[node_id] = surface_ids
+        
+        self.check_volumes_from_surfaces(surface_ids)
+
+    def check_volumes_from_surfaces(self, surface_ids: list[int]):
+
+        self.comboBox_volumes.blockSignals(True)
+     
+        external_surfaces_map = dict()
+        internal_surfaces_map = dict()  
+
+        for surface_id in surface_ids:
+            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
+            if len(volumes_from_surface) == 1:
+                external_surfaces_map[surface_id] = volumes_from_surface[0]
+
+            elif len(volumes_from_surface) == 2:
+                internal_surfaces_map[surface_id] = volumes_from_surface
+
+        self.comboBox_volumes.clear()
+        if external_surfaces_map and internal_surfaces_map:
             self.lineEdit_selection_id.setText("")
+            app().main_window.set_geometry_selection()
+            app().processEvents()
 
-    def update_render_according_to_selector(self):
+            title = "Invalid selection"
+            message = "The current selection contains internal and external surfaces. "
+            message += "The selection of multiple external surfaces is allowed, but"
+            message += "only one internal surface can be selected each time."
+            PrintMessageInput([error_title, title, message])
+            self.comboBox_volumes.blockSignals(False)
+            return
 
-        self.geometry_selection_callback()
+        if external_surfaces_map:
+            volumes_set = set()
+            self.comboBox_volumes.setEnabled(False)
+            for volume_id in external_surfaces_map.values():
+                volumes_set |= set([volume_id])
 
-        if self.comboBox_selector_filter.currentIndex() == 0:
-            app().main_window.show_geometry_render_widget()           
-        else:
-            app().main_window.show_mesh_render_widget()
+            if len(volumes_set) == 1:
+                self.comboBox_volumes.addItem(str(volume_id))
+            elif len(volumes_set) > 1:
+                self.comboBox_volumes.addItem("Multiple")
+
+        if internal_surfaces_map:
+            self.comboBox_volumes.setEnabled(True)
+            for volume_ids in internal_surfaces_map.values():
+                for volume_id in volume_ids:
+                    self.comboBox_volumes.addItem(str(volume_id))
+
+                app().main_window.set_geometry_selection(volumes=[volume_ids[0]])
+
+        self.comboBox_volumes.blockSignals(False)
 
     def check_inputs(self):
 
@@ -120,6 +200,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             return
 
         self.join_model_data()
+        app().main_window.update_symbols()
+
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
@@ -134,13 +216,32 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def get_response(self, selection_type: str, selected_id: int):
 
+        if self.comboBox_volumes.currentText() == "Multiple":
+            if selection_type == "surfaces":
+                volume_id = self.mesh.volumes_from_surface.get(selected_id)[0]
+            else:
+                surfaces_from_node = self.mesh.get_surfaces_from_node(selected_id)
+                volume_id = self.mesh.volumes_from_surface.get(surfaces_from_node[0])[0]
+        else:
+            volume_id = int(self.comboBox_volumes.currentText())
+
+        show_normals = True if self.comboBox_nodal_normals.currentText() == "Show" else False
+
         def function_callback():
 
             if selection_type == "surface":
-                acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(surface_id = selected_id)
+                acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(
+                    surface_id = selected_id,
+                    volume_id = volume_id,
+                    show_normals = show_normals,
+                    )
 
             else:
-                acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(node_id = selected_id)
+                acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(
+                    node_id = selected_id,
+                    volume_id = volume_id,
+                    show_normals = show_normals,
+                    )
 
             logging.info("Processing particle velocity... [95/100]")
 

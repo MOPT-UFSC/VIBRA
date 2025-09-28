@@ -137,12 +137,14 @@ class AcousticPostprocessing:
         return acoustic_pressures, min_value, max_value, np.imag(selected_mode_shape).any()
 
     def compute_particle_velocity(
-         self,
-         component_label: str,
-         node_id: int | None = None,
-         surface_id: int | None = None,
+        self,
+        component_label: str,
+        node_id: int | None = None,
+        surface_id: int | None = None,
+        volume_id: int | None = None,
+        show_normals: bool = False,
     ):
-        frequencies = self.harmonic_solver.assembler.frequencies
+        frequencies = self.harmonic_solver.assembler.model.analysis_setup.get("frequencies")
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
@@ -150,12 +152,19 @@ class AcousticPostprocessing:
             if np.unique(surface_ids).size != 1:
                 return zeros, None
             surface_id = surface_ids[0]
-
-        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        
+        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_volume(volume_id, frequencies)
+        # rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
         if rho is None:
             return zeros, None
 
-        particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, rho)
+        particle_velocities_data = self.get_particle_velocity_from_surface(
+            surface_id, 
+            rho, 
+            volume_id = volume_id, 
+            show_normals = show_normals
+            )
+
         particle_velocities_Vj = particle_velocities_data.get(component_label)
         if not isinstance(particle_velocities_Vj, dict):
             return zeros, None
@@ -167,7 +176,14 @@ class AcousticPostprocessing:
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             return np.average(array_particle_velocities_Vj, axis=0)
 
-    def compute_acoustic_impedance(self, node_id: int | None = None, surface_id: int | None = None):
+    def compute_acoustic_impedance(
+            self, 
+            node_id: int | None = None, 
+            surface_id: int | None = None,
+            volume_id: int | None = None,
+            show_normals: bool = False,
+        ):
+
         frequencies = self.harmonic_solver.assembler.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
@@ -187,7 +203,14 @@ class AcousticPostprocessing:
         rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
         if rho is None:
             return aux_zeros, None
-        particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, rho)
+
+        particle_velocities_data = self.get_particle_velocity_from_surface(
+            surface_id, 
+            rho, 
+            volume_id = volume_id,
+            show_normals = show_normals,
+            )
+
         particle_velocities_Vj = particle_velocities_data.get("Vn")
 
         if not isinstance(particle_velocities_Vj, dict):
@@ -207,6 +230,8 @@ class AcousticPostprocessing:
     def compute_surface_absorption_coefficient(
         self, 
         surface_id: int | None = None,
+        volume_id: int | None = None,
+        show_normals: bool = False,
     ):
 
         frequencies = self.harmonic_solver.assembler.frequencies
@@ -215,7 +240,12 @@ class AcousticPostprocessing:
         rho, speed_of_sound = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
         Z0 = rho * speed_of_sound
 
-        Zs = self.compute_acoustic_impedance(surface_id=surface_id)
+        Zs = self.compute_acoustic_impedance(
+            surface_id = surface_id, 
+            volume_id = volume_id,
+            show_normals = show_normals,
+            )
+
         if not Zs.any():
             return aux_zeros
 
@@ -227,7 +257,12 @@ class AcousticPostprocessing:
 
         return alpha
 
-    def get_particle_velocity_from_surface(self, surface_id: int, rho: float | np.ndarray):
+    def get_particle_velocity_from_surface(
+            self, 
+            surface_id: int, rho: float | np.ndarray, 
+            volume_id: int | None = None,
+            show_normals: bool = False,
+            ):
         """
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -257,7 +292,11 @@ class AcousticPostprocessing:
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
-        data_normals = self.harmonic_solver.assembler.model.mesh.get_surface_nodal_normals(surface_id)
+        data_normals = self.harmonic_solver.assembler.model.mesh.get_surface_nodal_normals(
+            surface_id, 
+            volume_id = volume_id,
+            )
+
         map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
             surface_id=surface_id, return_nodes=True)
         
@@ -307,8 +346,9 @@ class AcousticPostprocessing:
         particle_velocities["Vn"] = Vn
         particle_velocities["nodal_normals"] = data_normals
 
-        ## Uncomment the line below to plot the average normals at the nodes
-        self.harmonic_solver.assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
+        if show_normals:
+            ## Uncomment the line below to plot the average normals at the nodes
+            self.harmonic_solver.assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
 
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
@@ -391,6 +431,9 @@ class AcousticPostprocessing:
 
             Aeff_in = nodal_areas_in.reshape(-1, 1) * (A_in / np.sum(nodal_areas_in))
             Aeff_out = nodal_areas_out.reshape(-1, 1) * (A_out / np.sum(nodal_areas_out))
+
+            # Aeff_in = np.ones((nodes_input.size, 1), dtype=float) * (A_in / nodes_input.size)
+            # Aeff_out = np.ones((nodes_output.size, 1), dtype=float) * (A_out / nodes_output.size)
 
             rho_in, _ = model.get_fluid_properties_from_surface(input_surface_id, frequencies)
             if rho_in is None:

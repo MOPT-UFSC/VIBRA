@@ -1380,7 +1380,7 @@ class Mesh:
             # integrate the total surface area by the summation of each element area
             area = 0.0
             for element_nodes in connect_data:
-                area += self.process_triangular_area_by_nodal_coordinates(element_nodes)
+                area += self.process_element_area_from_connectivity(element_nodes)
 
             self.surface_area_from_element_integration[tag] = area
             face_nodes = np.unique(connect_data).astype(int)
@@ -1671,7 +1671,22 @@ class Mesh:
         """
 
         # t0 = time()
-       
+        volume_id = kwargs.get("volume_id", None)
+
+        if isinstance(volume_id, int):
+            solid_elements_connected_to_nodes = self.get_solid_elements_connected_to_nodes(surface_id=surface_id)
+
+            elements_set = set()
+            for elements in solid_elements_connected_to_nodes.values():
+                elements_set |= set(elements)
+
+            filtered_elements = list()
+            for elem3d_id in elements_set:
+                if self.solids_connectivity[elem3d_id, 1] == volume_id:
+                    filtered_elements.append(elem3d_id)
+
+            filt_element3d_connect = self.solids_connectivity[filtered_elements, 4:]
+
         face_connectivity = self.get_connectivity_from_surface(surface_id)
 
         if face_connectivity is None:
@@ -1706,8 +1721,21 @@ class Mesh:
             norm_cross = self.process_stacked_cross_products(inside_face_connectivity)
 
             for i, e_nodes in enumerate(inside_face_connectivity):
+
+                factor = 1
+                if isinstance(volume_id, int):
+                    mask = np.sum(np.isin(filt_element3d_connect, e_nodes), axis=1) == nodes_per_element
+                    connect_3d = filt_element3d_connect[mask, :].flatten()
+
+                    coords = self.nodal_coordinates[e_nodes[0], 1:]
+                    center_coords = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
+                    vector_inside = center_coords - coords
+                    dot_product = np.dot(norm_cross[i, :], vector_inside)
+
+                    factor = 1 if dot_product < 0 else -1
+
                 for node in e_nodes:
-                    Vn_sum[node] += norm_cross[i, :]
+                    Vn_sum[node] += norm_cross[i, :] * factor
 
         nodal_unit_normals = dict()
 
@@ -1796,15 +1824,15 @@ class Mesh:
         self.nodal_area.clear()
         for node, connectivities in self.face_elements_connected_to_nodes.items():
             for connect in connectivities:
-                area = self.process_triangular_area_by_nodal_coordinates(connect)
+                area = self.process_element_area_from_connectivity(connect)
                 if area is not None:
                     self.nodal_area[node].append(area)
 
-    def process_triangular_area_by_nodal_coordinates(
+    def process_element_area_from_connectivity(
         self, elem_connect: list[int] | np.ndarray
     ) -> np.ndarray | None:
         """
-        This method calculates the area of triangular elements
+        This method calculates the area of a surface element
         based on their connectivities.
 
         Parameters
@@ -1815,7 +1843,7 @@ class Mesh:
         Returns
         -------
         area: float
-            The area of the triangular element.
+            The area of surface element.
 
         """
         def compute_triangular_area(nodes: list):
@@ -1827,22 +1855,45 @@ class Mesh:
             area = np.linalg.norm(np.cross(vect_AB, vect_BC)) / 2
             return area
 
-        # compute the area for TRIA3 element
+        # internal triangles of TRIA3 element
         if len(elem_connect) == 3:
-            area = compute_triangular_area(elem_connect)
+            points_nodes = [
+                [elem_connect[0], elem_connect[1], elem_connect[2]],
+                ]
 
-        # compute the area for TRIA6 element
+        # internal triangles of QUAD4 element
+        elif len(elem_connect) == 4:
+            points_nodes = [
+                [elem_connect[0], elem_connect[1], elem_connect[2]],
+                [elem_connect[0], elem_connect[2], elem_connect[3]],
+                ]
+
+        # internal triangles of TRIA6 element
         elif len(elem_connect) == 6:
             points_nodes = [
                 [elem_connect[0], elem_connect[3], elem_connect[5]],
                 [elem_connect[5], elem_connect[3], elem_connect[1]],
                 [elem_connect[1], elem_connect[4], elem_connect[5]],
                 [elem_connect[5], elem_connect[4], elem_connect[2]],
-            ]
+                ]
+        
+        # internal triangles of QUAD8 element
+        elif len(elem_connect) == 8:
+            points_nodes = [
+                [elem_connect[7], elem_connect[0], elem_connect[4]],
+                [elem_connect[4], elem_connect[1], elem_connect[5]],
+                [elem_connect[5], elem_connect[7], elem_connect[4]],
+                [elem_connect[5], elem_connect[2], elem_connect[6]],
+                [elem_connect[6], elem_connect[3], elem_connect[7]],
+                [elem_connect[7], elem_connect[5], elem_connect[6]],
+                ]
 
-            area = 0.
-            for nodes in points_nodes:
-                area += compute_triangular_area(nodes)
+        else:
+            points_nodes = list()
+
+        area = 0.
+        for nodes in points_nodes:
+            area += compute_triangular_area(nodes)
 
         return area
 

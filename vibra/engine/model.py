@@ -397,11 +397,7 @@ class Model:
     def get_fluid_properties_from_surface(self, surface_id: int, frequencies: np.ndarray):
         """
         """
-
         fluid = None
-        density = None
-        speed_of_sound = None
-
         volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
@@ -439,10 +435,42 @@ class Model:
                 fluid = fluids[0]
 
         if isinstance(fluid, Fluid):
-            density = fluid.fluid_density
-            speed_of_sound = fluid.speed_of_sound
+            proportional_damping = self.properties._get_property("proportional_damping", volume=volumes_from_surface[0])
+            density = self.properties.get_fluid_density(fluid, proportional_damping)
+            speed_of_sound = self.properties.get_speed_of_sound(fluid, proportional_damping)
+            return density, speed_of_sound
 
-        return density, speed_of_sound
+        return None, None
+
+    def get_fluid_properties_from_volume(self, volume_id: int, frequencies: np.ndarray):
+        """
+        """
+        for key in self.properties.volume_properties.keys():
+            property, vol_id = key
+            if vol_id == volume_id:
+                if property == "viscous_thermal_model":
+                    vt_model = ViscousThermalLossModels(self)
+                    vt_model.process_effective_properties(frequencies)
+                    density = vt_model.effective_properties[volume_id]["rho_eff"]
+                    speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
+                    return density, speed_of_sound
+
+                elif property == "porous_material_model":
+                    pm_model = PorousMaterialModels(self)
+                    pm_model.process_effective_properties(frequencies)
+                    density = pm_model.effective_properties[volume_id]["rho_eff"]
+                    speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
+                    return density, speed_of_sound
+                
+        fluid = self.properties._get_property("fluid", volume=volume_id)
+        proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
+
+        if isinstance(fluid, Fluid):
+            density = self.properties.get_fluid_density(fluid, proportional_damping)
+            speed_of_sound = self.properties.get_speed_of_sound(fluid, proportional_damping)
+            return density, speed_of_sound
+
+        return None, None
 
     def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
         """
