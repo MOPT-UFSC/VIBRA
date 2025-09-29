@@ -128,20 +128,18 @@ class MumpsLinearSolver(LinearSolver):
 class ModalSuperpositionSolver(LinearSolver):
     def __init__(self, modes, **kwargs):
         super().__init__(**kwargs)
-        self.modes = modes
+        self.Phi = modes
+        self.PhiH = modes.conj().T
         self.linear_operator_class = LinearOperator  # Not used
 
     def solve(self, A, F):
-        return self.project_and_solve(A, F, self.modes)
+        Zr = np.matmul(self.PhiH, A.dot(self.Phi))
+        fr = np.matmul(self.PhiH, F)
+        ur = np.linalg.solve(Zr, fr)
+        return np.matmul(self.Phi, ur)
 
     def clear_memory(self):
         pass  # Nothing to clear
-
-    def project_and_solve(self, Z, f, modes):
-        Zr = np.matmul(modes.conj().T, Z.dot(modes))
-        fr = np.matmul(modes.conj().T, f)
-        ur = np.linalg.solve(Zr, fr)
-        return np.matmul(modes, ur)
 
 
 def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
