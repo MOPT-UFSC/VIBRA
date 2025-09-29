@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.9.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -250,7 +250,9 @@ class Ui_MainWindow(object):
         icon33 = QIcon()
         icon33.addFile(u":/icons/visibility/ghost.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.action_ghost_view.setIcon(icon33)
-        self.action_ghost_view.setMenuRole(QAction.MenuRole.NoRole)
+        self.action_ghost_view.setMenuRole(QAction.NoRole)
+        self.action_grab_tool = QAction(MainWindow)
+        self.action_grab_tool.setObjectName(u"action_grab_tool")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -258,7 +260,6 @@ class Ui_MainWindow(object):
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setLineWidth(1)
-        self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.splitter.setOpaqueResize(True)
         self.splitter.setHandleWidth(3)
         self.stacked_setup = QStackedWidget(self.splitter)
@@ -268,7 +269,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.stacked_setup.sizePolicy().hasHeightForWidth())
         self.stacked_setup.setSizePolicy(sizePolicy)
-        self.stacked_setup.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
+        self.stacked_setup.setContextMenuPolicy(Qt.NoContextMenu)
         self.stacked_setup.setStyleSheet(u"")
         self.page_3 = QWidget()
         self.page_3.setObjectName(u"page_3")
@@ -311,7 +312,7 @@ class Ui_MainWindow(object):
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1055, 25))
+        self.menubar.setGeometry(QRect(0, 0, 1055, 21))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
@@ -351,6 +352,8 @@ class Ui_MainWindow(object):
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_hide_selection)
         self.renderer_toolbar.addAction(self.action_unhide_all)
+        self.renderer_toolbar.addSeparator()
+        self.renderer_toolbar.addAction(self.action_grab_tool)
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_model_workspace)
         self.renderer_toolbar.addAction(self.action_mesh_workspace)
@@ -470,6 +473,7 @@ class Ui_MainWindow(object):
         self.action_home_exit.setText(QCoreApplication.translate("MainWindow", u"Home Exit", None))
         self.action_import_mesh.setText(QCoreApplication.translate("MainWindow", u"Import mesh", None))
         self.action_ghost_view.setText(QCoreApplication.translate("MainWindow", u"Ghost", None))
+        self.action_grab_tool.setText(QCoreApplication.translate("MainWindow", u"Grab tool", None))
         self.renderer_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
         self.menu_project.setTitle(QCoreApplication.translate("MainWindow", u"Project", None))
         self.menu_settings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
