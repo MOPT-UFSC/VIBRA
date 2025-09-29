@@ -110,22 +110,19 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def check_volumes_from_nodes(self, node_ids: list[int]):
 
-        self.comboBox_volumes.blockSignals(True)
-
-        surfaces_from_node = dict()
+        surfaces_from_nodes = set()
         for node_id in node_ids:
             surface_ids = self.mesh.get_surfaces_from_node(node_id)
-            if len(surface_ids) == 2:
-                surfaces_from_node[node_id] = surface_ids
-        
-        self.check_volumes_from_surfaces(surface_ids)
+            surfaces_from_nodes |= set(surface_ids)
+
+        self.check_volumes_from_surfaces(list(surfaces_from_nodes))
+
 
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
-        self.comboBox_volumes.blockSignals(True)
-     
         external_surfaces_map = dict()
         internal_surfaces_map = dict()  
+        self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:
             volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
@@ -165,8 +162,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             for volume_ids in internal_surfaces_map.values():
                 for volume_id in volume_ids:
                     self.comboBox_volumes.addItem(str(volume_id))
-
-                # app().main_window.set_geometry_selection(volumes=[volume_ids[0]])
 
         self.comboBox_volumes.blockSignals(False)
 

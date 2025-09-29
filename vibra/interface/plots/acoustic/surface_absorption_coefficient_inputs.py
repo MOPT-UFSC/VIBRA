@@ -94,10 +94,9 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
-        self.comboBox_volumes.blockSignals(True)
-     
         external_surfaces_map = dict()
         internal_surfaces_map = dict()  
+        self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:
             volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
@@ -137,8 +136,6 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             for volume_ids in internal_surfaces_map.values():
                 for volume_id in volume_ids:
                     self.comboBox_volumes.addItem(str(volume_id))
-
-                app().main_window.set_geometry_selection(volumes=[volume_ids[0]])
 
         self.comboBox_volumes.blockSignals(False)
 

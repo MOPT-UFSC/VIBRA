@@ -1654,7 +1654,7 @@ class Mesh:
 
         return data_normals
 
-    def get_surface_nodal_normals(self, surface_id: int, **kwargs):
+    def get_surface_nodal_normals(self, surface_id: int, volume_id: int):
         """
         This method processes the average normals in the surface nodes considering 
         the element faces normals connected to the same node.
@@ -1671,7 +1671,6 @@ class Mesh:
         """
 
         # t0 = time()
-        volume_id = kwargs.get("volume_id", None)
 
         if isinstance(volume_id, int):
             solid_elements_connected_to_nodes = self.get_solid_elements_connected_to_nodes(surface_id=surface_id)
@@ -1722,17 +1721,15 @@ class Mesh:
 
             for i, e_nodes in enumerate(inside_face_connectivity):
 
-                factor = 1
-                if isinstance(volume_id, int):
-                    mask = np.sum(np.isin(filt_element3d_connect, e_nodes), axis=1) == nodes_per_element
-                    connect_3d = filt_element3d_connect[mask, :].flatten()
+                mask = np.sum(np.isin(filt_element3d_connect, e_nodes), axis=1) == 3
+                connect_3d = filt_element3d_connect[mask, :].flatten()
 
-                    coords = self.nodal_coordinates[e_nodes[0], 1:]
-                    center_coords = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
-                    vector_inside = center_coords - coords
-                    dot_product = np.dot(norm_cross[i, :], vector_inside)
+                coords = self.nodal_coordinates[e_nodes[0], 1:]
+                center_coords = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
+                vector_inside = center_coords - coords
+                dot_product = np.dot(norm_cross[i, :], vector_inside)
 
-                    factor = 1 if dot_product < 0 else -1
+                factor = 1 if dot_product < 0 else -1
 
                 for node in e_nodes:
                     Vn_sum[node] += norm_cross[i, :] * factor

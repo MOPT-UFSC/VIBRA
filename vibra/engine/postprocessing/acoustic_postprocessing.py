@@ -151,18 +151,13 @@ class AcousticPostprocessing:
             surface_ids = self.harmonic_solver.assembler.model.mesh.get_surfaces_from_node(node_id)
             if np.unique(surface_ids).size != 1:
                 return zeros, None
+
             surface_id = surface_ids[0]
-        
-        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_volume(volume_id, frequencies)
-        # rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
-        if rho is None:
-            return zeros, None
 
         particle_velocities_data = self.get_particle_velocity_from_surface(
-            surface_id, 
-            rho, 
-            volume_id = volume_id, 
-            show_normals = show_normals
+            surface_id,
+            volume_id = volume_id,
+            show_normals = show_normals,
             )
 
         particle_velocities_Vj = particle_velocities_data.get(component_label)
@@ -185,28 +180,23 @@ class AcousticPostprocessing:
         ):
 
         frequencies = self.harmonic_solver.assembler.frequencies
-        aux_zeros = np.zeros_like(frequencies, dtype=complex)
+        zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
             surface_ids = self.harmonic_solver.assembler.model.mesh.get_surfaces_from_node(node_id)
             if np.unique(surface_ids).size != 1:
-                return aux_zeros, None
-
-            surface_id = surface_ids[0]
+                return zeros, None
+            else:
+                surface_id = surface_ids[0]
 
         elif isinstance(surface_id, int):
             nodes = self.harmonic_solver.assembler.model.mesh.get_nodes_from_surface(surface_id)
 
         else:
-            return aux_zeros, None
-
-        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
-        if rho is None:
-            return aux_zeros, None
+            return zeros, None
 
         particle_velocities_data = self.get_particle_velocity_from_surface(
-            surface_id, 
-            rho, 
+            surface_id,
             volume_id = volume_id,
             show_normals = show_normals,
             )
@@ -214,7 +204,7 @@ class AcousticPostprocessing:
         particle_velocities_Vj = particle_velocities_data.get("Vn")
 
         if not isinstance(particle_velocities_Vj, dict):
-            return aux_zeros, None
+            return zeros, None
 
         if isinstance(node_id, int):
             pressure = self.harmonic_solver.solution[node_id, :]
@@ -259,7 +249,7 @@ class AcousticPostprocessing:
 
     def get_particle_velocity_from_surface(
             self, 
-            surface_id: int, rho: float | np.ndarray, 
+            surface_id: int,
             volume_id: int | None = None,
             show_normals: bool = False,
             ):
@@ -282,6 +272,13 @@ class AcousticPostprocessing:
             the x, y, and z directions, computed in the selected surface.
         """
 
+        frequencies = self.harmonic_solver.assembler.model.analysis_setup.get("frequencies")
+        zeros = np.zeros_like(frequencies, dtype=complex)
+
+        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_volume(volume_id, frequencies)
+        if rho is None:
+            return zeros, None
+
         frequencies = self.harmonic_solver.assembler.model.frequencies
         element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
 
@@ -294,7 +291,7 @@ class AcousticPostprocessing:
 
         data_normals = self.harmonic_solver.assembler.model.mesh.get_surface_nodal_normals(
             surface_id, 
-            volume_id = volume_id,
+            volume_id,
             )
 
         map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
@@ -435,19 +432,25 @@ class AcousticPostprocessing:
             # Aeff_in = np.ones((nodes_input.size, 1), dtype=float) * (A_in / nodes_input.size)
             # Aeff_out = np.ones((nodes_output.size, 1), dtype=float) * (A_out / nodes_output.size)
 
-            rho_in, _ = model.get_fluid_properties_from_surface(input_surface_id, frequencies)
-            if rho_in is None:
+            volumes_in = model.mesh.volumes_from_surface.get(input_surface_id)
+            if volumes_in is None:
                 return None, None
 
-            rho_out, _ = model.get_fluid_properties_from_surface(output_surface_id, frequencies)
-            if rho_out is None:
+            volumes_out = model.mesh.volumes_from_surface.get(output_surface_id)
+            if volumes_out is None:
                 return None, None
+
+            if isinstance(volumes_in, list) and len(volumes_in) == 1:
+                volume_in = volumes_in[0]
+
+            if isinstance(volumes_out, list) and len(volumes_out) == 1:
+                volume_out = volumes_out[0]
 
             logging.info("Processing the transmission loss... [50/100]")
-            input_pv_data = self.get_particle_velocity_from_surface(input_surface_id, rho_in)
+            input_pv_data = self.get_particle_velocity_from_surface(input_surface_id, volume_id=volume_in)
 
             logging.info("Processing the transmission loss... [60/100]")
-            output_pv_data = self.get_particle_velocity_from_surface(output_surface_id, rho_out)
+            output_pv_data = self.get_particle_velocity_from_surface(output_surface_id, volume_id=volume_out)
 
         logging.info("Processing the transmission loss... [70/100]")
         Zo_in = model.get_surface_impedance(input_surface_id)
