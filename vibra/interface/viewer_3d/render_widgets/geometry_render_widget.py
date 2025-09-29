@@ -348,7 +348,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             coord_A = mesh.nodal_coordinates[node_ids[0], 1:]
             coord_B = mesh.nodal_coordinates[node_ids[1], 1:]
             if self.linhas is not None:
-                self.linhas.geometry(tuple(coord_A), tuple(coord_B))
+                self.linhas.build(tuple(coord_A), tuple(coord_B))
                         
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
