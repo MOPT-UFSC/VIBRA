@@ -204,36 +204,16 @@ def load_external_mesh_and_solve():
 
     t0 = time()
 
-    element_3d = model.acoustic_element_3d
-
-    list_nodes = list()
-    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
-        list_nodes.extend(surface_nodes)
-
-    rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
-    rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
-
     acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
 
-    input_particle_velocity = acoustic_post.get_particle_velocity_from_surface(1, rho_eff_v1)
-    output_particle_velocity = acoustic_post.get_particle_velocity_from_surface(2, rho_eff_v2)
+    input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, volume_id=1)
+    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=1)
 
-    input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
+    input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
+    output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
 
     input_Vx = np.average(input_velocities, axis=0)
     output_Vx = np.average(output_velocities, axis=0)
-
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
-
-    particle_velocity = dict()
-    for _node_id, element_ids in solid_elements_connected_to_nodes.items():
-
-        Vk = 0.
-        for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_0, frequencies, solution=solution)
-
-        particle_velocity[_node_id] = Vk / len(element_ids)
 
     # nodal area calculation
     mesh.process_face_elements_connected_to_nodes([1, 2])
@@ -273,10 +253,10 @@ def load_external_mesh_and_solve():
         abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - solution[node_out-1, :]) / (output_pressures_WB[node_out]))
         print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
 
-        abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - particle_velocity[node_in-1][0, :]) / (input_velocities_WB[node_in]))
+        abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - input_particle_velocities["Vx"][node_in-1]) / (input_velocities_WB[node_in]))
         print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
 
-        abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - particle_velocity[node_out-1][0, :]) / (output_velocities_WB[node_out]))
+        abs_diff_node_Vout = np.abs((output_velocities_WB[node_out] - output_particle_velocities["Vx"][node_out-1]) / (output_velocities_WB[node_out]))
         print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
 
         abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
@@ -350,7 +330,7 @@ def load_external_mesh_and_solve():
 
         fig7, ax7 = plt.subplots()
         title = f"Particle velocity at node {node_in}"
-        ax7.plot(frequencies, data_type(particle_velocity[node_in-1][0, :]), color='r', label='Vibra')
+        ax7.plot(frequencies, data_type(input_particle_velocities["Vx"][node_in-1]), color='r', label='Vibra')
         ax7.plot(freq_WB, data_type(input_velocities_WB[node_in]), 'k--', label='Ansys')
         ax7.set_xlabel('Frequency [Hz]')
         ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -360,7 +340,7 @@ def load_external_mesh_and_solve():
 
         fig8, ax8 = plt.subplots()
         title = f"Particle velocity at node {node_out}"
-        ax8.plot(frequencies, data_type(particle_velocity[node_out-1][0, :]), color='r', label='Vibra')
+        ax8.plot(frequencies, data_type(output_particle_velocities["Vx"][node_out-1]), color='r', label='Vibra')
         ax8.plot(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')

@@ -195,7 +195,7 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # solution = modal_solver.solve()
-    harmonic_solver.solve_direct_method(print_log=True)
+    harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
 
