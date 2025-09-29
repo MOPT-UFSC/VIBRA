@@ -243,7 +243,7 @@ class Project(QObject):
         if analysis_method == "direct":
             self.structural_harmonic_solver.solve_direct()
         else:
-            self.structural_harmonic_solver.solve_mode_superposition()
+            self.structural_harmonic_solver.solve_mode_superposition(is_proportionally_damped=True)
         
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
