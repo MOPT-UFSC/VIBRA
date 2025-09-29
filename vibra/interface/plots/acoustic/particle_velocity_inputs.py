@@ -58,6 +58,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
+        self.comboBox_nodal_normals.currentIndexChanged.connect(self.toggle_nodal_normals_symbols_visibility)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
@@ -77,6 +78,13 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         if self.comboBox_volumes.currentText() != "":
             volume_id = int(self.comboBox_volumes.currentText())
             app().main_window.set_geometry_selection(volumes=[volume_id])
+
+    def toggle_nodal_normals_symbols_visibility(self):
+        if self.comboBox_nodal_normals.currentText() == "Show":
+            if not self.mesh.nodal_normals_data:
+                return
+
+        app().main_window.update_symbols()
 
     def geometry_selection_callback(self):
 
@@ -194,7 +202,9 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             return
 
         self.join_model_data()
-        app().main_window.update_symbols()
+
+        if self.comboBox_nodal_normals.currentText() == "Show":
+            app().main_window.update_symbols()
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
@@ -226,8 +236,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         else:
             volume_id = int(self.comboBox_volumes.currentText())
 
-        show_normals = True if self.comboBox_nodal_normals.currentText() == "Show" else False
-
         def function_callback():
 
             logging.info("Processing particle velocity... [15/100]")
@@ -237,7 +245,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
                     component_label, 
                     surface_id = selected_id, 
                     volume_id = volume_id,
-                    show_normals = show_normals,
                     )
 
             else:
@@ -245,7 +252,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
                     component_label, 
                     node_id = selected_id, 
                     volume_id = volume_id,
-                    show_normals = show_normals,
                     )
 
             logging.info("Processing particle velocity... [95/100]")

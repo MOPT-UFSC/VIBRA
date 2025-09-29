@@ -142,7 +142,6 @@ class AcousticPostprocessing:
         node_id: int | None = None,
         surface_id: int | None = None,
         volume_id: int | None = None,
-        show_normals: bool = False,
     ):
         frequencies = self.harmonic_solver.assembler.model.analysis_setup.get("frequencies")
         zeros = np.zeros_like(frequencies, dtype=complex)
@@ -157,7 +156,6 @@ class AcousticPostprocessing:
         particle_velocities_data = self.get_particle_velocity_from_surface(
             surface_id,
             volume_id = volume_id,
-            show_normals = show_normals,
             )
 
         particle_velocities_Vj = particle_velocities_data.get(component_label)
@@ -176,7 +174,6 @@ class AcousticPostprocessing:
             node_id: int | None = None, 
             surface_id: int | None = None,
             volume_id: int | None = None,
-            show_normals: bool = False,
         ):
 
         frequencies = self.harmonic_solver.assembler.frequencies
@@ -198,7 +195,6 @@ class AcousticPostprocessing:
         particle_velocities_data = self.get_particle_velocity_from_surface(
             surface_id,
             volume_id = volume_id,
-            show_normals = show_normals,
             )
 
         particle_velocities_Vj = particle_velocities_data.get("Vn")
@@ -221,7 +217,6 @@ class AcousticPostprocessing:
         self, 
         surface_id: int | None = None,
         volume_id: int | None = None,
-        show_normals: bool = False,
     ):
 
         frequencies = self.harmonic_solver.assembler.frequencies
@@ -233,7 +228,6 @@ class AcousticPostprocessing:
         Zs = self.compute_acoustic_impedance(
             surface_id = surface_id, 
             volume_id = volume_id,
-            show_normals = show_normals,
             )
 
         if not Zs.any():
@@ -251,7 +245,6 @@ class AcousticPostprocessing:
             self, 
             surface_id: int,
             volume_id: int | None = None,
-            show_normals: bool = False,
             ):
         """
         This method computes the nodal average particle velocity in the selected surface.
@@ -343,9 +336,8 @@ class AcousticPostprocessing:
         particle_velocities["Vn"] = Vn
         particle_velocities["nodal_normals"] = data_normals
 
-        if show_normals:
-            ## Uncomment the line below to plot the average normals at the nodes
-            self.harmonic_solver.assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
+        ## Uncomment the line below to plot the average normals at the nodes
+        self.harmonic_solver.assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
 
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
