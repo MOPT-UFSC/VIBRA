@@ -107,8 +107,11 @@ class HarmonicSolver:
 
         logging.info(f"Solving harmonic analysis (mode superposition method)... [25/100]")
 
+        t0 = time()
         modal_solver = ModalSolver(self.assembler)
         natural_frequencies, Phi = modal_solver.solve(full_solution=False, harmonic_analysis=True)
+        dt = time() - t0
+        print(f"Elapsed time to solve modal anaysis: {dt} s")
 
         # Phi is the matrix of the eigenvectors
         Phi_t = Phi.T
