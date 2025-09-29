@@ -270,7 +270,7 @@ class Geometry:
 
                 self._surfaces_normals[tag] = normal
 
-                if np.any(np.isclose(curvature, 0, atol=1e-8)):
+                if np.allclose(curvature, 0, atol=1e-8):
                     self._straight_surfaces.add(tag)
 
             elif dim == 1:
@@ -279,9 +279,6 @@ class Geometry:
                 self.curves.append(tag)
 
                 center, uv_mid = self.process_center_element(dim, tag)
-                center = (
-                    gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-                )
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
 
                 self._curves_centers[tag] = center
@@ -291,38 +288,59 @@ class Geometry:
             elif dim == 0:
                 self.points.append(tag)
                 center, uv_mid = self.process_center_element(dim, tag)
-                center = (
-                    gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-                )
                 self._points_centers[tag] = center
 
         self._create_inverse_maps()
 
     def _process_curves_normals(self):
         for curve in self.curves:
-            center_coord = self._curves_centers[curve]
             adjacent_surfaces = self.curves_to_surfaces(curve)
+            
+            if not adjacent_surfaces:
+                continue
 
             normals_sum = np.zeros(3)
-            for surface in adjacent_surfaces:
-                center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
-                normals_sum += gmsh.model.get_normal(surface, center_uv)
+            curved_added = False
+
+            for surf_id in adjacent_surfaces:
+                is_planar = self.is_surface_straight(surf_id)
+                if is_planar:
+                    normals_sum += self._surfaces_normals[surf_id]
+
+                elif not curved_added:
+                    center_coord = self._curves_centers[curve]
+                    center_uv = gmsh.model.get_parametrization(2, surf_id, center_coord)
+                    normals_sum += gmsh.model.get_normal(surf_id, center_uv)
+                    curved_added = True
 
             norm = np.linalg.norm(normals_sum)
+            
             if norm > 1e-9:
                 self._curves_normals[curve] = normals_sum / norm
 
     def _process_points_normals(self):
         for point in self.points:
-            center_coord = self._points_centers[point]
             adjacent_surfaces = self.points_to_surfaces(point)
 
+            if not adjacent_surfaces:
+                continue
+
             normals_sum = np.zeros(3)
-            for surface in adjacent_surfaces:
-                center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
-                normals_sum += gmsh.model.get_normal(surface, center_uv)
+            curved_added = False
+
+            for surf_id in adjacent_surfaces:
+                is_planar = self.is_surface_straight(surf_id)
+                if is_planar:
+                    normals_sum += self._surfaces_normals[surf_id]
+
+                elif not curved_added:
+                    center_coord = self._points_centers[point]
+                    center_uv = gmsh.model.get_parametrization(2, surf_id, center_coord)
+                    normals_sum += gmsh.model.get_normal(surf_id, center_uv)
+                    curved_added = True
 
             norm = np.linalg.norm(normals_sum)
+
             if norm > 1e-9:
                 self._points_normals[point] = normals_sum / norm
 
