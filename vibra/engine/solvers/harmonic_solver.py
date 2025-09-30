@@ -6,7 +6,9 @@ from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5M
 from vibra.project_files.project_file import ProjectFile
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+# from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural_assembler_new import StructuralAssembler
+
 from vibra.engine.solvers import ModalSolver
 
 import logging
@@ -111,7 +113,7 @@ class HarmonicSolver:
         modal_solver = ModalSolver(self.assembler)
         natural_frequencies, Phi = modal_solver.solve(full_solution=False, harmonic_analysis=True)
         dt = time() - t0
-        print(f"Elapsed time to solve modal anaysis: {dt} s")
+        print(f"Elapsed time to solve modal anaysis: {dt : .6f} s")
 
         # Phi is the matrix of the eigenvectors
         Phi_t = Phi.T

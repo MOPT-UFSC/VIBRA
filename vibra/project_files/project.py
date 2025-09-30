@@ -4,7 +4,9 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+# from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural_assembler_new import StructuralAssembler
+
 from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
@@ -208,13 +210,16 @@ class Project(QObject):
         t0 = time()
         self.acoustic_modal_solver.solve()
         dt = time() - t0
-        print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+        t0 = time()
         self.structural_modal_solver.solve()
+        dt = time() - t0
+        print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
@@ -227,7 +232,7 @@ class Project(QObject):
         t0 = time()
         self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
         dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
@@ -246,7 +251,7 @@ class Project(QObject):
             self.structural_harmonic_solver.solve_mode_superposition()
         
         dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
 
     def run_analysis(self, is_resume: bool = False):
 
