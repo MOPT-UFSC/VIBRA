@@ -218,22 +218,24 @@ class STRUCT_TRIANGLE_3(Element2D):
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
 
     def __init__(self, model: "Model"):
+
         self.model = model
-        self.initialize_variables()
+
+        self.connectivity = None
+        self.element_label = "structural_triangular_3"
+
+        self.nodal_coordinates = self.model.mesh.nodal_coordinates
+        self.faces_connectivity = self.model.mesh.faces_connectivity
+
+        self.number_of_nodes = len(self.nodal_coordinates)
+        self.number_of_elements = self.faces_connectivity.shape[0]
+
+        self.local_dof = np.arange(self.DOF_PER_NODE, dtype=int)
+
         self.define_integration_points_for_bending()
         self.define_integration_points_for_membrane()
         self.process_shape_functions_and_derivatives_for_membrane()
 
-    def initialize_variables(self):
-        """ """
-        self.element_label = "structural_triangular_3"
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.connectivity = self.model.mesh.faces_connectivity
-        #
-        self.number_of_nodes = len(self.nodal_coordinates)
-        self.number_of_elements = len(self.connectivity)
-        #
-        self.local_dof = np.arange(self.DOF_PER_NODE, dtype=int)
 
     def define_integration_points_for_bending(self):
         """ This method computes the integration points for the bending effects. """
@@ -451,39 +453,60 @@ class STRUCT_TRIANGLE_3(Element2D):
         # #
         # return Ke, Me
 
+
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        self.connectivity = self.connectivity[:, [0, 4, 5, 6]]
+        if self.faces_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+            self.connectivity = self.faces_connectivity[:, [0, 4, 5, 6]]
 
-    def generate_ind_rows_cols(self):
-        """This method processess the dof indices (rows and columns) for assembly"""
 
-        self.reorder_connect()
+    def generate_ind_rows_cols(self, reorder: bool = True):
+        """ 
+        This method processess the dof indices (rows and columns) 
+        for assembly
+        """
+
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.faces_connectivity[:, [0, 4, 5, 6]]
+
         dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        n_el = self.faces_connectivity.shape[0]
 
-        ind_dof = (
-            np.array([  dof * self.connectivity[:, 1] + 0,
-                        dof * self.connectivity[:, 1] + 1,
-                        dof * self.connectivity[:, 1] + 2,
-                        dof * self.connectivity[:, 1] + 3,
-                        dof * self.connectivity[:, 1] + 4,
-                        dof * self.connectivity[:, 1] + 5,
-                        dof * self.connectivity[:, 2] + 0,
-                        dof * self.connectivity[:, 2] + 1,
-                        dof * self.connectivity[:, 2] + 2,
-                        dof * self.connectivity[:, 2] + 3,
-                        dof * self.connectivity[:, 2] + 4,
-                        dof * self.connectivity[:, 2] + 5,
-                        dof * self.connectivity[:, 3] + 0,
-                        dof * self.connectivity[:, 3] + 1,
-                        dof * self.connectivity[:, 3] + 2,
-                        dof * self.connectivity[:, 3] + 3,
-                        dof * self.connectivity[:, 3] + 4,
-                        dof * self.connectivity[:, 3] + 5  ], dtype=int)).T
+        local_dof = np.arange(dof, dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.NODES_PER_ELEMENT):
+            ind_dof[:, j*dof : (1 + j)*dof] = dof * self.connectivity[:, j+1].reshape(-1, 1) + local_dof
 
         vect_indices = ind_dof.flatten()
         self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, (1, edof))).flatten()
+        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        # ind_dof = (
+        #     np.array([  dof * self.connectivity[:, 1] + 0,
+        #                 dof * self.connectivity[:, 1] + 1,
+        #                 dof * self.connectivity[:, 1] + 2,
+        #                 dof * self.connectivity[:, 1] + 3,
+        #                 dof * self.connectivity[:, 1] + 4,
+        #                 dof * self.connectivity[:, 1] + 5,
+        #                 dof * self.connectivity[:, 2] + 0,
+        #                 dof * self.connectivity[:, 2] + 1,
+        #                 dof * self.connectivity[:, 2] + 2,
+        #                 dof * self.connectivity[:, 2] + 3,
+        #                 dof * self.connectivity[:, 2] + 4,
+        #                 dof * self.connectivity[:, 2] + 5,
+        #                 dof * self.connectivity[:, 3] + 0,
+        #                 dof * self.connectivity[:, 3] + 1,
+        #                 dof * self.connectivity[:, 3] + 2,
+        #                 dof * self.connectivity[:, 3] + 3,
+        #                 dof * self.connectivity[:, 3] + 4,
+        #                 dof * self.connectivity[:, 3] + 5  ], dtype=int)).T
+
+        # vect_indices = ind_dof.flatten()
+        # self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        # self.ind_cols = (np.tile(ind_dof, (1, edof))).flatten()
 
         # linhas = np.tile(vect_indices, (edof, 1)).T
         # colunas = (np.tile(ind_dof, (1, edof))).reshape(-1, self.DOF_PER_ELEMENT)

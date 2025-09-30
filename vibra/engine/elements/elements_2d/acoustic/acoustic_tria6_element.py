@@ -137,15 +137,12 @@ class ACT_TRIANGLE_6(Element2D):
 
         self.model = model
 
-        self.initialize_variables()
+        self.connectivities = None
+        self.element_label = "acoustic_triangular_6"
+        self.nodal_coordinates = self.model.mesh.nodal_coordinates
+
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
-
-
-    def initialize_variables(self):
-        self.connectivities = None
-        self.element_label = "acoustic_triangular_3"
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
 
     def define_integration_points(self):

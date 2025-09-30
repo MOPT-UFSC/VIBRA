@@ -80,7 +80,7 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
 
 
 class ACT_HEXAHEDRON_20C(Element3D):
-    #
+
     NODES_PER_ELEMENT = 20
     DOF_PER_NODE = 1
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE

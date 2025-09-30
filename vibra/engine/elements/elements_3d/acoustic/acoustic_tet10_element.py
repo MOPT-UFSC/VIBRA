@@ -77,6 +77,7 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
 
     return det_jac, (1 / det_jac) * adj_matrix
 
+
 def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
 
     """
