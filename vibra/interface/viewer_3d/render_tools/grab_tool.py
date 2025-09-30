@@ -5,24 +5,19 @@ class GrabTool(RenderTool):
 
     def __init__(self):
         super().__init__()
-
-        self._create_connections()
-
-    def _create_connections(self):
-        self.tool_signals.click_event.connect(self.start_panning)
-        self.tool_signals.position_changed.connect(self.update_panning)
-        self.tool_signals.release_event.connect(self.stop_panning)
     
-    def start_panning(self, x: int, y: int):
+    def left_button_press_event(self, obj, event):
         self.is_panning = True
+
+        x, y, *_ = self.GetInteractor().GetEventPosition()
         self.FindPokedRenderer(x, y)
 
-    def update_panning(self):
+    def mouse_move_event(self, obj, event):
         if self.is_panning:
             self.Pan()
             self.OnMouseMove()
         else:
-            super().mouse_move_event(None, None)
+            super().mouse_move_event(obj, event)
     
-    def stop_panning(self):
+    def left_button_release_event(self, obj, event):
         self.is_panning = False

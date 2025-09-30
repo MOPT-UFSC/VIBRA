@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1055</width>
+    <width>1056</width>
     <height>587</height>
    </rect>
   </property>
@@ -86,9 +86,6 @@
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
   <widget class="QToolBar" name="renderer_toolbar">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -104,7 +101,7 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
@@ -134,9 +131,6 @@
    <addaction name="action_hide_selection"/>
    <addaction name="action_unhide_all"/>
    <addaction name="separator"/>
-   <addaction name="action_grab_tool"/>
-   <addaction name="separator"/>
-   <addaction name="action_model_workspace"/>
    <addaction name="action_mesh_workspace"/>
    <addaction name="action_results_workspace"/>
   </widget>
@@ -145,7 +139,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1055</width>
+     <width>1056</width>
      <height>21</height>
     </rect>
    </property>
@@ -201,6 +195,37 @@
    <addaction name="menu_view_mode"/>
    <addaction name="advanced_results_menu"/>
    <addaction name="menu_help"/>
+  </widget>
+  <widget class="QToolBar" name="render_tools_toolbar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+            QToolBar {
+                border-style: solid;
+                border-width: 1px;
+                border-color: #888888;
+            }</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>RightToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="separator"/>
+   <addaction name="action_selection_tool"/>
+   <addaction name="separator"/>
+   <addaction name="action_grab_tool"/>
+   <addaction name="separator"/>
+   <addaction name="action_rotation_tool"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">
@@ -701,8 +726,39 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/pan_icon.png</normaloff>:/icons/pan_icon.png</iconset>
+   </property>
    <property name="text">
     <string>Grab tool</string>
+   </property>
+  </action>
+  <action name="action_selection_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/selection_icon.png</normaloff>:/icons/selection_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Selection tool</string>
+   </property>
+  </action>
+  <action name="action_rotation_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/rotation_icon.png</normaloff>:/icons/rotation_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Rotation tool</string>
    </property>
   </action>
  </widget>

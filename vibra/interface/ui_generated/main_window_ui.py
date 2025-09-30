@@ -24,7 +24,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1055, 587)
+        MainWindow.resize(1056, 587)
         self.action_new_project = QAction(MainWindow)
         self.action_new_project.setObjectName(u"action_new_project")
         icon = QIcon()
@@ -254,6 +254,16 @@ class Ui_MainWindow(object):
         self.action_grab_tool = QAction(MainWindow)
         self.action_grab_tool.setObjectName(u"action_grab_tool")
         self.action_grab_tool.setCheckable(True)
+        icon34 = QIcon()
+        icon34.addFile(u":/icons/pan_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.action_grab_tool.setIcon(icon34)
+        self.action_selection_tool = QAction(MainWindow)
+        self.action_selection_tool.setObjectName(u"action_selection_tool")
+        self.action_selection_tool.setCheckable(True)
+        self.action_selection_tool.setChecked(True)
+        icon35 = QIcon()
+        icon35.addFile(u":/icons/selection_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.action_selection_tool.setIcon(icon35)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -305,7 +315,6 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.status_bar)
         self.renderer_toolbar = QToolBar(MainWindow)
         self.renderer_toolbar.setObjectName(u"renderer_toolbar")
-        self.renderer_toolbar.setEnabled(True)
         self.renderer_toolbar.setStyleSheet(u"\n"
 "            QToolBar {\n"
 "                border-style: solid;\n"
@@ -313,9 +322,10 @@ class Ui_MainWindow(object):
 "                border-color: #888888;\n"
 "            }")
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
+        MainWindow.insertToolBarBreak(self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1055, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1056, 21))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
@@ -327,6 +337,20 @@ class Ui_MainWindow(object):
         self.advanced_results_menu = QMenu(self.menubar)
         self.advanced_results_menu.setObjectName(u"advanced_results_menu")
         MainWindow.setMenuBar(self.menubar)
+        self.render_tools_toolbar = QToolBar(MainWindow)
+        self.render_tools_toolbar.setObjectName(u"render_tools_toolbar")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.render_tools_toolbar.sizePolicy().hasHeightForWidth())
+        self.render_tools_toolbar.setSizePolicy(sizePolicy1)
+        self.render_tools_toolbar.setStyleSheet(u"\n"
+"            QToolBar {\n"
+"                border-style: solid;\n"
+"                border-width: 1px;\n"
+"                border-color: #888888;\n"
+"            }")
+        MainWindow.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
 
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_new_project)
@@ -356,9 +380,6 @@ class Ui_MainWindow(object):
         self.renderer_toolbar.addAction(self.action_hide_selection)
         self.renderer_toolbar.addAction(self.action_unhide_all)
         self.renderer_toolbar.addSeparator()
-        self.renderer_toolbar.addAction(self.action_grab_tool)
-        self.renderer_toolbar.addSeparator()
-        self.renderer_toolbar.addAction(self.action_model_workspace)
         self.renderer_toolbar.addAction(self.action_mesh_workspace)
         self.renderer_toolbar.addAction(self.action_results_workspace)
         self.menubar.addAction(self.menu_project.menuAction())
@@ -388,6 +409,10 @@ class Ui_MainWindow(object):
         self.menu_view_mode.addAction(self.action_show_empty)
         self.menu_help.addAction(self.action_about_vibra)
         self.advanced_results_menu.addAction(self.action_export_element_transfer_data)
+        self.render_tools_toolbar.addSeparator()
+        self.render_tools_toolbar.addAction(self.action_selection_tool)
+        self.render_tools_toolbar.addSeparator()
+        self.render_tools_toolbar.addAction(self.action_grab_tool)
 
         self.retranslateUi(MainWindow)
 
@@ -477,12 +502,14 @@ class Ui_MainWindow(object):
         self.action_import_mesh.setText(QCoreApplication.translate("MainWindow", u"Import mesh", None))
         self.action_ghost_view.setText(QCoreApplication.translate("MainWindow", u"Ghost", None))
         self.action_grab_tool.setText(QCoreApplication.translate("MainWindow", u"Grab tool", None))
+        self.action_selection_tool.setText(QCoreApplication.translate("MainWindow", u"Selection tool", None))
         self.renderer_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
         self.menu_project.setTitle(QCoreApplication.translate("MainWindow", u"Project", None))
         self.menu_settings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menu_view_mode.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
         self.menu_help.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
         self.advanced_results_menu.setTitle(QCoreApplication.translate("MainWindow", u"Advanced Results", None))
+        self.render_tools_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 
 
@@ -508,6 +535,7 @@ class MainWindow_UI(QMainWindow, Ui_MainWindow):
             - menu_view_mode: QMenu
             - menu_help: QMenu
             - advanced_results_menu: QMenu
+        - render_tools_toolbar: QToolBar
     """
 
     def __init__(self, *args, **kwargs):

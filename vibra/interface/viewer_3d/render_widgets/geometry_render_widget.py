@@ -1,7 +1,6 @@
 import logging
 
 from molde import Color
-from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
@@ -20,6 +19,7 @@ from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixed
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
 from ..render_tools.render_tool import RenderTool
+from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     acoustic_boundary_conditions_info_text,
     faces_info_text,
@@ -40,7 +40,7 @@ from .model_info_text import (
 class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
+        self.set_interactor_style(SelectionTool())
 
         self.geometry_selection = GeometrySelection(self)
         self.mouse_click = (0, 0)
@@ -466,8 +466,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update()
     
     def add_render_tool(self, tool: RenderTool):
-        self.render_interactor.SetInteractorStyle(tool)
+        self.set_interactor_style(tool)
     
-    def remove_render_tool(self):
-        self.render_interactor.SetInteractorStyle(self.interactor_style)
+    def set_default_render_tool(self):
+        self.set_interactor_style(SelectionTool())
 

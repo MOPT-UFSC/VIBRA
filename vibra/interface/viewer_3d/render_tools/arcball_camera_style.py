@@ -3,6 +3,7 @@ from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 from vtkmodules.vtkRenderingCore import vtkPropPicker
 
+
 from molde.actors import RoundPointsActor
 
 
@@ -12,6 +13,7 @@ class ArcballCameraInteractorStyle(vtkInteractorStyleTrackballCamera):
     """
 
     def __init__(self):
+
         self.center_of_rotation = None
         self.default_center_of_rotation = None
 
@@ -34,25 +36,25 @@ class ArcballCameraInteractorStyle(vtkInteractorStyleTrackballCamera):
         self.cor_actor = actor
 
     def _create_observers(self):
-        self.AddObserver("LeftButtonPressEvent", self._left_button_press_event)
-        self.AddObserver("LeftButtonReleaseEvent", self._left_button_release_event)
-        self.AddObserver("RightButtonPressEvent", self._right_button_press_event)
-        self.AddObserver("RightButtonReleaseEvent", self._right_button_release_event)
+        self.AddObserver("LeftButtonPressEvent", self.left_button_press_event)
+        self.AddObserver("LeftButtonReleaseEvent", self.left_button_release_event)
+        self.AddObserver("RightButtonPressEvent", self.right_button_press_event)
+        self.AddObserver("RightButtonReleaseEvent", self.right_button_release_event)
         self.AddObserver("MouseMoveEvent", self.mouse_move_event)
         self.AddObserver("MouseWheelForwardEvent", self._mouse_wheel_forward_event)
         self.AddObserver("MouseWheelBackwardEvent", self._mouse_wheel_backward_event)
         self.AddObserver("MiddleButtonPressEvent", self._click_mid_button_press_event)
         self.AddObserver("MiddleButtonReleaseEvent", self._click_mid_button_release_event)
 
-    def _left_button_press_event(self, obj, event):
+    def left_button_press_event(self, obj, event):
         # Implemented to stop the superclass movement
         self.is_left_clicked = True
 
-    def _left_button_release_event(self, obj, event):
+    def left_button_release_event(self, obj, event):
         # Implemented to stop the superclass movement
         self.is_left_clicked = False
 
-    def _right_button_press_event(self, obj, event):
+    def right_button_press_event(self, obj, event):
         self.is_right_clicked = True
         self.is_rotating = True
 
@@ -86,7 +88,7 @@ class ArcballCameraInteractorStyle(vtkInteractorStyleTrackballCamera):
         self.cor_actor.SetScale((distance_factor / 3.5, distance_factor / 3.5, distance_factor / 3.5))
         renderer.AddActor(self.cor_actor)
 
-    def _right_button_release_event(self, obj, event):
+    def right_button_release_event(self, obj, event):
         self.is_right_clicked = False
         self.is_rotating = False
         renderer = self.GetDefaultRenderer() or self.GetCurrentRenderer()
@@ -105,7 +107,7 @@ class ArcballCameraInteractorStyle(vtkInteractorStyleTrackballCamera):
         self.is_mid_clicked = False
         self.is_panning = False
 
-    def mouse_move_event(self, obj = None, event = None):
+    def mouse_move_event(self, obj, event):
         zoom = self.is_mid_clicked and self.GetInteractor().GetControlKey()
 
         if zoom and not self.is_zooming:

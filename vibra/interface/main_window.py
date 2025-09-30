@@ -41,6 +41,7 @@ from vibra.interface.viewer_3d.render_widgets import (
     ResultsRenderWidget,
 )
 from vibra.interface.viewer_3d.render_tools.grab_tool import GrabTool
+from vibra.interface.viewer_3d.render_tools.selection_tool import SelectionTool
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
@@ -433,10 +434,23 @@ class MainWindow(MainWindow_UI):
     
     def action_grab_tool_callback(self):
         if self.action_grab_tool.isChecked():
-            grab_tool = GrabTool()
-            self.geometry_widget.add_render_tool(grab_tool)
+            self.discheck_all_actions_except(self.action_grab_tool)
+
+            self.geometry_widget.add_render_tool(GrabTool())
         else:
-            self.geometry_widget.remove_render_tool()
+            self.action_selection_tool_callback()
+    
+    def action_selection_tool_callback(self):
+        self.discheck_all_actions_except(self.action_selection_tool)
+        self.geometry_widget.set_default_render_tool()
+        
+    def discheck_all_actions_except(self, action: QAction):
+        actions = self.render_tools_toolbar.findChildren(QAction)
+        
+        for _action in actions:
+            _action.setChecked(False)
+        
+        action.setChecked(True)
 
     def action_user_preferences_callback(self):
         self.close_dialogs()
