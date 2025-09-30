@@ -3,9 +3,18 @@ import numpy as np
 
 
 def initialize_gmsh_and_create_meshed_cube():
-        
+
+    # length dimension in millimeters
+    length = 2000
+
+    # base dimension in millimeters
+    base = 200
+
+    # height dimension in millimeters
+    height = 300
+
     gmsh.initialize()
-    cube = gmsh.model.occ.addBox(0, 0, 0, 1, 1, 1)
+    cube = gmsh.model.occ.addBox(0, 0, 0, length, height, base)
     gmsh.model.occ.synchronize()
 
     lines = gmsh.model.getEntities(dim=1)
@@ -14,7 +23,7 @@ def initialize_gmsh_and_create_meshed_cube():
     surfaces = gmsh.model.getEntities(dim=2)
     surface_tags = [tag for dim, tag in surfaces]
 
-    num_nodes = 2
+    num_nodes = 10
     for tag in lines_tags:
         gmsh.model.mesh.setTransfiniteCurve(tag, num_nodes)
 
@@ -33,7 +42,7 @@ def initialize_gmsh_and_create_meshed_cube():
     post_process_mesh()
 
     gmsh.fltk.run()
-    gmsh.write("cube_hex20.nas")
+    gmsh.write("rectangular_cavity_hex20.nas")
     gmsh.finalize()
 
 
