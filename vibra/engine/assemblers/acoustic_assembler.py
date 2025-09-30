@@ -1709,38 +1709,38 @@ class AcousticAssembler:
         else:
             self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble global matrices: {round(dt, 4)} [s]")
+        print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
         logging.info("Gathering data to assemble damping matrix... [40/100]")
         t0 = time()
         self.compute_data_to_assemble_damping_matrix()
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble damping matrices: {round(dt, 4)} [s]")
+        print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
 
         logging.info("Computing the global matrices factors... [45/100]")
         t0 = time()
         factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors()
         dt = time() - t0
-        print(f"Elapsed time to compute global matrices factor: {round(dt, 4)} [s]")
+        print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
 
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix(factor_K)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global stiffness matrix: {round(dt, 4)} [s]")
+        print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix(factor_M)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global mass matrix: {round(dt, 4)} [s]")
+        print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [70/100]")
         t0 = time()
         self.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global damping matrix: {round(dt, 4)} [s]\n")
+        print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
 
         logging.info("Processing element related loads... [75/100]")
         B = self.get_acoustic_excitations_by_element_integration()
