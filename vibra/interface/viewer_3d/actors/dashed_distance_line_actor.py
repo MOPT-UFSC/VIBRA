@@ -3,12 +3,11 @@ from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData, vtkPolyLine
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkPolyDataMapper,
-    vtkRenderWindow,
-    vtkRenderWindowInteractor,
-    vtkRenderer,
 )
 
-class linhas(vtkActor):
+from vibra.interface.analysis_filter_menu import app
+
+class DashedDistanceLineActor(vtkActor):
     def __init__(self):
         super().__init__()
 
@@ -19,8 +18,8 @@ class linhas(vtkActor):
 
         poly_line = vtkPolyLine()
         poly_line.GetPointIds().SetNumberOfIds(2)
-        for i in range(2):
-            poly_line.GetPointIds().SetId(i, i)
+        poly_line.GetPointIds().SetId(0, 0)
+        poly_line.GetPointIds().SetId(1, 1)
 
         cell_array = vtkCellArray()
         cell_array.InsertNextCell(poly_line)
@@ -35,41 +34,19 @@ class linhas(vtkActor):
         self.SetMapper(mapper)
 
         self.GetProperty().SetColor(1, 0, 0)
-        self.GetProperty().SetLineWidth(3)
+        self.GetProperty().SetLineWidth(app().config.user_preferences.lines_thickness + 60)
 
-        sp = self.GetShaderProperty()
-        sp.AddFragmentShaderReplacement(
+        shader_property = self.GetShaderProperty()
+        shader_property.AddFragmentShaderReplacement(
             "//VTK::Light::Impl",
             False,
             """
-            if (mod(gl_FragCoord.x + gl_FragCoord.y, 20.0) < 10.0) {
+            if (mod(ceil(gl_FragCoord.x / 20.0) + ceil(gl_FragCoord.y / 20.0), 2.0) == 0.0) {
                 discard;
             }
             """,
             False
         )
-
-if __name__ == "__main__":
-    renderer = vtkRenderer()
-    renderer.SetBackground(0.2, 0.3, 0.4)
-
-    render_window = vtkRenderWindow()
-    render_window.AddRenderer(renderer)
-    render_window.SetSize(800, 600)
-
-    interactor = vtkRenderWindowInteractor()
-    interactor.SetRenderWindow(render_window)
-
-    actors = [
-        linhas(),
-        linhas(),
-    ]
-    actors[0].build((0, 0, 0), (1, 1, 1))
-    actors[1].build((1, 1, 1), (-1, 1, 1))
-
-    for actor in actors:
-        renderer.AddActor(actor)
-
-    render_window.Render()
-    interactor.Initialize()
-    interactor.Start()
+    
+    def clear_colors(self):
+        self.GetProperty().SetColor(0, 0, 0)

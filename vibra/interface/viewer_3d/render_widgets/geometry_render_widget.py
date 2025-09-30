@@ -9,8 +9,7 @@ from PySide6.QtWidgets import QApplication
 from vibra import app
 from vibra.utils.image_functions import removes_image_background
 
-from vibra.interface.viewer_3d.actors.line_distance_actor import linhas
-
+from ..actors.dashed_distance_line_actor import DashedDistanceLineActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
 from ..actors.multimaterial import MultimaterialGeometryActor
@@ -134,8 +133,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         logging.info("Updating the geometry render... [25/100]")
         self.remove_all_actors()
 
-        self.linhas = linhas()
-        
+        self.dashed_distance_line_actor = DashedDistanceLineActor()
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
         self.multimaterial = MultimaterialGeometryActor(mesh)
@@ -162,7 +160,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.symbols_actor_structural,
             self.symbols_actor_acoustic,
             self.symbols_actor_acoustic_fixed_size,
-            self.linhas,
+            self.dashed_distance_line_actor,
         )
 
         with self.update_lock:
@@ -336,19 +334,23 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
+        # self.dashed_distance_line_actor.clear_colors()
 
         points = app().main_window.selected_geometry_points
         lines = app().main_window.selected_geometry_lines
         surfaces = app().main_window.selected_geometry_surfaces
 
         if len(points) == 2:
-            print(points)
             mesh = app().project.model.mesh
             node_ids = [mesh.nodes_from_points.get(point_id) for point_id in points]
             coord_A = mesh.nodal_coordinates[node_ids[0], 1:]
             coord_B = mesh.nodal_coordinates[node_ids[1], 1:]
-            if self.linhas is not None:
-                self.linhas.build(tuple(coord_A), tuple(coord_B))
+            if self.dashed_distance_line_actor is not None:
+                self.dashed_distance_line_actor.SetVisibility(True)
+                self.dashed_distance_line_actor.build(tuple(coord_A), tuple(coord_B))
+        else:
+            self.dashed_distance_line_actor.SetVisibility(False)
+        
                         
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
