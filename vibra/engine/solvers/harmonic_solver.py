@@ -23,7 +23,6 @@ class HarmonicSolver:
         self.project_file = project_file
         self.reset_variables()
 
-
     def reset_variables(self):
         self.solution = None
         self.displacement_dof = None
@@ -55,7 +54,8 @@ class HarmonicSolver:
             num_rows = self.assembler.stiffness_matrix.shape[0]
             solution = np.zeros((num_rows, len(frequencies)), dtype=complex)
 
-        self.compute_frequency_sweep(solution, print_log, is_resume)
+        if self.compute_frequency_sweep(solution, print_log, is_resume):
+            return
 
         logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
         if isinstance(solution, LazyHDF5MatrixWriter):
@@ -78,6 +78,11 @@ class HarmonicSolver:
             linear_solver = initialize_solver(SolverType.PARDISO)
         
         for i, freq in enumerate(frequencies):
+
+            if self.assembler.model.stop_processing:
+                self.reset_variables()
+                return True
+
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
             if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
@@ -138,6 +143,10 @@ class HarmonicSolver:
         (alpha, beta, eta) = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
 
         for i, freq in enumerate(frequencies):
+
+            if self.assembler.model.stop_processing:
+                self.reset_variables()
+                return True
 
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{num_freq}]")
 

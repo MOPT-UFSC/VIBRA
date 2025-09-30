@@ -934,7 +934,13 @@ class AcousticAssembler:
         # global_matrices shape
         self.gm_shape = (self.total_dof, self.total_dof)
 
+        logging.info(f"Processing the elementary matrices data... [25/100]")
         self.int3d_BtB, self.int3d_NtN = self.element_3d.stacked_elementary_matrices_NtN_BtB()
+
+        if self.model.stop_processing:
+            return True
+
+        logging.info(f"Processing the elementary matrices data... [35/100]")
 
         self.process_fluid_properties_from_volumes()
         self.process_indexes()
@@ -965,6 +971,9 @@ class AcousticAssembler:
 
         last_progress = 0
         for element_id in range(self.number_3d_elements):
+
+            if self.model.stop_processing:
+                return True
 
             progress = int(100 * (element_id / self.number_3d_elements))
             if progress != last_progress:
@@ -1702,7 +1711,7 @@ class AcousticAssembler:
         self.define_acoustic_elements()
         self.update_number_of_frequencies()
 
-        logging.info("Gathering data to assemble global matrices... [10/100]")
+        logging.info("Processing data to assemble global matrices... [10/100]")
         t0 = time()
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
@@ -1711,7 +1720,10 @@ class AcousticAssembler:
         dt = time() - t0
         print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
-        logging.info("Gathering data to assemble damping matrix... [40/100]")
+        if self.model.stop_processing:
+            return
+
+        logging.info("Processing data to assemble damping matrix... [40/100]")
         t0 = time()
         self.compute_data_to_assemble_damping_matrix()
         dt = time() - t0

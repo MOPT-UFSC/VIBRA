@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -232,7 +232,7 @@ class Ui_MainWindow(object):
         self.action_import_geometry = QAction(MainWindow)
         self.action_import_geometry.setObjectName(u"action_import_geometry")
         icon30 = QIcon()
-        icon30.addFile(u":/icons/geometry_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon30.addFile(u":/icons/import_geometry.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.action_import_geometry.setIcon(icon30)
         self.action_home_exit = QAction(MainWindow)
         self.action_home_exit.setObjectName(u"action_home_exit")
@@ -241,13 +241,15 @@ class Ui_MainWindow(object):
         self.action_home_exit.setIcon(icon31)
         self.action_import_mesh = QAction(MainWindow)
         self.action_import_mesh.setObjectName(u"action_import_mesh")
-        self.action_import_mesh.setIcon(icon27)
+        icon32 = QIcon()
+        icon32.addFile(u":/icons/import_mesh.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.action_import_mesh.setIcon(icon32)
         self.action_ghost_view = QAction(MainWindow)
         self.action_ghost_view.setObjectName(u"action_ghost_view")
         self.action_ghost_view.setCheckable(True)
-        icon32 = QIcon()
-        icon32.addFile(u":/icons/visibility/ghost.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_ghost_view.setIcon(icon32)
+        icon33 = QIcon()
+        icon33.addFile(u":/icons/visibility/ghost.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.action_ghost_view.setIcon(icon33)
         self.action_ghost_view.setMenuRole(QAction.MenuRole.NoRole)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
@@ -309,7 +311,7 @@ class Ui_MainWindow(object):
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1055, 20))
+        self.menubar.setGeometry(QRect(0, 0, 1055, 25))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
