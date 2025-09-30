@@ -40,6 +40,7 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
+from vibra.interface.viewer_3d.render_tools.grab_tool import GrabTool
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
@@ -429,6 +430,13 @@ class MainWindow(MainWindow_UI):
         else:
             self.visualization_filter.color_mode = ColorMode.COLORED        
         self.visualization_changed.emit()
+    
+    def action_grab_tool_callback(self):
+        if self.action_grab_tool.isChecked():
+            grab_tool = GrabTool()
+            self.geometry_widget.add_render_tool(grab_tool)
+        else:
+            self.geometry_widget.remove_render_tool()
 
     def action_user_preferences_callback(self):
         self.close_dialogs()

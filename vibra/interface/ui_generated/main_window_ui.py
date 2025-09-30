@@ -253,6 +253,7 @@ class Ui_MainWindow(object):
         self.action_ghost_view.setMenuRole(QAction.NoRole)
         self.action_grab_tool = QAction(MainWindow)
         self.action_grab_tool.setObjectName(u"action_grab_tool")
+        self.action_grab_tool.setCheckable(True)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -260,6 +261,7 @@ class Ui_MainWindow(object):
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setLineWidth(1)
+        self.splitter.setOrientation(Qt.Horizontal)
         self.splitter.setOpaqueResize(True)
         self.splitter.setHandleWidth(3)
         self.stacked_setup = QStackedWidget(self.splitter)
@@ -303,6 +305,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.status_bar)
         self.renderer_toolbar = QToolBar(MainWindow)
         self.renderer_toolbar.setObjectName(u"renderer_toolbar")
+        self.renderer_toolbar.setEnabled(True)
         self.renderer_toolbar.setStyleSheet(u"\n"
 "            QToolBar {\n"
 "                border-style: solid;\n"
