@@ -251,7 +251,12 @@ class AnalysisToolbar(QToolBar):
         self.update_analysis_combo_boxes()
         if app().project.run_analysis(is_resume):
             return
-        
+
+        if app().project.model.stop_processing:
+            app().project.model.toggle_processing_callback()
+            app().file.remove_results_data_from_project_file()
+            return
+
         if is_resume:
             app().project.can_resume_solution = False
 

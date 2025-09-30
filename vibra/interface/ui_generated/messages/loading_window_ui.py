@@ -15,15 +15,16 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QLabel, QProgressBar, QSizePolicy,
-    QSpacerItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QLabel,
+    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
+    QVBoxLayout, QWidget)
 
 class Ui_loading_window(object):
     def setupUi(self, loading_window):
         if not loading_window.objectName():
             loading_window.setObjectName(u"loading_window")
         loading_window.setWindowModality(Qt.ApplicationModal)
-        loading_window.resize(377, 145)
+        loading_window.resize(377, 157)
         self.verticalLayout = QVBoxLayout(loading_window)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
@@ -44,9 +45,27 @@ class Ui_loading_window(object):
 
         self.verticalLayout.addWidget(self.progress_bar)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.verticalLayout.addItem(self.verticalSpacer)
+        self.verticalLayout.addItem(self.verticalSpacer_3)
+
+        self.frame = QFrame(loading_window)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.NoFrame)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.gridLayout = QGridLayout(self.frame)
+        self.gridLayout.setSpacing(4)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(4, 4, 4, 4)
+        self.push_button_stop_processing = QPushButton(self.frame)
+        self.push_button_stop_processing.setObjectName(u"push_button_stop_processing")
+        self.push_button_stop_processing.setMinimumSize(QSize(0, 28))
+        self.push_button_stop_processing.setMaximumSize(QSize(120, 28))
+
+        self.gridLayout.addWidget(self.push_button_stop_processing, 0, 0, 1, 1)
+
+
+        self.verticalLayout.addWidget(self.frame)
 
 
         self.retranslateUi(loading_window)
@@ -57,6 +76,7 @@ class Ui_loading_window(object):
     def retranslateUi(self, loading_window):
         loading_window.setWindowTitle(QCoreApplication.translate("loading_window", u"Loading Window", None))
         self.progress_label.setText(QCoreApplication.translate("loading_window", u"Loading ...", None))
+        self.push_button_stop_processing.setText(QCoreApplication.translate("loading_window", u"Stop processing", None))
     # retranslateUi
 
 
@@ -68,6 +88,9 @@ class LoadingWindow_UI(QWidget, Ui_loading_window):
         - (Layout): QVBoxLayout
                 - progress_label: QLabel
                 - progress_bar: QProgressBar
+                - frame: QFrame
+                    - (Layout): QGridLayout
+                            - push_button_stop_processing: QPushButton
     """
 
     def __init__(self, *args, **kwargs):
