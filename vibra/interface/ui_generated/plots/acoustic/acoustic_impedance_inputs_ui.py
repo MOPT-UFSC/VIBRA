@@ -327,8 +327,8 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot specific acoustic impedance", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot the specific acoustic impedance", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
-        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
-        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Nodes", None))
+        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
+        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Nodes", None))
 
         self.label_3.setText(QCoreApplication.translate("Form", u"Volume ID: ", None))
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"  Plot data", None))

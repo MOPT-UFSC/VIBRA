@@ -175,18 +175,12 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def check_inputs(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        else:
-            selection = "nodes"
-
         input_ids = self.lineEdit_selection_id.text()
+        selection_type = self.comboBox_selector_filter.currentText().lower()
+
         self.selected_ids, error_data = self.mesh.check_selected_ids(
                                                                      input_ids, 
-                                                                     selection = selection
+                                                                     selection = selection_type
                                                                      )
 
         if error_data is not None:
@@ -240,7 +234,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
             logging.info("Processing particle velocity... [15/100]")
 
-            if selection_type == "surface":
+            if selection_type == "surfaces":
                 particle_velocity = self.acoustic_post.compute_particle_velocity(
                     component_label, 
                     surface_id = selected_id, 
@@ -262,14 +256,8 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def join_model_data(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection_type = "surface"
-        else:
-            selection_type = "node"
-
         component_label = self.get_component_label()
+        selection_type = self.comboBox_selector_filter.currentText().lower()
 
         self.model_results = dict()
         self.title = "Particle velocity frequency response"

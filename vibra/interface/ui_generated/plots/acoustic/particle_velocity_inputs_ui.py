@@ -380,8 +380,8 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot particle velocity", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot particle velocity frequency response", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
-        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
-        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Nodes", None))
+        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
+        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Nodes", None))
 
         self.label_4.setText(QCoreApplication.translate("Form", u"Component: ", None))
         self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Form", u"   x-axis", None))

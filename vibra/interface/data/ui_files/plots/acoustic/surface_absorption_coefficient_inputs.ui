@@ -626,7 +626,7 @@
            </property>
            <item>
             <property name="text">
-             <string>   Surfaces</string>
+             <string>Surfaces</string>
             </property>
            </item>
           </widget>

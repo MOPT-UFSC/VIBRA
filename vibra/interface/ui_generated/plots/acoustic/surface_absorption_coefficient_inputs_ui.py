@@ -334,7 +334,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
-        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
+        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
 
         self.label_4.setText(QCoreApplication.translate("Form", u"Nodal normals: ", None))
         self.comboBox_nodal_normals.setItemText(0, QCoreApplication.translate("Form", u"Hide", None))

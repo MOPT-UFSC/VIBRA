@@ -174,19 +174,12 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def check_inputs(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-
-        if index == 0:
-            selection = "surfaces"
-
-        else:
-            selection = "nodes"
-
         input_ids = self.lineEdit_selection_id.text()
+        selection_type = self.comboBox_selector_filter.currentText().lower()
+
         self.selected_ids, error_data = self.mesh.check_selected_ids(
                                                                      input_ids, 
-                                                                     selection = selection, 
-                                                                     single_id = False
+                                                                     selection = selection_type
                                                                      )
 
         if error_data is not None:
@@ -231,7 +224,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
         def function_callback():
 
-            if selection_type == "surface":
+            if selection_type == "surfaces":
                 acoustic_impedance = self.acoustic_post.compute_acoustic_impedance(
                     surface_id = selected_id,
                     volume_id = volume_id,
@@ -251,10 +244,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def join_model_data(self):
 
-        if self.comboBox_selector_filter.currentIndex() == 0:
-            selection_type = "surface"
-        else:
-            selection_type = "node"
+        selection_type = self.comboBox_selector_filter.currentText().lower()
 
         self.model_results = dict()
         title = "Specific acoustic impedance"

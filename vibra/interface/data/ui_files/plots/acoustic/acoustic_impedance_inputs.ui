@@ -234,12 +234,12 @@
            </property>
            <item>
             <property name="text">
-             <string>   Surfaces</string>
+             <string>Surfaces</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>   Nodes</string>
+             <string>Nodes</string>
             </property>
            </item>
           </widget>
