@@ -1,8 +1,7 @@
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-# from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.assemblers.structural_assembler_new import StructuralAssembler
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
 import logging
 import numpy as np

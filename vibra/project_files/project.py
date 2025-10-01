@@ -4,8 +4,7 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-# from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.assemblers.structural_assembler_new import StructuralAssembler
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
 from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver

@@ -6,8 +6,7 @@ from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5M
 from vibra.project_files.project_file import ProjectFile
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-# from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.assemblers.structural_assembler_new import StructuralAssembler
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
 from vibra.engine.solvers import ModalSolver
 
