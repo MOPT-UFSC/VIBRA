@@ -515,6 +515,10 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
+        if self.visualization_filter.normal_symbols:
+            self.visualization_filter.normal_symbols = False
+            self.update_symbols()
+
     def action_mesh_workspace_callback(self):
         self.action_node_view.setToolTip("Nodes view")
         self.action_mesh_workspace.setChecked(True)
