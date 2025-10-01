@@ -8,75 +8,6 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """
-    This function computes the determinant and inverse
-    of Jacobian matrix.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The Jacobian matrices.
-
-    Returns
-    -------
-    det_jac: np.ndarray
-        The determinant of Jacobian matrix.
-
-    inv_jac: np.ndarray
-        The inverse of Jacobian matrix.
-    """
-
-    if len(JAC.shape) == 3:
-
-        det_jac = (
-              JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-            + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-            + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-        ) - (
-              JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-            + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-            + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-        )
-        det_jac = det_jac.reshape(-1, 1, 1)
-
-        adj_matrix = np.zeros((det_jac.shape[0], 3, 3), dtype=float)
-        adj_matrix[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-        adj_matrix[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-        adj_matrix[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-        adj_matrix[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-        adj_matrix[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
-
-    else:
-
-        det_jac = (
-              JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-            + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-            + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-        ) - (
-              JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-            + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-            + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-        )
-
-        adj_matrix = np.zeros((3, 3), dtype=float)
-        adj_matrix[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-        adj_matrix[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-        adj_matrix[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-        adj_matrix[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-        adj_matrix[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-        adj_matrix[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-        adj_matrix[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-        adj_matrix[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-        adj_matrix[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    return det_jac, (1 / det_jac) * adj_matrix
-
-
 class STRUCT_HEXAHEDRON_8(Element3D):
 
     NODES_PER_ELEMENT = 8
@@ -112,16 +43,18 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             a = 1 / np.sqrt(3)
             w1 = 1
 
-            self.pint = np.array( [ [-a, -a, -a],
-                                    [ a, -a, -a],
-                                    [ a,  a, -a],
-                                    [-a,  a, -a],
-                                    [-a, -a,  a],
-                                    [ a, -a,  a],
-                                    [ a,  a,  a],
-                                    [-a,  a,  a] ], dtype=float)
-
-            self.wps = np.array([w1, w1, w1, w1, w1, w1, w1, w1], dtype=float)
+            self.num_int_data = np.array( [ 
+                [-a, -a, -a, w1],
+                [ a, -a, -a, w1],
+                [ a,  a, -a, w1],
+                [-a,  a, -a, w1],
+                [-a, -a,  a, w1],
+                [ a, -a,  a, w1],
+                [ a,  a,  a, w1],
+                [-a,  a,  a, w1],
+                ], dtype=float)
+            
+            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -138,9 +71,10 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             The shape functions derivatives.
         """
 
-        xi_1 = self.pint[:, 0]
-        xi_2 = self.pint[:, 1]
-        xi_3 = self.pint[:, 2]
+        ## coordinates from integration points
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
+        xi_3 = self.num_int_data[:, 2]
 
         self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
@@ -222,40 +156,12 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         return phi, dphi
 
 
-    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
-        """This methdo returns the material constitutive model."""
-
-        vv = material.poisson_ratio
-        E = material.elasticity_modulus
-
-        if model_type == "linear-isotropic":
-            # Constititive model - Linear isotropic material
-
-            factor = E / ((1 + vv) * (1 - 2 * vv))
-            nn = (1 - 2 * vv) / 2
-            tt = 1 - vv
-
-            const_law = np.array(
-                [
-                [tt, vv, vv,  0,  0,  0],
-                [vv, tt, vv,  0,  0,  0],
-                [vv, vv, tt,  0,  0,  0],
-                [ 0,  0,  0, nn,  0,  0],
-                [ 0,  0,  0,  0, nn,  0],
-                [ 0,  0,  0,  0,  0, nn],
-                ], 
-                dtype=float)
-
-            return factor * const_law
-
-
     def elementary_matrices(self, el_index: int, material: Material):
         """This method returns elementary stiffness and mass matrices for HEXAHEDRON-8 nodes.
         ANSYS SOLID45 w/o extra diplacements (very simple)
         """
 
-        rho = material.material_density
-        const_mat = self.get_constitutive_model(material, model_type="linear-isotropic")
+        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # nodes from element
         elem_nodes = self.connectivity[el_index, 1:]
@@ -267,7 +173,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         JAC = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivatives
         dphi_t = invJAC @ self.dphi
@@ -313,39 +219,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
         n_el = self.solids_connectivity.shape[0]
-
-        # ind_dof = (
-        #     np.array(
-        #         [
-        #             dof * self.connectivity[:, 1] - 1,
-        #             dof * self.connectivity[:, 1],
-        #             dof * self.connectivity[:, 1] + 1,
-        #             dof * self.connectivity[:, 2] - 1,
-        #             dof * self.connectivity[:, 2],
-        #             dof * self.connectivity[:, 2] + 1,
-        #             dof * self.connectivity[:, 3] - 1,
-        #             dof * self.connectivity[:, 3],
-        #             dof * self.connectivity[:, 3] + 1,
-        #             dof * self.connectivity[:, 4] - 1,
-        #             dof * self.connectivity[:, 4],
-        #             dof * self.connectivity[:, 4] + 1,
-        #             dof * self.connectivity[:, 5] - 1,
-        #             dof * self.connectivity[:, 5],
-        #             dof * self.connectivity[:, 5] + 1,
-        #             dof * self.connectivity[:, 6] - 1,
-        #             dof * self.connectivity[:, 6],
-        #             dof * self.connectivity[:, 6] + 1,
-        #             dof * self.connectivity[:, 7] - 1,
-        #             dof * self.connectivity[:, 7],
-        #             dof * self.connectivity[:, 7] + 1,
-        #             dof * self.connectivity[:, 8] - 1,
-        #             dof * self.connectivity[:, 8],
-        #             dof * self.connectivity[:, 8] + 1,
-        #         ],
-        #         dtype=int,
-        #     )
-        #     + 1
-        # ).T
 
         local_dof = np.arange(dof, dtype=int)
         ind_dof = np.zeros((n_el, edof), dtype=int)

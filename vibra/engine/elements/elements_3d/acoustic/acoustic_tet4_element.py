@@ -9,104 +9,6 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """
-    This function computes the determinant and inverse
-    of Jacobian matrix.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The Jacobian matrices.
-
-    Returns
-    -------
-    det_jac: np.ndarray
-        The determinant of Jacobian matrix.
-
-    inv_jac: np.ndarray
-        The inverse of Jacobian matrix.
-    """
-
-    det_jac = (
-                  JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-                + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-                + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-                ) - (
-                  JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-                + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-                + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-                )
-
-    # the adjoint matrix
-    AUJJ = np.zeros((3, 3), dtype=float)
-
-    AUJJ[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-    AUJJ[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-    AUJJ[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-    AUJJ[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-    AUJJ[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-    AUJJ[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-    AUJJ[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-    AUJJ[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-    AUJJ[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    inv_jac = (1 / det_jac) * AUJJ
-
-    return det_jac, inv_jac
-
-
-def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
-    """
-    This function computes the determinants and inverses
-    of Jacobian matrices in stacked form.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The stacked Jacobian matrices.
-
-    Returns
-    -------
-    det_jacs: np.ndarray
-        The stacked determinants of Jacobian matrices.
-
-    inv_jacs: np.ndarray
-        The stacked inverse of Jacobian matrices.
-
-    """
-
-    det_jacs = (  
-                  JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-                + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-                + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-                ) - (
-                  JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-                + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-                + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-                )
-
-    det_jacs = det_jacs.reshape(-1, 1, 1)
-
-    # the adjoint matrix
-    nel = JAC.shape[0]
-    AUJJ = np.zeros((nel, 3, 3), dtype=float)
-
-    AUJJ[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-    AUJJ[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-    AUJJ[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-    AUJJ[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-    AUJJ[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
-
-    inv_jacs = (1 / det_jacs) * AUJJ
-
-    return det_jacs, inv_jacs
-
-
 class ACT_TETRAHEDRON_4C(Element3D):
 
     DOF_PER_NODE = 1
@@ -318,7 +220,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        det_jac, invJAC = get_detJAC_and_invJAC(JAC)
+        det_jac, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
         B = invJAC @ self.dphi
@@ -366,7 +268,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC_stacked = self.dphi @ stacked_coords
 
         # Jacobian determinants and inverses of all elements
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
+        det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
         # derivative of shape functions
         B = inv_jacs @ self.dphi
@@ -480,7 +382,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC = dphi[:, :] @ coords
 
         # inverse of Jacobian matrix
-        _, invJAC = get_detJAC_and_invJAC(JAC)
+        _, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
         # B = invJAC @ dphi
@@ -524,7 +426,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
     #     ie = self.connectivity[el_index, 1:]
     #     JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
 
-    #     detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+    #     detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
     #     dphi_t = invJAC @ self.dphi
 
     #     B = np.zeros((3, self.DOF_PER_ELEMENT), dtype=float)

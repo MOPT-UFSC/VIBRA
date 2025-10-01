@@ -61,62 +61,6 @@ def shapeT10C(l1, l2, l3):
     return phi, dphi
 
 
-def get_detJAC_and_invJAC(JAC):
-    """ """
-
-    detJAC = (
-        JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-        + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-        + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-    ) - (
-        JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-        + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-        + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-    )
-
-    # adj(JAC)
-    AUJJ = np.zeros((3, 3), dtype=float)
-    AUJJ[0, 0] = 1 * ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-    AUJJ[1, 0] = -1 * ((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-    AUJJ[2, 0] = 1 * ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-    AUJJ[0, 1] = -1 * ((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-    AUJJ[1, 1] = 1 * ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-    AUJJ[2, 1] = -1 * ((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-    AUJJ[0, 2] = 1 * ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-    AUJJ[1, 2] = -1 * ((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-    AUJJ[2, 2] = 1 * ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    return detJAC, (1 / detJAC) * AUJJ
-
-
-def get_detJAC_and_invJAC(JAC):
-    """ """
-
-    detJAC = (
-        JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-        + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-        + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-    ) - (
-        JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-        + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-        + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-    )
-    detJAC = detJAC.reshape(-1, 1, 1)
-    # adj(JAC)
-    AUJJ = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-    AUJJ[:, 0, 0] = 1 * ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-    AUJJ[:, 1, 0] = -1 * ((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 0] = 1 * ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 1] = -1 * ((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-    AUJJ[:, 1, 1] = 1 * ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 1] = -1 * ((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 2] = 1 * ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-    AUJJ[:, 1, 2] = -1 * ((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-    AUJJ[:, 2, 2] = 1 * ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
-
-    return detJAC, (1 / detJAC) * AUJJ
-
-
 class STRUCT_TETRAHEDRON_10S(Element3D):
     #
     NODES_PER_ELEMENT = 10
@@ -211,44 +155,16 @@ class STRUCT_TETRAHEDRON_10S(Element3D):
         self.phi = phi
         self.dphi = dphi
 
-    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
-        """This methdo returns the material constitutive model."""
-        
-        self.material = material
-        vv = self.material.poisson_ratio
-        E = self.material.elasticity_modulus
-
-        if model_type == "linear-isotropic":
-            # Constititive model - Linear isotropic material
-            #
-            tempc = E / ((1 + vv) * (1 - 2 * vv))
-            tempn = (1 - 2 * vv) / 2
-            tempt = 1 - vv
-            #
-            const_law = np.array(
-                [
-                    [tempt, vv, vv, 0, 0, 0],
-                    [vv, tempt, vv, 0, 0, 0],
-                    [vv, vv, tempt, 0, 0, 0],
-                    [0, 0, 0, tempn, 0, 0],
-                    [0, 0, 0, 0, tempn, 0],
-                    [0, 0, 0, 0, 0, tempn],
-                ]
-            )
-
-            return tempc * const_law
-
     def elementary_matrices(self, el_index: int, material: Material):
         """T10S stiffness and mass matrices.
         Solid187 not mixed (pure displacement)
         """
 
-        const_mat = self.get_constitutive_model(material, model_type="linear-isotropic")
-        rho = self.material.material_density
+        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         ie = self.connectivity[el_index, 1:]
         JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
-        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
         B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)

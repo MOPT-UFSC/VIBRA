@@ -8,67 +8,6 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-def get_detJAC(JAC: np.ndarray) -> float:
-    """
-    This function computes the determinant of the Jacobian
-    matrix in both stacked and non-stacked matrices form.
-
-    Parameter
-    ---------
-    JAC: np.ndarray
-        The Jacobian 2D or 3D matrix.
-    
-    Return
-    ------
-    det_jac: float
-        The determinant of the Jacobian matrix.
-    """
-    if len(JAC.shape) == 3:
-        det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]
-        return det_jac.reshape(-1, 1, 1)
-
-    else:
-        det_jac = JAC[0, 0] * JAC[1, 1]  - JAC[0, 1] * JAC[1, 0]  
-        return det_jac
-
-
-def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
-    """
-    This function computes the determinants and inverses
-    of Jacobian matrices in stacked form.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The stacked Jacobian matrices.
-
-    Returns
-    -------
-    det_jacs: np.ndarray
-        The stacked determinants of Jacobian matrices.
-
-    inv_jacs: np.ndarray
-        The stacked inverse of Jacobian matrices.
-
-    """
-
-    # determinant of the Jacobian matrix
-    det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
-    det_jacs = det_jacs.reshape(-1, 1, 1)
-
-    # the adjoint matrix AUJJ
-    AUJJ = np.zeros((JAC.shape[0], 2, 2), dtype=float)
-
-    AUJJ[:, 0, 0] =  JAC[:, 1, 1]
-    AUJJ[:, 0, 1] = -JAC[:, 0, 1]
-    AUJJ[:, 1, 0] = -JAC[:, 1, 0]
-    AUJJ[:, 1, 1] =  JAC[:, 0, 0]
-
-    # inverse of the Jacobian matrix
-    inv_jacs = (1 / det_jacs) * AUJJ
-
-    return det_jacs, inv_jacs
-
 def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     """
     This funtion computes the local coordinates from global coordinates.
@@ -297,7 +236,7 @@ class ACT_TRIANGLE_3(Element2D):
         JAC_stacked = self.dphi @ local_coords
 
         # Jacobian determinants and inverses of all elements
-        det_jacs = get_detJAC(JAC_stacked)
+        det_jacs = self.get_detJAC(JAC_stacked)
 
         # initialize variable
         int2d_NtN = 0.
@@ -338,7 +277,7 @@ class ACT_TRIANGLE_3(Element2D):
         JAC_stacked = self.dphi @ local_coords
 
         # Jacobian determinants and inverses of all elements
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
+        det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
         # derivative of shape functions
         B = inv_jacs @ self.dphi
@@ -393,7 +332,7 @@ class ACT_TRIANGLE_3(Element2D):
         JAC = self.dphi @ coord_lcs
 
         # determinant of Jacobia matrix
-        det_jac = get_detJAC(JAC)
+        det_jac = self.get_detJAC(JAC)
 
         # initialize the variable Fe
         Fe = 0.
@@ -444,7 +383,7 @@ class ACT_TRIANGLE_3(Element2D):
         JAC = self.dphi @ coord_lcs
 
         # determinant of Jacobia matrix
-        det_jac = get_detJAC(JAC)
+        det_jac = self.get_detJAC(JAC)
 
         # initialize the variable We
         We = 0.

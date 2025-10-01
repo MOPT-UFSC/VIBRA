@@ -9,76 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """
-    This function computes the determinant and inverse
-    of Jacobian matrix.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The Jacobian matrices.
-
-    Returns
-    -------
-    det_jac: np.ndarray
-        The determinant of Jacobian matrix.
-
-    inv_jac: np.ndarray
-        The inverse of Jacobian matrix.
-    """
-
-    if len(JAC.shape) == 3:
-
-        det_jac = (
-              JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-            + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-            + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-        ) - (
-              JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-            + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-            + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-        )
-        det_jac = det_jac.reshape(-1, 1, 1)
-
-        adj_matrix = np.zeros((det_jac.shape[0], 3, 3), dtype=float)
-        adj_matrix[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-        adj_matrix[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-        adj_matrix[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-        adj_matrix[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-        adj_matrix[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
-
-    else:
-
-        det_jac = (
-              JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-            + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-            + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-        ) - (
-              JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-            + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-            + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-        )
-
-        adj_matrix = np.zeros((3, 3), dtype=float)
-        adj_matrix[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-        adj_matrix[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-        adj_matrix[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-        adj_matrix[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-        adj_matrix[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-        adj_matrix[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-        adj_matrix[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-        adj_matrix[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-        adj_matrix[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    return det_jac, (1 / det_jac) * adj_matrix
-
-
-def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
+def get_all_detJAC_and_invJAC(JAC: np.ndarray):
 
     """
     This method computes the determinant and inverse of Jacobian
@@ -90,10 +21,6 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
     JAC: np.array
         The Jacobian matrices.
 
-    all_int_points: bool, optional
-        Controls when the processing are executed in all 
-        integration points (default is False).
-
     Returns
     -------
     det_jac: np.ndarray
@@ -103,55 +30,29 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
         The inverse of Jacobian matrix.
     """
 
-    if all_int_points:
+    N_int = JAC.shape[0]
+    
+    detJAC = (
+            JAC[:, :, 0, 0] * JAC[:, :, 1, 1] * JAC[:, :, 2, 2]
+        + JAC[:, :, 0, 1] * JAC[:, :, 1, 2] * JAC[:, :, 2, 0]
+        + JAC[:, :, 0, 2] * JAC[:, :, 1, 0] * JAC[:, :, 2, 1]
+    ) - (
+            JAC[:, :, 2, 0] * JAC[:, :, 1, 1] * JAC[:, :, 0, 2]
+        + JAC[:, :, 2, 1] * JAC[:, :, 1, 2] * JAC[:, :, 0, 0]
+        + JAC[:, :, 2, 2] * JAC[:, :, 1, 0] * JAC[:, :, 0, 1]
+    )
+    det_jac = detJAC.reshape(-1, N_int, 1, 1)
 
-        N_int = JAC.shape[0]
-        
-        detJAC = (
-              JAC[:, :, 0, 0] * JAC[:, :, 1, 1] * JAC[:, :, 2, 2]
-            + JAC[:, :, 0, 1] * JAC[:, :, 1, 2] * JAC[:, :, 2, 0]
-            + JAC[:, :, 0, 2] * JAC[:, :, 1, 0] * JAC[:, :, 2, 1]
-        ) - (
-              JAC[:, :, 2, 0] * JAC[:, :, 1, 1] * JAC[:, :, 0, 2]
-            + JAC[:, :, 2, 1] * JAC[:, :, 1, 2] * JAC[:, :, 0, 0]
-            + JAC[:, :, 2, 2] * JAC[:, :, 1, 0] * JAC[:, :, 0, 1]
-        )
-        det_jac = detJAC.reshape(-1, N_int, 1, 1)
-
-        adj_matrix = np.zeros((detJAC.shape[0], N_int, 3, 3), dtype=float)
-        adj_matrix[:, :, 0, 0] =  ((JAC[:, :, 1, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 2, 1] * JAC[:, :, 1, 2]))
-        adj_matrix[:, :, 1, 0] = -((JAC[:, :, 1, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 1, 2] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 2, 0] =  ((JAC[:, :, 1, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 1, 1] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 0, 1] = -((JAC[:, :, 0, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 1]))
-        adj_matrix[:, :, 1, 1] =  ((JAC[:, :, 0, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 2, 1] = -((JAC[:, :, 0, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 0, 2] =  ((JAC[:, :, 0, 1] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 1]))
-        adj_matrix[:, :, 1, 2] = -((JAC[:, :, 0, 0] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 0]))
-        adj_matrix[:, :, 2, 2] =  ((JAC[:, :, 0, 0] * JAC[:, :, 1, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 1, 0]))
-
-    else:
-
-        detJAC = (
-              JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-            + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-            + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-        ) - (
-              JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-            + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-            + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-        )
-        det_jac = detJAC.reshape(-1, 1, 1)
-
-        adj_matrix = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-        adj_matrix[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-        adj_matrix[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-        adj_matrix[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-        adj_matrix[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-        adj_matrix[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+    adj_matrix = np.zeros((detJAC.shape[0], N_int, 3, 3), dtype=float)
+    adj_matrix[:, :, 0, 0] =  ((JAC[:, :, 1, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 2, 1] * JAC[:, :, 1, 2]))
+    adj_matrix[:, :, 1, 0] = -((JAC[:, :, 1, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 1, 2] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 2, 0] =  ((JAC[:, :, 1, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 1, 1] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 0, 1] = -((JAC[:, :, 0, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 1]))
+    adj_matrix[:, :, 1, 1] =  ((JAC[:, :, 0, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 2, 1] = -((JAC[:, :, 0, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 0, 2] =  ((JAC[:, :, 0, 1] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 1]))
+    adj_matrix[:, :, 1, 2] = -((JAC[:, :, 0, 0] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 0]))
+    adj_matrix[:, :, 2, 2] =  ((JAC[:, :, 0, 0] * JAC[:, :, 1, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 1, 0]))
 
     return det_jac, (1 / det_jac) * adj_matrix
 
@@ -483,7 +384,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
             JAC = self.dphi[i, :, :] @ coords
 
             # Jacobian determinant and inverse
-            detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+            detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
@@ -524,7 +425,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         JAC_stacked = dphi_resh @ stacked_coords
 
         # Jacobian determinants and inverses of all elements
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked, all_int_points=True)
+        det_jacs, inv_jacs = get_all_detJAC_and_invJAC(JAC_stacked)
 
         # shape functions
         N = self.phi
@@ -569,7 +470,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
             JAC_stacked = self.dphi[i, :, :] @ stacked_coords
 
             # Jacobian determinants and inverses of all elements
-            det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
+            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
             # shape functions
             N = self.phi[i, :]
@@ -671,7 +572,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         JAC = dphi[index[0], :, :] @ coords
 
         # inverse of Jacobian matrix
-        _, invJAC = get_detJAC_and_invJAC(JAC)
+        _, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
         # B = invJAC @ dphi

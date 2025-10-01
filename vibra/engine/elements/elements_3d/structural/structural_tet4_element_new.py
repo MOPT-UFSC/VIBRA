@@ -10,51 +10,6 @@ if TYPE_CHECKING:
 # fmt: off
 
 
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """
-    This function computes the determinant and inverse
-    of Jacobian matrix.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The Jacobian matrices.
-
-    Returns
-    -------
-    det_jac: np.ndarray
-        The determinant of Jacobian matrix.
-
-    inv_jac: np.ndarray
-        The inverse of Jacobian matrix.
-    """
-
-    det_jac = (
-                  JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-                + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-                + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-                ) - (
-                  JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-                + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-                + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-                )
-
-    # the adjoint matrix
-    AUJJ = np.zeros((3, 3), dtype=float)
-
-    AUJJ[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-    AUJJ[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-    AUJJ[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-    AUJJ[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-    AUJJ[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-    AUJJ[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-    AUJJ[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-    AUJJ[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-    AUJJ[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    return det_jac, (1 / det_jac) * AUJJ
-
-
 class STRUCT_TETRAHEDRON_4S(Element3D):
 
     NODES_PER_ELEMENT = 4
@@ -132,6 +87,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         derivatives for all integration points.
         """
 
+        ## coordinates from integration points
         xi_1 = self.num_int_data[:, 0]
         xi_2 = self.num_int_data[:, 1]
         xi_3 = self.num_int_data[:, 2]
@@ -202,40 +158,13 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         return phi, dphi
 
 
-    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
-        """This methdo returns the material constitutive model."""
-
-        vv = material.poisson_ratio
-        E = material.elasticity_modulus
-
-        if model_type == "linear-isotropic":
-            # Constititive model - Linear isotropic material
-
-            factor = E / ((1 + vv) * (1 - 2 * vv))
-            nn = (1 - 2 * vv) / 2
-            tt = 1 - vv
-
-            const_law = np.array(
-                [
-                [tt, vv, vv,  0,  0,  0],
-                [vv, tt, vv,  0,  0,  0],
-                [vv, vv, tt,  0,  0,  0],
-                [ 0,  0,  0, nn,  0,  0],
-                [ 0,  0,  0,  0, nn,  0],
-                [ 0,  0,  0,  0,  0, nn],
-                ], 
-                dtype=float)
-
-            return factor * const_law
-
-
     def elementary_matrices(self, el_index: int, material: Material):
         """Stiffness and mass matrices.
         This is not a p-u mixed fomulation. Do not compare with SOLID285.
         """
 
         rho = material.material_density
-        const_mat = self.get_constitutive_model(material, model_type="linear-isotropic")
+        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # nodes from element
         elem_nodes = self.connectivity[el_index, 1:]
@@ -247,7 +176,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         JAC = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivatives
         dphi_t = invJAC @ self.dphi
@@ -294,22 +223,6 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         dof = self.DOF_PER_NODE
         edof = self.DOF_PER_ELEMENT
         n_el = self.solids_connectivity.shape[0]
-
-        # ind_dof = np.array(
-        #     [  
-        #     dof * self.connectivity[:, 1] + 0,
-        #     dof * self.connectivity[:, 1] + 1,
-        #     dof * self.connectivity[:, 1] + 2,
-        #     dof * self.connectivity[:, 2] + 0,
-        #     dof * self.connectivity[:, 2] + 1,
-        #     dof * self.connectivity[:, 2] + 2,
-        #     dof * self.connectivity[:, 3] + 0,
-        #     dof * self.connectivity[:, 3] + 1,
-        #     dof * self.connectivity[:, 3] + 2,
-        #     dof * self.connectivity[:, 4] + 0,
-        #     dof * self.connectivity[:, 4] + 1,
-        #     dof * self.connectivity[:, 4] + 2,
-        #     ], dtype=int).T
 
         local_dof = np.arange(dof, dtype=int)
         ind_dof = np.zeros((n_el, edof), dtype=int)
