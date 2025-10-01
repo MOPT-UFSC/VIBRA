@@ -41,12 +41,15 @@ from vibra.interface.viewer_3d.render_widgets import (
     ResultsRenderWidget,
 )
 from vibra.interface.viewer_3d.render_tools.grab_tool import GrabTool
-from vibra.interface.viewer_3d.render_tools.selection_tool import SelectionTool
+from vibra.interface.viewer_3d.render_tools.rotation_tool import RotationTool
+from vibra.interface.viewer_3d.render_tools.zoom_tool import ZoomInTool
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 import gmsh
+
+from pprint import pprint
 
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
@@ -443,11 +446,25 @@ class MainWindow(MainWindow_UI):
     def action_selection_tool_callback(self):
         self.discheck_all_actions_except(self.action_selection_tool)
         self.geometry_widget.set_default_render_tool()
+    
+    def action_rotation_tool_callback(self):
+        if self.action_rotation_tool.isChecked():
+            self.discheck_all_actions_except(self.action_rotation_tool)
+            
+            self.geometry_widget.add_render_tool(RotationTool())
+        else:
+            self.action_selection_tool_callback()
+        
+    def action_zoom_in_callback(self):
+        if self.action_zoom_in.isChecked():
+            self.discheck_all_actions_except(self.action_zoom_in)
+
+            self.geometry_widget.add_render_tool(ZoomInTool())
+        else:
+            self.action_selection_tool_callback()
         
     def discheck_all_actions_except(self, action: QAction):
-        actions = self.render_tools_toolbar.findChildren(QAction)
-        
-        for _action in actions:
+        for _action in self.render_tools_toolbar.actions():
             _action.setChecked(False)
         
         action.setChecked(True)

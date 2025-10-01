@@ -7,4 +7,7 @@ class RotationTool(RenderTool):
         super().__init__()
 
     def left_button_press_event(self, obj, event):
-        ...
+        super().start_rotating()
+    
+    def left_button_release_event(self, obj, event):
+        super().stop_rotating()

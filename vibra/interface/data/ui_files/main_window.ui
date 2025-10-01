@@ -101,7 +101,7 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
@@ -198,7 +198,7 @@
   </widget>
   <widget class="QToolBar" name="render_tools_toolbar">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -226,6 +226,9 @@
    <addaction name="action_grab_tool"/>
    <addaction name="separator"/>
    <addaction name="action_rotation_tool"/>
+   <addaction name="separator"/>
+   <addaction name="action_zoom_in"/>
+   <addaction name="separator"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">
@@ -759,6 +762,30 @@
    </property>
    <property name="text">
     <string>Rotation tool</string>
+   </property>
+  </action>
+  <action name="action_zoom_in">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/zoom_in_icon.png</normaloff>:/icons/zoom_in_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom in</string>
+   </property>
+  </action>
+  <action name="action_zoom_out">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/zoom_out_icon.png</normaloff>:/icons/zoom_out_icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom out</string>
    </property>
   </action>
  </widget>
