@@ -82,9 +82,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
         app().main_window.visualization_filter.normal_symbols = show_normals
-
-        if show_normals and self.mesh.nodal_normals_data:
-            app().main_window.update_symbols()
+        app().main_window.update_symbols()
 
     def geometry_selection_callback(self):
 
