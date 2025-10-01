@@ -197,7 +197,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
         app().main_window.visualization_filter.normal_symbols = show_normals
-
         if show_normals:
             app().main_window.update_symbols()
 
