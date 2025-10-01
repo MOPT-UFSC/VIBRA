@@ -38,6 +38,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
     def build(self):
         self.clear_symbols()
         self._build_nodal_normals()
+        self._build_geometry_normals()
 
         point_properties = app().project.model.properties.point_properties
         for property_name, point_id in point_properties.keys():
@@ -101,6 +102,44 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
+
+    def _build_geometry_normals(self):
+        geometry = app().project.model.geometry
+        if geometry is None:
+            return
+
+        for point in geometry.points:
+            position = geometry.point_center(point)
+            normal = geometry.point_normal(point)
+
+            self.add_symbol(
+                sources.create_outwards_arrow_source,
+                position,
+                normal,
+                color=color_names.GRAY,
+            )
+        
+        for curve in geometry.curves:
+            position = geometry.curve_center(curve)
+            normal = geometry.curve_normal(curve)
+
+            self.add_symbol(
+                sources.create_outwards_arrow_source,
+                position,
+                normal,
+                color=color_names.GRAY,
+            )
+        
+        for surface in geometry.surfaces:
+            position = geometry.surface_center(surface)
+            normal = geometry.surface_normal(surface)
+
+            self.add_symbol(
+                sources.create_outwards_arrow_source,
+                position,
+                normal,
+                color=color_names.GRAY,
+            )
 
     def _build_prescribed_dof(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         coords = None

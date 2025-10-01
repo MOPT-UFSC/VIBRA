@@ -70,7 +70,7 @@ class Model:
 
         self.mesh = None
         self.mesh_setup = None
-        self.geometry = None
+        self.geometry: Geometry | None = None
         self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
