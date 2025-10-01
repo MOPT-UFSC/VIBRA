@@ -184,7 +184,7 @@ class ACT_QUADRANGLE_8(Element2D):
         phi[:, 0, 7] = (1 - xi_1)*(1 - xi_2**2) / 2                      # ->      (-1.0,  0.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((self.nint, 2, self.NODES_PER_ELEMENT), dtype=float)
         dphi[:, 0, 0] = (1 - xi_2)*(2*xi_1 + xi_2) / 4 
         dphi[:, 0, 1] = (1 - xi_2)*(2*xi_1 - xi_2) / 4
         dphi[:, 0, 2] = (1 + xi_2)*(2*xi_1 + xi_2) / 4
