@@ -44,16 +44,18 @@ class ACT_HEXAHEDRON_8C(Element3D):
             a = 1 / np.sqrt(3)
             w1 = 1
 
-            self.pint = np.array( [ [-a, -a, -a],
-                                    [ a, -a, -a],
-                                    [ a,  a, -a],
-                                    [-a,  a, -a],
-                                    [-a, -a,  a],
-                                    [ a, -a,  a],
-                                    [ a,  a,  a],
-                                    [-a,  a,  a] ], dtype=float)
+            self.num_int_data = np.array([
+                [-a, -a, -a, w1],
+                [ a, -a, -a, w1],
+                [ a,  a, -a, w1],
+                [-a,  a, -a, w1],
+                [-a, -a,  a, w1],
+                [ a, -a,  a, w1],
+                [ a,  a,  a, w1],
+                [-a,  a,  a, w1],
+                ], dtype=float)
 
-            self.wps = np.array([w1, w1, w1, w1, w1, w1, w1, w1], dtype=float)
+            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -70,9 +72,9 @@ class ACT_HEXAHEDRON_8C(Element3D):
             The shape functions derivatives.
         """
 
-        xi_1 = self.pint[:, 0]
-        xi_2 = self.pint[:, 1]
-        xi_3 = self.pint[:, 2]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
+        xi_3 = self.num_int_data[:, 2]
 
         self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
