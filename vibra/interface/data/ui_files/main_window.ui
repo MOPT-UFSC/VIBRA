@@ -131,6 +131,7 @@
    <addaction name="action_hide_selection"/>
    <addaction name="action_unhide_all"/>
    <addaction name="separator"/>
+   <addaction name="action_model_workspace"/>
    <addaction name="action_mesh_workspace"/>
    <addaction name="action_results_workspace"/>
   </widget>
@@ -780,11 +781,16 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../icons/resources.qrc">
+    <iconset>
      <normaloff>:/icons/zoom_out_icon.png</normaloff>:/icons/zoom_out_icon.png</iconset>
    </property>
    <property name="text">
     <string>Zoom out</string>
+   </property>
+  </action>
+  <action name="action_model_workspace_2">
+   <property name="text">
+    <string>Model workspace</string>
    </property>
   </action>
  </widget>
