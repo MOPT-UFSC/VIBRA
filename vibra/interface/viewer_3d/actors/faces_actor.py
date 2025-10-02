@@ -19,6 +19,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPolyDataM
 
 from vibra import app
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.geometry.geometry import Geometry
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.interface_utils import ColorMode
@@ -32,8 +33,11 @@ class FacesActor(vtkActor):
         8: VTK_QUADRATIC_QUAD,
     }
 
-    def __init__(self, mesh: Mesh, allow_hidding=True, update_normals=True):
+    def __init__(self, mesh: Mesh, geometry: Geometry | None = None,
+                 allow_hidding=True, update_normals=True):
+        
         self.mesh = mesh
+        self.geometry = geometry
         self.data = None
         self.allow_hidding = allow_hidding
         self.update_normals = update_normals
@@ -95,6 +99,12 @@ class FacesActor(vtkActor):
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue
+                
+            if self.geometry is not None:
+                solids = self.geometry.surfaces_to_solids(surface)
+                volume = min(solids) if solids else -1
+            else:
+                volume = surface_to_volume.get(surface, -1)
 
             volume = surface_to_volume.get(surface, -1)
             surface_indexes.InsertNextValue(surface)

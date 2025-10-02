@@ -74,6 +74,7 @@ class Model:
         self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
+        self.length_unit = None
 
         self.f_min = 5
         self.f_max = 600
@@ -128,17 +129,18 @@ class Model:
                          length_unit = self.length_unit, 
                          geometry_qf = self.geometry_qf
                          )
-    def initialize_geometry(self):
+    def initialize_geometry(self, path):
+        if self.length_unit is None:
+            self.set_length_unit()
+
         self.geometry = Geometry(
-                         length_unit = self.length_unit)
+                         length_unit = self.length_unit,
+                         path=path)
 
     def load_geometry(self, path : str):
         try:
             logging.info("Processing geometry...")
-            self.initialize_geometry()
-            self.geometry.read_file(path)
-            
-            self.initialize_mesh()
+            self.initialize_geometry(path)
             
         except Exception as error_log:
             print(f"Error loading geometry: {error_log}")
