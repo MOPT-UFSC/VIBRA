@@ -28,7 +28,7 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
+    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/rectangular_cavities_tet10.dat"
     results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/"
 
     if not os.path.exists(mesh_path):
@@ -44,7 +44,7 @@ def load_external_mesh_and_solve():
                             }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 2] }
+    surfaces_from_volume = { 1 : [1, 3, 4], 2 : [2, 5]}
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -119,7 +119,7 @@ def load_external_mesh_and_solve():
     model.mesh =  mesh
     model.generated_mesh = True
 
-    for _vol_id in [1]:
+    for _vol_id in [1, 2]:
         model.properties._set_property("fluid", fluid, volume=_vol_id)
     
     for _surf_id in [1, 2]:
@@ -164,7 +164,7 @@ def load_external_mesh_and_solve():
 
     df = 5
     f_min = 5
-    f_max = 600
+    f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
     analysis_setup = {
@@ -204,7 +204,7 @@ def load_external_mesh_and_solve():
     acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
 
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, 1)
-    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 1)
+    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 2)
 
     input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
@@ -222,8 +222,8 @@ def load_external_mesh_and_solve():
     if solution is not None:
 
         # tet10
-        node_in = 899
-        node_out = 908
+        node_in = 604
+        node_out = 215
 
         # Load the external data
         ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)
@@ -338,11 +338,11 @@ def load_external_mesh_and_solve():
         fig8, ax8 = plt.subplots()
         title = f"Particle velocity at node {node_out}"
 
-        for index, _node in enumerate(output_rows):
-            if  _node+1 in [908, 7540, 7605]:
-                ax8.semilogy(frequencies, data_type(output_particle_velocities["Vx"][_node]), color=get_color(index), label=f'Vibra - node: {_node+1}')
+        # for index, _node in enumerate(output_rows):
+        #     if  _node+1 in [908, 7540, 7605]:
+        #         ax8.semilogy(frequencies, data_type(output_particle_velocities["Vx"][_node]), color=get_color(index), label=f'Vibra - node: {_node+1}')
 
-        # ax8.semilogy(frequencies, data_type(output_particle_velocities["Vx"][node_out-1]), 'r', label='Vibra')
+        ax8.semilogy(frequencies, data_type(output_particle_velocities["Vx"][node_out-1]), 'r', label='Vibra')
         ax8.semilogy(freq_WB, data_type(output_velocities_WB[node_out]), 'k--', label='Ansys')
         ax8.set_xlabel('Frequency [Hz]')
         ax8.set_ylabel(f'Particle velocity [m/s] - {type_label}')
