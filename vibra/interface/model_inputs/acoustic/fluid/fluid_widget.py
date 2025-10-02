@@ -568,14 +568,18 @@ class FluidWidget(FluidWidget_UI):
             self.pick_color_for_item(row, col)
 
     def cell_double_clicked_callback(self, row, col):
+        
+        try:
+            identifier = int(self.tableWidget_fluid_data.item(1, col).text())
+        except:
+            return
 
-        fluid_name = self.tableWidget_fluid_data.item(0, col).text()
-        identifier = int(self.tableWidget_fluid_data.item(1, col).text())
         selected_fluid = self.fluids_from_library.get(identifier)
         if not isinstance(selected_fluid, Fluid):
             return
 
         self.tableWidget_fluid_data.blockSignals(True)
+        fluid_name = self.tableWidget_fluid_data.item(0, col).text()
 
         if fluid_name in self.fluid_name_to_refprop_data.keys():
             if self.call_refprop_interface(selected_fluid = selected_fluid):
