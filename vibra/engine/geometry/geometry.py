@@ -288,6 +288,15 @@ class Geometry:
         self._create_inverse_maps()
 
     def _process_curves_normals(self):
+        '''
+        This is not a mathematically rigorous concept.
+
+        It is just a quick and dirty way to find a vector pointing
+        outwards of a geometry in the location of the curve center.
+
+        It may be used for many purposes, such as positioning symbols, for example. 
+        '''
+
         for curve in self.curves:
             adjacent_surfaces = self.curves_to_surfaces(curve)
 
@@ -295,49 +304,63 @@ class Geometry:
                 continue
 
             normals_sum = np.zeros(3)
-            curved_added = False
 
+            # First try to get normals from the surfaces
             for surf_id in adjacent_surfaces:
-                is_planar = self.is_surface_straight(surf_id)
-                if is_planar:
-                    normals_sum += self._surfaces_normals[surf_id]
+                normals_sum += self._surfaces_normals[surf_id]
 
-                elif not curved_added:
-                    center_coord = self._curves_centers[curve]
-                    center_uv = gmsh.model.get_parametrization(2, surf_id, center_coord)
-                    normals_sum += gmsh.model.get_normal(surf_id, center_uv)
-                    curved_added = True
+            if np.allclose(normals_sum, 0):
+                # If the sum of the surface normals is zero, estimate the "curve normal"
+                # by summing the vectors that point to each adjacent surface center.
+                curve_center = self.curve_center(curve)
+                for surf_id in adjacent_surfaces:
+                    surf_center = self.surface_center(surf_id)
+                    vector = curve_center - surf_center
+                    normals_sum += vector / np.linalg.norm(vector)
 
+            # normalize the sum
             norm = np.linalg.norm(normals_sum)
-
             if norm > 1e-9:
-                self._curves_normals[curve] = normals_sum / norm
+                normals_sum /= norm
+
+            self._curves_normals[curve] = normals_sum
 
     def _process_points_normals(self):
-        for point in self.points:
-            adjacent_surfaces = self.points_to_surfaces(point)
+        '''
+        This is not a mathematically rigorous concept.
 
-            if not adjacent_surfaces:
+        It is just a quick and dirty way to find a vector pointing
+        outwards of a geometry in the location of the point center.
+
+        It may be used for many purposes, such as positioning symbols, for example. 
+        '''
+
+        for point in self.points:
+            adjacent_curves = self.points_to_curves(point)
+            
+            if not adjacent_curves:
                 continue
 
             normals_sum = np.zeros(3)
-            curved_added = False
 
-            for surf_id in adjacent_surfaces:
-                is_planar = self.is_surface_straight(surf_id)
-                if is_planar:
-                    normals_sum += self._surfaces_normals[surf_id]
+            for curve_id in adjacent_curves:
+                normals_sum += self._curves_normals[curve_id]
 
-                elif not curved_added:
-                    center_coord = self._points_centers[point]
-                    center_uv = gmsh.model.get_parametrization(2, surf_id, center_coord)
-                    normals_sum += gmsh.model.get_normal(surf_id, center_uv)
-                    curved_added = True
+            if np.allclose(normals_sum, 0):
+                # If the sum of the curve normals is zero, estimate the "point normal"
+                # by summing the vectors that point to each adjacent curve center.
+                point_center = self.point_center(point)
+                for curve_id in adjacent_curves:
+                    curve_center = self.curve_center(curve_id)
+                    vector = point_center - curve_center
+                    normals_sum += vector / np.linalg.norm(vector)
 
+            # normalize the sum
             norm = np.linalg.norm(normals_sum)
-
             if norm > 1e-9:
-                self._points_normals[point] = normals_sum / norm
+                normals_sum /= norm
+
+            self._points_normals[point] = normals_sum  
 
     def process_center_element(self, dim: int, tag: int) -> np.ndarray:
         """Process the center of an element based on its dimension."""
