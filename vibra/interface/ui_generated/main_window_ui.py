@@ -434,8 +434,6 @@ class Ui_MainWindow(object):
         self.render_tools_toolbar.addAction(self.action_rotation_tool)
         self.render_tools_toolbar.addSeparator()
         self.render_tools_toolbar.addAction(self.action_zoom_in)
-        self.render_tools_toolbar.addSeparator()
-        self.render_tools_toolbar.addAction(self.action_zoom_out)
 
         self.retranslateUi(MainWindow)
 

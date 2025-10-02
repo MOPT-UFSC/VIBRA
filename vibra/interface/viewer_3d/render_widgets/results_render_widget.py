@@ -13,6 +13,8 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
+from vibra.interface.viewer_3d.render_tools.render_tool import RenderTool
+from vibra.interface.viewer_3d.render_tools.selection_tool import SelectionTool
 
 from ..actors import (
     AnalysisActor,
@@ -29,7 +31,7 @@ from .model_info_text import (
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
+        self.set_interactor_style(SelectionTool())
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
@@ -464,5 +466,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
+    
+    def add_render_tool(self, tool: RenderTool):
+        self.set_interactor_style(tool)
+    
+    def set_default_render_tool(self):
+        self.set_interactor_style(SelectionTool())
 
 

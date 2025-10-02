@@ -8,8 +8,8 @@ import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
-from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtCore import QEvent, Qt, Signal, QSize
+from PySide6.QtGui import QAction, QPixmap, QCursor, QColor
 from PySide6.QtWidgets import (
     QAbstractButton,
     QFileDialog,
@@ -17,11 +17,11 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
+from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR, ICON_DIR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
+from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon, paint_pixmap
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
@@ -40,9 +40,10 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
+from vibra.interface.viewer_3d.render_tools.render_tool import RenderTool
 from vibra.interface.viewer_3d.render_tools.grab_tool import GrabTool
 from vibra.interface.viewer_3d.render_tools.rotation_tool import RotationTool
-from vibra.interface.viewer_3d.render_tools.zoom_tool import ZoomInTool
+from vibra.interface.viewer_3d.render_tools.zoom_tool import ZoomTool
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
@@ -133,6 +134,7 @@ class MainWindow(MainWindow_UI):
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
         self.insertToolBarBreak(self.animation_toolbar)
+        self.render_tools_toolbar.setVisible(False)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -437,37 +439,66 @@ class MainWindow(MainWindow_UI):
     
     def action_grab_tool_callback(self):
         if self.action_grab_tool.isChecked():
-            self.discheck_all_actions_except(self.action_grab_tool)
+            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
+            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"pan_icon.png")
 
-            self.geometry_widget.add_render_tool(GrabTool())
+            self.add_render_tool_in_render_widgets(GrabTool)
         else:
             self.action_selection_tool_callback()
     
     def action_selection_tool_callback(self):
-        self.discheck_all_actions_except(self.action_selection_tool)
-        self.geometry_widget.set_default_render_tool()
-    
+        self.discheck_all_actions_of_render_tools_toolbar_except(self.action_selection_tool)
+        self.update_mouse_cursor_in_render_widgets("default")
+        self.set_default_render_tool_in_render_widgets()
+
     def action_rotation_tool_callback(self):
         if self.action_rotation_tool.isChecked():
-            self.discheck_all_actions_except(self.action_rotation_tool)
-            
-            self.geometry_widget.add_render_tool(RotationTool())
+            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_rotation_tool)
+            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"rotation_icon.png")
+
+            self.add_render_tool_in_render_widgets(RotationTool)
         else:
             self.action_selection_tool_callback()
         
     def action_zoom_in_callback(self):
         if self.action_zoom_in.isChecked():
-            self.discheck_all_actions_except(self.action_zoom_in)
+            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_zoom_in)
+            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"zoom_in_icon.png")
 
-            self.geometry_widget.add_render_tool(ZoomInTool())
+            self.add_render_tool_in_render_widgets(ZoomTool)
         else:
             self.action_selection_tool_callback()
         
-    def discheck_all_actions_except(self, action: QAction):
+    def discheck_all_actions_of_render_tools_toolbar_except(self, action: QAction):
         for _action in self.render_tools_toolbar.actions():
             _action.setChecked(False)
         
         action.setChecked(True)
+    
+    def update_mouse_cursor_in_render_widgets(self, path: str):
+        custom_pixmap = QPixmap(path)
+
+        renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
+        for render in renders:
+
+            if custom_pixmap.isNull():
+                render.setCursor(Qt.CursorShape.ArrowCursor)
+            else:
+                custom_pixmap = custom_pixmap.scaled(QSize(24, 24), Qt.KeepAspectRatio)
+                paint_pixmap(custom_pixmap, QColor("white"))
+                custom_cursor = QCursor(custom_pixmap, hotX=0, hotY=0)
+                render.setCursor(custom_cursor)
+    
+    def add_render_tool_in_render_widgets(self, tool_class: RenderTool):
+        renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
+        for render in renders:
+            tool = tool_class()
+            render.add_render_tool(tool)
+        
+    def set_default_render_tool_in_render_widgets(self):
+        renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
+        for render in renders:
+            render.set_default_render_tool()
 
     def action_user_preferences_callback(self):
         self.close_dialogs()
@@ -602,6 +633,7 @@ class MainWindow(MainWindow_UI):
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
+        self.render_tools_toolbar.setVisible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
@@ -953,6 +985,7 @@ class MainWindow(MainWindow_UI):
 
             self.action_results_workspace.setDisabled(True)
             self.action_model_workspace_callback()
+            self.render_tools_toolbar.setVisible(True)
             self.model_setup_widget.model_setup_items.update_items_appearance()
             
             if app().project.can_resume_solution:

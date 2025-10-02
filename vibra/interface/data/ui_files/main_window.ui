@@ -228,7 +228,6 @@
    <addaction name="action_rotation_tool"/>
    <addaction name="separator"/>
    <addaction name="action_zoom_in"/>
-   <addaction name="separator"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">

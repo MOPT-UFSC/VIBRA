@@ -15,6 +15,8 @@ from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
 from ..selection.mesh_selection import MeshSelection
+from ..render_tools.render_tool import RenderTool
+from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     nodes_info_text,
     mesh_faces_info_text,
@@ -28,7 +30,7 @@ import logging
 class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
+        self.set_interactor_style(SelectionTool())
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)
@@ -233,6 +235,9 @@ class MeshRenderWidget(CommonRenderWidget):
         """
         if not self.actors_exists():
             return
+    
+        if not isinstance(self.get_interactor_style(), SelectionTool):
+            return
 
         self.update_info_text()
         visualization = app().main_window.visualization_filter
@@ -371,3 +376,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
+
+    def add_render_tool(self, tool: RenderTool):
+        self.set_interactor_style(tool)
+    
+    def set_default_render_tool(self):
+        self.set_interactor_style(SelectionTool())
