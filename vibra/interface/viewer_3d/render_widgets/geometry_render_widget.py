@@ -62,6 +62,9 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         # dont't remove, transparency depends on it
         self.renderer.UseDepthPeelingOn()
+        self.renderer.SetMaximumNumberOfPeels(1)
+        self.renderer.SetOcclusionRatio(0.9)
+        self.render_interactor.GetRenderWindow().SetMultiSamples(0)
 
         self.remove_all_actors()
         self.create_axes()
