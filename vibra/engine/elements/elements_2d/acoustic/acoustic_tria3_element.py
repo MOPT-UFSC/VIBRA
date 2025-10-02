@@ -69,24 +69,62 @@ class ACT_TRIANGLE_3(Element2D):
         self.process_shape_functions_and_derivatives()
 
 
-    def define_integration_points(self):
+    def define_integration_points(self, integration_points: int = 3):
         """ 
         Defines the integration points and their respective weights
         for the numerical integration processing.
         """
 
-        self.nint = 3
-        a = 1/6
-        b = 2/3
-        w1 = 1/6
+        if integration_points == 3:
+        
+            self.nint = 3
+            a = 1/6
+            b = 2/3
+            w1 = 1/6
 
-        self.num_int_data = np.array([
-            [a, a, w1],
-            [b, a, w1],
-            [a, b, w1],
-            ], dtype=float)
+            self.num_int_data = np.array([
+                [a, a, w1],
+                [b, a, w1],
+                [a, b, w1],
+                ], dtype=float)
+
+        elif integration_points == 4:
+        
+            self.nint = 4
+            a = 1/3
+            b = 1/5
+            c = 3/5
+            w1 = -27/96
+            w2 = 25/96
+
+            self.num_int_data = np.array([
+                [a, a, w1],
+                [b, b, w2],
+                [b, c, w2],
+                [c, b, w2],
+                ], dtype=float)
+
+        elif integration_points == 6:
+        
+            self.nint = 6
+            a = 0.4459484909
+            b = 0.091576213509771
+            c = 1 - 2*a
+            d = 1 - 2*b 
+            w1 = 0.111690794839005
+            w2 = 0.054975871827661
+
+            self.num_int_data = np.array([
+                [a, a, w1],
+                [c, a, w1],
+                [a, c, w1],
+                [b, b, w2],
+                [d, b, w2],
+                [b, d, w2],
+                ], dtype=float)
 
         self.wps = self.num_int_data[:, -1]
+
 
     def process_shape_functions_and_derivatives(self):
         """

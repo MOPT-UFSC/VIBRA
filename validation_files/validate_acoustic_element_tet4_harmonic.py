@@ -34,7 +34,7 @@ def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
 
-    mesh_path = get_data_path("validation/acoustic/elements/tet4/mesh/ds_Lpipe_act_tet4_30mm.dat")
+    mesh_path = get_data_path("validation/acoustic/elements/tet4/mesh/rectangular_cavities_tet4.dat")
     results_path = Path(get_data_path("validation/acoustic/elements/tet4/results/"))
 
     if not os.path.exists(mesh_path):
@@ -50,7 +50,7 @@ def load_external_mesh_and_solve():
                             }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 2] }
+    surfaces_from_volume = { 1 : [1, 3, 4], 2 : [2, 5]}
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -94,7 +94,6 @@ def load_external_mesh_and_solve():
     # check collapsed elements
     # collapsed_3d_elements, collapsed_2d_elements, collapsed_1d_elements = mesh.get_collapsed_elements()
 
-    # return
     # define the fluid properties
     temperature = 293.15
     pressure = 101325
@@ -124,7 +123,7 @@ def load_external_mesh_and_solve():
     model.mesh =  mesh
     model.generated_mesh = True
 
-    for _vol_id in [1]:
+    for _vol_id in [1, 2]:
         model.properties._set_property("fluid", fluid, volume=_vol_id)
     
     for _surf_id in [1, 2]:
@@ -138,6 +137,12 @@ def load_external_mesh_and_solve():
                 "averaged" : False
                 }
 
+    ## normal surface velocity data
+    data_Pa = { 
+                "real_values" : [1],
+                "imag_values" : [0],
+                }
+
     ## mass source data
     data_ms = { 
                 "real_values" : [1],
@@ -146,6 +151,7 @@ def load_external_mesh_and_solve():
                 }
     
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
+    # model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
 
     ## boundary impedance setup
     Zo = fluid.impedance
@@ -162,7 +168,7 @@ def load_external_mesh_and_solve():
 
     df = 5
     f_min = 5
-    f_max = 600
+    f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df)
 
     analysis_setup = {
@@ -202,7 +208,7 @@ def load_external_mesh_and_solve():
     acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
 
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, volume_id=1)
-    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=1)
+    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=2)
 
     input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
@@ -211,8 +217,8 @@ def load_external_mesh_and_solve():
     output_Vx = np.average(output_velocities, axis=0)
 
     # nodal area calculation
-    mesh.process_face_elements_connected_to_nodes([1, 2])
-    mesh.compute_nodal_areas()
+    # mesh.process_face_elements_connected_to_nodes([1, 2])
+    # mesh.compute_nodal_areas()
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
@@ -220,8 +226,8 @@ def load_external_mesh_and_solve():
     if solution is not None:
 
         # tet4
-        node_in = 2505
-        node_out = 2549
+        node_in = 1602
+        node_out = 367
 
         # Load the external data
         ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)

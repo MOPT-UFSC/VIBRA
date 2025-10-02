@@ -203,8 +203,8 @@ def load_external_mesh_and_solve():
 
     acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
 
-    input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, 1)
-    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 2)
+    input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, volume_id=1)
+    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=2)
 
     input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
     output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
@@ -213,8 +213,8 @@ def load_external_mesh_and_solve():
     output_Vx = np.average(output_velocities, axis=0)
 
     # nodal area calculation
-    mesh.process_face_elements_connected_to_nodes([1, 2])
-    mesh.compute_nodal_areas()
+    # mesh.process_face_elements_connected_to_nodes([1, 2])
+    # mesh.compute_nodal_areas()
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
