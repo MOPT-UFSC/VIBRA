@@ -1,10 +1,9 @@
+from collections import defaultdict
 from pathlib import Path
 from typing import Iterator, Literal
 
 import gmsh
 import numpy as np
-
-from collections import defaultdict
 
 LengthUnits = Literal["millimeter", "inch"]
 
@@ -55,20 +54,16 @@ class Geometry:
     def read_file(self, file_path: str):
         # allowed to run in a secondary thread
         gmsh.initialize("", False, interruptible=False)
-
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 0)  # all available threads
 
         gmsh.open(file_path)
-
         gmsh.model.occ.synchronize()
 
         self._process_geometry_information()
         self._process_curves_normals()
         self._process_points_normals()
-
-        gmsh.finalize()
 
     def clear(self):
         self._solids_to_surfaces.clear()
@@ -205,9 +200,9 @@ class Geometry:
 
     def is_surface_straight(self, surface_id: int) -> bool:
         return surface_id in self._straight_surfaces
-    
+
     def are_there_volumes_in_geometry(self) -> bool:
-        return bool(self.solids) 
+        return bool(self.solids)
 
     def solid_center(self, solid_id: int) -> np.ndarray | None:
         return self._solids_centers.get(solid_id)
@@ -295,7 +290,7 @@ class Geometry:
     def _process_curves_normals(self):
         for curve in self.curves:
             adjacent_surfaces = self.curves_to_surfaces(curve)
-            
+
             if not adjacent_surfaces:
                 continue
 
@@ -314,7 +309,7 @@ class Geometry:
                     curved_added = True
 
             norm = np.linalg.norm(normals_sum)
-            
+
             if norm > 1e-9:
                 self._curves_normals[curve] = normals_sum / norm
 
@@ -350,11 +345,11 @@ class Geometry:
             uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
             uv_mid = (uv_min + uv_max) / 2
             center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-            
+
         else:
             center = np.asarray(gmsh.model.occ.getCenterOfMass(dim, tag)) * self.length_unit_factor
             uv_mid = None
-        
+
         return center, uv_mid
 
     def _create_inverse_maps(self):
@@ -376,7 +371,6 @@ class Geometry:
             for point in points:
                 points_to_curves[point].append(curve)
         self._points_to_curves = {point: tuple(curv) for point, curv in points_to_curves.items()}
-
 
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "millimeter":
