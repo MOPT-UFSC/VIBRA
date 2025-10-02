@@ -262,10 +262,9 @@ class Geometry:
 
                 normal = gmsh.model.getNormal(tag, uv_mid)
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
-
                 self._surfaces_normals[tag] = normal
 
-                if np.allclose(curvature, 0, atol=1e-8):
+                if np.allclose(curvature, 0):
                     self._straight_surfaces.add(tag)
 
             elif dim == 1:
@@ -275,9 +274,9 @@ class Geometry:
 
                 center, uv_mid = self.process_center_element(dim, tag)
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
-
                 self._curves_centers[tag] = center
-                if np.any(np.isclose(curvature, 0, atol=1e-8)):
+
+                if np.allclose(curvature, 0):
                     self._straight_curves.add(tag)
 
             elif dim == 0:
@@ -288,14 +287,14 @@ class Geometry:
         self._create_inverse_maps()
 
     def _process_curves_normals(self):
-        '''
+        """
         This is not a mathematically rigorous concept.
 
         It is just a quick and dirty way to find a vector pointing
         outwards of a geometry in the location of the curve center.
 
-        It may be used for many purposes, such as positioning symbols, for example. 
-        '''
+        It may be used for many purposes, such as positioning symbols, for example.
+        """
 
         for curve in self.curves:
             adjacent_surfaces = self.curves_to_surfaces(curve)
@@ -326,18 +325,18 @@ class Geometry:
             self._curves_normals[curve] = normals_sum
 
     def _process_points_normals(self):
-        '''
+        """
         This is not a mathematically rigorous concept.
 
         It is just a quick and dirty way to find a vector pointing
         outwards of a geometry in the location of the point center.
 
-        It may be used for many purposes, such as positioning symbols, for example. 
-        '''
+        It may be used for many purposes, such as positioning symbols, for example.
+        """
 
         for point in self.points:
             adjacent_curves = self.points_to_curves(point)
-            
+
             if not adjacent_curves:
                 continue
 
@@ -360,7 +359,7 @@ class Geometry:
             if norm > 1e-9:
                 normals_sum /= norm
 
-            self._points_normals[point] = normals_sum  
+            self._points_normals[point] = normals_sum
 
     def process_center_element(self, dim: int, tag: int) -> np.ndarray:
         """Process the center of an element based on its dimension."""
