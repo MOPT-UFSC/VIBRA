@@ -28,7 +28,7 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/acoustic/elements/hex20/mesh/ds_rectangular_cavities_hex20.dat"
+    mesh_path = f"data/validation/acoustic/elements/hex20/mesh/rectangular_cavities_hex20.dat"
     results_path = PROJECT_DIR / "data/validation/acoustic/elements/hex20/results/"
 
     if not os.path.exists(mesh_path):
@@ -95,7 +95,7 @@ def load_external_mesh_and_solve():
     pressure = 101325
     rho_0 = 1.204263
     c_0 = 343.395034
-    mu = 0*1.8247e-5
+    mu = 1*1.8247e-5
     Cp = 1006.400178
     kt = 2.5503e-02
     gamma = 1.401985
@@ -222,8 +222,8 @@ def load_external_mesh_and_solve():
     if solution is not None:
 
         # hex8
-        node_in = 3229
-        node_out = 2280
+        node_in = 3235
+        node_out = 2276
 
         # Load the external data
         ext_data = LoadExternalData(results_path / "Vn_Z0", rho_0)
