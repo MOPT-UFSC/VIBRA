@@ -7,6 +7,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
+from vibra.utils.load_data_utils import load_spreadsheet_data
 
 import os
 import matplotlib.pyplot as plt
@@ -183,8 +184,13 @@ def load_external_mesh_and_solve():
 
     if solution is not None:
 
-        imported_results = get_external_results()
-        
+        results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_and_narrow_slit_ducts_results.xlsx"
+        # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_and_rectangular_ducts_results.xlsx"
+        # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_ducts_results.xlsx"
+        # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/only_fluid_results.xlsx"
+
+        imported_results = load_spreadsheet_data(results_path)
+
         pressure_at_input_face = imported_results["input_pressure"]
         pressure_at_output_face = imported_results["output_pressure"]
         velocity_at_input_face = imported_results["input_velocity_Vx"]
@@ -362,43 +368,6 @@ def get_viscous_thermal_model_data_for_narrow_slit_duct(height: float):
             }
 
     return data
-
-def get_external_results():
-
-    imported_results = dict()
-    results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_and_narrow_slit_ducts_results.xlsx"
-    # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_and_rectangular_ducts_results.xlsx"
-    # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_ducts_results.xlsx"
-    # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/only_fluid_results.xlsx"
-
-    if not os.path.exists(results_path):
-        return imported_results
-
-    wb = load_workbook(results_path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
 
 
 if __name__ == "__main__":

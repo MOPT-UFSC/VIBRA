@@ -7,14 +7,14 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
+from vibra.utils.load_data_utils import load_spreadsheet_data
 
-import os
+from os.path import dirname
 import pytest
 import numpy as np
 
 from pathlib import Path
-from pandas import read_excel
-from openpyxl import load_workbook
+
 
 def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     
@@ -79,44 +79,6 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     return model
 
 
-def get_external_results(path: str) -> dict:
-
-    imported_results = dict()
-
-    if not Path(path).exists():
-        return imported_results
-
-    wb = load_workbook(path)
-
-    skiprows = 0
-    sheetnames = wb.sheetnames
-
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-
-        except:
-            sheet_data = read_excel(
-                                    path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-            
-        filtered_data = [row_data for row_data in sheet_data if not isinstance(row_data[0], str)]
-        sheet_data = np.array(filtered_data, dtype=float)
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
-
-
 def _solve_harmonic_problem(datadir, model: "Model", path: str):
 
     assembler = AcousticAssembler(model)
@@ -132,8 +94,8 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     output_surface_nodes = model.mesh.get_nodes_from_surface(11)
     average_solution = np.average(solution[output_surface_nodes, :], axis=0)
 
-    results_path = os.path.dirname(path) + "/acoustic_pressures_reference.xlsx"
-    external_data = get_external_results(results_path)
+    results_path = dirname(path) + "/acoustic_pressures_reference.xlsx"
+    external_data = load_spreadsheet_data(results_path)
 
     output_pressures = external_data.get("output_surface")
     reference_solution = output_pressures[:, 1] + 1j*output_pressures[:, 2]

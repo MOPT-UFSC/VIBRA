@@ -7,6 +7,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
+from vibra.utils.load_data_utils import load_spreadsheet_data
 
 import os
 import matplotlib.pyplot as plt
@@ -191,8 +192,9 @@ def load_external_mesh_and_solve():
 
     if solution is not None:
 
-        imported_results = get_external_results()
-        
+        results_path = f"validation_files/data/WB/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
+        imported_results = load_spreadsheet_data(results_path)
+
         pressure_at_input_face = imported_results["input_face_pressure"]
         pressure_at_output_face = imported_results["output_face_pressure"]
         velocity_at_input_face = imported_results["input_face_velocity"]
@@ -434,41 +436,6 @@ def get_porous_material_data(model="DB"):
                                }
 
     return material_model_data
-
-
-def get_external_results():
-
-    imported_results = dict()
-    results_path = f"validation_files/data/WB/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
-
-    if not os.path.exists(results_path):
-        return imported_results
-
-    wb = load_workbook(results_path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
 
 
 if __name__ == "__main__":

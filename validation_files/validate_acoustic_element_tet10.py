@@ -387,40 +387,6 @@ def get_color(index: int):
         return tuple(np.random.randint(0, 255, size=3) / 255)
 
 
-def get_external_results(path: str):
-
-    imported_results = dict()
-
-    if not os.path.exists(path):
-        return imported_results
-
-    wb = load_workbook(path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
-
-
 if __name__ == "__main__":
 
     load_external_mesh_and_solve()

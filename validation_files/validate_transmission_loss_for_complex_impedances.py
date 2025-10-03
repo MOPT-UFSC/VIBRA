@@ -6,8 +6,9 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
-
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
+from vibra.utils.load_data_utils import load_spreadsheet_data
+
 from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
@@ -131,8 +132,9 @@ def load_external_mesh_and_solve():
               }
 
     ## Impedance data - table of values
-
-    # complex_fluid_data = get_complex_impedance_data()
+    
+    # fluid_data_path = f"validation_files/data/WB/porous_material_models/results/silencer/complex_fluid_properties_DB_model.xlsx"
+    # complex_fluid_data = load_spreadsheet_data(fluid_data_path)
     # impedance_data = complex_fluid_data["complex_impedance"]
 
     # data_Z = {"values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]]}
@@ -219,7 +221,14 @@ def load_external_mesh_and_solve():
 
     if solution is not None:
 
-        imported_results = get_external_results()
+        ## load external results data
+        # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
+        # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_real.xlsx"
+        # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
+        results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
+
+        imported_results = load_spreadsheet_data(results_path)
+
         TL_data = imported_results["transmission_loss"] # ports enabled
 
         WB_pressure_data = ext_data.load_nodal_pressures()
@@ -468,79 +477,6 @@ def get_porous_material_data(model="DB"):
                                }
 
     return material_model_data
-
-
-def get_external_results():
-
-    imported_results = dict()
-    # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
-    # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_real.xlsx"
-    # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
-    results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
-
-    if not os.path.exists(results_path):
-        return imported_results
-
-    wb = load_workbook(results_path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
-
-
-def get_complex_impedance_data():
-
-    imported_results = dict()
-    results_path = f"validation_files/data/WB/porous_material_models/results/silencer/complex_fluid_properties_DB_model.xlsx"
-
-    if not os.path.exists(results_path):
-        return imported_results
-
-    wb = load_workbook(results_path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
 
 
 def process_external_TL(model: "Model", ext_data: LoadExternalData):
