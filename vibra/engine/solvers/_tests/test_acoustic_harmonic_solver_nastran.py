@@ -127,7 +127,7 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     frequencies = model.frequencies
 
     # Solve and store solutions into hdf5 files
-    solution = harmonic_solver.solve_direct(print_log=False)
+    solution = harmonic_solver.solve_direct(print_log=True)
 
     output_surface_nodes = model.mesh.get_nodes_from_surface(11)
     average_solution = np.average(solution[output_surface_nodes, :], axis=0)
@@ -150,7 +150,7 @@ def test_solve_model_for_tet4_element(fluid: Fluid, datadir: Path):
 
 @pytest.mark.skip
 def test_solve_model_for_tet10_element(fluid: Fluid, datadir: Path):
-    path = str(PROJECT_DIR / "validation_files/data/Comsol/tet10_lagrange/rectangular_cavities_tet10_40x30_mm.nas")
+    path = str(PROJECT_DIR / "validation_files/data/Comsol/tet10_lagrange/rectangular_cavities_tet10_50x30_mm.nas")
     model = _acoustic_model_nastran(path, fluid)
     _solve_harmonic_problem(datadir, model, path)
 
