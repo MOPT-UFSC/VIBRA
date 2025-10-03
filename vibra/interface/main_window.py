@@ -1222,6 +1222,20 @@ class MainWindow(MainWindow_UI):
                 self.action_section_plane.blockSignals(False)
                 self.section_plane.cutting = not active
                 self.section_plane.value_changed.emit()
+            
+            elif (event.key() == Qt.Key.Key_Delete):
+                physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
+                
+                for surf_id in self.selected_geometry_surfaces:
+                    app().project.model.properties.remove_surface_properties(surf_id, physical_domain)
+                
+                for point_id in self.selected_geometry_lines:
+                    app().project.model.properties.remove_line_properties(point_id, physical_domain)
+                
+                for point_id in self.selected_geometry_points:
+                    app().project.model.properties.remove_point_properties(point_id, physical_domain)
+
+                self.update_symbols()
         
         return super(MainWindow, self).eventFilter(obj, event)
 
