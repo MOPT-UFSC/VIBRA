@@ -23,7 +23,7 @@ def load_external_mesh_and_solve():
     # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "data/validation/porous_material_models/mesh/silencer/ds_silencer_suction_stg1.dat"
+    mesh_path = "validation_files/data/WB/porous_material_models/mesh/silencer/ds_silencer_suction_stg1.dat"
 
     
     if pm_model not in ["DB", "DBM", "JCA"]:
@@ -439,7 +439,7 @@ def get_porous_material_data(model="DB"):
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"data/validation/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
+    results_path = f"validation_files/data/WB/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results

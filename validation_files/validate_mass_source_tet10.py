@@ -4,10 +4,10 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.load_external_data import LoadExternalData
+
+from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ from time import time
 def load_external_mesh_and_solve(assignment_type: str):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/mass_source/mesh/ds_mass_source_tet10.dat"
+    mesh_path = f"validation_files/data/WB/mass_source/mesh/ds_mass_source_tet10.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -274,7 +274,7 @@ def load_external_mesh_and_solve(assignment_type: str):
             return
 
         # Load the external data
-        path = f"data/validation/mass_source/results/tet10/{assignment_type}"
+        path = f"validation_files/data/WB/mass_source/results/tet10/{assignment_type}"
         if not os.path.exists(path):
             return
 

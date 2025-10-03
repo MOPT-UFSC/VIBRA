@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from data import data_test_helper
+from validation_files.data import data_test_helper
 
 from vibra.engine.mesher.element_type import (
     HEXAHEDRON_8,

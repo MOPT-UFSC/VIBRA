@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from data.data_test_helper import get_data_path
 from vibra import PROJECT_DIR
 from vibra.engine.postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
@@ -12,7 +11,7 @@ from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.load_external_data import LoadExternalData
+from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -33,9 +32,8 @@ from pprint import pprint
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-
-    mesh_path = get_data_path("validation/acoustic/elements/tet4/mesh/rectangular_cavities_tet4.dat")
-    results_path = Path(get_data_path("validation/acoustic/elements/tet4/results/"))
+    mesh_path = f"validation_files/data/WB/acoustic/elements/tet4/mesh/rectangular_cavities_tet4.dat"
+    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/elements/tet4/results/"
 
     if not os.path.exists(mesh_path):
         return

@@ -23,8 +23,8 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/acoustic/elements/hex20/mesh/ds_rectangular_cavities_hex20.dat"
-    results_path = PROJECT_DIR / "data/validation/acoustic/elements/hex20/results/"
+    mesh_path = f"validation_files/data/WB/acoustic/elements/hex20/mesh/ds_rectangular_cavities_hex20.dat"
+    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/elements/hex20/results/"
 
     if not os.path.exists(mesh_path):
         return

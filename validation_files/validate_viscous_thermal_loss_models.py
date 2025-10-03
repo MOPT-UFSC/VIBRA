@@ -19,7 +19,7 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "data/validation/viscous_thermal_loss/mesh/ds_viscous_thermal_reference_geometry.dat"
+    mesh_path = "validation_files/data/WB/viscous_thermal_loss/mesh/ds_viscous_thermal_reference_geometry.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -366,10 +366,10 @@ def get_viscous_thermal_model_data_for_narrow_slit_duct(height: float):
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"data/validation/viscous_thermal_loss/results/circular_and_narrow_slit_ducts_results.xlsx"
-    # results_path = f"data/validation/viscous_thermal_loss/results/circular_and_rectangular_ducts_results.xlsx"
-    # results_path = f"data/validation/viscous_thermal_loss/results/circular_ducts_results.xlsx"
-    # results_path = f"data/validation/viscous_thermal_loss/results/only_fluid_results.xlsx"
+    results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_and_narrow_slit_ducts_results.xlsx"
+    # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_and_rectangular_ducts_results.xlsx"
+    # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_ducts_results.xlsx"
+    # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/only_fluid_results.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results

@@ -8,7 +8,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.load_external_data import LoadExternalData
+from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -28,9 +28,8 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    # mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
-    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_tet10_one_element.dat"
-    results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/"
+    mesh_path = f"validation_files/data/WB/acoustic/elements/tet10/mesh/ds_tet10_one_element.dat"
+    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/elements/tet10/results/"
 
     if not os.path.exists(mesh_path):
         return

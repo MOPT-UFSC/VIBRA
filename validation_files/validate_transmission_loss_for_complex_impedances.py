@@ -8,7 +8,7 @@ from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.load_external_data import LoadExternalData
+from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -31,8 +31,8 @@ def load_external_mesh_and_solve():
     # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    # mesh_path = "data/validation/porous_material_models/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
-    mesh_path = "data/validation/transmission_loss/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
+    # mesh_path = "validation_files/data/WB/porous_material_models/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
+    mesh_path = "validation_files/data/WB/transmission_loss/mesh/silencer/ds_only_fluid_of_silencer_suction_stg1.dat"
 
     if pm_model not in ["DB", "DBM", "JCA"]:
         return
@@ -103,8 +103,8 @@ def load_external_mesh_and_solve():
                     molar_mass = molar_mass  )
        
     # Load the external data
-    path = "data/validation/transmission_loss/results/Zo_real"
-    # path = "data/validation/transmission_loss/results/Zo_complex"
+    path = "validation_files/data/WB/transmission_loss/results/Zo_real"
+    # path = "validation_files/data/WB/transmission_loss/results/Zo_complex"
     ext_data = LoadExternalData(path, rho_0)
 
     # Set the defined fluid
@@ -473,10 +473,10 @@ def get_porous_material_data(model="DB"):
 def get_external_results():
 
     imported_results = dict()
-    # results_path = f"data/validation/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
-    # results_path = f"data/validation/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_real.xlsx"
-    # results_path = f"data/validation/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
-    results_path = f"data/validation/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
+    # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_complex.xlsx"
+    # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_{pm_model}_Vn1_Z1_Z2_real.xlsx"
+    # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
+    results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results
@@ -511,7 +511,7 @@ def get_external_results():
 def get_complex_impedance_data():
 
     imported_results = dict()
-    results_path = f"data/validation/porous_material_models/results/silencer/complex_fluid_properties_DB_model.xlsx"
+    results_path = f"validation_files/data/WB/porous_material_models/results/silencer/complex_fluid_properties_DB_model.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results

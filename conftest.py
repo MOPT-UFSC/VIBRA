@@ -1,6 +1,6 @@
 import pytest
 
-from data import data_test_helper
+from validation_files.data import data_test_helper
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 import numpy as np

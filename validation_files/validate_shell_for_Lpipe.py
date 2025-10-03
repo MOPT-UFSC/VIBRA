@@ -8,7 +8,7 @@ from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
 
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.load_external_data import LoadExternalData
+from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ mesh_size = "200mm"
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/structural/shell/L_pipe/mesh/ds_Lpipe_with_caps.dat"
+    mesh_path = f"validation_files/data/WB/structural/shell/L_pipe/mesh/ds_Lpipe_with_caps.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -79,7 +79,7 @@ def load_external_mesh_and_solve():
 
 
     # # Load the external data
-    # path = f"data/validation/structural/shell/pipes/results/results_for_L_pipe.xlsx"
+    # path = f"validation_files/data/WB/structural/shell/pipes/results/results_for_L_pipe.xlsx"
     # ext_data = LoadExternalData(path, rho_0)
 
     # assign the created fluid
@@ -274,7 +274,7 @@ def load_external_mesh_and_solve():
 def get_external_results():
 
     imported_results = dict()
-    results_path = f"data/validation/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
+    results_path = f"validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
 
     if not os.path.exists(results_path):
         return imported_results
