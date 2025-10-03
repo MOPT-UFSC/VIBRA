@@ -940,9 +940,10 @@ class AcousticAssembler:
         if self.model.stop_processing:
             return True
 
-        logging.info(f"Processing the elementary matrices data... [35/100]")
-
+        logging.info(f"Processing the elementary matrices data... [85/100]")
         self.process_fluid_properties_from_volumes()
+
+        logging.info(f"Processing the elementary matrices data... [95/100]")
         self.process_indexes()
 
 

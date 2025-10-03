@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+import logging
 import numpy as np
-
 
 class ACT_HEXAHEDRON_20C(Element3D):
 
@@ -302,6 +302,9 @@ class ACT_HEXAHEDRON_20C(Element3D):
 
         # integration loop
         for i in range(self.nint):
+
+            progress = int(25 + 55*(i / self.nint))
+            logging.info(f"Processing the elementary matrices data... [{progress}/100]")
 
             # Jacobian matrices of all elements
             JAC_stacked = self.dphi[i, :, :] @ stacked_coords
