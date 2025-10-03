@@ -95,68 +95,8 @@ class ACT_QUADRANGLE_8(Element2D):
         Defines the integration points and their respective weights
         for the numerical integration processing.
         """
-        if integration_points == 4:
-
-            self.nint = 4
-            a = 1 / np.sqrt(3)
-            w1 = 1
-
-            self.num_int_data = np.array([
-                [-a, -a, w1],
-                [ a, -a, w1],
-                [ a,  a, w1],
-                [-a,  a, w1],
-                ], dtype=float)
-
-        elif integration_points == 9:
-
-            self.nint = 9
-            a = np.sqrt(3/5)
-            w1 = 25/81
-            w2 = 40/81
-            w3 = 64/81
-
-            self.num_int_data = np.array([
-                [-a, -a, w1],
-                [ a, -a, w1],
-                [ a,  a, w1],
-                [-a,  a, w1],
-                [ 0, -a, w2],
-                [ a,  0, w2],
-                [ 0,  a, w2],
-                [-a,  0, w2],
-                [ 0,  0, w3],
-                ], dtype=float)
-
-        else:
-
-            self.nint = 16
-            a = np.sqrt((3 + 2*np.sqrt(6/5)) / 7)
-            b = np.sqrt((3 - 2*np.sqrt(6/5)) / 7)
-
-            w1 = 0.1210029932856020
-            w2 = 0.4252933030106942
-            w3 = 0.2268518518518519
-
-            self.num_int_data = np.array([
-                [-a, -a, w1],
-                [-a,  a, w1],
-                [ a,  a, w1],
-                [ a, -a, w1],
-                [-b, -b, w2],
-                [-b,  b, w2],
-                [ b,  b, w2],
-                [ b, -b, w2],
-                [-a, -b, w3],
-                [-a,  b, w3],
-                [ a, -b, w3],
-                [ a,  b, w3],
-                [-b, -a, w3],
-                [-b,  a, w3],
-                [ b,  a, w3],
-                [ b, -a, w3],
-                ], dtype=float)
-
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_quadrangles(integration_points)
         self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
