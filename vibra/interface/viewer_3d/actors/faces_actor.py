@@ -33,11 +33,10 @@ class FacesActor(vtkActor):
         8: VTK_QUADRATIC_QUAD,
     }
 
-    def __init__(self, mesh: Mesh, geometry: Geometry | None = None,
-                 allow_hidding=True, update_normals=True):
+    def __init__(self, mesh: Mesh, allow_hidding=True, update_normals=True):
         
         self.mesh = mesh
-        self.geometry = geometry
+        self.geometry = app().project.model.geometry
         self.data = None
         self.allow_hidding = allow_hidding
         self.update_normals = update_normals
@@ -95,11 +94,12 @@ class FacesActor(vtkActor):
                 surface_to_volume[surface] = volume
 
         self.visible_indexes = dict()
+
         hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue
-                
+            
             if self.geometry is not None:
                 solids = self.geometry.surfaces_to_solids(surface)
                 volume = min(solids) if solids else -1
