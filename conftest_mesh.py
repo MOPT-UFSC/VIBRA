@@ -1,9 +1,9 @@
-import pytest
-
-from validation_files.data import data_test_helper
+from vibra import PROJECT_DIR
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
+
 import numpy as np
+import pytest
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +26,8 @@ def fluid() -> Fluid:
 
 @pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
-    path = data_test_helper.get_data_path("validation_files/data/Comsol/hex8_linear/cavidades_retangulares_hex8_linear_40x30_mm.nas")
+    
+    path = str(PROJECT_DIR / "validation_files/data/Comsol/hex8_linear/cavidades_retangulares_hex8_linear_40x30_mm.nas")
     # mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
