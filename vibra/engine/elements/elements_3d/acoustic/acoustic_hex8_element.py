@@ -37,25 +37,9 @@ class ACT_HEXAHEDRON_8C(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-        # 8-node hexahedron integration rule (Atalla and Sgard, 2015, pg. 182)
-        if integration_points == 8:
-       
-            self.nint = 8
-            a = 1 / np.sqrt(3)
-            w1 = 1
-
-            self.num_int_data = np.array([
-                [-a, -a, -a, w1],
-                [ a, -a, -a, w1],
-                [ a,  a, -a, w1],
-                [-a,  a, -a, w1],
-                [-a, -a,  a, w1],
-                [ a, -a,  a, w1],
-                [ a,  a,  a, w1],
-                [-a,  a,  a, w1],
-                ], dtype=float)
-
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -152,6 +136,9 @@ class ACT_HEXAHEDRON_8C(Element3D):
         dphi[:, 2, 5] =  (1.0 + xi_1) * (1.0 - xi_2) / 8
         dphi[:, 2, 6] =  (1.0 + xi_1) * (1.0 + xi_2) / 8
         dphi[:, 2, 7] =  (1.0 - xi_1) * (1.0 + xi_2) / 8
+
+        if Nz == 1:
+            return phi[0, :, :], dphi[0, :, :]
 
         return phi, dphi
 
@@ -358,8 +345,7 @@ class ACT_HEXAHEDRON_8C(Element3D):
             return None
 
         # local coordinates
-        # (ssx, ttx, rrx) = p_calc[index[0], :]
-        ssx, ttx, rrx = p_calc[:, 0], p_calc[:, 1], p_calc[:, 2]
+        (ssx, ttx, rrx) = p_calc[index[0], :]
 
         # derivative of the shape function at the selected point
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
@@ -368,15 +354,13 @@ class ACT_HEXAHEDRON_8C(Element3D):
         coords = self.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
-        # JAC = dphi @ coords
-        JAC = dphi[index[0], :, :] @ coords
+        JAC = dphi @ coords
 
         # inverse of Jacobian matrix
         _, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
-        # B = invJAC @ dphi
-        B = invJAC @ dphi[index[0], :, :]
+        B = invJAC @ dphi
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)

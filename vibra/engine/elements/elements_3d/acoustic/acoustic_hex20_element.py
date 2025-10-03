@@ -37,83 +37,9 @@ class ACT_HEXAHEDRON_20C(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-
-        if integration_points == 14:
-
-            # Reference: https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_et1.html#a6e1b1lmm
-            # Table 12.9 - Numerical Integration for 20-Node Brick (14-points rule)
-
-            self.nint = 14
-            a = 0.758786910639328
-            b = 0.795822425754222
-
-            w1 = 0.335180055401662
-            w2 = 0.886426592797784
-
-            self.num_int_data = np.array([  
-                [-a,  a,  a, w1],
-                [ a,  a,  a, w1],
-                [-a, -a,  a, w1],
-                [ a, -a,  a, w1],
-                [-a,  a, -a, w1],
-                [ a,  a, -a, w1],
-                [-a, -a, -a, w1],
-                [ a, -a, -a, w1],
-                [-b,  0,  0, w2],
-                [ b,  0,  0, w2],
-                [ 0, -b,  0, w2],
-                [ 0,  b,  0, w2],
-                [ 0,  0, -b, w2],
-                [ 0,  0,  b, w2],
-                ], dtype=float)
-            
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
-
-        elif integration_points == 27:
-
-            # Reference: Zienkiewicz, O. C., Taylor, R. L. The Finite Element Method. Volume 1: The basis. Fifth edition. 2000.
-            # See Table 9.1 from page 220 (n=3)
-
-            self.nint = 27
-
-            a = np.sqrt(3 / 5)
-
-            w1 = (5**3) / (9**3)
-            w2 = (5**2)*8 / (9**3)
-            w3 = 5*(8**2) / (9**3)
-            w4 = (8**3) / (9**3)
-
-            self.num_int_data = np.array([  
-                [-a, -a, -a, w1],
-                [ a, -a, -a, w1],
-                [ a,  a, -a, w1],
-                [-a,  a, -a, w1],
-                [-a, -a,  a, w1],
-                [ a, -a,  a, w1],
-                [ a,  a,  a, w1],
-                [-a,  a,  a, w1],
-                [ 0, -a, -a, w2],
-                [ a,  0, -a, w2],
-                [ 0,  a, -a, w2],
-                [-a,  0, -a, w2],
-                [ 0, -a,  a, w2],
-                [ a,  0,  a, w2],
-                [ 0,  a,  a, w2],
-                [-a,  0,  a, w2],
-                [-a, -a,  0, w2],
-                [ a, -a,  0, w2],
-                [ a,  a,  0, w2],
-                [-a,  a,  0, w2],
-                [ 0,  0, -a, w3],
-                [ 0, -a,  0, w3],
-                [ a,  0,  0, w3],
-                [ 0,  a,  0, w3],
-                [-a,  0,  0, w3],
-                [ 0,  0,  a, w3],
-                [ 0,  0,  0, w4],
-                ], dtype=float)
-
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -219,7 +145,6 @@ class ACT_HEXAHEDRON_20C(Element3D):
         dphi[:, 0, 18] = (1) * (1 + xi_2) * (1 - xi_3**2) / 4
         dphi[:, 0, 19] = (-1) * (1 + xi_2) * (1 - xi_3**2) / 4
 
-
         dphi[:, 1, 0 ] = (1 - xi_1) * (1 - xi_3) * ( xi_1 + 2*xi_2 + xi_3 + 1) / 8
         dphi[:, 1, 1 ] = (1 + xi_1) * (1 - xi_3) * (-xi_1 + 2*xi_2 + xi_3 + 1) / 8
         dphi[:, 1, 2 ] = (1 + xi_1) * (1 - xi_3) * ( xi_1 + 2*xi_2 - xi_3 - 1) / 8
@@ -261,6 +186,9 @@ class ACT_HEXAHEDRON_20C(Element3D):
         dphi[:, 2, 17] = (1 + xi_1) * (1 - xi_2) * (-2*xi_3) / 4
         dphi[:, 2, 18] = (1 + xi_1) * (1 + xi_2) * (-2*xi_3) / 4
         dphi[:, 2, 19] = (1 - xi_1) * (1 + xi_2) * (-2*xi_3) / 4
+
+        if Nz == 1:
+            return phi[0, :, :], dphi[0, :, :]
 
         return phi, dphi
 
@@ -479,8 +407,7 @@ class ACT_HEXAHEDRON_20C(Element3D):
             return None
 
         # local coordinates
-        # (ssx, ttx, rrx) = p_calc[index[0], :]
-        ssx, ttx, rrx = p_calc[:, 0], p_calc[:, 1], p_calc[:, 2]
+        (ssx, ttx, rrx) = p_calc[index[0], :]
 
         # derivative of the shape function at the selected point
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
@@ -489,15 +416,13 @@ class ACT_HEXAHEDRON_20C(Element3D):
         coords = self.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
-        # JAC = dphi @ coords
-        JAC = dphi[index[0], :, :] @ coords
+        JAC = dphi @ coords
 
         # inverse of Jacobian matrix
         _, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
-        # B = invJAC @ dphi
-        B = invJAC @ dphi[index[0], :, :]
+        B = invJAC @ dphi
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)

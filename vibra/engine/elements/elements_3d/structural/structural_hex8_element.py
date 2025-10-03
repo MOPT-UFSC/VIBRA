@@ -36,25 +36,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-        # 8-node hexahedron integration rule (Atalla and Sgard, 2015, pg. 182)
-        if integration_points == 8:
-       
-            self.nint = 8
-            a = 1 / np.sqrt(3)
-            w1 = 1
-
-            self.num_int_data = np.array( [ 
-                [-a, -a, -a, w1],
-                [ a, -a, -a, w1],
-                [ a,  a, -a, w1],
-                [-a,  a, -a, w1],
-                [-a, -a,  a, w1],
-                [ a, -a,  a, w1],
-                [ a,  a,  a, w1],
-                [-a,  a,  a, w1],
-                ], dtype=float)
-            
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):

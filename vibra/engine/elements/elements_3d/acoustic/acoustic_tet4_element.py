@@ -45,46 +45,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-        # NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
-        # The numerical integration points and their respective weights for the 4- and 5-point integration rules are found on page 177.
-
-        # 4-point integration rule for unit tetrahedron element
-        if integration_points == 4:
-
-            self.nint = 4
-
-            a = (5 - np.sqrt(5)) / 20
-            b = (5 + 3 * np.sqrt(5)) / 20
-
-            w1 = 1/24
-
-            self.num_int_data = np.array([
-                [a, a, a, w1], 
-                [a, a, b, w1], 
-                [a, b, a, w1], 
-                [b, a, a, w1],
-                ], dtype=float)
-
-        # 5-point integration rule for unit tetrahedron element
-        else:
-
-            self.nint = 5
-
-            a = 1/4
-            b = 1/6
-            c = 1/2
-
-            w1 = -2/15
-            w2 = 3/40
-
-            self.num_int_data = np.array([
-                [a, a, a, w1],
-                [b, b, b, w2],
-                [b, b, c, w2],
-                [b, c, b, w2],
-                [c, b, b, w2],
-                ], dtype=float)
-
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_tetrahedrons(integration_points)
         self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
@@ -368,8 +330,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
             return None
 
         # local coordinates
-        # (ssx, ttx, rrx) = p_calc[index[0], :]
-        ssx, ttx, rrx = p_calc[:, 0], p_calc[:, 1], p_calc[:, 2]
+        (ssx, ttx, rrx) = p_calc[index[0], :]
 
         # derivative of the shape function at the selected point
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
@@ -378,15 +339,13 @@ class ACT_TETRAHEDRON_4C(Element3D):
         coords = self.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
-        # JAC = dphi @ coords
-        JAC = dphi[:, :] @ coords
+        JAC = dphi @ coords
 
         # inverse of Jacobian matrix
         _, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
-        # B = invJAC @ dphi
-        B = invJAC @ dphi[:, :]
+        B = invJAC @ dphi
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)

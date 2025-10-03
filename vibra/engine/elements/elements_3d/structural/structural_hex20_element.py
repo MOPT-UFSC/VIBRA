@@ -36,83 +36,9 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-
-        if integration_points == 14:
-
-            # Reference: https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_et1.html#a6e1b1lmm
-            # Table 12.9 - Numerical Integration for 20-Node Brick (14-points rule)
-
-            self.nint = 14
-            a = 0.758786910639328
-            b = 0.795822425754222
-
-            w1 = 0.335180055401662
-            w2 = 0.886426592797784
-
-            self.num_int_data = np.array([  
-                [-a,  a,  a, w1],
-                [ a,  a,  a, w1],
-                [-a, -a,  a, w1],
-                [ a, -a,  a, w1],
-                [-a,  a, -a, w1],
-                [ a,  a, -a, w1],
-                [-a, -a, -a, w1],
-                [ a, -a, -a, w1],
-                [-b,  0,  0, w2],
-                [ b,  0,  0, w2],
-                [ 0, -b,  0, w2],
-                [ 0,  b,  0, w2],
-                [ 0,  0, -b, w2],
-                [ 0,  0,  b, w2],
-                ], dtype=float)
-            
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
-
-        elif integration_points == 27:
-
-            # Reference: Zienkiewicz, O. C., Taylor, R. L. The Finite Element Method. Volume 1: The basis. Fifth edition. 2000.
-            # See Table 9.1 from page 220 (n=3)
-
-            self.nint = 27
-
-            a = np.sqrt(3 / 5)
-
-            w1 = (5**3) / (9**3)
-            w2 = (5**2)*8 / (9**3)
-            w3 = 5*(8**2) / (9**3)
-            w4 = (8**3) / (9**3)
-
-            self.num_int_data = np.array([  
-                [-a, -a, -a, w1],
-                [ a, -a, -a, w1],
-                [ a,  a, -a, w1],
-                [-a,  a, -a, w1],
-                [-a, -a,  a, w1],
-                [ a, -a,  a, w1],
-                [ a,  a,  a, w1],
-                [-a,  a,  a, w1],
-                [ 0, -a, -a, w2],
-                [ a,  0, -a, w2],
-                [ 0,  a, -a, w2],
-                [-a,  0, -a, w2],
-                [ 0, -a,  a, w2],
-                [ a,  0,  a, w2],
-                [ 0,  a,  a, w2],
-                [-a,  0,  a, w2],
-                [-a, -a,  0, w2],
-                [ a, -a,  0, w2],
-                [ a,  a,  0, w2],
-                [-a,  a,  0, w2],
-                [ 0,  0, -a, w3],
-                [ 0, -a,  0, w3],
-                [ a,  0,  0, w3],
-                [ 0,  a,  0, w3],
-                [-a,  0,  0, w3],
-                [ 0,  0,  a, w3],
-                [ 0,  0,  0, w4],
-                ], dtype=float)
-
-            self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):

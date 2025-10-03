@@ -38,46 +38,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-        # NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
-        # The numerical integration points and their respective weights for the 4- and 5-point integration rules are found on page 177.
-
-        # 4-point integration rule for unit tetrahedron element
-        if integration_points == 4:
-
-            self.nint = 4
-
-            a = (5 - np.sqrt(5)) / 20
-            b = (5 + 3 * np.sqrt(5)) / 20
-
-            w1 = 1/24
-
-            self.num_int_data = np.array([
-                [a, a, a, w1], 
-                [a, a, b, w1], 
-                [a, b, a, w1], 
-                [b, a, a, w1],
-                ], dtype=float)
-
-        # 5-point integration rule for unit tetrahedron element
-        else:
-
-            self.nint = 5
-
-            a = 1/4
-            b = 1/6
-            c = 1/2
-
-            w1 = -2/15
-            w2 = 3/40
-
-            self.num_int_data = np.array([
-                [a, a, a, w1],
-                [b, b, b, w2],
-                [b, b, c, w2],
-                [b, c, b, w2],
-                [c, b, b, w2],
-                ], dtype=float)
-
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_tetrahedrons(integration_points)
         self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
