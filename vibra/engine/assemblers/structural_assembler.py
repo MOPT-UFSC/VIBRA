@@ -365,6 +365,9 @@ class StructuralAssembler:
         # loop for 2d elements
         for element_id, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
 
+            if self.model.stop_processing:
+                return True
+
             progress = int(100 * (element_id / self.number_2d_elements))
             if progress != last_progress:
                 logging.info(f"Processing the elementary matrices data for face elements... [{int(progress)}/100]")
@@ -409,6 +412,9 @@ class StructuralAssembler:
 
         # loop for 3d elements
         for element_id, vol_id, *_ in self.model.mesh.solids_connectivity:
+            
+            if self.model.stop_processing:
+                return True
 
             progress = int(100 * (element_id / self.number_3d_elements))
             if progress != last_progress:
@@ -424,7 +430,7 @@ class StructuralAssembler:
             self.data_M[element_id, :, :] = Me
 
 
-    def compute_data_to_process_global_matrices_new(self, reorder: bool = True):
+    def compute_data_to_process_global_matrices(self, reorder: bool = True):
         """
         """
         if self.model.mesh.solids_connectivity.size:
@@ -467,10 +473,13 @@ class StructuralAssembler:
 
         logging.info("Gathering data to assemble global matrices... [20/100]")
         t0 = time()
-        if self.compute_data_to_process_global_matrices_new(reorder=reorder):
+        if self.compute_data_to_process_global_matrices(reorder=reorder):
             return
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {dt : .6f} [s]")
+
+        if self.model.stop_processing:
+            return
 
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()
