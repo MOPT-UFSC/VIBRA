@@ -42,6 +42,7 @@ def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
     }
 
     acoustic_model.set_analysis_setup(analysis_setup)
+    acoustic_model.process_viscous_thermal_model_properties(frequencies)
 
     # Direct solver setup and solve
     assembler = AcousticAssembler(acoustic_model)
@@ -55,5 +56,5 @@ def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
     modal_harmonic_solver = HarmonicSolver(assembler)
     modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 
-    for i, _ in enumerate(frequencies):
+    for i in range(frequencies.size):
         assert np.allclose(direct_solutions[:, i], modal_solutions[:, i])
