@@ -1,4 +1,4 @@
-from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray, vtkIntArray
 from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
@@ -40,6 +40,21 @@ class PointsActor(vtkActor):
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
 
+        geometry = app().project.model.geometry
+        vol_ids = vtkIntArray()
+        vol_ids.SetName("geom_point_volume")
+        vol_ids.SetNumberOfTuples(number_of_points)
+        
+        cell_idx = 0
+        for point_id, _ in self.mesh.nodes_from_points.items():
+            vol = -1
+            if geometry is not None:
+                solids = geometry.points_to_solids(point_id)
+                vol = min(solids) if solids else -1
+            vol_ids.SetValue(cell_idx, vol)
+            cell_idx += 1
+        data.GetCellData().AddArray(vol_ids)
+            
         mapper.SetInputData(data)
         self.SetMapper(mapper)
 

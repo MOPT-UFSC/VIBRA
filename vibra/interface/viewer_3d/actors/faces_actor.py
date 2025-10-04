@@ -36,7 +36,6 @@ class FacesActor(vtkActor):
     def __init__(self, mesh: Mesh, allow_hidding=True, update_normals=True):
         
         self.mesh = mesh
-        self.geometry = app().project.model.geometry
         self.data = None
         self.allow_hidding = allow_hidding
         self.update_normals = update_normals
@@ -95,6 +94,7 @@ class FacesActor(vtkActor):
 
         self.visible_indexes = dict()
 
+        self.geometry = app().project.model.geometry
         hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
@@ -106,7 +106,6 @@ class FacesActor(vtkActor):
             else:
                 volume = surface_to_volume.get(surface, -1)
 
-            volume = surface_to_volume.get(surface, -1)
             surface_indexes.InsertNextValue(surface)
             volume_indexes.InsertNextValue(volume)
 
@@ -157,8 +156,8 @@ class FacesActor(vtkActor):
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
 
-                if (material is None) and (surface in mesh.volumes_from_surface):
-                    volume = mesh.volumes_from_surface[surface][0]
+                if (material is None) and (surface in self.geometry._surfaces_to_solids):
+                    volume = min(self.geometry._surfaces_to_solids[surface])
                     material = properties._get_property("material", volume=volume)
 
                 color = Color(*material.color) if (material is not None) else no_info_color
@@ -168,8 +167,8 @@ class FacesActor(vtkActor):
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
 
-                if (fluid is None) and (surface in mesh.volumes_from_surface):
-                    volume = mesh.volumes_from_surface[surface][0]
+                if (fluid is None) and (surface in self.geometry._surfaces_to_solids):
+                    volume = min(self.geometry._surfaces_to_solids[surface])
                     fluid = properties._get_property("fluid", volume=volume)
 
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color
