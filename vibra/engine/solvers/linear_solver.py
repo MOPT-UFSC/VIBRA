@@ -8,6 +8,7 @@ import numpy as np
 class SolverType(Enum):
     PARDISO = auto()
     MUMPS = auto()
+    MODAL_SUPERPOSITION = auto()
 
 
 class MumpsLinearOperator(LinearOperator):
@@ -123,6 +124,22 @@ class MumpsLinearSolver(LinearSolver):
         print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
         self._solver = Context(self.verbose)
         return self._solver
+    
+class ModalSuperpositionSolver(LinearSolver):
+    def __init__(self, modes, **kwargs):
+        super().__init__(**kwargs)
+        self.Phi = modes
+        self.PhiH = modes.conj().T
+        self.linear_operator_class = LinearOperator  # Not used
+
+    def solve(self, A, F):
+        Zr = np.matmul(self.PhiH, A.dot(self.Phi))
+        fr = np.matmul(self.PhiH, F)
+        ur = np.linalg.solve(Zr, fr)
+        return np.matmul(self.Phi, ur)
+
+    def clear_memory(self):
+        pass  # Nothing to clear
 
 
 def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
@@ -130,6 +147,13 @@ def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
         return PardisoLinearSolver(**kwargs)
     elif solver_type == SolverType.MUMPS:
         return MumpsLinearSolver(**kwargs)
+    elif solver_type == SolverType.MODAL_SUPERPOSITION:
+        modes = kwargs.get('modes')
+        if modes is None:
+            raise ValueError("Modes must be provided for Modal Superposition Solver.")
+        return ModalSuperpositionSolver(modes)
+    else:
+        raise ValueError(f"Unknown solver type: {solver_type}")
 
 
 def check_symmetry(matrix, tol=1e-5) -> bool:

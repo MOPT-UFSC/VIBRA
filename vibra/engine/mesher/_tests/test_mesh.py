@@ -9,8 +9,9 @@ from vibra.engine.mesher.element_type import (
     TETRAHEDRON_10,
 )
 
-from pathlib import Path
+import gmsh
 import numpy as np
+from pathlib import Path
 
 
 def test_tetrahedron_4_mesh():
@@ -65,6 +66,7 @@ def test_hexahedron_8_mesh():
         mesh,
         mesh_test_path,
     )
+
 
 
 def test_hexahedron_20_mesh():
@@ -124,10 +126,13 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     )
     expected_mappings = (mesh_path / "mappings.dat").read_text()
 
+    if gmsh.isInitialized():
+        gmsh.finalize()
+
     assert np.allclose(expected_nodal_coordinates, mesh.nodal_coordinates)
     assert np.allclose(expected_lines_connectivity, mesh.lines_connectivity)
     assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
-    assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
+    assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
     assert expected_mappings == str(mappings)
 
     if (expected_solids_connectivity.size != 0) and (mesh.solids_connectivity.size != 0):

@@ -103,9 +103,7 @@ class LazyHDF5MatrixLoader:
                 row_idx, col_idx = key, slice(None)
 
             if isinstance(col_idx, (int, np.integer)):
-                if not status[col_idx]:
-                    raise ValueError(COL_ERROR_MESSAGE_FORMAT.format(col_idx))
-                return solution[row_idx, col_idx]
+                return _get_column_data(col_idx)[row_idx]
 
             if isinstance(col_idx, slice):
                 cols = range(*col_idx.indices(shape[1]))
