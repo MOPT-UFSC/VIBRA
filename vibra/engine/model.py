@@ -1,5 +1,4 @@
-from typing import Optional, Callable
-
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.engine.mesher.element_type import (
 TETRAHEDRON_4,
 TETRAHEDRON_10,
@@ -50,9 +49,11 @@ import logging
 import numpy as np
 
 from copy import deepcopy
+from pathlib import Path
+from typing import Optional, Callable
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 
 class ModelStatus:
@@ -115,6 +116,21 @@ class Model:
     def set_geometry_path(self, path : str):
         self.geometry_path = path
 
+    def check_path_for_geometry_file(self, path: Path | str):
+        """
+        This method returns True if a CAD extension file is detected 
+        in the input path, otherwise, it returns False.
+        """
+
+        if isinstance(path, Path):
+            path = str(path)
+
+        ext = path.split(".")[-1]
+        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
+            return True
+
+        return False
+
     def set_properties(self, properties):
         self.properties = properties
 
@@ -164,7 +180,7 @@ class Model:
             print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return -1       
 
     def process_mesh_data(self, path : str):
@@ -184,7 +200,7 @@ class Model:
             print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return -1
 
     def process_mesh(self):
