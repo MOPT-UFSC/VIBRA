@@ -95,7 +95,7 @@ def material() -> Material:
 
 @pytest.fixture(scope="module")
 def structural_model(material: Material) -> Model:
-    path = data_test_helper.get_data_path("examples/geometry_files/curve_L_3D.step")
+    path = path = str(PROJECT_DIR / "data/examples/geometry_files/curve_L_3D.step")
     mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()

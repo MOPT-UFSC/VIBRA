@@ -1,5 +1,3 @@
-from validation_files.data.data_test_helper import get_data_path
-
 from vibra import PROJECT_DIR
 from vibra.engine.geometry.geometry import Geometry
 import numpy as np
