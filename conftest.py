@@ -1,9 +1,9 @@
-import pytest
-
-from data import data_test_helper
+from vibra import PROJECT_DIR
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
+
 import numpy as np
+import pytest
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +26,7 @@ def fluid() -> Fluid:
 
 @pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
-    path = data_test_helper.get_data_path("examples/geometry_files/cylinder.step")
+    path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
     mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()

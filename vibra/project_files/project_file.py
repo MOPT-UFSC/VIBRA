@@ -313,7 +313,7 @@ class ProjectFile:
 
     def read_mesh_data_from_file(self):
 
-        if not self.geometry_data_filepath.exists():
+        if not self.mesh_data_filepath.exists():
             return dict()
 
         try:
@@ -618,8 +618,10 @@ class ProjectFile:
             app().main_window.project_data_modified = True
 
     def handling_harmonic_solution_results(self, solver_tag: str):
+
         if not self.results_data_filepath.exists():
             return
+
         with h5py.File(self.results_data_filepath, "r") as f_src:
             # Converting Harmonic solution in the old form.
             analysis = f_src.get(solver_tag)

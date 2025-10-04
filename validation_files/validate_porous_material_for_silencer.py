@@ -7,6 +7,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
+from vibra.utils.load_data_utils import load_spreadsheet_data
 
 import os
 import matplotlib.pyplot as plt
@@ -23,7 +24,7 @@ def load_external_mesh_and_solve():
     # return
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "data/validation/porous_material_models/mesh/silencer/ds_silencer_suction_stg1.dat"
+    mesh_path = "validation_files/data/WB/porous_material_models/mesh/silencer/ds_silencer_suction_stg1.dat"
 
     
     if pm_model not in ["DB", "DBM", "JCA"]:
@@ -58,7 +59,6 @@ def load_external_mesh_and_solve():
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
@@ -171,44 +171,16 @@ def load_external_mesh_and_solve():
 
     t0 = time()
 
-    element_3d = model.acoustic_element_3d
-
-    list_nodes = list()
-    for tag, surface_nodes in mesh.external_nodes_from_surfaces.items():
-        list_nodes.extend(surface_nodes)
-
-    rho_eff_v1, _ = model.get_fluid_properties_from_surface(1, frequencies)
-    rho_eff_v2, _ = model.get_fluid_properties_from_surface(2, frequencies)
-
     acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
 
-    input_particle_velocity = acoustic_post.get_particle_velocity_from_surface(1, rho_eff_v1)
-    output_particle_velocity = acoustic_post.get_particle_velocity_from_surface(2, rho_eff_v2)
+    input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, 1)
+    output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 1)
 
-    input_velocities = np.array(list(input_particle_velocity["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocity["Vx"].values()), dtype=complex)
+    input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
+    output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
 
     input_Vx = np.average(input_velocities, axis=0)
     output_Vx = np.average(output_velocities, axis=0)
-
-    solid_elements_connected_to_nodes =  mesh.get_solid_elements_connected_to_nodes(node_ids=list_nodes)
-
-    particle_velocity = dict()
-    for _node_id, element_ids in solid_elements_connected_to_nodes.items():
-        Vk = 0.
-        for _element_id in element_ids:
-            Vk += element_3d.process_particle_velocity(_element_id, _node_id, rho_eff_v1, frequencies, solution=solution)
-        particle_velocity[_node_id] = Vk / len(element_ids)
-
-    # input_Vx = 0.
-    # for node_id in mesh.external_nodes_from_surfaces[1]:
-    #     input_Vx += particle_velocity[node_id][0, :]
-    # input_Vx /= len(mesh.external_nodes_from_surfaces[1])
-
-    # output_Vx = 0.
-    # for node_id in mesh.external_nodes_from_surfaces[2]:
-    #     output_Vx += particle_velocity[node_id][0, :]
-    # output_Vx /= len(mesh.external_nodes_from_surfaces[2])
 
     mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
@@ -220,8 +192,9 @@ def load_external_mesh_and_solve():
 
     if solution is not None:
 
-        imported_results = get_external_results()
-        
+        results_path = f"validation_files/data/WB/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
+        imported_results = load_spreadsheet_data(results_path)
+
         pressure_at_input_face = imported_results["input_face_pressure"]
         pressure_at_output_face = imported_results["output_face_pressure"]
         velocity_at_input_face = imported_results["input_face_velocity"]
@@ -309,7 +282,7 @@ def load_external_mesh_and_solve():
 
         fig6, ax6 = plt.subplots()
         title = "Particle velocity at node 8904"
-        ax6.plot(frequencies, data_type(particle_velocity[8904-1][0, :]), 'r', label='VIBRA')
+        ax6.plot(frequencies, data_type(output_particle_velocities["Vx"][8904-1]), 'r', label='VIBRA')
         ax6.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax6.set_xlabel('Frequency [Hz]')
         ax6.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -322,7 +295,7 @@ def load_external_mesh_and_solve():
 
         fig7, ax7 = plt.subplots()
         title = "Particle velocity at node 8817"
-        ax7.plot(frequencies, data_type(particle_velocity[8817-1][0, :]), 'r', label='VIBRA')
+        ax7.plot(frequencies, data_type(input_particle_velocities["Vx"][8817-1]), 'r', label='VIBRA')
         ax7.plot(x_data_WB, data_type(y_data_WB), 'k--', label='ANSYS')
         ax7.set_xlabel('Frequency [Hz]')
         ax7.set_ylabel(f'Particle velocity [m/s] - {type_label}')
@@ -362,7 +335,7 @@ def load_external_mesh_and_solve():
         Vx_8817_WB = velocity_at_node_8817[:, 1] + 1j*velocity_at_node_8817[:, 2]
         P_8817_WB = pressure_at_node_8817[:, 1] + 1j*pressure_at_node_8817[:, 2]
 
-        sound_int = np.real(solution[8817-1, :] * np.conj(particle_velocity[8817-1][0, :])) / 2
+        sound_int = np.real(solution[8817-1, :] * np.conj(input_particle_velocities["Vx"][8817-1])) / 2
         y_data_WB = np.real(P_8817_WB * np.conj(Vx_8817_WB)) / 2
 
         fig10, ax10 = plt.subplots()
@@ -381,7 +354,7 @@ def load_external_mesh_and_solve():
         Vx_8904_WB = velocity_at_node_8904[:, 1] + 1j*velocity_at_node_8904[:, 2]
         P_8904_WB = pressure_at_node_8904[:, 1] + 1j*pressure_at_node_8904[:, 2]
 
-        sound_int = np.real(solution[8904-1, :] * np.conj(particle_velocity[8904-1][0, :])) / 2
+        sound_int = np.real(solution[8904-1, :] * np.conj(output_particle_velocities["Vx"][8904-1])) / 2
         y_data_WB = np.real(P_8904_WB * np.conj(Vx_8904_WB)) / 2
 
         fig11, ax11 = plt.subplots()
@@ -463,41 +436,6 @@ def get_porous_material_data(model="DB"):
                                }
 
     return material_model_data
-
-
-def get_external_results():
-
-    imported_results = dict()
-    results_path = f"data/validation/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
-
-    if not os.path.exists(results_path):
-        return imported_results
-
-    wb = load_workbook(results_path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
 
 
 if __name__ == "__main__":

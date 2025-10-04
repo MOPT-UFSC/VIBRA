@@ -515,6 +515,10 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
+        if self.visualization_filter.normal_symbols:
+            self.visualization_filter.normal_symbols = False
+            self.update_symbols()
+
     def action_mesh_workspace_callback(self):
         self.action_node_view.setToolTip("Nodes view")
         self.action_mesh_workspace.setChecked(True)
@@ -923,6 +927,7 @@ class MainWindow(MainWindow_UI):
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
+
             window_title = "Error"
             title = "Error while processing the 'open_project' method"
             message = str(error_log)
@@ -934,14 +939,14 @@ class MainWindow(MainWindow_UI):
 
     def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
 
-        geometry_file = self.check_path_for_geometry_file(path)
+        is_geometry_file = app().project.model.check_path_for_geometry_file(path)
 
         if app().file.read_mesh_data_from_file():
-            app().project.load_project_without_process_mesh(path, geometry_file)
+            app().project.load_project_without_process_mesh(path, is_geometry_file)
 
         else:
 
-            if geometry_file:
+            if is_geometry_file:
                 if LoadingWindow(app().project.import_geometry).run(path) == -1:
                     return
 
@@ -950,9 +955,10 @@ class MainWindow(MainWindow_UI):
                     return
 
                 self.update_mesh_information()
-                app().file.write_geometry_data_in_file()
                 app().file.write_mesh_data_in_file()
                 self.project_data_modified = False
+
+            app().file.write_geometry_data_in_file()
 
             self.update_geometry_information()
             self.update_toolbar_and_menu_items_after_load_project()
@@ -972,7 +978,7 @@ class MainWindow(MainWindow_UI):
             if ignore_workspaces:
                 return
 
-            if geometry_file:
+            if is_geometry_file:
                 self.action_model_workspace_callback()
             else:
                 self.action_mesh_workspace_callback()
@@ -980,26 +986,11 @@ class MainWindow(MainWindow_UI):
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
-            
+
             window_title = "Error"
-            title = "Error while processing geometry"
+            title = "Error while processing 'import_geometry_or_mesh' method"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
-
-    def check_path_for_geometry_file(self, path: Path | str):
-        """
-        This method returns True if a CAD extension file is detected 
-        in the input path, otherwise, it returns False.
-        """
-
-        if isinstance(path, Path):
-            path = str(path)
-
-        ext = path.split(".")[-1]
-        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
-            return True
-
-        return False
     
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()

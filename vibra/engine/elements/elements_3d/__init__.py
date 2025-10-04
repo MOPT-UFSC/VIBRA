@@ -3,6 +3,11 @@ from .acoustic.acoustic_hex20_element import ACT_HEXAHEDRON_20C
 from .acoustic.acoustic_tet4_element import ACT_TETRAHEDRON_4C
 from .acoustic.acoustic_tet10_element import ACT_TETRAHEDRON_10C
 
+# from .structural.structural_hex8_element_ref import STRUCT_HEXAHEDRON_8
+# from .structural.structural_hex20_element_ref import STRUCT_HEXAHEDRON_20
+# from .structural.structural_tet4_element_ref import STRUCT_TETRAHEDRON_4S
+# from .structural.structural_tet10_element_ref import STRUCT_TETRAHEDRON_10S
+
 from .structural.structural_hex8_element import STRUCT_HEXAHEDRON_8
 from .structural.structural_hex20_element import STRUCT_HEXAHEDRON_20
 from .structural.structural_tet4_element import STRUCT_TETRAHEDRON_4S

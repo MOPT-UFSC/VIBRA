@@ -6,105 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+import logging
 import numpy as np
-
-
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """
-    This function computes the determinant and inverse
-    of Jacobian matrix.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The Jacobian matrices.
-
-    Returns
-    -------
-    det_jac: np.ndarray
-        The determinant of Jacobian matrix.
-
-    inv_jac: np.ndarray
-        The inverse of Jacobian matrix.
-    """
-
-    det_jac = (
-                  JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-                + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-                + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-                ) - (
-                  JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-                + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-                + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-                )
-
-    # the adjoint matrix
-    AUJJ = np.zeros((3, 3), dtype=float)
-
-    AUJJ[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-    AUJJ[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-    AUJJ[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-    AUJJ[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-    AUJJ[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-    AUJJ[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-    AUJJ[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-    AUJJ[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-    AUJJ[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    inv_jac = (1 / det_jac) * AUJJ
-
-    return det_jac, inv_jac
-
-
-def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
-    """
-    This function computes the determinants and inverses
-    of Jacobian matrices in stacked form.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The stacked Jacobian matrices.
-
-    Returns
-    -------
-    det_jacs: np.ndarray
-        The stacked determinants of Jacobian matrices.
-
-    inv_jacs: np.ndarray
-        The stacked inverse of Jacobian matrices.
-
-    """
-
-    det_jacs = (  
-                  JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-                + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-                + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-                ) - (
-                  JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-                + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-                + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-                )
-
-    det_jacs = det_jacs.reshape(-1, 1, 1)
-
-    # the adjoint matrix
-    nel = JAC.shape[0]
-    AUJJ = np.zeros((nel, 3, 3), dtype=float)
-
-    AUJJ[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-    AUJJ[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-    AUJJ[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-    AUJJ[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-    AUJJ[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-    AUJJ[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-    AUJJ[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
-
-    inv_jacs = (1 / det_jacs) * AUJJ
-
-    return det_jacs, inv_jacs
 
 
 class ACT_TETRAHEDRON_4C(Element3D):
@@ -143,45 +46,9 @@ class ACT_TETRAHEDRON_4C(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-        # NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
-        # The numerical integration points and their respective weights for the 4- and 5-point integration rules are found on page 177.
-
-        # 4-point integration rule for unit tetrahedron element
-        if integration_points == 4:
-
-            self.nint = 4
-
-            con1 = (5 - np.sqrt(5)) / 20
-            con2 = (5 + 3 * np.sqrt(5)) / 20
-
-            w1 = 1/24
-
-            self.pint = np.array([[con1, con1, con1], 
-                                  [con1, con1, con2], 
-                                  [con1, con2, con1], 
-                                  [con2, con1, con1]], dtype=float)
-
-            self.wps = 6 * np.array([w1, w1, w1, w1], dtype=float).reshape(-1, 1, 1)
-
-        # 5-point integration rule for unit tetrahedron element
-        else:
-
-            self.nint = 5
-
-            a = 1/4
-            b = 1/6
-            c = 1/2
-
-            w1 = -2/15
-            w2 = 3/40
-
-            self.pint = np.array([[a, a, a],
-                                  [b, b, b],
-                                  [b, b, c],
-                                  [b, c, b],
-                                  [c, b, b]], dtype=float)
-
-            self.wps = 6 * np.array([w1, w2, w2, w2, w2], dtype=float).reshape(-1, 1, 1)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_tetrahedrons(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -190,11 +57,11 @@ class ACT_TETRAHEDRON_4C(Element3D):
         derivatives for all integration points.
         """
 
-        ssx = self.pint[:, 0]
-        ttx = self.pint[:, 1]
-        rrx = self.pint[:, 2]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
+        xi_3 = self.num_int_data[:, 2]
 
-        self.phi, self.dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
+        self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
 
     def get_shape_functions_and_derivatives(self, xi_1: np.ndarray, xi_2: np.ndarray, xi_3: np.ndarray) -> np.ndarray:
@@ -229,16 +96,12 @@ class ACT_TETRAHEDRON_4C(Element3D):
 
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
-        # intialize the shape function variable
+        # define the shape functions (Atalla and Sgard, 2015, pg. 170)
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
-        # define coordiante xi_4
+        # define isoparametric coordiante xi_4
         xi_4 = 1 - xi_1 - xi_2 - xi_3
 
-        # # shape functions
-        # phi = np.array([1 - xi_1 - xi_2 - xi_3, xi_2, xi_3, xi_1], dtype=float).T
-
-        # shape functions (Atalla and Sgard, 2015, pg. 170)
         phi[:, 0, 0] = xi_4      # ->      (0.0, 0.0, 0.0)   Node 1
         phi[:, 0, 1] = xi_2      # ->      (0.0, 1.0, 0.0)   Node 2
         phi[:, 0, 2] = xi_3      # ->      (0.0, 0.0, 1.0)   Node 3
@@ -320,7 +183,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        det_jac, invJAC = get_detJAC_and_invJAC(JAC)
+        det_jac, invJAC = self.get_detJAC_and_invJAC(JAC)
 
         # derivative of shape functions
         B = invJAC @ self.dphi
@@ -335,14 +198,14 @@ class ACT_TETRAHEDRON_4C(Element3D):
             # shape functions
             N = self.phi[i, :]
 
-            int2d_BtB += (1 / 6) * B.T @ B * (det_jac * self.wps[i])
-            int2d_NtN += (1 / 6) * N.T @ N * (det_jac * self.wps[i])
+            int2d_BtB += B.T @ B * (det_jac * self.wps[i])
+            int2d_NtN += N.T @ N * (det_jac * self.wps[i])
 
         # # shape functions
         # N = self.phi
 
-        # int2d_BtB = (1 / 6) * B.T @ B * (det_jac * self.wps) * self.nint
-        # int2d_NtN = (1 / 6) * N.T @ N * (det_jac * self.wps)
+        # int2d_BtB = B.T @ B * (det_jac * self.wps) * self.nint
+        # int2d_NtN = N.T @ N * (det_jac * self.wps)
 
         return int2d_BtB, int2d_NtN
 
@@ -368,7 +231,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC_stacked = self.dphi @ stacked_coords
 
         # Jacobian determinants and inverses of all elements
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
+        det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
         # derivative of shape functions
         B = inv_jacs @ self.dphi
@@ -381,12 +244,15 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # integration loop
         for i in range(self.nint):
 
+            progress = int(25 + 55*(i / self.nint))
+            logging.info(f"Processing the elementary matrices data... [{progress}/100]")
+
             # shape functions
             N = self.phi[i, :]
             N_t = N.T
 
-            int2d_BtB += (1 / 6) * B_t @ B * (det_jacs * self.wps[i])
-            int2d_NtN += (1 / 6) * N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
 
         # # shape functions
         # N = self.phi
@@ -396,8 +262,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         # B = inv_jacs @ self.dphi
         # B_t = np.transpose(B, axes=(0, 2, 1))
 
-        # int2d_BtB = (1 / 6) * B_t @ B * (det_jacs * self.wps) * self.nint
-        # int2d_NtN = (1 / 6) * N_t @ N * (det_jacs * self.wps)
+        # int2d_BtB = B_t @ B * (det_jacs * self.wps) * self.nint
+        # int2d_NtN = N_t @ N * (det_jacs * self.wps)
 
         return int2d_BtB, int2d_NtN
 
@@ -480,8 +346,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
         JAC = dphi @ coords
 
         # inverse of Jacobian matrix
-        _, invJAC = get_detJAC_and_invJAC(JAC)
-        
+        _, invJAC = self.get_detJAC_and_invJAC(JAC)
+
         # derivative of shape functions
         B = invJAC @ dphi
 
@@ -523,7 +389,7 @@ class ACT_TETRAHEDRON_4C(Element3D):
     #     ie = self.connectivity[el_index, 1:]
     #     JAC = self.dphi @ self.nodal_coordinates[ie, 1:4]
 
-    #     detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+    #     detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
     #     dphi_t = invJAC @ self.dphi
 
     #     B = np.zeros((3, self.DOF_PER_ELEMENT), dtype=float)
@@ -537,8 +403,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
     #     # integration loop
     #     Ke, Me = 0, 0
     #     for i in range(self.nint):
-    #         Ke += (1 / 6) * B.T @ B * (detJAC * self.wps)
-    #         Me += (1 / 6) * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
+    #         Ke += B.T @ B * (detJAC * self.wps)
+    #         Me += N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps)
 
     #     return Ke, Me
 
