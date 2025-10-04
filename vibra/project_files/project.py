@@ -5,6 +5,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+
 from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
@@ -205,16 +206,29 @@ class Project(QObject):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
+
+        if self.model.stop_processing:
+            return
+
         t0 = time()
         self.acoustic_modal_solver.solve()
         dt = time() - t0
-        print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
+
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+
+        if self.model.stop_processing:
+            return
+
+        t0 = time()
         self.structural_modal_solver.solve()
+        dt = time() - t0
+        print(f"Elapsed time to solve structural modal analysis: {dt : .6f} [s]")
+
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
@@ -224,10 +238,15 @@ class Project(QObject):
         self.model.process_viscous_thermal_model_properties(self.model.frequencies)
         self.model.process_perforated_plate_impedance(self.model.frequencies)
         self.acoustic_assembler.process_assemble()
+
+        if self.model.stop_processing:
+            return
+
         t0 = time()
         self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
         dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
+
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
@@ -238,15 +257,16 @@ class Project(QObject):
 
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+        if self.model.stop_processing:
+            return
 
-        t0 = time()   
+        t0 = time()
         if analysis_method == "direct":
             self.structural_harmonic_solver.solve_direct()
         else:
             self.structural_harmonic_solver.solve_mode_superposition(is_proportionally_damped=True)
-        
         dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
 
     def run_analysis(self, is_resume: bool = False):
 
@@ -264,12 +284,16 @@ class Project(QObject):
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
+        interrupt_function = app().project.model.toggle_processing_callback
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             if checker.check_structural_harmonic_analysis():
                 return True
 
-            LoadingWindow(analysis.process_structural_harmonic_analysis).run()
+            LoadingWindow(
+                analysis.process_structural_harmonic_analysis,
+                interrupt_function,
+            ).run()
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             if checker.check_structural_modal_analysis():
@@ -280,8 +304,10 @@ class Project(QObject):
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
-
-            LoadingWindow(lambda: analysis.process_acoustic_harmonic_analysis(is_resume)).run()
+            LoadingWindow(
+                analysis.process_acoustic_harmonic_analysis,
+                interrupt_function,    
+            ).run(is_resume)
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():

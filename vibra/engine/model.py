@@ -1,5 +1,4 @@
-from typing import Optional, Callable
-
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.engine.mesher.element_type import (
 TETRAHEDRON_4,
 TETRAHEDRON_10,
@@ -27,6 +26,7 @@ from vibra.engine.elements.elements_2d import (
     ACT_TRIANGLE_3,
     ACT_TRIANGLE_6,
     ACT_QUADRANGLE_4,
+    ACT_QUADRANGLE_8,
 
     # 2D elements - structural
     STRUCT_TRIANGLE_3
@@ -49,9 +49,11 @@ import logging
 import numpy as np
 
 from copy import deepcopy
+from pathlib import Path
+from typing import Optional, Callable
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
+warning_title = "Warning"
 
 
 class ModelStatus:
@@ -69,6 +71,7 @@ class Model:
 
         self.mesh = None
         self.mesh_setup = None
+        self.stop_processing = False
         self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
@@ -112,6 +115,21 @@ class Model:
 
     def set_geometry_path(self, path : str):
         self.geometry_path = path
+
+    def check_path_for_geometry_file(self, path: Path | str):
+        """
+        This method returns True if a CAD extension file is detected 
+        in the input path, otherwise, it returns False.
+        """
+
+        if isinstance(path, Path):
+            path = str(path)
+
+        ext = path.split(".")[-1]
+        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
+            return True
+
+        return False
 
     def set_properties(self, properties):
         self.properties = properties
@@ -162,7 +180,7 @@ class Model:
             print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return -1       
 
     def process_mesh_data(self, path : str):
@@ -182,7 +200,7 @@ class Model:
             print_exception(error_log)
             title = "Error while processing geometry"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return -1
 
     def process_mesh(self):
@@ -300,10 +318,10 @@ class Model:
             return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), None
+            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
         elif element_type == HEXAHEDRON_20:
-            return ACT_HEXAHEDRON_20C(self), None, None
+            return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -396,11 +414,7 @@ class Model:
     def get_fluid_properties_from_surface(self, surface_id: int, frequencies: np.ndarray):
         """
         """
-
         fluid = None
-        density = None
-        speed_of_sound = None
-
         volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
@@ -438,10 +452,42 @@ class Model:
                 fluid = fluids[0]
 
         if isinstance(fluid, Fluid):
-            density = fluid.fluid_density
-            speed_of_sound = fluid.speed_of_sound
+            proportional_damping = self.properties._get_property("proportional_damping", volume=volumes_from_surface[0])
+            density = self.properties.get_fluid_density(fluid, proportional_damping)
+            speed_of_sound = self.properties.get_speed_of_sound(fluid, proportional_damping)
+            return density, speed_of_sound
 
-        return density, speed_of_sound
+        return None, None
+
+    def get_fluid_properties_from_volume(self, volume_id: int, frequencies: np.ndarray):
+        """
+        """
+        for key in self.properties.volume_properties.keys():
+            property, vol_id = key
+            if vol_id == volume_id:
+                if property == "viscous_thermal_model":
+                    vt_model = ViscousThermalLossModels(self)
+                    vt_model.process_effective_properties(frequencies)
+                    density = vt_model.effective_properties[volume_id]["rho_eff"]
+                    speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
+                    return density, speed_of_sound
+
+                elif property == "porous_material_model":
+                    pm_model = PorousMaterialModels(self)
+                    pm_model.process_effective_properties(frequencies)
+                    density = pm_model.effective_properties[volume_id]["rho_eff"]
+                    speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
+                    return density, speed_of_sound
+                
+        fluid = self.properties._get_property("fluid", volume=volume_id)
+        proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
+
+        if isinstance(fluid, Fluid):
+            density = self.properties.get_fluid_density(fluid, proportional_damping)
+            speed_of_sound = self.properties.get_speed_of_sound(fluid, proportional_damping)
+            return density, speed_of_sound
+
+        return None, None
 
     def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
         """
@@ -737,3 +783,6 @@ class Model:
     def process_degrees_of_freedom_decoupling(self):
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
+
+    def toggle_processing_callback(self):
+        self.stop_processing = not self.stop_processing

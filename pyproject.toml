@@ -22,7 +22,7 @@ dependencies = [
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
     "molde (>=0.1.16,<0.2.0)",
-    "pyside6 (>=6.9.0,<7.0.0)",
+    "pyside6 (==6.9.2)",
 ]
 
 

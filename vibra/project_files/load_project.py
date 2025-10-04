@@ -286,13 +286,14 @@ class LoadProject:
     def load_mesh_data(self):
 
         mesh_data = self.file.read_mesh_data_from_file()
-        if mesh_data:
-            self.load_mesh_data_from_file(mesh_data)
+        if not mesh_data:
+            return
 
-        # else:
-        #     app().project.generate_mesh()
-        #     app().file.write_mesh_data_in_file()
-        #     app().file.app().file.write_geometry_data_in_file()
+        self.load_mesh_data_from_file(mesh_data)
+
+        geometry_path = self.file.read_geometry_from_file()
+        if not self.model.check_path_for_geometry_file(geometry_path):
+            self.model.mesh.update_element_type()
 
     def update_render(self):
 

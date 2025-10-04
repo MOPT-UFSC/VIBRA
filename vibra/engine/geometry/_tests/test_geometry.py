@@ -1,5 +1,6 @@
-from data.data_test_helper import get_data_path
+from validation_files.data.data_test_helper import get_data_path
 
+from vibra import PROJECT_DIR
 from vibra.engine.geometry.geometry import Geometry
 import numpy as np
 import pytest
@@ -7,7 +8,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def geometry() -> Geometry:
-    path = get_data_path("examples/geometry_files/cylinder.step")
+    path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
     return Geometry(path)
 
 

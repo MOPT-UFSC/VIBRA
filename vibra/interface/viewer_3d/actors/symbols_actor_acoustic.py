@@ -114,6 +114,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         return node
     
     def _build_nodal_normals(self):
+        if not app().main_window.visualization_filter.normal_symbols:
+            return
+
         mesh = app().project.model.mesh
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
@@ -197,9 +200,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(sources.create_dissipation_model_source, coords, normal, color=color_names.BLUE)
 
-    def _build_viscous_thermal_loss_model(
-        self, surface_id: int = -1, *args, **kwargs
-    ):
+    def _build_viscous_thermal_loss_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 

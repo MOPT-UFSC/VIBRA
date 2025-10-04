@@ -5,6 +5,7 @@ from vibra.project_files.project_file import ProjectFile
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+
 from vibra.engine.solvers import ModalSolver
 
 import logging
@@ -18,7 +19,6 @@ class HarmonicSolver:
         self.assembler = assembler
         self.project_file = project_file
         self.reset_variables()
-
 
     def reset_variables(self):
         self.solution = None
@@ -84,6 +84,11 @@ class HarmonicSolver:
         
         # compute the solution for each frequency step
         for i, freq in enumerate(frequencies):
+
+            if self.assembler.model.stop_processing:
+                self.reset_variables()
+                return True
+
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
             if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
@@ -108,9 +113,12 @@ class HarmonicSolver:
     def solve_mode_superposition(self, print_log: bool = False, is_resume: bool = False, is_proportionally_damped: bool = False):
         logging.info(f"Solving harmonic analysis (mode superposition method)... [10/100]")
         solution = self._get_solution_handler(is_resume)
-        
+
+        t0 = time()        
         modal_solver = ModalSolver(self.assembler)
         natural_frequencies, modes = modal_solver.solve(full_solution=False)
+        dt = time() - t0
+        print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
 
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(solution, modes, natural_frequencies, print_log, is_resume)
