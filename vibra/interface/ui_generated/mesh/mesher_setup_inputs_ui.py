@@ -59,7 +59,7 @@ class Ui_Dialog(object):
 
         self.label_20 = QLabel(self.frame_element_formulation)
         self.label_20.setObjectName(u"label_20")
-        self.label_20.setMinimumSize(QSize(0, 20))
+        self.label_20.setMinimumSize(QSize(180, 20))
         self.label_20.setMaximumSize(QSize(240, 16777215))
         self.label_20.setFont(font)
         self.label_20.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -89,7 +89,7 @@ class Ui_Dialog(object):
 
         self.label_16 = QLabel(self.frame_element_formulation)
         self.label_16.setObjectName(u"label_16")
-        self.label_16.setMinimumSize(QSize(0, 20))
+        self.label_16.setMinimumSize(QSize(180, 20))
         self.label_16.setMaximumSize(QSize(240, 16777215))
         self.label_16.setFont(font)
         self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -106,7 +106,7 @@ class Ui_Dialog(object):
 
         self.label_10 = QLabel(self.frame_element_formulation)
         self.label_10.setObjectName(u"label_10")
-        self.label_10.setMinimumSize(QSize(0, 20))
+        self.label_10.setMinimumSize(QSize(180, 20))
         self.label_10.setMaximumSize(QSize(240, 16777215))
         self.label_10.setFont(font)
         self.label_10.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -125,7 +125,7 @@ class Ui_Dialog(object):
 
         self.label_19 = QLabel(self.frame_element_formulation)
         self.label_19.setObjectName(u"label_19")
-        self.label_19.setMinimumSize(QSize(0, 20))
+        self.label_19.setMinimumSize(QSize(180, 20))
         self.label_19.setMaximumSize(QSize(240, 16777215))
         self.label_19.setFont(font)
         self.label_19.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -222,7 +222,7 @@ class Ui_Dialog(object):
 
         self.label_3 = QLabel(self.frame_6)
         self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(120, 20))
+        self.label_3.setMinimumSize(QSize(140, 20))
         self.label_3.setMaximumSize(QSize(240, 16777215))
         self.label_3.setFont(font)
         self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -247,7 +247,7 @@ class Ui_Dialog(object):
 
         self.label_9 = QLabel(self.frame_6)
         self.label_9.setObjectName(u"label_9")
-        self.label_9.setMinimumSize(QSize(120, 20))
+        self.label_9.setMinimumSize(QSize(140, 20))
         self.label_9.setMaximumSize(QSize(240, 16777215))
         self.label_9.setFont(font)
         self.label_9.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -272,7 +272,7 @@ class Ui_Dialog(object):
 
         self.label_17 = QLabel(self.frame_6)
         self.label_17.setObjectName(u"label_17")
-        self.label_17.setMinimumSize(QSize(120, 20))
+        self.label_17.setMinimumSize(QSize(140, 20))
         self.label_17.setMaximumSize(QSize(240, 16777215))
         self.label_17.setFont(font)
         self.label_17.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -291,7 +291,7 @@ class Ui_Dialog(object):
 
         self.label_2 = QLabel(self.frame_6)
         self.label_2.setObjectName(u"label_2")
-        self.label_2.setMinimumSize(QSize(120, 20))
+        self.label_2.setMinimumSize(QSize(140, 20))
         self.label_2.setMaximumSize(QSize(240, 16777215))
         self.label_2.setFont(font)
         self.label_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -340,7 +340,7 @@ class Ui_Dialog(object):
 
         self.label_11 = QLabel(self.frame_9)
         self.label_11.setObjectName(u"label_11")
-        self.label_11.setMinimumSize(QSize(160, 20))
+        self.label_11.setMinimumSize(QSize(210, 20))
         self.label_11.setMaximumSize(QSize(300, 16777215))
         self.label_11.setFont(font)
         self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -349,7 +349,7 @@ class Ui_Dialog(object):
 
         self.label_15 = QLabel(self.frame_9)
         self.label_15.setObjectName(u"label_15")
-        self.label_15.setMinimumSize(QSize(160, 20))
+        self.label_15.setMinimumSize(QSize(210, 20))
         self.label_15.setMaximumSize(QSize(300, 16777215))
         self.label_15.setFont(font)
         self.label_15.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -358,7 +358,7 @@ class Ui_Dialog(object):
 
         self.label_12 = QLabel(self.frame_9)
         self.label_12.setObjectName(u"label_12")
-        self.label_12.setMinimumSize(QSize(160, 20))
+        self.label_12.setMinimumSize(QSize(210, 20))
         self.label_12.setMaximumSize(QSize(300, 16777215))
         self.label_12.setFont(font)
         self.label_12.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -367,7 +367,7 @@ class Ui_Dialog(object):
 
         self.label_6 = QLabel(self.frame_9)
         self.label_6.setObjectName(u"label_6")
-        self.label_6.setMinimumSize(QSize(160, 20))
+        self.label_6.setMinimumSize(QSize(210, 20))
         self.label_6.setMaximumSize(QSize(300, 16777215))
         self.label_6.setFont(font)
         self.label_6.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -386,7 +386,7 @@ class Ui_Dialog(object):
 
         self.label_13 = QLabel(self.frame_9)
         self.label_13.setObjectName(u"label_13")
-        self.label_13.setMinimumSize(QSize(160, 20))
+        self.label_13.setMinimumSize(QSize(210, 20))
         self.label_13.setMaximumSize(QSize(300, 16777215))
         self.label_13.setFont(font)
         self.label_13.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -416,7 +416,7 @@ class Ui_Dialog(object):
 
         self.label_14 = QLabel(self.frame_9)
         self.label_14.setObjectName(u"label_14")
-        self.label_14.setMinimumSize(QSize(160, 20))
+        self.label_14.setMinimumSize(QSize(210, 20))
         self.label_14.setMaximumSize(QSize(300, 16777215))
         self.label_14.setFont(font)
         self.label_14.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
@@ -517,7 +517,8 @@ class Ui_Dialog(object):
 
         self.label_7 = QLabel(self.frame_13)
         self.label_7.setObjectName(u"label_7")
-        self.label_7.setMinimumSize(QSize(0, 20))
+        self.label_7.setMinimumSize(QSize(160, 20))
+        self.label_7.setMaximumSize(QSize(16777215, 160))
         self.label_7.setFont(font)
         self.label_7.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
@@ -546,7 +547,8 @@ class Ui_Dialog(object):
 
         self.label_selected_ids = QLabel(self.frame_13)
         self.label_selected_ids.setObjectName(u"label_selected_ids")
-        self.label_selected_ids.setMinimumSize(QSize(0, 20))
+        self.label_selected_ids.setMinimumSize(QSize(160, 20))
+        self.label_selected_ids.setMaximumSize(QSize(16777215, 160))
         self.label_selected_ids.setFont(font)
         self.label_selected_ids.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
@@ -604,7 +606,7 @@ class Ui_Dialog(object):
         self.pushButton_plot_histogram.setObjectName(u"pushButton_plot_histogram")
         self.pushButton_plot_histogram.setEnabled(True)
         self.pushButton_plot_histogram.setMinimumSize(QSize(140, 30))
-        self.pushButton_plot_histogram.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_plot_histogram.setMaximumSize(QSize(150, 16777215))
         self.pushButton_plot_histogram.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_plot_histogram, 0, 0, 1, 1)
@@ -613,7 +615,7 @@ class Ui_Dialog(object):
         self.pushButton_show_bad_elements.setObjectName(u"pushButton_show_bad_elements")
         self.pushButton_show_bad_elements.setEnabled(True)
         self.pushButton_show_bad_elements.setMinimumSize(QSize(140, 30))
-        self.pushButton_show_bad_elements.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_show_bad_elements.setMaximumSize(QSize(150, 16777215))
         self.pushButton_show_bad_elements.setAutoDefault(False)
 
         self.gridLayout_15.addWidget(self.pushButton_show_bad_elements, 0, 1, 1, 1)

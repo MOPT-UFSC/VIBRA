@@ -112,7 +112,7 @@
           <widget class="QLabel" name="label_20">
            <property name="minimumSize">
             <size>
-             <width>0</width>
+             <width>180</width>
              <height>20</height>
             </size>
            </property>
@@ -207,7 +207,7 @@
           <widget class="QLabel" name="label_16">
            <property name="minimumSize">
             <size>
-             <width>0</width>
+             <width>180</width>
              <height>20</height>
             </size>
            </property>
@@ -260,7 +260,7 @@
           <widget class="QLabel" name="label_10">
            <property name="minimumSize">
             <size>
-             <width>0</width>
+             <width>180</width>
              <height>20</height>
             </size>
            </property>
@@ -318,7 +318,7 @@
           <widget class="QLabel" name="label_19">
            <property name="minimumSize">
             <size>
-             <width>0</width>
+             <width>180</width>
              <height>20</height>
             </size>
            </property>
@@ -574,7 +574,7 @@
                      <widget class="QLabel" name="label_3">
                       <property name="minimumSize">
                        <size>
-                        <width>120</width>
+                        <width>140</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -649,7 +649,7 @@
                      <widget class="QLabel" name="label_9">
                       <property name="minimumSize">
                        <size>
-                        <width>120</width>
+                        <width>140</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -726,7 +726,7 @@
                      <widget class="QLabel" name="label_17">
                       <property name="minimumSize">
                        <size>
-                        <width>120</width>
+                        <width>140</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -776,7 +776,7 @@
                      <widget class="QLabel" name="label_2">
                       <property name="minimumSize">
                        <size>
-                        <width>120</width>
+                        <width>140</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -923,7 +923,7 @@
                      <widget class="QLabel" name="label_11">
                       <property name="minimumSize">
                        <size>
-                        <width>160</width>
+                        <width>210</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -950,7 +950,7 @@
                      <widget class="QLabel" name="label_15">
                       <property name="minimumSize">
                        <size>
-                        <width>160</width>
+                        <width>210</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -977,7 +977,7 @@
                      <widget class="QLabel" name="label_12">
                       <property name="minimumSize">
                        <size>
-                        <width>160</width>
+                        <width>210</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -1004,7 +1004,7 @@
                      <widget class="QLabel" name="label_6">
                       <property name="minimumSize">
                        <size>
-                        <width>160</width>
+                        <width>210</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -1062,7 +1062,7 @@
                      <widget class="QLabel" name="label_13">
                       <property name="minimumSize">
                        <size>
-                        <width>160</width>
+                        <width>210</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -1159,7 +1159,7 @@
                      <widget class="QLabel" name="label_14">
                       <property name="minimumSize">
                        <size>
-                        <width>160</width>
+                        <width>210</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -1435,8 +1435,14 @@
                  <widget class="QLabel" name="label_7">
                   <property name="minimumSize">
                    <size>
-                    <width>0</width>
+                    <width>160</width>
                     <height>20</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>160</height>
                    </size>
                   </property>
                   <property name="font">
@@ -1513,8 +1519,14 @@
                  <widget class="QLabel" name="label_selected_ids">
                   <property name="minimumSize">
                    <size>
-                    <width>0</width>
+                    <width>160</width>
                     <height>20</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>160</height>
                    </size>
                   </property>
                   <property name="font">
@@ -1646,7 +1658,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>140</width>
+                    <width>150</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -1671,7 +1683,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>140</width>
+                    <width>150</width>
                     <height>16777215</height>
                    </size>
                   </property>
