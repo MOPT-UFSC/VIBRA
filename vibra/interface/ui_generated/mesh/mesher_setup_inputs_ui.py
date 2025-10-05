@@ -17,18 +17,19 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox,
     QFrame, QGridLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QSizePolicy, QSpacerItem,
-    QTabWidget, QTableWidget, QTableWidgetItem, QWidget)
+    QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+    QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
+    QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(554, 558)
+        Dialog.resize(596, 603)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setVerticalSpacing(4)
-        self.gridLayout.setContentsMargins(4, 4, 4, 2)
+        self.gridLayout.setContentsMargins(4, 4, 4, 4)
         self.frame_main = QFrame(Dialog)
         self.frame_main.setObjectName(u"frame_main")
         self.frame_main.setFrameShape(QFrame.Box)
@@ -154,13 +155,14 @@ class Ui_Dialog(object):
         self.tab_global_settings.setObjectName(u"tab_global_settings")
         self.gridLayout_9 = QGridLayout(self.tab_global_settings)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.gridLayout_9.setContentsMargins(6, 6, 6, 6)
         self.tabWidget_global_settings = QTabWidget(self.tab_global_settings)
         self.tabWidget_global_settings.setObjectName(u"tabWidget_global_settings")
-        self.tab_3 = QWidget()
-        self.tab_3.setObjectName(u"tab_3")
-        self.gridLayout_6 = QGridLayout(self.tab_3)
+        self.tab_main = QWidget()
+        self.tab_main.setObjectName(u"tab_main")
+        self.gridLayout_6 = QGridLayout(self.tab_main)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.frame_6 = QFrame(self.tab_3)
+        self.frame_6 = QFrame(self.tab_main)
         self.frame_6.setObjectName(u"frame_6")
         self.frame_6.setMinimumSize(QSize(0, 62))
         self.frame_6.setMaximumSize(QSize(16777215, 180))
@@ -301,80 +303,31 @@ class Ui_Dialog(object):
 
         self.gridLayout_6.addWidget(self.frame_6, 0, 0, 1, 1)
 
-        self.tabWidget_global_settings.addTab(self.tab_3, "")
-        self.tab_4 = QWidget()
-        self.tab_4.setObjectName(u"tab_4")
-        self.gridLayout_11 = QGridLayout(self.tab_4)
+        self.tabWidget_global_settings.addTab(self.tab_main, "")
+        self.tab_advanced_controls = QWidget()
+        self.tab_advanced_controls.setObjectName(u"tab_advanced_controls")
+        self.gridLayout_11 = QGridLayout(self.tab_advanced_controls)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
-        self.frame_9 = QFrame(self.tab_4)
-        self.frame_9.setObjectName(u"frame_9")
-        self.frame_9.setMinimumSize(QSize(0, 62))
-        self.frame_9.setMaximumSize(QSize(16777215, 300))
-        self.frame_9.setFrameShape(QFrame.NoFrame)
-        self.gridLayout_13 = QGridLayout(self.frame_9)
-        self.gridLayout_13.setObjectName(u"gridLayout_13")
-        self.gridLayout_13.setHorizontalSpacing(6)
-        self.gridLayout_13.setContentsMargins(4, 4, 4, 4)
-        self.comboBox_recombination_algorithm = QComboBox(self.frame_9)
-        self.comboBox_recombination_algorithm.addItem("")
-        self.comboBox_recombination_algorithm.addItem("")
-        self.comboBox_recombination_algorithm.addItem("")
-        self.comboBox_recombination_algorithm.addItem("")
-        self.comboBox_recombination_algorithm.setObjectName(u"comboBox_recombination_algorithm")
-        self.comboBox_recombination_algorithm.setMinimumSize(QSize(200, 28))
-        self.comboBox_recombination_algorithm.setMaximumSize(QSize(200, 16777215))
-        self.comboBox_recombination_algorithm.setFont(font)
-
-        self.gridLayout_13.addWidget(self.comboBox_recombination_algorithm, 3, 2, 1, 1)
-
-        self.comboBox_subdivision_algorithm = QComboBox(self.frame_9)
-        self.comboBox_subdivision_algorithm.addItem("")
-        self.comboBox_subdivision_algorithm.addItem("")
-        self.comboBox_subdivision_algorithm.addItem("")
-        self.comboBox_subdivision_algorithm.setObjectName(u"comboBox_subdivision_algorithm")
-        self.comboBox_subdivision_algorithm.setMinimumSize(QSize(200, 28))
-        self.comboBox_subdivision_algorithm.setMaximumSize(QSize(200, 16777215))
-        self.comboBox_subdivision_algorithm.setFont(font)
-
-        self.gridLayout_13.addWidget(self.comboBox_subdivision_algorithm, 4, 2, 1, 1)
-
-        self.label_11 = QLabel(self.frame_9)
-        self.label_11.setObjectName(u"label_11")
-        self.label_11.setMinimumSize(QSize(210, 20))
-        self.label_11.setMaximumSize(QSize(300, 16777215))
-        self.label_11.setFont(font)
-        self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_11, 1, 1, 1, 1)
-
-        self.label_15 = QLabel(self.frame_9)
+        self.gridLayout_11.setContentsMargins(6, 6, 6, 6)
+        self.scrollArea = QScrollArea(self.tab_advanced_controls)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.NoFrame)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 526, 247))
+        self.gridLayout_17 = QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout_17.setObjectName(u"gridLayout_17")
+        self.label_15 = QLabel(self.scrollAreaWidgetContents)
         self.label_15.setObjectName(u"label_15")
         self.label_15.setMinimumSize(QSize(210, 20))
         self.label_15.setMaximumSize(QSize(300, 16777215))
         self.label_15.setFont(font)
         self.label_15.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_13.addWidget(self.label_15, 6, 1, 1, 1)
+        self.gridLayout_17.addWidget(self.label_15, 5, 1, 1, 1)
 
-        self.label_12 = QLabel(self.frame_9)
-        self.label_12.setObjectName(u"label_12")
-        self.label_12.setMinimumSize(QSize(210, 20))
-        self.label_12.setMaximumSize(QSize(300, 16777215))
-        self.label_12.setFont(font)
-        self.label_12.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_12, 4, 1, 1, 1)
-
-        self.label_6 = QLabel(self.frame_9)
-        self.label_6.setObjectName(u"label_6")
-        self.label_6.setMinimumSize(QSize(210, 20))
-        self.label_6.setMaximumSize(QSize(300, 16777215))
-        self.label_6.setFont(font)
-        self.label_6.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_6, 0, 1, 1, 1)
-
-        self.comboBox_second_order_incomplete = QComboBox(self.frame_9)
+        self.comboBox_second_order_incomplete = QComboBox(self.scrollAreaWidgetContents)
         self.comboBox_second_order_incomplete.addItem("")
         self.comboBox_second_order_incomplete.addItem("")
         self.comboBox_second_order_incomplete.setObjectName(u"comboBox_second_order_incomplete")
@@ -382,48 +335,35 @@ class Ui_Dialog(object):
         self.comboBox_second_order_incomplete.setMaximumSize(QSize(200, 16777215))
         self.comboBox_second_order_incomplete.setFont(font)
 
-        self.gridLayout_13.addWidget(self.comboBox_second_order_incomplete, 6, 2, 1, 1)
+        self.gridLayout_17.addWidget(self.comboBox_second_order_incomplete, 5, 2, 1, 1)
 
-        self.label_13 = QLabel(self.frame_9)
-        self.label_13.setObjectName(u"label_13")
-        self.label_13.setMinimumSize(QSize(210, 20))
-        self.label_13.setMaximumSize(QSize(300, 16777215))
-        self.label_13.setFont(font)
-        self.label_13.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_13.addWidget(self.label_13, 3, 1, 1, 1)
+        self.gridLayout_17.addItem(self.horizontalSpacer_5, 0, 3, 1, 1)
 
-        self.comboBox_3d_algorithm = QComboBox(self.frame_9)
-        self.comboBox_3d_algorithm.addItem("")
-        self.comboBox_3d_algorithm.addItem("")
-        self.comboBox_3d_algorithm.addItem("")
-        self.comboBox_3d_algorithm.setObjectName(u"comboBox_3d_algorithm")
-        self.comboBox_3d_algorithm.setMinimumSize(QSize(200, 28))
-        self.comboBox_3d_algorithm.setMaximumSize(QSize(200, 16777215))
-        self.comboBox_3d_algorithm.setFont(font)
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_13.addWidget(self.comboBox_3d_algorithm, 1, 2, 1, 1)
+        self.gridLayout_17.addItem(self.horizontalSpacer_6, 0, 0, 1, 1)
 
-        self.comboBox_recombine_all = QComboBox(self.frame_9)
-        self.comboBox_recombine_all.addItem("")
-        self.comboBox_recombine_all.addItem("")
-        self.comboBox_recombine_all.setObjectName(u"comboBox_recombine_all")
-        self.comboBox_recombine_all.setMinimumSize(QSize(200, 28))
-        self.comboBox_recombine_all.setMaximumSize(QSize(200, 16777215))
-        self.comboBox_recombine_all.setFont(font)
-
-        self.gridLayout_13.addWidget(self.comboBox_recombine_all, 5, 2, 1, 1)
-
-        self.label_14 = QLabel(self.frame_9)
+        self.label_14 = QLabel(self.scrollAreaWidgetContents)
         self.label_14.setObjectName(u"label_14")
         self.label_14.setMinimumSize(QSize(210, 20))
         self.label_14.setMaximumSize(QSize(300, 16777215))
         self.label_14.setFont(font)
         self.label_14.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_13.addWidget(self.label_14, 5, 1, 1, 1)
+        self.gridLayout_17.addWidget(self.label_14, 4, 1, 1, 1)
 
-        self.comboBox_2d_algorithm = QComboBox(self.frame_9)
+        self.label_6 = QLabel(self.scrollAreaWidgetContents)
+        self.label_6.setObjectName(u"label_6")
+        self.label_6.setMinimumSize(QSize(210, 20))
+        self.label_6.setMaximumSize(QSize(300, 16777215))
+        self.label_6.setFont(font)
+        self.label_6.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_17.addWidget(self.label_6, 0, 1, 1, 1)
+
+        self.comboBox_2d_algorithm = QComboBox(self.scrollAreaWidgetContents)
         self.comboBox_2d_algorithm.addItem("")
         self.comboBox_2d_algorithm.addItem("")
         self.comboBox_2d_algorithm.addItem("")
@@ -435,20 +375,84 @@ class Ui_Dialog(object):
         self.comboBox_2d_algorithm.setMaximumSize(QSize(200, 16777215))
         self.comboBox_2d_algorithm.setFont(font)
 
-        self.gridLayout_13.addWidget(self.comboBox_2d_algorithm, 0, 2, 1, 1)
+        self.gridLayout_17.addWidget(self.comboBox_2d_algorithm, 0, 2, 1, 1)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.comboBox_3d_algorithm = QComboBox(self.scrollAreaWidgetContents)
+        self.comboBox_3d_algorithm.addItem("")
+        self.comboBox_3d_algorithm.addItem("")
+        self.comboBox_3d_algorithm.addItem("")
+        self.comboBox_3d_algorithm.setObjectName(u"comboBox_3d_algorithm")
+        self.comboBox_3d_algorithm.setMinimumSize(QSize(200, 28))
+        self.comboBox_3d_algorithm.setMaximumSize(QSize(200, 16777215))
+        self.comboBox_3d_algorithm.setFont(font)
 
-        self.gridLayout_13.addItem(self.horizontalSpacer_5, 0, 3, 1, 1)
+        self.gridLayout_17.addWidget(self.comboBox_3d_algorithm, 1, 2, 1, 1)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.label_13 = QLabel(self.scrollAreaWidgetContents)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setMinimumSize(QSize(210, 20))
+        self.label_13.setMaximumSize(QSize(300, 16777215))
+        self.label_13.setFont(font)
+        self.label_13.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_13.addItem(self.horizontalSpacer_6, 0, 0, 1, 1)
+        self.gridLayout_17.addWidget(self.label_13, 2, 1, 1, 1)
 
+        self.comboBox_recombine_all = QComboBox(self.scrollAreaWidgetContents)
+        self.comboBox_recombine_all.addItem("")
+        self.comboBox_recombine_all.addItem("")
+        self.comboBox_recombine_all.setObjectName(u"comboBox_recombine_all")
+        self.comboBox_recombine_all.setMinimumSize(QSize(200, 28))
+        self.comboBox_recombine_all.setMaximumSize(QSize(200, 16777215))
+        self.comboBox_recombine_all.setFont(font)
 
-        self.gridLayout_11.addWidget(self.frame_9, 0, 0, 1, 1)
+        self.gridLayout_17.addWidget(self.comboBox_recombine_all, 4, 2, 1, 1)
 
-        self.tabWidget_global_settings.addTab(self.tab_4, "")
+        self.label_11 = QLabel(self.scrollAreaWidgetContents)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMinimumSize(QSize(210, 20))
+        self.label_11.setMaximumSize(QSize(300, 16777215))
+        self.label_11.setFont(font)
+        self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_17.addWidget(self.label_11, 1, 1, 1, 1)
+
+        self.comboBox_recombination_algorithm = QComboBox(self.scrollAreaWidgetContents)
+        self.comboBox_recombination_algorithm.addItem("")
+        self.comboBox_recombination_algorithm.addItem("")
+        self.comboBox_recombination_algorithm.addItem("")
+        self.comboBox_recombination_algorithm.addItem("")
+        self.comboBox_recombination_algorithm.setObjectName(u"comboBox_recombination_algorithm")
+        self.comboBox_recombination_algorithm.setMinimumSize(QSize(200, 28))
+        self.comboBox_recombination_algorithm.setMaximumSize(QSize(200, 16777215))
+        self.comboBox_recombination_algorithm.setFont(font)
+
+        self.gridLayout_17.addWidget(self.comboBox_recombination_algorithm, 2, 2, 1, 1)
+
+        self.label_12 = QLabel(self.scrollAreaWidgetContents)
+        self.label_12.setObjectName(u"label_12")
+        self.label_12.setMinimumSize(QSize(210, 20))
+        self.label_12.setMaximumSize(QSize(300, 16777215))
+        self.label_12.setFont(font)
+        self.label_12.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_17.addWidget(self.label_12, 3, 1, 1, 1)
+
+        self.comboBox_subdivision_algorithm = QComboBox(self.scrollAreaWidgetContents)
+        self.comboBox_subdivision_algorithm.addItem("")
+        self.comboBox_subdivision_algorithm.addItem("")
+        self.comboBox_subdivision_algorithm.addItem("")
+        self.comboBox_subdivision_algorithm.setObjectName(u"comboBox_subdivision_algorithm")
+        self.comboBox_subdivision_algorithm.setMinimumSize(QSize(200, 28))
+        self.comboBox_subdivision_algorithm.setMaximumSize(QSize(200, 16777215))
+        self.comboBox_subdivision_algorithm.setFont(font)
+
+        self.gridLayout_17.addWidget(self.comboBox_subdivision_algorithm, 3, 2, 1, 1)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.gridLayout_11.addWidget(self.scrollArea, 0, 0, 1, 1)
+
+        self.tabWidget_global_settings.addTab(self.tab_advanced_controls, "")
 
         self.gridLayout_9.addWidget(self.tabWidget_global_settings, 0, 0, 1, 1)
 
@@ -727,32 +731,13 @@ class Ui_Dialog(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_syncrhonize.setText("")
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Geometry tolerance:", None))
-        self.tabWidget_global_settings.setTabText(self.tabWidget_global_settings.indexOf(self.tab_3), QCoreApplication.translate("Dialog", u"Main", None))
-        self.comboBox_recombination_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"Simple", None))
-        self.comboBox_recombination_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"Blossom", None))
-        self.comboBox_recombination_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"Simple Full-Quad", None))
-        self.comboBox_recombination_algorithm.setItemText(3, QCoreApplication.translate("Dialog", u"Blossom Full-Quad", None))
-
-        self.comboBox_subdivision_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"None", None))
-        self.comboBox_subdivision_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"All quads", None))
-        self.comboBox_subdivision_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"All hexas", None))
-
-        self.label_11.setText(QCoreApplication.translate("Dialog", u"3D algorithm:", None))
+        self.tabWidget_global_settings.setTabText(self.tabWidget_global_settings.indexOf(self.tab_main), QCoreApplication.translate("Dialog", u"Main", None))
         self.label_15.setText(QCoreApplication.translate("Dialog", u"Second order incomplete", None))
-        self.label_12.setText(QCoreApplication.translate("Dialog", u"Subdivision algorithm:", None))
-        self.label_6.setText(QCoreApplication.translate("Dialog", u"2D algorithm:", None))
         self.comboBox_second_order_incomplete.setItemText(0, QCoreApplication.translate("Dialog", u"No", None))
         self.comboBox_second_order_incomplete.setItemText(1, QCoreApplication.translate("Dialog", u"Yes", None))
 
-        self.label_13.setText(QCoreApplication.translate("Dialog", u"Recombination algorithm:", None))
-        self.comboBox_3d_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"Delaunay", None))
-        self.comboBox_3d_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"Frontal-Delaunay", None))
-        self.comboBox_3d_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"HXT_3D", None))
-
-        self.comboBox_recombine_all.setItemText(0, QCoreApplication.translate("Dialog", u"No", None))
-        self.comboBox_recombine_all.setItemText(1, QCoreApplication.translate("Dialog", u"Yes", None))
-
         self.label_14.setText(QCoreApplication.translate("Dialog", u"Recombine all triangular meshes:", None))
+        self.label_6.setText(QCoreApplication.translate("Dialog", u"2D algorithm:", None))
         self.comboBox_2d_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"MeshAdapt", None))
         self.comboBox_2d_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"Automatic", None))
         self.comboBox_2d_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"Initial Mesh Only", None))
@@ -760,7 +745,26 @@ class Ui_Dialog(object):
         self.comboBox_2d_algorithm.setItemText(4, QCoreApplication.translate("Dialog", u"Frontal-Delaunay", None))
         self.comboBox_2d_algorithm.setItemText(5, QCoreApplication.translate("Dialog", u"Quasi Structured Quads", None))
 
-        self.tabWidget_global_settings.setTabText(self.tabWidget_global_settings.indexOf(self.tab_4), QCoreApplication.translate("Dialog", u"Advanced controls", None))
+        self.comboBox_3d_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"Delaunay", None))
+        self.comboBox_3d_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"Frontal-Delaunay", None))
+        self.comboBox_3d_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"HXT_3D", None))
+
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"Recombination algorithm:", None))
+        self.comboBox_recombine_all.setItemText(0, QCoreApplication.translate("Dialog", u"No", None))
+        self.comboBox_recombine_all.setItemText(1, QCoreApplication.translate("Dialog", u"Yes", None))
+
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"3D algorithm:", None))
+        self.comboBox_recombination_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"Simple", None))
+        self.comboBox_recombination_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"Blossom", None))
+        self.comboBox_recombination_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"Simple Full-Quad", None))
+        self.comboBox_recombination_algorithm.setItemText(3, QCoreApplication.translate("Dialog", u"Blossom Full-Quad", None))
+
+        self.label_12.setText(QCoreApplication.translate("Dialog", u"Subdivision algorithm:", None))
+        self.comboBox_subdivision_algorithm.setItemText(0, QCoreApplication.translate("Dialog", u"None", None))
+        self.comboBox_subdivision_algorithm.setItemText(1, QCoreApplication.translate("Dialog", u"All quads", None))
+        self.comboBox_subdivision_algorithm.setItemText(2, QCoreApplication.translate("Dialog", u"All hexas", None))
+
+        self.tabWidget_global_settings.setTabText(self.tabWidget_global_settings.indexOf(self.tab_advanced_controls), QCoreApplication.translate("Dialog", u"Advanced controls", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_global_settings), QCoreApplication.translate("Dialog", u"Global settings", None))
         ___qtablewidgetitem = self.tableWidget_refining_mesh_data.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Element size [mm]", None));
@@ -818,7 +822,7 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                             - tab_global_settings: QWidget
                                                 - (Layout): QGridLayout
                                                         - tabWidget_global_settings: QTabWidget
-                                                            - tab_3: QWidget
+                                                            - tab_main: QWidget
                                                                 - (Layout): QGridLayout
                                                                         - frame_6: QFrame
                                                                             - (Layout): QGridLayout
@@ -834,22 +838,23 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                                                     - label_17: QLabel
                                                                                     - pushButton_syncrhonize: QPushButton
                                                                                     - label_2: QLabel
-                                                            - tab_4: QWidget
+                                                            - tab_advanced_controls: QWidget
                                                                 - (Layout): QGridLayout
-                                                                        - frame_9: QFrame
-                                                                            - (Layout): QGridLayout
-                                                                                    - comboBox_recombination_algorithm: QComboBox
-                                                                                    - comboBox_subdivision_algorithm: QComboBox
-                                                                                    - label_11: QLabel
-                                                                                    - label_15: QLabel
-                                                                                    - label_12: QLabel
-                                                                                    - label_6: QLabel
-                                                                                    - comboBox_second_order_incomplete: QComboBox
-                                                                                    - label_13: QLabel
-                                                                                    - comboBox_3d_algorithm: QComboBox
-                                                                                    - comboBox_recombine_all: QComboBox
-                                                                                    - label_14: QLabel
-                                                                                    - comboBox_2d_algorithm: QComboBox
+                                                                        - scrollArea: QScrollArea
+                                                                            - scrollAreaWidgetContents: QWidget
+                                                                                - (Layout): QGridLayout
+                                                                                        - label_15: QLabel
+                                                                                        - comboBox_second_order_incomplete: QComboBox
+                                                                                        - label_14: QLabel
+                                                                                        - label_6: QLabel
+                                                                                        - comboBox_2d_algorithm: QComboBox
+                                                                                        - comboBox_3d_algorithm: QComboBox
+                                                                                        - label_13: QLabel
+                                                                                        - comboBox_recombine_all: QComboBox
+                                                                                        - label_11: QLabel
+                                                                                        - comboBox_recombination_algorithm: QComboBox
+                                                                                        - label_12: QLabel
+                                                                                        - comboBox_subdivision_algorithm: QComboBox
                                             - tab_local_refining: QWidget
                                                 - (Layout): QGridLayout
                                                         - tableWidget_refining_mesh_data: QTableWidget
