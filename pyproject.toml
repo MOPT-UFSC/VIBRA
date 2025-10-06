@@ -21,7 +21,7 @@ dependencies = [
     "moviepy (>=1.0.3,<2.0.0)",
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
-    "molde (>=0.1.16,<0.2.0)",
+    "molde @ git+https://github.com/andrefpf/molde.git@update_camera_interactor_style",
     "pyside6 (==6.9.2)",
 ]
 

@@ -3,7 +3,6 @@ from threading import Lock
 from time import time
 
 import numpy as np
-from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
