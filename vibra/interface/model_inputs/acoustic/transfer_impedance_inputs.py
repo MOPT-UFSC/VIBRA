@@ -9,7 +9,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
-
+from vibra.engine.geometry.geometry import Geometry
 from copy import deepcopy
 
 import logging, os, warnings
@@ -29,6 +29,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._initialize()
@@ -355,7 +356,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         title = "Invalid selection detected"
 
         for surface_id in surface_ids:
-            if len(self.mesh.volumes_from_surface[surface_id]) != 2:
+            if len(self.geometry._surfaces_to_solids[surface_id]) != 2:
                 self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
@@ -466,7 +467,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
-        volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+        volumes_from_surface = self.geometry._surfaces_to_solids.get(surface_id)
+        
         if volumes_from_surface is None:
             return 
 
@@ -513,7 +515,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         line_properties = deepcopy(self.properties.line_properties)
         for new_surface_id in new_surface_ids:
-            lines_from_surface = self.mesh.lines_from_surface.get(new_surface_id)
+            lines_from_surface = self.geometry._surfaces_to_curves.get(new_surface_id)
+            
             if lines_from_surface is None:
                 continue
 

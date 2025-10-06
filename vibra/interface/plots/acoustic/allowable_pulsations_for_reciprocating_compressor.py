@@ -5,6 +5,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra.engine import AnalysisID
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
+from vibra.engine.geometry.geometry import Geometry
 
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_reciprocating_compressor_inputs_ui import AllowablePulsationsForReciprocatingCompressorInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -27,6 +28,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
+
         self.properties = app().project.model.properties
 
         self._reset_variables()
@@ -98,7 +101,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         if len(surfaces) == 1:
             surface_id = list(surfaces)[0]
 
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry._surfaces_to_solids.get(surface_id)
             if len(volumes_from_surface) == 1:
                 selected_fluid = self.properties._get_property("fluid", volume=volumes_from_surface[0])
                 self.get_selected_fluid(selected_fluid=selected_fluid)
@@ -397,7 +400,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         if self.check_selected_ids():
             return
 
-        area = self.mesh.area_from_surfaces.get(self.selected_ids[0])
+        area = self.geometry._surfaces_areas.get(self.selected_ids[0])
         diameter = np.sqrt(4 * area / np.pi) * 1000
 
         self.lineEdit_inside_diameter.setText(f"{diameter : .4f}")

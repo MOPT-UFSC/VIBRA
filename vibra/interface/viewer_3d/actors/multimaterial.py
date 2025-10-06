@@ -42,6 +42,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         if self.mesh is None:
             self.mesh = app().project.model.mesh
 
+        self.geometry = app().project.model.geometry
+
         self.extractors: dict[str, vtkExtractCells] = dict()
         self.create_geometry()
 
@@ -111,6 +113,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def reload_composition(self):
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
@@ -128,7 +131,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
 
         for surface in surfaces:
-            volumes = mesh.volumes_from_surface.get(surface, ())
+            volumes = geometry._surfaces_to_solids.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             if surface in app().main_window.hidden_surfaces:
@@ -244,7 +247,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data.SetPoints(points)
             data.SetPolys(cells)
 
-            volumes = self.mesh.volumes_from_surface.get(surface)
+            volumes = self.geometry._surfaces_to_solids.get(surface)
 
             # Every surface have its own plane defining
             # how to project the texture coordinates on it
@@ -417,11 +420,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _surfaces_with_perforated_plate(self):
         # Find both surfaces of a perforated plate
-        mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
         properties = app().project.model.properties
 
         surfaces_with_perforated_plates = set()
-        for surface, _ in mesh.volumes_from_surface.items():
+        for surface, _ in geometry._surfaces_to_solids.items():
             perforated = properties._get_property("perforated_plate_model", surface=surface)
             decoupling = properties._get_property("degrees_of_freedom_decoupling", surface=surface)
             if (perforated is not None) and (decoupling is not None):
