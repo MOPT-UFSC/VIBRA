@@ -27,7 +27,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "degrees_of_freedom_decoupling": self._build_dof_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,
-            "dissipation_model": self._build_dissipation_model,
+            "proportional_damping": self._build_proportional_damping,
             "acoustic_transfer_element_data": self._build_acoustic_transfer_element_data,
             "incident_plane_wave": self._build_incident_plane_wave,
             "mass_source": self._build_mass_source,
@@ -193,7 +193,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(sources.create_acoustic_pressure_source, coords, normal, color=color_names.RED_2)
 
-    def _build_dissipation_model(self, surface_id: int = -1, *args, **kwargs):
+    def _build_proportional_damping(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
