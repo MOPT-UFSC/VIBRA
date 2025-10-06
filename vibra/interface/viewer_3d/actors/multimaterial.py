@@ -68,6 +68,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def clear_colors(self):
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
 
@@ -81,7 +82,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
         for surface in surfaces:
-            volumes = mesh.volumes_from_surface.get(surface, ())
+            volumes = geometry._surfaces_to_solids.get(surface, [])
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
