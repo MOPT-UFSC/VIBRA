@@ -21,7 +21,7 @@ from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTE
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon, paint_pixmap
+from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
@@ -440,7 +440,7 @@ class MainWindow(MainWindow_UI):
     def action_grab_tool_callback(self):
         if self.action_grab_tool.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
-            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"pan_icon.png")
+            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"cursors/pan_cursor.png")
 
             self.add_render_tool_in_render_widgets(GrabTool)
         else:
@@ -454,7 +454,7 @@ class MainWindow(MainWindow_UI):
     def action_rotation_tool_callback(self):
         if self.action_rotation_tool.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_rotation_tool)
-            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"rotation_icon.png")
+            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"cursors/rotation_cursor.png")
 
             self.add_render_tool_in_render_widgets(RotationTool)
         else:
@@ -463,7 +463,7 @@ class MainWindow(MainWindow_UI):
     def action_zoom_in_callback(self):
         if self.action_zoom_in.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_zoom_in)
-            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"zoom_in_icon.png")
+            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"cursors/zoom_cursor.png")
 
             self.add_render_tool_in_render_widgets(ZoomTool)
         else:
@@ -485,7 +485,6 @@ class MainWindow(MainWindow_UI):
                 render.setCursor(Qt.CursorShape.ArrowCursor)
             else:
                 custom_pixmap = custom_pixmap.scaled(QSize(24, 24), Qt.KeepAspectRatio)
-                paint_pixmap(custom_pixmap, QColor("white"))
                 custom_cursor = QCursor(custom_pixmap, hotX=0, hotY=0)
                 render.setCursor(custom_cursor)
     
