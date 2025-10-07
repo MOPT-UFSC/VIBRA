@@ -163,11 +163,11 @@ class Ui_Dialog(object):
 
         self.label.setText(QCoreApplication.translate("Dialog", u"Geometry setup", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_proceed.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><br/></p></body></html>", None))
+        self.pushButton_proceed.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.pushButton_proceed.setText(QCoreApplication.translate("Dialog", u"Proceed", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_exit.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><br/></p></body></html>", None))
+        self.pushButton_exit.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
     # retranslateUi
