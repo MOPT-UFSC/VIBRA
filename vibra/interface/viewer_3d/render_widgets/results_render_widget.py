@@ -238,10 +238,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self.min_value = min_value
                 self.max_value = max_value
 
-        elif analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        elif analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
@@ -416,11 +413,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if  self.frequency_index is None and self.mode_index is None:
             return
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.ACOUSTIC_HARMONIC,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
             text += analysis_info_text(self.frequency_index + 1)
 
         if analysis_id in [
@@ -437,9 +430,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         unit_mapping = {
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD: "m",
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION: "m",
-            AnalysisID.ACOUSTIC_HARMONIC: "Pa",
+            AnalysisID.STRUCTURAL_HARMONIC : "m",
+            AnalysisID.ACOUSTIC_HARMONIC : "Pa",
         }
 
         analysis_id = app().project.analysis_id

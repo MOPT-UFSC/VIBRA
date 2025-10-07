@@ -66,13 +66,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
         app().main_window.set_input_widget(self)
-
         self.mesh = app().project.model.mesh
 
         self._config_window()
         self._initialize()
         self._create_connections()
         self._config_widgets()
+        self.update_combo_boxes_according_to_geometry_info()
         self.update_advanced_gmsh_controls()
         self._load_current_mesh_setup()
 
@@ -563,6 +563,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             return None
             # raise NotImplementedError(f"Element type not defined!")
+
+    def update_combo_boxes_according_to_geometry_info(self):
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        if not volume_exists:
+            self.comboBox_element_type.removeItem(1)
+            self.comboBox_shape_function.removeItem(1)
 
     def update_advanced_gmsh_controls(self):
         element_type = self.get_element_type()

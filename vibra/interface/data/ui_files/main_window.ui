@@ -141,7 +141,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -653,7 +653,7 @@
   <action name="action_import_geometry">
    <property name="icon">
     <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/geometry_icon.png</normaloff>:/icons/geometry_icon.png</iconset>
+     <normaloff>:/icons/import_geometry.png</normaloff>:/icons/import_geometry.png</iconset>
    </property>
    <property name="text">
     <string>Import geometry</string>
@@ -671,7 +671,7 @@
   <action name="action_import_mesh">
    <property name="icon">
     <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/mesh.png</normaloff>:/icons/mesh.png</iconset>
+     <normaloff>:/icons/import_mesh.png</normaloff>:/icons/import_mesh.png</iconset>
    </property>
    <property name="text">
     <string>Import mesh</string>

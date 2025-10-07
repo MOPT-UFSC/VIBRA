@@ -286,13 +286,14 @@ class LoadProject:
     def load_mesh_data(self):
 
         mesh_data = self.file.read_mesh_data_from_file()
-        if mesh_data:
-            self.load_mesh_data_from_file(mesh_data)
+        if not mesh_data:
+            return
 
-        # else:
-        #     app().project.generate_mesh()
-        #     app().file.write_mesh_data_in_file()
-        #     app().file.app().file.write_geometry_data_in_file()
+        self.load_mesh_data_from_file(mesh_data)
+
+        geometry_path = self.file.read_geometry_from_file()
+        if not self.model.check_path_for_geometry_file(geometry_path):
+            self.model.mesh.update_element_type()
 
     def update_render(self):
 
@@ -361,19 +362,11 @@ class LoadProject:
     def load_analysis_setup(self):
 
         analysis_setup = self.file.read_analysis_setup_from_file()
-        if analysis_setup:
 
-            f_min = None
-            if "f_min" in analysis_setup.keys():
-                f_min = analysis_setup["f_min"]
-
-            f_max = None
-            if "f_max" in analysis_setup.keys():
-                f_max = analysis_setup["f_max"]
-
-            f_step = None
-            if "f_step" in analysis_setup.keys():
-                f_step = analysis_setup["f_step"]
+        if isinstance(analysis_setup, dict):
+            f_min = analysis_setup.get("f_min")
+            f_max = analysis_setup.get("f_max")
+            f_step = analysis_setup.get("f_step")
 
             if ([f_min, f_max, f_step]).count(None) == 0:
                 analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)

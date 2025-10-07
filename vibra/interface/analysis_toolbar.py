@@ -6,10 +6,8 @@ from PySide6.QtCore import Qt, QSize, Signal
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
-from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
-from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
+from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 
 from typing import Literal
@@ -221,7 +219,7 @@ class AnalysisToolbar(QToolBar):
 
         if analysis_type == "Harmonic":
             if physical_domain == "Structural":
-                return AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
+                return AnalysisID.STRUCTURAL_HARMONIC
             else:
                 return AnalysisID.ACOUSTIC_HARMONIC
 
@@ -251,7 +249,12 @@ class AnalysisToolbar(QToolBar):
         self.update_analysis_combo_boxes()
         if app().project.run_analysis(is_resume):
             return
-        
+
+        if app().project.model.stop_processing:
+            app().project.model.toggle_processing_callback()
+            app().file.remove_results_data_from_project_file()
+            return
+
         if is_resume:
             app().project.can_resume_solution = False
 
@@ -327,13 +330,7 @@ class AnalysisToolbar(QToolBar):
 
     def harmonic_structural(self):
 
-        select = StructuralHarmonicAnalysisMethodSelecorInput()
-        if select.index == -1:
-            return
- 
-        analysis_setup = {"analysis_id": select.index}
-        self.update_analysis_setup(analysis_setup)
-        harmonic = StructuralHarmonicAnalysisDirectMethodInput()
+        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.STRUCTURAL_HARMONIC)
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -343,9 +340,8 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-        analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.update_analysis_setup(analysis_setup)
-        harmonic = AcousticHarmonicAnalysisDirectMethodInput()
+
+        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.ACOUSTIC_HARMONIC)
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -356,7 +352,7 @@ class AnalysisToolbar(QToolBar):
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
 
-        if modal.modes is None:
+        if modal.modes_number is None:
             return
 
         if modal.setup_defined:
@@ -370,7 +366,7 @@ class AnalysisToolbar(QToolBar):
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
 
-        if modal.modes is None:
+        if modal.modes_number is None:
             return
 
         if modal.setup_defined:
@@ -384,8 +380,9 @@ class AnalysisToolbar(QToolBar):
     def update_analysis_setup(self, analysis_setup: dict):
         if app().project.analysis_setup is not None:
             for key, value in app().project.analysis_setup.items():
-                if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    analysis_setup[key] = value
+                if key in ["analysis_id"]:
+                    continue
+                analysis_setup[key] = value
 
         app().project.set_analysis_setup(analysis_setup)
 
