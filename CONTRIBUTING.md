@@ -28,8 +28,9 @@ You might need to restart your computer.
 The dependencies and environments in this project are managed mainly using Poetry.
 If you do not have poetry installed, you can install it running:
 ```
-pip install poetry
+pip install poetry -U
 ```
+*Note that poetry versions bellow 2.x.x are not supported*
 
 To download and install all dependencies in a local environment run:
 ```
@@ -37,8 +38,10 @@ poetry install
 ```
 This command is also usefull to reinstall the packages if some dependency changed.
 
-When the dependencies are installed in a local virtual environment poetry can run commands
-inside this environment as follows: 
+If you are using vscode, you may want to change the virtual environment to the local `.venv` directory.
+Usually this option is offered in a notification which can be safely accepted.
+
+When the dependencies are installed in a local virtual environment, poetry can run commands inside this environment as follows: 
 ```
 poetry run <you command here>
 ```
