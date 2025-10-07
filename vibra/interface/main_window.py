@@ -9,7 +9,7 @@ import platform
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal, QSize
-from PySide6.QtGui import QAction, QPixmap, QCursor, QColor
+from PySide6.QtGui import QAction, QPixmap, QCursor
 from PySide6.QtWidgets import (
     QAbstractButton,
     QFileDialog,
@@ -40,10 +40,13 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
-from vibra.interface.viewer_3d.render_tools.render_tool import RenderTool
-from vibra.interface.viewer_3d.render_tools.grab_tool import GrabTool
-from vibra.interface.viewer_3d.render_tools.rotation_tool import RotationTool
-from vibra.interface.viewer_3d.render_tools.zoom_tool import ZoomTool
+from vibra.interface.viewer_3d.render_tools import (
+    RenderTool,
+    SelectionTool,
+    RotationTool,
+    GrabTool,
+    ZoomTool
+)
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
@@ -497,7 +500,7 @@ class MainWindow(MainWindow_UI):
     def set_default_render_tool_in_render_widgets(self):
         renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
         for render in renders:
-            render.set_default_render_tool()
+            render.add_render_tool(SelectionTool())
 
     def action_user_preferences_callback(self):
         self.close_dialogs()

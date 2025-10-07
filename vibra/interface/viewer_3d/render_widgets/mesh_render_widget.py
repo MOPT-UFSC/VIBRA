@@ -14,7 +14,6 @@ from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
 from ..selection.mesh_selection import MeshSelection
-from ..render_tools.render_tool import RenderTool
 from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     nodes_info_text,
@@ -375,9 +374,3 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-
-    def add_render_tool(self, tool: RenderTool):
-        self.set_interactor_style(tool)
-    
-    def set_default_render_tool(self):
-        self.set_interactor_style(SelectionTool())

@@ -18,7 +18,6 @@ from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
-from ..render_tools.render_tool import RenderTool
 from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     acoustic_boundary_conditions_info_text,
@@ -464,10 +463,4 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-    
-    def add_render_tool(self, tool: RenderTool):
-        self.set_interactor_style(tool)
-    
-    def set_default_render_tool(self):
-        self.set_interactor_style(SelectionTool())
 

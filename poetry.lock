@@ -881,7 +881,7 @@ vtk = "^9.3.1"
 type = "git"
 url = "https://github.com/andrefpf/molde.git"
 reference = "update_camera_interactor_style"
-resolved_reference = "6f0ba7744446617f02df8c94b213c4ce708d94b8"
+resolved_reference = "dab97eadee231ddc6db62ebd0936593c4ad8c454"
 
 [[package]]
 name = "moviepy"
