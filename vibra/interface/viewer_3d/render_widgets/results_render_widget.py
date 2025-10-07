@@ -314,6 +314,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         section_plane = app().main_window.section_plane
+        self.stop_animation()
 
         if not section_plane.cutting:
             visualization = app().main_window.visualization_filter

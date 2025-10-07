@@ -31,7 +31,7 @@ class AnalysisActor(SolidsActor):
 
         for i, val in enumerate(self.color_table.values_vector):
             color = self.color_table.get_color(val)
-            point_colors.SetTuple(i, color)
+            point_colors.SetTuple(i, color.to_rgba())
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUsePointData()
