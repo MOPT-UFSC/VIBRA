@@ -110,7 +110,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         list_volumes = list()
         for face_id in surface_ids:            
-            for volume_id in self.model.mesh.volumes_from_surface[face_id]:
+            for volume_id in self.model.geometry._surfaces_to_solids[face_id]:
                 if volume_id not in list_volumes:
                     list_volumes.append(volume_id)
 
@@ -145,7 +145,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         for surface_id in surface_ids:
 
-            volume_ids = self.model.mesh.volumes_from_surface[surface_ids[0]]
+            volume_ids = self.model.geometry._surfaces_to_solids[surface_ids[0]]
             if len(surface_ids) > 1 and len(volume_ids) > 1:
                 
                 self.hide()

@@ -594,6 +594,7 @@ class MainWindow(MainWindow_UI):
 
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
 
         if not mesh.are_there_volumes_in_geometry():
             PrintMessageInput(
@@ -610,7 +611,7 @@ class MainWindow(MainWindow_UI):
 
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
-                volumes_to_hide |= set(mesh.volumes_from_surface[surface])
+                volumes_to_hide |= set(geometry._solids_to_surfaces[surface])
 
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:

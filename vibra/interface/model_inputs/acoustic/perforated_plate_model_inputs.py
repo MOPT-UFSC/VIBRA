@@ -14,6 +14,7 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.ui_generated.model.setup.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
 
 from vibra.engine.properties.fluid import Fluid
+from vibra.engine.geometry.geometry import Geometry
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 
 from pathlib import Path
@@ -38,6 +39,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self.model_setup_workspace()
@@ -262,7 +264,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         title = "Invalid selection detected"
 
         for surface_id in surface_ids:
-            if len(self.mesh.volumes_from_surface[surface_id]) != 2:
+            if len(self.geometry._surfaces_to_solids[surface_id]) != 2:
                 self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
@@ -688,7 +690,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
-        volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+        volumes_from_surface = self.geometry._surfaces_to_solids.get(surface_id)
         if volumes_from_surface is None:
             return 
 

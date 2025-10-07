@@ -9,6 +9,8 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 
+from vibra.engine.geometry.geometry import Geometry
+
 import numpy as np
 
 window_title_1 = "Error"
@@ -25,6 +27,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -317,7 +320,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         """
         """
         for surface_id in surface_ids:
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry._surfaces_to_solids.get(surface_id)
             if len(volumes_from_surface) != 1:
                 return True
 

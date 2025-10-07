@@ -447,7 +447,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             PrintMessageInput(error_data)
             return None
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+        volumes_from_surface = self.model.geometry._surfaces_to_solids.get(surface_id)
         if len(volumes_from_surface) != 1:
             self.hide()
             title = "Invalid surface selected"
@@ -740,7 +740,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             flow_label = "out_flow"
             connection_type = "discharge"
 
-        volume_id = self.model.mesh.volumes_from_surface[surface_id]
+        volume_id = self.model.geometry._surfaces_to_solids[surface_id]
+        
 
         compressor_info = { 
                             "temperature_at_suction" : self.T_suction,
