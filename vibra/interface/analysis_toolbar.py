@@ -378,9 +378,11 @@ class AnalysisToolbar(QToolBar):
             self.run_analysis()
 
     def update_analysis_setup(self, analysis_setup: dict):
-        if app().project.analysis_setup is not None:
+
+        keys_to_ignore = list(analysis_setup.keys())
+        if isinstance(app().project.analysis_setup, dict):
             for key, value in app().project.analysis_setup.items():
-                if key in ["analysis_id"]:
+                if key in keys_to_ignore:
                     continue
                 analysis_setup[key] = value
 
