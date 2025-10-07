@@ -180,6 +180,10 @@ class MainWindow(MainWindow_UI):
 
         app().splash.close()
         self.showMaximized()
+        
+        # I have no idea why, but the definition on _config_window is not enough
+        # it need to be redefined here again to appear propperly
+        self.setWindowIcon(self.vibra_icon)
 
         app().processEvents()
 
