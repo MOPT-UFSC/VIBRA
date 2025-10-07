@@ -4,7 +4,7 @@ from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import app
+from vibra import app, ICON_DIR
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -49,9 +49,19 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.remove_all_actors()
         self.create_axes()
+        self.create_logos()
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+
+    def create_logos(self):
+        if hasattr(self, "vibra_logo"):
+            self.renderer.RemoveViewProp(self.vibra_logo)
+
+        path = ICON_DIR / "logo_vibra.png"
+        self.vibra_logo = self.create_logo(path)
+        self.vibra_logo.SetPosition(0.9, 0.9)
+        self.vibra_logo.SetPosition2(0.15, 0.15)
 
     def set_theme(self, *args, **kwargs):
         self.update_theme()

@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
-from vibra import app
+from vibra import app, ICON_DIR
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
@@ -47,10 +47,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.mode_index = None
 
         self.remove_all_actors()
+        self.create_logos()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
+
+    def create_logos(self):
+        if hasattr(self, "vibra_logo"):
+            self.renderer.RemoveViewProp(self.vibra_logo)
+
+        path = ICON_DIR / "logo_vibra.png"
+        self.vibra_logo = self.create_logo(path)
+        self.vibra_logo.SetPosition(0.9, 0.9)
+        self.vibra_logo.SetPosition2(0.15, 0.15)
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
