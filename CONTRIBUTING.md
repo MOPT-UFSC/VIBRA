@@ -143,11 +143,11 @@ To ensure consistency, use colors from [this palette](https://andrefpf.github.io
 from molde.colors import color_names
 
 example_colors = [
-    colornames.RED,
-    GREEN_6,
-    PURPLE_2,
-    PURPLE_9,
-    PINK_4,
+    color_names.RED,
+    color_names.GREEN_6,
+    color_names.PURPLE_2,
+    color_names.PURPLE_9,
+    color_names.PINK_4,
 ]
 ```
 
