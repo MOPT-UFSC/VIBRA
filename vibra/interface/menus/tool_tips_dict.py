@@ -17,8 +17,8 @@ tool_tips["mesh_setup"] = (
 
 tool_tips["degrees_of_freedom_decoupling"] = (
     "This feature disconnects the nodes from connected volumes and modifies the "
-    "connectivity from all geometric entities. Both structural and acoustic "
-    "and degrees of freedom will be increased and decoupled. "
+    "connectivity from all geometric entities. As a consequence, both structural "
+    "and acoustic degrees of freedom will be decoupled."
 )
 
 tool_tips["surface_thickness"] = (
@@ -42,7 +42,7 @@ tool_tips["normal_pressure_load"] = (
     )
 
 tool_tips["acoustic_pressure"] = (
-    "Create a boundary condition that prescribe an acoustic pressure at the boundary of domain."
+    "Create a boundary condition that prescribe an acoustic pressure at the boundary of the domain."
     )
 
 tool_tips["mass_source"] = (
@@ -58,11 +58,11 @@ tool_tips["anechoic_termination"] = (
 )
 
 tool_tips["absorption_surface"] = (
-    "Use this feature to configure an absorption equivalent surface through the sound absorption coefficient."
+    "Set a boundary condition that absorbs, in percentage, the incident sound energy."
     )
 
 tool_tips["specific_impedance"] = (
-    "Define a specific impedance at a boundary in the domain."
+    "Define a specific impedance (real or complex) at a boundary of the domain."
     )
 
 tool_tips["transfer_impedance"] = (
