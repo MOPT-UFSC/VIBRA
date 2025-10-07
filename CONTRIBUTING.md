@@ -16,6 +16,14 @@ git clone https://github.com/MOPT-UFSC/VIBRA.git
 
 # Running from source
 
+## Python
+
+A compatible python version is needed.[Python 3.12 is recommended](https://www.python.org/downloads/release/python-3129/).
+
+If you are using Windows, we highly recommend you to mark the option "Add python.exe to PATH". Otherwise you need to do it manually.
+
+You might need to restart your computer.
+
 ## Poetry
 The dependencies and environments in this project are managed mainly using Poetry.
 If you do not have poetry installed, you can install it running:
