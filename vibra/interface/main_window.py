@@ -146,6 +146,9 @@ class MainWindow(MainWindow_UI):
         self.setWindowTitle("Vibra")
         self.installEventFilter(self)
 
+        # to ensure everything has been processed before proceeding
+        app().processEvents()
+
         # for qdarktheme
         self.custom_colors = {
             "[dark]": {

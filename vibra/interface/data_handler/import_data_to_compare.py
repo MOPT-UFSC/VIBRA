@@ -60,14 +60,10 @@ class ImportDataToCompare(ImportDataToCompare_UI):
 
     def _create_connections(self):
         #
-        self.checkBox_skiprows.clicked.connect(self.update_skiprows_visibility)
-        #
         self.pushButton_add_imported_data_to_plot.clicked.connect(self.add_imported_data_to_plot)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_reset_imported_data.clicked.connect(self.reset_imported_data)
         self.pushButton_search_file_to_import.clicked.connect(self.import_results)
-        #
-        self.update_skiprows_visibility()
 
     def _config_widgets(self):
 
@@ -76,9 +72,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
 
         for i, width in enumerate([180, 180, 60]):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
-
-    def update_skiprows_visibility(self):
-        self.spinBox_skiprows.setDisabled(not self.checkBox_skiprows.isChecked())
 
     def import_results(self):
         extensions = ["xlsx", "xls", "csv", "txt", "dat"]
