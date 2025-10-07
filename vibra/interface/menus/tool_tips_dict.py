@@ -74,8 +74,8 @@ tool_tips["perforated_plate_model"] = (
     "across this component."
     )
 
-tool_tips["propotional_damping"] = (
-    "Configure the proportional damping factors for the acoustic model."
+tool_tips["proportional_damping"] = (
+    "Configure the proportional damping model for the acoustic analyses."
     )
 
 tool_tips["porous_material_model"] = (
