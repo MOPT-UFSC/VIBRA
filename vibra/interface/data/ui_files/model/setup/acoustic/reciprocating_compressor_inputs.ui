@@ -351,8 +351,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>475</width>
-                  <height>1038</height>
+                  <width>465</width>
+                  <height>1064</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_11">
@@ -2971,8 +2971,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>492</width>
-                  <height>549</height>
+                  <width>486</width>
+                  <height>537</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_18">
@@ -4414,7 +4414,7 @@ at suction</string>
                    <bool>false</bool>
                   </property>
                   <property name="status" stdset="0">
-                   <string>danger</string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
