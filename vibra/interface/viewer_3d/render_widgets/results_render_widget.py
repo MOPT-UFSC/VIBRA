@@ -59,7 +59,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         path = ICON_DIR / "logo_vibra.png"
         self.vibra_logo = self.create_logo(path)
-        self.vibra_logo.SetPosition(0.9, 0.9)
+        self.vibra_logo.SetPosition(0.85, 0.85)
         self.vibra_logo.SetPosition2(0.15, 0.15)
 
     def update_theme(self):
