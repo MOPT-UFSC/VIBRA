@@ -58,10 +58,10 @@ class MeshRenderWidget(CommonRenderWidget):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logo_vibra.png"
+        path = ICON_DIR / "logo_vibra_comp.png"
         self.vibra_logo = self.create_logo(path)
-        self.vibra_logo.SetPosition(0.85, 0.85)
-        self.vibra_logo.SetPosition2(0.15, 0.15)
+        self.vibra_logo.SetPosition(0.895, 0.91)
+        self.vibra_logo.SetPosition2(0.10, 0.10)
 
     def set_theme(self, *args, **kwargs):
         self.update_theme()
