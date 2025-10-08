@@ -22,6 +22,7 @@ from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
+from vibra.interface.general.chose_property_to_delete import ChosePropertytoDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
@@ -1001,6 +1002,44 @@ class MainWindow(MainWindow_UI):
 
         return False
     
+    def remove_property(self):
+        # properties = None
+        # if physical_domain == "Structural":
+        #     properties = self.structural_properties_names
+        # else:
+        #     properties = self.acoustic_properties_names
+            
+        # prop_to_remove = list()
+        # for key in self.line_properties.keys():
+        #     if key[1] == line_id and key[0] in properties:
+        #         prop_to_remove.append(key)
+
+        physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
+        for surf_id in self.selected_geometry_surfaces:
+            app().project.model.properties.remove_surface_properties(surf_id, physical_domain)
+        
+        for point_id in self.selected_geometry_lines:
+            app().project.model.properties.remove_line_properties(point_id, physical_domain)
+        
+        for point_id in self.selected_geometry_points:
+            app().project.model.properties.remove_point_properties(point_id, physical_domain)
+
+        buttons_config = {
+                          "left_button_label": "Cancel", 
+                          "right_button_label": "Delete property",
+                          "right_toolTip" : "Delete selected property from the model"
+                          }
+
+        options = ("pri", "seg", "ter")
+        pa = ChosePropertytoDelete("Delele Property", "Choose a property", options=options, buttons_config=buttons_config, window_title="Vibra")
+
+        if pa._confirm:
+            print(pa._property_to_delete)
+        else:
+            print("canceled")
+        
+        self.update_symbols()
+
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
 
@@ -1224,18 +1263,7 @@ class MainWindow(MainWindow_UI):
                 self.section_plane.value_changed.emit()
             
             elif (event.key() == Qt.Key.Key_Delete):
-                physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
-                
-                for surf_id in self.selected_geometry_surfaces:
-                    app().project.model.properties.remove_surface_properties(surf_id, physical_domain)
-                
-                for point_id in self.selected_geometry_lines:
-                    app().project.model.properties.remove_line_properties(point_id, physical_domain)
-                
-                for point_id in self.selected_geometry_points:
-                    app().project.model.properties.remove_point_properties(point_id, physical_domain)
-
-                self.update_symbols()
+                self.remove_property()
         
         return super(MainWindow, self).eventFilter(obj, event)
 
