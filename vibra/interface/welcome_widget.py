@@ -58,7 +58,7 @@ class WelcomeWidget(QWidget):
         if not self.recents_layout.isEmpty():
             self.remove_all_recent_widgets()
             
-        number_of_recent = 5
+        number_of_recent = 7
         recent_paths = app().config.get_recent_files()
         recent_paths = recent_paths[-number_of_recent:]
 
@@ -113,7 +113,7 @@ class WelcomeWidget(QWidget):
 
         # Finds every file that end with ".vibra" in the examples
         # dir and use only the last N of them to show.
-        number_of_examples = 5
+        number_of_examples = 3
         example_paths = (EXAMPLES_DIR / "vibra_files/").glob("*.vibra")
         example_paths = list(example_paths)[:number_of_examples]
 
