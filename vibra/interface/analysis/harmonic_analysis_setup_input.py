@@ -189,17 +189,32 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
 
-            f_min = self.check_inputs(self.lineEdit_fmin, "'minimum frequency'", zero_included=True, _float=True)
+            zero_allowed = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText() == "Structural"
+
+            f_min = self.check_inputs(
+                self.lineEdit_fmin, 
+                "minimum frequency (Freq. min)", 
+                zero_included = zero_allowed, 
+                )
+
             if f_min is None:
                 self.lineEdit_fmin.setFocus()
                 return True
 
-            f_max = self.check_inputs(self.lineEdit_fmax, "'maximum frequency'", _float=True)
+            f_max = self.check_inputs(
+                self.lineEdit_fmax, 
+                "maximum frequency (Freq. max)"
+                )
+
             if f_max is None:
                 self.lineEdit_fmax.setFocus()
                 return True
 
-            f_step = self.check_inputs(self.lineEdit_fstep, "'frequency resolution (df)'", _float=True)
+            f_step = self.check_inputs(
+                self.lineEdit_fstep, 
+                "frequency resolution (Freq. step)"
+                )
+
             if f_step is None:
                 self.lineEdit_fstep.setFocus()
                 return True
@@ -207,12 +222,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             if f_max < f_min + f_step:
                 self.hide()
                 title = "Invalid frequency setup"
-                message = "The maximum frequency (fmax) must be greater than \n"
-                message += "the sum between minimum frequency (fmin) and \n"
-                message += "frequency resolution (df)."
+                message = "The maximum frequency (fmax) must be greater than the sum of "
+                message += "minimum frequency (fmin) and frequency resolution (df)."
                 PrintMessageInput([error_title, title, message])
                 return True
-            
+
             analysis_setup["f_min"] = f_min
             analysis_setup["f_max"] = f_max
             analysis_setup["f_step"] = f_step
@@ -221,17 +235,32 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
 
-            alpha = self.check_inputs(self.lineEdit_mass_multiplier, "mass matrix multiplier (α)", zero_included=True, _float=True)
+            alpha = self.check_inputs(
+                self.lineEdit_mass_multiplier, 
+                "mass matrix multiplier (α)", 
+                zero_included = True
+                )
+
             if alpha is None:
                 self.lineEdit_mass_multiplier.setFocus()
                 return True
 
-            beta = self.check_inputs(self.lineEdit_stiffness_multiplier, "stiffness matrix multiplier (β)", zero_included=True,  _float=True)
+            beta = self.check_inputs(
+                self.lineEdit_stiffness_multiplier, 
+                "stiffness matrix multiplier (β)", 
+                zero_included = True
+                )
+
             if beta is None:
                 self.lineEdit_stiffness_multiplier.setFocus()
                 return True
 
-            eta = self.check_inputs(self.lineEdit_constant_structural_coefficient, "'proportional hysteretic damping (η)'", zero_included=True, _float=True)
+            eta = self.check_inputs(
+                self.lineEdit_constant_structural_coefficient, 
+                "proportional hysteretic damping (η)", 
+                zero_included = True
+                )
+
             if eta is None:
                 self.lineEdit_constant_structural_coefficient.setFocus()
                 return True
@@ -254,42 +283,36 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         return False
 
-    def check_inputs(self, lineEdit, label, only_positive=True, zero_included=False, _float=False):
+    def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included=False):
         message = ""
-        title = "Invalid input to the analysis setup"
         if lineEdit.text() != "":
             try:
-                if _float:
-                    out = float(lineEdit.text())
+                value = float(lineEdit.text())
+                if zero_included:
+                    if value < 0:
+                        message = f"Enter a positive value in the {label} input field. "
                 else:
-                    out = int(lineEdit.text())
-
-                if only_positive:
-                    if zero_included:
-                        if out < 0:
-                            message = f"Insert a positive value to the {label}."
-                            message += "\n\nNote: zero value is allowed."
-                    else:
-                        if out <= 0:
-                            message = f"Insert a positive value to the {label}."
-                            message += "\n\nNote: zero value is not allowed."
+                    if value <= 0:
+                        message = f"Enter a positive value in the {label} input field. "
+                        message += "The zero value is not allowed."
 
             except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
-                message += f"{label} input field.\n\n"
+                message = f"The typed value at the {label} input field is invalid.\n\n"
                 message += str(_err)
 
         else:
             if zero_included:
                 return float(0)
             else:
-                message = f"Insert some value at the {label} input field."
+                message = f"Enter a positive value in the '{label}' input field."
 
         if message != "":
             self.hide()
+            title = "Invalid input to the analysis setup"
             PrintMessageInput([error_title, title, message])
             return None
-        return out
+
+        return value
 
     def run_analysis(self):
         if self.enter_setup_callback():
