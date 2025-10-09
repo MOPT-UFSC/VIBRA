@@ -149,7 +149,7 @@ class Mesh:
         dimension = kwargs.get("dimension", 3)
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
- 
+        # mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
         # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
         # self.element_type: ElementType
 
@@ -816,14 +816,14 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list):
+    def local_mesh_refine(self, global_size: float | int, mesh_refinement_parameters: list):
         fields_list = [1]
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
 
-        for selection_type, local_size, selection_ids in refinement_parameters:
+        for selection_type, local_size, selection_ids in mesh_refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
             if selection_type == "surfaces":
                 gmsh.model.mesh.field.setNumbers(
@@ -845,12 +845,12 @@ class Mesh:
         size_factor = kwargs.get("size_factor", 0.0)
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)
-        refinement_parameters = kwargs.get("refinement_parameters", list())
+        mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
         element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
         element_type: ElementType
 
-        if refinement_parameters:
-            self.local_mesh_refine(maximum_element_size, refinement_parameters)
+        if mesh_refinement_parameters:
+            self.local_mesh_refine(maximum_element_size, mesh_refinement_parameters)
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
