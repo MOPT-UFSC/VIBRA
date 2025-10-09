@@ -878,9 +878,8 @@ class AcousticAssembler:
         self.frequency_dependent = False
         self.fluid_properties_from_volume.clear()
 
-        # we should ignore frequency-varying fluid properties
+        # prevent frequency-varying fluid properties
         # while solving acoustic modal analysis
-        # TODO: print a message informing the user
         analysis_id = self.model.analysis_setup.get("analysis_id")
         is_harmonic = analysis_id == AnalysisID.ACOUSTIC_HARMONIC
 
