@@ -139,7 +139,7 @@ class MainWindow(MainWindow_UI):
         self.splitter.widget(0).setMinimumWidth(360)        
 
     def _config_window(self):
-        self.setMinimumSize(800, 600)
+        self.setMinimumHeight(768)
         self.showMinimized()
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
