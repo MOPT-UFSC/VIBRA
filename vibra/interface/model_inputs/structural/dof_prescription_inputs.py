@@ -11,6 +11,8 @@ from vibra.interface.model_inputs.data_filter.change_frequency_data_handler impo
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.utils import are_there_values_different_from_zero
 
+from vibra.engine.geometry.geometry import Geometry
+
 import numpy as np
 from enum import IntEnum
 from os.path import basename
@@ -49,6 +51,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -830,7 +833,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.geometry._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("prescribed_dof", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("prescribed_dof", surface_id)
@@ -856,7 +859,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         self.properties._remove_line_property("prescribed_dof", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
-                    for surface_id in self.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.geometry._curves_to_surfaces[line_id]:
                         data = self.properties._get_property("prescribed_dof", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dof", surface_id)
@@ -876,7 +879,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         self.properties._remove_line_property("prescribed_dof", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
-                    for surface_id in self.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.geometry._curves_to_surfaces[line_id]:
                         data = self.properties._get_property("prescribed_dof", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dof", surface_id)

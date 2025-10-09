@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 
 from vibra.engine import AnalysisID
+from vibra.engine.geometry.geometry import Geometry
 from vibra import app
 from vibra.interface.ui_generated.plots.structural.structural_frequency_response_inputs_ui import StructuralFrequencyResponseInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -20,6 +21,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
 
         self._config_window()
         self._initialize()
@@ -179,7 +181,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             nodes = self.mesh.get_nodes_from_surface(selected_id)
 
         elif selection_type == "line":           
-            surface_ids = self.mesh.surfaces_from_line[selected_id]
+            surface_ids = self.geometry._curves_to_surfaces[selected_id]
             nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":

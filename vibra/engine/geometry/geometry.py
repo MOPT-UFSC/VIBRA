@@ -14,26 +14,26 @@ class Geometry:
         path: str | Path | None = None,
         length_unit: LengthUnits = "millimeter",
     ):
-        self._solids_to_surfaces = dict()
-        self._surfaces_to_curves = dict()
-        self._curves_to_points = dict()
+        self._solids_to_surfaces = defaultdict()
+        self._surfaces_to_curves = defaultdict()
+        self._curves_to_points = defaultdict()
 
-        self._surfaces_to_solids = dict()
-        self._curves_to_surfaces = dict()
-        self._points_to_curves = dict()
+        self._surfaces_to_solids = defaultdict()
+        self._curves_to_surfaces = defaultdict()
+        self._points_to_curves = defaultdict()
 
-        self._solids_centers = dict()
-        self._surfaces_centers = dict()
-        self._curves_centers = dict()
-        self._points_centers = dict()
+        self._solids_centers = defaultdict()
+        self._surfaces_centers = defaultdict()
+        self._curves_centers = defaultdict()
+        self._points_centers = defaultdict()
 
-        self._surfaces_normals = dict()
-        self._curves_normals = dict()
-        self._points_normals = dict()
+        self._surfaces_normals = defaultdict()
+        self._curves_normals = defaultdict()
+        self._points_normals = defaultdict()
 
-        self._surfaces_areas = dict()
-        self._curves_lengths = dict()
-        self._solids_volumes = dict()
+        self._surfaces_areas = defaultdict()
+        self._curves_lengths = defaultdict()
+        self._solids_volumes = defaultdict()
 
         self._straight_curves = set()
         self._straight_surfaces = set()

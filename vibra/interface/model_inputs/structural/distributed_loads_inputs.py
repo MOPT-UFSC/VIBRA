@@ -10,6 +10,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+from vibra.engine.geometry.geometry import Geometry
 import numpy as np
 from os.path import basename
 from pathlib import Path
@@ -27,6 +28,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -552,7 +554,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                         table_names.extend(self.properties.get_property_related_table_names("distributed_loads", line_id, "lines"))
 
             elif selection == "lines":
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.geometry._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("distributed_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_loads", surface_id)
