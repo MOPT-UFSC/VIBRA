@@ -149,9 +149,6 @@ class Mesh:
         dimension = kwargs.get("dimension", 3)
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
-        # mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
-        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_type: ElementType
 
         if not gmsh.isInitialized():
             gmsh.initialize("", False, interruptible=False)
@@ -187,6 +184,8 @@ class Mesh:
 
         except Exception as error_log:
             print_exception(error_log)
+            gmsh.finalize()
+            return
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
@@ -198,6 +197,8 @@ class Mesh:
         if gmsh_gui:
             if "-nopopup" not in sys.argv:
                 gmsh.fltk.run()
+
+        gmsh.finalize()
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -840,6 +841,7 @@ class Mesh:
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
 
     def _configure_mesh(self, **kwargs):
         size_factor = kwargs.get("size_factor", 0.0)
