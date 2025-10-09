@@ -1,4 +1,5 @@
 
+from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
@@ -877,19 +878,25 @@ class AcousticAssembler:
         self.frequency_dependent = False
         self.fluid_properties_from_volume.clear()
 
+        # we should ignore frequency-varying fluid properties
+        # while solving acoustic modal analysis
+        # TODO: print a message informing the user
+        analysis_id = self.model.analysis_setup.get("analysis_id")
+        is_harmonic = analysis_id == AnalysisID.ACOUSTIC_HARMONIC
+
         for vol_id in self.model.mesh.elements_from_volume.keys():
 
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
             vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
 
-            if isinstance(pm_data, dict):
+            if isinstance(pm_data, dict) and is_harmonic:
                 pm_data = self.model.porous_material_properties.get(vol_id)
                 rho_f = pm_data["rho_eff"]
                 C_f = pm_data["C_eff"]
                 self.frequency_dependent = True
 
-            elif isinstance(vt_data, dict):
+            elif isinstance(vt_data, dict) and is_harmonic:
                 vt_data = self.model.viscous_thermal_model_properties.get(vol_id)
                 rho_f = vt_data["rho_eff"]
                 C_f = vt_data["C_eff"]
