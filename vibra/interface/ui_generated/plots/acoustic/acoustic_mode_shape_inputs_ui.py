@@ -132,7 +132,7 @@ class Ui_Form(object):
         self.lineEdit_natural_frequency.setObjectName(u"lineEdit_natural_frequency")
         self.lineEdit_natural_frequency.setEnabled(False)
         self.lineEdit_natural_frequency.setMinimumSize(QSize(80, 28))
-        self.lineEdit_natural_frequency.setMaximumSize(QSize(120, 28))
+        self.lineEdit_natural_frequency.setMaximumSize(QSize(180, 28))
         self.lineEdit_natural_frequency.setFont(font1)
         self.lineEdit_natural_frequency.setStyleSheet(u"")
         self.lineEdit_natural_frequency.setAlignment(Qt.AlignCenter)
@@ -168,7 +168,7 @@ class Ui_Form(object):
         self.pushButton_plot = QPushButton(self.frame_button)
         self.pushButton_plot.setObjectName(u"pushButton_plot")
         self.pushButton_plot.setMinimumSize(QSize(160, 30))
-        self.pushButton_plot.setMaximumSize(QSize(160, 30))
+        self.pushButton_plot.setMaximumSize(QSize(180, 30))
         self.pushButton_plot.setFont(font1)
         self.pushButton_plot.setStyleSheet(u"")
 
@@ -227,16 +227,16 @@ class Ui_Form(object):
 
         self.gridLayout_5.addWidget(self.frame, 3, 0, 1, 1)
 
-        self.frame_4 = QFrame(self.frame_frequencies)
-        self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(0, 40))
-        self.frame_4.setMaximumSize(QSize(16777215, 40))
-        self.frame_4.setFrameShape(QFrame.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Raised)
-        self.gridLayout_8 = QGridLayout(self.frame_4)
+        self.frame_transparency = QFrame(self.frame_frequencies)
+        self.frame_transparency.setObjectName(u"frame_transparency")
+        self.frame_transparency.setMinimumSize(QSize(0, 40))
+        self.frame_transparency.setMaximumSize(QSize(16777215, 40))
+        self.frame_transparency.setFrameShape(QFrame.NoFrame)
+        self.frame_transparency.setFrameShadow(QFrame.Raised)
+        self.gridLayout_8 = QGridLayout(self.frame_transparency)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.label_3 = QLabel(self.frame_4)
+        self.label_3 = QLabel(self.frame_transparency)
         self.label_3.setObjectName(u"label_3")
         self.label_3.setMinimumSize(QSize(90, 26))
         self.label_3.setMaximumSize(QSize(90, 26))
@@ -245,7 +245,7 @@ class Ui_Form(object):
 
         self.gridLayout_8.addWidget(self.label_3, 0, 1, 1, 1)
 
-        self.slider_transparency = QSlider(self.frame_4)
+        self.slider_transparency = QSlider(self.frame_transparency)
         self.slider_transparency.setObjectName(u"slider_transparency")
         self.slider_transparency.setMinimumSize(QSize(176, 0))
         self.slider_transparency.setMaximumSize(QSize(200, 16777215))
@@ -262,7 +262,7 @@ class Ui_Form(object):
         self.gridLayout_8.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_4, 4, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_transparency, 4, 0, 1, 1)
 
         self.frame_3 = QFrame(self.frame_frequencies)
         self.frame_3.setObjectName(u"frame_3")
@@ -292,18 +292,18 @@ class Ui_Form(object):
 
         self.gridLayout_10.addItem(self.horizontalSpacer_8, 0, 3, 1, 1)
 
-        self.comboBox_color_scale = QComboBox(self.frame_3)
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.setObjectName(u"comboBox_color_scale")
-        self.comboBox_color_scale.setMinimumSize(QSize(176, 26))
-        self.comboBox_color_scale.setMaximumSize(QSize(200, 26))
-        self.comboBox_color_scale.setFont(font3)
+        self.comboBox_plot_type = QComboBox(self.frame_3)
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
+        self.comboBox_plot_type.setMinimumSize(QSize(176, 26))
+        self.comboBox_plot_type.setMaximumSize(QSize(200, 26))
+        self.comboBox_plot_type.setFont(font3)
 
-        self.gridLayout_10.addWidget(self.comboBox_color_scale, 0, 2, 1, 1)
+        self.gridLayout_10.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_3, 5, 0, 1, 1)
@@ -347,12 +347,12 @@ class Ui_Form(object):
 
         self.label_2.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"Transparency:", None))
-        self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Color scale:", None))
-        self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
-        self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
-        self.comboBox_color_scale.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
-        self.comboBox_color_scale.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
-        self.comboBox_color_scale.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
+        self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
+        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
+        self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
     # retranslateUi
 
@@ -383,14 +383,14 @@ class AcousticModeShapeInputs_UI(QWidget, Ui_Form):
                                 - (Layout): QGridLayout
                                         - comboBox_colormaps: QComboBox
                                         - label_2: QLabel
-                            - frame_4: QFrame
+                            - frame_transparency: QFrame
                                 - (Layout): QGridLayout
                                         - label_3: QLabel
                                         - slider_transparency: QSlider
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
                                         - label_color_scalling: QLabel
-                                        - comboBox_color_scale: QComboBox
+                                        - comboBox_plot_type: QComboBox
     """
 
     def __init__(self, *args, **kwargs):

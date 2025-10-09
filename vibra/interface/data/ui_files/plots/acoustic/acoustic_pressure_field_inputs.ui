@@ -328,7 +328,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Color scale:</string>
+            <string>Plot type:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -362,7 +362,7 @@
           </spacer>
          </item>
          <item row="0" column="2">
-          <widget class="QComboBox" name="comboBox_color_scale">
+          <widget class="QComboBox" name="comboBox_plot_type">
            <property name="minimumSize">
             <size>
              <width>176</width>
@@ -548,7 +548,7 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>80</width>
+             <width>180</width>
              <height>28</height>
             </size>
            </property>
@@ -732,7 +732,7 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QFrame" name="frame_5">
+       <widget class="QFrame" name="frame_transparency">
         <property name="minimumSize">
          <size>
           <width>0</width>
