@@ -113,7 +113,7 @@ class WelcomeWidget(QWidget):
 
         # Finds every file that end with ".vibra" in the examples
         # dir and use only the last N of them to show.
-        number_of_examples = 3
+        number_of_examples = 5
         example_paths = (EXAMPLES_DIR / "vibra_files/").glob("*.vibra")
         example_paths = list(example_paths)[:number_of_examples]
 
