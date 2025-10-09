@@ -178,7 +178,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         analysis_setup["analysis_method"] = analysis_method
 
         if analysis_method == "mode_superposition":
-            modes_number = self.check_inputs(self.lineEdit_modes_to_expand, "'modes to expand'")
+            modes_number = self.check_inputs(
+                self.lineEdit_modes_to_expand, 
+                "modes to expand",
+                int_value = True,
+                )
+
             if modes_number is None:
                 self.lineEdit_modes_to_expand.setFocus()
                 return True
@@ -283,11 +288,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         return False
 
-    def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included=False):
+    def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
         message = ""
         if lineEdit.text() != "":
             try:
-                value = float(lineEdit.text())
+                if int_value:
+                    value = int(lineEdit.text())
+                else:
+                    value = float(lineEdit.text())
+
                 if zero_included:
                     if value < 0:
                         message = f"Enter a positive value in the {label} input field. "
