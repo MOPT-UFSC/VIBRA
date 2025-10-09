@@ -208,6 +208,19 @@ class Ui_Form(object):
         self.gridLayout_4.setHorizontalSpacing(6)
         self.gridLayout_4.setVerticalSpacing(0)
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.label_4 = QLabel(self.frame_frequency)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(0, 28))
+        self.label_4.setMaximumSize(QSize(16777215, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        self.label_4.setFont(font3)
+        self.label_4.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
+
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_4.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
@@ -225,20 +238,16 @@ class Ui_Form(object):
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 3, 1, 1)
+        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 4, 1, 1)
 
-        self.label_4 = QLabel(self.frame_frequency)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(0, 28))
-        self.label_4.setMaximumSize(QSize(16777215, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        self.label_4.setFont(font3)
-        self.label_4.setAlignment(Qt.AlignCenter)
+        self.label_5 = QLabel(self.frame_frequency)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMinimumSize(QSize(0, 28))
+        self.label_5.setMaximumSize(QSize(16777215, 28))
+        self.label_5.setFont(font3)
+        self.label_5.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.label_5, 0, 3, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_frequency, 0, 0, 1, 1)
@@ -355,8 +364,9 @@ class Ui_Form(object):
         self.comboBox_colormaps.setItemText(10, QCoreApplication.translate("Form", u" Grayscale", None))
 
         self.label_6.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
-        self.lineEdit_selected_frequency.setText("")
         self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
+        self.lineEdit_selected_frequency.setText("")
+        self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u" Sum", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u" Real Ux", None))
         self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u" Real Uy", None))
@@ -393,8 +403,9 @@ class DisplacementFieldInputs_UI(QWidget, Ui_Form):
                                         - label_6: QLabel
                             - frame_frequency: QFrame
                                 - (Layout): QGridLayout
-                                        - lineEdit_selected_frequency: QLineEdit
                                         - label_4: QLabel
+                                        - lineEdit_selected_frequency: QLineEdit
+                                        - label_5: QLabel
                             - frame_2: QFrame
                                 - (Layout): QGridLayout
                                         - comboBox_plot_type: QComboBox
