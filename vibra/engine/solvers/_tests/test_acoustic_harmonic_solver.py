@@ -42,7 +42,7 @@ def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
     }
 
     acoustic_model.set_analysis_setup(analysis_setup)
-    acoustic_model.process_viscous_thermal_model_properties(frequencies)
+    acoustic_model.process_viscous_thermal_model_properties()
 
     # Direct solver setup and solve
     assembler = AcousticAssembler(acoustic_model)

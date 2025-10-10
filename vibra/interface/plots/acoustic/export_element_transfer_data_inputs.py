@@ -203,7 +203,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
         surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
-        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id)
         if rho is None:
             return None
 

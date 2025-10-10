@@ -87,7 +87,22 @@ class AnalysisRequirementsChecker:
                 PrintMessageInput([error_title, title, message])
                 return True
 
-            return False           
+            return False
+
+    def check_frequency_varying_fluid_properties_for_modal_analysis(self):
+        pm_exists = self.properties.is_the_volume_property_present_in_the_model("porous_material_model")
+        vt_exists = self.properties.is_the_volume_property_present_in_the_model("viscous_thermal_model")
+
+        if pm_exists or vt_exists:
+            title = "Invalid model setup"
+            message = "A frequency-varying fluid property was detected in the acoustic model. The modal "
+            message += "analysis can only be solved for fluid properties that are constant or proportional "
+            message += "to frequency. Consider reconfiguring the acoustic model to proceed with the "
+            message += "acoustic modal analysis solution."
+            PrintMessageInput([error_title, title, message])
+            return True
+
+        return False
 
     def check_acoustic_harmonic_excitations(self):
 
@@ -196,6 +211,9 @@ class AnalysisRequirementsChecker:
     def check_acoustic_modal_analysis(self):
 
         if self.check_fluids():
+            return True
+
+        if self.check_frequency_varying_fluid_properties_for_modal_analysis():
             return True
 
     def check_structural_modal_analysis(self):

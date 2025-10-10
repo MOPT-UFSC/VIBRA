@@ -144,7 +144,7 @@ def load_external_mesh_and_solve():
     model.set_viscous_thermal_model_data(minor_duct_data, volume=4)
     model.set_viscous_thermal_model_data(minor_duct_data, volume=5)
 
-    model.process_viscous_thermal_model_properties(frequencies)
+    model.process_viscous_thermal_model_properties()
 
     assembler = AcousticAssembler(model)
 
