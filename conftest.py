@@ -66,7 +66,6 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
     f_min = 100
     f_max = 300
     frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-    acoustic_model.process_viscous_thermal_model_properties(frequencies)
 
     analysis_setup = {
         "analysis_id": 3,
@@ -77,6 +76,7 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
     }
 
     acoustic_model.set_analysis_setup(analysis_setup)
+    acoustic_model.process_viscous_thermal_model_properties()
 
     return acoustic_model
 

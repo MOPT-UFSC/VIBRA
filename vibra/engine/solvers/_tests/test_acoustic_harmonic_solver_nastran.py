@@ -64,7 +64,6 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     f_min = 100
     f_max = 1400
     frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-    model.process_viscous_thermal_model_properties(frequencies)
 
     analysis_setup = {
         "analysis_id": 3,
@@ -75,6 +74,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     }
 
     model.set_analysis_setup(analysis_setup)
+    model.process_viscous_thermal_model_properties()
 
     return model
 

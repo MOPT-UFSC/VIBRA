@@ -168,7 +168,7 @@ def load_external_mesh_and_solve():
     ## Configure porous material
     # pm_data = get_porous_material_data(model=pm_model)
     # model.properties._set_property("porous_material_model", pm_data, volume=1)
-    # model.process_porous_material_properties(frequencies)
+    # model.process_porous_material_properties()
 
     assembler = AcousticAssembler(model)
 
