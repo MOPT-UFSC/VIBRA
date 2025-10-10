@@ -867,59 +867,6 @@ class AcousticAssembler:
                 self.int2d_NtN, self.int2d_BtB = self.element_2d.stacked_matrices_NtN_and_BtB()
 
 
-    def process_fluid_properties_from_volumes(self):
-        """
-        This method maps the fluid properties against each volume
-        to calculate the global matrices factors.
-        """
-        nf = self.number_frequencies
-        aux_nf = np.ones(nf, dtype=float)
-
-        self.frequency_dependent = False
-        self.fluid_properties_from_volume.clear()
-
-        # prevent frequency-varying fluid properties
-        # while solving acoustic modal analysis
-        analysis_id = self.model.analysis_setup.get("analysis_id")
-        is_harmonic = analysis_id == AnalysisID.ACOUSTIC_HARMONIC
-
-        for vol_id in self.model.mesh.elements_from_volume.keys():
-
-            pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
-            vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
-            fluid = self.properties._get_property("fluid", volume=vol_id)
-
-            if isinstance(pm_data, dict) and is_harmonic:
-                pm_data = self.model.porous_material_properties.get(vol_id)
-                rho_f = pm_data["rho_eff"]
-                C_f = pm_data["C_eff"]
-                self.frequency_dependent = True
-
-            elif isinstance(vt_data, dict) and is_harmonic:
-                vt_data = self.model.viscous_thermal_model_properties.get(vol_id)
-                rho_f = vt_data["rho_eff"]
-                C_f = vt_data["C_eff"]
-                self.frequency_dependent = True
-
-            elif isinstance(fluid, Fluid):
-                proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
-                rho = self.properties.get_fluid_density(fluid, proportional_damping)
-                C = self.properties.get_speed_of_sound(fluid, proportional_damping)
-                rho_f = rho * aux_nf
-                C_f = C * aux_nf
-
-            else:
-                continue
-
-            self.fluid_properties_from_volume[vol_id] = {
-                                                         "rho_f" : rho_f,
-                                                         "C_f" : C_f,
-                                                         "rho_0" : fluid.fluid_density,
-                                                         "C_0" : fluid.speed_of_sound, 
-                                                         "mu_0" : fluid.dynamic_viscosity
-                                                         }
-
-
     def compute_data_to_assemble_global_matrices(self, reorder: bool = True):
         """ 
         This method processes the data required to assemble the global matrices
@@ -947,7 +894,7 @@ class AcousticAssembler:
             return True
 
         logging.info(f"Processing the elementary matrices data... [85/100]")
-        self.process_fluid_properties_from_volumes()
+        self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
 
         logging.info(f"Processing the elementary matrices data... [95/100]")
         self.process_indexes()
@@ -992,7 +939,7 @@ class AcousticAssembler:
             self.int3d_BtB[element_id, :, :] = Ke
             self.int3d_NtN[element_id, :, :] = Me
 
-        self.process_fluid_properties_from_volumes()
+        self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
         self.process_indexes()
 
 
@@ -1776,6 +1723,7 @@ class AcousticAssembler:
         logging.info("Finishing the model building... [98/100]")
         self.mass_flow_vectors = A + B
 
+
     def reinsert_the_prescribed_dof(self, solution: np.ndarray, modal_analysis=False):
         """
         This method reinserts the value of the prescribed degree of freedom in the solution array.
@@ -1806,6 +1754,7 @@ class AcousticAssembler:
                 full_solution[prescribed_indexes, :] = array_prescribed_values[:, 0:cols]
 
         return full_solution
+
 
     def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
         """
