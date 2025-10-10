@@ -13,6 +13,7 @@ from vibra.engine.mesher.element_type import (
 )
 
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
@@ -898,6 +899,31 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.distinguish_mesh_solids(mesh_bad_elements)
         self.bad_elements_showed = True
 
+    def check_unprocessed_mesh_refining(self):
+
+        if self.cache_mesh_refinement_data == self.mesh_refinement_data:
+            return
+
+        self.hide()
+
+        title = "Unprocessed mesh refinement"    
+        message = "The mesh refinement configuration has been modified, but the mesh itself "
+        message += "has not been processed. Would you like to generate the new mesh?"
+
+        buttons_config = {
+                        "left_button_label": "No", 
+                        "right_button_label": "Generate",
+                        }
+
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
+        if read._cancel:
+            return True
+
+        if not read._continue:
+            return True
+
+        self.generate_mesh_callback()
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.generate_mesh_callback()
@@ -908,8 +934,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def closeEvent(self, a0):
         self.keep_window_open = False
-        if self.cache_mesh_refinement_data != self.mesh_refinement_data:
-            self.generate_mesh_callback()
+        self.check_unprocessed_mesh_refining()
 
         if self.bad_elements_showed:
             app().main_window.distinguish_mesh_solids([])
