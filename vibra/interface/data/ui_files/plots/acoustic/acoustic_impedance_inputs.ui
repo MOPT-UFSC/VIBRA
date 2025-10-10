@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Plot specific acoustic impedance</string>
+   <string>Plot the acoustic impedance</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_4">
    <property name="leftMargin">
@@ -92,7 +92,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Plot the specific acoustic impedance</string>
+         <string>Plot the acoustic impedance</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>

@@ -247,20 +247,20 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
         self.model_results = dict()
-        title = "Specific acoustic impedance"
+        title = "Acoustic impedance"
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Specific acoustic impedance at {selection_type} [{selected_id}]"
+            legend_label = f"Acoustic impedance at {selection_type} [{selected_id}]"
 
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
                                         "y_data" : self.get_response(selection_type, selected_id),
                                         "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Specific acoustic impedance",
+                                        "y_label" : "Acoustic impedance",
                                         "title" : title,
-                                        "data_type" : "specific acoustic impedance",
+                                        "data_type" : "acoustic impedance",
                                         "legend" : legend_label,
                                         "unit" : self.unit_label,
                                         "color" : self.get_color(i),
