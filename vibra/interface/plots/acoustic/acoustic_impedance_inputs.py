@@ -49,7 +49,6 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _reset_variables(self):
-        self.unit_label = "Pa/m/s"
         self.keep_window_open = True
         self.exporter = None
         self.plotter = None
@@ -221,7 +220,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
                 volume_id = self.mesh.volumes_from_surface.get(surfaces_from_node[0])[0]
         else:
             volume_id = int(self.comboBox_volumes.currentText())
-
+       
         def function_callback():
 
             if selection_type == "surfaces":
@@ -236,6 +235,19 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
                     volume_id = volume_id,
                     )
 
+            if self.comboBox_normalized_impedance.currentText() == "Enabled":
+
+                if self.project.acoustic_assembler.fluid_properties_from_volume:
+                    prop_data = self.project.acoustic_assembler.fluid_properties_from_volume.get(volume_id)
+                    rho_f = prop_data.get("rho_f")
+                    C_f = prop_data.get("C_f")
+                else:  
+                    frequencies = self.model.frequencies
+                    rho_f, C_f = self.model.get_fluid_properties_from_volume(volume_id, frequencies)
+
+                Z0_f = rho_f * C_f
+                acoustic_impedance /= Z0_f
+
             logging.info("Processing particle velocity... [95/100]")
 
             return acoustic_impedance
@@ -247,22 +259,28 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
         self.model_results = dict()
-        title = "Acoustic impedance"
+
+        if self.comboBox_normalized_impedance.currentText() == "Enabled":
+            plot_type = "Normalized acoustic impedance"
+            unit_label = "--"
+        else:
+            plot_type = "Specific acoustic impedance"
+            unit_label = "Pa/m/s"
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Acoustic impedance at {selection_type} [{selected_id}]"
+            legend_label = f"{plot_type} at {selection_type} [{selected_id}]"
 
             self.model_results[key] = { 
                                         "x_data" : self.frequencies,
                                         "y_data" : self.get_response(selection_type, selected_id),
                                         "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Acoustic impedance",
-                                        "title" : title,
-                                        "data_type" : "acoustic impedance",
+                                        "y_label" : plot_type,
+                                        "title" : plot_type,
+                                        "data_type" : plot_type.lower(),
                                         "legend" : legend_label,
-                                        "unit" : self.unit_label,
+                                        "unit" : unit_label,
                                         "color" : self.get_color(i),
                                         "linestyle" : "-"  
                                       }
