@@ -176,7 +176,7 @@ class AcousticPostprocessing:
             volume_id: int | None = None,
         ):
 
-        frequencies = self.harmonic_solver.assembler.frequencies
+        frequencies = self.harmonic_solver.assembler.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
@@ -219,7 +219,7 @@ class AcousticPostprocessing:
         volume_id: int | None = None,
     ):
 
-        frequencies = self.harmonic_solver.assembler.frequencies
+        frequencies = self.harmonic_solver.assembler.model.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
         rho, speed_of_sound = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id)
