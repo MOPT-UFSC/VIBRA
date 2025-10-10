@@ -1,4 +1,5 @@
 from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt
 
 from vibra.interface.formatters.icons import get_error_icon, get_warning_icon
 from vibra.interface.ui_generated.messages.exception_message_ui import (
@@ -11,6 +12,7 @@ from traceback import format_tb
 class ExceptionMessage(ExceptionMessage_UI):
     def __init__(self, exception: Exception, stack_trace = None):
         super().__init__()
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 
         if isinstance(exception, Warning):
             self.setWindowIcon(get_warning_icon())

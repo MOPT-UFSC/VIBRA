@@ -2,7 +2,7 @@ from typing import Sequence
 
 
 class VibraException(Exception):
-    pass
+    show_traceback: bool = False
 
 
 class MeshException(VibraException):
@@ -56,4 +56,4 @@ class AnalysisCanceledException(VibraException):
 
 
 class MeshingAlgorithmException(MeshException):
-    pass
+    show_traceback = True

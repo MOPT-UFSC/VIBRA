@@ -23,8 +23,10 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
+        Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
         Dialog.resize(313, 240)
         Dialog.setMaximumSize(QSize(600, 600))
+        Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.title_label = QLabel(Dialog)
