@@ -99,7 +99,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         else:
             self.lineEdit_input_selected_id.setStyleSheet("")
 
-        self.current_lineEdit.setStyleSheet("""border-color: rgb(200, 0, 0); border-width: 2px;""")
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(32, 207, 255); border-width: 2px;""")
 
     def alternate_selected_line_edit(self):
         if self.current_lineEdit == self.lineEdit_input_selected_id:
