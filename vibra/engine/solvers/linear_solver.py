@@ -75,7 +75,8 @@ class PardisoLinearSolver(LinearSolver):
         return solver.solve(A, F)
 
     def clear_memory(self):
-        self._solver.free_memory(everything=True)
+        if self._solver is not None:
+            self._solver.free_memory(everything=True)
 
     def get_solver_instance(self, A, f=None):
         if self._solver:

@@ -1,4 +1,4 @@
-from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver, LinearSolver
 
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.project_files.project_file import ProjectFile
@@ -23,6 +23,7 @@ class HarmonicSolver:
     def reset_variables(self):
         self.solution = None
         self.displacement_dof = None
+        self._linear_solver = None
 
     def solve_direct(self, print_log: bool = False, is_resume: bool = False):
         """
@@ -73,14 +74,6 @@ class HarmonicSolver:
     def compute_frequency_sweep(self, solution, print_log, is_resume, modes=None):
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
-
-        # initialize the solver
-        if modes is not None:
-            linear_solver = initialize_solver(SolverType.MODAL_SUPERPOSITION, modes=modes)
-        elif isinstance(self.assembler, StructuralAssembler):
-            linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
-        else:
-            linear_solver = initialize_solver(SolverType.PARDISO)
         
         # compute the solution for each frequency step
         for i, freq in enumerate(frequencies):
@@ -99,7 +92,15 @@ class HarmonicSolver:
 
             A, f = self.assembler.build_harmonic_system(freq, i)
 
+            if freq == 0:
+                # In case of freq=0, the matrix may differ from the non-zero frequencies, so we solve it with
+                # a particular linear solver
+                linear_solver = self._get_linear_solver(modes, True)
+            else:
+                linear_solver = self._get_linear_solver(modes)
+
             solution_freq = linear_solver.solve(A, f)
+
             if isinstance(solution, LazyHDF5MatrixWriter):
                 # reinsert the prescribed degrees of freedom into the solution vector
                 solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
@@ -109,6 +110,23 @@ class HarmonicSolver:
             # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
             del A, f
+
+    def _get_linear_solver(self, modes, new_instance: bool = False) -> LinearSolver:
+        if self._linear_solver is None or new_instance:
+            if modes is not None:
+                linear_solver = initialize_solver(SolverType.MODAL_SUPERPOSITION, modes=modes)
+            elif isinstance(self.assembler, StructuralAssembler):
+                linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+            else:
+                linear_solver = initialize_solver(SolverType.PARDISO)
+
+        if new_instance:
+            return linear_solver
+        elif self._linear_solver is not None:
+            return self._linear_solver
+        else:
+            self._linear_solver = linear_solver
+            return linear_solver
 
     def solve_mode_superposition(self, print_log: bool = False, is_resume: bool = False, is_proportionally_damped: bool = False):
         logging.info(f"Solving harmonic analysis (mode superposition method)... [10/100]")

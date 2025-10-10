@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -9,14 +9,19 @@ from vibra.interface.model_inputs.data_filter.change_frequency_data_handler impo
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-import os
 import numpy as np
 
-from collections import defaultdict
+from enum import IntEnum
 from traceback import print_exception
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+class AssignmentType(IntEnum):
+    NODES = 0
+    POINTS = 1
+    LINES = 2
+    SURFACES = 3
+    VOLUMES = 4
+
+error_title = "Error"
 
 
 class MassSourceInputs(MassSourceInputs_UI):
@@ -154,7 +159,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if self.tabWidget_main.currentIndex() == 3:
             return
-        
+
         if selection_type == "points":
             data = self.model.properties._get_property("mass_source", point=selection_id)
         elif selection_type == "lines":
@@ -179,21 +184,20 @@ class MassSourceInputs(MassSourceInputs_UI):
     def attribution_type_callback(self):
 
         attribution_type = self.comboBox_attribution_type.currentIndex()
-        if attribution_type == 0:
+        if attribution_type == AssignmentType.NODES:
             app().main_window.action_mesh_workspace_callback()
-
         else:
             app().main_window.action_model_workspace_callback()
 
-        if attribution_type in [0, 1]:
+        if attribution_type in [AssignmentType.NODES, AssignmentType.POINTS]:
             self.comboBox_inherit_fluid_from.setEnabled(True)
             self.label_mass_source_unit.setText("[kg/s]")
 
-        elif attribution_type == 2:
+        elif attribution_type == AssignmentType.LINES:
             self.comboBox_inherit_fluid_from.setEnabled(True)
             self.label_mass_source_unit.setText("[kg/m.s]")
 
-        elif attribution_type == 3:
+        elif attribution_type == AssignmentType.SURFACES:
             self.comboBox_inherit_fluid_from.setEnabled(True)
             self.label_mass_source_unit.setText("[kg/m².s]")
 
@@ -266,7 +270,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 message += "between selected entities and the volumes. To univocally assign fluids "
                 message += "for mass source calculation, select groups of entities associated "
                 message += "with the same volume or volume sets."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
 
             return True
 
@@ -375,7 +379,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         if message != "":
             self.hide()
             lineEdit.setFocus()
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
         else:
             return out
@@ -411,12 +415,17 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.set_mesh_selection(nodes=[nearest_node])
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 3:
+
+        self.pushButton_remove.setDisabled(True)
+        tab_list = self.tabWidget_main.currentIndex() == 3
+
+        if tab_list:
             self.comboBox_attribution_type.setDisabled(True)
             app().main_window.clear_selection()
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
+
         else:
             self.comboBox_attribution_type.setEnabled(True)
             self.lineEdit_selection_id.setDisabled(False)
@@ -457,7 +466,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of acoustic pressure."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -469,7 +478,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of acoustic pressure."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -533,7 +542,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one non-zero value to mass source \n"
             message += "input fields before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
@@ -559,14 +568,14 @@ class MassSourceInputs(MassSourceInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum data must "
                 message += "have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
             return imported_file
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None
 
@@ -581,7 +590,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -686,7 +695,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             title = "Additional inputs required"
             message = "You must inform a valid table path to the mass source \n"
             message += "data before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
 
     def process_table_file_removal(self, table_names: list):
@@ -727,33 +736,33 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def remove_callback(self):
 
+        if self.lineEdit_selection_id.text() == "":
+            return
+
+        selection_id = int(self.lineEdit_selection_id.text())
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
-        if self.lineEdit_selection_id.text() != "":
+        if attribution_type == AssignmentType.NODES:
+            self.remove_table_files_from_selection(selection_id, "nodes")
+            self.properties._remove_nodal_property("mass_source", selection_id)
 
-            selection_id = int(self.lineEdit_selection_id.text())
+        elif attribution_type == AssignmentType.POINTS:
+            self.remove_table_files_from_selection(selection_id, "points")
+            self.properties._remove_point_property("mass_source", selection_id)
 
-            if attribution_type == 0:
-                self.remove_table_files_from_selection(selection_id, "nodes")
-                self.properties._remove_nodal_property("mass_source", selection_id)
+        elif attribution_type == AssignmentType.LINES:
+            self.remove_table_files_from_selection(selection_id, "lines")
+            self.properties._remove_line_property("mass_source", selection_id)
 
-            elif attribution_type == 1:
-                self.remove_table_files_from_selection(selection_id, "points")
-                self.properties._remove_point_property("mass_source", selection_id)
+        elif attribution_type == AssignmentType.SURFACES:
+            self.remove_table_files_from_selection(selection_id, "surfaces")
+            self.properties._remove_surface_property("mass_source", selection_id)
 
-            elif attribution_type == 2:
-                self.remove_table_files_from_selection(selection_id, "lines")
-                self.properties._remove_line_property("mass_source", selection_id)
+        else:
+            self.remove_table_files_from_selection(selection_id, "volumes")
+            self.properties._remove_volume_property("mass_source", selection_id)
 
-            elif attribution_type == 2:
-                self.remove_table_files_from_selection(selection_id, "surfaces")
-                self.properties._remove_surface_property("mass_source", selection_id)
-
-            else:
-                self.remove_table_files_from_selection(selection_id, "volumes")
-                self.properties._remove_volume_property("mass_source", selection_id)
-
-            self.actions_to_finalize()
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -870,31 +879,34 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.tabWidget_main.setTabVisible(3, False)
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            selection_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
+        if item.text(0) == "":
+            return
 
-            selection_label = item.text(1)
+        selection_id = int(item.text(0))
+        selection_label = item.text(1)
+        self.lineEdit_selection_id.setText(item.text(0))
 
-            if selection_label == "node":
-                self.comboBox_attribution_type.setCurrentIndex(0)
-                app().main_window.set_mesh_selection(nodes=[selection_id])
+        self.pushButton_remove.setEnabled(True)
 
-            elif selection_label == "point":
-                self.comboBox_attribution_type.setCurrentIndex(1)
-                app().main_window.set_geometry_selection(points=[selection_id])
+        if selection_label == "node":
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.NODES)
+            app().main_window.set_mesh_selection(nodes=[selection_id])
 
-            elif selection_label == "line":
-                self.comboBox_attribution_type.setCurrentIndex(2)
-                app().main_window.set_geometry_selection(lines=[selection_id])
+        elif selection_label == "point":
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.POINTS)
+            app().main_window.set_geometry_selection(points=[selection_id])
 
-            elif selection_label == "surface":
-                self.comboBox_attribution_type.setCurrentIndex(3)
-                app().main_window.set_geometry_selection(surfaces=[selection_id])
+        elif selection_label == "line":
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.LINES)
+            app().main_window.set_geometry_selection(lines=[selection_id])
 
-            elif selection_label == "volume":
-                self.comboBox_attribution_type.setCurrentIndex(4)
-                app().main_window.set_geometry_selection(volumes=[selection_id])
+        elif selection_label == "surface":
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.SURFACES)
+            app().main_window.set_geometry_selection(surfaces=[selection_id])
+
+        elif selection_label == "volume":
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.VOLUMES)
+            app().main_window.set_geometry_selection(volumes=[selection_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
