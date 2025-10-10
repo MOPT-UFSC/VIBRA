@@ -222,7 +222,7 @@ class AcousticPostprocessing:
         frequencies = self.harmonic_solver.assembler.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
-        rho, speed_of_sound = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id, frequencies)
+        rho, speed_of_sound = self.harmonic_solver.assembler.model.get_fluid_properties_from_surface(surface_id)
         Z0 = rho * speed_of_sound
 
         Zs = self.compute_acoustic_impedance(
