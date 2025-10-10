@@ -234,9 +234,9 @@ class Project(QObject):
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
-        self.model.process_porous_material_properties(self.model.frequencies)
-        self.model.process_viscous_thermal_model_properties(self.model.frequencies)
-        self.model.process_perforated_plate_impedance(self.model.frequencies)
+        self.model.process_porous_material_properties()
+        self.model.process_viscous_thermal_model_properties()
+        self.model.process_perforated_plate_impedance()
         self.acoustic_assembler.process_assemble()
 
         if self.model.stop_processing:

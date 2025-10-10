@@ -24,7 +24,10 @@ class ViscousThermalLossModels:
         self.map_model_id_to_models: defaultdict[int, RectangularDuctData|CircularDuctData] = defaultdict()
         self.map_model_id_to_volumes: defaultdict[int, list[int]] = defaultdict(list)
 
-    def process_effective_properties(self, frequencies: np.ndarray):
+    def process_effective_properties(self, frequencies: np.ndarray | None = None):
+
+        if frequencies is None:
+            frequencies = self.model.frequencies
 
         self.effective_properties = dict()
         if frequencies[0] == 0:
