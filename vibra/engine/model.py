@@ -220,8 +220,7 @@ class Model:
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        if self.mesh.load_cad(self.geometry_path, **self.mesh_setup) is None:
-            return
+        self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
 
         self.generated_mesh = True
         if self.disable_resume_callback is not None:

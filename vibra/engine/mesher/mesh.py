@@ -1,37 +1,35 @@
-import gmsh
 import logging
-import numpy as np
 import os
 import sys
-
 from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from time import time
-from traceback import print_exception
 from typing import Literal
 
+import gmsh
+import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON, 
-    VTK_QUADRATIC_HEXAHEDRON, 
-    VTK_QUADRATIC_TETRA, 
-    VTK_TETRA, 
-    vtkUnstructuredGrid
+    VTK_HEXAHEDRON,
+    VTK_QUADRATIC_HEXAHEDRON,
+    VTK_QUADRATIC_TETRA,
+    VTK_TETRA,
+    vtkUnstructuredGrid,
 )
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.engine.mesher.element_type import (
-    ElementType,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
+    DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
-    DEFAULT_ELEMENT_TYPE,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementType,
 )
+from vibra.errors import MeshingAlgorithmException
 
-type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
+MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:
@@ -183,9 +181,8 @@ class Mesh:
             gmsh.model.mesh.removeDuplicateNodes()
 
         except Exception as error_log:
-            print_exception(error_log)
             gmsh.finalize()
-            return
+            raise MeshingAlgorithmException(error_log) from error_log
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()

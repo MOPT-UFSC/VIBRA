@@ -53,3 +53,7 @@ class IncompleteSetupError(ModelException):
 
 class AnalysisCanceledException(VibraException):
     pass
+
+
+class MeshingAlgorithmException(MeshException):
+    pass
