@@ -138,6 +138,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.selection_spheres_actor = SelectionSpheres()
 
+        # Create empty variables to be used when switching actors
+        self._cache_hollow_solids_actor: HollowSolidsActor | None = self.solids_actor
+        self._cache_full_solids_actor: SolidsActor | None = None
+
         visualization = app().main_window.visualization_filter
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
@@ -301,6 +305,24 @@ class MeshRenderWidget(CommonRenderWidget):
     def _get_info_tab(self):
         pass
 
+    def switch_to_hollow_actor(self):
+        if not isinstance(self.solids_actor, SolidsActor):
+            return
+
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        if not isinstance(self._cache_hollow_solids_actor, HollowSolidsActor):
+            self._cache_hollow_solids_actor = HollowSolidsActor(mesh)
+
+        self._cache_full_solids_actor = self.solids_actor
+
+        self.remove_actors(self.solids_actor, self.edges_actor)
+        self.solids_actor = self._cache_hollow_solids_actor
+        self.edges_actor = EdgesActor(self.solids_actor.data)
+        self.add_actors(self.solids_actor, self.edges_actor)
+
     def switch_to_solids_actor(self):
         if not isinstance(self.solids_actor, HollowSolidsActor):
             return
@@ -312,8 +334,13 @@ class MeshRenderWidget(CommonRenderWidget):
         if not mesh.are_there_volumes_in_geometry():
             return
 
+        if not isinstance(self._cache_full_solids_actor, SolidsActor):
+            self._cache_full_solids_actor = SolidsActor(mesh)
+
+        self._cache_hollow_solids_actor = self.solids_actor
+
         self.remove_actors(self.solids_actor, self.edges_actor)
-        self.solids_actor = SolidsActor(mesh)
+        self.solids_actor = self._cache_full_solids_actor
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.add_actors(self.solids_actor, self.edges_actor)
 
@@ -370,6 +397,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.disable_cut()
         self.solids_actor.disable_cut()
         self.edges_actor.disable_cut()
+
+        self.switch_to_hollow_actor()
         self.update()
 
     def update_info_text(self):
