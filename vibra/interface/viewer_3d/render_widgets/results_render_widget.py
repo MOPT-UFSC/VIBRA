@@ -95,6 +95,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor = GhostActor(mesh)
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
+        # Create empty variables to be used when switching actors
+        self._cache_hollow_solids_actor: HollowAnalysisActor | None = self.analysis_actor
+        self._cache_full_solids_actor: AnalysisActor | None = None
+
         self.add_actors(
             self.analysis_actor,
             self.edges_actor,
@@ -319,36 +323,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def update_section_plane(self):
-        if not self.actors_exists():
-            return
-
-        section_plane = app().main_window.section_plane
-        self.stop_animation()
-
-        if not section_plane.cutting:
-            visualization = app().main_window.visualization_filter
-            self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
-            self.plane_actor.VisibilityOff()
-            self.analysis_actor.disable_cut()
-            self.edges_actor.disable_cut()
-            self.update()
-            return
-
-        position = section_plane.get_position()
-        rotation = section_plane.get_rotation()
-        inverted = section_plane.get_inverted()
-
-        if section_plane.editing:
-            self.plane_actor.configure_section_plane(position, rotation)
-            self.plane_actor.VisibilityOn()
-            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
-            self.plane_actor.GetProperty().SetOpacity(0.8)
-        else:
-            show_plane = not section_plane.keep_section_plane
-            self._apply_section_plane(position, rotation, inverted, show_plane)
-
-        self.update()
 
     def visualization_changed_callback(self):
         if not self.actors_exists():
@@ -383,18 +357,75 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plane_actor: None | SectionPlaneActor = None
         return super().remove_all_actors()
 
-    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+    def switch_to_hollow_actor(self):
+        if not isinstance(self.analysis_actor, AnalysisActor):
+            return
+
         mesh = app().project.model.mesh
-        actor_is_hollow = isinstance(self.analysis_actor, HollowAnalysisActor)
+        if mesh is None:
+            return
 
-        self.clear_cache()
+        if not isinstance(self._cache_hollow_solids_actor, HollowAnalysisActor):
+            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh)
 
-        if actor_is_hollow and mesh.are_there_volumes_in_geometry():
-            self.remove_actors(self.analysis_actor, self.edges_actor)
-            self.analysis_actor = AnalysisActor(mesh)
-            self.edges_actor = EdgesActor(self.analysis_actor.data)
-            self.add_actors(self.analysis_actor, self.edges_actor)
-            self.update_color_and_deformation()
+        self._cache_full_solids_actor = self.analysis_actor
+
+        self.remove_actors(self.analysis_actor, self.edges_actor)
+        self.analysis_actor = self._cache_hollow_solids_actor
+        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.update_color_and_deformation()
+        self.add_actors(self.analysis_actor, self.edges_actor)
+
+    def switch_to_solids_actor(self):
+        if not isinstance(self.analysis_actor, HollowAnalysisActor):
+            return
+
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        if not mesh.are_there_volumes_in_geometry():
+            return
+
+        if not isinstance(self._cache_full_solids_actor, AnalysisActor):
+            self._cache_full_solids_actor = AnalysisActor(mesh)
+
+        self._cache_hollow_solids_actor = self.analysis_actor
+
+        self.remove_actors(self.analysis_actor, self.edges_actor)
+        self.analysis_actor = self._cache_full_solids_actor
+        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.update_color_and_deformation()
+        self.add_actors(self.analysis_actor, self.edges_actor)
+
+    def update_section_plane(self):
+        if not self.actors_exists():
+            return
+
+        section_plane = app().main_window.section_plane
+        self.stop_animation()
+
+        if not section_plane.cutting:
+            self._disable_section_plane()
+            return
+
+        position = section_plane.get_position()
+        rotation = section_plane.get_rotation()
+        inverted = section_plane.get_inverted()
+
+        if section_plane.editing:
+            self.plane_actor.configure_section_plane(position, rotation)
+            self.plane_actor.VisibilityOn()
+            self.plane_actor.GetProperty().SetColor(0, 0.333, 0.867)
+            self.plane_actor.GetProperty().SetOpacity(0.8)
+        else:
+            show_plane = not section_plane.keep_section_plane
+            self._apply_section_plane(position, rotation, inverted, show_plane)
+
+        self.update()
+
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        self.switch_to_solids_actor()
 
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
@@ -409,6 +440,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+
+    def _disable_section_plane(self):
+        visualization = app().main_window.visualization_filter
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
+        self.plane_actor.VisibilityOff()
+
+        self.analysis_actor.disable_cut()
+        self.edges_actor.disable_cut()
+
+        self.switch_to_hollow_actor()
+        self.update()
 
     def update_info_text(self):
 
