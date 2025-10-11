@@ -737,7 +737,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         line_properties = deepcopy(self.properties.line_properties)
         for new_surface_id in new_surface_ids:
-            lines_from_surface = self.mesh.lines_from_surface.get(new_surface_id)
+            lines_from_surface = self.geometry._surfaces_to_curves.get(new_surface_id)
             if lines_from_surface is None:
                 continue
 

@@ -547,7 +547,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-                for line_id in self.mesh.lines_from_surface[selected_id]:
+                for line_id in self.geometry._surfaces_to_curves[selected_id]:
                     data = self.properties._get_property("distributed_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("distributed_loads", line_id)
