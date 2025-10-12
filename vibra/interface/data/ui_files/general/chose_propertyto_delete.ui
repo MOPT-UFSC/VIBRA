@@ -32,6 +32,9 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="3">
+    <widget class="QComboBox" name="property_comboBox"/>
+   </item>
    <item row="0" column="0">
     <spacer name="horizontalSpacer">
      <property name="orientation">
@@ -48,7 +51,7 @@
      </property>
     </spacer>
    </item>
-   <item row="0" column="3">
+   <item row="0" column="4">
     <spacer name="horizontalSpacer_2">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -64,16 +67,6 @@
      </property>
     </spacer>
    </item>
-   <item row="0" column="2">
-    <widget class="QComboBox" name="property_comboBox"/>
-   </item>
-   <item row="1" column="2">
-    <widget class="QPushButton" name="confirm_pushButton">
-     <property name="text">
-      <string>PushButton</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1">
     <widget class="QPushButton" name="cancel_pushButton">
      <property name="text">
@@ -85,6 +78,26 @@
     <widget class="QLabel" name="message_label">
      <property name="text">
       <string>TextLabel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="QPushButton" name="confirm_pushButton">
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+     <property name="default">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="remove_all_pushButton">
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+     <property name="default">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

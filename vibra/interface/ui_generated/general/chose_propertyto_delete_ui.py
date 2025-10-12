@@ -33,23 +33,18 @@ class Ui_Dialog(object):
         Dialog.setMaximumSize(QSize(400, 150))
         self.gridLayout_2 = QGridLayout(Dialog)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.property_comboBox = QComboBox(Dialog)
+        self.property_comboBox.setObjectName(u"property_comboBox")
+
+        self.gridLayout_2.addWidget(self.property_comboBox, 0, 3, 1, 1)
+
         self.horizontalSpacer = QSpacerItem(20, 10, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_2.addItem(self.horizontalSpacer, 0, 0, 1, 1)
 
         self.horizontalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
-
-        self.property_comboBox = QComboBox(Dialog)
-        self.property_comboBox.setObjectName(u"property_comboBox")
-
-        self.gridLayout_2.addWidget(self.property_comboBox, 0, 2, 1, 1)
-
-        self.confirm_pushButton = QPushButton(Dialog)
-        self.confirm_pushButton.setObjectName(u"confirm_pushButton")
-
-        self.gridLayout_2.addWidget(self.confirm_pushButton, 1, 2, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 4, 1, 1)
 
         self.cancel_pushButton = QPushButton(Dialog)
         self.cancel_pushButton.setObjectName(u"cancel_pushButton")
@@ -61,17 +56,32 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.message_label, 0, 1, 1, 1)
 
+        self.confirm_pushButton = QPushButton(Dialog)
+        self.confirm_pushButton.setObjectName(u"confirm_pushButton")
+
+        self.gridLayout_2.addWidget(self.confirm_pushButton, 1, 3, 1, 1)
+
+        self.remove_all_pushButton = QPushButton(Dialog)
+        self.remove_all_pushButton.setObjectName(u"remove_all_pushButton")
+
+        self.gridLayout_2.addWidget(self.remove_all_pushButton, 1, 2, 1, 1)
+
 
         self.retranslateUi(Dialog)
+
+        self.confirm_pushButton.setDefault(True)
+        self.remove_all_pushButton.setDefault(False)
+
 
         QMetaObject.connectSlotsByName(Dialog)
     # setupUi
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.confirm_pushButton.setText(QCoreApplication.translate("Dialog", u"PushButton", None))
         self.cancel_pushButton.setText(QCoreApplication.translate("Dialog", u"PushButton", None))
         self.message_label.setText(QCoreApplication.translate("Dialog", u"TextLabel", None))
+        self.confirm_pushButton.setText(QCoreApplication.translate("Dialog", u"PushButton", None))
+        self.remove_all_pushButton.setText(QCoreApplication.translate("Dialog", u"PushButton", None))
     # retranslateUi
 
 
@@ -82,9 +92,10 @@ class ChosePropertytoDelete_UI(QDialog, Ui_Dialog):
     - Dialog: QDialog
         - (Layout): QGridLayout
                 - property_comboBox: QComboBox
-                - confirm_pushButton: QPushButton
                 - cancel_pushButton: QPushButton
                 - message_label: QLabel
+                - confirm_pushButton: QPushButton
+                - remove_all_pushButton: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

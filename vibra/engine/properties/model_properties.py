@@ -281,7 +281,7 @@ class ModelProperties:
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
-    def remove_surface_properties(self, surface_id: int, physical_domain: str):
+    def remove_all_surface_properties(self, surface_id: int, physical_domain: str):
         properties = None
         if physical_domain == "Structural":
             properties = self.structural_properties_names
@@ -295,7 +295,7 @@ class ModelProperties:
         for key in prop_to_remove:
             self.surface_properties.pop(key)
     
-    def remove_line_properties(self, line_id: int, physical_domain: str):
+    def remove_all_line_properties(self, line_id: int, physical_domain: str):
         properties = None
         if physical_domain == "Structural":
             properties = self.structural_properties_names
@@ -309,7 +309,7 @@ class ModelProperties:
         for key in prop_to_remove:
             self.line_properties.pop(key)
     
-    def remove_point_properties(self, point_id: int, physical_domain: str):
+    def remove_all_point_properties(self, point_id: int, physical_domain: str):
         properties = None
         if physical_domain == "Structural":
             properties = self.structural_properties_names

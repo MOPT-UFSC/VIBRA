@@ -22,7 +22,7 @@ from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
-from vibra.interface.general.chose_property_to_delete import ChosePropertytoDelete
+from vibra.interface.general.choose_property_to_delete import ChoosePropertytoDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
@@ -1003,41 +1003,55 @@ class MainWindow(MainWindow_UI):
         return False
     
     def remove_property(self):
-        # properties = None
-        # if physical_domain == "Structural":
-        #     properties = self.structural_properties_names
-        # else:
-        #     properties = self.acoustic_properties_names
-            
-        # prop_to_remove = list()
-        # for key in self.line_properties.keys():
-        #     if key[1] == line_id and key[0] in properties:
-        #         prop_to_remove.append(key)
+        properties_names = app().project.model.properties.acoustic_properties_names
+        properties_names.extend(app().project.model.properties.structural_properties_names)
 
-        physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
+        properties_founded: list[str] = list()
         for surf_id in self.selected_geometry_surfaces:
-            app().project.model.properties.remove_surface_properties(surf_id, physical_domain)
+            prop_id = app().project.model.properties.surface_properties.keys()
+            prop = [prop for prop, id in prop_id if (surf_id == id and prop in properties_names)]
+            properties_founded.extend(prop)
         
-        for point_id in self.selected_geometry_lines:
-            app().project.model.properties.remove_line_properties(point_id, physical_domain)
+        for line_id in self.selected_geometry_lines:
+            prop_id = app().project.model.properties.line_properties.keys()
+            prop = [prop for prop, id in prop_id if (line_id == id and prop in properties_names)]
+            properties_founded.extend(prop)
         
         for point_id in self.selected_geometry_points:
-            app().project.model.properties.remove_point_properties(point_id, physical_domain)
-
+            prop_id = app().project.model.properties.point_properties.keys()
+            prop = [prop for prop, id in prop_id if (point_id == id and prop in properties_names)]
+            properties_founded.extend(prop)
+        
         buttons_config = {
-                          "left_button_label": "Cancel", 
+                          "left_button_label": "Cancel",
+                          "middle_button_label": "Remove all",
                           "right_button_label": "Delete property",
+                          "middle_toolTip" : "Delete all selected property from the model",
                           "right_toolTip" : "Delete selected property from the model"
                           }
 
-        options = ("pri", "seg", "ter")
-        pa = ChosePropertytoDelete("Delele Property", "Choose a property", options=options, buttons_config=buttons_config, window_title="Vibra")
+        user_option = ChoosePropertytoDelete("Delele Property", "Choose a property", options=properties_founded, buttons_config=buttons_config, window_title="Vibra")
+        physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
 
-        if pa._confirm:
-            print(pa._property_to_delete)
-        else:
-            print("canceled")
-        
+        if user_option._confirm:
+            for surf_id in self.selected_geometry_surfaces:
+                app().project.model.properties._remove_surface_property(user_option._property_to_delete, surf_id)
+            
+            for line_id in self.selected_geometry_lines:
+                app().project.model.properties._remove_line_property(user_option._property_to_delete, line_id)
+            
+            for point_id in self.selected_geometry_points:
+                app().project.model.properties._remove_point_property(user_option._property_to_delete, point_id)
+        elif user_option._remove_all:
+            for surf_id in self.selected_geometry_surfaces:
+                app().project.model.properties.remove_all_surface_properties(surf_id, physical_domain)
+            
+            for point_id in self.selected_geometry_lines:
+                app().project.model.properties.remove_all_line_properties(point_id, physical_domain)
+            
+            for point_id in self.selected_geometry_points:
+                app().project.model.properties.remove_all_point_properties(point_id, physical_domain)
+
         self.update_symbols()
 
     def update_toolbar_and_menu_items_after_load_project(self):
@@ -1246,7 +1260,6 @@ class MainWindow(MainWindow_UI):
     def eventFilter(self, obj, event: QEvent):
         modifiers = app().keyboardModifiers()
         alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
-
         if event.type() == QEvent.Type.ShortcutOverride:
             if event.key() == Qt.Key.Key_F5:
                 self.update_plots()
@@ -1262,7 +1275,7 @@ class MainWindow(MainWindow_UI):
                 self.section_plane.cutting = not active
                 self.section_plane.value_changed.emit()
             
-            elif (event.key() == Qt.Key.Key_Delete):
+            elif event.key() == Qt.Key.Key_Delete:
                 self.remove_property()
         
         return super(MainWindow, self).eventFilter(obj, event)
