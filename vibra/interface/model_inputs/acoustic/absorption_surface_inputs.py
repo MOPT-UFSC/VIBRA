@@ -113,11 +113,28 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selected_geometry_surfaces
 
-        if faces:
-            text = ", ".join([str(i) for i in faces])
+        if surfaces:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
+
+        if len(surfaces) == 1:
+            surface_id = list(surfaces)[0]
+            self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+
+        data = self.properties._get_property("absorption_surface", surface=surface_id)
+        if not isinstance(data, dict):
+            return
+
+        if "table_paths" in data.keys():
+            self.tabWidget_main.setCurrentIndex(1)
+            self.lineEdit_table_path.setText(data.get("table_paths")[0])
+        else:
+            self.tabWidget_main.setCurrentIndex(0)
+            self.lineEdit_real_value.setText(f"{data.get("real_values")[0]}")
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
@@ -476,4 +493,5 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
