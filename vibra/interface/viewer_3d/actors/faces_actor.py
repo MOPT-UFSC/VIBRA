@@ -4,6 +4,7 @@ from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
+    vtkFloatArray,
 )
 from vtkmodules.vtkCommonDataModel import (
     VTK_QUAD,
@@ -57,8 +58,7 @@ class FacesActor(vtkActor):
             mapper = vtkPolyDataMapper()
 
         points = vtkPoints()
-        point_colors = vtkUnsignedCharArray()
-        point_colors.SetNumberOfComponents(3)
+        point_colors = vtkFloatArray()
         point_colors.SetNumberOfTuples(number_of_nodes)
         point_colors.Fill(0)
 
