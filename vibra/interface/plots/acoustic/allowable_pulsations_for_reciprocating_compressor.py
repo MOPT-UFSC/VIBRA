@@ -399,8 +399,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         if self.check_selected_ids():
             return
-
-        area = self.geometry._surfaces_areas.get(self.selected_ids[0])
+        
+        area = self.geometry.surface_area(self.selected_ids[0])
         diameter = np.sqrt(4 * area / np.pi) * 1000
 
         self.lineEdit_inside_diameter.setText(f"{diameter : .4f}")

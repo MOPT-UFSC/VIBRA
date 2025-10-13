@@ -144,7 +144,7 @@ class LoadProject:
                 self.model.mesh.length_from_lines = {int(key) : value for key, value in data}
 
             elif "area_from" in key:
-                self.model.mesh.area_from_surfaces = {int(key) : value for key, value in data}
+                self.model.geometry._surfaces_areas = {int(key) : value for key, value in data}
 
             elif "volume_from" in key:
                 self.model.mesh.volume_from_bodies = {int(key) : value for key, value in data}

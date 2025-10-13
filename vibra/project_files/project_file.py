@@ -95,11 +95,12 @@ class ProjectFile:
     def write_geometry_data_in_file(self):
 
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
 
         geometry_data = dict(
             geometry_info = mesh.geometry_information,
             length_from_lines = mesh.length_from_lines,
-            area_from_surfaces = mesh.area_from_surfaces,
+            area_from_surfaces = geometry._surfaces_areas,
             volume_from_bodies = mesh.volume_from_bodies,
             surfaces_from_volume = mesh.surfaces_from_volume,
             lines_from_surface = mesh.lines_from_surface,

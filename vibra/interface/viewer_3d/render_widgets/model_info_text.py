@@ -94,12 +94,12 @@ def faces_info_text():
     if len(surface_ids) == 0:
         return ""
 
-    area_from_surfaces = app().project.model.mesh.area_from_surfaces
+    geometry = app().project.model.geometry
 
     text = ""
     area = 0
     for surface_id in surface_ids:
-        area += area_from_surfaces.get(surface_id, 0)
+        area += geometry.surface_area(surface_id)
 
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
