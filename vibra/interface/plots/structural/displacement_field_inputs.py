@@ -1,19 +1,12 @@
-import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QComboBox,
-    QFrame,
-    QLineEdit,
-    QPushButton,
-    QSlider,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QWidget,
-)
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.structural.displacement_field_inputs_ui import DisplacementFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+
+import numpy as np
 
 
 class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
@@ -109,11 +102,14 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
             return
-
+        
         frequency_selected = float(self.lineEdit_selected_frequency.text())
-        if frequency_selected in self.frequencies:
-            self.frequency_index = self.frequencies.index(frequency_selected)
-            app().main_window.results_widget.update_plot()
+        self.frequency_index = self.frequency_to_index.get(frequency_selected)
+
+        if self.frequency_index is None:
+            return
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def current_frequency_index(self):
         if self.frequency_index is not None:
