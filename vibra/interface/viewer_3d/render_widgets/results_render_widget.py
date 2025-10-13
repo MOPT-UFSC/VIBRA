@@ -88,11 +88,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if mesh is None:
             return
 
+        logging.info(f"Updating the results render... [10/100]")
         self.remove_all_actors()
 
+        logging.info(f"Updating the results render... [25/100]")
         self.analysis_actor = HollowAnalysisActor(mesh)
+
+        logging.info(f"Updating the results render... [75/100]")
         self.edges_actor = EdgesActor(self.analysis_actor.data)
+        
+        logging.info(f"Updating the results render... [80/100]")
         self.ghost_actor = GhostActor(mesh)
+
+        logging.info(f"Updating the results render... [85/100]")
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
         # Create empty variables to be used when switching actors
@@ -110,6 +118,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
+        logging.info(f"Updating the results render... [90/100]")
         with self.update_lock:
             self.update_theme()
             self.update_section_plane()
@@ -121,6 +130,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
+        logging.info(f"Updating the results render... [98/100]")
         self.update()
     
     def enable_scale_bar(self):
