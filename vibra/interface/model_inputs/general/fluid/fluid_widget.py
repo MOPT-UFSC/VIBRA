@@ -10,7 +10,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.libraries.default_libraries import default_fluid_library

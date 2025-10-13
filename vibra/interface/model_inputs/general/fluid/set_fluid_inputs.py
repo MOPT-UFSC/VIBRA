@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
 from vibra.engine.properties.fluid import Fluid
-from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
+from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 

@@ -4,7 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.engine.properties.fluid import Fluid
 
 import warnings

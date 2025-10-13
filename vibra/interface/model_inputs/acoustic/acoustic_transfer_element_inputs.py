@@ -6,7 +6,7 @@ from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
