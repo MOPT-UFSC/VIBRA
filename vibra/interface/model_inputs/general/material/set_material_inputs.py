@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.interface.ui_generated.model.setup.material.set_material_ui import SetMaterial_UI
 from vibra.engine.properties.material import Material
-from vibra.interface.model_inputs.structural.material.material_widget import MaterialWidget
+from vibra.interface.model_inputs.general.material.material_widget import MaterialWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
