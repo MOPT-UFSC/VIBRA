@@ -13,6 +13,7 @@ from vibra.engine.mesher.element_type import (
 )
 
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
@@ -81,6 +82,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _initialize(self):
         self.complete = False
+
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
@@ -88,6 +90,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.mesh_quality_data = None
         self.mesh_setup = dict()
         self.mesh_refinement_data = defaultdict(list)
+        self.cache_mesh_refinement_data = defaultdict(list)
 
         self.mesh_quality_parameters = {
             0: "gamma",
@@ -341,6 +344,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 for selection_type, e_size, selected_ids in mesh_refinement_parameters:
                     self.mesh_refinement_data[(selection_type, e_size)].extend(selected_ids)
 
+                self.cache_refinement_data()
                 self.update_refining_table_data()
                 self.config_control_quality_table()
 
@@ -349,6 +353,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 title = "Error while loading mesh setup"
                 message = str(error_log)
                 PrintMessageInput([error_title, title, message])
+
+    def cache_refinement_data(self):
+        self.cache_mesh_refinement_data = deepcopy(self.mesh_refinement_data)
 
     def update_refining_table_data(self):
         self.tableWidget_refining_mesh_data.clearContents()
@@ -462,6 +469,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             app().file.remove_mesh_quality_data_from_project_file()
 
+        self.cache_refinement_data()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
 
@@ -891,6 +899,31 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.distinguish_mesh_solids(mesh_bad_elements)
         self.bad_elements_showed = True
 
+    def check_unprocessed_mesh_refining(self):
+
+        if self.cache_mesh_refinement_data == self.mesh_refinement_data:
+            return
+
+        self.hide()
+
+        title = "Unprocessed mesh refinement"    
+        message = "The mesh refinement configuration has been modified, but the mesh itself "
+        message += "has not been processed. Would you like to generate the new mesh?"
+
+        buttons_config = {
+                        "left_button_label": "No", 
+                        "right_button_label": "Generate",
+                        }
+
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
+        if read._cancel:
+            return True
+
+        if not read._continue:
+            return True
+
+        self.generate_mesh_callback()
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.generate_mesh_callback()
@@ -901,6 +934,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def closeEvent(self, a0):
         self.keep_window_open = False
+        self.check_unprocessed_mesh_refining()
+
         if self.bad_elements_showed:
             app().main_window.distinguish_mesh_solids([])
 

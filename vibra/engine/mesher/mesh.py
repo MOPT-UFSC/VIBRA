@@ -1,37 +1,35 @@
-import gmsh
 import logging
-import numpy as np
 import os
 import sys
-
 from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from time import time
-from traceback import print_exception
 from typing import Literal
 
+import gmsh
+import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON, 
-    VTK_QUADRATIC_HEXAHEDRON, 
-    VTK_QUADRATIC_TETRA, 
-    VTK_TETRA, 
-    vtkUnstructuredGrid
+    VTK_HEXAHEDRON,
+    VTK_QUADRATIC_HEXAHEDRON,
+    VTK_QUADRATIC_TETRA,
+    VTK_TETRA,
+    vtkUnstructuredGrid,
 )
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.engine.mesher.element_type import (
-    ElementType,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
+    DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
-    DEFAULT_ELEMENT_TYPE,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementType,
 )
+from vibra.errors import MeshingAlgorithmException
 
-type MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
+MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:
@@ -149,9 +147,6 @@ class Mesh:
         dimension = kwargs.get("dimension", 3)
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
- 
-        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_type: ElementType
 
         if not gmsh.isInitialized():
             gmsh.initialize("", False, interruptible=False)
@@ -186,7 +181,8 @@ class Mesh:
             gmsh.model.mesh.removeDuplicateNodes()
 
         except Exception as error_log:
-            print_exception(error_log)
+            gmsh.finalize()
+            raise MeshingAlgorithmException(error_log) from error_log
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
@@ -198,6 +194,8 @@ class Mesh:
         if gmsh_gui:
             if "-nopopup" not in sys.argv:
                 gmsh.fltk.run()
+
+        gmsh.finalize()
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -816,14 +814,14 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list):
+    def local_mesh_refine(self, global_size: float | int, mesh_refinement_parameters: list):
         fields_list = [1]
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
 
-        for selection_type, local_size, selection_ids in refinement_parameters:
+        for selection_type, local_size, selection_ids in mesh_refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
             if selection_type == "surfaces":
                 gmsh.model.mesh.field.setNumbers(
@@ -841,16 +839,17 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
+
     def _configure_mesh(self, **kwargs):
         size_factor = kwargs.get("size_factor", 0.0)
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)
-        refinement_parameters = kwargs.get("refinement_parameters", list())
+        mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
         element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
         element_type: ElementType
 
-        if refinement_parameters:
-            self.local_mesh_refine(maximum_element_size, refinement_parameters)
+        if mesh_refinement_parameters:
+            self.local_mesh_refine(maximum_element_size, mesh_refinement_parameters)
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)

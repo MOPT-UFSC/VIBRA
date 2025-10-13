@@ -234,6 +234,7 @@ class Model:
 
         logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
+
         self.generated_mesh = True
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
