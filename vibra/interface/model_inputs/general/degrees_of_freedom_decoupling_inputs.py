@@ -12,8 +12,7 @@ from copy import deepcopy
 
 import logging
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+warning_title = "Warning"
 
 
 class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
@@ -143,7 +142,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             if message != "":
                 self.hide()
                 title = "Invalid surface selected"
-                PrintMessageInput([window_title_2, title, message])
+                PrintMessageInput([warning_title, title, message])
                 return
 
             data = {"volume_to_decouple" : volumes_from_surface[0]}
