@@ -1003,8 +1003,12 @@ class MainWindow(MainWindow_UI):
         return False
     
     def remove_property(self):
-        properties_names = app().project.model.properties.acoustic_properties_names
-        properties_names.extend(app().project.model.properties.structural_properties_names)
+        physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
+
+        if physical_domain == "Structural":
+            properties_names = app().project.model.properties.structural_properties_names
+        else:
+            properties_names = app().project.model.properties.acoustic_properties_names
 
         properties_founded: list[str] = list()
         for surf_id in self.selected_geometry_surfaces:
@@ -1022,26 +1026,28 @@ class MainWindow(MainWindow_UI):
             prop = [prop for prop, id in prop_id if (point_id == id and prop in properties_names)]
             properties_founded.extend(prop)
         
+        properties_founded = [p.replace('_', ' ').title() for p in properties_founded]
+
         buttons_config = {
                           "left_button_label": "Cancel",
                           "middle_button_label": "Remove all",
-                          "right_button_label": "Delete property",
-                          "middle_toolTip" : "Delete all selected property from the model",
-                          "right_toolTip" : "Delete selected property from the model"
+                          "right_button_label": "Remove",
+                          "middle_toolTip" : "Remove all selected property from the model",
+                          "right_toolTip" : "Remove selected property from the model"
                           }
 
-        user_option = ChoosePropertytoDelete("Delele Property", "Choose a property", options=properties_founded, buttons_config=buttons_config, window_title="Vibra")
-        physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
+        user_option = ChoosePropertytoDelete("Remove Property", "Choose a property", options=properties_founded, buttons_config=buttons_config, window_title="Vibra")
 
         if user_option._confirm:
+            prop = user_option._property_to_delete.lower().replace(' ', '_')
             for surf_id in self.selected_geometry_surfaces:
-                app().project.model.properties._remove_surface_property(user_option._property_to_delete, surf_id)
+                app().project.model.properties._remove_surface_property(prop, surf_id)
             
             for line_id in self.selected_geometry_lines:
-                app().project.model.properties._remove_line_property(user_option._property_to_delete, line_id)
+                app().project.model.properties._remove_line_property(prop, line_id)
             
             for point_id in self.selected_geometry_points:
-                app().project.model.properties._remove_point_property(user_option._property_to_delete, point_id)
+                app().project.model.properties._remove_point_property(prop, point_id)
         elif user_option._remove_all:
             for surf_id in self.selected_geometry_surfaces:
                 app().project.model.properties.remove_all_surface_properties(surf_id, physical_domain)

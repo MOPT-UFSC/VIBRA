@@ -1,10 +1,10 @@
 from PySide6.QtCore import Qt
 
 from vibra import app, __version__
-from vibra.interface.ui_generated.general.chose_propertyto_delete_ui import ChosePropertytoDelete_UI
+from vibra.interface.ui_generated.general.choose_property_to_delete_ui import ChoosePropertyToDelete_UI
 
 
-class ChoosePropertytoDelete(ChosePropertytoDelete_UI):
+class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def __init__(self, title, message, options, *args, **kwargs):
         super().__init__(*args)
 
