@@ -1,4 +1,5 @@
 import numpy as np
+from molde.colors import color_names
 
 from .faces_actor import FacesActor
 
@@ -25,7 +26,7 @@ class GhostActor(FacesActor):
         self.GetProperty().SetOpacity(0.05)
         self.GetProperty().LightingOff()
         self.PickableOff()
-        self.clear_colors()
+        self.set_color(color_names.WHITE)
 
     def SetVisibility(self, _arg):
         if _arg:
