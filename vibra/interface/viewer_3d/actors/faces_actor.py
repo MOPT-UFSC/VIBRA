@@ -170,8 +170,6 @@ class FacesActor(vtkActor):
             self.set_color(color)
 
     def set_color(self, color: Color):
-        # TODO: update these functions to work with the molde.Colors instead of tuples
-
         if self.data is None:
             return
 
