@@ -27,7 +27,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle(self.window_title)
+        self.setWindowTitle(self.title)
     
     def _create_connections(self):
         self.cancel_pushButton.clicked.connect(self.cancel_action)
@@ -35,7 +35,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.confirm_pushButton.clicked.connect(self.confirm_action)
     
     def _reset_variables(self):
-        self._confirm = False
+        self._remove = False
         self._remove_all = False
         self._cancel = True
         self._property_to_delete = None
@@ -73,21 +73,21 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
                 self.confirm_pushButton.setFixedWidth(self.buttons_config["right_button_size"])
 
     def confirm_action(self):
-        self._confirm = True
+        self._remove = True
         self._remove_all = False
         self._cancel = False
         self._property_to_delete = self.property_comboBox.currentText()
         self.close()
     
     def remove_all_action(self):
-        self._confirm = False
+        self._remove = False
         self._remove_all = True
         self._cancel = False
         self._property_to_delete = None
         self.close()
     
     def cancel_action(self):
-        self._confirm = False
+        self._remove = False
         self._remove_all = False
         self._cancel = True
         self._property_to_delete = None

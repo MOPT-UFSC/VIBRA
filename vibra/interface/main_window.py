@@ -1026,7 +1026,7 @@ class MainWindow(MainWindow_UI):
             prop = [prop for prop, id in prop_id if (point_id == id and prop in properties_names)]
             properties_founded.extend(prop)
         
-        properties_founded = [p.replace('_', ' ').title() for p in properties_founded]
+        properties_founded = list(set([p.replace('_', ' ').title() for p in properties_founded]))
 
         buttons_config = {
                           "left_button_label": "Cancel",
@@ -1038,7 +1038,7 @@ class MainWindow(MainWindow_UI):
 
         user_option = ChoosePropertytoDelete("Remove Property", "Choose a property", options=properties_founded, buttons_config=buttons_config, window_title="Vibra")
 
-        if user_option._confirm:
+        if user_option._remove:
             prop = user_option._property_to_delete.lower().replace(' ', '_')
             for surf_id in self.selected_geometry_surfaces:
                 app().project.model.properties._remove_surface_property(prop, surf_id)
