@@ -4,7 +4,7 @@ from PySide6.QtGui import QColor
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 

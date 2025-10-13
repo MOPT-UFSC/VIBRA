@@ -12,7 +12,7 @@ from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.loading_window import LoadingWindow
 
 import logging
