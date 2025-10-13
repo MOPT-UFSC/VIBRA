@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'exception_message.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,7 +24,7 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-        Dialog.resize(313, 240)
+        Dialog.resize(562, 402)
         Dialog.setMaximumSize(QSize(600, 600))
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
