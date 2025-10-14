@@ -283,14 +283,14 @@ class AnalysisToolbar(QToolBar):
 
             t0 = time()
             logging.info("Post-processing results... [80/100]")
-            if not app().file.read_geometry_data_from_file():
+            if not app().file.geometry_data_filepath.exists():
                 app().file.write_geometry_data_in_file()
             dt = time() - t0
             print(f"Elapsed time B: {dt : .6f}s")
 
             t0 = time()
             logging.info("Post-processing results... [85/100]")
-            if not app().file.read_mesh_data_from_file():
+            if not app().file.mesh_data_filepath.exists():
                 app().file.write_mesh_data_in_file()
             dt = time() - t0
             print(f"Elapsed time C: {dt : .6f}s")
