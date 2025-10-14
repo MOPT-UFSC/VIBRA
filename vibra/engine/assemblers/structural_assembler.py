@@ -244,7 +244,7 @@ class StructuralAssembler:
                 if nodes is None:
                     continue
 
-                for surface_id in self.model.geometry._curves_to_surfaces[line_id]:
+                for surface_id in self.model.geometry.curves_to_surfaces(line_id): 
                     connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
                     rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
 

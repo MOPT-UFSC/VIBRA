@@ -611,7 +611,7 @@ class MainWindow(MainWindow_UI):
 
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
-                volumes_to_hide |= set(geometry._solids_to_surfaces[surface])
+                volumes_to_hide |= geometry.solids_to_surfaces(surface)
 
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:

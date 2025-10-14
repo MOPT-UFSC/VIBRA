@@ -717,13 +717,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in self.geometry._surfaces_to_curves[selected_id]:
+                for line_id in self.geometry.surfaces_to_curves(selected_id):
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
-                    for point_id in self.geometry._curves_to_points[line_id]:
+                    for point_id in self.geometry.curves_to_points(line_id):
                         data = self.properties._get_property("nodal_loads", point=point_id)
                         if isinstance(data, dict):
                             self.properties._remove_point_property("nodal_loads", point_id)
@@ -737,13 +737,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in self.geometry._curves_to_surfaces[selected_id]:
+                for surface_id in self.geometry.curves_to_surfaces(selected_id):
                     data = self.properties._get_property("nodal_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("nodal_loads", surface_id)
                         table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
 
-                for point_id in self.geometry._curves_to_points[selected_id]:
+                for point_id in self.geometry.curves_to_points(selected_id):
                     data = self.properties._get_property("nodal_loads", point=point_id)
                     if isinstance(data, dict):
                         self.properties._remove_point_property("nodal_loads", point_id)
@@ -763,7 +763,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         self.properties._remove_line_property("nodal_loads", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
-                    for surface_id in self.model.geometry._curves_to_surfaces[line_id]:
+                    for surface_id in self.model.geometry.curves_to_surfaces(line_id):
                         data = self.properties._get_property("nodal_loads", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("nodal_loads", surface_id)
@@ -783,7 +783,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                         self.properties._remove_line_property("nodal_loads", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
-                    for surface_id in self.model.geometry._curves_to_surfaces[line_id]:
+                    for surface_id in self.model.geometry.curves_to_surfaces(line_id):
                         data = self.properties._get_property("nodal_loads", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("nodal_loads", surface_id)

@@ -157,7 +157,7 @@ class FacesActor(vtkActor):
                 material: Material | None = properties._get_property("material", surface=surface)
 
                 if (material is None) and (surface in self.geometry._surfaces_to_solids):
-                    volume = min(self.geometry._surfaces_to_solids[surface])
+                    volume = min(self.geometry.surfaces_to_solids(surface))
                     material = properties._get_property("material", volume=volume)
 
                 color = Color(*material.color) if (material is not None) else no_info_color
@@ -168,7 +168,7 @@ class FacesActor(vtkActor):
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
 
                 if (fluid is None) and (surface in self.geometry._surfaces_to_solids):
-                    volume = min(self.geometry._surfaces_to_solids[surface])
+                    volume = min(self.geometry.surfaces_to_solids(surface))
                     fluid = properties._get_property("fluid", volume=volume)
 
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color

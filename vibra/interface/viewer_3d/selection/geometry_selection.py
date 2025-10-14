@@ -37,7 +37,7 @@ class GeometrySelection:
         geometry = app().project.model.geometry
 
         for surface in surface_ids:
-            surface_volumes = geometry._surfaces_to_solids.get(surface, [])
+            surface_volumes = geometry.surfaces_to_solids(surface)
             volume_ids.update(surface_volumes)
 
         # Cheating a bit to prioritize selection of points and lines

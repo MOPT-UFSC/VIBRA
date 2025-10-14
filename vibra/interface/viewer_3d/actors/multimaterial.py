@@ -84,7 +84,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
         for surface in surfaces:
-            volumes = geometry._surfaces_to_solids.get(surface, [])
+            volumes = geometry.surfaces_to_solids(surface)
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
@@ -131,7 +131,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
 
         for surface in surfaces:
-            volumes = geometry._surfaces_to_solids.get(surface, ())
+            volumes = geometry.surfaces_to_solids(surface)
             volume = get_first_visible_volume(volumes)
 
             if surface in app().main_window.hidden_surfaces:
@@ -247,7 +247,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data.SetPoints(points)
             data.SetPolys(cells)
 
-            volumes = self.geometry._surfaces_to_solids.get(surface)
+            volumes = self.geometry.surfaces_to_solids(surface)
 
             # Every surface have its own plane defining
             # how to project the texture coordinates on it

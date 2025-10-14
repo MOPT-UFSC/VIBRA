@@ -320,7 +320,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         """
         """
         for surface_id in surface_ids:
-            volumes_from_surface = self.geometry._surfaces_to_solids.get(surface_id)
+            volumes_from_surface = self.geometry.surfaces_to_solids(surface_id)
             if len(volumes_from_surface) != 1:
                 return True
 

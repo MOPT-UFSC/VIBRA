@@ -113,6 +113,10 @@ def test_entities_relactions(geometry: Geometry):
     set8 = geometry.solids_to_curves(1)
     set9 = geometry.solids_to_surfaces(1)
 
+    # Tests with two or more arguments
+    set10 = geometry.curves_to_points(1,2)
+    set11 = geometry.points_to_curves(1,3,4)
+
     assert (set1 == {1, 2})
     assert (set2 == {1, 3})
     assert (set3 == {1})
@@ -122,6 +126,10 @@ def test_entities_relactions(geometry: Geometry):
     assert (set7 == {1, 2, 3, 4})
     assert (set8 == {1, 2, 3, 4, 5, 6})
     assert (set9 == {1, 2, 3, 4})
+    assert (set10 == {1,2,3})
+    assert (set11 == {1,2,3,4,5,6})
+
+    
 
 
 def test_geometry_normals(geometry: Geometry):

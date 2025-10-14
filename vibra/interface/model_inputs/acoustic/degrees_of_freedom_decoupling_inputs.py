@@ -104,7 +104,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.treeWidget_selection_info.clear()
 
         for surface_id in surface_ids:
-            volumes_from_surface = self.model.geometry._surfaces_to_solids[surface_id]
+            volumes_from_surface = self.model.geometry.surfaces_to_solids(surface_id)
             item = QTreeWidgetItem([str(surface_id), str(volumes_from_surface)])
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
@@ -130,7 +130,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         for surface_id in surface_ids:
 
             message = ""
-            volumes_from_surface = self.model.geometry._surfaces_to_solids.get(surface_id)
+            volumes_from_surface = self.model.geometry.surfaces_to_solids(surface_id)
 
             if volumes_from_surface is None:
                 message = "The selected surface is not connected to any volume. "
@@ -171,7 +171,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         line_properties = deepcopy(self.properties.line_properties)
         for new_surface_id in new_surface_ids:
-            lines_from_surface = self.geometry._surfaces_to_curves.get(new_surface_id)
+            lines_from_surface = self.geometry.surfaces_to_curves(new_surface_id)
             if lines_from_surface is None:
                 continue
 

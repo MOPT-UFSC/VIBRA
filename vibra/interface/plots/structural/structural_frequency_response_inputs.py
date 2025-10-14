@@ -181,7 +181,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             nodes = self.mesh.get_nodes_from_surface(selected_id)
 
         elif selection_type == "line":           
-            surface_ids = self.geometry._curves_to_surfaces[selected_id]
+            surface_ids = self.geometry.curves_to_surfaces(selected_id)
             nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":

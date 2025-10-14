@@ -264,7 +264,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         title = "Invalid selection detected"
 
         for surface_id in surface_ids:
-            if len(self.geometry._surfaces_to_solids[surface_id]) != 2:
+            if len(self.geometry.surfaces_to_solids(surface_id)) != 2:
                 self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
@@ -690,7 +690,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def decouple_degrees_of_freedom(self, surface_id: int):
 
-        volumes_from_surface = self.geometry._surfaces_to_solids.get(surface_id)
+        volumes_from_surface = self.geometry.surfaces_to_solids(surface_id)
         if volumes_from_surface is None:
             return 
 
@@ -737,7 +737,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         line_properties = deepcopy(self.properties.line_properties)
         for new_surface_id in new_surface_ids:
-            lines_from_surface = self.geometry._surfaces_to_curves.get(new_surface_id)
+            lines_from_surface = self.geometry.surfaces_to_curves(new_surface_id)
             if lines_from_surface is None:
                 continue
 

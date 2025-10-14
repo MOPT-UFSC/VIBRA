@@ -328,7 +328,7 @@ class DegreesOfFreedomDecoupling:
         """
 
         cols = self.mesh.lines_connectivity.shape[1]
-        lines_from_surface = self.geometry._surfaces_to_curves[surface_id]
+        lines_from_surface = self.geometry.surfaces_to_curves(surface_id)
 
         for i, line_id in enumerate(lines_from_surface):
 
