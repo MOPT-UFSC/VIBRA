@@ -60,7 +60,7 @@ class Ui_loading_window(object):
         self.push_button_stop_processing = QPushButton(self.frame)
         self.push_button_stop_processing.setObjectName(u"push_button_stop_processing")
         self.push_button_stop_processing.setMinimumSize(QSize(0, 28))
-        self.push_button_stop_processing.setMaximumSize(QSize(120, 28))
+        self.push_button_stop_processing.setMaximumSize(QSize(140, 28))
 
         self.gridLayout.addWidget(self.push_button_stop_processing, 0, 0, 1, 1)
 

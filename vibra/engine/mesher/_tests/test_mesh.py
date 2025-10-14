@@ -1,7 +1,6 @@
-from pathlib import Path
 
-import numpy as np
-from data import data_test_helper
+from vibra import PROJECT_DIR
+from vibra.engine.mesher.mesh import Mesh
 
 from vibra.engine.mesher.element_type import (
     HEXAHEDRON_8,
@@ -9,12 +8,15 @@ from vibra.engine.mesher.element_type import (
     TETRAHEDRON_4,
     TETRAHEDRON_10,
 )
-from vibra.engine.mesher.mesh import Mesh
+
+import gmsh
+import numpy as np
+from pathlib import Path
 
 
 def test_tetrahedron_4_mesh():
-    geometry_path = data_test_helper.get_data_path("examples/geometry_files/cylinder.step")
-    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/cilinder_tet4/")
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
+    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_tet4/")
 
     mesh = Mesh().load_cad(
         geometry_path,
@@ -31,8 +33,8 @@ def test_tetrahedron_4_mesh():
     
 
 def test_tetrahedron_10_mesh():
-    geometry_path = data_test_helper.get_data_path("examples/geometry_files/tetrahedron.step")
-    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/tetrahedron_tet10/")
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron.step")
+    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/tetrahedron_tet10/")
 
     mesh = Mesh().load_cad(
         geometry_path,
@@ -49,8 +51,8 @@ def test_tetrahedron_10_mesh():
 
 
 def test_hexahedron_8_mesh():
-    geometry_path = data_test_helper.get_data_path("examples/geometry_files/cylinder.step")
-    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/cilinder_hex8/")
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
+    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_hex8/")
 
     mesh = Mesh().load_cad(
         geometry_path,
@@ -66,9 +68,10 @@ def test_hexahedron_8_mesh():
     )
 
 
+
 def test_hexahedron_20_mesh():
-    geometry_path = data_test_helper.get_data_path("examples/geometry_files/parallelepiped.step")
-    mesh_test_path = data_test_helper.get_data_path("validation/mesh_info/parallelepiped_hex20/")
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/parallelepiped.step")
+    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/parallelepiped_hex20/")
 
     mesh = Mesh().load_cad(
         geometry_path,
@@ -123,10 +126,13 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     )
     expected_mappings = (mesh_path / "mappings.dat").read_text()
 
+    if gmsh.isInitialized():
+        gmsh.finalize()
+
     assert np.allclose(expected_nodal_coordinates, mesh.nodal_coordinates)
     assert np.allclose(expected_lines_connectivity, mesh.lines_connectivity)
     assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
-    assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
+    assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
     assert expected_mappings == str(mappings)
 
     if (expected_solids_connectivity.size != 0) and (mesh.solids_connectivity.size != 0):

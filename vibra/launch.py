@@ -1,12 +1,13 @@
 import logging
 import os
 import sys
-from traceback import format_tb
+from traceback import print_exception
 import platform
 
 from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
 from vibra import USER_PATH
+from vibra.errors import VibraException
 from vibra.interface.application import Application
 
 error_message = None
@@ -19,19 +20,22 @@ def custom_exception_hooks(exc_type, exc_value, exc_traceback):
         sys.exit()
 
     # Logs unhandled errors for future checks
-    logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
+    if not isinstance(exc_value, VibraException):
+        logging.error("Unhandled error", exc_info=(exc_type, exc_value, exc_traceback))
 
     try:
-        from vibra.interface.general.print_message_input import PrintMessageInput
+        from vibra.interface.user_input.exception_message import ExceptionMessage
 
-        window_title = "Unhandled error"
-        title = str(exc_type.__name__)
-        message = str(exc_value) + "\n\n" + "\n".join(format_tb(exc_traceback, limit=-1))
-
-        if isinstance(error_message, PrintMessageInput):
+        if isinstance(error_message, ExceptionMessage):
             error_message.close()
 
-        error_message = PrintMessageInput([window_title, title, message], exec=False)
+        if isinstance(exc_value, VibraException) and not exc_value.show_traceback:
+            exc_traceback = None
+
+        if exc_traceback is not None:
+            print_exception(exc_value)
+
+        error_message = ExceptionMessage(exc_value, stack_trace=exc_traceback)
         error_message.show()
 
     except Exception as e:
@@ -52,7 +56,9 @@ def configure_logs():
     All info logs are saved in the file, but only warnings or error
     are shown to users.
     """
-    file_formatter = logging.Formatter("%(asctime)s \t | %(levelname)s \t | %(message)s")
+    file_formatter = logging.Formatter(
+        "%(asctime)s \t | %(levelname)s \t | %(message)s"
+    )
     file_handler = logging.FileHandler(USER_PATH / ".vibra.log", "w+")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)

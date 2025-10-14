@@ -179,24 +179,15 @@ class InputUi:
         self.process_input(ReciprocatingCompressorInputs)
 
     def plot_structural_mode_shapes(self):
-        if self.project.analysis_id in [
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        if self.project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
             return self.process_input(PlotStructuralModeShapeInputs)     
 
     def plot_displacement_field(self):
-        if self.project.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if self.project.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             return self.process_input(PlotDisplacementFieldInputs)
 
     def plot_structural_frequency_response(self):
-        if self.project.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if self.project.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             return self.process_input(PlotStructuralFrequencyResponseInputs)
 
     def plot_reaction_frequency_response(self):

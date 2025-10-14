@@ -4,7 +4,7 @@ from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import app
+from vibra import app, ICON_DIR
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -49,9 +49,19 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.remove_all_actors()
         self.create_axes()
+        self.create_logos()
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+
+    def create_logos(self):
+        if hasattr(self, "vibra_logo"):
+            self.renderer.RemoveViewProp(self.vibra_logo)
+
+        path = ICON_DIR / "logo_vibra_comp.png"
+        self.vibra_logo = self.create_logo(path)
+        self.vibra_logo.SetPosition(0.895, 0.91)
+        self.vibra_logo.SetPosition2(0.10, 0.10)
 
     def set_theme(self, *args, **kwargs):
         self.update_theme()
@@ -127,6 +137,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor: SolidsActor | HollowSolidsActor = HollowSolidsActor(mesh)
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.selection_spheres_actor = SelectionSpheres()
+
+        # Create empty variables to be used when switching actors
+        self._cache_hollow_solids_actor: HollowSolidsActor | None = self.solids_actor
+        self._cache_full_solids_actor: SolidsActor | None = None
 
         visualization = app().main_window.visualization_filter
         self.ghost_actor = GhostActor(mesh)
@@ -291,6 +305,24 @@ class MeshRenderWidget(CommonRenderWidget):
     def _get_info_tab(self):
         pass
 
+    def switch_to_hollow_actor(self):
+        if not isinstance(self.solids_actor, SolidsActor):
+            return
+
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        if not isinstance(self._cache_hollow_solids_actor, HollowSolidsActor):
+            self._cache_hollow_solids_actor = HollowSolidsActor(mesh)
+
+        self._cache_full_solids_actor = self.solids_actor
+
+        self.remove_actors(self.solids_actor, self.edges_actor)
+        self.solids_actor = self._cache_hollow_solids_actor
+        self.edges_actor = EdgesActor(self.solids_actor.data)
+        self.add_actors(self.solids_actor, self.edges_actor)
+
     def switch_to_solids_actor(self):
         if not isinstance(self.solids_actor, HollowSolidsActor):
             return
@@ -302,8 +334,13 @@ class MeshRenderWidget(CommonRenderWidget):
         if not mesh.are_there_volumes_in_geometry():
             return
 
+        if not isinstance(self._cache_full_solids_actor, SolidsActor):
+            self._cache_full_solids_actor = SolidsActor(mesh)
+
+        self._cache_hollow_solids_actor = self.solids_actor
+
         self.remove_actors(self.solids_actor, self.edges_actor)
-        self.solids_actor = SolidsActor(mesh)
+        self.solids_actor = self._cache_full_solids_actor
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.add_actors(self.solids_actor, self.edges_actor)
 
@@ -360,6 +397,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.disable_cut()
         self.solids_actor.disable_cut()
         self.edges_actor.disable_cut()
+
+        self.switch_to_hollow_actor()
         self.update()
 
     def update_info_text(self):
