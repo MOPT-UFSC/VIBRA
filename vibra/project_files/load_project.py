@@ -24,15 +24,34 @@ class LoadProject:
         self.properties = app().project.model.properties
 
     def load(self):
+        logging.info("Loading project... [25/100]")
         self.load_geometry_setup()
+
+        logging.info("Loading project... [30/100]")
         self.load_geometry()
+
+        logging.info("Loading project... [35/100]")
         self.load_geometry_data()
+
+        logging.info("Loading project... [40/100]")
         self.load_mesh_setup()
+
+        logging.info("Loading project... [45/100]")
         self.load_mesh_data()
+
+        logging.info("Loading project... [55/100]")
         self.load_project_libraries()
+
+        logging.info("Loading project... [60/100]")
         self.load_imported_table_data_from_file()
+
+        logging.info("Loading project... [65/100]")
         self.load_model_properties()
+    
+        logging.info("Loading project... [70/100]")
         self.load_analysis_setup()
+
+        logging.info("Loading project... [75/100]")
         self.load_analysis_results()
 
     def load_geometry_setup(self):
@@ -126,8 +145,6 @@ class LoadProject:
             self.file.remove_results_data_from_project_file()
             return
 
-        logging.info("Loading geometry data... [20/100]")
-
         for key in ["points", "lines", "surfaces", "volumes"]:
 
             data = geometry_data.get(key)
@@ -135,8 +152,6 @@ class LoadProject:
                 continue
 
             self.model.mesh.geometry_information[key] = [int(value) for value in data]
-
-        logging.info(" geometry data... [60/100]")
 
         for key, data in geometry_data.items():
               
@@ -173,14 +188,10 @@ class LoadProject:
                 else:    
                     self.model.mesh.points_from_line[tag] = _data
 
-        logging.info("Loading geometry data... [95/100]")
         self.model.mesh.process_upwards_adjacencies_from_entities()
-
         app().main_window.update_geometry_information()
 
     def load_mesh_data_from_file(self, mesh_data: dict):
-
-        logging.info("Loading mesh... [20/100]")
 
         self.model.mesh.clear_mesh_data()
 
@@ -199,8 +210,6 @@ class LoadProject:
         if isinstance(nodes_from_points, np.ndarray):
             self.model.mesh.nodes_from_points = {int(key) : int(value) for key, value in nodes_from_points}
             self.model.mesh.points_from_nodes = {value : key for key, value in self.model.mesh.nodes_from_points.items()}
-
-        logging.info("Loading mesh... [60/100]")
 
         for key, data in mesh_data.items():
             
@@ -243,10 +252,8 @@ class LoadProject:
 
         self.model.mesh.process_upwards_adjacencies_from_entities()
 
-        logging.info("Loading mesh... [68/100]")
+        logging.info("Loading project... [50/100]")
         self.model.mesh.process_mesh_related_mappings("Loading")
-
-        logging.info("Loading mesh... [99/100]")
         self.model.generated_mesh = True
 
     def load_mesh_setup(self):
@@ -295,13 +302,13 @@ class LoadProject:
         if not self.model.check_path_for_geometry_file(geometry_path):
             self.model.mesh.update_element_type()
 
-    def update_render(self):
+    # def update_render(self):
 
-        logging.info("Updating render... [20/100]")
-        app().main_window.update_mesh_information()
+    #     logging.info("Updating render... [20/100]")
+    #     app().main_window.update_mesh_information()
 
-        logging.info("Updating render... [90/100]")
-        app().main_window.update_plots()
+    #     logging.info("Updating render... [90/100]")
+    #     app().main_window.update_plots()
 
     def load_imported_table_data_from_file(self):
 
@@ -382,8 +389,6 @@ class LoadProject:
     def load_analysis_results(self):
 
         project = app().project
-
-        logging.info("Loading results... [20/100]")
         results_data = self.file.read_results_data_from_file()
 
         for key, data in results_data.items():
@@ -414,7 +419,7 @@ class LoadProject:
             else:
                 continue
 
-        logging.info("Updating analysis render... [85/100]")
+        logging.info("Loading project... [85/100]")
 
         acoustic_harmonic_solver = project.acoustic_harmonic_solver
         if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:

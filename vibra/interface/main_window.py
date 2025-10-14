@@ -892,40 +892,49 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
 
         try:
-            if project_path is not None:
-                project_path = Path(project_path)
-                app().config.add_recent_file(project_path)
-                app().config.write_last_folder_path_in_file("project_folder", project_path)
-                self.update_recents_menu()
-                app().file.extract_project(project_path)
-                self.update_window_title(project_path)
 
-            app().project.reset_variables()
-            app().project.reset_solutions()
+            def open_callback(project_path):
 
-            if project_path is not None:
-                app().project.name = project_path.stem
-                app().project.save_path = project_path
+                if project_path is not None:
+                    project_path = Path(project_path)
+                    app().config.add_recent_file(project_path)
+                    app().config.write_last_folder_path_in_file("project_folder", project_path)
+                    self.update_recents_menu()
 
-            app().load_project.initialize()
-            LoadingWindow(app().load_project.load).run()
+                    logging.info("Loading project... [15/100]")
+                    app().file.extract_project(project_path)
+                    self.update_window_title(project_path)
 
-            self.update_toolbar_and_menu_items_after_load_project()
-            self.analysis_toolbar.check_analysis_setup_callback()
-            self.status_bar.setVisible(True)
-            self.action_front_view_callback()
-            self.update_mesh_information()
+                app().project.reset_variables()
+                app().project.reset_solutions()
 
-            LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
+                if project_path is not None:
+                    app().project.name = project_path.stem
+                    app().project.save_path = project_path
 
-            self.action_results_workspace.setDisabled(True)
-            self.action_model_workspace_callback()
-            self.model_setup_widget.model_setup_items.update_items_appearance()
+                app().load_project.initialize()
+                app().load_project.load()
+
+                self.update_toolbar_and_menu_items_after_load_project()
+                self.analysis_toolbar.check_analysis_setup_callback()
+                self.status_bar.setVisible(True)
+                self.action_front_view_callback()
+                self.update_mesh_information()
+
+                self.mesh_widget.update_plot()
+                self.geometry_widget.update_plot()
+
+                self.action_results_workspace.setDisabled(True)
+                self.action_model_workspace_callback()
+                self.model_setup_widget.model_setup_items.update_items_appearance()
             
+            LoadingWindow(open_callback).run(project_path)
+
             if app().project.can_resume_solution:
-                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records",
-                               "Click on the 'Resume the analysis' button to solve remaining frequencies"])
+                window_title = "Acoustic Harmonic results"
+                title = "Missing solution frequency records"
+                message = "Click on the 'Resume the analysis' button to solve remaining frequencies"
+                PrintMessageInput([window_title, title, message])
 
         except Exception as error_log:
             from traceback import print_exception
