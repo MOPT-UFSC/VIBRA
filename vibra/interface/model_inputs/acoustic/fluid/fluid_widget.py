@@ -688,7 +688,7 @@ class FluidWidget(FluidWidget_UI):
                 if isinstance(data, Fluid):
                     if data.identifier in fluid_identifiers:
                         volumes_to_remove_fluid.append(volume_id)
-                        surface_ids = self.model.mesh.surfaces_from_volume[volume_id]
+                        surface_ids = self.model.geometry.solids_to_surfaces(volume_id)
                         for surface_id in surface_ids:
                             surfaces_to_remove_fluid.append(surface_id)
 

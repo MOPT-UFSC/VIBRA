@@ -44,6 +44,8 @@ class FacesActor(vtkActor):
         self.configure_appearance()
 
     def create_geometry(self):
+        self.geometry = app().project.model.geometry
+
         if self.mesh.nodal_coordinates.size == 0:
             return
 
@@ -88,13 +90,12 @@ class FacesActor(vtkActor):
         points.SetData(numpy_to_vtk(coordinates))
 
         surface_to_volume = dict()
-        for volume, surfaces in self.mesh.surfaces_from_volume.items():
+        for volume, surfaces in self.geometry._solids_to_surfaces.items():
             for surface in surfaces:
                 surface_to_volume[surface] = volume
 
         self.visible_indexes = dict()
 
-        self.geometry = app().project.model.geometry
         hidden_surfaces = app().main_window.hidden_surfaces if self.allow_hidding else set()
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:

@@ -297,10 +297,11 @@ class MainWindow(MainWindow_UI):
         surfaces = set(surfaces) - set(self.hidden_surfaces)
         volumes = set(volumes) - set(self.hidden_volumes)
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
-            volume_surfaces = mesh.surfaces_from_volume.get(volume, [])
+            volume_surfaces = geometry.solids_to_surfaces(volume)
             surfaces |= set(volume_surfaces)
 
         if join and remove:
@@ -626,12 +627,13 @@ class MainWindow(MainWindow_UI):
 
     def hide_volumes(self, volumes: set[int]):
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
 
         volumes = set(volumes)
         selected_volume_surfaces = set()
         visible_volume_surfaces = set()
 
-        for volume, surfaces in mesh.surfaces_from_volume.items():
+        for volume, surfaces in geometry._solids_to_surfaces.items():
             if volume in volumes:
                 selected_volume_surfaces |= set(surfaces)
             elif volume not in self.hidden_volumes:

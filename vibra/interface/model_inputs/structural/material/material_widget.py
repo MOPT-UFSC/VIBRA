@@ -11,7 +11,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 
 from vibra.libraries.default_libraries import default_material_library
 from vibra.engine.properties.material import Material
-
+from vibra.engine.geometry.geometry import Geometry
 from molde import Color
 from copy import deepcopy
 from itertools import count
@@ -36,6 +36,7 @@ class MaterialWidget(MaterialWidget_UI):
         app().main_window.action_model_workspace_callback()
 
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self.dialog = kwargs.get("dialog", None)
@@ -546,7 +547,7 @@ class MaterialWidget(MaterialWidget_UI):
                 if isinstance(data, Material):
                     if data.identifier in material_identifiers:
                         volumes_to_remove_material.append(volume_id)
-                        surface_ids = self.mesh.surfaces_from_volume[volume_id]
+                        surface_ids = self.geometry.solids_to_surfaces(volume_id)
                         for surface_id in surface_ids:
                             surfaces_to_remove_material.append(surface_id)
 

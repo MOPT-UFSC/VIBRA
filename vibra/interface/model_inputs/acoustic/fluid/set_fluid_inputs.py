@@ -9,6 +9,8 @@ from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+from vibra.engine.geometry.geometry import Geometry
+
 error_title = "Error"
 warning_title = "Warning"
 
@@ -33,6 +35,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -217,7 +220,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         for volume_id in volume_ids:
             self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
-            for surface_id in self.mesh.surfaces_from_volume[volume_id]:
+            for surface_id in self.geometry.solids_to_surfaces(volume_id):
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         self.actions_to_finalize()
@@ -241,7 +244,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         elif selection == "Volume":
             self.properties._remove_volume_property("fluid", selected_id)
             self.properties._remove_volume_property("fluid_id", selected_id)
-            for surface_id in self.mesh.surfaces_from_volume[selected_id]:
+            for surface_id in self.geometry.solids_to_surfaces(selected_id):
                 self.properties._remove_surface_property("fluid", surface_id)
                 self.properties._remove_surface_property("fluid_id", surface_id)
 
