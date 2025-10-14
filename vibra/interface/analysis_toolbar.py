@@ -245,8 +245,12 @@ class AnalysisToolbar(QToolBar):
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
 
-        # Do not solve models with collapsed elements!
+        # Do not solve models if there are disconnected nodes or collapsed elements!
         mesh = app().project.model.mesh   
+
+        if mesh.disconnected_nodes:
+            return
+
         collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
         if collapsed:
             return
@@ -335,10 +339,12 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        # disable run_analysis button if there are collapsed elements
-        mesh = app().project.model.mesh   
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-        self.pushButton_run_analysis.setDisabled(bool(collapsed))
+        # disable run_analysis button if there are disconnected nodes or collapsed elements
+        mesh = app().project.model.mesh
+        disconnected_nodes = bool(mesh.disconnected_nodes)
+        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+
+        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def harmonic_structural(self):
 
