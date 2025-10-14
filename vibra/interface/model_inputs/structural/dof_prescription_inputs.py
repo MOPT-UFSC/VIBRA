@@ -853,7 +853,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in self.mesh.lines_from_point[selected_id]:
+                for line_id in self.geometry.points_to_curves(selected_id):
                     data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dof", line_id)
@@ -873,7 +873,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     self.properties._remove_point_property("prescribed_dof", point_id)
                     table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
-                for line_id in self.mesh.lines_from_point[point_id]:
+                for line_id in self.geometry.points_to_curves(point_id):
                     data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dof", line_id)
