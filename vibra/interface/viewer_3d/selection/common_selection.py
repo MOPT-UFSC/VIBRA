@@ -23,9 +23,10 @@ def pick_actor_cell_info(
     cell_picker = vtkCellPicker()
     cell_picker.SetTolerance(0.0018)
 
-    pickability = narrow_pickability_to_actor(target_actor, renderer)
+    cell_picker.InitializePickList()
+    cell_picker.AddPickList(target_actor)
+    cell_picker.PickFromListOn()
     cell_picker.Pick(x, y, 0, renderer)
-    restore_pickability(pickability, renderer)
 
     cell_id = cell_picker.GetCellId()
     position = cell_picker.GetPickPosition()
