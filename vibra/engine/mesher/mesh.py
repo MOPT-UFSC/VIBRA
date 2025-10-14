@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
@@ -126,6 +127,8 @@ class Mesh:
         self.cache_lines_from_surface = dict()
         self.cache_points_from_line = dict()
 
+        self.error_data = dict()
+
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
@@ -180,8 +183,28 @@ class Mesh:
             gmsh.model.mesh.generate(dim=dimension)
             gmsh.model.mesh.removeDuplicateNodes()
 
-        except Exception as error_log:
+            self.reset_error_data()
+
+        except:# Exception as error_log:
             gmsh.finalize()
+
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            # tb_message = "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            tb_message = traceback.format_exception(exc_type, exc_value, exc_traceback)[-1]
+            
+            message = "A problem occurred while processing the mesh. Some of the following actions may help resolve "
+            message += "the issue: reducing the size of the elements and/or changing the 3D meshing algorithm. " 
+            message += "If neither of these options works, we suggest reviewing the CAD geometry to eliminate "
+            message += "any potential underlying geometric issues. \n\n"
+            message += "Error details:\n\n"
+            message += tb_message
+
+            self.error_data = {
+                "title" : "Error while generating mesh",
+                "message" : message
+                }
+
+            return
             raise MeshingAlgorithmException(error_log) from error_log
 
         logging.info("Post-processing mesh... [60/100]")
@@ -2513,6 +2536,15 @@ class Mesh:
         selected_elements = np.array([*set(_selected_elements)], dtype=int)
 
         return nodes_inside_sphere, list(selected_elements)
+
+    def set_error_data(self, title: str, message: str):
+        self.error_data = {
+            "title" : title, 
+            "message" : message
+            }
+
+    def reset_error_data(self):
+        self.error_data.clear()
 
 
 if __name__ == "__main__":
