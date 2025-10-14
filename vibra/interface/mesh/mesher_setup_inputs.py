@@ -439,20 +439,29 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         LoadingWindow(generate_function).run()
 
-        collapsed = (self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
+        disconnected_nodes = self.mesh.disconnected_nodes
+        collapsed_elements = (self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
 
-        if collapsed:
+        run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
+        run_analysis_button.setDisabled(bool(collapsed_elements) or bool(self.mesh.disconnected_nodes))
+
+        if disconnected_nodes:
+            title = "The generated mesh contains disconnected nodes"
+            message = "Disconnected nodes: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes) + "."
+            PrintMessageInput([error_title, title, message])
+
+        if collapsed_elements:
             title = "The generated mesh contains collapsed elements"
 
             message = ""
             if self.mesh.collapsed_3d_elements:
-                message += "Collapsed 3d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_3d_elements) + ".\n\n"
+                message += "Collapsed 3d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_3d_elements) + ".\n\n"
 
             if self.mesh.collapsed_2d_elements:
-                message += "Collapsed 2d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_2d_elements) + ".\n\n"
+                message += "Collapsed 2d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_2d_elements) + ".\n\n"
 
             if self.mesh.collapsed_1d_elements:
-                message += "Collapsed 1d elements: " + ", ".join(str(i) for i in self.mesh.collapsed_1d_elements) + "."
+                message += "Collapsed 1d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_1d_elements) + "."
 
             PrintMessageInput([error_title, title, message])
 
@@ -475,6 +484,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
+
+        app().main_window.set_mesh_selection(nodes=self.mesh.disconnected_nodes)
 
     def process_degress_of_freedom_if_necessary(self):
         if not app().project.model.properties.is_the_surface_property_present_in_the_model(
