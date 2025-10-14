@@ -81,7 +81,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         color_to_surfaces = defaultdict(list)
         self.reload_composition()
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
-        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
+        surfaces = geometry._surfaces_to_curves.keys()  # We don't have just "surfaces" yet
 
         for surface in surfaces:
             volumes = geometry.surfaces_to_solids(surface)
@@ -116,7 +116,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         geometry = app().project.model.geometry
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
-        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
+        surfaces = geometry._surfaces_to_curves.keys()  # We don't have just "surfaces" yet
 
         if color_mode == ColorMode.EMPTY:
             self.clear_composition()
