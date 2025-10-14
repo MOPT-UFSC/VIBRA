@@ -53,7 +53,6 @@ from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 import gmsh
 
-from pprint import pprint
 
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)

@@ -327,6 +327,9 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_selection(self):
         if not self.actors_exists():
             return
+        
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
 
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
