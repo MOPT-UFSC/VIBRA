@@ -1,11 +1,13 @@
-import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QHeaderView, QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+
+import numpy as np
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -104,8 +106,9 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         if self.lineEdit_natural_frequency.text() == "":
             return
 
-        self.mode_index = self.natural_frequencies.index(self.selected_frequency)
-        app().main_window.results_widget.update_plot()
+        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def update_transparency_callback(self):
         return
@@ -180,9 +183,9 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             damped_frequency = np.abs(selected_frequency) * ((1 - damping_ratio**2) ** (1 / 2))
             self.lineEdit_natural_frequency.setText(str(round(damped_frequency, 4)))
         else:
-            self.lineEdit_natural_frequency.setText(str(round(selected_frequency, 4)))
+            self.lineEdit_natural_frequency.setText(f"{selected_frequency : .6f}")
 
-        self.selected_frequency = selected_frequency
+        self.selected_natural_frequency = selected_frequency
         self.update_plot()
 
     def on_doubleclick_item(self, item):
