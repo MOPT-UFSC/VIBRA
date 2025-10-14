@@ -61,12 +61,11 @@ def lines_info_text():
     if len(line_ids) == 0:
         return ""
     
-    length_from_lines = app().project.model.mesh.length_from_lines
-
+    length_from_lines = app().project.model.geometry._curves_lengths
     text = ""
     length = 0
     for line_id in line_ids:
-        length += length_from_lines.get(line_id, 0)
+        length += length_from_lines.get(line_id)
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
@@ -156,10 +155,10 @@ def process_volumes_and_masses(volume_ids: list):
     material_mass = 0.
     volume_compound = 0.
 
-    volume_from_bodies = app().project.model.mesh.volume_from_bodies
+    volume_from_bodies = app().project.model.geometry._solids_volumes
 
     for volume_id in volume_ids:
-        volume = volume_from_bodies.get(volume_id, 0)
+        volume = volume_from_bodies.get(volume_id)
         volume_compound += volume
 
         fluid = app().project.model.properties._get_property("fluid", volume=volume_id)
