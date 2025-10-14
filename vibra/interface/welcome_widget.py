@@ -60,7 +60,7 @@ class WelcomeWidget(QWidget):
             
         number_of_recent = 7
         recent_paths = app().config.get_recent_files()
-        recent_paths = recent_paths[-number_of_recent:]
+        recent_paths = recent_paths[:number_of_recent]
 
         for path in recent_paths:
             path = Path(path)

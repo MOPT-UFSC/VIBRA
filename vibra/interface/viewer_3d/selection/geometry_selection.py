@@ -125,6 +125,12 @@ class GeometrySelection:
             return set(), line_distance
 
     def _pick_surface(self, x: int, y: int) -> set[int]:
+        # A actor can not be picked if it is not visible, so we make it
+        # visible and then revert it back to the previous state
+        default_actor = self.geometry_render_widget.multimaterial.default_actor
+
+        visibility = default_actor.GetVisibility()
+        default_actor.SetVisibility(True)
         surface_id, surface_distance = pick_actor_cell_info(
             x,
             y,
@@ -132,6 +138,8 @@ class GeometrySelection:
             "surface_indexes",
             self.geometry_render_widget.renderer,
         )
+        default_actor.SetVisibility(visibility)
+
         if surface_id >= 0:
             return {surface_id}, surface_distance
         else:
