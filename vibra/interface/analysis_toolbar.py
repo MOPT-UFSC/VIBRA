@@ -269,40 +269,21 @@ class AnalysisToolbar(QToolBar):
         logging.info("Post-processing results... [10/100]")
         self.set_pushbutton_reset_solution_enabled()
 
-        t0 = time()
-        # This is needed specially when the geometry
-        # and mesh changes because of the analysis
         logging.info("Post-processing results... [65/100]")
-
         app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
-        dt = time() - t0
-        print(f"Elapsed time A: {dt : .6f}s")
 
-        t0 = time()
-        logging.info("Post-processing results... [80/100]")
         if not app().file.geometry_data_filepath.exists():
             app().file.write_geometry_data_in_file()
-        dt = time() - t0
-        print(f"Elapsed time B: {dt : .6f}s")
 
-        t0 = time()
         logging.info("Post-processing results... [85/100]")
         if not app().file.mesh_data_filepath.exists():
             app().file.write_mesh_data_in_file()
-        dt = time() - t0
-        print(f"Elapsed time C: {dt : .6f}s")
 
-        t0 = time()
         logging.info("Post-processing results... [90/100]")
         app().file.write_model_properties_in_file()
-        dt = time() - t0
-        print(f"Elapsed time D: {dt : .6f}s")
 
-        t0 = time()
         logging.info("Post-processing results... [95/100]")
         app().file.write_results_data_in_file()
-        dt = time() - t0
-        print(f"Elapsed time E: {dt : .6f}s")
 
     def project_solution_data_reset_callback(self):
 
