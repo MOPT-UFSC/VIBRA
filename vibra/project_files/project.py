@@ -272,13 +272,11 @@ class Project(QObject):
 
         if not self.model.generated_mesh:
             obj = MesherSetupInputs(close_after_generate=True)
-            if obj.complete:
-                app().main_window.update_plots()
-            else:
-                return
+            if not obj.complete:
+                return True
 
         if len(self.analysis_setup) == 0:
-            return
+            return True
 
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
