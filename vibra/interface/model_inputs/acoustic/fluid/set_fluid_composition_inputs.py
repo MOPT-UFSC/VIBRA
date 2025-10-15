@@ -844,13 +844,18 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     
         title = "Error while processing fluid properties"
         message = "The following errors were found in while processing the fluid properties.\n\n"
-    
+        import re
+        
+        has_error = False
         for key, _error in self.errors.items():
             message += f"{str(key)}: {str(_error)}\n\n"
-    
+            if re.match(r"\[\w+\s+error", _error) is not None:
+                has_error = True
+
+        print(has_error)
         message += "It is recommended to check the fluid composition and state properties to proceed."
         PrintMessageInput([error_title, title, message])
-        return True
+        return not has_error
 
     def actions_to_finalize(self):
         if not self.state_properties:
