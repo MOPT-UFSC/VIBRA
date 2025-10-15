@@ -124,9 +124,9 @@ class Project(QObject):
             return
         self.model.process_mesh()
 
-    def set_analysis_setup(self, data: dict):
-        self.analysis_setup = data
-        self.model.set_analysis_setup(data)
+    def set_analysis_setup(self, analysis_setup: dict):
+        self.analysis_setup = analysis_setup
+        self.model.set_analysis_setup(analysis_setup)
 
     def is_analysis_setup_complete(self):
 

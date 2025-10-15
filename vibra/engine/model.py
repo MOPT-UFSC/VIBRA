@@ -86,7 +86,6 @@ class Model:
 
         self.decouple_info = dict()
         self.nodes_mapping = dict()
-        self.frequency_setup = dict()
 
         self.analysis_setup = None
         self.solid_acoustic_element = None
@@ -253,10 +252,8 @@ class Model:
         self.f_max = analysis_setup.get("f_max", None)
         self.f_step = analysis_setup.get("f_step", None)
 
-        self.frequency_setup.clear()
-
         if "frequencies" in analysis_setup.keys():
-            self.frequencies = analysis_setup.get("frequencies", None)
+            self.frequencies = analysis_setup.get("frequencies")
 
         elif (self.f_min, self.f_max, self.f_step).count(None) == 0:
 
@@ -265,13 +262,6 @@ class Model:
             except:
                 self.frequencies = None
                 return
-
-        self.frequency_setup = {
-                                "f_min" : self.f_min,
-                                "f_max" : self.f_max,
-                                "f_step" : self.f_step,
-                                "frequencies" : self.frequencies
-                                }
 
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
@@ -449,6 +439,8 @@ class Model:
             number_frequencies = self.frequencies.size
         else:
             return dict(), False
+        
+        print(f"Number of frequencies: {number_frequencies}")
 
         aux_ones = np.ones(number_frequencies, dtype=float)
 
