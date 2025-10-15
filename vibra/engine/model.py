@@ -442,7 +442,15 @@ class Model:
 
         frequency_dependent = False
         fluid_properties_from_volume = dict()
-        aux_ones = np.ones(self.frequencies.size, dtype=float)
+
+        if self.frequencies is None:
+            number_frequencies = 1
+        elif isinstance(self.frequencies, np.ndarray):
+            number_frequencies = self.frequencies.size
+        else:
+            return dict(), False
+
+        aux_ones = np.ones(number_frequencies, dtype=float)
 
         # prevent frequency-varying fluid properties
         # while solving acoustic modal analysis
