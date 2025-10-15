@@ -81,6 +81,7 @@ class Mesh:
 
         self.mesh_quality_data = dict()
 
+        self.disconnected_nodes = list()
         self.collapsed_3d_elements = set()
         self.collapsed_2d_elements = set()
         self.collapsed_1d_elements = set()
@@ -893,6 +894,11 @@ class Mesh:
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
+        self.disconnected_nodes.clear()
+        self.collapsed_1d_elements.clear()
+        self.collapsed_2d_elements.clear()
+        self.collapsed_3d_elements.clear()
+
         self.nodes_from_points.clear()
         self.points_from_nodes.clear()
 
@@ -1077,7 +1083,10 @@ class Mesh:
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
 
-        logging.info("Post-processing mesh... [88/100]")
+        logging.info("Post-processing mesh... [80/100]")
+        self.disconnected_nodes = self.get_disconnected_nodes()
+
+        logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
 
     def cache_mesh_information(self):
@@ -1532,6 +1541,15 @@ class Mesh:
             axis=1,
         )
         return mask
+
+    def get_disconnected_nodes(self):
+        disconnected_nodes = list()
+        nodes_from_solid_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
+        if self.nodal_coordinates[:, 0].size != nodes_from_solid_elements.size:
+            _disconnected_nodes = np.delete(self.nodal_coordinates[:, 0], nodes_from_solid_elements)
+            disconnected_nodes = [int(node_id) for node_id in _disconnected_nodes]
+
+        return disconnected_nodes
 
     def get_face_elements_connected_to_nodes(
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None

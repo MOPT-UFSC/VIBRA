@@ -2,15 +2,17 @@ from PySide6.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt, QSize, Signal
 
-
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.loading_window import LoadingWindow
 
+import logging
 from typing import Literal
+from time import time
 
 AnalysisType = Literal[
     "",
@@ -240,6 +242,9 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis(self, is_resume: bool = False):
 
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
+
         # Do not solve models with collapsed elements!
         mesh = app().project.model.mesh   
         collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
@@ -258,19 +263,26 @@ class AnalysisToolbar(QToolBar):
         if is_resume:
             app().project.can_resume_solution = False
 
+        LoadingWindow(self.post_processing_analysis).run()
+
+    def post_processing_analysis(self):
+        logging.info("Post-processing results... [10/100]")
         self.set_pushbutton_reset_solution_enabled()
 
-        # This is needed specially when the geometry
-        # and mesh changes because of the analysis
-        app().main_window.update_plots(reset_camera=False)
+        logging.info("Post-processing results... [65/100]")
+        app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-        if not app().file.read_geometry_data_from_file():
+        if not app().file.geometry_data_filepath.exists():
             app().file.write_geometry_data_in_file()
 
-        if not app().file.read_mesh_data_from_file():
+        logging.info("Post-processing results... [85/100]")
+        if not app().file.mesh_data_filepath.exists():
             app().file.write_mesh_data_in_file()
 
+        logging.info("Post-processing results... [90/100]")
         app().file.write_model_properties_in_file()
+
+        logging.info("Post-processing results... [95/100]")
         app().file.write_results_data_in_file()
 
     def project_solution_data_reset_callback(self):

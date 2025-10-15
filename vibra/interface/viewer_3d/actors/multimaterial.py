@@ -116,13 +116,13 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         if color_mode == ColorMode.EMPTY:
             self.clear_composition()
-            self.default_actor.GetProperty().SetOpacity(1)
+            self.default_actor.VisibilityOn()
             hidden_surfaces = app().main_window.hidden_surfaces
             visible_surfaces = set(surfaces) - hidden_surfaces
             self.configure_composition("default", visible_surfaces)
             return
 
-        self.default_actor.GetProperty().SetOpacity(1e-12)
+        self.default_actor.VisibilityOff()
         composition_to_surfaces = defaultdict(list)
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
 
@@ -343,10 +343,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         It is used to enable selection whithout further modifications
         and the performance does not degrade too much.
 
-        The selection actor has opacity 0 so it is "rendered" but is not visible.
+        It is also shown when the user whant to disable colors and textures.
         """
         self.default_actor = self._new_actor_extraction("default")
-        self.default_actor.GetProperty().SetOpacity(1e-12)
+        self.default_actor.VisibilityOff()
         self.default_actor.PickableOn()
 
     def _create_material_volume_actor(self):

@@ -322,6 +322,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = self._cache_hollow_solids_actor
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.add_actors(self.solids_actor, self.edges_actor)
+        self.visualization_changed_callback()
 
     def switch_to_solids_actor(self):
         if not isinstance(self.solids_actor, HollowSolidsActor):
@@ -343,6 +344,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor = self._cache_full_solids_actor
         self.edges_actor = EdgesActor(self.solids_actor.data)
         self.add_actors(self.solids_actor, self.edges_actor)
+        self.visualization_changed_callback()
 
     def update_section_plane(self):
         if not self.actors_exists():
