@@ -86,7 +86,6 @@ class Model:
 
         self.decouple_info = dict()
         self.nodes_mapping = dict()
-        self.frequency_setup = dict()
 
         self.analysis_setup = None
         self.solid_acoustic_element = None
@@ -244,6 +243,7 @@ class Model:
         self.mesh = mesh
         self.generated_mesh = True
 
+
     def set_analysis_setup(self, analysis_setup: dict):
 
         self.frequencies = None
@@ -253,10 +253,8 @@ class Model:
         self.f_max = analysis_setup.get("f_max", None)
         self.f_step = analysis_setup.get("f_step", None)
 
-        self.frequency_setup.clear()
-
         if "frequencies" in analysis_setup.keys():
-            self.frequencies = analysis_setup.get("frequencies", None)
+            self.frequencies = analysis_setup.get("frequencies")
 
         elif (self.f_min, self.f_max, self.f_step).count(None) == 0:
 
@@ -265,13 +263,6 @@ class Model:
             except:
                 self.frequencies = None
                 return
-
-        self.frequency_setup = {
-                                "f_min" : self.f_min,
-                                "f_max" : self.f_max,
-                                "f_step" : self.f_step,
-                                "frequencies" : self.frequencies
-                                }
 
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
@@ -442,7 +433,15 @@ class Model:
 
         frequency_dependent = False
         fluid_properties_from_volume = dict()
-        aux_ones = np.ones(self.frequencies.size, dtype=float)
+
+        if self.frequencies is None:
+            number_frequencies = 1
+        elif isinstance(self.frequencies, np.ndarray):
+            number_frequencies = self.frequencies.size
+        else:
+            return dict(), False
+
+        aux_ones = np.ones(number_frequencies, dtype=float)
 
         # prevent frequency-varying fluid properties
         # while solving acoustic modal analysis
