@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, 
 
 from vibra import app, ICON_DIR
 from vibra.engine.mesher import gmsh_constants
+from vibra.engine.geometry.geometry import Geometry
 from vibra.engine.mesher.element_type import (
     ElementType,
     TETRAHEDRON_4,
@@ -68,6 +69,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.set_input_widget(self)
 
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
 
         self._config_window()
         self._initialize()
@@ -637,7 +639,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def config_control_quality_table(self):
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.are_there_volumes_in_geometry()
         self.tabWidget_main.setTabVisible(2, volume_exists)                
         if not volume_exists:
             return

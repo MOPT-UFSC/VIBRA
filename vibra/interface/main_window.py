@@ -597,7 +597,7 @@ class MainWindow(MainWindow_UI):
         mesh = app().project.model.mesh
         geometry = app().project.model.geometry
 
-        if not mesh.are_there_volumes_in_geometry():
+        if not geometry.are_there_volumes_in_geometry():
             PrintMessageInput(
                 [
                     "Warning",

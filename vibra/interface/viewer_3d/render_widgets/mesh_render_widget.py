@@ -296,10 +296,11 @@ class MeshRenderWidget(CommonRenderWidget):
             return
 
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
         if mesh is None:
             return
 
-        if not mesh.are_there_volumes_in_geometry():
+        if not geometry.are_there_volumes_in_geometry():
             return
 
         self.remove_actors(self.solids_actor, self.edges_actor)

@@ -101,7 +101,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
                       "Rotation Rz",
                       ]
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.are_there_volumes_in_geometry()
         if volume_exists:
             active_dof_labels = dof_labels[:3]
         else:

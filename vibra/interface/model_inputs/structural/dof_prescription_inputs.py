@@ -404,7 +404,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     lineEdit_imag.setText(str(np.imag(values[index])))
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, line_edit_real: QLineEdit, line_edit_imag: QLineEdit, label: str):

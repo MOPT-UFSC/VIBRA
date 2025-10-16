@@ -4,10 +4,12 @@ from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.model.setup.material.set_material_ui import SetMaterial_UI
-from vibra.engine.properties.material import Material
 from vibra.interface.model_inputs.structural.material.material_widget import MaterialWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from vibra.engine.properties.material import Material
+from vibra.engine.geometry.geometry import Geometry
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -31,6 +33,7 @@ class MaterialInputs(SetMaterial_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -137,7 +140,7 @@ class MaterialInputs(SetMaterial_UI):
         volumes = app().main_window.selected_geometry_volumes
         surfaces = app().main_window.selected_geometry_surfaces
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.are_there_volumes_in_geometry()
         index = self.comboBox_attribution_type.currentIndex()
 
         selected_ids = set()
@@ -191,7 +194,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def update_selection_combo_box_texts(self):
 
-        volumes_exists = self.mesh.are_there_volumes_in_geometry()
+        volumes_exists = self.geometry.are_there_volumes_in_geometry()
         if volumes_exists:
             labels = ["All volumes", "Selected volumes"]
         else:

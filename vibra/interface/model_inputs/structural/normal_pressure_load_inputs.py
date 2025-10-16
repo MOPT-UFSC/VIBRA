@@ -10,6 +10,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+from vibra.engine.geometry.geometry import Geometry
 import numpy as np
 from os.path import basename
 from pathlib import Path
@@ -27,6 +28,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -130,7 +132,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         return
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):
