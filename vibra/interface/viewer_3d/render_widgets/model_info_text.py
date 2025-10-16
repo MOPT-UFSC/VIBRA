@@ -827,8 +827,12 @@ def analysis_info_text(frequency_index: int):
     project = app().project
     if not project.is_there_a_valid_solution():
         return ""
-    
+
     analysis_setup = project.model.analysis_setup
+    analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
+    if analysis_id == AnalysisID.NO_ANALYSIS:
+        return ""
 
     display_name = {
         AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
@@ -837,10 +841,6 @@ def analysis_info_text(frequency_index: int):
         AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
         AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
         }
-
-    analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-    if analysis_id == AnalysisID.NO_ANALYSIS:
-        return ""
 
     tree = TreeInfo(display_name[analysis_id])
 
