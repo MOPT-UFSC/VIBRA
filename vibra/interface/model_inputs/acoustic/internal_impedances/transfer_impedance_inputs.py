@@ -764,6 +764,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return
 
         self.keep_window_open = False
+        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+
         return super().closeEvent(a0)
 
 # fmt: on
