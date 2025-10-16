@@ -256,7 +256,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
             # This should have been calculated by the mesher
             # or even better: by a geometry class
-            surface_normals = self.mesh.normals_surface.get(surface)
+            surface_normals = self.geometry.surface_normal(surface)
             if surface_normals is None:
                 element_face_normals = self.mesh.get_stacked_normals_for_surface_elements(surface)
                 normal = np.average(element_face_normals, axis=0).flatten()
