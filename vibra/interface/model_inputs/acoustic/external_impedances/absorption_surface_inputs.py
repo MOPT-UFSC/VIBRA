@@ -2,17 +2,16 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
-from vibra.interface.ui_generated.model.setup.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra import app
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface.ui_generated.model.setup.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
 
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
@@ -91,26 +90,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_model_info(self):
-
-        self.treeWidget_absorption_surface.clear()
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
-            if property == "absorption_surface":
-
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    absorption_coefficient = np.array(data["real_values"])
-                    str_value = str(absorption_coefficient)
-
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_absorption_surface.addTopLevelItem(new)
-
-        self.update_tabs_visibility()
-
     def geometry_selection_callback(self):
 
         surfaces = app().main_window.selected_geometry_surfaces
@@ -135,6 +114,26 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         else:
             self.tabWidget_main.setCurrentIndex(0)
             self.lineEdit_real_value.setText(f"{data.get("real_values")[0]}")
+
+    def load_model_info(self):
+
+        self.treeWidget_absorption_surface.clear()
+        for key, data in self.properties.surface_properties.items():
+            property, surface_id = key
+            if property == "absorption_surface":
+
+                if "table_names" in data.keys():
+                    str_value = "Table of values"
+                else:
+                    absorption_coefficient = np.array(data["real_values"])
+                    str_value = str(absorption_coefficient)
+
+                new = QTreeWidgetItem([str(surface_id), str_value])
+                new.setTextAlignment(0, Qt.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignCenter)
+                self.treeWidget_absorption_surface.addTopLevelItem(new)
+
+        self.update_tabs_visibility()
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
@@ -176,7 +175,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         if message != "":
             self.hide()
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
         else:
             return value
@@ -243,14 +242,14 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             if imported_file.shape[1] < 2:
                 message = "The imported table has insufficient number of columns. The absorption coefficient"
                 message += " data must have two columns in the form: frequencies and real values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
             return imported_file
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -265,7 +264,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -357,7 +356,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one absorption surface\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
 
     def process_table_file_removal(self, table_names: list):

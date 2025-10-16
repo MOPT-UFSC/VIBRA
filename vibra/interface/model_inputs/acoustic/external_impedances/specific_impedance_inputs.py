@@ -3,17 +3,15 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface.ui_generated.model.setup.acoustic.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
 
-import os
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
@@ -31,10 +29,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
-        self._config_widgets()
         self._create_connections()
 
-        self.load_info()
+        self.load_model_info()
         self.geometry_selection_callback()
 
         while self.keep_window_open:
@@ -51,9 +48,12 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.keep_window_open = True
 
     def _configure_qt_variables(self):
+        #
         self.pushButton_change_frequency_setup.setDisabled(True)
-        self.treeWidget_specific_impedance.setColumnWidth(1, 20)
-        self.treeWidget_specific_impedance.setColumnWidth(2, 80)
+        #
+        for i, w in enumerate([20, 80]):
+            self.treeWidget_specific_impedance.setColumnWidth(i, w)
+            self.treeWidget_specific_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
@@ -69,14 +69,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-
-    def _config_widgets(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
-        for i, w in enumerate([120]):
-            self.treeWidget_specific_impedance.setColumnWidth(i, w)
-            self.treeWidget_specific_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
         self.pushButton_remove.setDisabled(True)
@@ -98,7 +90,32 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def load_info(self):
+    def geometry_selection_callback(self):
+
+        surfaces = app().main_window.selected_geometry_surfaces
+
+        if surfaces:
+            text = ", ".join([str(i) for i in surfaces])
+            self.lineEdit_selection_id.setText(text)
+
+        if len(surfaces) == 1:
+            surface_id = list(surfaces)[0]
+            self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+
+        data = self.properties._get_property("specific_impedance", surface=surface_id)
+        if not isinstance(data, dict):
+            return
+
+        if "table_paths" in data.keys():
+            self.tabWidget_main.setCurrentIndex(1)
+            self.lineEdit_table_path.setText(data.get("table_paths")[0])
+        else:
+            self.tabWidget_main.setCurrentIndex(0)
+            self.lineEdit_real_value.setText(f"{data.get("real_values")[0]}")
+
+    def load_model_info(self):
         self.treeWidget_specific_impedance.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
@@ -122,14 +139,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self):
-
-        surfaces = app().main_window.selected_geometry_surfaces
-
-        if surfaces:
-            text = ", ".join([str(i) for i in surfaces])
-            self.lineEdit_selection_id.setText(text)
-
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == 0:
@@ -145,7 +154,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of specific impedance."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -157,7 +166,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of specific impedance."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -210,7 +219,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             title = "Additional inputs required"
             message = "You must enter the specific impedance to"
             message += "proceed with the attribution."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
@@ -235,14 +244,14 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
             return imported_file
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -257,7 +266,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -348,7 +357,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one specific impedance\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
 
     def process_table_file_removal(self, table_names: list):
@@ -419,7 +428,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
-        self.load_info()
+        self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
