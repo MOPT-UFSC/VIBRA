@@ -186,7 +186,7 @@ class Mesh:
 
             self.reset_error_data()
 
-        except:# Exception as error_log:
+        except:
             gmsh.finalize()
 
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -206,7 +206,6 @@ class Mesh:
                 }
 
             return
-            raise MeshingAlgorithmException(error_log) from error_log
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
