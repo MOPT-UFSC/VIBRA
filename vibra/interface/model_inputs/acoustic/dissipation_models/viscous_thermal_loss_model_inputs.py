@@ -6,14 +6,13 @@ from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.model_inputs.acoustic.get_sphere_selection_information import GetSphereSelectionInformation
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.model_inputs.acoustic.rectangular_duct_data import RectangularDuctData
-from vibra.interface.model_inputs.acoustic.circular_duct_data import CircularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
 
 import warnings
 import numpy as np
@@ -21,8 +20,7 @@ from enum import IntEnum
 from collections import defaultdict
 
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class TabType(IntEnum):
@@ -49,6 +47,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
+        app().main_window.volume_selection_mode = True
 
         self.project = app().project
         self.model = app().project.model
@@ -641,7 +640,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None, True
         else:
             return out, False
@@ -863,5 +862,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.volume_selection_mode = False
         app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

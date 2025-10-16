@@ -323,7 +323,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if not shift_pressed:
+        if not (shift_pressed or app().main_window.volume_selection_mode):
             picked_volumes.clear()
 
         app().main_window.set_geometry_selection(

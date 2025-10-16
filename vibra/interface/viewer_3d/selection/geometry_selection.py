@@ -45,10 +45,10 @@ class GeometrySelection:
         closest = min(point_distance, line_distance, surface_distance)
 
         if closest == point_distance:
-            return point_ids, set(), set(), volume_ids
+            return point_ids, set(), set(), set()
 
         elif closest == line_distance:
-            return set(), line_ids, set(), volume_ids
+            return set(), line_ids, set(), set()
 
         elif closest == surface_distance:
             return set(), set(), surface_ids, volume_ids

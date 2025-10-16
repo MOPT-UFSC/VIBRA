@@ -7,9 +7,9 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 
 from vibra.engine.properties.fluid import Fluid
@@ -1149,4 +1149,5 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

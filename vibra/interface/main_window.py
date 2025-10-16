@@ -58,6 +58,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
+        # TODO: move this to a separate class
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
         self.selected_mesh_solids = set()
@@ -65,6 +66,7 @@ class MainWindow(MainWindow_UI):
         self.selected_geometry_lines = set()
         self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
+        self.volume_selection_mode = False
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
