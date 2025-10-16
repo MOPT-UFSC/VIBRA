@@ -74,6 +74,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.keep_window_open = True
         self.material_model_data = dict()
         self.models: list[RectangularDuctData|CircularDuctData] = list()
+        app().main_window.volume_selection_mode = True
 
     def _create_connections(self):
         #
@@ -863,5 +864,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.volume_selection_mode = False
         app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
