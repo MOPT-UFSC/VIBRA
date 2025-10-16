@@ -40,6 +40,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
+        app().main_window.volume_selection_mode = True
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
@@ -76,6 +77,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.update_tabs = True
         self.keep_window_open = True
         self.material_model_data = dict()
+        app().main_window.volume_selection_mode = True
 
     def _create_connections(self):
         #
@@ -875,5 +877,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if isinstance(self.auxiliar_dialog, QDialog):
             self.auxiliar_dialog.close()
+
+        app().main_window.volume_selection_mode = False
 
         return super().closeEvent(a0)

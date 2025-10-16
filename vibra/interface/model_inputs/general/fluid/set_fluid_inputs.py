@@ -29,6 +29,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
+        app().main_window.volume_selection_mode = True
 
         self.project = app().project
         self.model = app().project.model
@@ -394,4 +395,5 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.volume_selection_mode = False
         return super().closeEvent(a0)
