@@ -21,8 +21,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from time import time
-from pandas import read_excel
-from openpyxl import load_workbook
 
 # valid mesh sizes: 20mm and 200mm.
 mesh_size = "200mm"

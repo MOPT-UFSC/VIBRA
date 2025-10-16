@@ -263,51 +263,27 @@ class AnalysisToolbar(QToolBar):
         if is_resume:
             app().project.can_resume_solution = False
 
-        def post_processing():
+        LoadingWindow(self.post_processing_analysis).run()
 
-            logging.info("Post-processing results... [10/100]")
-            self.set_pushbutton_reset_solution_enabled()
+    def post_processing_analysis(self):
+        logging.info("Post-processing results... [10/100]")
+        self.set_pushbutton_reset_solution_enabled()
 
-            t0 = time()
-            # This is needed specially when the geometry
-            # and mesh changes because of the analysis
-            logging.info("Post-processing results... [65/100]")
+        logging.info("Post-processing results... [65/100]")
+        app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-            #NOTE: It seems that we are spending time on unnecessary render updates
-            # app().main_window.update_plots(reset_camera=False)
+        if not app().file.geometry_data_filepath.exists():
+            app().file.write_geometry_data_in_file()
 
-            app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
-            # app().main_window.results_widget.update_plot(reset_camera=True)
-            dt = time() - t0
-            print(f"Elapsed time A: {dt : .6f}s")
+        logging.info("Post-processing results... [85/100]")
+        if not app().file.mesh_data_filepath.exists():
+            app().file.write_mesh_data_in_file()
 
-            t0 = time()
-            logging.info("Post-processing results... [80/100]")
-            if not app().file.read_geometry_data_from_file():
-                app().file.write_geometry_data_in_file()
-            dt = time() - t0
-            print(f"Elapsed time B: {dt : .6f}s")
+        logging.info("Post-processing results... [90/100]")
+        app().file.write_model_properties_in_file()
 
-            t0 = time()
-            logging.info("Post-processing results... [85/100]")
-            if not app().file.read_mesh_data_from_file():
-                app().file.write_mesh_data_in_file()
-            dt = time() - t0
-            print(f"Elapsed time C: {dt : .6f}s")
-
-            t0 = time()
-            logging.info("Post-processing results... [90/100]")
-            app().file.write_model_properties_in_file()
-            dt = time() - t0
-            print(f"Elapsed time D: {dt : .6f}s")
-
-            t0 = time()
-            logging.info("Post-processing results... [95/100]")
-            app().file.write_results_data_in_file()
-            dt = time() - t0
-            print(f"Elapsed time E: {dt : .6f}s")
-
-        LoadingWindow(post_processing).run()
+        logging.info("Post-processing results... [95/100]")
+        app().file.write_results_data_in_file()
 
     def project_solution_data_reset_callback(self):
 
@@ -392,7 +368,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.update_analysis_setup(modal.analysis_setup)
+            app().project.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
@@ -406,12 +382,17 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            self.update_analysis_setup(modal.analysis_setup)
+            app().project.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
+
+    def final_actions(self):
+        self.reset_solution()
+        app().project.create_solver()
+        app().file.write_analysis_setup_in_file(app().project.analysis_setup)
 
     def update_analysis_setup(self, analysis_setup: dict):
 
@@ -423,8 +404,3 @@ class AnalysisToolbar(QToolBar):
                 analysis_setup[key] = value
 
         app().project.set_analysis_setup(analysis_setup)
-
-    def final_actions(self):
-        self.reset_solution()
-        app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_setup)

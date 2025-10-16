@@ -124,9 +124,9 @@ class Project(QObject):
             return
         self.model.process_mesh()
 
-    def set_analysis_setup(self, data: dict):
-        self.analysis_setup = data
-        self.model.set_analysis_setup(data)
+    def set_analysis_setup(self, analysis_setup: dict):
+        self.analysis_setup = analysis_setup
+        self.model.set_analysis_setup(analysis_setup)
 
     def is_analysis_setup_complete(self):
 
@@ -272,13 +272,11 @@ class Project(QObject):
 
         if not self.model.generated_mesh:
             obj = MesherSetupInputs(close_after_generate=True)
-            if obj.complete:
-                app().main_window.update_plots()
-            else:
-                return
+            if not obj.complete:
+                return True
 
         if len(self.analysis_setup) == 0:
-            return
+            return True
 
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)

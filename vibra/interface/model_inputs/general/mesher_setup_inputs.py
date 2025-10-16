@@ -439,6 +439,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         LoadingWindow(generate_function).run()
 
+        if self.mesh.error_data:
+            title = self.mesh.error_data.get("title")
+            message = self.mesh.error_data.get("message")
+            PrintMessageInput([error_title, title, message])
+            return
+
         collapsed = (self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
 
         if collapsed:
