@@ -243,6 +243,7 @@ class Model:
         self.mesh = mesh
         self.generated_mesh = True
 
+
     def set_analysis_setup(self, analysis_setup: dict):
 
         self.frequencies = None
@@ -439,8 +440,6 @@ class Model:
             number_frequencies = self.frequencies.size
         else:
             return dict(), False
-        
-        print(f"Number of frequencies: {number_frequencies}")
 
         aux_ones = np.ones(number_frequencies, dtype=float)
 
