@@ -18,6 +18,7 @@ class HarmonicSolver:
     def __init__(self, assembler: AcousticAssembler | StructuralAssembler, project_file: ProjectFile | None = None, **kwargs):
         self.assembler = assembler
         self.project_file = project_file
+
         self.reset_variables()
 
     def reset_variables(self):
@@ -66,21 +67,24 @@ class HarmonicSolver:
     def _closing_solution_handler(self, solution):
         if isinstance(solution, LazyHDF5MatrixWriter):
             solution.close()
-            self.solution = self.project_file.get_solution_loader()
+            if self.assembler.model.stop_processing:
+                self.reset_variables()
+            else:
+                self.solution = self.project_file.get_solution_loader()
         else:
             # reinsert the prescribed degrees of freedom into the solution vector
             self.solution = self.assembler.reinsert_the_prescribed_dof(solution)
 
-    def compute_frequency_sweep(self, solution, print_log, is_resume, modes=None):
+    def compute_frequency_sweep(self, solution, print_log, is_resume, eigenvectors=None):
+
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
-        
+
         # compute the solution for each frequency step
         for i, freq in enumerate(frequencies):
 
             if self.assembler.model.stop_processing:
-                self.reset_variables()
-                return True
+                return
 
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
@@ -95,9 +99,9 @@ class HarmonicSolver:
             if freq == 0:
                 # In case of freq=0, the matrix may differ from the non-zero frequencies, so we solve it with
                 # a particular linear solver
-                linear_solver = self._get_linear_solver(modes, True)
+                linear_solver = self._get_linear_solver(eigenvectors, True)
             else:
-                linear_solver = self._get_linear_solver(modes)
+                linear_solver = self._get_linear_solver(eigenvectors)
 
             solution_freq = linear_solver.solve(A, f)
 
@@ -111,10 +115,10 @@ class HarmonicSolver:
             linear_solver.clear_memory()
             del A, f
 
-    def _get_linear_solver(self, modes, new_instance: bool = False) -> LinearSolver:
+    def _get_linear_solver(self, eigenvectors, new_instance: bool = False) -> LinearSolver:
         if self._linear_solver is None or new_instance:
-            if modes is not None:
-                linear_solver = initialize_solver(SolverType.MODAL_SUPERPOSITION, modes=modes)
+            if eigenvectors is not None:
+                linear_solver = initialize_solver(SolverType.MODAL_SUPERPOSITION, eigenvectors=eigenvectors)
             elif isinstance(self.assembler, StructuralAssembler):
                 linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
             else:
@@ -134,12 +138,12 @@ class HarmonicSolver:
 
         t0 = time()        
         modal_solver = ModalSolver(self.assembler)
-        natural_frequencies, modes = modal_solver.solve(full_solution=False)
+        natural_frequencies, eigenvectors = modal_solver.solve(full_solution=False)
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
 
         if is_proportionally_damped:
-            self.compute_proportionally_damped_frequency_sweep(solution, modes, natural_frequencies, print_log, is_resume)
+            self.compute_proportionally_damped_frequency_sweep(solution, eigenvectors, natural_frequencies, print_log, is_resume)
         else:
             self.compute_frequency_sweep(solution, print_log, is_resume)
 

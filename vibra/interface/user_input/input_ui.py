@@ -183,11 +183,11 @@ class InputUi:
             return self.process_input(PlotStructuralModeShapeInputs)     
 
     def plot_displacement_field(self):
-        if self.project.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        if self.project.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return self.process_input(PlotDisplacementFieldInputs)
 
     def plot_structural_frequency_response(self):
-        if self.project.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        if self.project.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return self.process_input(PlotStructuralFrequencyResponseInputs)
 
     def plot_reaction_frequency_response(self):
