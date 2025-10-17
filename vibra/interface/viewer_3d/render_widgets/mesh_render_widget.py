@@ -53,6 +53,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_section_plane()
 
     def create_logos(self):
         if hasattr(self, "vibra_logo"):
@@ -348,6 +352,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def update_section_plane(self):
         if not self.actors_exists():
+            return
+
+        if not self.isVisible():
             return
 
         section_plane = app().main_window.section_plane

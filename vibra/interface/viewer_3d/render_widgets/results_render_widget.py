@@ -53,6 +53,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_scale_bar()
         self.update_plot()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_section_plane()
+
     def create_logos(self):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
@@ -410,6 +414,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_section_plane(self):
         if not self.actors_exists():
+            return
+
+        if not self.isVisible():
             return
 
         section_plane = app().main_window.section_plane

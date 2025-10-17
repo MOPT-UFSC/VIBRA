@@ -35,8 +35,9 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.setWindowTitle("Vibra")
         self.setGeometry(200, 200, 400, 400)
     
-    def show(self):
-        super().show()
+    def showEvent(self, event):
+        super().showEvent(event)
+        app().processEvents()
         self.keep_section_plane = False
         self.cutting = True
         self.value_changed.emit()
@@ -52,23 +53,6 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
             slider.valueChanged.connect(self.value_change_callback)
             slider.sliderReleased.connect(self.slider_release_callback)
             slider.sliderPressed.connect(self.slider_pressed_callback)
-
-    def show(self):
-        super().show()
-        self.cutting = True
-        self.keep_section_plane = False
-        self.value_changed.emit()
-
-    def closeEvent(self, event):
-        if not self.keep_section_plane:
-            app().main_window.action_section_plane.blockSignals(True)
-            app().main_window.action_section_plane.setChecked(False)
-            app().main_window.action_section_plane.blockSignals(False)
-            self.cutting = False
-        else:
-            self.cutting = True
-        self.value_changed.emit()
-        # self.closed.emit()
 
     def get_position(self, get_from: str = "spinboxes"):
         if get_from == "sliders":
