@@ -3,7 +3,7 @@ from threading import Lock
 from time import time
 
 import numpy as np
-from molde.interactor_styles import BoxSelectionInteractorStyle
+from molde.interactor_styles import ArcballCameraInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -29,7 +29,7 @@ from .model_info_text import (
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
+        self.set_interactor_style(ArcballCameraInteractorStyle())
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
