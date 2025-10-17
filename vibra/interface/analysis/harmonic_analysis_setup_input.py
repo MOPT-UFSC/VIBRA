@@ -107,7 +107,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         self.comboBox_method.blockSignals(True)
 
-        if self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC]:
+        if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.comboBox_method.removeItem(1)
             self.tabWidget_main.setTabVisible(1, False)
 

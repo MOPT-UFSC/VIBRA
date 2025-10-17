@@ -127,10 +127,10 @@ class MumpsLinearSolver(LinearSolver):
         return self._solver
     
 class ModalSuperpositionSolver(LinearSolver):
-    def __init__(self, modes, **kwargs):
+    def __init__(self, eigenvectors: np.ndarray, **kwargs):
         super().__init__(**kwargs)
-        self.Phi = modes
-        self.PhiH = modes.conj().T
+        self.Phi = eigenvectors
+        self.PhiH = eigenvectors.conj().T
         self.linear_operator_class = LinearOperator  # Not used
 
     def solve(self, A, F):
@@ -149,10 +149,10 @@ def initialize_solver(solver_type: SolverType, **kwargs) -> LinearSolver:
     elif solver_type == SolverType.MUMPS:
         return MumpsLinearSolver(**kwargs)
     elif solver_type == SolverType.MODAL_SUPERPOSITION:
-        modes = kwargs.get('modes')
-        if modes is None:
-            raise ValueError("Modes must be provided for Modal Superposition Solver.")
-        return ModalSuperpositionSolver(modes)
+        eigenvectors = kwargs.get("eigenvectors")
+        if eigenvectors is None:
+            raise ValueError("Eigenvectors must be provided for Modal Superposition Solver.")
+        return ModalSuperpositionSolver(eigenvectors)
     else:
         raise ValueError(f"Unknown solver type: {solver_type}")
 
