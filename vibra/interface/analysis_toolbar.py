@@ -245,6 +245,9 @@ class AnalysisToolbar(QToolBar):
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
 
+        app().main_window.action_results_workspace.setDisabled(True)
+        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
+
         # Do not solve models with collapsed elements!
         mesh = app().project.model.mesh   
         collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
