@@ -43,7 +43,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         self.load_analysis_setup()
         self.update_harmonic_analysis_title()
-        self.check_for_collapsed_elements()
+        self.check_mesh_related_issues()
 
         while self.keep_window_open:
             self.exec()
@@ -152,18 +152,26 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         elif self.analysis_id == AnalysisID.COUPLED_HARMONIC:
             self.label_title.setText("Coupled harmonic analysis setup")
 
-    def check_for_collapsed_elements(self):
-        mesh = app().project.model.mesh   
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-        self.pushButton_run_analysis.setDisabled(bool(collapsed))
+    def check_mesh_related_issues(self):
+
+        # disable run_analysis button if there are disconnected nodes or collapsed elements
+        mesh = app().project.model.mesh
+        disconnected_nodes = bool(mesh.disconnected_nodes)
+        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 
         text = ""
-        if collapsed:
+        if collapsed_elements:
             text = "Collapsed elements have been detected during the mesh post-processing. \n"
             text += "The model solution will stay deactivated until the collapsed-related \n"
             text += "issues have been addressed."
 
+        if disconnected_nodes:
+            text += "Disconnected nodes have been detected during the mesh post-processing. \n"
+            text += "The model solution will stay deactivated until the meshing-related issues \n"
+            text += "have been addressed."
+
         self.pushButton_run_analysis.setToolTip(text)
+        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def enter_setup_callback(self):
         # analysis_setup = app().file.read_analysis_setup_from_file()
