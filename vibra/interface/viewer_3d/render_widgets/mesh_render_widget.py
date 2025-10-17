@@ -1,10 +1,13 @@
+import logging
+
 from molde import Color
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
+from vibra.interface.loading_window import LoadingWindow
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -16,13 +19,11 @@ from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
 from ..selection.mesh_selection import MeshSelection
 from .model_info_text import (
-    nodes_info_text,
     mesh_faces_info_text,
     mesh_solids_info_text,
     mesh_structural_boundary_conditions_info_text,
+    nodes_info_text,
 )
-
-import logging
 
 
 class MeshRenderWidget(CommonRenderWidget):
@@ -37,9 +38,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
         app().main_window.theme_changed.connect(self.update_theme)
-        app().main_window.visualization_changed.connect(
-            self.visualization_changed_callback
-        )
+        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
         app().main_window.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -53,6 +52,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_section_plane()
 
     def create_logos(self):
         if hasattr(self, "vibra_logo"):
@@ -87,12 +90,8 @@ class MeshRenderWidget(CommonRenderWidget):
             self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
 
         if hasattr(self, "scale_bar_actor"):
-            self.scale_bar_actor.GetLegendTitleProperty().SetColor(
-                font_color.to_rgb_f()
-            )
-            self.scale_bar_actor.GetLegendLabelProperty().SetColor(
-                font_color.to_rgb_f()
-            )
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
         self.update_selection()
 
@@ -188,9 +187,7 @@ class MeshRenderWidget(CommonRenderWidget):
             self.switch_to_solids_actor()
 
         if isinstance(self.solids_actor, SolidsActor):
-            self.solids_actor.distinguish_solids(
-                app().main_window.distinguished_solids
-            )
+            self.solids_actor.distinguish_solids(app().main_window.distinguished_solids)
 
         self.update_selection()
         self.update()
@@ -207,12 +204,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
-            xyz = self.plane_actor.calculate_xyz_position(
-                section_plane_widget.get_position()
-            )
-            normal = self.plane_actor.calculate_normal_vector(
-                section_plane_widget.get_rotation()
-            )
+            xyz = self.plane_actor.calculate_xyz_position(section_plane_widget.get_position())
+            normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
             if section_plane_widget.get_inverted():
                 normal = -normal
             self.mesh_selection.set_section_plane(xyz, normal)
@@ -223,9 +216,7 @@ class MeshRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(
-                x0, y0, x, y
-            )
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
         else:
             picked_nodes, picked_faces, picked_solids = self.mesh_selection.pick(x, y)
 
@@ -266,9 +257,7 @@ class MeshRenderWidget(CommonRenderWidget):
         solids = app().main_window.selected_mesh_solids
 
         selection_faces_color = app().config.user_preferences.selection_faces_color
-        selection_nodes_points_color = (
-            app().config.user_preferences.selection_nodes_points_color
-        )
+        selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
 
         self.nodes_actor.paint_cells(selection_nodes_points_color, nodes)
         self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4), faces)
@@ -350,6 +339,9 @@ class MeshRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             return
 
+        if not self.isVisible():
+            return
+
         section_plane = app().main_window.section_plane
 
         if not section_plane.cutting:
@@ -368,26 +360,36 @@ class MeshRenderWidget(CommonRenderWidget):
             self.update()
         else:
             show_plane = not section_plane.keep_section_plane
-            self._apply_section_plane(position, rotation, inverted, show_plane)
+            LoadingWindow(self._apply_section_plane).run(
+                position,
+                rotation,
+                inverted,
+                show_plane,
+            )
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        logging.info("Switching to solid actor... [50/100]")
         self.switch_to_solids_actor()
-        self.plane_actor.configure_section_plane(position, rotation)
-        xyz = self.plane_actor.calculate_xyz_position(position)
-        normal = self.plane_actor.calculate_normal_vector(rotation)
+
+        logging.info("Configuring section plane... [60/100]")
+        xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
             normal = -normal
 
+        logging.info("Applying cut... [70/100]")
         self.nodes_actor.apply_cut(xyz, normal)
         self.faces_actor.apply_cut(xyz, normal)
         self.solids_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
+        logging.info("Updating visualization... [80/100]")
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+
+        logging.info("Updating... [99/100]")
         self.update()
 
     def _disable_section_plane(self):
