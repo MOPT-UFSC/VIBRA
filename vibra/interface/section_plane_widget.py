@@ -30,7 +30,6 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
             | Qt.WindowCloseButtonHint
             | Qt.FramelessWindowHint
             | Qt.WindowShadeButtonHint
-            | Qt.WindowMinimizeButtonHint
         )
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
