@@ -476,13 +476,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if  self.frequency_index is None and self.mode_index is None:
             return
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.ACOUSTIC_HARMONIC
+            ]:
             text += analysis_info_text(self.frequency_index + 1)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
-        ]:
+            ]:
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)
