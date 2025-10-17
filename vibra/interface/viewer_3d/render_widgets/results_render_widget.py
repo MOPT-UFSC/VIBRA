@@ -1,3 +1,4 @@
+from scipy.special._ufuncs import loggamma
 import logging
 from threading import Lock
 from time import time
@@ -437,26 +438,37 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
         else:
             show_plane = not section_plane.keep_section_plane
-            self._apply_section_plane(position, rotation, inverted, show_plane)
+            LoadingWindow(self._apply_section_plane).run(
+                position,
+                rotation,
+                inverted,
+                show_plane,
+            )
 
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        logging.info("Switching to solid actor... [50/100]")
         self.switch_to_solids_actor()
 
+        logging.info("Configuring section plane... [60/100]")
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
             normal = -normal
 
+        logging.info("Applying cut... [70/100]")
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
-        self.update()
 
+        logging.info("Updating visualization... [80/100]")
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        
+        logging.info("Updating... [99/100]")
+        self.update()
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
