@@ -160,7 +160,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.ghost_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
-        logging.info("Updating the mesh render... [75/100]")
+        logging.info("Updating the geometry render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
@@ -181,7 +181,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
-        logging.info("Updating the mesh render... [95/100]")
+        logging.info("Updating the geometry render... [95/100]")
         self.update()
 
         if app().project.thumbnail is None:
