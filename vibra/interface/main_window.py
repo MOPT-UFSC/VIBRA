@@ -10,12 +10,7 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (
-    QAbstractButton,
-    QFileDialog,
-    QMenu,
-    QMessageBox,
-)
+from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
