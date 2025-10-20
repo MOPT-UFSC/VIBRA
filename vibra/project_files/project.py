@@ -5,19 +5,20 @@ from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+
 from vibra.engine.postprocessing import StructuralPostprocessing, AcousticPostprocessing
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.loading_window import LoadingWindow
+
+from vibra.project_files.project_file import ProjectFile
 
 import logging
 from time import sleep, time
-
-from vibra.project_files.project_file import ProjectFile
 
 
 class Project(QObject):
@@ -49,7 +50,6 @@ class Project(QObject):
 
         def disable_resume_callback():
             self.can_resume_solution = False
-
 
         self.model = Model(disable_resume_callback)
         self.acoustic_assembler = AcousticAssembler(self.model)
@@ -123,9 +123,9 @@ class Project(QObject):
             return
         self.model.process_mesh()
 
-    def set_analysis_setup(self, data: dict):
-        self.analysis_setup = data
-        self.model.set_analysis_setup(data)
+    def set_analysis_setup(self, analysis_setup: dict):
+        self.analysis_setup = analysis_setup
+        self.model.set_analysis_setup(analysis_setup)
 
     def is_analysis_setup_complete(self):
 
@@ -137,8 +137,8 @@ class Project(QObject):
                 AnalysisID.STRUCTURAL_MODAL,
                 AnalysisID.ACOUSTIC_MODAL,
             ]:
-                if "modes" in analysis_setup.keys():
-                    if not isinstance(analysis_setup["modes"], int):
+                if "modes_number" in analysis_setup.keys():
+                    if not isinstance(analysis_setup["modes_number"], int):
                         return False
                 else:
                     return False
@@ -151,11 +151,7 @@ class Project(QObject):
 
                 return True
 
-            elif analysis_id in [
-                AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                AnalysisID.ACOUSTIC_HARMONIC,
-            ]:
+            elif analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
                 for f_type in ["f_min", "f_max", "f_step"]:    
                     if f_type in analysis_setup.keys():
                         if not isinstance(analysis_setup[f_type], int | float):
@@ -172,15 +168,10 @@ class Project(QObject):
         data = self.analysis_setup
         if "analysis_id" in data.keys():
 
-            # structural harmonic analysis - direct method
-            if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
+            # structural harmonic analysis (both methods)
+            if data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC:
                 self.structural_harmonic_solver = HarmonicSolver(self.structural_assembler, self.project_file)
-                self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
-
-            # structural harmonic analysis - mode superposition method
-            elif data["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
-                print("Structural harmonic analysis (mode superposition method) not implemented")
-                raise NotImplementedError("Not implemented solver")
+                self.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
 
             # structural modal analysis
             elif data["analysis_id"] == AnalysisID.STRUCTURAL_MODAL:
@@ -197,18 +188,13 @@ class Project(QObject):
                 self.acoustic_modal_solver = ModalSolver(self.acoustic_assembler)
                 self.analysis_id = AnalysisID.ACOUSTIC_MODAL
 
-            # coupled harmonic analysis (direct method)
-            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD:
+            # coupled harmonic analysis (both methods)
+            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC:
                 print("Coupled harmonic analysis (direct method) not implemented")
                 raise NotImplementedError("Not implemented solver")
 
-            # coupled harmonic analysis (mode superposition method)
-            elif data["analysis_id"] == AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION:
-                print("Coupled harmonic analysis (mode superposition method) not implemented")
-                raise NotImplementedError("Not implemented solver")
-
             # static analysis
-            elif data["analysis_id"] == AnalysisID.STATIC_ANALYSIS:
+            elif data["analysis_id"] == AnalysisID.STRUCTURAL_STATIC:
                 print("Static analysis not implemented")
                 raise NotImplementedError("Not implemented solver")
 
@@ -219,81 +205,114 @@ class Project(QObject):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
         self.acoustic_assembler.process_assemble()
+
+        if self.model.stop_processing:
+            return
+
         t0 = time()
         self.acoustic_modal_solver.solve()
         dt = time() - t0
-        print(f"Elapsed time to solve modal analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
+
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+
+        if self.model.stop_processing:
+            return
+
+        t0 = time()
         self.structural_modal_solver.solve()
+        dt = time() - t0
+        print(f"Elapsed time to solve structural modal analysis: {dt : .6f} [s]")
+
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
-        self.model.process_porous_material_properties(self.model.frequencies)
-        self.model.process_viscous_thermal_model_properties(self.model.frequencies)
-        self.model.process_perforated_plate_impedance(self.model.frequencies)
+        self.model.process_porous_material_properties()
+        self.model.process_viscous_thermal_model_properties()
+        self.model.process_perforated_plate_impedance()
         self.acoustic_assembler.process_assemble()
+
+        if self.model.stop_processing:
+            return
+
         t0 = time()
-        self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
+        if self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume):
+            return
+
         dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
+
         app().main_window.disable_advanced_acoustic_plots_buttons(False)
 
     def solve_structural_harmonic_analysis(self):
+        analisys_id = self.analysis_setup.get("analysis_id")
+        analysis_method = self.analysis_setup.get("analysis_method")
+        if analisys_id != AnalysisID.STRUCTURAL_HARMONIC:
+            return
+
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
         self.structural_assembler.process_assemble()
+        if self.model.stop_processing:
+            return
+
         t0 = time()
-        if self.analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
+        if analysis_method == "direct":
             self.structural_harmonic_solver.solve_direct()
         else:
-            self.structural_harmonic_solver.solve_modal_superposition()
-            return
+            self.structural_harmonic_solver.solve_mode_superposition(is_proportionally_damped=True)
         dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {round(dt, 6)} [s]")
+        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
 
     def run_analysis(self, is_resume: bool = False):
 
         if not self.model.generated_mesh:
             obj = MesherSetupInputs(close_after_generate=True)
-            if obj.complete:
-                app().main_window.update_plots()
-            else:
-                return
+            if not obj.complete:
+                return True
 
         if len(self.analysis_setup) == 0:
-            return
+            return True
 
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
+        interrupt_function = app().project.model.toggle_processing_callback
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             if checker.check_structural_harmonic_analysis():
                 return True
-            LoadingWindow(analysis.process_structural_harmonic_analysis).run()
+
+            LoadingWindow(
+                analysis.process_structural_harmonic_analysis,
+                interrupt_function,
+            ).run()
 
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             if checker.check_structural_modal_analysis():
                 return True
+
             LoadingWindow(analysis.process_structural_modal_analysis).run()
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
-            LoadingWindow(lambda: analysis.process_acoustic_harmonic_analysis(is_resume)).run()
+
+            LoadingWindow(
+                analysis.process_acoustic_harmonic_analysis,
+                interrupt_function,    
+            ).run(is_resume)
 
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             if checker.check_acoustic_modal_analysis():
                 return True
+
             LoadingWindow(analysis.process_acoustic_modal_analysis).run()
 
         else:
@@ -319,7 +338,7 @@ class Project(QObject):
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             if self.structural_harmonic_solver is None:
                 return
 
@@ -356,38 +375,26 @@ class Project(QObject):
     def get_analysis_type_and_physical_domain(self):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
+        if not isinstance(analysis_setup, dict):
             return "", ""
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return "", ""
 
-        if analysis_id in [
-                           AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                           AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                           AnalysisID.ACOUSTIC_HARMONIC, 
-                           AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-                           AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
-                           ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             analysis_type = "harmonic"
 
-        elif analysis_id == AnalysisID.STATIC_ANALYSIS:
+        elif analysis_id == AnalysisID.STRUCTURAL_STATIC:
             analysis_type = "static"
 
         else:
             analysis_type = "modal"
 
-        if analysis_id in [
-                           AnalysisID.ACOUSTIC_HARMONIC, 
-                           AnalysisID.ACOUSTIC_MODAL
-                           ]:
+        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             physical_domain = "acoustic"
 
-        elif analysis_id in [
-                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
-                            ]:
+        elif analysis_id == AnalysisID.COUPLED_HARMONIC:
             physical_domain = "coupled"
 
         else:
@@ -412,22 +419,22 @@ class Project(QObject):
                 return False
 
         if analysis_id in [
-                            AnalysisID.ACOUSTIC_HARMONIC,
-                            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-                            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-                            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-                            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION
-                            ]:
+            AnalysisID.ACOUSTIC_HARMONIC, 
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.COUPLED_HARMONIC
+            ]:
+
             for key in ["f_min", "f_max", "f_step"]:
                 if key not in analysis_setup.keys():
                     return False
             return True
 
         elif analysis_id in [
-                             AnalysisID.ACOUSTIC_MODAL, 
-                             AnalysisID.STRUCTURAL_MODAL
-                             ]:
-            for key in ["modes", "sigma_factor"]:
+            AnalysisID.ACOUSTIC_MODAL, 
+            AnalysisID.STRUCTURAL_MODAL
+            ]:
+
+            for key in ["modes_number", "sigma_factor"]:
                 if key not in analysis_setup.keys():
                     return False
             return True

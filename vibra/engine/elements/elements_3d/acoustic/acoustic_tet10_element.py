@@ -6,78 +6,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+import logging
 import numpy as np
 
 
-def get_detJAC_and_invJAC(JAC: np.ndarray):
-    """
-    This function computes the determinant and inverse
-    of Jacobian matrix.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The Jacobian matrices.
-
-    Returns
-    -------
-    det_jac: np.ndarray
-        The determinant of Jacobian matrix.
-
-    inv_jac: np.ndarray
-        The inverse of Jacobian matrix.
-    """
-
-    if len(JAC.shape) == 3:
-
-        det_jac = (
-              JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-            + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-            + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-        ) - (
-              JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-            + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-            + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-        )
-        det_jac = det_jac.reshape(-1, 1, 1)
-
-        adj_matrix = np.zeros((det_jac.shape[0], 3, 3), dtype=float)
-        adj_matrix[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-        adj_matrix[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-        adj_matrix[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-        adj_matrix[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-        adj_matrix[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
-
-    else:
-
-        det_jac = (
-              JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-            + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-            + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-        ) - (
-              JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-            + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-            + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-        )
-
-        adj_matrix = np.zeros((3, 3), dtype=float)
-        adj_matrix[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
-        adj_matrix[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))
-        adj_matrix[2, 0] =  ((JAC[1, 0] * JAC[2, 1]) - (JAC[1, 1] * JAC[2, 0]))
-        adj_matrix[0, 1] = -((JAC[0, 1] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 1]))
-        adj_matrix[1, 1] =  ((JAC[0, 0] * JAC[2, 2]) - (JAC[0, 2] * JAC[2, 0]))
-        adj_matrix[2, 1] = -((JAC[0, 0] * JAC[2, 1]) - (JAC[0, 1] * JAC[2, 0]))
-        adj_matrix[0, 2] =  ((JAC[0, 1] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 1]))
-        adj_matrix[1, 2] = -((JAC[0, 0] * JAC[1, 2]) - (JAC[0, 2] * JAC[1, 0]))
-        adj_matrix[2, 2] =  ((JAC[0, 0] * JAC[1, 1]) - (JAC[0, 1] * JAC[1, 0]))
-
-    return det_jac, (1 / det_jac) * adj_matrix
-
-def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
+def get_all_detJAC_and_invJAC(JAC: np.ndarray):
 
     """
     This method computes the determinant and inverse of Jacobian
@@ -89,10 +22,6 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
     JAC: np.array
         The Jacobian matrices.
 
-    all_int_points: bool, optional
-        Controls when the processing are executed in all 
-        integration points (default is False).
-
     Returns
     -------
     det_jac: np.ndarray
@@ -102,55 +31,29 @@ def get_stacked_detJAC_and_invJAC(JAC: np.ndarray, all_int_points: bool=False):
         The inverse of Jacobian matrix.
     """
 
-    if all_int_points:
+    N_int = JAC.shape[0]
+    
+    detJAC = (
+            JAC[:, :, 0, 0] * JAC[:, :, 1, 1] * JAC[:, :, 2, 2]
+        + JAC[:, :, 0, 1] * JAC[:, :, 1, 2] * JAC[:, :, 2, 0]
+        + JAC[:, :, 0, 2] * JAC[:, :, 1, 0] * JAC[:, :, 2, 1]
+    ) - (
+            JAC[:, :, 2, 0] * JAC[:, :, 1, 1] * JAC[:, :, 0, 2]
+        + JAC[:, :, 2, 1] * JAC[:, :, 1, 2] * JAC[:, :, 0, 0]
+        + JAC[:, :, 2, 2] * JAC[:, :, 1, 0] * JAC[:, :, 0, 1]
+    )
+    det_jac = detJAC.reshape(-1, N_int, 1, 1)
 
-        N_int = JAC.shape[0]
-        
-        detJAC = (
-              JAC[:, :, 0, 0] * JAC[:, :, 1, 1] * JAC[:, :, 2, 2]
-            + JAC[:, :, 0, 1] * JAC[:, :, 1, 2] * JAC[:, :, 2, 0]
-            + JAC[:, :, 0, 2] * JAC[:, :, 1, 0] * JAC[:, :, 2, 1]
-        ) - (
-              JAC[:, :, 2, 0] * JAC[:, :, 1, 1] * JAC[:, :, 0, 2]
-            + JAC[:, :, 2, 1] * JAC[:, :, 1, 2] * JAC[:, :, 0, 0]
-            + JAC[:, :, 2, 2] * JAC[:, :, 1, 0] * JAC[:, :, 0, 1]
-        )
-        det_jac = detJAC.reshape(-1, N_int, 1, 1)
-
-        adj_matrix = np.zeros((detJAC.shape[0], N_int, 3, 3), dtype=float)
-        adj_matrix[:, :, 0, 0] =  ((JAC[:, :, 1, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 2, 1] * JAC[:, :, 1, 2]))
-        adj_matrix[:, :, 1, 0] = -((JAC[:, :, 1, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 1, 2] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 2, 0] =  ((JAC[:, :, 1, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 1, 1] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 0, 1] = -((JAC[:, :, 0, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 1]))
-        adj_matrix[:, :, 1, 1] =  ((JAC[:, :, 0, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 2, 1] = -((JAC[:, :, 0, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 2, 0]))
-        adj_matrix[:, :, 0, 2] =  ((JAC[:, :, 0, 1] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 1]))
-        adj_matrix[:, :, 1, 2] = -((JAC[:, :, 0, 0] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 0]))
-        adj_matrix[:, :, 2, 2] =  ((JAC[:, :, 0, 0] * JAC[:, :, 1, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 1, 0]))
-
-    else:
-
-        detJAC = (
-              JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-            + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-            + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-        ) - (
-              JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-            + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-            + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-        )
-        det_jac = detJAC.reshape(-1, 1, 1)
-
-        adj_matrix = np.zeros((detJAC.shape[0], 3, 3), dtype=float)
-        adj_matrix[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
-        adj_matrix[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 0] =  ((JAC[:, 1, 0] * JAC[:, 2, 1]) - (JAC[:, 1, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 1] = -((JAC[:, 0, 1] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 1]))
-        adj_matrix[:, 1, 1] =  ((JAC[:, 0, 0] * JAC[:, 2, 2]) - (JAC[:, 0, 2] * JAC[:, 2, 0]))
-        adj_matrix[:, 2, 1] = -((JAC[:, 0, 0] * JAC[:, 2, 1]) - (JAC[:, 0, 1] * JAC[:, 2, 0]))
-        adj_matrix[:, 0, 2] =  ((JAC[:, 0, 1] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 1]))
-        adj_matrix[:, 1, 2] = -((JAC[:, 0, 0] * JAC[:, 1, 2]) - (JAC[:, 0, 2] * JAC[:, 1, 0]))
-        adj_matrix[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
+    adj_matrix = np.zeros((detJAC.shape[0], N_int, 3, 3), dtype=float)
+    adj_matrix[:, :, 0, 0] =  ((JAC[:, :, 1, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 2, 1] * JAC[:, :, 1, 2]))
+    adj_matrix[:, :, 1, 0] = -((JAC[:, :, 1, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 1, 2] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 2, 0] =  ((JAC[:, :, 1, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 1, 1] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 0, 1] = -((JAC[:, :, 0, 1] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 1]))
+    adj_matrix[:, :, 1, 1] =  ((JAC[:, :, 0, 0] * JAC[:, :, 2, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 2, 1] = -((JAC[:, :, 0, 0] * JAC[:, :, 2, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 2, 0]))
+    adj_matrix[:, :, 0, 2] =  ((JAC[:, :, 0, 1] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 1]))
+    adj_matrix[:, :, 1, 2] = -((JAC[:, :, 0, 0] * JAC[:, :, 1, 2]) - (JAC[:, :, 0, 2] * JAC[:, :, 1, 0]))
+    adj_matrix[:, :, 2, 2] =  ((JAC[:, :, 0, 0] * JAC[:, :, 1, 1]) - (JAC[:, :, 0, 1] * JAC[:, :, 1, 0]))
 
     return det_jac, (1 / det_jac) * adj_matrix
 
@@ -191,118 +94,9 @@ class ACT_TETRAHEDRON_10C(Element3D):
         This method defines the integration points and their
         weights for numerical integration.
         """
-
-        # NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
-        # The numerical integration points and their respective weights for the 4-, 5-, and 15-point integration rules are found on pages 177 and 178.
-
-        # 4-point integration rule for the quadratic tetrahedron element
-        if integration_points == 4:
-
-            self.nint = 4
-
-            a = (5 - np.sqrt(5)) / 20
-            b = (5 + 3 * np.sqrt(5)) / 20
-
-            w1 = 1/24
-
-            self.pint = np.array([[a, a, a],
-                                  [a, a, b],
-                                  [a, b, a],
-                                  [b, a, a]], dtype=float)
-
-            self.wps = 6 * np.array([w1, w1, w1, w1], dtype=float).reshape(-1, 1, 1)
-
-        # 5-point integration rule for the quadratic tetrahedron element
-        elif integration_points == 5:
-
-            self.nint = 5
-
-            a = 1/4
-            b = 1/6
-            c = 1/2
-
-            w1 = -2/15
-            w2 = 3/40
-
-            self.pint = np.array([[a, a, a],
-                                  [b, b, b],
-                                  [b, b, c],
-                                  [b, c, b],
-                                  [c, b, b]], dtype=float)
-
-            self.wps = 6 * np.array([w1, w2, w2, w2, w2], dtype=float).reshape(-1, 1, 1)
-
-
-        # 11-point integration rule for the quadratic tetrahedron element
-        elif integration_points == 11:
-
-            # Reference: Table 12.8 from webpage https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_thry/thy_et1.html
-
-            self.nint = 11
-
-            a = 1/4
-            b = 0.0714285714285714
-            c = 1 - 3*b
-            d = 0.399403576166799
-            e = 1/2 - d
-
-            w1 = -0.013155555555555
-            w2 = 0.007622222222222
-            w3 = 0.024888888888888
-
-            self.pint = np.array([  [a, a, a],
-                                    [b, b, b],
-                                    [b, b, c],
-                                    [b, c, b],
-                                    [c, b, b],
-                                    [d, d, e],
-                                    [d, e, d],
-                                    [d, e, e],
-                                    [e, d, e],
-                                    [e, d, d],
-                                    [e, e, d],  ], dtype=float)
-
-            self.wps = 6 * np.array([w1,
-                                     w2, w2, w2, w2, 
-                                     w3, w3, w3, w3, w3, w3], dtype=float).reshape(-1, 1, 1)
-
-        # 15-point integration rule for the quadratic tetrahedron element
-        else:
-
-            self.nint = 15
-
-            a = 1 / 4
-            b = (7 + np.sqrt(15)) / 34
-            c = (7 - np.sqrt(15)) / 34
-            d = (13 - 3 * np.sqrt(15)) / 34
-            e = (13 + 3 * np.sqrt(15)) / 34
-            f = (5 - np.sqrt(15)) / 20
-            g = (5 + np.sqrt(15)) / 20
-
-            w1 = 8 / 405
-            w2 = (2665 - 14 * np.sqrt(15)) / 226800
-            w3 = (2665 + 14 * np.sqrt(15)) / 226800
-            w4 = 5 / 567
-
-            self.pint = np.array([  [a, a, a],
-                                    [b, b, b],
-                                    [b, b, d],
-                                    [b, d, b],
-                                    [d, b, b],
-                                    [c, c, c],
-                                    [c, c, e],
-                                    [c, e, c],
-                                    [e, c, c],
-                                    [f, f, g],
-                                    [f, g, f],
-                                    [g, f, f],
-                                    [f, g, g],
-                                    [g, f, g],
-                                    [g, g, f]  ], dtype=float)
-
-            self.wps = 6 * np.array([w1, w2, w2, w2, w2, 
-                                     w3, w3, w3, w3, w4, 
-                                     w4, w4, w4, w4, w4], dtype=float).reshape(-1, 1, 1)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_tetrahedrons(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -319,27 +113,27 @@ class ACT_TETRAHEDRON_10C(Element3D):
             The shape functions derivatives.
         """
 
-        l1 = self.pint[:, 0]
-        l2 = self.pint[:, 1]
-        l3 = self.pint[:, 2]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
+        xi_3 = self.num_int_data[:, 2]
 
-        self.phi, self.dphi = self.get_shape_functions_and_derivatives(l1, l2, l3)
+        self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
 
-    def get_shape_functions_and_derivatives(self, l1: np.ndarray|float, l2: np.ndarray|float, l3: np.ndarray|float):
+    def get_shape_functions_and_derivatives(self, xi_1: np.ndarray | float, xi_2: np.ndarray | float, xi_3: np.ndarray | float):
 
         """
         This method returns the shape functions and its derivatives.
         
         Parameters
         ----------
-        l1: np.ndarray
+        xi_1: np.ndarray
             The x coordinates of the integration points.
         
-        l2: np.ndarray
+        xi_2: np.ndarray
             The y coordinates of the integration points.
 
-        l3: np.ndarray
+        xi_3: np.ndarray
             The z coordinates of the integration points.
 
         Returns
@@ -351,72 +145,70 @@ class ACT_TETRAHEDRON_10C(Element3D):
             The shape functions derivatives.
         """
 
-        if isinstance(l1, np.ndarray):
-            Nz = l1.size
+        if isinstance(xi_1, np.ndarray):
+            Nz = xi_1.size
         else:
             Nz = 1
 
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
-        # intialize the shape function variable
+        # define the shape functions (Atalla and Sgard, 2015, pg. 170)
         phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
 
-        # define coordiante l4
-        l4 = 1 - l1 - l2 - l3
+        # define the isoparametric coordiante l4
+        xi_4 = 1 - xi_1 - xi_2 - xi_3
 
-        # shape functions (Atalla and Sgard, 2015, pg. 170)
-        phi[:, 0, 0] = (2 * l4 - 1) * l4       # ->      (0.0, 0.0, 0.0)   Node 1
-        phi[:, 0, 1] = (2 * l2 - 1) * l2       # ->      (0.0, 1.0, 0.0)   Node 2
-        phi[:, 0, 2] = (2 * l3 - 1) * l3       # ->      (0.0, 0.0, 1.0)   Node 3
-        phi[:, 0, 3] = (2 * l1 - 1) * l1       # ->      (1.0, 0.0, 0.0)   Node 4
-        phi[:, 0, 4] = 4 * l4 * l2             # ->      (0.0, 0.5, 0.0)   Node 5
-        phi[:, 0, 5] = 4 * l2 * l3             # ->      (0.0, 0.5, 0.5)   Node 6
-        phi[:, 0, 6] = 4 * l3 * l4             # ->      (0.0, 0.0, 0.5)   Node 7
-        phi[:, 0, 7] = 4 * l1 * l4             # ->      (0.5, 0.0, 0.0)   Node 8
-        phi[:, 0, 8] = 4 * l1 * l2             # ->      (0.5, 0.5, 0.0)   Node 9
-        phi[:, 0, 9] = 4 * l1 * l3             # ->      (0.5, 0.0, 0.5)   Node 10
-
-        # derivatives of shape functions
-        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
+        phi[:, 0, 0] = (2 * xi_4 - 1) * xi_4       # ->      (0.0, 0.0, 0.0)   Node 1
+        phi[:, 0, 1] = (2 * xi_2 - 1) * xi_2       # ->      (0.0, 1.0, 0.0)   Node 2
+        phi[:, 0, 2] = (2 * xi_3 - 1) * xi_3       # ->      (0.0, 0.0, 1.0)   Node 3
+        phi[:, 0, 3] = (2 * xi_1 - 1) * xi_1       # ->      (1.0, 0.0, 0.0)   Node 4
+        phi[:, 0, 4] = 4 * xi_4 * xi_2             # ->      (0.0, 0.5, 0.0)   Node 5
+        phi[:, 0, 5] = 4 * xi_2 * xi_3             # ->      (0.0, 0.5, 0.5)   Node 6
+        phi[:, 0, 6] = 4 * xi_3 * xi_4             # ->      (0.0, 0.0, 0.5)   Node 7
+        phi[:, 0, 7] = 4 * xi_1 * xi_4             # ->      (0.5, 0.0, 0.0)   Node 8
+        phi[:, 0, 8] = 4 * xi_1 * xi_2             # ->      (0.5, 0.5, 0.0)   Node 9
+        phi[:, 0, 9] = 4 * xi_1 * xi_3             # ->      (0.5, 0.0, 0.5)   Node 10
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi[:, 0, 0] = -4 * l4 + 1
+        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
+
+        dphi[:, 0, 0] = -4 * xi_4 + 1
         dphi[:, 0, 1] =  0
         dphi[:, 0, 2] =  0
-        dphi[:, 0, 3] =  4 * l1 - 1
-        dphi[:, 0, 4] = -4 * l2
+        dphi[:, 0, 3] =  4 * xi_1 - 1
+        dphi[:, 0, 4] = -4 * xi_2
         dphi[:, 0, 5] =  0
-        dphi[:, 0, 6] = -4 * l3
-        dphi[:, 0, 7] =  4 * (l4 - l1)
-        dphi[:, 0, 8] =  4 * l2
-        dphi[:, 0, 9] =  4 * l3
+        dphi[:, 0, 6] = -4 * xi_3
+        dphi[:, 0, 7] =  4 * (xi_4 - xi_1)
+        dphi[:, 0, 8] =  4 * xi_2
+        dphi[:, 0, 9] =  4 * xi_3
 
-        dphi[:, 1, 0] = -4 * l4 + 1
-        dphi[:, 1, 1] =  4 * l2 - 1
+        dphi[:, 1, 0] = -4 * xi_4 + 1
+        dphi[:, 1, 1] =  4 * xi_2 - 1
         dphi[:, 1, 2] =  0
         dphi[:, 1, 3] =  0
-        dphi[:, 1, 4] =  4 * (l4 - l2)
-        dphi[:, 1, 5] =  4 * l3
-        dphi[:, 1, 6] = -4 * l3
-        dphi[:, 1, 7] = -4 * l1
-        dphi[:, 1, 8] =  4 * l1
+        dphi[:, 1, 4] =  4 * (xi_4 - xi_2)
+        dphi[:, 1, 5] =  4 * xi_3
+        dphi[:, 1, 6] = -4 * xi_3
+        dphi[:, 1, 7] = -4 * xi_1
+        dphi[:, 1, 8] =  4 * xi_1
         dphi[:, 1, 9] =  0
 
-        dphi[:, 2, 0] = -4 * l4 + 1
+        dphi[:, 2, 0] = -4 * xi_4 + 1
         dphi[:, 2, 1] =  0
-        dphi[:, 2, 2] =  4 * l3 - 1
+        dphi[:, 2, 2] =  4 * xi_3 - 1
         dphi[:, 2, 3] =  0
-        dphi[:, 2, 4] = -4 * l2
-        dphi[:, 2, 5] =  4 * l2
-        dphi[:, 2, 6] =  4 * (l4 - l3)
-        dphi[:, 2, 7] = -4 * l1
+        dphi[:, 2, 4] = -4 * xi_2
+        dphi[:, 2, 5] =  4 * xi_2
+        dphi[:, 2, 6] =  4 * (xi_4 - xi_3)
+        dphi[:, 2, 7] = -4 * xi_1
         dphi[:, 2, 8] =  0
-        dphi[:, 2, 9] =  4 * l1
+        dphi[:, 2, 9] =  4 * xi_1
 
         if Nz == 1:
             return phi[0, :, :], dphi[0, :, :]
-        else:
-            return phi, dphi
+
+        return phi, dphi
 
 
     def get_stacked_nodal_coords(self, all_int_points: bool=False) -> np.ndarray:
@@ -487,7 +279,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
             JAC = self.dphi[i, :, :] @ coords
 
             # Jacobian determinant and inverse
-            detJAC, invJAC = get_detJAC_and_invJAC(JAC)
+            detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
@@ -495,8 +287,8 @@ class ACT_TETRAHEDRON_10C(Element3D):
             # derivative of shape functions
             B = invJAC @ self.dphi[i, :, :]
 
-            Ke += (1 / 6) * B.T @ B * (detJAC * self.wps[i])
-            Me += (1 / 6) * N.T @ N * (detJAC * self.wps[i])
+            Ke += B.T @ B * (detJAC * self.wps[i])
+            Me += N.T @ N * (detJAC * self.wps[i])
 
         # if el_index == 0:
         #     np.savetxt("Me_base.dat", Me, fmt="%.16e", delimiter=",")
@@ -528,7 +320,7 @@ class ACT_TETRAHEDRON_10C(Element3D):
         JAC_stacked = dphi_resh @ stacked_coords
 
         # Jacobian determinants and inverses of all elements
-        det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked, all_int_points=True)
+        det_jacs, inv_jacs = get_all_detJAC_and_invJAC(JAC_stacked)
 
         # shape functions
         N = self.phi
@@ -538,8 +330,8 @@ class ACT_TETRAHEDRON_10C(Element3D):
         B = inv_jacs @ dphi_resh
         B_t = np.transpose(B, axes=(0, 1, 3, 2))
 
-        Ke = np.sum((1 / 6) * B_t @ B * (det_jacs * self.wps), axis=1)
-        Me = np.sum((1 / 6) * N_t @ N * (det_jacs * self.wps), axis=1)
+        Ke = np.sum(B_t @ B * (det_jacs * self.wps), axis=1)
+        Me = np.sum(N_t @ N * (det_jacs * self.wps), axis=1)
 
         return Ke, Me
 
@@ -569,11 +361,14 @@ class ACT_TETRAHEDRON_10C(Element3D):
         # integration loop
         for i in range(self.nint):
 
+            progress = int(25 + 55*(i / self.nint))
+            logging.info(f"Processing the elementary matrices data... [{progress}/100]")
+
             # Jacobian matrices of all elements
             JAC_stacked = self.dphi[i, :, :] @ stacked_coords
 
             # Jacobian determinants and inverses of all elements
-            det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
+            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
             # shape functions
             N = self.phi[i, :]
@@ -583,8 +378,8 @@ class ACT_TETRAHEDRON_10C(Element3D):
             B = inv_jacs @ self.dphi[i, :, :]
             B_t = np.transpose(B, axes=(0, 2, 1))
 
-            int2d_BtB += (1 / 6) * B_t @ B * (det_jacs * self.wps[i])
-            int2d_NtN += (1 / 6) * N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
 
         return int2d_BtB, int2d_NtN
 
@@ -673,8 +468,8 @@ class ACT_TETRAHEDRON_10C(Element3D):
         JAC = dphi @ coords
 
         # inverse of Jacobian matrix
-        _, invJAC = get_detJAC_and_invJAC(JAC)
-        
+        _, invJAC = self.get_detJAC_and_invJAC(JAC)
+
         # derivative of shape functions
         B = invJAC @ dphi
 

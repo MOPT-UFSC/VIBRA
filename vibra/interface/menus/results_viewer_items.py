@@ -138,35 +138,21 @@ class ResultsViewerItems(CommonMenuItems):
             return
 
         analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
+        if not isinstance(analysis_setup, dict):
             return
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        # analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.STRUCTURAL_MODAL,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.update_structural_analysis_visibility_items()
         
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             self.update_acoustic_analysis_visibility_items()
         
-        elif analysis_id in [
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:    
+        elif analysis_id == AnalysisID.COUPLED_HARMONIC:    
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             self.item_child_structural_frequency_response.setDisabled(False)
             self.item_child_displacement_field.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
@@ -179,11 +165,7 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_acoustic_mode_shapes.setDisabled(False)
         
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
 
             if analysis_id != AnalysisID.ACOUSTIC_HARMONIC:
                 self.item_child_displacement_field.setDisabled(False)
@@ -217,23 +199,13 @@ class ResultsViewerItems(CommonMenuItems):
         """
         analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.STRUCTURAL_MODAL,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)
 
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             self.expandItem(self.item_top_results_viewer_acoustic)
 
-        elif analysis_id in [
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        elif analysis_id in [AnalysisID.COUPLED_HARMONIC]:
             self.expandItem(self.item_top_results_viewer_structural)
             self.expandItem(self.item_top_results_viewer_acoustic)
 

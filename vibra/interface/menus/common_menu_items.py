@@ -148,7 +148,6 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
     
     def set_property_name(self, name: str):
         name = name.lower()
-        name = re.match(r"item_child_(?:set_|add_)*(.+)", name).group(1)
         name = name.strip()
         self.property_name = name
 

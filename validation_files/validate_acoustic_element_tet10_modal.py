@@ -23,8 +23,8 @@ from time import time
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
-    results_path = PROJECT_DIR / "data/validation/acoustic/elements/tet10/results/"
+    mesh_path = f"validation_files/data/WB/acoustic/elements/tet10/mesh/ds_Lpipe_act_tet10_50mm.dat"
+    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/elements/tet10/results/"
 
     if not os.path.exists(mesh_path):
         return
@@ -74,7 +74,6 @@ def load_external_mesh_and_solve():
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
@@ -138,7 +137,7 @@ def load_external_mesh_and_solve():
 
     analysis_setup = {
                       "analisys_id" : 4,
-                      "modes": 100,
+                      "modes_number": 100,
                       "sigma_factor": 0.01,
                       }
 

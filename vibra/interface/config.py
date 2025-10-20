@@ -49,7 +49,7 @@ class Config:
         recent_file = Path(recent_file)
 
         recent_files = self.get_recent_files()
-        if (len(recent_files) == 5) and (recent_file not in recent_files):
+        if (len(recent_files) == 10) and (recent_file not in recent_files):
             recent_files.pop()
 
         if recent_file in recent_files:

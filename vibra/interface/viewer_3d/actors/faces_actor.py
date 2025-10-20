@@ -4,6 +4,7 @@ from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
+    vtkFloatArray,
 )
 from vtkmodules.vtkCommonDataModel import (
     VTK_QUAD,
@@ -61,8 +62,7 @@ class FacesActor(vtkActor):
             mapper = vtkPolyDataMapper()
 
         points = vtkPoints()
-        point_colors = vtkUnsignedCharArray()
-        point_colors.SetNumberOfComponents(3)
+        point_colors = vtkFloatArray()
         point_colors.SetNumberOfTuples(number_of_nodes)
         point_colors.Fill(0)
 
@@ -180,8 +180,6 @@ class FacesActor(vtkActor):
             self.set_color(color)
 
     def set_color(self, color: Color):
-        # TODO: update these functions to work with the molde.Colors instead of tuples
-
         if self.data is None:
             return
 

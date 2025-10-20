@@ -34,8 +34,8 @@ class Ui_Dialog(object):
         self.gridLayout.setContentsMargins(4, 4, 4, 4)
         self.frame_main_widget = QFrame(Dialog)
         self.frame_main_widget.setObjectName(u"frame_main_widget")
-        self.frame_main_widget.setFrameShape(QFrame.Box)
-        self.frame_main_widget.setFrameShadow(QFrame.Raised)
+        self.frame_main_widget.setFrameShape(QFrame.Shape.Box)
+        self.frame_main_widget.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_main_widget)
         self.gridLayout_4.setSpacing(2)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -47,8 +47,8 @@ class Ui_Dialog(object):
         font = QFont()
         font.setPointSize(10)
         self.frame.setFont(font)
-        self.frame.setFrameShape(QFrame.NoFrame)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.frame.setLineWidth(1)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -78,8 +78,8 @@ class Ui_Dialog(object):
         font1.setPointSize(10)
         font1.setBold(False)
         self.label.setFont(font1)
-        self.label.setTextFormat(Qt.AutoText)
-        self.label.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label, 0, 1, 1, 1)
 
@@ -89,17 +89,17 @@ class Ui_Dialog(object):
         self.lineEdit_selection_id.setMinimumSize(QSize(180, 26))
         self.lineEdit_selection_id.setMaximumSize(QSize(180, 26))
         self.lineEdit_selection_id.setFont(font)
-        self.lineEdit_selection_id.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selection_id.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.lineEdit_selection_id.setStyleSheet(u"")
-        self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
+        self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
         self.label_3 = QLabel(self.frame)
         self.label_3.setObjectName(u"label_3")
         self.label_3.setFont(font1)
-        self.label_3.setTextFormat(Qt.AutoText)
-        self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_3.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_3, 1, 1, 1, 1)
 
@@ -109,9 +109,9 @@ class Ui_Dialog(object):
         self.lineEdit_selected_material_name.setMinimumSize(QSize(180, 26))
         self.lineEdit_selected_material_name.setMaximumSize(QSize(180, 26))
         self.lineEdit_selected_material_name.setFont(font)
-        self.lineEdit_selected_material_name.setFocusPolicy(Qt.ClickFocus)
+        self.lineEdit_selected_material_name.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.lineEdit_selected_material_name.setStyleSheet(u"")
-        self.lineEdit_selected_material_name.setAlignment(Qt.AlignCenter)
+        self.lineEdit_selected_material_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.lineEdit_selected_material_name, 1, 2, 1, 1)
 
@@ -132,11 +132,11 @@ class Ui_Dialog(object):
         self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
         self.scrollArea_table_of_materials = QScrollArea(self.tab_setup)
         self.scrollArea_table_of_materials.setObjectName(u"scrollArea_table_of_materials")
-        self.scrollArea_table_of_materials.setFrameShape(QFrame.NoFrame)
+        self.scrollArea_table_of_materials.setFrameShape(QFrame.Shape.NoFrame)
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 870, 323))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 870, 322))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
@@ -150,8 +150,8 @@ class Ui_Dialog(object):
         self.frame_reset_remove_buttons.setObjectName(u"frame_reset_remove_buttons")
         self.frame_reset_remove_buttons.setMinimumSize(QSize(560, 40))
         self.frame_reset_remove_buttons.setMaximumSize(QSize(16777215, 40))
-        self.frame_reset_remove_buttons.setFrameShape(QFrame.NoFrame)
-        self.frame_reset_remove_buttons.setFrameShadow(QFrame.Raised)
+        self.frame_reset_remove_buttons.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_reset_remove_buttons.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_8 = QGridLayout(self.frame_reset_remove_buttons)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setHorizontalSpacing(12)
@@ -188,25 +188,19 @@ class Ui_Dialog(object):
         if (self.tableWidget_model_materials.columnCount() < 6):
             self.tableWidget_model_materials.setColumnCount(6)
         __qtablewidgetitem = QTableWidgetItem()
-        __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_materials.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
-        __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_materials.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
-        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_materials.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
-        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_materials.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
-        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_materials.setHorizontalHeaderItem(4, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
-        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_materials.setHorizontalHeaderItem(5, __qtablewidgetitem5)
         self.tableWidget_model_materials.setObjectName(u"tableWidget_model_materials")
-        self.tableWidget_model_materials.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.tableWidget_model_materials.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.tableWidget_model_materials.verticalHeader().setVisible(False)
 
         self.gridLayout_6.addWidget(self.tableWidget_model_materials, 0, 0, 1, 1)
@@ -222,8 +216,8 @@ class Ui_Dialog(object):
         self.frame_title.setObjectName(u"frame_title")
         self.frame_title.setMinimumSize(QSize(0, 48))
         self.frame_title.setMaximumSize(QSize(16777215, 48))
-        self.frame_title.setFrameShape(QFrame.Box)
-        self.frame_title.setFrameShadow(QFrame.Raised)
+        self.frame_title.setFrameShape(QFrame.Shape.Box)
+        self.frame_title.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_title)
         self.gridLayout_3.setSpacing(4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -235,8 +229,8 @@ class Ui_Dialog(object):
         font3.setPointSize(11)
         font3.setBold(False)
         self.label_2.setFont(font3)
-        self.label_2.setTextFormat(Qt.AutoText)
-        self.label_2.setAlignment(Qt.AlignCenter)
+        self.label_2.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_3.addWidget(self.label_2, 0, 0, 1, 1)
 
@@ -277,7 +271,7 @@ class Ui_Dialog(object):
         ___qtablewidgetitem3 = self.tableWidget_model_materials.horizontalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Density [kg/m\u00b3]", None));
         ___qtablewidgetitem4 = self.tableWidget_model_materials.horizontalHeaderItem(4)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Elasticity modulus [GPa]", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Elasticity modulus [Pa]", None));
         ___qtablewidgetitem5 = self.tableWidget_model_materials.horizontalHeaderItem(5)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Poisson ratio [--]", None));
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))

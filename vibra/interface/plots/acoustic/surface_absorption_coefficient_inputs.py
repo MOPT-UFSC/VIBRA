@@ -12,6 +12,8 @@ from vibra.interface.ui_generated.plots.acoustic.surface_absorption_coefficient_
 import logging
 import numpy as np
 
+error_title = "Error"
+
 
 class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -46,12 +48,15 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _reset_variables(self):
-        self.exporter = None
-        self.plotter = None
         self.unit_label = "--"
         self.keep_window_open = True
+        self.exporter = None
+        self.plotter = None
 
     def _create_connections(self):
+        #
+        self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
+        self.comboBox_nodal_normals.currentIndexChanged.connect(self.toggle_nodal_normals_symbols_visibility)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
@@ -59,14 +64,86 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
-    
+
+    def volume_selector_callback(self):
+        if self.comboBox_volumes.currentText() != "":
+            volume_id = int(self.comboBox_volumes.currentText())
+            app().main_window.set_geometry_selection(volumes=[volume_id])
+
+    def toggle_nodal_normals_symbols_visibility(self):
+        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        app().main_window.visualization_filter.normal_symbols = show_normals
+        app().main_window.update_symbols()
+
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selected_geometry_volumes
+        surfaces = app().main_window.selected_geometry_surfaces
 
-        if faces:
-            text = ", ".join([str(i) for i in faces])
+        if volumes:
+            if len(volumes) == 1:
+                try:
+                    self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
+                except:
+                    pass
+            return
+
+        if not surfaces:
+            return
+
+        index = self.comboBox_selector_filter.currentIndex()
+        if surfaces and index == 0:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
+            
+            self.check_volumes_from_surfaces(surfaces)
+
+    def check_volumes_from_surfaces(self, surface_ids: list[int]):
+
+        external_surfaces_map = dict()
+        internal_surfaces_map = dict()  
+        self.comboBox_volumes.blockSignals(True)
+
+        for surface_id in surface_ids:
+            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
+            if len(volumes_from_surface) == 1:
+                external_surfaces_map[surface_id] = volumes_from_surface[0]
+
+            elif len(volumes_from_surface) == 2:
+                internal_surfaces_map[surface_id] = volumes_from_surface
+
+        self.comboBox_volumes.clear()
+        if external_surfaces_map and internal_surfaces_map:
+            self.lineEdit_selection_id.setText("")
+            app().main_window.set_geometry_selection()
+            app().processEvents()
+
+            title = "Invalid selection"
+            message = "The current selection contains internal and external surfaces. "
+            message += "The selection of multiple external surfaces is allowed, but"
+            message += "only one internal surface can be selected each time."
+            PrintMessageInput([error_title, title, message])
+            self.comboBox_volumes.blockSignals(False)
+            return
+
+        if external_surfaces_map:
+            volumes_set = set()
+            self.comboBox_volumes.setEnabled(False)
+            for volume_id in external_surfaces_map.values():
+                volumes_set |= set([volume_id])
+
+            if len(volumes_set) == 1:
+                self.comboBox_volumes.addItem(str(volume_id))
+            elif len(volumes_set) > 1:
+                self.comboBox_volumes.addItem("Multiple")
+
+        if internal_surfaces_map:
+            self.comboBox_volumes.setEnabled(True)
+            for volume_ids in internal_surfaces_map.values():
+                for volume_id in volume_ids:
+                    self.comboBox_volumes.addItem(str(volume_id))
+
+        self.comboBox_volumes.blockSignals(False)
 
     def check_inputs(self):
 
@@ -90,6 +167,12 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             return
 
         self.join_model_data()
+
+        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        app().main_window.visualization_filter.normal_symbols = show_normals
+        if show_normals:
+            app().main_window.update_symbols()
+
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter.imported_real_data()
         self.plotter._set_model_results_data_to_plot(self.model_results)
@@ -105,10 +188,18 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def get_response(self, selected_id: int):
 
+        if self.comboBox_volumes.currentText() == "Multiple":
+            volume_id = self.mesh.volumes_from_surface.get(selected_id)[0]
+        else:
+            volume_id = int(self.comboBox_volumes.currentText())
+
         def function_callback():
 
             logging.info("Processing surface absorption coefficient... [15/100]")
-            absorption_coefficient = self.acoustic_post.compute_surface_absorption_coefficient(surface_id = selected_id)
+            absorption_coefficient = self.acoustic_post.compute_surface_absorption_coefficient(
+                surface_id = selected_id,
+                volume_id = volume_id,
+                )
 
             logging.info("Processing surface absorption coefficient... [95/100]")
             return absorption_coefficient

@@ -116,11 +116,11 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         analysis_setup = app().project.analysis_setup
 
         if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.analysis_method = "Direct method"
+            analysis_method = analysis_setup.get("analysis_method", "direct")
+            if isinstance(analysis_method, str):
+                analysis_method = analysis_method.capitalize().replace("_", " ")
 
-            elif analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
-                self.analysis_method = "Mode Superposition method"
+            self.analysis_method = f"{analysis_method} method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = app().project.structural_harmonic_solver.solution

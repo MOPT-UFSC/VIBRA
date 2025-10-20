@@ -1,35 +1,34 @@
-import gmsh
 import logging
-import numpy as np
 import os
 import sys
-
+import traceback
 from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from time import time
-from traceback import print_exception
 from typing import Literal
 
+import gmsh
+import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON, 
-    VTK_QUADRATIC_HEXAHEDRON, 
-    VTK_QUADRATIC_TETRA, 
-    VTK_TETRA, 
-    vtkUnstructuredGrid
+    VTK_HEXAHEDRON,
+    VTK_QUADRATIC_HEXAHEDRON,
+    VTK_QUADRATIC_TETRA,
+    VTK_TETRA,
+    vtkUnstructuredGrid,
 )
+from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.engine.mesher.element_type import (
-    ElementType,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
+    DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
-    DEFAULT_ELEMENT_TYPE,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementType,
 )
+from vibra.errors import MeshingAlgorithmException
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
@@ -82,6 +81,7 @@ class Mesh:
 
         self.mesh_quality_data = dict()
 
+        self.disconnected_nodes = list()
         self.collapsed_3d_elements = set()
         self.collapsed_2d_elements = set()
         self.collapsed_1d_elements = set()
@@ -109,16 +109,13 @@ class Mesh:
         self.external_connectivity_from_lines = dict()
         self.external_connectivity_from_surfaces = dict()
 
-        self.solid_elements_center = dict()
-
-        self.nodes_out_of_face_element = dict()
-        self.surface_area_from_element_integration = dict()
-
-        self.nodal_area = defaultdict(list)
-
         self.normals_surface = dict()
         self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
+        self.solid_elements_center = dict()
+        self.surface_area_from_element_integration = dict()
+
+        self.nodal_area = defaultdict(list)
 
         self.nodes_collapsed_elements = None
 
@@ -130,6 +127,8 @@ class Mesh:
         self.cache_surfaces_from_volume = dict()
         self.cache_lines_from_surface = dict()
         self.cache_points_from_line = dict()
+
+        self.error_data = dict()
 
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
@@ -152,9 +151,6 @@ class Mesh:
         dimension = kwargs.get("dimension", 3)
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
- 
-        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_type: ElementType
 
         if not gmsh.isInitialized():
             gmsh.initialize("", False, interruptible=False)
@@ -188,8 +184,28 @@ class Mesh:
             gmsh.model.mesh.generate(dim=dimension)
             gmsh.model.mesh.removeDuplicateNodes()
 
-        except Exception as error_log:
-            print_exception(error_log)
+            self.reset_error_data()
+
+        except:
+            gmsh.finalize()
+
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            # tb_message = "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            tb_message = traceback.format_exception(exc_type, exc_value, exc_traceback)[-1]
+            
+            message = "A problem occurred while processing the mesh. Some of the following actions may help resolve "
+            message += "the issue: reducing the size of the elements and/or changing the 3D meshing algorithm. " 
+            message += "If neither of these options works, we suggest reviewing the CAD geometry to eliminate "
+            message += "any potential underlying geometric issues. \n\n"
+            message += "Error details:\n\n"
+            message += tb_message
+
+            self.error_data = {
+                "title" : "Error while generating mesh",
+                "message" : message
+                }
+
+            return
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
@@ -201,6 +217,8 @@ class Mesh:
         if gmsh_gui:
             if "-nopopup" not in sys.argv:
                 gmsh.fltk.run()
+
+        gmsh.finalize()
 
         logging.info(
             f"Mesh generated with {len(self.nodal_coordinates)} nodes"
@@ -819,14 +837,14 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def local_mesh_refine(self, global_size: float | int, refinement_parameters: list):
+    def local_mesh_refine(self, global_size: float | int, mesh_refinement_parameters: list):
         fields_list = [1]
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
         gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
 
-        for selection_type, local_size, selection_ids in refinement_parameters:
+        for selection_type, local_size, selection_ids in mesh_refinement_parameters:
             threshold_type = gmsh.model.mesh.field.add("Constant")
             if selection_type == "surfaces":
                 gmsh.model.mesh.field.setNumbers(
@@ -844,16 +862,17 @@ class Mesh:
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
+
     def _configure_mesh(self, **kwargs):
         size_factor = kwargs.get("size_factor", 0.0)
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)
-        refinement_parameters = kwargs.get("refinement_parameters", list())
+        mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
         element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
         element_type: ElementType
 
-        if refinement_parameters:
-            self.local_mesh_refine(maximum_element_size, refinement_parameters)
+        if mesh_refinement_parameters:
+            self.local_mesh_refine(maximum_element_size, mesh_refinement_parameters)
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", minimum_element_size)
             gmsh.option.setNumber("Mesh.MeshSizeMax", maximum_element_size)
@@ -873,6 +892,11 @@ class Mesh:
         self.lines_connectivity = np.zeros((0, 4), dtype=int)
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
+
+        self.disconnected_nodes.clear()
+        self.collapsed_1d_elements.clear()
+        self.collapsed_2d_elements.clear()
+        self.collapsed_3d_elements.clear()
 
         self.nodes_from_points.clear()
         self.points_from_nodes.clear()
@@ -1058,7 +1082,10 @@ class Mesh:
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
 
-        logging.info("Post-processing mesh... [88/100]")
+        logging.info("Post-processing mesh... [80/100]")
+        self.disconnected_nodes = self.get_disconnected_nodes()
+
+        logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
 
     def cache_mesh_information(self):
@@ -1383,7 +1410,7 @@ class Mesh:
             # integrate the total surface area by the summation of each element area
             area = 0.0
             for element_nodes in connect_data:
-                area += self.process_triangular_area_by_nodal_coordinates(element_nodes)
+                area += self.process_element_area_from_connectivity(element_nodes)
 
             self.surface_area_from_element_integration[tag] = area
             face_nodes = np.unique(connect_data).astype(int)
@@ -1513,6 +1540,15 @@ class Mesh:
             axis=1,
         )
         return mask
+
+    def get_disconnected_nodes(self):
+        disconnected_nodes = list()
+        nodes_from_solid_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
+        if self.nodal_coordinates[:, 0].size != nodes_from_solid_elements.size:
+            _disconnected_nodes = np.delete(self.nodal_coordinates[:, 0], nodes_from_solid_elements)
+            disconnected_nodes = [int(node_id) for node_id in _disconnected_nodes]
+
+        return disconnected_nodes
 
     def get_face_elements_connected_to_nodes(
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None
@@ -1657,7 +1693,7 @@ class Mesh:
 
         return data_normals
 
-    def get_surface_nodal_normals(self, surface_id: int, **kwargs):
+    def get_surface_nodal_normals(self, surface_id: int, volume_id: int):
         """
         This method processes the average normals in the surface nodes considering 
         the element faces normals connected to the same node.
@@ -1673,8 +1709,20 @@ class Mesh:
             A dictionary mapping the node IDs to the average normal vector.
         """
 
-        # t0 = time()
-       
+        if isinstance(volume_id, int):
+            solid_elements_connected_to_nodes = self.get_solid_elements_connected_to_nodes(surface_id=surface_id)
+
+            elements_set = set()
+            for elements in solid_elements_connected_to_nodes.values():
+                elements_set |= set(elements)
+
+            filtered_elements = list()
+            for elem3d_id in elements_set:
+                if self.solids_connectivity[elem3d_id, 1] == volume_id:
+                    filtered_elements.append(elem3d_id)
+
+            filt_element3d_connect = self.solids_connectivity[filtered_elements, 4:]
+
         face_connectivity = self.get_connectivity_from_surface(surface_id)
 
         if face_connectivity is None:
@@ -1683,11 +1731,21 @@ class Mesh:
         # noodes per element
         nodes_per_element = face_connectivity[0, :].size
 
+        # tria3 surface element
         if nodes_per_element == 3:
-            column_indexes = [(0, 1, 2)]
+            column_indexes = [(0,1,2)]
 
+        # quad4 surface element
+        elif nodes_per_element == 4:
+            column_indexes = [(0,1,2), (0,2,3)]
+
+        # tria6 surface element
         elif nodes_per_element == 6:
             column_indexes = [(3,1,4), (3,4,2), (3,2,5), (3,5,0)]
+
+        # quad8 surface element
+        elif nodes_per_element == 8:
+            column_indexes = [(0,4,7), (4,1,5), (5,2,6), (6,3,7), (4,6,7), (4,5,6)]
 
         else:
             return NotImplementedError(f"Normal not implemented for surface with {nodes_per_element} nodes")
@@ -1699,17 +1757,25 @@ class Mesh:
             norm_cross = self.process_stacked_cross_products(inside_face_connectivity)
 
             for i, e_nodes in enumerate(inside_face_connectivity):
+
+                mask = np.sum(np.isin(filt_element3d_connect, e_nodes), axis=1) == 3
+                connect_3d = filt_element3d_connect[mask, :].flatten()
+
+                coords = self.nodal_coordinates[e_nodes[0], 1:]
+                center_coords = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
+                vector_inside = center_coords - coords
+                dot_product = np.dot(norm_cross[i, :], vector_inside)
+
+                factor = 1 if dot_product < 0 else -1
+
                 for node in e_nodes:
-                    Vn_sum[node] += norm_cross[i, :]
+                    Vn_sum[node] += norm_cross[i, :] * factor
 
         nodal_unit_normals = dict()
 
         for node in self.get_nodes_from_surface(surface_id):
             Vn = Vn_sum[node]
             nodal_unit_normals[node] = Vn / np.linalg.norm(Vn)
-
-        # dt = time() - t0
-        # print(f"Elapsed time - surface #{surface_id}: {dt : .6f} s")
 
         return nodal_unit_normals
 
@@ -1789,15 +1855,15 @@ class Mesh:
         self.nodal_area.clear()
         for node, connectivities in self.face_elements_connected_to_nodes.items():
             for connect in connectivities:
-                area = self.process_triangular_area_by_nodal_coordinates(connect)
+                area = self.process_element_area_from_connectivity(connect)
                 if area is not None:
                     self.nodal_area[node].append(area)
 
-    def process_triangular_area_by_nodal_coordinates(
+    def process_element_area_from_connectivity(
         self, elem_connect: list[int] | np.ndarray
     ) -> np.ndarray | None:
         """
-        This method calculates the area of triangular elements
+        This method calculates the area of a surface element
         based on their connectivities.
 
         Parameters
@@ -1808,7 +1874,7 @@ class Mesh:
         Returns
         -------
         area: float
-            The area of the triangular element.
+            The area of surface element.
 
         """
         def compute_triangular_area(nodes: list):
@@ -1820,22 +1886,45 @@ class Mesh:
             area = np.linalg.norm(np.cross(vect_AB, vect_BC)) / 2
             return area
 
-        # compute the area for TRIA3 element
+        # internal triangles of TRIA3 element
         if len(elem_connect) == 3:
-            area = compute_triangular_area(elem_connect)
+            points_nodes = [
+                [elem_connect[0], elem_connect[1], elem_connect[2]],
+                ]
 
-        # compute the area for TRIA6 element
+        # internal triangles of QUAD4 element
+        elif len(elem_connect) == 4:
+            points_nodes = [
+                [elem_connect[0], elem_connect[1], elem_connect[2]],
+                [elem_connect[0], elem_connect[2], elem_connect[3]],
+                ]
+
+        # internal triangles of TRIA6 element
         elif len(elem_connect) == 6:
             points_nodes = [
                 [elem_connect[0], elem_connect[3], elem_connect[5]],
                 [elem_connect[5], elem_connect[3], elem_connect[1]],
                 [elem_connect[1], elem_connect[4], elem_connect[5]],
                 [elem_connect[5], elem_connect[4], elem_connect[2]],
-            ]
+                ]
+        
+        # internal triangles of QUAD8 element
+        elif len(elem_connect) == 8:
+            points_nodes = [
+                [elem_connect[7], elem_connect[0], elem_connect[4]],
+                [elem_connect[4], elem_connect[1], elem_connect[5]],
+                [elem_connect[5], elem_connect[7], elem_connect[4]],
+                [elem_connect[5], elem_connect[2], elem_connect[6]],
+                [elem_connect[6], elem_connect[3], elem_connect[7]],
+                [elem_connect[7], elem_connect[5], elem_connect[6]],
+                ]
 
-            area = 0.
-            for nodes in points_nodes:
-                area += compute_triangular_area(nodes)
+        else:
+            points_nodes = list()
+
+        area = 0.
+        for nodes in points_nodes:
+            area += compute_triangular_area(nodes)
 
         return area
 
@@ -2464,6 +2553,15 @@ class Mesh:
         selected_elements = np.array([*set(_selected_elements)], dtype=int)
 
         return nodes_inside_sphere, list(selected_elements)
+
+    def set_error_data(self, title: str, message: str):
+        self.error_data = {
+            "title" : title, 
+            "message" : message
+            }
+
+    def reset_error_data(self):
+        self.error_data.clear()
 
 
 if __name__ == "__main__":

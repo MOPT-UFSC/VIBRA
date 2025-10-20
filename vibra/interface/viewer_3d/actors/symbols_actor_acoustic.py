@@ -27,7 +27,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "degrees_of_freedom_decoupling": self._build_dof_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,
-            "dissipation_model": self._build_dissipation_model,
+            "proportional_damping": self._build_proportional_damping,
             "acoustic_transfer_element_data": self._build_acoustic_transfer_element_data,
             "incident_plane_wave": self._build_incident_plane_wave,
             "mass_source": self._build_mass_source,
@@ -66,27 +66,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
         geometry = app().project.model.geometry
-        surface_nodes = mesh.get_nodes_from_surface(surface_id)
-        surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
-
-        surface_normals = geometry.surface_normal(surface_id)
-        if surface_normals is None:
-            eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
-            avg_normal = np.average(eface_normals, axis=0).flatten()
-
-        else:
-            avg_normal = np.average(surface_normals, axis=0).round(6)
-
-        contains_curvature = not geometry.is_surface_straight(surface_id)
-        center_coords = np.average(surface_coordinates, axis=0)
-
-        if contains_curvature:
-            # Finds the node that is closest to the center coords
-            dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-            index = np.argmin(dist)
-            return surface_coordinates[index, :], surface_normals[index, :]
+        avg_normal = geometry.surface_normal(surface_id)
+        center_coords = geometry.surface_center(surface_id)
 
         return center_coords, avg_normal
 
@@ -114,6 +96,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         return node
     
     def _build_nodal_normals(self):
+        if not app().main_window.visualization_filter.normal_symbols:
+            return
+
         mesh = app().project.model.mesh
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
@@ -190,16 +175,14 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(sources.create_acoustic_pressure_source, coords, normal, color=color_names.RED_2)
 
-    def _build_dissipation_model(self, surface_id: int = -1, *args, **kwargs):
+    def _build_proportional_damping(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(sources.create_dissipation_model_source, coords, normal, color=color_names.BLUE)
 
-    def _build_viscous_thermal_loss_model(
-        self, surface_id: int = -1, *args, **kwargs
-    ):
+    def _build_viscous_thermal_loss_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 

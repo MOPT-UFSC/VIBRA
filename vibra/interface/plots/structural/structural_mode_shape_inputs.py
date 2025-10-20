@@ -1,15 +1,12 @@
-import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QTreeWidgetItem,
-)
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+import numpy as np
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -18,7 +15,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
 
         self._initialize()
         self._create_connections()
-        self._config_widgets()
+        self._configure_qt_variables()
         self.load_natural_frequencies()
         self.load_user_preference_colormap()
 
@@ -36,13 +33,8 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.setDisabled(True)
-        self.comboBox_color_scale.setDisabled(True)
-        self.slider_transparency.setDisabled(True)
-
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
-        self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -54,19 +46,21 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
 
-    def _config_widgets(self):
+    def _configure_qt_variables(self):
+        #
         self.frame_button.setVisible(False)
+        self.frame_transparency.setVisible(False)
+        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-
-        widths = [80, 140]
-        for i, width in enumerate(widths):
+        #
+        for i, width in enumerate([80, 140]):
             self.treeWidget_frequencies.setColumnWidth(i, width)
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def update_animation_widget_visibility(self):
         return
-        index = self.comboBox_color_scale.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         if index >= 4:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
@@ -99,10 +93,10 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_natural_frequency.text() == "":
             return
+        
+        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
 
-        frequency = self.selected_natural_frequency
-        self.mode_index = self.natural_frequencies.index(frequency)
-        app().main_window.results_widget.update_plot()
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def update_displacements(self):
         pass
@@ -119,76 +113,8 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             "u_y",
             "u_z",
         ]
-        index = self.comboBox_displacements.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         return plot_types[index]
-
-    def get_user_color_scale_setup(self):
-        return
-
-        absolute = False
-        ux_abs_values = False
-        uy_abs_values = False
-        uz_abs_values = False
-        ux_real_values = False
-        uy_real_values = False
-        uz_real_values = False
-        ux_imag_values = False
-        uy_imag_values = False
-        uz_imag_values = False
-        absolute_animation = False
-        ux_animation = False
-        uy_animation = False
-        uz_animation = False
-
-        index = self.comboBox_color_scale.currentIndex()
-
-        if index == 0:
-            absolute_animation = True
-        elif index == 1:
-            ux_animation = True
-        elif index == 2:
-            uy_animation = True
-        elif index == 3:
-            uz_animation = True
-        elif index == 4:
-            absolute = True
-        elif index == 5:
-            ux_abs_values = True
-        elif index == 6:
-            uy_abs_values = True
-        elif index == 7:
-            uz_abs_values = True
-        elif index == 8:
-            ux_real_values = True
-        elif index == 9:
-            uy_real_values = True
-        elif index == 10:
-            uz_real_values = True
-        elif index == 11:
-            ux_imag_values = True
-        elif index == 12:
-            uy_imag_values = True
-        elif index == 13:
-            uz_imag_values = True
-
-        color_scale_setup = {
-            "absolute": absolute,
-            "ux_abs_values": ux_abs_values,
-            "uy_abs_values": uy_abs_values,
-            "uz_abs_values": uz_abs_values,
-            "ux_real_values": ux_real_values,
-            "uy_real_values": uy_real_values,
-            "uz_real_values": uz_real_values,
-            "ux_imag_values": ux_imag_values,
-            "uy_imag_values": uy_imag_values,
-            "uz_imag_values": uz_imag_values,
-            "absolute_animation": absolute_animation,
-            "ux_animation": ux_animation,
-            "uy_animation": uy_animation,
-            "uz_animation": uz_animation,
-        }
-
-        return color_scale_setup
 
     def load_natural_frequencies(self):
         if app().project.structural_modal_solver is None:

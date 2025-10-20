@@ -27,18 +27,19 @@ class VisualizationFilter:
     solids: bool = False
     symbols: bool = False
     ghost: bool = True
+    normal_symbols: bool = False
     color_mode: ColorMode = ColorMode.COLORED
 
     @classmethod
     def all_false(cls):
         # It is dumb, but it works
-        args = [False] * 6
+        args = [False] * 7
         return cls(*args)
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
-        args = [True] * 6
+        args = [True] * 7
         return cls(*args)
 
 

@@ -24,9 +24,15 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def _reset(self):
         self.current_widget = None
-    
+
     def hide_bottom_widget(self):
         self.bottom_widget.hide()
+
+    def clear_treeWidgets_of_frequencies(self):
+        self.plot_structural_modal.treeWidget_frequencies.clear()
+        self.plot_structural_harmonic.treeWidget_frequencies.clear()
+        self.plot_acoustic_modal.treeWidget_frequencies.clear()
+        self.plot_acoustic_harmonic.treeWidget_frequencies.clear()
 
     def _define_qt_variables(self):
         self.main_frame = QFrame()
@@ -64,25 +70,21 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def add_structural_modal_widget(self):
         self.plot_structural_modal.load_natural_frequencies()
         self.plot_structural_modal.load_user_preference_colormap()
-        self.plot_structural_modal.update_plot()
         self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.load_user_preference_colormap()
-        self.plot_structural_harmonic.update_plot()
         self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.load_user_preference_colormap()
-        self.plot_acoustic_modal.update_plot()
         self.add_widget(self.plot_acoustic_modal)
 
     def add_acoustic_harmonic_widget(self):
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.load_user_preference_colormap()
-        self.plot_acoustic_harmonic.update_plot()
         self.add_widget(self.plot_acoustic_harmonic)
 
     def add_structural_frequency_response_widget(self):

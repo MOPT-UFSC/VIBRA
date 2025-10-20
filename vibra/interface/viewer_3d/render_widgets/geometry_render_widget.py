@@ -6,7 +6,7 @@ from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import app
+from vibra import app, ICON_DIR
 from vibra.utils.image_functions import removes_image_background
 
 from ..actors.ghost_actor import GhostActor
@@ -62,12 +62,25 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         # dont't remove, transparency depends on it
         self.renderer.UseDepthPeelingOn()
+        self.renderer.SetMaximumNumberOfPeels(1)
+        self.renderer.SetOcclusionRatio(0.9)
+        self.render_interactor.GetRenderWindow().SetMultiSamples(0)
 
         self.remove_all_actors()
+        self.create_logos()
         self.create_axes()
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+
+    def create_logos(self):
+        if hasattr(self, "vibra_logo"):
+            self.renderer.RemoveViewProp(self.vibra_logo)
+
+        path = ICON_DIR / "logo_vibra_comp.png"
+        self.vibra_logo = self.create_logo(path)
+        self.vibra_logo.SetPosition(0.895, 0.91)
+        self.vibra_logo.SetPosition2(0.10, 0.10)
 
     def set_theme(self, *args, **kwargs):
         self.update_theme()
@@ -147,7 +160,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.ghost_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
-        logging.info("Updating the mesh render... [75/100]")
+        logging.info("Updating the geometry render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
@@ -168,7 +181,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
-        logging.info("Updating the mesh render... [95/100]")
+        logging.info("Updating the geometry render... [95/100]")
         self.update()
 
         if app().project.thumbnail is None:
@@ -310,7 +323,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if not shift_pressed:
+        if not (shift_pressed or app().main_window.volume_selection_mode):
             picked_volumes.clear()
 
         app().main_window.set_geometry_selection(

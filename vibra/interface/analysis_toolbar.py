@@ -2,17 +2,17 @@ from PySide6.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt, QSize, Signal
 
-
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
-from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
-from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
+from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.loading_window import LoadingWindow
 
+import logging
 from typing import Literal
+from time import time
 
 AnalysisType = Literal[
     "",
@@ -221,7 +221,7 @@ class AnalysisToolbar(QToolBar):
 
         if analysis_type == "Harmonic":
             if physical_domain == "Structural":
-                return AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD
+                return AnalysisID.STRUCTURAL_HARMONIC
             else:
                 return AnalysisID.ACOUSTIC_HARMONIC
 
@@ -242,8 +242,17 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis(self, is_resume: bool = False):
 
-        # Do not solve models with collapsed elements!
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
+
+        app().main_window.action_results_workspace.setDisabled(True)
+        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
+
+        ## Do not solve models if there are disconnected nodes or collapsed elements!
         mesh = app().project.model.mesh   
+        if mesh.disconnected_nodes:
+            return
+
         collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
         if collapsed:
             return
@@ -251,23 +260,35 @@ class AnalysisToolbar(QToolBar):
         self.update_analysis_combo_boxes()
         if app().project.run_analysis(is_resume):
             return
-        
+
+        if app().project.model.stop_processing:
+            app().project.model.toggle_processing_callback()
+            app().file.remove_results_data_from_project_file()
+            return
+
         if is_resume:
             app().project.can_resume_solution = False
 
+        LoadingWindow(self.post_processing_analysis).run()
+
+    def post_processing_analysis(self):
+        logging.info("Post-processing results... [10/100]")
         self.set_pushbutton_reset_solution_enabled()
 
-        # This is needed specially when the geometry
-        # and mesh changes because of the analysis
-        app().main_window.update_plots(reset_camera=False)
+        logging.info("Post-processing results... [65/100]")
+        app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-        if not app().file.read_geometry_data_from_file():
+        if not app().file.geometry_data_filepath.exists():
             app().file.write_geometry_data_in_file()
 
-        if not app().file.read_mesh_data_from_file():
+        logging.info("Post-processing results... [85/100]")
+        if not app().file.mesh_data_filepath.exists():
             app().file.write_mesh_data_in_file()
 
+        logging.info("Post-processing results... [90/100]")
         app().file.write_model_properties_in_file()
+
+        logging.info("Post-processing results... [95/100]")
         app().file.write_results_data_in_file()
 
     def project_solution_data_reset_callback(self):
@@ -320,20 +341,16 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        # disable run_analysis button if there are collapsed elements
-        mesh = app().project.model.mesh   
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-        self.pushButton_run_analysis.setDisabled(bool(collapsed))
+        # disable run_analysis button if there are disconnected nodes or collapsed elements
+        mesh = app().project.model.mesh
+        disconnected_nodes = bool(mesh.disconnected_nodes)
+        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+
+        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def harmonic_structural(self):
 
-        select = StructuralHarmonicAnalysisMethodSelecorInput()
-        if select.index == -1:
-            return
- 
-        analysis_setup = {"analysis_id": select.index}
-        self.update_analysis_setup(analysis_setup)
-        harmonic = StructuralHarmonicAnalysisDirectMethodInput()
+        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.STRUCTURAL_HARMONIC)
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -343,9 +360,8 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-        analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.update_analysis_setup(analysis_setup)
-        harmonic = AcousticHarmonicAnalysisDirectMethodInput()
+
+        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.ACOUSTIC_HARMONIC)
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -356,11 +372,11 @@ class AnalysisToolbar(QToolBar):
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
 
-        if modal.modes is None:
+        if modal.modes_number is None:
             return
 
         if modal.setup_defined:
-            self.update_analysis_setup(modal.analysis_setup)
+            app().project.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
@@ -370,26 +386,29 @@ class AnalysisToolbar(QToolBar):
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
 
-        if modal.modes is None:
+        if modal.modes_number is None:
             return
 
         if modal.setup_defined:
-            self.update_analysis_setup(modal.analysis_setup)
+            app().project.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
 
-    def update_analysis_setup(self, analysis_setup: dict):
-        if app().project.analysis_setup is not None:
-            for key, value in app().project.analysis_setup.items():
-                if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    analysis_setup[key] = value
-
-        app().project.set_analysis_setup(analysis_setup)
-
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
         app().file.write_analysis_setup_in_file(app().project.analysis_setup)
+
+    def update_analysis_setup(self, analysis_setup: dict):
+
+        keys_to_ignore = list(analysis_setup.keys())
+        if isinstance(app().project.analysis_setup, dict):
+            for key, value in app().project.analysis_setup.items():
+                if key in keys_to_ignore:
+                    continue
+                analysis_setup[key] = value
+
+        app().project.set_analysis_setup(analysis_setup)
