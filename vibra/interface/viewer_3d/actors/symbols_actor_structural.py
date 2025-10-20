@@ -53,27 +53,9 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
         geometry = app().project.model.geometry
-        nodes = mesh.get_nodes_from_surface(surface_id)
-        surface_coordinates = mesh.nodal_coordinates[nodes, 1:]
-
-        surface_normals = geometry.surface_normal(surface_id)
-        if surface_normals is None:
-            eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
-            avg_normal = np.average(eface_normals, axis=0).flatten()
-
-        else:
-            avg_normal = np.average(surface_normals, axis=0).round(6)
-
-        contains_curvature = not geometry.is_surface_straight(surface_id)
-        center_coords = np.average(surface_coordinates, axis=0)
-
-        if contains_curvature:
-            # Finds the node that is closest to the center coords
-            dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-            index = np.argmin(dist)
-            return surface_coordinates[index, :], surface_normals[index, :]
+        center_coords = geometry.surface_center(surface_id)
+        avg_normal = geometry.surface_normal(surface_id)
 
         return center_coords, avg_normal
 

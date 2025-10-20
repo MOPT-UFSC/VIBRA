@@ -44,33 +44,16 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
         geometry = app().project.model.geometry
-        surface_nodes = mesh.get_nodes_from_surface(surface_id)
-        surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
 
-        surface_normals = geometry.surface_normal(surface_id)
-        if surface_normals is None:
-            eface_normals = mesh.get_stacked_normals_for_surface_elements(surface_id)
-            avg_normal = np.average(eface_normals, axis=0).flatten()
 
-        else:
-            avg_normal = np.average(surface_normals, axis=0).round(6)
+        avg_normal = geometry.surface_normal(surface_id)
+        center_coords = geometry.surface_center(surface_id)
+        surface_area = geometry.surface_area(surface_id)
 
-        contains_curvature = not geometry.is_surface_straight(surface_id)
-        center_coords = np.average(surface_coordinates, axis=0)
+        radius = np.sqrt(surface_area/np.pi)
 
-        if contains_curvature:
-            # Finds the node that is closest to the center coords
-            dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-            index = np.argmin(dist)
-            index_max = np.argmax(dist)
-            return surface_coordinates[index, :], surface_normals[index, :], dist[index_max]
-
-        dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-        index = np.argmax(dist)
-        
-        return center_coords, avg_normal, dist[index]
+        return center_coords, avg_normal, radius
 
     def _build_reciprocating_compressor(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
