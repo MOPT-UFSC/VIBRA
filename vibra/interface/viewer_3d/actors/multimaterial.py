@@ -261,9 +261,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
                 element_face_normals = self.mesh.get_stacked_normals_for_surface_elements(surface)
                 normal = np.average(element_face_normals, axis=0).flatten()
             else:
-                normal = np.average(surface_normals, axis=0).round(6)
+                normals_2d = np.atleast_2d(surface_normals)
+                normal = np.average(normals_2d, axis=0).round(6)
             normal /= np.linalg.norm(normal)
-
             nx, ny, nz = normal * 0.08
             p1 = np.array([-ny, nz, nx])
             p2 = np.cross(p1, normal)
