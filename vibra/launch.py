@@ -6,7 +6,7 @@ import platform
 
 from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
-from vibra import USER_PATH
+from vibra import USER_PATH, APP_ID
 from vibra.errors import VibraException
 from vibra.interface.application import Application
 
@@ -96,6 +96,10 @@ def main():
     # This is needed because VTK is not compatible with Wayland
     if platform.system() == "Linux":
         os.environ["QT_QPA_PLATFORM"] = "xcb"
+
+    if platform.system() == "Windows":
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
 
     app = Application(sys.argv)
     sys.exit(app.exec_())
