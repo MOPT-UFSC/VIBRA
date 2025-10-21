@@ -883,7 +883,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             except Exception as error_log:
                 title = f"Invalid entry to the {label}"
                 message = f"Dear user, you have typed an invalid value at the {label} input field."
-                message += "You should to inform a valid float number to proceed.\n\n"
+                message += "You should inform a valid float number to proceed.\n\n"
                 message += f"Details: {str(error_log)}"
                 PrintMessageInput([error_title, title, message])
                 return None
