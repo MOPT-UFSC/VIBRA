@@ -800,7 +800,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         if temperature_K < 0:
             title = "Invalid entry to the temperature"
             message = "The typed value at temperature input field reaches a negative value in Kelvin scale."
-            message += "It is necessary to enter a value that maintains the physicall coherence and consistence "
+            message += "It is necessary to enter a value that maintains the physical coherence and consistence "
             message += "to proceed with the fluid setup."
             PrintMessageInput([error_title, title, message])
             return None
