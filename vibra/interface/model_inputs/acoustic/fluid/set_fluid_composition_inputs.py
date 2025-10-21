@@ -518,7 +518,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.hide()
             remaining_molar_fraction = round(100*self.remaining_molar_fraction, 6)
             title = "Fluid composition not invalid"
-            message += "The sum of all molar fractions must be equals to the unity. It is recommended "
+            message += "The sum of all molar fractions must be equal to the unity. It is recommended "
             message += "to adjust the fluid composition until this requirement is met.\n\n"
             message += f"Remaining molar fraction: {remaining_molar_fraction} %"
             PrintMessageInput([error_title, title, message])
@@ -727,7 +727,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if round(T_start - T_end, 6) == 0 and round(P_start - P_end, 6) == 0:
                 self.hide()
                 title = "Invalid thermodynamic states"
-                message = "The intial and final thermodynamic states are identical. "
+                message = "The initial and final thermodynamic states are identical. "
                 message += "You must to specify different states to obtain valid"
                 message += "property distribuitions."
                 PrintMessageInput([error_title, title, message])
