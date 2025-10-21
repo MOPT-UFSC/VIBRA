@@ -852,10 +852,10 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if re.match(r"\[\w+\s+error", _error) is not None:
                 has_error = True
 
-        print(has_error)
         message += "It is recommended to check the fluid composition and state properties to proceed."
         PrintMessageInput([error_title, title, message])
-        return not has_error
+        # for now it is needed to click "X" on the window and not the "Close" button
+        return has_error
 
     def actions_to_finalize(self):
         if not self.state_properties:
