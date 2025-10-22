@@ -35,6 +35,10 @@ class Geometry:
         self._curves_lengths = defaultdict()
         self._solids_volumes = defaultdict()
 
+        self._bounding_lines = defaultdict()
+        self._bounding_surfaces = defaultdict() 
+        self._bounding_solids = defaultdict() 
+
         self._straight_curves = set()
         self._straight_surfaces = set()
 
@@ -252,6 +256,9 @@ class Geometry:
                 center, _ = self.process_center_element(dim, tag)
                 self._solids_centers[tag] = center
 
+                bounding_solids_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
+                self._bounding_solids[tag] = bounding_solids_coords
+
             elif dim == 2:
                 self._surfaces_areas[tag] = mass * (self.length_unit_factor**2)
                 self._surfaces_to_curves[tag] = tuple(downwards)
@@ -264,6 +271,9 @@ class Geometry:
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
                 self._surfaces_normals[tag] = normal
 
+                bounding_surf_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
+                self._bounding_surfaces[tag] = bounding_surf_coords
+
                 if np.allclose(curvature, 0):
                     self._straight_surfaces.add(tag)
 
@@ -275,6 +285,9 @@ class Geometry:
                 center, uv_mid = self.process_center_element(dim, tag)
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
                 self._curves_centers[tag] = center
+
+                bounding_lines_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
+                self._bounding_lines[tag] = bounding_lines_coords
 
                 if np.allclose(curvature, 0):
                     self._straight_curves.add(tag)
