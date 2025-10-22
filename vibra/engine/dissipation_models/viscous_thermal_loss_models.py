@@ -1,6 +1,6 @@
 from vibra.engine.properties.fluid import Fluid
-from vibra.interface.model_inputs.acoustic.rectangular_duct_data import RectangularDuctData
-from vibra.interface.model_inputs.acoustic.circular_duct_data import CircularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

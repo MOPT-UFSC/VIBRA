@@ -10,12 +10,7 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (
-    QAbstractButton,
-    QFileDialog,
-    QMenu,
-    QMessageBox,
-)
+from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
@@ -58,6 +53,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
+        # TODO: move this to a separate class
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
         self.selected_mesh_solids = set()
@@ -65,6 +61,7 @@ class MainWindow(MainWindow_UI):
         self.selected_geometry_lines = set()
         self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
+        self.volume_selection_mode = False
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()

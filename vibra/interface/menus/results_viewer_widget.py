@@ -24,9 +24,15 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def _reset(self):
         self.current_widget = None
-    
+
     def hide_bottom_widget(self):
         self.bottom_widget.hide()
+
+    def clear_treeWidgets_of_frequencies(self):
+        self.plot_structural_modal.treeWidget_frequencies.clear()
+        self.plot_structural_harmonic.treeWidget_frequencies.clear()
+        self.plot_acoustic_modal.treeWidget_frequencies.clear()
+        self.plot_acoustic_harmonic.treeWidget_frequencies.clear()
 
     def _define_qt_variables(self):
         self.main_frame = QFrame()

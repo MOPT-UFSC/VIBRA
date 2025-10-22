@@ -1,9 +1,10 @@
+from scipy.special._ufuncs import loggamma
 import logging
 from threading import Lock
 from time import time
 
 import numpy as np
-from molde.interactor_styles import BoxSelectionInteractorStyle
+from molde.interactor_styles import ArcballCameraInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -29,7 +30,7 @@ from .model_info_text import (
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
+        self.set_interactor_style(ArcballCameraInteractorStyle())
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
@@ -52,6 +53,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_section_plane()
 
     def create_logos(self):
         if hasattr(self, "vibra_logo"):
@@ -88,19 +93,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if mesh is None:
             return
 
-        logging.info(f"Updating the results render... [10/100]")
+        logging.info("Updating the results render... [10/100]")
         self.remove_all_actors()
 
-        logging.info(f"Updating the results render... [25/100]")
+        logging.info("Updating the results render... [25/100]")
         self.analysis_actor = HollowAnalysisActor(mesh)
 
-        logging.info(f"Updating the results render... [75/100]")
+        logging.info("Updating the results render... [75/100]")
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         
-        logging.info(f"Updating the results render... [80/100]")
+        logging.info("Updating the results render... [80/100]")
         self.ghost_actor = GhostActor(mesh)
 
-        logging.info(f"Updating the results render... [85/100]")
+        logging.info("Updating the results render... [85/100]")
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
         # Create empty variables to be used when switching actors
@@ -118,7 +123,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
-        logging.info(f"Updating the results render... [90/100]")
+        logging.info("Updating the results render... [90/100]")
         with self.update_lock:
             self.update_theme()
             self.update_section_plane()
@@ -130,7 +135,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
-        logging.info(f"Updating the results render... [98/100]")
+        logging.info("Updating the results render... [98/100]")
         self.update()
     
     def enable_scale_bar(self):
@@ -412,6 +417,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self.actors_exists():
             return
 
+        if not self.isVisible():
+            return
+
         section_plane = app().main_window.section_plane
         self.stop_animation()
 
@@ -430,26 +438,37 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
         else:
             show_plane = not section_plane.keep_section_plane
-            self._apply_section_plane(position, rotation, inverted, show_plane)
+            LoadingWindow(self._apply_section_plane).run(
+                position,
+                rotation,
+                inverted,
+                show_plane,
+            )
 
         self.update()
 
     def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+        logging.info("Switching to solid actor... [50/100]")
         self.switch_to_solids_actor()
 
+        logging.info("Configuring section plane... [60/100]")
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
             normal = -normal
 
+        logging.info("Applying cut... [70/100]")
         self.analysis_actor.apply_cut(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
-        self.update()
 
+        logging.info("Updating visualization... [80/100]")
         visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        
+        logging.info("Updating... [99/100]")
+        self.update()
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
@@ -476,13 +495,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if  self.frequency_index is None and self.mode_index is None:
             return
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.ACOUSTIC_HARMONIC
+            ]:
             text += analysis_info_text(self.frequency_index + 1)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
-        ]:
+            ]:
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)

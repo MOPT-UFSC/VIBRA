@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.interface.ui_generated.model.setup.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
 from vibra.engine.properties.fluid import Fluid
-from vibra.interface.model_inputs.acoustic.fluid.fluid_widget import FluidWidget
+from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -29,6 +29,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
+        app().main_window.volume_selection_mode = True
 
         self.project = app().project
         self.model = app().project.model
@@ -394,4 +395,5 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.volume_selection_mode = False
         return super().closeEvent(a0)
