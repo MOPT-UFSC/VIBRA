@@ -1,17 +1,19 @@
+import os
+import re
+from pathlib import Path
+
+import numpy as np
 from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.utils import get_new_path
-
-from pathlib import Path
-
-import os
-import numpy as np
 
 error_title = "Error"
 warning_title = "Warning"
+IS_ERROR_REGEX = re.compile(r"\[\w+\s+error")
+
 
 class RefpropInterface:
     def __init__(self, *args, **kwargs):
@@ -171,7 +173,7 @@ class RefpropInterface:
                                         molar_fractions
                                         )
 
-        if read.herr:
+        if IS_ERROR_REGEX.match(read.herr):
             return None, read.herr
 
         if property_key == "M":
@@ -179,7 +181,7 @@ class RefpropInterface:
         else:
             fluid_property = read.Output[0]
 
-        return fluid_property, None
+        return fluid_property, read.herr
     
     def compute_fluid_properties_for_multiple_state_properties(self, **kwargs):
 
