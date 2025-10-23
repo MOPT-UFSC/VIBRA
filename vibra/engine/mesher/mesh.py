@@ -231,9 +231,7 @@ class Mesh:
 
     def _merge_nodes_from_adjacent_volumes(self):
         """This method merges all nodes from adjacent volumes."""
-        # lines_list = gmsh.model.getEntities(1)
         volumes_list = gmsh.model.getEntities(3)
-        # gmsh.model.occ.fragment(lines_list, lines_list)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
 
