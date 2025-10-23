@@ -765,12 +765,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.refprop_fluids_data["thermodynamic_states"] = "multiple_states"
             self.refprop_fluids_data["properties"] = multstate_fluid_properties
 
-        # from pprint import pprint
-        # pprint(self.refprop_fluids_data)
-
         self.process_errors()
-        # if self.process_errors():
-        #     return
 
         self.complete = True
         self.close()
@@ -849,30 +844,32 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         return [round(temperature_K, 8), round(pressure_Pa, 8)]
 
     def process_errors(self):
-        if not self.errors and not self.warnings:
+        if not (self.errors or self.warnings):
             return
-            
-        message_content = ""
+
+        self.hide()
+        further_details = ""
+
         if self.errors:
             for key, _error in self.errors.items():
-                message_content += f"{str(key)}: {str(_error)}\n\n"
+                further_details += f"{str(key)}: {str(_error)}\n\n"
             
-            title_error = "Error while processing fluid properties"
+            title = "Error generated while processing fluid properties"
             message = "The following errors were found in while processing the fluid properties.\n\n"
-            message += message_content
+            message += further_details
             message += "It is recommended to check the fluid composition and state properties to proceed."
-            PrintMessageInput([error_title, title_error, message])
+            PrintMessageInput([error_title, title, message])
 
         else:
             for key, _warning in self.warnings.items():
-                message_content += f"{str(key)}: {str(_warning)}\n\n"
+                further_details += f"{str(key)}: {str(_warning)}\n\n"
 
-            title_warning = "Warning generated while processing fluid properties"
+            title = "Warning generated while processing fluid properties"
             message = "The following warnings were generated while processing the fluid properties.\n\n"
-            message += message_content
+            message += further_details
             message += "It is recommended to check the fluid properties related to the warnings."
             message += "\n\nThis warning is shown only once."
-            PrintMessageInput([warning_title, title_warning, message])
+            PrintMessageInput([warning_title, title, message])
 
     def actions_to_finalize(self):
         if not self.state_properties:
