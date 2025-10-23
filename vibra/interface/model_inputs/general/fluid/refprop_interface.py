@@ -220,7 +220,7 @@ class RefpropInterface:
             fluid_properties["color"] = rgb_colors[j]
 
             for prop_key, prop_label in self.map_properties.items():
-                fluid_property, errors = self.get_specific_fluid_property(
+                fluid_property, errors, warnings = self.get_specific_fluid_property(
                                                                           key_mixture = key_mixture,
                                                                           molar_fractions = molar_fractions,
                                                                           property_key = prop_key,

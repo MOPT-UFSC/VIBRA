@@ -343,7 +343,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         else:
             key_mixture, molar_fractions = composition_data
 
-        fluid_property, errors = self.refprop_interface.get_specific_fluid_property( 
+        fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property( 
                                                                                     key_mixture = key_mixture,
                                                                                     molar_fractions = molar_fractions,
                                                                                     property_key = self.refprop_interface.isentropic_label,
@@ -595,7 +595,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if key_prop in ["PRANDTL", "TD", "KV"]:
                 continue
 
-            fluid_property, errors = self.refprop_interface.get_specific_fluid_property(
+            fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
                                                                                         key_mixture = key_mixture,
                                                                                         molar_fractions = molar_fractions,
                                                                                         property_key = key_prop,
@@ -605,6 +605,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             if errors:
                 self.errors[prop_label] = errors
+            
+            if warnings:
+                self.warnings[prop_label] = warnings
 
             self.fluid_properties[prop_label] = fluid_property
             if key_prop != "M":
@@ -627,7 +630,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                     if key_prop in ["PRANDTL", "TD", "KV"]:
                         continue    
 
-                    fluid_property, errors = self.refprop_interface.get_specific_fluid_property(
+                    fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
                                                                                                 key_mixture = key_mixture,
                                                                                                 molar_fractions = molar_fractions,
                                                                                                 property_key = key_prop,
@@ -637,6 +640,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
                     if errors:
                         self.errors[prop_label] = errors
+                    
+                    if warnings:
+                        self.warnings[prop_label] = warnings
 
                     self.fluid_properties[prop_label] = fluid_property  
                     if key_prop == self.refprop_interface.isentropic_label:
