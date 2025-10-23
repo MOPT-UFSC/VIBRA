@@ -13,6 +13,7 @@ from vibra.utils.utils import get_new_path
 error_title = "Error"
 warning_title = "Warning"
 IS_ERROR_REGEX = re.compile(r"\[\w+\s+error")
+IS_WARNING_REGEX = re.compile(r"\[\w+\s+warning")
 
 
 class RefpropInterface:
@@ -174,14 +175,24 @@ class RefpropInterface:
                                         )
 
         if IS_ERROR_REGEX.match(read.herr):
-            return None, read.herr
+            errors = read.herr
+        else:
+            errors = ""
 
+        if IS_WARNING_REGEX.match(read.herr):
+            warnings = read.herr
+        else: 
+            warnings = ""
+        
+        if errors:
+            return None, errors, warnings
+                
         if property_key == "M":
             fluid_property = 1000*read.Output[0]   
         else:
             fluid_property = read.Output[0]
 
-        return fluid_property, read.herr
+        return fluid_property, errors, warnings
     
     def compute_fluid_properties_for_multiple_state_properties(self, **kwargs):
 

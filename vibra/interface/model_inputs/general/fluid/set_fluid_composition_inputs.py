@@ -61,6 +61,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.remaining_molar_fraction = 1
 
         self.errors = dict()
+        self.warnings = dict()
         self.fluid_data = dict()
         self.fluid_properties = dict()
         self.refprop_fluids_data = dict()
@@ -567,7 +568,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if key_prop in ["PRANDTL", "TD", "KV"]:
                 continue 
 
-            fluid_property, errors = self.refprop_interface.get_specific_fluid_property(
+            fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
                                                                                         key_mixture = key_mixture,
                                                                                         molar_fractions = molar_fractions,
                                                                                         property_key = key_prop,
@@ -577,6 +578,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             if errors:
                 self.errors[prop_label] = errors
+            
+            if warnings:
+                self.warnings[prop_label] = warnings
 
             self.fluid_properties[prop_label] = fluid_property
 
@@ -839,32 +843,28 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         return [round(temperature_K, 8), round(pressure_Pa, 8)]
 
     def process_errors(self):
-        if not self.errors:
+        if not (self.errors and self.warnings):
             return
-    
-        title_error = "Error while processing fluid properties"
-        title_warning = "Warning generated while processing fluid properties"
-        message_start_error = "The following errors were found in while processing the fluid properties.\n\n"
-        message_start_warning = "The following warnings were generated while processing the fluid properties.\n\n"
-        
-        import re
-        has_error = False
-        for key, _error in self.errors.items():
-            message_content = f"{str(key)}: {str(_error)}\n\n"
-            if re.match(r"\[\w+\s+error", _error) is not None:
-                has_error = True
-
-        message_end_error = "It is recommended to check the fluid composition and state properties to proceed."
-        message_end_warning = "It is recommended to check the fluid properties related to the warnings."
-
-        if has_error:
-            message = message_start_error + message_content + message_end_error
+            
+        if self.errors:
+            for key, _error in self.errors.items():
+                message_content = f"{str(key)}: {str(_error)}\n\n"
+            
+            title_error = "Error while processing fluid properties"
+            message = "The following errors were found in while processing the fluid properties.\n\n"
+            message += message_content
+            message += "It is recommended to check the fluid composition and state properties to proceed."
             PrintMessageInput([error_title, title_error, message])
-        else:
-            message = message_start_warning + message_content + message_end_warning
-            PrintMessageInput([warning_title, title_warning, message])
 
-        return has_error
+        else:
+            for key, _warning in self.warnings.items():
+                message_content = f"{str(key)}: {str(_warning)}\n\n"
+
+            title_warning = "Warning generated while processing fluid properties"
+            message = "The following warnings were generated while processing the fluid properties.\n\n"
+            message += message_content
+            message += "It is recommended to check the fluid properties related to the warnings."
+            PrintMessageInput([warning_title, title_warning, message])
 
     def actions_to_finalize(self):
         if not self.state_properties:
