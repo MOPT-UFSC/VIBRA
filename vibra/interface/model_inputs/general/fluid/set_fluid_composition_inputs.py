@@ -843,7 +843,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         return [round(temperature_K, 8), round(pressure_Pa, 8)]
 
     def process_errors(self):
-        if not (self.errors and self.warnings):
+        if not self.errors and not self.warnings:
             return
             
         if self.errors:
