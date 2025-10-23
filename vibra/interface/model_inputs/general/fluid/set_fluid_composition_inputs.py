@@ -846,9 +846,10 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         if not self.errors and not self.warnings:
             return
             
+        message_content = ""
         if self.errors:
             for key, _error in self.errors.items():
-                message_content = f"{str(key)}: {str(_error)}\n\n"
+                message_content += f"{str(key)}: {str(_error)}\n\n"
             
             title_error = "Error while processing fluid properties"
             message = "The following errors were found in while processing the fluid properties.\n\n"
@@ -858,12 +859,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         else:
             for key, _warning in self.warnings.items():
-                message_content = f"{str(key)}: {str(_warning)}\n\n"
+                message_content += f"{str(key)}: {str(_warning)}\n\n"
 
             title_warning = "Warning generated while processing fluid properties"
             message = "The following warnings were generated while processing the fluid properties.\n\n"
             message += message_content
             message += "It is recommended to check the fluid properties related to the warnings."
+            message += "\n\nThis warning is shown only once."
             PrintMessageInput([warning_title, title_warning, message])
 
     def actions_to_finalize(self):
