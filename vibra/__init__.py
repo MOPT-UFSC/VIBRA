@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication
 from molde import Color
 
 __version__ = "0.4.0"
-__release_date__ = "June 24th 2024"
+__release_date__ = "October 3th 2025"
 
 VERSION = __version__
 APP_ID = f"mopt.vibra.{VERSION}"
