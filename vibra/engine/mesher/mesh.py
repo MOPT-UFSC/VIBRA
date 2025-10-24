@@ -156,7 +156,7 @@ class Mesh:
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.setNumber("General.Terminal", 0)
             gmsh.option.setNumber("General.Verbosity", 0)
-            gmsh.option.setNumber("General.NumThreads", threads)
+            # gmsh.option.setNumber("General.NumThreads", threads)
             gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
             logging.info("Loading geometry... [10/100]")
@@ -2017,7 +2017,7 @@ class Mesh:
         gmsh.initialize("", False, interruptible=False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
-        gmsh.option.setNumber("General.NumThreads", threads)
+        # gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
         gmsh.open(path)
