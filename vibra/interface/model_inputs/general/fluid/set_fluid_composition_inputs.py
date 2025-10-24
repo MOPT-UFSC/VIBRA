@@ -765,7 +765,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.refprop_fluids_data["thermodynamic_states"] = "multiple_states"
             self.refprop_fluids_data["properties"] = multstate_fluid_properties
 
-        self.process_errors()
+        self.process_refprop_warning_anderrors()
 
         self.complete = True
         self.close()
@@ -843,7 +843,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         return [round(temperature_K, 8), round(pressure_Pa, 8)]
 
-    def process_errors(self):
+    def process_refprop_warning_anderrors(self):
         if not (self.errors or self.warnings):
             return
 

@@ -242,6 +242,10 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis(self, is_resume: bool = False):
 
+        if app().project.model.analysis_setup is None:
+            self.configure_analysis()
+            return
+
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
 
