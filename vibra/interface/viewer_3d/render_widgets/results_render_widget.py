@@ -206,6 +206,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
+        if not self.actors_exists():
+            return
+
         if app().project.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
