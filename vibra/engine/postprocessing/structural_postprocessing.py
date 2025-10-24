@@ -1,85 +1,139 @@
+from functools import cache
+
 import numpy as np
 
-from typing import TYPE_CHECKING, Literal
+from typing import Literal, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from vibra.engine.solvers import StructuralModalSolver, StructuralHarmonicSolver
+    from vibra.project_files.project import Project
+    
+from vibra.engine.solvers import ModalSolver, HarmonicSolver
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
 
-def compute_structural_modal_field(
-    solver: "StructuralModalSolver",
-    index: int,
-    phase_rad: float,
-    displacement_type: DisplacementTypes,
-):
-    if solver.solution is None:
-        return
+class StructuralPostprocessing:
+    def __init__(self, project: 'Project'=None, structural_modal_solver: ModalSolver=None, structural_harmonic_solver: HarmonicSolver=None):
+        if all(v is None for v in [project, structural_modal_solver, structural_harmonic_solver]):  
+            raise ValueError("At least one of 'project', 'structural_modal_solver', or 'structural_harmonic_solver' must be provided.")
+        self.project = project
+        self.structural_harmonic_solver = structural_harmonic_solver
+        self.structural_modal_solver = structural_modal_solver
 
-    disp_dofs = solver.displacement_dofs
-    results_complex: np.ndarray = solver.solution[disp_dofs, index]
+    @property
+    def harmonic_solver(self):
+        if self.project is not None:
+            return self.project.structural_harmonic_solver
+        return self.structural_harmonic_solver
 
-    amplitudes = np.abs(results_complex)
-    phases = np.angle(results_complex)
-    results_real = amplitudes * np.cos(phases + phase_rad)
+    @property
+    def modal_solver(self):
+        if self.project is not None:
+            return self.project.structural_modal_solver
+        return self.structural_modal_solver
 
-    current_solution = results_real.reshape(-1, 3).copy()
-    if displacement_type == "u_sum":
-        color_scalars = np.linalg.norm(current_solution, axis=1)
-        displacements = current_solution.copy()
+    @cache
+    def get_max_min_values_of_displacements(self, column: int, disp_type: str, is_modal: bool = False):
+        """ This method returns the minimum and maximum displacement values
+            of selected frequency for animation purposes.
 
-    elif displacement_type == "u_x":
-        color_scalars = current_solution[:, 0]
-        displacements = current_solution * np.array([1.0, 0.0, 0.0])
+            Parameters:
+            -----------
+            column: int value relative to frequency column index.
 
-    elif displacement_type == "u_y":
-        color_scalars = current_solution[:, 1]
-        displacements = current_solution * np.array([0.0, 1.0, 0.0])
+            Returns:
+            -----------
+            u_min, u_max: float values for minimum and maximum displacements,
 
-    elif displacement_type == "u_z":
-        color_scalars = current_solution[:, 2]
-        displacements = current_solution * np.array([0.0, 0.0, 1.0])
+        """
 
-    min_value, max_value = solver.get_max_min_values_of_displacements(index, displacement_type)
+        if is_modal:
+            data = self.modal_solver.solution[self.modal_solver.displacement_dof, column]
+        else:
+            data = self.harmonic_solver.solution[self.harmonic_solver.displacement_dof, column]
 
-    return displacements, color_scalars, min_value, max_value
+        amplitudes = np.abs(data)
+        phases = np.angle(data)
 
+        r_min = 1
+        r_max = 0
+        thetas = np.arange(0, 360, 2) * (np.pi / 180)
 
-def compute_structural_harmonic_field(
-    solver: "StructuralHarmonicSolver",
-    index: int,
-    phase_rad: float,
-    displacement_type: DisplacementTypes,
-):
-    if solver.solution is None:
-        return
+        for theta in thetas:
 
-    disp_dofs = solver.displacement_dofs
-    results_complex: np.ndarray = solver.solution[disp_dofs, index]
+            results = (amplitudes * np.cos(phases + theta)).reshape(-1, 3)
 
-    amplitudes = np.abs(results_complex)
-    phases = np.angle(results_complex)
+            if disp_type == "u_x":
+                u_xyz = results * np.array([1.0, 0.0, 0.0])
+            elif disp_type == "u_y":
+                u_xyz = results * np.array([0.0, 1.0, 0.0])
+            elif disp_type == "u_z":
+                u_xyz = results * np.array([0.0, 0.0, 1.0])
+            else:
+                u_xyz = np.linalg.norm(results, axis=1)
 
-    results_real = amplitudes * np.cos(phases + phase_rad)
-    current_solution = results_real.reshape(-1, 3).copy()
+            r_min_i = np.min(u_xyz)
+            if r_min_i < r_min:
+                r_min = r_min_i
 
-    if displacement_type == "u_sum":
-        color_scalars = np.linalg.norm(current_solution, axis=1)
-        displacements = current_solution.copy()
+            r_max_i = np.max(u_xyz)
+            if r_max_i > r_max:
+                r_max = r_max_i
 
-    elif displacement_type == "u_x":
-        color_scalars = current_solution[:, 0]
-        displacements = current_solution * np.array([1.0, 0.0, 0.0])
+        # print("get_max_min_values_of_displacements", r_min, r_max)
 
-    elif displacement_type == "u_y":
-        color_scalars = current_solution[:, 1]
-        displacements = current_solution * np.array([0.0, 1.0, 0.0])
+        if disp_type == "u_sum":
+            return 0., r_max
 
-    elif displacement_type == "u_z":
-        color_scalars = current_solution[:, 2]
-        displacements = current_solution * np.array([0.0, 0.0, 1.0])
+        else:
 
-    min_value, max_value = solver.get_max_min_values_of_displacements(index, displacement_type)
+            if np.abs(r_min) != np.abs(r_max):
+                max_abs = np.max(np.abs([r_min, r_max]))
+                r_min = -max_abs
+                r_max = max_abs
 
-    return displacements, color_scalars, min_value, max_value
+        return r_min, r_max
+
+    def compute_structural_displacement_field(
+        self,
+        index: int,
+        phase_rad: float,
+        displacement_type: DisplacementTypes,
+        is_modal: bool = False
+    ):
+        if is_modal:
+            solver = self.modal_solver
+        else:
+            solver = self.harmonic_solver
+
+        if solver.solution is None:
+            return
+
+        disp_dof = solver.displacement_dof
+        results_complex: np.ndarray = solver.solution[disp_dof, index]
+
+        amplitudes = np.abs(results_complex)
+        phases = np.angle(results_complex)
+        delta = -phases[np.argmax(amplitudes)]
+        results_real = amplitudes * np.cos(phases + phase_rad + delta)
+
+        current_solution = results_real.reshape(-1, 3).copy()
+        if displacement_type == "u_sum":
+            color_scalars = np.linalg.norm(current_solution, axis=1)
+            displacements = current_solution.copy()
+
+        elif displacement_type == "u_x":
+            color_scalars = current_solution[:, 0]
+            displacements = current_solution * np.array([1.0, 0.0, 0.0])
+
+        elif displacement_type == "u_y":
+            color_scalars = current_solution[:, 1]
+            displacements = current_solution * np.array([0.0, 1.0, 0.0])
+
+        elif displacement_type == "u_z":
+            color_scalars = current_solution[:, 2]
+            displacements = current_solution * np.array([0.0, 0.0, 1.0])
+
+        min_value, max_value = self.get_max_min_values_of_displacements(index, displacement_type, is_modal)
+
+        return displacements, color_scalars, min_value, max_value, np.imag(displacements).any()

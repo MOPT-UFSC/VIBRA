@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'import_data_to_compare.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFrame,
-    QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QPushButton, QSizePolicy, QSpacerItem, QSpinBox,
-    QTreeWidget, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+    QHeaderView, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QTreeWidget, QTreeWidgetItem,
+    QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -102,41 +102,11 @@ class Ui_Dialog(object):
         self.pushButton_reset_imported_data.setStyleSheet(u"")
         self.pushButton_reset_imported_data.setIconSize(QSize(20, 20))
 
-        self.gridLayout_12.addWidget(self.pushButton_reset_imported_data, 0, 4, 1, 1)
+        self.gridLayout_12.addWidget(self.pushButton_reset_imported_data, 0, 1, 1, 1)
 
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_12.addItem(self.horizontalSpacer_2, 0, 5, 1, 1)
-
-        self.spinBox_skiprows = QSpinBox(self.frame_skiprows_reset)
-        self.spinBox_skiprows.setObjectName(u"spinBox_skiprows")
-        self.spinBox_skiprows.setMinimumSize(QSize(0, 30))
-        self.spinBox_skiprows.setMaximumSize(QSize(72, 30))
-        font2 = QFont()
-        font2.setPointSize(10)
-        self.spinBox_skiprows.setFont(font2)
-        self.spinBox_skiprows.setAlignment(Qt.AlignCenter)
-        self.spinBox_skiprows.setMaximum(10)
-
-        self.gridLayout_12.addWidget(self.spinBox_skiprows, 0, 3, 1, 1)
-
-        self.checkBox_skiprows = QCheckBox(self.frame_skiprows_reset)
-        self.checkBox_skiprows.setObjectName(u"checkBox_skiprows")
-        self.checkBox_skiprows.setMinimumSize(QSize(25, 30))
-        self.checkBox_skiprows.setMaximumSize(QSize(25, 30))
-        self.checkBox_skiprows.setLayoutDirection(Qt.RightToLeft)
-        self.checkBox_skiprows.setTristate(False)
-
-        self.gridLayout_12.addWidget(self.checkBox_skiprows, 0, 1, 1, 1)
-
-        self.label_14 = QLabel(self.frame_skiprows_reset)
-        self.label_14.setObjectName(u"label_14")
-        self.label_14.setMinimumSize(QSize(160, 30))
-        self.label_14.setMaximumSize(QSize(180, 30))
-        self.label_14.setFont(font1)
-        self.label_14.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_12.addWidget(self.label_14, 0, 2, 1, 1)
+        self.gridLayout_12.addItem(self.horizontalSpacer_2, 0, 2, 1, 1)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -154,27 +124,27 @@ class Ui_Dialog(object):
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(2, 2, 2, 2)
         self.treeWidget_import_sheet_files = QTreeWidget(self.frame_spreadsheet_files)
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(9)
-        font3.setBold(False)
-        font3.setItalic(False)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(9)
+        font2.setBold(False)
+        font2.setItalic(False)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(2, font3);
+        __qtreewidgetitem.setFont(2, font2);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(1, font3);
+        __qtreewidgetitem.setFont(1, font2);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(0, font3);
+        __qtreewidgetitem.setFont(0, font2);
         self.treeWidget_import_sheet_files.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_import_sheet_files.setObjectName(u"treeWidget_import_sheet_files")
         self.treeWidget_import_sheet_files.setMinimumSize(QSize(410, 40))
         self.treeWidget_import_sheet_files.setMaximumSize(QSize(500, 200))
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(8)
-        font4.setItalic(False)
-        self.treeWidget_import_sheet_files.setFont(font4)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(8)
+        font3.setItalic(False)
+        self.treeWidget_import_sheet_files.setFont(font3)
         self.treeWidget_import_sheet_files.setAlternatingRowColors(True)
         self.treeWidget_import_sheet_files.setIndentation(0)
 
@@ -194,14 +164,14 @@ class Ui_Dialog(object):
         self.treeWidget_import_text_files = QTreeWidget(self.frame_text_files)
         __qtreewidgetitem1 = QTreeWidgetItem()
         __qtreewidgetitem1.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem1.setFont(1, font3);
+        __qtreewidgetitem1.setFont(1, font2);
         __qtreewidgetitem1.setTextAlignment(0, Qt.AlignCenter);
-        __qtreewidgetitem1.setFont(0, font3);
+        __qtreewidgetitem1.setFont(0, font2);
         self.treeWidget_import_text_files.setHeaderItem(__qtreewidgetitem1)
         self.treeWidget_import_text_files.setObjectName(u"treeWidget_import_text_files")
         self.treeWidget_import_text_files.setMinimumSize(QSize(410, 40))
         self.treeWidget_import_text_files.setMaximumSize(QSize(500, 200))
-        self.treeWidget_import_text_files.setFont(font4)
+        self.treeWidget_import_text_files.setFont(font3)
         self.treeWidget_import_text_files.setAlternatingRowColors(True)
         self.treeWidget_import_text_files.setIndentation(0)
 
@@ -234,11 +204,11 @@ class Ui_Dialog(object):
         self.lineEdit_import_results_path.setEnabled(False)
         self.lineEdit_import_results_path.setMinimumSize(QSize(240, 30))
         self.lineEdit_import_results_path.setMaximumSize(QSize(500, 30))
-        font5 = QFont()
-        font5.setPointSize(9)
-        font5.setBold(False)
-        font5.setItalic(False)
-        self.lineEdit_import_results_path.setFont(font5)
+        font4 = QFont()
+        font4.setPointSize(9)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.lineEdit_import_results_path.setFont(font4)
         self.lineEdit_import_results_path.setLayoutDirection(Qt.LeftToRight)
         self.lineEdit_import_results_path.setStyleSheet(u"")
         self.lineEdit_import_results_path.setAlignment(Qt.AlignCenter)
@@ -250,12 +220,12 @@ class Ui_Dialog(object):
         self.pushButton_search_file_to_import.setMinimumSize(QSize(40, 30))
         self.pushButton_search_file_to_import.setMaximumSize(QSize(40, 30))
         self.pushButton_search_file_to_import.setSizeIncrement(QSize(0, 0))
-        font6 = QFont()
-        font6.setFamilies([u"MS Shell Dlg 2"])
-        font6.setPointSize(11)
-        font6.setBold(True)
-        font6.setItalic(False)
-        self.pushButton_search_file_to_import.setFont(font6)
+        font5 = QFont()
+        font5.setFamilies([u"MS Shell Dlg 2"])
+        font5.setPointSize(11)
+        font5.setBold(True)
+        font5.setItalic(False)
+        self.pushButton_search_file_to_import.setFont(font5)
         self.pushButton_search_file_to_import.setStyleSheet(u"")
         icon = QIcon()
         icon.addFile(u":/icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
@@ -318,8 +288,6 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Import data to compare", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Import data to compare", None))
         self.pushButton_reset_imported_data.setText(QCoreApplication.translate("Dialog", u"Reset", None))
-        self.checkBox_skiprows.setText("")
-        self.label_14.setText(QCoreApplication.translate("Dialog", u"Header rows to skip:", None))
         ___qtreewidgetitem = self.treeWidget_import_sheet_files.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Add to plot", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Sheetname", None));
@@ -350,9 +318,6 @@ class ImportDataToCompare_UI(QDialog, Ui_Dialog):
                                         - frame_skiprows_reset: QFrame
                                             - (Layout): QGridLayout
                                                     - pushButton_reset_imported_data: QPushButton
-                                                    - spinBox_skiprows: QSpinBox
-                                                    - checkBox_skiprows: QCheckBox
-                                                    - label_14: QLabel
                                         - frame_spreadsheet_files: QFrame
                                             - (Layout): QGridLayout
                                                     - treeWidget_import_sheet_files: QTreeWidget

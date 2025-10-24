@@ -2,7 +2,7 @@ from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkP
 from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
-from vibra.utils.polydata_utils import transform_polydata
+from vibra.utils.vtk_utils import transform_polydata
 
 
 def create_arrow_source():
@@ -16,7 +16,20 @@ def create_arrow_source():
         scale=(1.5, 1.5, 1.5),
     )
 
-def create_triple_arrow_source():
+def create_pencil_source():
+    source = vtkArrowSource()
+    source.SetTipLength(0.25)
+    source.SetTipRadius(.06)
+    source.SetShaftRadius(.06)
+    source.Update()
+
+    return transform_polydata(
+        source.GetOutput(),
+        position=(-1, 0, 0),
+        scale=(1, 1, 1),
+    )
+
+def create_quadruple_arrow_source():
     arrow = vtkArrowSource()
     arrow.SetTipLength(0.25)
     arrow.Update()
@@ -55,6 +68,38 @@ def create_triple_arrow_source():
         scale=(1.5, 1.5, 1.5),
     )
 
+def create_triple_arrow_source():
+    arrow = vtkArrowSource()
+    arrow.SetTipLength(0.25)
+    arrow.Update()
+    
+    pos, on_x, on_z = .2, 0, 0
+    source0 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, -pos, on_z),
+    )
+    
+    source1 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, 0, on_z),
+    )
+    
+    source2 = transform_polydata(
+        arrow.GetOutput(),
+        position=(on_x, pos, on_z),
+    )
+
+    source = vtkAppendPolyData()
+    source.AddInputData(source0)
+    source.AddInputData(source1)
+    source.AddInputData(source2)
+    source.Update()
+    
+    return transform_polydata(
+        source.GetOutput(),
+        position=(-1.5, 0, 0),
+        scale=(1.5, 1.5, 1.5),
+    )
 
 def create_long_arrow_source():
     source = vtkArrowSource()
@@ -85,7 +130,8 @@ def create_double_arrow_source():
 
     return transform_polydata(
         source.GetOutput(),
-        position=(-1, 0, 0),
+        position=(-1.5, 0, 0),
+        scale=(1.5, 1.5, 1.5)
     )
 
 
@@ -261,13 +307,6 @@ def create_surface_velocity_source():
     arrow = vtkArrowSource()
     arrow.SetTipLength(0.25)
     arrow.Update()
-    # transform = vtkTransform()
-    # transform.RotateY(180)
-    # transform.Translate(-1.2, 0, 0)
-    # transform_arrow = vtkTransformPolyDataFilter()
-    # transform_arrow.SetInputConnection(arrow.GetOutputPort())
-    # transform_arrow.SetTransform(transform)
-    # transform_arrow.Update()
     
     cylinder = vtkCylinderSource()
     cylinder.SetRadius(.3)

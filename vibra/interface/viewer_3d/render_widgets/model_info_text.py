@@ -3,9 +3,11 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.utils.utils import are_there_values_different_from_zero
 
 from molde.utils import TreeInfo
 from molde.utils.format_sequences import format_long_sequence
+
 
 import numpy as np
 from numbers import Number
@@ -14,8 +16,10 @@ from numbers import Number
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
 
+    mesh = app().project.model.mesh
+
     selected_points = app().main_window.selected_geometry_points
-    node_ids = [int(point_id)-1 for point_id in selected_points]
+    node_ids = [mesh.nodes_from_points.get(point_id) for point_id in selected_points]
     point_ids = list(selected_points)
 
     if len(node_ids) == 0:
@@ -24,14 +28,14 @@ def points_info_text():
     text = ""
 
     if len(point_ids) == 1:
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+        coords = mesh.nodal_coordinates[node_ids[0], 1:].round(6)
         tree = TreeInfo(f"POINT {point_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
         text += str(tree)
 
     elif len(point_ids) == 2:
-        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        coord_A = mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = mesh.nodal_coordinates[node_ids[1], 1:]
         dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
         distance = np.linalg.norm(coord_A - coord_B)
 
@@ -68,14 +72,7 @@ def lines_info_text():
         tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
 
-        # nodes_from_line = app().project.model.mesh.nodes_from_lines.get(line_ids[0])
-        # if nodes_from_line is not None:
-        #     print()
-        #     print(f"There are {len(nodes_from_line)} nodes in line {line_ids[0]}")
-        #     print(f"Nodes: {[int(node) for node in nodes_from_line]}")
-
     else:
-
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
             sequence = sequence[:20 - 4] + " ..."
@@ -107,12 +104,6 @@ def faces_info_text():
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
-
-        # nodes_from_surface = app().project.model.mesh.nodes_from_surfaces.get(surface_ids[0])
-        # if nodes_from_surface is not None:
-        #     print(f"There are {len(nodes_from_surface)} nodes in surface {surface_ids[0]}")
-        #     print(f"Nodes: {nodes_from_surface}")
-        #     print()
 
         surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
@@ -178,7 +169,7 @@ def process_volumes_and_masses(volume_ids: list):
 
         material = app().project.model.properties._get_property("material", volume=volume_id)
         if isinstance(material, Material):
-            material_density = material.density
+            material_density = material.material_density
             material_mass += volume * material_density
     
     return volume_compound, fluid_mass, material_mass
@@ -203,8 +194,8 @@ def material_info_text():
     tree = TreeInfo("Material")
     tree.add_item("Name", material.name)
     tree.add_item("Identifier", material.identifier)
-    tree.add_item("Density", material.density, "kg/m³")
-    tree.add_item("elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
+    tree.add_item("Density", material.material_density, "kg/m³")
+    tree.add_item("Elasticity modulus", material.elasticity_modulus / 1e9, "GPa")
     tree.add_item("Poisson ratio", material.poisson_ratio, "--")
     tree.add_item("Thermal expasion coefficient", material.thermal_expansion_coefficient, "1/K")
 
@@ -244,6 +235,31 @@ def fluid_info_text():
 
     return text
 
+def proportional_damping_info_text():
+    volumes = list(app().main_window.selected_geometry_volumes)
+    text = ""
+
+    if len(volumes) != 1:
+        return text
+
+    pd_data = app().project.model.properties._get_property(
+        "proportional_damping", volume=volumes[0]
+    )
+    if not isinstance(pd_data, dict):
+        return text
+
+    tree = TreeInfo("Proportional damping")
+
+    speed_factor = pd_data.get("speed_of_sound_factor")
+    if speed_factor:
+        tree.add_item("Speed of sound factor", pd_data.get("speed_of_sound_factor", ""))
+
+    density_factor = pd_data.get("density_factor")
+    if density_factor:
+        tree.add_item("Density factor", pd_data.get("density_factor", ""))
+
+    return str(tree)
+
 def porous_material_info_text():
     volumes = list(app().main_window.selected_geometry_volumes)
     text = ""
@@ -254,16 +270,33 @@ def porous_material_info_text():
     pm_model = app().project.model.properties._get_property(
         "porous_material_model", volume=volumes[0]
     )
-    if pm_model is None:
+    if not isinstance(pm_model, dict):
         return text
 
-    tree = TreeInfo("Porous material")
-    tree.add_item("Model", pm_model["model"])
-    tree.add_item("Flow resistivity", pm_model["flow_resistivity"], "kg/m³s")
+    tree = TreeInfo("Porous material model")
+    tree.add_item("Model", pm_model.get("model", ""))
+    tree.add_item("Flow resistivity", pm_model.get("flow_resistivity", ""), "kg/m³s")
 
-    text += str(tree)
+    return str(tree)
 
-    return text
+def viscous_thermal_info_text():
+    volumes = list(app().main_window.selected_geometry_volumes)
+    text = ""
+
+    if len(volumes) != 1:
+        return text
+
+    vt_model = app().project.model.properties._get_property(
+        "viscous_thermal_model", volume=volumes[0]
+    )
+    if not isinstance(vt_model, dict):
+        return text
+
+    tree = TreeInfo("Viscous-thermal loss model")
+    tree.add_item("Formulation", vt_model.get("formulation", ""))
+    tree.add_item("Section type", vt_model.get("section_type"))
+
+    return str(tree)
 
 def perforated_plate_info_text():
 
@@ -288,8 +321,6 @@ def perforated_plate_info_text():
 
     tree.add_item("Formulation", pp_data["formulation"].replace("_", " "))
     if pp_data["formulation"] == "circular_hole":
-
-        tree.add_item("Coupling type", pp_data.get("coupling_type").replace("_", " "))
         tree.add_item("Plate thickness", pp_data.get("plate_thickness"), "m")
         tree.add_item("Hole diameter", pp_data.get("hole_diameter"), "m")
         tree.add_item("Porosity", pp_data.get("porosity"), "--")
@@ -312,35 +343,21 @@ def acoustic_boundary_conditions_info_text():
 
     if len(selected_faces) != 1:
         return text
+    
+    properties = app().project.model.properties
 
-    acoustic_pressure = app().project.model.properties._get_property(
-        "acoustic_pressure",
-        surface=selected_faces[0],
-    )
-    surface_velocity = app().project.model.properties._get_property(
-        "surface_velocity",
-        surface=selected_faces[0],
-    )
-    incident_plane_wave = app().project.model.properties._get_property(
-    "incident_plane_wave",
-    surface=selected_faces[0],
-    )
-    mass_flow_rate = app().project.model.properties._get_property(
-        "mass_flow_rate",
-        surface=selected_faces[0],
-    )
-    absorption_surface = app().project.model.properties._get_property(
-        "absorption_surface",
-        surface=selected_faces[0],
-    )
-    specific_impedance = app().project.model.properties._get_property(
-        "specific_impedance",
-        surface=selected_faces[0],
-    )
+    acoustic_pressure = properties._get_property("acoustic_pressure", surface=selected_faces[0])
+    surface_velocity = properties._get_property("surface_velocity", surface=selected_faces[0])
+    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=selected_faces[0])
+    incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
+    mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
+    absorption_surface = properties._get_property("absorption_surface", surface=selected_faces[0])
+    specific_impedance = properties._get_property("specific_impedance", surface=selected_faces[0])
 
     boundary_conditions_list = [
                                 acoustic_pressure,
                                 surface_velocity,
+                                recip_compressor_excitation,
                                 incident_plane_wave,
                                 mass_flow_rate,
                                 absorption_surface,
@@ -358,17 +375,11 @@ def acoustic_boundary_conditions_info_text():
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
-    if incident_plane_wave is not None:
-        value = incident_plane_wave["values"][0]
-        tree_pw = TreeInfo("Incident plane wave")
-        if isinstance(value, Number | str | float | complex):
-            tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
-        else:
-            tree_pw.add_item("P_inc", "Table of values")
+    if isinstance(recip_compressor_excitation, dict):
+        text += get_reciprocating_compressor_text(recip_compressor_excitation)
 
-        wave_vector = incident_plane_wave["wave_vector"]
-        tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
-        text += str(tree_pw)
+    if isinstance(incident_plane_wave, dict):
+        text += get_incident_plane_wave_text(incident_plane_wave)
 
     if mass_flow_rate is not None:
         values = mass_flow_rate["values"][0]
@@ -378,31 +389,154 @@ def acoustic_boundary_conditions_info_text():
         values = absorption_surface["values"][0]
         text += acoustic_format("Absorption surface", values, "alpha", "--")
 
-    if specific_impedance is not None:
-        if "anechoic_termination" in specific_impedance.keys():
-            fluid = app().project.model.properties._get_property("fluid", surface=selected_faces[0])
-            if isinstance(fluid, Fluid):
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-                values = np.array([density * speed_of_sound], dtype=complex)
-                text += acoustic_format(
-                    "Specific impedance",
-                    values[0],
-                    "Zs",
-                    "kg/m².s",
-                    ("Impedance type", "anechoic (non-reflexive)"),
-                )
-
-        else:
-            values = specific_impedance["values"]
-            text += acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
+    if isinstance(specific_impedance, dict):
+        text += get_specific_and_anechoic_impedance_text(selected_faces[0], specific_impedance)
 
     return text
+
+def get_incident_plane_wave_text(ipw_data: dict):
+
+    if ipw_data is None:
+        return ""
+
+    value = ipw_data["values"][0]
+    tree_pw = TreeInfo("Incident plane wave")
+    if isinstance(value, Number | str | float | complex):
+        tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
+    else:
+        tree_pw.add_item("P_inc", "Table of values")
+
+    wave_vector = ipw_data["wave_vector"]
+    tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
+
+    return str(tree_pw)
+
+def get_reciprocating_compressor_text(rc_data: dict):
+
+    rc_parameters = rc_data.get("parameters", dict)
+    acting_head = rc_parameters.get("acting_head", "")
+
+    # ensure the backwards compatibility
+    if acting_head == "":
+        acting_head = rc_parameters.get("acting_label", "")
+
+    if acting_head != "":
+        acting_head = acting_head.replace("_", " ")
+
+    pressure_unit = rc_parameters.get("pressure_unit", "")
+    temperature_unit = rc_parameters.get("temperature_unit", "")
+
+    compression_stage = rc_parameters.get("compression_stage")
+    if isinstance(compression_stage, int):
+        labels = ["1st stage", "2nd stage", "3rd stage"]
+        compression_stage = labels[compression_stage-1]
+    else:
+        compression_stage = compression_stage.lower()
+
+    if "TDC_crank_angle_1" in rc_parameters.keys():
+        tdc_crank_angle = rc_parameters.get("TDC_crank_angle_1")
+    else:
+        tdc_crank_angle = rc_parameters.get("TDC_crank_angle", "")
+
+    tree_rc = TreeInfo("Reciprocating compressor")
+    tree_rc.add_item("Connection", rc_data.get("connection_type", ""))
+    tree_rc.add_item("Compression stage", compression_stage)
+    tree_rc.add_item("Valves per head", rc_parameters.get("valves_per_head", "1"))
+    tree_rc.add_item("Acting head", acting_head)
+
+    if acting_head in ["head end", "both ends"]:
+        tree_rc.add_item("HE clearance", rc_parameters.get("clearance_HE", ""), "%")
+
+    if acting_head in ["crank end", "both ends"]:
+        tree_rc.add_item("CE clearance", rc_parameters.get("clearance_CE", ""), "%")
+
+    tree_rc.add_item("Bore diameter", rc_parameters.get("bore_diameter", ""), "m")
+    tree_rc.add_item("Stroke", rc_parameters.get("stroke", ""), "m")
+    tree_rc.add_item("Connecting rod length", rc_parameters.get("connecting_rod_length", ""), "m")
+
+    if acting_head in ["crank end", "both ends"]:
+        tree_rc.add_item("Rod diameter", rc_parameters.get("rod_diameter", ""), "m")
+
+    tree_rc.add_item("TDC angle", tdc_crank_angle, "deg")
+    tree_rc.add_item("Capacity", rc_parameters.get("capacity", ""), "%")
+
+    tree_rc.add_item("Pressure at suction", rc_parameters.get("pressure_at_suction", ""), pressure_unit.replace(" ", ""))
+    tree_rc.add_item("Temperature at suction", rc_parameters.get("temperature_at_suction", ""), temperature_unit)
+    tree_rc.add_item("Rotational speed", rc_parameters.get("rotational_speed", ""), "rpm")
+    tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""), "--")
+
+    return str(tree_rc)
+
+def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
+    text = ""
+    properties = app().project.model.properties
+    if "anechoic_termination" in si_data.keys():
+        fluid = properties._get_property("fluid", surface=surface)
+        if isinstance(fluid, Fluid):
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+            values = np.array([density * speed_of_sound], dtype=complex)
+            text = acoustic_format(
+                "Specific impedance",
+                values[0],
+                "Zs",
+                "kg/m².s",
+                ("Impedance type", "anechoic (non-reflexive)"),
+            )
+
+    else:
+        values = si_data["values"]
+        text = acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
+
+    return text
+
+def get_mass_source_text(**kwargs):
+    properties = app().project.model.properties
+    mass_source = properties._get_property("mass_source", **kwargs)
+    if mass_source is None:
+        return ""
+
+    if isinstance(kwargs.get("volume"), Number):
+        unit_label = "kg/m³.s"
+    elif isinstance(kwargs.get("surface"), Number):
+        unit_label = "kg/m².s"
+    elif isinstance(kwargs.get("line"), Number):
+        unit_label = "kg/m.s"
+    elif isinstance(kwargs.get("point"), Number):
+        unit_label = "kg/s"
+    elif isinstance(kwargs.get("node"), Number):
+        unit_label = "kg/s"
+    else:
+        return ""
+
+    values = mass_source.get("values")[0]
+    return acoustic_format("Mass source", values, "Qm", unit_label)
+
+def mass_source_info_text():
+    text = ""
+    selected_volumes = list(app().main_window.selected_geometry_volumes)
+    selected_surfaces = list(app().main_window.selected_geometry_surfaces)
+    selected_lines = list(app().main_window.selected_geometry_lines)
+    selected_points = list(app().main_window.selected_geometry_points)
+    selected_nodes = list(app().main_window.selected_mesh_nodes)
+
+    if len(selected_volumes) == 1:
+        return get_mass_source_text(volume=selected_volumes[0])
+    if len(selected_surfaces) == 1:
+        return get_mass_source_text(surface=selected_surfaces[0])
+    if len(selected_lines) == 1:
+        return get_mass_source_text(line=selected_lines[0])
+    if len(selected_points) == 1:
+        return get_mass_source_text(point=selected_points[0])
+    if len(selected_nodes) == 1:
+        return get_mass_source_text(node=selected_nodes[0])
+    else:
+        return text
 
 def structural_boundary_conditions_info_text():
     text = ""
     distributed_loads_line = None
-    prescribed_dofs = None
+    prescribed_dof = None
     nodal_loads = None
     distributed_loads_area = None
     normal_pressure_load = None
@@ -411,8 +545,8 @@ def structural_boundary_conditions_info_text():
     selected_lines = list(app().main_window.selected_geometry_lines)
 
     if len(selected_faces) == 1:
-        prescribed_dofs = app().project.model.properties._get_property(
-            "prescribed_dofs", surface=selected_faces[0]
+        prescribed_dof = app().project.model.properties._get_property(
+            "prescribed_dof", surface=selected_faces[0]
         )
         nodal_loads = app().project.model.properties._get_property(
             "nodal_loads", surface=selected_faces[0]
@@ -433,7 +567,7 @@ def structural_boundary_conditions_info_text():
         return text
 
     boundary_conditions = [
-        prescribed_dofs,
+        prescribed_dof,
         nodal_loads,
         distributed_loads_area,
         normal_pressure_load,
@@ -443,11 +577,16 @@ def structural_boundary_conditions_info_text():
     if all(bc is None for bc in boundary_conditions):
         return text
 
-    if prescribed_dofs is not None:
-        values = prescribed_dofs["values"]
-        loaded_table = "table_names" in prescribed_dofs.keys()
+    if prescribed_dof is not None:
+        values = prescribed_dof["values"]
+        loaded_table = "table_names" in prescribed_dof.keys()
+        if are_there_values_different_from_zero(values):
+            property_label = "Prescribed DOF"
+        else:
+            property_label = "Constrained DOF"
+
         text += structural_format(
-            "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
+            property_label, values, ("u", "r"), ("m", "rad"), loaded_table
         )
 
     if nodal_loads is not None:
@@ -535,9 +674,8 @@ def mesh_faces_info_text():
     return text
 
 def mesh_solids_info_text():
-    solids_elem_ids = list(app().main_window.selected_mesh_solids)
     text = ""
-
+    solids_elem_ids = list(app().main_window.selected_mesh_solids)
     if len(solids_elem_ids) > 1:
         text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
         text += f"{format_long_sequence(solids_elem_ids)}\n\n"
@@ -560,16 +698,16 @@ def mesh_material_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         material = app().project.model.properties._get_property("material", volume=current_solid)
-        if material is None:
+        if not isinstance(material, Material):
             return text
 
         tree = TreeInfo("Material")
         tree.add_item("Name", material.name)
         tree.add_item("Identifier", material.identifier)
-        tree.add_item("Density", material.density, "kg/m³")
-        tree.add_item("Young Modulus", material.elasticity_modulus / 1e9, "GPa")
+        tree.add_item("Density", material.material_density, "kg/m³")
+        tree.add_item("Elasticity Modulus", material.elasticity_modulus / 1e9, "GPa")
         tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
         tree.add_item(
             "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
@@ -587,9 +725,9 @@ def mesh_fluid_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
-        if fluid is None:
+        if not isinstance(fluid, Fluid):
             return text
 
         tree = TreeInfo("Fluid")
@@ -612,20 +750,20 @@ def mesh_structural_boundary_conditions_info_text():
     if len(selected_nodes) != 1:
         return text
 
-    prescribed_dofs = app().project.model.properties._get_property(
-        "prescribed_dofs", node=selected_nodes[0]
+    prescribed_dof = app().project.model.properties._get_property(
+        "prescribed_dof", node=selected_nodes[0]
     )
     nodal_loads = app().project.model.properties._get_property(
         "nodal_loads", node=selected_nodes[0]
     )
-    boundary_conditions_list = [prescribed_dofs, nodal_loads]
+    boundary_conditions_list = [prescribed_dof, nodal_loads]
 
     if all(condition is None for condition in boundary_conditions_list):
         return text
 
-    if prescribed_dofs is not None:
-        values = prescribed_dofs["values"]
-        loaded_table = "table_names" in prescribed_dofs.keys()
+    if prescribed_dof is not None:
+        values = prescribed_dof["values"]
+        loaded_table = "table_names" in prescribed_dof.keys()
         text += structural_format(
             "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
         )
@@ -690,20 +828,25 @@ def analysis_info_text(frequency_index: int):
     if not project.is_there_a_valid_solution():
         return ""
 
-    display_name = {
-                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
-                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
-                    AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD : "Structural Harmonic Analysis",
-                    AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
-                    }
+    analysis_setup = project.model.analysis_setup
+    analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-    analysis_id = project.analysis_id
+    if analysis_id == AnalysisID.NO_ANALYSIS:
+        return ""
+
+    display_name = {
+        AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
+        AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
+        AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
+        AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
+        AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
+        }
+
     tree = TreeInfo(display_name[analysis_id])
 
-    if project.analysis_id in [
-        AnalysisID.STRUCTURAL_MODAL,
-        AnalysisID.ACOUSTIC_MODAL,
-    ]:
+    if project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
+
+        ## modal analysis info texts
 
         frequencies = None
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
@@ -722,10 +865,6 @@ def analysis_info_text(frequency_index: int):
             print(f"frequency index: {frequency_index}")
             print(f"frequencies: {frequencies}")
             return ""
-        
-        # This works beacuse there is only this method for now
-        # TODO: add logic for other methods
-        tree.add_item("Method", "Direct")
 
         mode = frequency_index + 1
         tree.add_item("Mode", mode)
@@ -743,6 +882,8 @@ def analysis_info_text(frequency_index: int):
 
     else:
 
+        ## harmonic analysis info texts
+
         frequencies = project.model.frequencies
         if frequencies is None:
             return ""
@@ -750,11 +891,11 @@ def analysis_info_text(frequency_index: int):
         if frequency_index-1 >= len(frequencies):
             return ""
 
-        # TODO: add logic for other methods
-        tree.add_item("Method", "Direct")
+        method = analysis_setup.get("analysis_method", "none").replace("_", " ")
+        tree.add_item("Method", method)
 
-        frequency = frequencies[frequency_index-1]
-        tree.add_item("Frequency", f"{frequency:.2f}", "Hz")
+        frequency = frequencies[frequency_index - 1]
+        tree.add_item("Frequency", f"{frequency:.4f}", "Hz")
 
     return str(tree)
 

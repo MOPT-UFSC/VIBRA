@@ -1,6 +1,6 @@
 [project]
 name = "vibra"
-version = "0.3.2"
+version = "0.4.0"
 description = ""
 authors = [
     {name = "Your Name",email = "you@example.com"}
@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "numpy (>=2.2.6,<3.0.0)",
-    "vtk (>=9.4.2,<10.0.0)",
+    "vtk (>=9.4.2,<9.5)",
     "gmsh (>=4.13.1,<5.0.0)",
     "ctrefprop (>=0.10.5,<0.11.0)",
     "scipy (>=1.15.3,<2.0.0)",
@@ -21,8 +21,8 @@ dependencies = [
     "moviepy (>=1.0.3,<2.0.0)",
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
-    "molde (>=0.1.10,<0.2.0)",
-    "pyside6 (>=6.9.0,<7.0.0)",
+    "molde (>=0.1.16,<0.2.0)",
+    "pyside6 (==6.9.2)",
 ]
 
 
@@ -31,6 +31,7 @@ dependencies = [
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.10"
 pytest = "^8.3.5"
+pytest-datadir = "^1.7.2"
 pyinstaller = "^6.13.0"
 tuna = "^0.5.11"
 invoke = "^2.2.0"

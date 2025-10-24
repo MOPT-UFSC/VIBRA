@@ -1,8 +1,8 @@
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import TransmissionLossInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -19,13 +19,13 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
+        self.acoustic_post = self.project.acoustic_postprocessing
 
         self._initialize()
         self._create_connections()
@@ -40,7 +40,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     
     def showEvent(self, event):
         super().showEvent(event)
-        self.main_window.show_geometry_render_widget()
+        app().main_window.show_geometry_render_widget()
 
     def _load_analysis_setup(self):
         self.analysis_method = ""
@@ -62,10 +62,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        self.main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_1_clicked)
-        self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_2_clicked)
+        self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_input_clicked)
+        self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
+        #
+        self.lineEdit_output_clicked()
 
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
@@ -86,15 +88,34 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         widget.installEventFilter(filter)
         return filter.clicked
 
-    def lineEdit_1_clicked(self):
+    def lineEdit_input_clicked(self):
         self.current_lineEdit = self.lineEdit_input_surface_id
+        self.highlight_selected_line_edit()
 
-    def lineEdit_2_clicked(self):
+    def lineEdit_output_clicked(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
+        self.highlight_selected_line_edit()
+
+    def highlight_selected_line_edit(self):
+
+        if self.current_lineEdit == self.lineEdit_input_surface_id:
+            self.lineEdit_output_surface_id.setStyleSheet("")
+        else:
+            self.lineEdit_input_surface_id.setStyleSheet("")
+
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(32, 207, 255); border-width: 2px;""")
+
+    def alternate_selected_line_edit(self):
+        if self.current_lineEdit == self.lineEdit_input_surface_id:
+            self.lineEdit_output_clicked()
+            self.lineEdit_output_surface_id.setFocus()
+        else:
+            self.lineEdit_input_clicked()
+            self.lineEdit_input_surface_id.setFocus()
     
     def geometry_selection_callback(self):
 
-        faces = self.main_window.selected_geometry_surfaces
+        faces = app().main_window.selected_geometry_surfaces
 
         if faces:
 
@@ -171,7 +192,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.plotter.imported_dB_data()
+        self.plotter.imported_real_data(decibel_data=True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
         app().main_window.update_symbols()
 
@@ -225,6 +246,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.model_results = dict()
 
         if self.comboBox_processing_selector.currentIndex() == 0:
+
             plot_type = "Transmission loss"
 
             def transmission_loss_callback():
@@ -235,27 +257,29 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 if not integration_method:
 
                     logging.info("Processing the transmission loss... [10/100]")
-                    self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+                    self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
 
-                x_data, y_data = self.project.acoustic_harmonic_solver.get_transmission_loss(
-                                                                                             self.input_surface_id,
-                                                                                             self.output_surface_id,
-                                                                                             surface_integration = bool(integration_method),
-                                                                                             )
+                x_data, y_data = self.acoustic_post.compute_transmission_loss(
+                    self.input_surface_id,
+                    self.output_surface_id,
+                    surface_integration = bool(integration_method),
+                    )
 
                 return x_data, y_data
 
             x_data, y_data = LoadingWindow(transmission_loss_callback).run()
 
         else:
+
             plot_type = "Noise reduction"
-            x_data, y_data = self.project.acoustic_harmonic_solver.get_noise_reduction(
-                                                                                       self.input_surface_id, 
-                                                                                       self.output_surface_id,
-                                                                                       )
+    
+            x_data, y_data = self.acoustic_post.compute_noise_reduction(
+                self.input_surface_id, 
+                self.output_surface_id,
+                )
 
         if y_data is None:
             title = "Invalid input surface id"
@@ -264,7 +288,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.title = f"{plot_type} - {self.analysis_method}"
+        self.title = f"{plot_type}"
         legend_label = f"{plot_type} between surfaces [{self.input_surface_id}] and [{self.output_surface_id}]"
 
         key = ("surface", (self.input_surface_id, self.output_surface_id))
@@ -288,6 +312,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
+        elif event.key() == Qt.Key_Down or event.key() == Qt.Key_Up:
+            self.alternate_selected_line_edit()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

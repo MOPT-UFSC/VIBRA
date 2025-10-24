@@ -119,7 +119,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Structural modal analysis</string>
+         <string>Structural modal analysis setup</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
@@ -509,6 +509,9 @@
            <property name="text">
             <string>Run analysis</string>
            </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item row="0" column="0">
@@ -540,6 +543,9 @@
            <property name="text">
             <string>Enter setup</string>
            </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
         </layout>
@@ -550,6 +556,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

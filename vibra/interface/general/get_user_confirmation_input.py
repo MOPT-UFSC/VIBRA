@@ -1,19 +1,14 @@
-from PySide6.QtWidgets import QDialog
-from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
-from vibra import app, __version__
+from vibra import app, VERSION
 from vibra.interface.ui_generated.messages.get_user_confirmation_ui import GetUserConfirmation_UI
-from vibra.interface.formatters.icons import *
 
 
 class GetUserConfirmationInput(GetUserConfirmation_UI):
     def __init__(self, title, message, *args, **kwargs):
         super().__init__(*args)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
 
         self.project = app().project
         self.model = self.project.model
@@ -22,7 +17,7 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
         self.title = title
         self.message = message
         self.buttons_config = kwargs.get("buttons_config", dict())
-        self.window_title = kwargs.get('window_title', f'Vibra v{__version__}')
+        self.window_title = kwargs.get('window_title', f'Vibra v{VERSION}')
 
         self._config_window()
         self._reset_variables()

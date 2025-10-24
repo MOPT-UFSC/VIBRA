@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'acoustic_transfer_element_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -142,6 +142,7 @@ class Ui_Dialog(object):
         icon.addFile(u":/icons/new_file.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_search.setIcon(icon)
         self.pushButton_search.setIconSize(QSize(20, 20))
+        self.pushButton_search.setAutoDefault(False)
 
         self.gridLayout_7.addWidget(self.pushButton_search, 0, 2, 1, 1)
 
@@ -310,6 +311,7 @@ class Ui_Dialog(object):
         icon1.addFile(u":/icons/invert_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_invert_selection.setIcon(icon1)
         self.pushButton_invert_selection.setIconSize(QSize(22, 22))
+        self.pushButton_invert_selection.setAutoDefault(False)
         self.pushButton_invert_selection.setFlat(False)
 
         self.gridLayout_16.addWidget(self.pushButton_invert_selection, 1, 4, 1, 1)
@@ -369,6 +371,7 @@ class Ui_Dialog(object):
         self.pushButton_process_data.setFont(font3)
         self.pushButton_process_data.setStyleSheet(u"")
         self.pushButton_process_data.setIconSize(QSize(20, 20))
+        self.pushButton_process_data.setAutoDefault(False)
         self.pushButton_process_data.setFlat(False)
 
         self.gridLayout_48.addWidget(self.pushButton_process_data, 0, 1, 1, 1)
@@ -380,6 +383,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setFont(font3)
         self.pushButton_exit.setStyleSheet(u"")
         self.pushButton_exit.setIconSize(QSize(20, 20))
+        self.pushButton_exit.setAutoDefault(False)
         self.pushButton_exit.setFlat(False)
 
         self.gridLayout_48.addWidget(self.pushButton_exit, 0, 0, 1, 1)

@@ -274,32 +274,12 @@
            </property>
            <item>
             <property name="text">
-             <string>All bodies/faces</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
              <string>All bodies</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>All faces</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
              <string>Selected bodies</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Selected faces</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Selected bodies/faces</string>
             </property>
            </item>
           </widget>
@@ -387,6 +367,18 @@
             <layout class="QGridLayout" name="gridLayout_6">
              <item row="0" column="0">
               <widget class="QTableWidget" name="tableWidget_model_fluids">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>350</height>
+                </size>
+               </property>
                <property name="sizeAdjustPolicy">
                 <enum>QAbstractScrollArea::AdjustToContents</enum>
                </property>
@@ -508,6 +500,9 @@
                   <property name="text">
                    <string>Reset</string>
                   </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
                  </widget>
                 </item>
                 <item row="0" column="1">
@@ -538,6 +533,9 @@
                   </property>
                   <property name="text">
                    <string>Remove</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -616,6 +614,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'acoustic_pressure_frequency_response_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -179,6 +179,7 @@ class Ui_Form(object):
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.addItem("")
+        self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.setObjectName(u"comboBox_selector_filter")
         self.comboBox_selector_filter.setMinimumSize(QSize(110, 30))
         self.comboBox_selector_filter.setMaximumSize(QSize(110, 30))
@@ -230,9 +231,10 @@ class Ui_Form(object):
         self.pushButton_export_data.setText("")
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
-        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"   Surfaces", None))
-        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"   Line", None))
-        self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Form", u"   Nodes", None))
+        self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
+        self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Lines", None))
+        self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Form", u"Points", None))
+        self.comboBox_selector_filter.setItemText(3, QCoreApplication.translate("Form", u"Nodes", None))
 
     # retranslateUi
 

@@ -50,7 +50,8 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-    
+        self.update_dof_combo_box_texts()
+
     def selection_type_callback(self):
         if self.comboBox_selector_filter.currentIndex() == 3:
             app().main_window.show_mesh_render_widget()
@@ -87,17 +88,37 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         else:
             self.lineEdit_selection_id.setText("")
 
+    def update_dof_combo_box_texts(self):
+
+        dof_labels = [
+                      "Displacement Ux", 
+                      "Displacement Uy", 
+                      "Displacement Uz", 
+                      "Rotation Rx", 
+                      "Rotation Ry", 
+                      "Rotation Rz",
+                      ]
+
+        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        if volume_exists:
+            active_dof_labels = dof_labels[:3]
+        else:
+            active_dof_labels = dof_labels
+
+        self.comboBox_dof_selector.clear()
+        self.comboBox_dof_selector.addItems(active_dof_labels)
+
     def _load_analysis_setup_and_solution(self):
 
         self.analysis_method = ""
         analysis_setup = app().project.analysis_setup
 
         if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.analysis_method = "Direct method"
+            analysis_method = analysis_setup.get("analysis_method", "direct")
+            if isinstance(analysis_method, str):
+                analysis_method = analysis_method.capitalize().replace("_", " ")
 
-            elif analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
-                self.analysis_method = "Mode Superposition method"
+            self.analysis_method = f"{analysis_method} method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = app().project.structural_harmonic_solver.solution
@@ -152,43 +173,41 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
     def get_response(self, selection_type: str, selected_id: int, dof_index: int):
 
         surface_ids = list()
-        element_3d, element_2d = app().project.structural_harmonic_solver.assembler.get_element()
 
         if selection_type == "surface":
-            surface_ids.append(selected_id)
-            nodes = self.mesh.nodes_from_surfaces[selected_id]
+            surface_ids = [selected_id]
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
 
         elif selection_type == "line":           
             surface_ids = self.mesh.surfaces_from_line[selected_id]
-            nodes = self.mesh.nodes_from_lines[selected_id]
+            nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":
             node_id = selected_id - 1
-            for surf_id, surf_nodes in self.mesh.nodes_from_surfaces.items():
-                if node_id in surf_nodes:
-                    if surf_id not in surface_ids:
-                        surface_ids.append(surf_id)
-
             nodes = np.array([node_id], dtype=int)
 
         else:
-            for surf_id, surf_nodes in self.mesh.nodes_from_surfaces.items():
-                if selected_id in surf_nodes:
-                    if surf_id not in surface_ids:
-                        surface_ids.append(surf_id)
-
             nodes = np.array([selected_id], dtype=int)
+        
+        if selection_type in ["point", "node"]:   
+            mask = np.sum(np.isin(self.mesh.faces_connectivity[:, 4:], nodes), axis=1) == 1
+            surface_ids = [int(surf_id) for surf_id in np.unique(self.mesh.faces_connectivity[:, 1][mask])]
 
         for surf_id in surface_ids:
 
             surf_data = self.model.properties._get_property("surface_thickness", surface=surf_id)
             if isinstance(surf_data, dict):
-                dofs_per_node = element_2d.DOFS_PER_NODE
-            else:
-                dofs_per_node = element_3d.DOFS_PER_NODE
+                if self.model.structural_element_2d is None:
+                    self.model.set_structural_elements()
+                dof_per_node = self.model.structural_element_2d.DOF_PER_NODE
 
-            gdofs = dofs_per_node * nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
-            rows = gdofs[:, dof_index]
+            else:
+                if self.model.structural_element_3d is None:
+                    self.model.set_structural_elements()
+                dof_per_node = self.model.structural_element_3d.DOF_PER_NODE
+
+            gdof = dof_per_node * nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+            rows = gdof[:, dof_index]
 
         if isinstance(rows, int):
             response = self.solution[rows,:]
