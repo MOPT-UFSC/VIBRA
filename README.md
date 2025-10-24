@@ -41,7 +41,7 @@ The authors are members of [MOPT - Multidisciplinary Modeling and Optimization](
    - [Vitor Slongo](https://www.linkedin.com/in/vitor-slongo-45298a270/) - Mesh and Geometry Specialist;
    - [Rodrigo Schwartz](https://www.linkedin.com/in/rodrigo-schwartz-249308244/) - Computer Scientist;
    - [Vinícius H. Ribeiro](http://linkedin.com/in/vin%C3%ADcius-henrique-ribeiro-385b67218) - Computer Scientist;
-   - [Guilherme Pierri](https://www.linkedin.com/in/guilherme-pierri-4487a4271/)) - Computer Scientist;
+   - [Guilherme Pierri](https://www.linkedin.com/in/guilherme-pierri-4487a4271/) - Computer Scientist;
    - [Gustavo Martins](https://www.linkedin.com/in/gustavo-martins/) - Engineer and Data Scientist;   
    - [Gildean Almeida](https://www.linkedin.com/in/gildean-almeida-708862298/) - Validation;
    - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements.
