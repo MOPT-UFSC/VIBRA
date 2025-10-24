@@ -26,7 +26,7 @@ Vibra is an open-source software developed in Python for modeling vibroacoustic 
 
 - The theoretical background for the acoustic formulation implemented in Vibra is based on classic and new FE books. Example: [Finite Element and Boundary Methods in Structural Acoustics and Vibration, by Noureddine Atalla and Franck Sgard (CRC Press, 2015)](https://www.taylorfrancis.com/books/mono/10.1201/b18366/finite-element-boundary-methods-structural-acoustics-vibration-noureddine-atalla-franck-sgard).
  
-- Examples of application: [MOPT YouTube Playlist](https://www.youtube.com/playlist?list=PLg6O6BGMOmkfDxR0atlMMUncDrxqOLwbT)).
+- Examples of application: [MOPT YouTube Playlist](https://www.youtube.com/playlist?list=PLg6O6BGMOmkfDxR0atlMMUncDrxqOLwbT).
   
 ## Questions
 If you have any questions you can open a new issue with the tag 'question'.
