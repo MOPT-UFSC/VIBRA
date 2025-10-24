@@ -3,10 +3,9 @@
 
 
 # Vibra: Vibroacoustic Analysis using FEM
+*V0.4.0 October 2025*
 
-*V0.4.0 October 27th 2025*
-
-Vibra is an open-source software developed in Python for modeling vibroacoustic problems using the Finite Element Method (FEM). In its current version, the software has been validated for performing modal analysis, complex modal analysis, and time-harmonic analysis of linear acoustic problems using linear tetrahedral finite elements (which do not suffer from locking in acoustic applications). Built-in support for Gmsh functions enables the generation of high-quality meshes, ensuring continuity between regions and allowing for local refinements. Typical acoustic boundary conditions—Dirichlet, Neumann, and Robin—are implemented, as well as transfer impedance conditions between media, which can be used, for example, to model perforated panels. Porous material models are also available, including Delany-Bazley, Delany-Bazley-Miki, JCA, and JCAL. The software is integrated with the NIST REPROP library, which can be adopted for determining the properties of working fluid mixtures.
+Vibra is an open-source software developed in Python for modeling vibroacoustic problems using the Finite Element Method (FEM). In its current version, the software has been validated for performing modal analysis, complex modal analysis, and time-harmonic analysis of linear acoustic problems using linear tetrahedral finite elements (which do not suffer from locking in acoustic applications). Built-in support for Gmsh functions enables the generation of high-quality meshes, ensuring continuity between regions and allowing for local refinements. Typical acoustic boundary conditions—Dirichlet, Neumann, and Robin—are implemented, as well as transfer impedance conditions between media, which can be used, for example, to model perforated panels. Porous material models are also available, including Delany-Bazley, Delany-Bazley-Miki, JCA, and JCAL. The software is integrated with the NIST REPROP library, which can be adopted for determining the properties of working fluid mixtures (if you use this feature, you need a license from NIST).
 
 <p align="center">
    <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/275Hz.gif?raw=true" alt="FILTRO gif" width="900"/>
@@ -17,15 +16,17 @@ Vibra is an open-source software developed in Python for modeling vibroacoustic 
 - Complete set of boundary conditions for 3D acoustic analysis.
 - Acoustic transfer admittance model for representing complex devices as equivalent models.
 - Perforate plate transfer admittance model.
+- Viscothermal loss models.
+- Porous materials models (rigid porous materials, equivalent properties).
 - New interface and visualization tools (enhanced symbols for boundary condition, excitation, etc).
 - Project file management improvements: structural and acoustic results can now be saved and retrieved.
 - Enhanced animation of results (real and imaginary parts, phase monitoring, etc).
 
 ## Documentation
 
-- The theoretical background for the acoustic formulation implemented in Vibra is based on [Finite Element and Boundary Methods in Structural Acoustics and Vibration, by Noureddine Atalla and Franck Sgard (CRC Press, 2015)](https://www.taylorfrancis.com/books/mono/10.1201/b18366/finite-element-boundary-methods-structural-acoustics-vibration-noureddine-atalla-franck-sgard).
+- The theoretical background for the acoustic formulation implemented in Vibra is based on classic and new FE books. Example: [Finite Element and Boundary Methods in Structural Acoustics and Vibration, by Noureddine Atalla and Franck Sgard (CRC Press, 2015)](https://www.taylorfrancis.com/books/mono/10.1201/b18366/finite-element-boundary-methods-structural-acoustics-vibration-noureddine-atalla-franck-sgard).
  
-- [Português] Demonstração rápida: [MOPT YouTube](https://youtu.be/Z5d9rrtZrtk).
+- Examples of application: [MOPT YouTube Playlist](https://www.youtube.com/playlist?list=PLg6O6BGMOmkfDxR0atlMMUncDrxqOLwbT)).
   
 ## Questions
 If you have any questions you can open a new issue with the tag 'question'.
@@ -37,10 +38,11 @@ The authors are members of [MOPT - Multidisciplinary Modeling and Optimization](
    - [Andre F. Fernandes](https://www.linkedin.com/in/andrefpf/) - Computer Scientist; 
    - [Olavo M. Silva](https://www.linkedin.com/in/olavo-m-silva-5822a5151/) - Engineer;
    - [Jacson G. Vargas](https://www.linkedin.com/in/jacson-gil-vargas-a54b0768/) - Engineer;
+   - [Vitor Slongo](https://www.linkedin.com/in/vitor-slongo-45298a270/) - Mesh and Geometry Specialist;
    - [Rodrigo Schwartz](https://www.linkedin.com/in/rodrigo-schwartz-249308244/) - Computer Scientist;
    - [Vinícius H. Ribeiro](http://linkedin.com/in/vin%C3%ADcius-henrique-ribeiro-385b67218) - Computer Scientist;
-   - [Gustavo Martins](https://www.linkedin.com/in/gustavo-martins/) - Engineer and Data Scientist;
-   - [Vitor Slongo](https://www.linkedin.com/in/vitor-slongo-45298a270/) - Mesh and Geometry Specialist;
+   - [Guilherme Pierri](https://www.linkedin.com/in/guilherme-pierri-4487a4271/)) - Computer Scientist;
+   - [Gustavo Martins](https://www.linkedin.com/in/gustavo-martins/) - Engineer and Data Scientist;   
    - [Gildean Almeida](https://www.linkedin.com/in/gildean-almeida-708862298/) - Validation;
    - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements.
 
