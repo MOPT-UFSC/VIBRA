@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'normal_pressure_load_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -273,9 +273,8 @@ class Ui_Dialog(object):
         self.frame_9.setFrameShape(QFrame.NoFrame)
         self.frame_9.setFrameShadow(QFrame.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_9)
+        self.gridLayout_3.setSpacing(6)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.gridLayout_3.setHorizontalSpacing(4)
-        self.gridLayout_3.setVerticalSpacing(7)
         self.gridLayout_3.setContentsMargins(4, 4, 4, 2)
         self.label_table = QLabel(self.frame_9)
         self.label_table.setObjectName(u"label_table")
@@ -290,8 +289,8 @@ class Ui_Dialog(object):
         self.lineEdit_table_path = QLineEdit(self.frame_9)
         self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
         self.lineEdit_table_path.setEnabled(False)
-        self.lineEdit_table_path.setMinimumSize(QSize(240, 26))
-        self.lineEdit_table_path.setMaximumSize(QSize(240, 26))
+        self.lineEdit_table_path.setMinimumSize(QSize(280, 26))
+        self.lineEdit_table_path.setMaximumSize(QSize(280, 26))
         self.lineEdit_table_path.setStyleSheet(u"")
         self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
 
@@ -305,10 +304,15 @@ class Ui_Dialog(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
         self.pushButton_load_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_table.setMinimumSize(QSize(62, 26))
-        self.pushButton_load_table.setMaximumSize(QSize(62, 26))
+        self.pushButton_load_table.setMinimumSize(QSize(40, 26))
+        self.pushButton_load_table.setMaximumSize(QSize(40, 26))
         self.pushButton_load_table.setFont(font3)
         self.pushButton_load_table.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_load_table.setIcon(icon)
+        self.pushButton_load_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_table.setAutoDefault(False)
 
         self.gridLayout_3.addWidget(self.pushButton_load_table, 0, 3, 1, 1)
 
@@ -447,7 +451,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.pushButton_attribute.setDefault(True)
+        self.pushButton_attribute.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -473,7 +477,7 @@ class Ui_Dialog(object):
         self.label_unit.setText(QCoreApplication.translate("Dialog", u"[N/m\u00b2]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.label_table.setText(QCoreApplication.translate("Dialog", u"Pressure:", None))
-        self.pushButton_load_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
+        self.pushButton_load_table.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_normal_pressure_loads.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Pressure load", None));

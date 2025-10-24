@@ -1,6 +1,7 @@
 import numpy as np
 import os
 
+from copy import deepcopy
 from pathlib import Path
 from scipy.signal import butter, filtfilt
 
@@ -24,7 +25,7 @@ def plot(x, y, x_label, y_label, title, label="", _absolute=False):
 
     plt().ion()
 
-    fig = plt().figure(figsize=[10, 6])
+    fig = plt().figure(figsize=[8, 6])
     ax_ = fig.add_subplot(1,1,1)
 
     if _absolute:
@@ -43,7 +44,7 @@ def plot2(x, y, x_label, y_label, title, labels, colors, linestyles):
 
     plt().ion()
 
-    fig = plt().figure(figsize=[10, 6])
+    fig = plt().figure(figsize=[8, 6])
     ax_ = fig.add_subplot(1,1,1)
 
     for i, label in enumerate(labels): 
@@ -60,7 +61,7 @@ def plot2(x, y, x_label, y_label, title, labels, colors, linestyles):
 def plot_2_yaxis(data_to_plot, title):
 
     plt().ion()
-    fig = plt().figure(figsize=[10, 6])
+    fig = plt().figure(figsize=[8, 6])
     ax_1 = fig.add_subplot(1,1,1)
     ax_2 = ax_1.twinx()
     
@@ -139,32 +140,28 @@ class ReciprocatingCompressorModel:
         """
         """
         
-        self.D = parameters['bore_diameter']                                    # Cylinder bore diameter [m]
-        self.r = parameters['stroke']/2                                         # Length of compressor full stroke [m]
-        self.L = parameters['connecting_rod_length']                            # Connecting rod length [m]
-        self.rod_diam = parameters['rod_diameter']                              # Rod diameter [m]
+        self.D = parameters['bore_diameter']                                     # Cylinder bore diameter [m]
+        self.r = parameters['stroke'] / 2                                        # Length of compressor full stroke [m]
+        self.L = parameters['connecting_rod_length']                             # Connecting rod length [m]
+        self.d_rod = parameters.get('rod_diameter', 0)                           # Rod diameter [m]
         
-        self.p_ratio = parameters['pressure_ratio']                             # Compressor pressure ratio Pd/Ps
-        self.c_HE = parameters['clearance_HE'] / 100                            # Clearance HE volume as percentage of full volume (%)
-        self.c_CE = parameters['clearance_CE'] / 100                            # Clearance CE volume as percentage of full volume (%)
-        self.crank_angle_1 = parameters['TDC_crank_angle_1']                    # Crank angle (degrees) at which piston in the head end chamber is at top dead center
-        self.crank_angle_2 = parameters.get('TDC_crank_angle_2', None)          # Crank angle (degrees) at which piston in the head end chamber is at top dead center
-        self.rpm = parameters['rotational_speed']                               # Compressor rotation speed (rpm)
-        self.capacity = parameters['capacity'] / 100                            # Capacity of compression stage (%)
-        self.acting_label = parameters['acting_label']                          # Active cylinder(s) key (int)
-        self.number_of_cylinders = parameters.get('number_of_cylinders', 1)     # Number of cylinders
-        
-        self.isentropic_exponent = parameters.get('isentropic_exponent', 1.4)   # Isontropic exponent (Cp/Cv)
-        self.molar_mass = parameters.get('number_of_cylinders', 2.0158)         # Molar mass [kg/kmol]
+        self.p_ratio = parameters['pressure_ratio']                              # Compressor pressure ratio Pd/Ps
+        self.c_HE = parameters.get('clearance_HE', 0) / 100                      # Clearance HE volume as percentage of full volume (%)
+        self.c_CE = parameters.get('clearance_CE', 0) / 100                      # Clearance CE volume as percentage of full volume (%)
+        self.crank_angle = parameters.get('TDC_crank_angle', 0)                  # Crank angle (degrees) at which piston in the head end chamber is at top dead center
+        self.rpm = parameters['rotational_speed']                                # Compressor rotation speed (rpm)
+        self.capacity = parameters['capacity'] / 100                             # Capacity of compression stage (%)
+        self.acting_head = parameters.get('acting_head')                         # Active cylinder(s) key (int)
+        self.valves_per_head = parameters.get('valves_per_head', 1)              # Number of valves per head
+
+        self.isentropic_exponent = parameters.get('isentropic_exponent', 1.4)    # Isontropic exponent (Cp/Cv)
+        self.molar_mass = parameters.get('number_of_cylinders', 2.0158)          # Molar mass [kg/kmol]
 
         self.process_state_properties_in_SI_units(parameters)
 
         self.area_head_end = pi * (self.D**2) / 4
-        self.area_crank_end = pi * ((self.D**2) - (self.rod_diam**2)) / 4
-
-        self.tdc_1 = self.crank_angle_1 * pi / 180
-        if isinstance(self.crank_angle_2, (int | float)):
-            self.tdc_2 = self.tdc_2 * pi / 180
+        self.area_crank_end = pi * ((self.D**2) - (self.d_rod**2)) / 4
+        self.tdc_crank_angle = self.crank_angle * pi / 180
 
     def _initialize(self):
         self.cap = None
@@ -227,7 +224,7 @@ class ReciprocatingCompressorModel:
 
         N = self.number_points + 1
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         r = self.r
         l = self.L
@@ -251,7 +248,7 @@ class ReciprocatingCompressorModel:
 
         N = self.number_points + 1
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         r = self.r
         l = self.L
@@ -261,11 +258,11 @@ class ReciprocatingCompressorModel:
         v *= self.rpm*(2*pi/60)
         return v
 
-    def get_clearance_data(self, acting_label):
-        if acting_label == "HE":
+    def get_clearance_data(self, acting_head):
+        if acting_head == "HE":
             h_0 = self.c_HE*(2*self.r) # clearance height head end
             A = self.area_head_end
-        elif acting_label == "CE":
+        elif acting_head == "CE":
             h_0 = self.c_CE*(2*self.r) # clearance height crank end
             A = self.area_crank_end
         else:
@@ -273,11 +270,11 @@ class ReciprocatingCompressorModel:
         V_0 = h_0*A
         return V_0, A, h_0
 
-    def get_cycles_boundary_data(self, acting_label="HE", tdc=None):
+    def get_cycles_boundary_data(self, acting_head="HE", tdc=None):
         """ This method returns the boundary data for each cycle. 
         """
 
-        V0, A, h0 = self.get_clearance_data(acting_label)
+        V0, A, h0 = self.get_clearance_data(acting_head)
 
         V1 = V0
         V2 = V1*(self.p_ratio)**(1/self.k)
@@ -285,9 +282,9 @@ class ReciprocatingCompressorModel:
         V4 = V3*(1/self.p_ratio)**(1/self.k)
 
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
-        if acting_label == "HE":
+        if acting_head == "HE":
             v_piston = self.recip_v(tdc=tdc)
             theta, x_piston = self.recip_x(tdc=tdc)
             volumes = list((h0 - x_piston)*A)
@@ -333,7 +330,7 @@ class ReciprocatingCompressorModel:
                 else:
                     start_data[labels[j]] = [n_index, cache_Vi, cache_theta]
                     start = cache_ind
-                    # print(f"{acting_label}: {labels[j]} {start_data[labels[j]]}")
+                    # print(f"{acting_head}: {labels[j]} {start_data[labels[j]]}")
                     break
         # 
         for j, key in enumerate(["V2", "V3", "V4", "V1"]):
@@ -353,7 +350,7 @@ class ReciprocatingCompressorModel:
                                         "angles"  : [start_angle, end_angle],
                                         "volumes" : [start_volume, end_volume]}
 
-            # print(f"{acting_label}: {labels[j]} {boundary_data[labels[j]]}")
+            # print(f"{acting_head}: {labels[j]} {boundary_data[labels[j]]}")
 
         return boundary_data
 
@@ -373,7 +370,7 @@ class ReciprocatingCompressorModel:
         V3 = V3c = (2*self.r + h0)*A
         V4 = V4c= V3*(1/self.p_ratio)**(1/self.k)
 
-        angle_data = self.get_cycles_boundary_data(acting_label="HE", tdc=tdc)
+        angle_data = self.get_cycles_boundary_data(acting_head="HE", tdc=tdc)
         # [theta_3i, theta_3f] = angle_data["V3"]["angles"]
         # [theta_4i, theta_4f] = angle_data["V4"]["angles"]
 
@@ -385,7 +382,7 @@ class ReciprocatingCompressorModel:
         #     capacity = self.cap
 
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         v_piston = self.recip_v(tdc=tdc)
         theta, x_piston = self.recip_x(tdc=tdc)
@@ -508,8 +505,8 @@ class ReciprocatingCompressorModel:
 
         if export_data:
 
-            fname = f"temporary_data\\PV_diagram_head_end_crank_angle_{self.crank_angle_1}.dat"
-            fname_log = f"temporary_data\\log_info_head_end_{self.crank_angle_1}_cap_{capacity}.txt"
+            fname = f"temporary_data\\PV_diagram_head_end_crank_angle_{self.crank_angle}.dat"
+            fname_log = f"temporary_data\\log_info_head_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
                 os.mkdir("temporary_data")
@@ -547,7 +544,7 @@ class ReciprocatingCompressorModel:
         V3 = V3c = (2*self.r + h0)*A
         V4 = V4c= V3*(1/self.p_ratio)**(1/self.k)
         
-        angle_data = self.get_cycles_boundary_data(acting_label="CE", tdc=tdc)
+        angle_data = self.get_cycles_boundary_data(acting_head="CE", tdc=tdc)
         # [theta_3i, theta_3f] = angle_data["V3"]["angles"]
         # [theta_4i, theta_4f] = angle_data["V4"]["angles"]
 
@@ -559,7 +556,7 @@ class ReciprocatingCompressorModel:
         #     capacity = self.cap
 
         if tdc is None:
-            tdc = self.tdc_1
+            tdc = self.tdc_crank_angle
 
         v_piston = -self.recip_v(tdc=tdc)
         theta, x_piston = self.recip_x(tdc=tdc)
@@ -685,8 +682,8 @@ class ReciprocatingCompressorModel:
 
         if export_data:
 
-            fname = f"temporary_data\\PV_diagram_crank_end_crank_angle_{self.crank_angle_1}.dat"
-            fname_log = f"temporary_data\\log_info_crank_end_{self.crank_angle_1}_cap_{capacity}.txt"
+            fname = f"temporary_data\\PV_diagram_crank_end_crank_angle_{self.crank_angle}.dat"
+            fname_log = f"temporary_data\\log_info_crank_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
                 os.mkdir("temporary_data")
@@ -794,32 +791,15 @@ class ReciprocatingCompressorModel:
     def process_sum_of_volumetric_flow_rate(self, key: str, capacity=None, smooth_data=False):
         try:
 
-            if self.acting_label == 'both_ends':
+            if self.acting_head == 'both_ends':
+                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate += self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
 
-                if self.number_of_cylinders == 1:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                else:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_crank_end(tdc=self.tdc_2, capacity=capacity)[key] 
-                    flow_rate += self.flow_head_end(tdc=self.tdc_2, capacity=capacity)[key]
+            elif self.acting_head == 'head_end':
+                flow_rate = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
 
-            elif self.acting_label == 'head_end':
-
-                if self.number_of_cylinders == 1:
-                    flow_rate = self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                else:
-                    flow_rate = self.flow_head_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_head_end(tdc=self.tdc_2, capacity=capacity)[key]
-
-            elif self.acting_label == 'crank_end':
-
-                if self.number_of_cylinders == 1:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                else:
-                    flow_rate = self.flow_crank_end(tdc=self.tdc_1, capacity=capacity)[key]
-                    flow_rate += self.flow_crank_end(tdc=self.tdc_2, capacity=capacity)[key]
+            elif self.acting_head == 'crank_end':
+                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
 
         except Exception as error:
             print(str(error))
@@ -935,46 +915,55 @@ class ReciprocatingCompressorModel:
             return cap
 
     def linear_interpolation(self, x1, x2, y1, y2, y):
-        A = y-y1
-        B = y2-y
-        if y1==y2:
-            if y>y1:
+
+        A = y - y1
+        B = y2 - y
+        if y1 == y2:
+            if y > y1:
                 x = ((x1 + x2)/2)*1.01
             else:
                 x = ((x1 + x2)/2)*0.99
         else:
-            x = (A*x2 + B*x1)/(A+B)
+            x = (A*x2 + B*x1) / (A+B)
+
         return x
 
-    def FFT_periodic(self, x_t, one_sided = True):
-        N = x_t.shape[0]
-        if one_sided: # One-sided spectrum
-            Xf = 2*np.fft.fft(x_t)
-            Xf[0] = Xf[0]/2
-        else: # Two-sided spectrum
-            Xf = np.fft.fft(x_t)
-        return Xf/N
 
-    def extend_signals(self, data, revolutions):
-        Trev = 60/self.rpm
-        T = revolutions*Trev
-        values_time = np.tile(data[:-1], revolutions) # extending signals
-        return values_time, T
+    def extend_signals(self, data: np.ndarray, revolutions: int):
 
-    def process_FFT_of_(self, values, revolutions):
+        # revollution time
+        T_rev = 60 / self.rpm
 
-        values_time, T = self.extend_signals(values, revolutions)
-        values_freq = self.FFT_periodic(values_time)
-        df = 1/T
+        # acquisition time
+        T = revolutions * T_rev
+
+        # process the extended signal
+        xt_ext = np.tile(data[:-1], revolutions)
+
+        return xt_ext, T
+
+
+    def process_FFT_from_extended_signal(self, values: np.ndarray, revolutions: int):
         
-        size = len(values_freq)
-        if np.remainder(size, 2)==0:
-            N = int(size/2)
-        else:
-            N = int((size + 1)/2)
-        frequencies = np.arange(0, N+1, 1)*df
+        # extend the signal to increase the frequency resolution
+        xt_ext, T = self.extend_signals(values, revolutions)
 
-        return frequencies, values_freq[0:N+1]
+        # process the one-sided spectrum
+        X_f = np.fft.rfft(xt_ext) / len(xt_ext)
+
+        # adjust the one-sided spectrum amplitude
+        X_f[1:] *= 2
+
+        # time increment
+        dt = T / len(xt_ext)
+
+        # create the frequencies vector
+        frequencies = np.fft.rfftfreq(len(xt_ext), dt)
+
+        # self.check_iFFT_processing(dt, xt_ext, X_f)
+
+        return frequencies, X_f
+
 
     def process_FFT_of_volumetric_flow_rate(self, revolutions, key):
 
@@ -983,11 +972,36 @@ class ReciprocatingCompressorModel:
         if flow_rate is None:
             return None, None
         
-        freq, flow_rate = self.process_FFT_of_(flow_rate, revolutions)
+        freq, flow_rate = self.process_FFT_from_extended_signal(flow_rate, revolutions)
         freq = freq[freq <= self.max_frequency]
         flow_rate = flow_rate[:len(freq)]
 
         return freq, flow_rate
+
+
+    def check_iFFT_processing(self, dt: float, xt_ext: np.ndarray, X_f: np.ndarray):
+
+        X_f = deepcopy(X_f)
+
+        X_f[1:] /= 2
+        xt_ifft = np.fft.irfft(X_f) * len(xt_ext)
+
+        time = np.arange(xt_ext.size, dtype=float) * dt
+        x_label = "Time [s]"
+        y_label = f"Volumetric flow [m³/s]"
+        title = ""
+
+        labels = ["Extended signal", "iFFT signal"]
+        colors = [(1,0,0), (0,0,1)]
+        linestyles = ["-", "--"]
+
+        x_data = [time, time]
+        y_data = [xt_ext, xt_ifft]
+
+        print(f"Maximum absolute difference: {np.max(np.abs(xt_ext - xt_ifft))}")
+
+        plot2(x_data, y_data, x_label, y_label, title, labels, colors, linestyles)
+
 
     def plot_PV_diagram_both_ends(self):
 
@@ -1015,6 +1029,7 @@ class ReciprocatingCompressorModel:
 
         plot2(volumes, pressures, x_label, y_label, title, labels, colors, linestyles)
 
+
     def plot_PV_diagram_head_end(self):
 
         volume_HE, pressure_HE, _ = self.process_head_end_volumes_and_pressures()
@@ -1032,6 +1047,7 @@ class ReciprocatingCompressorModel:
 
         plot(volume_HE, pressure_HE, x_label, y_label, title)
 
+
     def plot_PV_diagram_crank_end(self):
 
         volume_CE, pressure_CE, _ = self.process_crank_end_volumes_and_pressures()
@@ -1047,6 +1063,7 @@ class ReciprocatingCompressorModel:
         title = "P-V diagram (crank end)"
 
         plot(volume_CE, pressure_CE, x_label, y_label, title)
+
 
     def plot_pressure_vs_time(self):
 
@@ -1078,6 +1095,7 @@ class ReciprocatingCompressorModel:
 
         plot2(x_data, y_data, x_label, y_label, title, labels, colors, linestyles)
 
+
     def plot_volume_vs_time(self):
 
         volume_HE, _, _ = self.process_head_end_volumes_and_pressures()
@@ -1097,6 +1115,7 @@ class ReciprocatingCompressorModel:
         linestyles = ["-","--"]
 
         plot2(x_data, y_data, x_label, y_label, title, labels, colors, linestyles)
+
 
     def plot_volumetric_flow_rate_at_suction_time(self):
 
@@ -1137,7 +1156,7 @@ class ReciprocatingCompressorModel:
         load_crank = -pressure_crank*self.area_crank_end
         rod_pressure_load_time = (load_head + load_crank)/1000
 
-        freq, rod_pressure_load = self.process_FFT_of_(rod_pressure_load_time, revolutions)
+        freq, rod_pressure_load = self.process_FFT_from_extended_signal(rod_pressure_load_time, revolutions)
         mask = freq <= self.max_frequency
         freq = freq[mask]
         rod_pressure_load = rod_pressure_load[mask]
@@ -1147,6 +1166,7 @@ class ReciprocatingCompressorModel:
         title = "Rod pressure load"
         
         plot(freq, rod_pressure_load, x_label, y_label, title, _absolute=True)  
+
 
     def plot_rod_pressure_load_time(self):
 
@@ -1166,6 +1186,7 @@ class ReciprocatingCompressorModel:
         title = "Rod pressure load"
         
         plot(time, rod_pressure_load_time, x_label, y_label, title, _absolute=True) 
+
 
     def plot_piston_position_and_velocity(self, tdc=None, domain="time"):
 
@@ -1208,6 +1229,7 @@ class ReciprocatingCompressorModel:
 
         plot_2_yaxis(data, title)
 
+
     def plot_volumetric_flow_rate_at_suction_frequency(self, revolutions):
         freq, flow_rate = self.process_FFT_of_volumetric_flow_rate(revolutions, 'in_flow')
         if flow_rate is None:
@@ -1217,6 +1239,7 @@ class ReciprocatingCompressorModel:
         title = "Volumetric flow rate at suction"
         plot(freq, flow_rate, x_label, y_label, title, _absolute=True)
 
+
     def plot_volumetric_flow_rate_at_discharge_frequency(self, revolutions):
         freq, flow_rate = self.process_FFT_of_volumetric_flow_rate(revolutions, 'out_flow')
         if flow_rate is None:
@@ -1225,6 +1248,7 @@ class ReciprocatingCompressorModel:
         y_label = "Volumetric crank flow rate [m³/s]"
         title = "Volumetric flow rate at discharge"
         plot(freq, flow_rate, x_label, y_label, title, _absolute=True)
+
 
     def plot_head_end_pressure_vs_angle(self):
         
@@ -1244,6 +1268,7 @@ class ReciprocatingCompressorModel:
 
         plot(angle, pressure_HE, x_label, y_label, title)
 
+
     def plot_head_end_volume_vs_angle(self):
 
         volume_HE, _, _ = self.process_head_end_volumes_and_pressures()
@@ -1256,6 +1281,7 @@ class ReciprocatingCompressorModel:
         title = "Head end volume vs Angle"
 
         plot(angle, volume_HE, x_label, y_label, title)
+
 
     def plot_crank_end_pressure_vs_angle(self):
 
@@ -1275,6 +1301,7 @@ class ReciprocatingCompressorModel:
 
         plot(angle, pressure_CE, x_label, y_label, title)
 
+
     def plot_crank_end_volume_vs_angle(self):
 
         volume_CE, _, _ = self.process_crank_end_volumes_and_pressures()
@@ -1288,17 +1315,20 @@ class ReciprocatingCompressorModel:
 
         plot(angle, volume_CE, x_label, y_label, title)
 
+
     def plot_convergence(self, x, y):
         x_label = "Iteration"
         y_label = "Ratio"
         title = "Convergence plot"
         plot(x, y, x_label, y_label, title)
 
+
     def plot_convergence_cap(self, x, y):
         x_label = "Iteration"
         y_label = "Capacity parameter"
         title = "Convergence plot"
         plot(x, y, x_label, y_label, title)
+
 
     def import_measured_PV_data(self, id_1, id_2, comp):
 
@@ -1342,7 +1372,7 @@ class ReciprocatingCompressorModel:
     #     # ang = np.linspace(0, 2*pi, N)
 
     #     if tdc is None:
-    #         tdc = self.tdc_1
+    #         tdc = self.tdc_crank_angle
                 
     #     if capacity is None:
     #         if self.cap is None:
@@ -1352,7 +1382,7 @@ class ReciprocatingCompressorModel:
     #     open_suc = [False]*N
     #     open_disch = [False]*N
 
-    #     if self.acting_label not in ['head_end', 'both_ends'] and not aux_process:
+    #     if self.acting_head not in ['head_end', 'both_ends'] and not aux_process:
     #         p = np.zeros(N) 
     #         print('Cylinder does not have head end pressure.')
     #     else:
@@ -1568,10 +1598,11 @@ if __name__ == "__main__":
                     'pressure_ratio' : 1.90788804,
                     'clearance_HE' : 15.8,
                     'clearance_CE' : 18.39,
-                    'TDC_crank_angle_1' : 0,
+                    'TDC_crank_angle' : 0,
                     'rotational_speed' : 360,
                     'capacity' : 100,
-                    'acting_label' : 0,
+                    'acting_head' : 0,
+                    'valves_per_head' : 1,
                     'pressure_at_suction' : 19.65,
                     'temperature_at_suction' : 45,
                     'pressure_unit' : "bar",

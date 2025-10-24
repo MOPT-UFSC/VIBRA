@@ -24,9 +24,15 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def _reset(self):
         self.current_widget = None
-    
+
     def hide_bottom_widget(self):
         self.bottom_widget.hide()
+
+    def clear_treeWidgets_of_frequencies(self):
+        self.plot_structural_modal.treeWidget_frequencies.clear()
+        self.plot_structural_harmonic.treeWidget_frequencies.clear()
+        self.plot_acoustic_modal.treeWidget_frequencies.clear()
+        self.plot_acoustic_harmonic.treeWidget_frequencies.clear()
 
     def _define_qt_variables(self):
         self.main_frame = QFrame()
@@ -46,10 +52,13 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
+        self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_waveform.clicked.connect(self.add_acoustic_pressure_waveform_widget)
         self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
         self.results_viewer_items.item_child_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
-        self.results_viewer_items.item_child_acoustic_specific_impedance.clicked.connect(self.add_acoustic_specific_impedance_plot_widget)
+        self.results_viewer_items.item_child_acoustic_impedance.clicked.connect(self.add_acoustic_impedance_plot_widget)
+        self.results_viewer_items.item_child_absorption_coefficient.clicked.connect(self.add_absorption_coefficient_plot_widget)
 
     def get_item(self):
         return self.results_viewer_items
@@ -61,25 +70,21 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def add_structural_modal_widget(self):
         self.plot_structural_modal.load_natural_frequencies()
         self.plot_structural_modal.load_user_preference_colormap()
-        self.plot_structural_modal.update_plot()
         self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.load_user_preference_colormap()
-        self.plot_structural_harmonic.update_plot()
         self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.load_user_preference_colormap()
-        self.plot_acoustic_modal.update_plot()
         self.add_widget(self.plot_acoustic_modal)
 
     def add_acoustic_harmonic_widget(self):
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.load_user_preference_colormap()
-        self.plot_acoustic_harmonic.update_plot()
         self.add_widget(self.plot_acoustic_harmonic)
 
     def add_structural_frequency_response_widget(self):
@@ -109,7 +114,25 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
             app().main_window.results_widget.stop_animation()
 
         self.add_widget(self.current_widget)
-    
+
+    def add_allowable_pulsations_for_reciprocating_compressor_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_reciprocating_compressor()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_acoustic_pressure_waveform_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform()
+        
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        app().main_window.animation_toolbar.setDisabled(True)
+
+        self.add_widget(self.current_widget)
+
     def add_TL_NR_widget(self):
         self.current_widget = app().main_window.input_ui.plot_TL_NR()
 
@@ -130,12 +153,22 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_acoustic_specific_impedance_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_specific_impedance_from_surface()
+    def add_acoustic_impedance_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_impedance()
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-        
+
+        app().main_window.animation_toolbar.setDisabled(True)
+
+        self.add_widget(self.current_widget)
+
+    def add_absorption_coefficient_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_absorption_coefficient_from_surface()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
         app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)

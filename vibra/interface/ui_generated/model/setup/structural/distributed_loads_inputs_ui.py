@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'distributed_loads_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -350,19 +350,18 @@ class Ui_Dialog(object):
         self.frame_9.setFrameShape(QFrame.NoFrame)
         self.frame_9.setFrameShadow(QFrame.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_9)
+        self.gridLayout_3.setSpacing(6)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.gridLayout_3.setHorizontalSpacing(4)
-        self.gridLayout_3.setVerticalSpacing(7)
         self.gridLayout_3.setContentsMargins(4, 4, 4, 2)
         self.lineEdit_path_table_Fx = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fx.setObjectName(u"lineEdit_path_table_Fx")
         self.lineEdit_path_table_Fx.setEnabled(False)
-        self.lineEdit_path_table_Fx.setMinimumSize(QSize(210, 26))
-        self.lineEdit_path_table_Fx.setMaximumSize(QSize(240, 26))
+        self.lineEdit_path_table_Fx.setMinimumSize(QSize(280, 26))
+        self.lineEdit_path_table_Fx.setMaximumSize(QSize(280, 26))
         self.lineEdit_path_table_Fx.setStyleSheet(u"")
         self.lineEdit_path_table_Fx.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_3.addWidget(self.lineEdit_path_table_Fx, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.lineEdit_path_table_Fx, 0, 2, 1, 1)
 
         self.label_table_Fx = QLabel(self.frame_9)
         self.label_table_Fx.setObjectName(u"label_table_Fx")
@@ -372,22 +371,7 @@ class Ui_Dialog(object):
         self.label_table_Fx.setFont(font3)
         self.label_table_Fx.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_3.addWidget(self.label_table_Fx, 0, 0, 1, 1)
-
-        self.pushButton_load_Fx_table = QPushButton(self.frame_9)
-        self.pushButton_load_Fx_table.setObjectName(u"pushButton_load_Fx_table")
-        self.pushButton_load_Fx_table.setEnabled(True)
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.pushButton_load_Fx_table.sizePolicy().hasHeightForWidth())
-        self.pushButton_load_Fx_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_Fx_table.setMinimumSize(QSize(62, 26))
-        self.pushButton_load_Fx_table.setMaximumSize(QSize(62, 26))
-        self.pushButton_load_Fx_table.setFont(font3)
-        self.pushButton_load_Fx_table.setStyleSheet(u"")
-
-        self.gridLayout_3.addWidget(self.pushButton_load_Fx_table, 0, 2, 1, 1)
+        self.gridLayout_3.addWidget(self.label_table_Fx, 0, 1, 1, 1)
 
         self.label_table_Fy = QLabel(self.frame_9)
         self.label_table_Fy.setObjectName(u"label_table_Fy")
@@ -397,7 +381,37 @@ class Ui_Dialog(object):
         self.label_table_Fy.setFont(font3)
         self.label_table_Fy.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_3.addWidget(self.label_table_Fy, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.label_table_Fy, 1, 1, 1, 1)
+
+        self.lineEdit_path_table_Fy = QLineEdit(self.frame_9)
+        self.lineEdit_path_table_Fy.setObjectName(u"lineEdit_path_table_Fy")
+        self.lineEdit_path_table_Fy.setEnabled(False)
+        self.lineEdit_path_table_Fy.setMinimumSize(QSize(280, 26))
+        self.lineEdit_path_table_Fy.setMaximumSize(QSize(280, 26))
+        self.lineEdit_path_table_Fy.setStyleSheet(u"")
+        self.lineEdit_path_table_Fy.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_3.addWidget(self.lineEdit_path_table_Fy, 1, 2, 1, 1)
+
+        self.pushButton_load_Fx_table = QPushButton(self.frame_9)
+        self.pushButton_load_Fx_table.setObjectName(u"pushButton_load_Fx_table")
+        self.pushButton_load_Fx_table.setEnabled(True)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.pushButton_load_Fx_table.sizePolicy().hasHeightForWidth())
+        self.pushButton_load_Fx_table.setSizePolicy(sizePolicy1)
+        self.pushButton_load_Fx_table.setMinimumSize(QSize(40, 26))
+        self.pushButton_load_Fx_table.setMaximumSize(QSize(40, 26))
+        self.pushButton_load_Fx_table.setFont(font3)
+        self.pushButton_load_Fx_table.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_load_Fx_table.setIcon(icon)
+        self.pushButton_load_Fx_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_Fx_table.setAutoDefault(False)
+
+        self.gridLayout_3.addWidget(self.pushButton_load_Fx_table, 0, 3, 1, 1)
 
         self.label_table_Fz = QLabel(self.frame_9)
         self.label_table_Fz.setObjectName(u"label_table_Fz")
@@ -407,51 +421,55 @@ class Ui_Dialog(object):
         self.label_table_Fz.setFont(font3)
         self.label_table_Fz.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_3.addWidget(self.label_table_Fz, 2, 0, 1, 1)
-
-        self.lineEdit_path_table_Fy = QLineEdit(self.frame_9)
-        self.lineEdit_path_table_Fy.setObjectName(u"lineEdit_path_table_Fy")
-        self.lineEdit_path_table_Fy.setEnabled(False)
-        self.lineEdit_path_table_Fy.setMinimumSize(QSize(210, 26))
-        self.lineEdit_path_table_Fy.setMaximumSize(QSize(240, 26))
-        self.lineEdit_path_table_Fy.setStyleSheet(u"")
-        self.lineEdit_path_table_Fy.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_3.addWidget(self.lineEdit_path_table_Fy, 1, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.label_table_Fz, 2, 1, 1, 1)
 
         self.lineEdit_path_table_Fz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fz.setObjectName(u"lineEdit_path_table_Fz")
         self.lineEdit_path_table_Fz.setEnabled(False)
-        self.lineEdit_path_table_Fz.setMinimumSize(QSize(210, 26))
-        self.lineEdit_path_table_Fz.setMaximumSize(QSize(240, 26))
+        self.lineEdit_path_table_Fz.setMinimumSize(QSize(280, 26))
+        self.lineEdit_path_table_Fz.setMaximumSize(QSize(280, 26))
         self.lineEdit_path_table_Fz.setStyleSheet(u"")
         self.lineEdit_path_table_Fz.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_3.addWidget(self.lineEdit_path_table_Fz, 2, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.lineEdit_path_table_Fz, 2, 2, 1, 1)
 
         self.pushButton_load_Fy_table = QPushButton(self.frame_9)
         self.pushButton_load_Fy_table.setObjectName(u"pushButton_load_Fy_table")
         self.pushButton_load_Fy_table.setEnabled(True)
         sizePolicy1.setHeightForWidth(self.pushButton_load_Fy_table.sizePolicy().hasHeightForWidth())
         self.pushButton_load_Fy_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_Fy_table.setMinimumSize(QSize(62, 26))
-        self.pushButton_load_Fy_table.setMaximumSize(QSize(62, 26))
+        self.pushButton_load_Fy_table.setMinimumSize(QSize(40, 26))
+        self.pushButton_load_Fy_table.setMaximumSize(QSize(40, 26))
         self.pushButton_load_Fy_table.setFont(font3)
         self.pushButton_load_Fy_table.setStyleSheet(u"")
+        self.pushButton_load_Fy_table.setIcon(icon)
+        self.pushButton_load_Fy_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_Fy_table.setAutoDefault(False)
 
-        self.gridLayout_3.addWidget(self.pushButton_load_Fy_table, 1, 2, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_load_Fy_table, 1, 3, 1, 1)
 
         self.pushButton_load_Fz_table = QPushButton(self.frame_9)
         self.pushButton_load_Fz_table.setObjectName(u"pushButton_load_Fz_table")
         self.pushButton_load_Fz_table.setEnabled(True)
         sizePolicy1.setHeightForWidth(self.pushButton_load_Fz_table.sizePolicy().hasHeightForWidth())
         self.pushButton_load_Fz_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_Fz_table.setMinimumSize(QSize(62, 26))
-        self.pushButton_load_Fz_table.setMaximumSize(QSize(62, 26))
+        self.pushButton_load_Fz_table.setMinimumSize(QSize(40, 26))
+        self.pushButton_load_Fz_table.setMaximumSize(QSize(40, 26))
         self.pushButton_load_Fz_table.setFont(font3)
         self.pushButton_load_Fz_table.setStyleSheet(u"")
+        self.pushButton_load_Fz_table.setIcon(icon)
+        self.pushButton_load_Fz_table.setIconSize(QSize(20, 20))
+        self.pushButton_load_Fz_table.setAutoDefault(False)
 
-        self.gridLayout_3.addWidget(self.pushButton_load_Fz_table, 2, 2, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_load_Fz_table, 2, 3, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_3.addItem(self.horizontalSpacer_3, 0, 4, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_3.addItem(self.horizontalSpacer_4, 0, 0, 1, 1)
 
 
         self.gridLayout_10.addWidget(self.frame_9, 1, 0, 1, 1)
@@ -580,7 +598,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.pushButton_attribute.setDefault(True)
+        self.pushButton_attribute.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -613,11 +631,11 @@ class Ui_Dialog(object):
         self.label_constant_Fz.setText(QCoreApplication.translate("Dialog", u"Fz / area:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.label_table_Fx.setText(QCoreApplication.translate("Dialog", u"Fx / A:", None))
-        self.pushButton_load_Fx_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
         self.label_table_Fy.setText(QCoreApplication.translate("Dialog", u"Fy / A:", None))
+        self.pushButton_load_Fx_table.setText("")
         self.label_table_Fz.setText(QCoreApplication.translate("Dialog", u"Fz / A:", None))
-        self.pushButton_load_Fy_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
-        self.pushButton_load_Fz_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
+        self.pushButton_load_Fy_table.setText("")
+        self.pushButton_load_Fz_table.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_distributed_loads.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Pressure load", None));
@@ -679,10 +697,10 @@ class DistributedLoadsInputs_UI(QDialog, Ui_Dialog):
                                                             - (Layout): QGridLayout
                                                                     - lineEdit_path_table_Fx: QLineEdit
                                                                     - label_table_Fx: QLabel
-                                                                    - pushButton_load_Fx_table: QPushButton
                                                                     - label_table_Fy: QLabel
-                                                                    - label_table_Fz: QLabel
                                                                     - lineEdit_path_table_Fy: QLineEdit
+                                                                    - pushButton_load_Fx_table: QPushButton
+                                                                    - label_table_Fz: QLabel
                                                                     - lineEdit_path_table_Fz: QLineEdit
                                                                     - pushButton_load_Fy_table: QPushButton
                                                                     - pushButton_load_Fz_table: QPushButton

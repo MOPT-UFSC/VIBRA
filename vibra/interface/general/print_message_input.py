@@ -1,13 +1,11 @@
-from PySide6.QtWidgets import QFrame, QLabel, QProgressBar, QPushButton, QDialog
-from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, QTimer
 
 from vibra import app
 from vibra.interface.ui_generated.messages.print_message_ui import PrintMessage_UI
-from vibra.interface.formatters.icons import *
+from vibra.interface.formatters.icons import get_error_icon, get_warning_icon
 
 from time import sleep, time 
-
+from molde import Color
 
 class PrintMessageInput(PrintMessage_UI):
     def __init__(self, text_info, *args, **kwargs):
@@ -15,8 +13,6 @@ class PrintMessageInput(PrintMessage_UI):
 
         self.auto_close = kwargs.get("auto_close", False)
         self.window_title, self.title, self.message = text_info
-
-        self.main_window = app().main_window
 
         self._config_window()
         self._define_qt_variables()
@@ -72,7 +68,7 @@ class PrintMessageInput(PrintMessage_UI):
         self.setWindowTitle(self.window_title)
 
         if self.window_title in ["Error", "ERROR"]:
-            icon = get_error_icon(QColor(255,0,0,200))
+            icon = get_error_icon(Color(255,0,0,200).to_qt())
         elif self.window_title in ["Warning", "WARNING"]:
             icon = get_warning_icon()
         else:

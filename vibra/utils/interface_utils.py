@@ -9,8 +9,14 @@ window_title = "Error"
 
 class ColorMode(IntEnum):
     EMPTY = auto()
+    COLORED = auto()
     MATERIAL = auto()
     FLUID = auto()
+    MESH_QUALITY_VOLUME = auto()
+    MESH_QUALITY_GAMMA = auto()
+    MESH_QUALITY_MINSJ = auto()
+    MESH_QUALITY_MINSIGE = auto()
+    MESH_QUALITY_MINSICN = auto()
 
 
 @dataclass
@@ -19,10 +25,10 @@ class VisualizationFilter:
     lines: bool = False
     faces: bool = False
     solids: bool = False
-    acoustic_symbols: bool = False
-    structural_symbols: bool = False
+    symbols: bool = False
     ghost: bool = True
-    color_mode: ColorMode = ColorMode.EMPTY
+    normal_symbols: bool = False
+    color_mode: ColorMode = ColorMode.COLORED
 
     @classmethod
     def all_false(cls):

@@ -59,7 +59,7 @@
         </property>
         <item>
          <property name="text">
-          <string>milimeter</string>
+          <string>millimeter</string>
          </property>
         </item>
         <item>
@@ -292,7 +292,7 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string/>
         </property>
         <property name="styleSheet">
          <string notr="true"/>
@@ -326,7 +326,7 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string/>
         </property>
         <property name="styleSheet">
          <string notr="true"/>

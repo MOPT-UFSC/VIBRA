@@ -2,16 +2,17 @@ from PySide6.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt, QSize, Signal
 
-
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
-from vibra.interface.analysis.harmonic_analysis_method_selector_input import StructuralHarmonicAnalysisMethodSelecorInput
 from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
-from vibra.interface.analysis.structural_harmonic_analysis_direct_method_input import StructuralHarmonicAnalysisDirectMethodInput
-from vibra.interface.analysis.acoustic_harmonic_analysis_direct_method_input import AcousticHarmonicAnalysisDirectMethodInput
+from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.loading_window import LoadingWindow
 
+import logging
 from typing import Literal
+from time import time
 
 AnalysisType = Literal[
     "",
@@ -33,8 +34,6 @@ class AnalysisToolbar(QToolBar):
     def __init__(self):
         super().__init__()
 
-        self.main_window = app().main_window
-
         self._load_icons()
         self._define_qt_variables()
         self._configure_layout()
@@ -48,6 +47,7 @@ class AnalysisToolbar(QToolBar):
     def _load_icons(self):
         self.settings_icon = QIcon(str(ICON_DIR / "settings.png"))
         self.solution_icon = QIcon(str(ICON_DIR / "go_next.png"))
+        self.resume_icon = QIcon(str(ICON_DIR / "resume_icon.png"))
         self.reset_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
 
     def _define_qt_variables(self):
@@ -64,22 +64,21 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis = QPushButton(self)
         self.pushButton_configure_analysis = QPushButton(self)
         self.pushButton_reset_solution = QPushButton(self)
+        self.pushButton_resume_analysis = QPushButton(self)
 
     def _create_connections(self):
         #
-        # self.combo_box_physical_domain.currentIndexChanged.connect(self._update_state)
-        # self.combo_box_analysis_type.currentIndexChanged.connect(self._update_state)
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
         #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
+        self.pushButton_resume_analysis.clicked.connect(lambda: self.run_analysis(True))
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
-        self.pushButton_reset_solution.clicked.connect(self.reset_solution)
+        self.pushButton_reset_solution.clicked.connect(self.project_solution_data_reset_callback)
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
-    
-    # def _update_state(self):
-    #     app().main_window.update_symbols()
+
+        app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -126,6 +125,8 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.get_spacer())
         self.addWidget(self.pushButton_run_analysis)
         self.addWidget(self.get_spacer())
+        self.addWidget(self.pushButton_resume_analysis)
+        self.addWidget(self.get_spacer())
         self.addWidget(self.pushButton_reset_solution)
         #
         self.adjustSize()
@@ -150,6 +151,13 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.setToolTip("Run the analysis")
         self.pushButton_run_analysis.setDisabled(True)
 
+        self.pushButton_resume_analysis.setFixedSize(50, 30)
+        self.pushButton_resume_analysis.setIcon(self.resume_icon)
+        self.pushButton_resume_analysis.setIconSize(QSize(20, 20))
+        self.pushButton_resume_analysis.setCursor(Qt.PointingHandCursor)
+        self.pushButton_resume_analysis.setToolTip("Resume the analysis")
+        self.pushButton_resume_analysis.setDisabled(True)
+
         self.pushButton_reset_solution.setFixedSize(50, 30)
         self.pushButton_reset_solution.setIcon(self.reset_icon)
         self.pushButton_reset_solution.setIconSize(QSize(20, 20))
@@ -169,7 +177,11 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.setCurrentText("Harmonic")
         self.combo_box_physical_domain.setCurrentText("Acoustic")
 
-    def update_analysis_combo_boxes(self):
+    def update_analysis_combo_boxes(self, block_signals: bool = False):
+
+        if block_signals:
+            self.combo_box_analysis_type.blockSignals(block_signals)
+            self.combo_box_physical_domain.blockSignals(block_signals)
 
         analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
 
@@ -187,47 +199,137 @@ class AnalysisToolbar(QToolBar):
         elif physical_domain == "coupled":
             self.combo_box_physical_domain.setCurrentIndex(2)
 
-    def set_pushbutton_run_analysis_enabled(self, enable=True):
+        if block_signals:
+            self.combo_box_analysis_type.blockSignals(False)
+            self.combo_box_physical_domain.blockSignals(False)
+
+    def set_pushbutton_run_analysis_enabled(self, enable: bool = True):
         self.pushButton_run_analysis.setEnabled(enable)
+
+    def set_pushbutton_resume_analysis_enabled(self, enable=True):
+        self.pushButton_resume_analysis.setEnabled(enable)
+
+    def update_pushbutton_resume_analysis(self, can_resume_value: bool):
+        self.pushButton_resume_analysis.setEnabled(can_resume_value)
 
     def set_pushbutton_reset_solution_enabled(self):
         self.pushButton_reset_solution.setEnabled(True)
 
+    def get_current_analysis_id(self):
+        analysis_type = self.combo_box_analysis_type.currentText()
+        physical_domain = self.combo_box_physical_domain.currentText()
+
+        if analysis_type == "Harmonic":
+            if physical_domain == "Structural":
+                return AnalysisID.STRUCTURAL_HARMONIC
+            else:
+                return AnalysisID.ACOUSTIC_HARMONIC
+
+        elif analysis_type == "Modal":
+            if physical_domain == "Structural":
+                return AnalysisID.STRUCTURAL_MODAL
+            else:
+                return AnalysisID.ACOUSTIC_MODAL
+
+        return AnalysisID.NO_ANALYSIS
+
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
-        valid_setup = app().project.is_there_a_valid_analysis_setup()
+        app().main_window.update_info_text()
+        current_analysis_id = self.get_current_analysis_id()
+        valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
-    def run_analysis(self):
+    def run_analysis(self, is_resume: bool = False):
 
-        self.update_analysis_combo_boxes()
-        if app().project.run_analysis():
+        if app().project.model.analysis_setup is None:
+            self.configure_analysis()
             return
 
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
+
+        app().main_window.action_results_workspace.setDisabled(True)
+        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
+
+        ## Do not solve models if there are disconnected nodes or collapsed elements!
+        mesh = app().project.model.mesh   
+        if mesh.disconnected_nodes:
+            return
+
+        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        if collapsed:
+            return
+
+        self.update_analysis_combo_boxes()
+        if app().project.run_analysis(is_resume):
+            return
+
+        if app().project.model.stop_processing:
+            app().project.model.toggle_processing_callback()
+            app().file.remove_results_data_from_project_file()
+            return
+
+        if is_resume:
+            app().project.can_resume_solution = False
+
+        LoadingWindow(self.post_processing_analysis).run()
+
+    def post_processing_analysis(self):
+        logging.info("Post-processing results... [10/100]")
         self.set_pushbutton_reset_solution_enabled()
 
-        # This is needed specially when the geometry
-        # and mesh changes because of the analysis
-        app().main_window.update_plots(reset_camera=False)
+        logging.info("Post-processing results... [65/100]")
+        app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-        if not app().file.read_geometry_data_from_file():
+        if not app().file.geometry_data_filepath.exists():
             app().file.write_geometry_data_in_file()
 
-        if not app().file.read_mesh_data_from_file():
+        logging.info("Post-processing results... [85/100]")
+        if not app().file.mesh_data_filepath.exists():
             app().file.write_mesh_data_in_file()
 
+        logging.info("Post-processing results... [90/100]")
         app().file.write_model_properties_in_file()
+
+        logging.info("Post-processing results... [95/100]")
         app().file.write_results_data_in_file()
 
-    def reset_solution(self):
+    def project_solution_data_reset_callback(self):
+
+        title = "Removal of project solution data"
+        message = "Would you like to delete all solution data from this project? "
+        tool_tip = "Be aware, this process cannot be undone."
+
+        buttons_config = {
+                          "left_button_label": "Cancel", 
+                          "right_button_label": "Delete all",
+                          "right_toolTip" : tool_tip
+                          }
+
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
+        if read._cancel:
+            return
+
+        if not read._continue:
+            return
+
+        self.reset_solution(True)
+
+    def reset_solution(self, force_delete_harmonic = False):
         app().project.reset_solutions()
         app().file.remove_results_data_from_project_file()
+
+        if force_delete_harmonic:
+            app().file.delete_harmonic_solution()
+
+        self.pushButton_reset_solution.setDisabled(True)
+        app().main_window.project_data_modified = True
         app().main_window.action_model_workspace_callback()
         app().main_window.disable_advanced_acoustic_plots_buttons(True)
-        self.pushButton_reset_solution.setDisabled(True)
 
     def configure_analysis(self):
-        # aqui
+
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
 
@@ -242,16 +344,17 @@ class AnalysisToolbar(QToolBar):
                 self.modal_structural()
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
-        
+
+        # disable run_analysis button if there are disconnected nodes or collapsed elements
+        mesh = app().project.model.mesh
+        disconnected_nodes = bool(mesh.disconnected_nodes)
+        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+
+        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
+
     def harmonic_structural(self):
 
-        select = StructuralHarmonicAnalysisMethodSelecorInput()
-        if select.index == -1:
-            return
- 
-        analysis_setup = {"analysis_id": select.index}
-        self.update_analysis_setup(analysis_setup)
-        harmonic = StructuralHarmonicAnalysisDirectMethodInput()
+        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.STRUCTURAL_HARMONIC)
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -261,9 +364,8 @@ class AnalysisToolbar(QToolBar):
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-        analysis_setup = {"analysis_id": AnalysisID.ACOUSTIC_HARMONIC}
-        self.update_analysis_setup(analysis_setup)
-        harmonic = AcousticHarmonicAnalysisDirectMethodInput()
+
+        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.ACOUSTIC_HARMONIC)
 
         if harmonic.setup_defined:
             self.final_actions()
@@ -274,11 +376,12 @@ class AnalysisToolbar(QToolBar):
     def modal_structural(self):
         modal = StructuralModalAnalysisInput()
 
-        if modal.modes is None:
+        if modal.modes_number is None:
             return
 
         if modal.setup_defined:
-            self.update_analysis_setup(modal.analysis_setup)
+            app().project.set_analysis_setup(modal.analysis_setup)
+            self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:
@@ -287,25 +390,29 @@ class AnalysisToolbar(QToolBar):
     def modal_acoustic(self):
         modal = AcousticModalAnalysisInput()
 
-        if modal.modes is None:
+        if modal.modes_number is None:
             return
 
         if modal.setup_defined:
-            self.update_analysis_setup(modal.analysis_setup)
+            app().project.set_analysis_setup(modal.analysis_setup)
+            self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
 
-    def update_analysis_setup(self, analysis_setup: dict):
-        if app().project.analysis_setup is not None:
-            for key, value in app().project.analysis_setup.items():
-                if key in ["f_min", "f_max", "f_step", "frequencies", "global_damping"]:
-                    analysis_setup[key] = value
-
-        app().project.set_analysis_setup(analysis_setup)
-
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
         app().file.write_analysis_setup_in_file(app().project.analysis_setup)
+
+    def update_analysis_setup(self, analysis_setup: dict):
+
+        keys_to_ignore = list(analysis_setup.keys())
+        if isinstance(app().project.analysis_setup, dict):
+            for key, value in app().project.analysis_setup.items():
+                if key in keys_to_ignore:
+                    continue
+                analysis_setup[key] = value
+
+        app().project.set_analysis_setup(analysis_setup)

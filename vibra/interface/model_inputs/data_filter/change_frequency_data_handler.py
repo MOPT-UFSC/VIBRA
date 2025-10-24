@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtWidgets import QDialog, QDoubleSpinBox, QPushButton
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -20,9 +18,8 @@ class ChangeFrequencyDataRangeInput(ChangeFrequencyDataRangeInput_UI):
     def __init__(self, imported_values, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
-        # self.main_window.action_model_workspace_callback()
+        app().main_window.set_input_widget(self)
+        app().main_window.action_model_workspace_callback()
 
         # self.project = app().project
         # self.model = app().project.model
@@ -44,7 +41,7 @@ class ChangeFrequencyDataRangeInput(ChangeFrequencyDataRangeInput_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _initialize(self):

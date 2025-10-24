@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -20,8 +18,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
-        app().main_window.action_unhide_all_callback()
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -43,7 +40,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Surface thickness")
+        self.setWindowTitle("Vibra")
 
     def _initialize(self):
         self.imported_values = None
@@ -306,5 +303,3 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.keep_window_open = False
         self.process_surfaces_according_with_thickness_setup()
         return super().closeEvent(a0)
-
-# fmt: on

@@ -1,9 +1,4 @@
-import typing
-
-from PySide6 import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QWidget
 
 from vibra import app
 

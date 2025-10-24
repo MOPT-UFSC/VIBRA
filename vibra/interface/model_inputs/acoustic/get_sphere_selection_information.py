@@ -18,8 +18,7 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
     def __init__(self, selection_id, selection_radius, averaged, filter_type, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
 
         self.project = app().project
         self.model = app().project.model
@@ -39,7 +38,7 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(self.main_window.vibra_icon)
+        self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
     def _config_widgets(self):

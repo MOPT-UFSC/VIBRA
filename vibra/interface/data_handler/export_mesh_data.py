@@ -4,7 +4,7 @@ from PySide6.QtGui import QColor
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
@@ -16,8 +16,7 @@ class ExportMeshData(ExportMesh_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.main_window = app().main_window
-        self.main_window.set_input_widget(self)
+        app().main_window.set_input_widget(self)
         
         self.project = app().project
         self.model = self.project.model
@@ -27,7 +26,7 @@ class ExportMeshData(ExportMesh_UI):
         if self.mesh is None:
             return
         else:
-            self.main_window.action_mesh_workspace_callback()
+            app().main_window.action_mesh_workspace_callback()
 
         self._configure_window()
         self._reset_variables()
@@ -39,7 +38,7 @@ class ExportMeshData(ExportMesh_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Export mesh data")
+        self.setWindowTitle("Vibra")
 
         self.checkBox_nodal_coordinates.setChecked(True)
         self.checkBox_face_elements_connectivity.setChecked(True)
@@ -53,7 +52,7 @@ class ExportMeshData(ExportMesh_UI):
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
-        self.main_window.theme_changed.connect(self.update_icons_color)
+        app().main_window.theme_changed.connect(self.update_icons_color)
 
     def search_folder(self):
         self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', self.temp_path)
@@ -100,7 +99,7 @@ class ExportMeshData(ExportMesh_UI):
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
-            self.mesher = MeshSetupInputs(close_after_generate=True)
+            self.mesher = MesherSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
                 return True
@@ -123,10 +122,11 @@ class ExportMeshData(ExportMesh_UI):
     
     def update_icons_color(self):
         theme = app().config.user_preferences.interface_theme
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = self.findChildren(QPushButton)
         change_icon_color_for_widgets(widgets, icon_color)

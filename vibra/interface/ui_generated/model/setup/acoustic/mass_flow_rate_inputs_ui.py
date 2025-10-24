@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mass_flow_rate_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -247,6 +247,121 @@ class Ui_Dialog(object):
         self.gridLayout_3.setSpacing(2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(2, 6, 2, 6)
+        self.frame_16 = QFrame(self.tab_tabular_data)
+        self.frame_16.setObjectName(u"frame_16")
+        self.frame_16.setFrameShape(QFrame.NoFrame)
+        self.frame_16.setFrameShadow(QFrame.Raised)
+        self.gridLayout_15 = QGridLayout(self.frame_16)
+        self.gridLayout_15.setObjectName(u"gridLayout_15")
+        self.gridLayout_15.setContentsMargins(0, 0, 0, 0)
+        self.radioButton_element_integration_table = QRadioButton(self.frame_16)
+        self.radioButton_element_integration_table.setObjectName(u"radioButton_element_integration_table")
+        self.radioButton_element_integration_table.setMinimumSize(QSize(0, 28))
+        self.radioButton_element_integration_table.setMaximumSize(QSize(16777215, 28))
+        self.radioButton_element_integration_table.setFont(font2)
+
+        self.gridLayout_15.addWidget(self.radioButton_element_integration_table, 0, 3, 1, 1)
+
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_15.addItem(self.horizontalSpacer_8, 0, 0, 1, 1)
+
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_15.addItem(self.horizontalSpacer_9, 0, 2, 1, 1)
+
+        self.radioButton_nodal_attribution_table = QRadioButton(self.frame_16)
+        self.radioButton_nodal_attribution_table.setObjectName(u"radioButton_nodal_attribution_table")
+        self.radioButton_nodal_attribution_table.setMinimumSize(QSize(0, 28))
+        self.radioButton_nodal_attribution_table.setMaximumSize(QSize(16777215, 28))
+        self.radioButton_nodal_attribution_table.setFont(font2)
+        self.radioButton_nodal_attribution_table.setChecked(True)
+
+        self.gridLayout_15.addWidget(self.radioButton_nodal_attribution_table, 0, 1, 1, 1)
+
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_15.addItem(self.horizontalSpacer_10, 0, 4, 1, 1)
+
+        self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_15.addItem(self.verticalSpacer_4, 1, 2, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_16, 3, 0, 1, 1)
+
+        self.frame_9 = QFrame(self.tab_tabular_data)
+        self.frame_9.setObjectName(u"frame_9")
+        self.frame_9.setMinimumSize(QSize(260, 0))
+        self.frame_9.setMaximumSize(QSize(400, 100))
+        self.frame_9.setFrameShape(QFrame.NoFrame)
+        self.frame_9.setFrameShadow(QFrame.Raised)
+        self.gridLayout_2 = QGridLayout(self.frame_9)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setHorizontalSpacing(6)
+        self.gridLayout_2.setVerticalSpacing(2)
+        self.gridLayout_2.setContentsMargins(0, 4, 0, 0)
+        self.lineEdit_table_path = QLineEdit(self.frame_9)
+        self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
+        self.lineEdit_table_path.setEnabled(True)
+        self.lineEdit_table_path.setMinimumSize(QSize(280, 26))
+        self.lineEdit_table_path.setMaximumSize(QSize(280, 26))
+        font3 = QFont()
+        font3.setPointSize(9)
+        font3.setBold(False)
+        self.lineEdit_table_path.setFont(font3)
+        self.lineEdit_table_path.setStyleSheet(u"")
+        self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.lineEdit_table_path, 0, 1, 1, 1)
+
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer_12, 0, 4, 1, 1)
+
+        self.pushButton_load_table = QPushButton(self.frame_9)
+        self.pushButton_load_table.setObjectName(u"pushButton_load_table")
+        self.pushButton_load_table.setEnabled(True)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
+        self.pushButton_load_table.setSizePolicy(sizePolicy1)
+        self.pushButton_load_table.setMinimumSize(QSize(40, 26))
+        self.pushButton_load_table.setMaximumSize(QSize(40, 26))
+        self.pushButton_load_table.setFont(font1)
+        self.pushButton_load_table.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_load_table.setIcon(icon)
+        self.pushButton_load_table.setAutoDefault(False)
+
+        self.gridLayout_2.addWidget(self.pushButton_load_table, 0, 2, 1, 1)
+
+        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer_11, 0, 0, 1, 1)
+
+        self.pushButton_change_frequency_setup = QPushButton(self.frame_9)
+        self.pushButton_change_frequency_setup.setObjectName(u"pushButton_change_frequency_setup")
+        self.pushButton_change_frequency_setup.setEnabled(True)
+        sizePolicy1.setHeightForWidth(self.pushButton_change_frequency_setup.sizePolicy().hasHeightForWidth())
+        self.pushButton_change_frequency_setup.setSizePolicy(sizePolicy1)
+        self.pushButton_change_frequency_setup.setMinimumSize(QSize(40, 28))
+        self.pushButton_change_frequency_setup.setMaximumSize(QSize(40, 28))
+        self.pushButton_change_frequency_setup.setFont(font1)
+        self.pushButton_change_frequency_setup.setStyleSheet(u"")
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_change_frequency_setup.setIcon(icon1)
+        self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
+        self.pushButton_change_frequency_setup.setAutoDefault(False)
+
+        self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 1, 2, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_9, 1, 0, 1, 1)
+
         self.frame_21 = QFrame(self.tab_tabular_data)
         self.frame_21.setObjectName(u"frame_21")
         self.frame_21.setFrameShape(QFrame.NoFrame)
@@ -265,113 +380,19 @@ class Ui_Dialog(object):
         self.gridLayout_17.addWidget(self.checkBox_averaged_table_values, 0, 0, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_21, 2, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_21, 4, 0, 1, 1)
 
-        self.frame_9 = QFrame(self.tab_tabular_data)
-        self.frame_9.setObjectName(u"frame_9")
-        self.frame_9.setMinimumSize(QSize(260, 0))
-        self.frame_9.setMaximumSize(QSize(400, 100))
-        self.frame_9.setFrameShape(QFrame.NoFrame)
-        self.frame_9.setFrameShadow(QFrame.Raised)
-        self.gridLayout_2 = QGridLayout(self.frame_9)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setHorizontalSpacing(6)
-        self.gridLayout_2.setVerticalSpacing(2)
-        self.gridLayout_2.setContentsMargins(0, 4, 0, 0)
-        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer_12, 0, 4, 1, 1)
+        self.gridLayout_3.addItem(self.verticalSpacer, 0, 0, 1, 1)
 
-        self.lineEdit_table_path = QLineEdit(self.frame_9)
-        self.lineEdit_table_path.setObjectName(u"lineEdit_table_path")
-        self.lineEdit_table_path.setEnabled(True)
-        self.lineEdit_table_path.setMinimumSize(QSize(240, 26))
-        self.lineEdit_table_path.setMaximumSize(QSize(260, 26))
-        font3 = QFont()
-        font3.setPointSize(9)
-        font3.setBold(False)
-        self.lineEdit_table_path.setFont(font3)
-        self.lineEdit_table_path.setStyleSheet(u"")
-        self.lineEdit_table_path.setAlignment(Qt.AlignCenter)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addWidget(self.lineEdit_table_path, 0, 1, 1, 1)
+        self.gridLayout_3.addItem(self.verticalSpacer_2, 5, 0, 1, 1)
 
-        self.pushButton_load_table = QPushButton(self.frame_9)
-        self.pushButton_load_table.setObjectName(u"pushButton_load_table")
-        self.pushButton_load_table.setEnabled(True)
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.pushButton_load_table.sizePolicy().hasHeightForWidth())
-        self.pushButton_load_table.setSizePolicy(sizePolicy1)
-        self.pushButton_load_table.setMinimumSize(QSize(62, 26))
-        self.pushButton_load_table.setMaximumSize(QSize(62, 26))
-        self.pushButton_load_table.setFont(font1)
-        self.pushButton_load_table.setStyleSheet(u"")
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addWidget(self.pushButton_load_table, 0, 2, 1, 1)
-
-        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer_11, 0, 0, 1, 1)
-
-        self.pushButton_change_frequency_setup = QPushButton(self.frame_9)
-        self.pushButton_change_frequency_setup.setObjectName(u"pushButton_change_frequency_setup")
-        self.pushButton_change_frequency_setup.setEnabled(True)
-        sizePolicy1.setHeightForWidth(self.pushButton_change_frequency_setup.sizePolicy().hasHeightForWidth())
-        self.pushButton_change_frequency_setup.setSizePolicy(sizePolicy1)
-        self.pushButton_change_frequency_setup.setMinimumSize(QSize(40, 28))
-        self.pushButton_change_frequency_setup.setMaximumSize(QSize(40, 28))
-        self.pushButton_change_frequency_setup.setFont(font1)
-        self.pushButton_change_frequency_setup.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/recent.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_change_frequency_setup.setIcon(icon)
-        self.pushButton_change_frequency_setup.setIconSize(QSize(20, 20))
-
-        self.gridLayout_2.addWidget(self.pushButton_change_frequency_setup, 0, 3, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_9, 0, 0, 1, 1)
-
-        self.frame_16 = QFrame(self.tab_tabular_data)
-        self.frame_16.setObjectName(u"frame_16")
-        self.frame_16.setFrameShape(QFrame.NoFrame)
-        self.frame_16.setFrameShadow(QFrame.Raised)
-        self.gridLayout_15 = QGridLayout(self.frame_16)
-        self.gridLayout_15.setObjectName(u"gridLayout_15")
-        self.gridLayout_15.setContentsMargins(0, 0, 0, 0)
-        self.radioButton_nodal_attribution_table = QRadioButton(self.frame_16)
-        self.radioButton_nodal_attribution_table.setObjectName(u"radioButton_nodal_attribution_table")
-        self.radioButton_nodal_attribution_table.setMinimumSize(QSize(0, 28))
-        self.radioButton_nodal_attribution_table.setMaximumSize(QSize(16777215, 28))
-        self.radioButton_nodal_attribution_table.setFont(font2)
-        self.radioButton_nodal_attribution_table.setChecked(True)
-
-        self.gridLayout_15.addWidget(self.radioButton_nodal_attribution_table, 0, 1, 1, 1)
-
-        self.radioButton_element_integration_table = QRadioButton(self.frame_16)
-        self.radioButton_element_integration_table.setObjectName(u"radioButton_element_integration_table")
-        self.radioButton_element_integration_table.setMinimumSize(QSize(0, 28))
-        self.radioButton_element_integration_table.setMaximumSize(QSize(16777215, 28))
-        self.radioButton_element_integration_table.setFont(font2)
-
-        self.gridLayout_15.addWidget(self.radioButton_element_integration_table, 0, 3, 1, 1)
-
-        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_15.addItem(self.horizontalSpacer_8, 0, 0, 1, 1)
-
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_15.addItem(self.horizontalSpacer_9, 0, 2, 1, 1)
-
-        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_15.addItem(self.horizontalSpacer_10, 0, 4, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_16, 1, 0, 1, 1)
+        self.gridLayout_3.addItem(self.verticalSpacer_3, 2, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
@@ -396,6 +417,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font1)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -405,6 +427,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font1)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -480,6 +503,7 @@ class Ui_Dialog(object):
         self.pushButton_attribute.setMaximumSize(QSize(100, 28))
         self.pushButton_attribute.setFont(font1)
         self.pushButton_attribute.setStyleSheet(u"")
+        self.pushButton_attribute.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_attribute, 0, 1, 1, 1)
 
@@ -489,6 +513,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font1)
         self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 
@@ -518,14 +543,14 @@ class Ui_Dialog(object):
         self.radioButton_element_integration_constant.setText(QCoreApplication.translate("Dialog", u"Element integration", None))
         self.radioButton_nodal_attribution_constant.setText(QCoreApplication.translate("Dialog", u"Nodal attribution", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
-        self.checkBox_averaged_table_values.setText(QCoreApplication.translate("Dialog", u"Average value over all nodes", None))
-        self.pushButton_load_table.setText(QCoreApplication.translate("Dialog", u"Search", None))
+        self.radioButton_element_integration_table.setText(QCoreApplication.translate("Dialog", u"Element integration", None))
+        self.radioButton_nodal_attribution_table.setText(QCoreApplication.translate("Dialog", u"Nodal attribution", None))
+        self.pushButton_load_table.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Filter the frequency range of interest</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_change_frequency_setup.setText("")
-        self.radioButton_nodal_attribution_table.setText(QCoreApplication.translate("Dialog", u"Nodal attribution", None))
-        self.radioButton_element_integration_table.setText(QCoreApplication.translate("Dialog", u"Element integration", None))
+        self.checkBox_averaged_table_values.setText(QCoreApplication.translate("Dialog", u"Average value over all nodes", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -574,18 +599,18 @@ class MassFlowRateInputs_UI(QDialog, Ui_Dialog):
                                                         - radioButton_nodal_attribution_constant: QRadioButton
                                 - tab_tabular_data: QWidget
                                     - (Layout): QGridLayout
-                                            - frame_21: QFrame
+                                            - frame_16: QFrame
                                                 - (Layout): QGridLayout
-                                                        - checkBox_averaged_table_values: QCheckBox
+                                                        - radioButton_element_integration_table: QRadioButton
+                                                        - radioButton_nodal_attribution_table: QRadioButton
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout
                                                         - lineEdit_table_path: QLineEdit
                                                         - pushButton_load_table: QPushButton
                                                         - pushButton_change_frequency_setup: QPushButton
-                                            - frame_16: QFrame
+                                            - frame_21: QFrame
                                                 - (Layout): QGridLayout
-                                                        - radioButton_nodal_attribution_table: QRadioButton
-                                                        - radioButton_element_integration_table: QRadioButton
+                                                        - checkBox_averaged_table_values: QCheckBox
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame
