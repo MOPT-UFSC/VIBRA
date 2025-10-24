@@ -837,8 +837,10 @@ class MainWindow(MainWindow_UI):
         if not check:
             return False
 
-        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
+        self.set_geometry_selection()
+        self.set_mesh_selection()
 
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
         app().project.reset_variables()
         app().project.reset_solutions()
 
