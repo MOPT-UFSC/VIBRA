@@ -61,6 +61,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.remaining_molar_fraction = 1
 
         self.errors = dict()
+        self.warnings = dict()
         self.fluid_data = dict()
         self.fluid_properties = dict()
         self.refprop_fluids_data = dict()
@@ -342,7 +343,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         else:
             key_mixture, molar_fractions = composition_data
 
-        fluid_property, errors = self.refprop_interface.get_specific_fluid_property( 
+        fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property( 
                                                                                     key_mixture = key_mixture,
                                                                                     molar_fractions = molar_fractions,
                                                                                     property_key = self.refprop_interface.isentropic_label,
@@ -518,7 +519,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.hide()
             remaining_molar_fraction = round(100*self.remaining_molar_fraction, 6)
             title = "Fluid composition not invalid"
-            message += "The sum of all molar fractions must be equals to the unity. It is recommended "
+            message += "The sum of all molar fractions must be equal to the unity. It is recommended "
             message += "to adjust the fluid composition until this requirement is met.\n\n"
             message += f"Remaining molar fraction: {remaining_molar_fraction} %"
             PrintMessageInput([error_title, title, message])
@@ -567,7 +568,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if key_prop in ["PRANDTL", "TD", "KV"]:
                 continue 
 
-            fluid_property, errors = self.refprop_interface.get_specific_fluid_property(
+            fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
                                                                                         key_mixture = key_mixture,
                                                                                         molar_fractions = molar_fractions,
                                                                                         property_key = key_prop,
@@ -577,6 +578,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             if errors:
                 self.errors[prop_label] = errors
+            
+            if warnings:
+                self.warnings[prop_label] = warnings
 
             self.fluid_properties[prop_label] = fluid_property
 
@@ -591,7 +595,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if key_prop in ["PRANDTL", "TD", "KV"]:
                 continue
 
-            fluid_property, errors = self.refprop_interface.get_specific_fluid_property(
+            fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
                                                                                         key_mixture = key_mixture,
                                                                                         molar_fractions = molar_fractions,
                                                                                         property_key = key_prop,
@@ -601,6 +605,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             if errors:
                 self.errors[prop_label] = errors
+            
+            if warnings:
+                self.warnings[prop_label] = warnings
 
             self.fluid_properties[prop_label] = fluid_property
             if key_prop != "M":
@@ -623,7 +630,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                     if key_prop in ["PRANDTL", "TD", "KV"]:
                         continue    
 
-                    fluid_property, errors = self.refprop_interface.get_specific_fluid_property(
+                    fluid_property, errors, warnings = self.refprop_interface.get_specific_fluid_property(
                                                                                                 key_mixture = key_mixture,
                                                                                                 molar_fractions = molar_fractions,
                                                                                                 property_key = key_prop,
@@ -633,6 +640,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
                     if errors:
                         self.errors[prop_label] = errors
+                    
+                    if warnings:
+                        self.warnings[prop_label] = warnings
 
                     self.fluid_properties[prop_label] = fluid_property  
                     if key_prop == self.refprop_interface.isentropic_label:
@@ -727,7 +737,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             if round(T_start - T_end, 6) == 0 and round(P_start - P_end, 6) == 0:
                 self.hide()
                 title = "Invalid thermodynamic states"
-                message = "The intial and final thermodynamic states are identical. "
+                message = "The initial and final thermodynamic states are identical. "
                 message += "You must to specify different states to obtain valid"
                 message += "property distribuitions."
                 PrintMessageInput([error_title, title, message])
@@ -755,12 +765,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.refprop_fluids_data["thermodynamic_states"] = "multiple_states"
             self.refprop_fluids_data["properties"] = multstate_fluid_properties
 
-        # from pprint import pprint
-        # pprint(self.refprop_fluids_data)
-
         self.process_errors()
-        # if self.process_errors():
-        #     return
 
         self.complete = True
         self.close()
@@ -800,7 +805,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         if temperature_K < 0:
             title = "Invalid entry to the temperature"
             message = "The typed value at temperature input field reaches a negative value in Kelvin scale."
-            message += "It is necessary to enter a value that maintains the physicall coherence and consistence "
+            message += "It is necessary to enter a value that maintains the physical coherence and consistence "
             message += "to proceed with the fluid setup."
             PrintMessageInput([error_title, title, message])
             return None
@@ -839,18 +844,32 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         return [round(temperature_K, 8), round(pressure_Pa, 8)]
 
     def process_errors(self):
-        if not self.errors:
+        if not (self.errors or self.warnings):
             return
-    
-        title = "Error while processing fluid properties"
-        message = "The following errors were found in while processing the fluid properties.\n\n"
-    
-        for key, _error in self.errors.items():
-            message += f"{str(key)}: {str(_error)}\n\n"
-    
-        message += "It is recommended to check the fluid composition and state properties to proceed."
-        PrintMessageInput([error_title, title, message])
-        return True
+
+        self.hide()
+        further_details = ""
+
+        if self.errors:
+            for key, _error in self.errors.items():
+                further_details += f"{str(key)}: {str(_error)}\n\n"
+            
+            title = "Error generated while processing fluid properties"
+            message = "The following errors were found in while processing the fluid properties.\n\n"
+            message += further_details
+            message += "It is recommended to check the fluid composition and state properties to proceed."
+            PrintMessageInput([error_title, title, message])
+
+        else:
+            for key, _warning in self.warnings.items():
+                further_details += f"{str(key)}: {str(_warning)}\n\n"
+
+            title = "Warning generated while processing fluid properties"
+            message = "The following warnings were generated while processing the fluid properties.\n\n"
+            message += further_details
+            message += "It is recommended to check the fluid properties related to the warnings."
+            message += "\n\nThis warning is shown only once."
+            PrintMessageInput([warning_title, title, message])
 
     def actions_to_finalize(self):
         if not self.state_properties:
@@ -878,7 +897,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             except Exception as error_log:
                 title = f"Invalid entry to the {label}"
                 message = f"Dear user, you have typed an invalid value at the {label} input field."
-                message += "You should to inform a valid float number to proceed.\n\n"
+                message += "You should inform a valid float number to proceed.\n\n"
                 message += f"Details: {str(error_log)}"
                 PrintMessageInput([error_title, title, message])
                 return None
