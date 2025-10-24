@@ -106,6 +106,10 @@
    <addaction name="separator"/>
    <addaction name="action_new_project"/>
    <addaction name="action_open_project"/>
+   <addaction name="action_import_geometry"/>
+   <addaction name="action_import_mesh"/>
+   <addaction name="action_save"/>
+   <addaction name="action_save_as"/>
    <addaction name="separator"/>
    <addaction name="action_top_view"/>
    <addaction name="action_bottom_view"/>
@@ -137,7 +141,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>33</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -173,8 +177,6 @@
     <addaction name="action_line_view"/>
     <addaction name="action_face_view"/>
     <addaction name="separator"/>
-    <addaction name="action_show_materials"/>
-    <addaction name="action_show_fluids"/>
     <addaction name="action_show_empty"/>
    </widget>
    <widget class="QMenu" name="menu_help">
@@ -641,6 +643,9 @@
    </property>
   </action>
   <action name="action_show_empty">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Show Empty</string>
    </property>
@@ -648,7 +653,7 @@
   <action name="action_import_geometry">
    <property name="icon">
     <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/geometry_icon.png</normaloff>:/icons/geometry_icon.png</iconset>
+     <normaloff>:/icons/import_geometry.png</normaloff>:/icons/import_geometry.png</iconset>
    </property>
    <property name="text">
     <string>Import geometry</string>
@@ -665,8 +670,8 @@
   </action>
   <action name="action_import_mesh">
    <property name="icon">
-    <iconset>
-     <normaloff>../icons/mesh.png</normaloff>../icons/mesh.png</iconset>
+    <iconset resource="../icons/resources.qrc">
+     <normaloff>:/icons/import_mesh.png</normaloff>:/icons/import_mesh.png</iconset>
    </property>
    <property name="text">
     <string>Import mesh</string>

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'equations_for_DBM_porous_material_models.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -56,17 +56,10 @@ class Ui_Dialog(object):
         self.label_51 = QLabel(self.frame)
         self.label_51.setObjectName(u"label_51")
         self.label_51.setTextFormat(Qt.AutoText)
-        self.label_51.setPixmap(QPixmap(u"../../../figures/effective_acoustic_impedance_for_DBM_porous_material_models.PNG"))
+        self.label_51.setPixmap(QPixmap(u":/icons/figures/effective_acoustic_impedance_for_DBM_porous_material_models.png"))
         self.label_51.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label_51, 3, 0, 1, 1)
-
-        self.label = QLabel(self.frame)
-        self.label.setObjectName(u"label")
-        self.label.setMaximumSize(QSize(16777215, 48))
-        self.label.setFont(font)
-
-        self.gridLayout_2.addWidget(self.label, 2, 0, 1, 1)
 
         self.label_4 = QLabel(self.frame)
         self.label_4.setObjectName(u"label_4")
@@ -75,6 +68,13 @@ class Ui_Dialog(object):
         self.label_4.setWordWrap(True)
 
         self.gridLayout_2.addWidget(self.label_4, 6, 0, 1, 1)
+
+        self.label = QLabel(self.frame)
+        self.label.setObjectName(u"label")
+        self.label.setMaximumSize(QSize(16777215, 48))
+        self.label.setFont(font)
+
+        self.gridLayout_2.addWidget(self.label, 2, 0, 1, 1)
 
         self.label_2 = QLabel(self.frame)
         self.label_2.setObjectName(u"label_2")
@@ -86,7 +86,7 @@ class Ui_Dialog(object):
         self.label_52 = QLabel(self.frame)
         self.label_52.setObjectName(u"label_52")
         self.label_52.setTextFormat(Qt.AutoText)
-        self.label_52.setPixmap(QPixmap(u"../../../figures/effective_wavenumber_for_DBM_porous_material_models.PNG"))
+        self.label_52.setPixmap(QPixmap(u":/icons/figures/effective_wavenumber_for_DBM_porous_material_models.png"))
         self.label_52.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label_52, 1, 0, 1, 1)
@@ -125,8 +125,8 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Equations for Delany, Bazley and Miki porous material models ", None))
         self.label_51.setText("")
-        self.label.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>and acoustic impedance Z<span style=\" vertical-align:sub;\">eff</span></p></body></html>", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>where f is the frequency in Hz, \u03c3 is the flow resistivity in kg/m\u00b3.s, C<span style=\" vertical-align:sub;\">1</span> up to C<span style=\" vertical-align:sub;\">8</span> are the model constants, \u03c9 is the angular frequency in rad/s, \u03c1<span style=\" vertical-align:sub;\">0</span> is the medium density in kg/m\u00b3, and c<span style=\" vertical-align:sub;\">0</span> is the medium speed of sound in m/s.</p></body></html>", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>and acoustic impedance Z<span style=\" vertical-align:sub;\">eff</span></p></body></html>", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Effectives complex wave number k<span style=\" vertical-align:sub;\">eff</span>:</p></body></html>", None))
         self.label_52.setText("")
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
@@ -145,8 +145,8 @@ class EquationsForDbmPorousMaterialModels_UI(QDialog, Ui_Dialog):
                 - frame: QFrame
                     - (Layout): QGridLayout
                             - label_51: QLabel
-                            - label: QLabel
                             - label_4: QLabel
+                            - label: QLabel
                             - label_2: QLabel
                             - label_52: QLabel
                 - frame_bottom: QFrame

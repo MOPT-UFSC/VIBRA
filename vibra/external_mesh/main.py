@@ -34,7 +34,7 @@ if __name__ == "__main__":
         mesh = ParaviewFile()
         mesh.set_nodal_coordinates(data.nodal_coordinates)
 
-        for key, connect in data.connectivity_arrays.items():
+        for key, connect in data.solids_connectivities.items():
             body_id, element_type = key
             mesh.set_connectivity(connect)
             mesh.set_element_type(element_type)

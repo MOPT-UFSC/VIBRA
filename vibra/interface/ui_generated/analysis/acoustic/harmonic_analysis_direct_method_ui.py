@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'harmonic_analysis_direct_method.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -183,6 +183,7 @@ class Ui_Dialog(object):
         self.pushButton_enter_setup.setMaximumSize(QSize(120, 32))
         self.pushButton_enter_setup.setFont(font)
         self.pushButton_enter_setup.setStyleSheet(u"")
+        self.pushButton_enter_setup.setAutoDefault(False)
 
         self.gridLayout_5.addWidget(self.pushButton_enter_setup, 0, 0, 1, 1)
 
@@ -192,6 +193,7 @@ class Ui_Dialog(object):
         self.pushButton_run_analysis.setMaximumSize(QSize(120, 32))
         self.pushButton_run_analysis.setFont(font)
         self.pushButton_run_analysis.setStyleSheet(u"")
+        self.pushButton_run_analysis.setAutoDefault(False)
 
         self.gridLayout_5.addWidget(self.pushButton_run_analysis, 0, 1, 1, 1)
 

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'get_user_confirmation.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -54,7 +54,7 @@ class Ui_Dialog(object):
         font.setItalic(False)
         self.pushButton_rightButton.setFont(font)
         self.pushButton_rightButton.setStyleSheet(u"")
-        self.pushButton_rightButton.setAutoDefault(True)
+        self.pushButton_rightButton.setAutoDefault(False)
         self.pushButton_rightButton.setFlat(False)
 
         self.gridLayout.addWidget(self.pushButton_rightButton, 0, 3, 1, 1)
@@ -70,7 +70,7 @@ class Ui_Dialog(object):
         self.pushButton_leftButton.setMaximumSize(QSize(100, 30))
         self.pushButton_leftButton.setFont(font)
         self.pushButton_leftButton.setStyleSheet(u"")
-        self.pushButton_leftButton.setAutoDefault(False)
+        self.pushButton_leftButton.setAutoDefault(True)
         self.pushButton_leftButton.setFlat(False)
 
         self.gridLayout.addWidget(self.pushButton_leftButton, 0, 1, 1, 1)
@@ -130,7 +130,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.pushButton_rightButton.setDefault(False)
-        self.pushButton_leftButton.setDefault(False)
+        self.pushButton_leftButton.setDefault(True)
 
 
         QMetaObject.connectSlotsByName(Dialog)

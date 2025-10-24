@@ -1,0 +1,279 @@
+/batch
+/config,noeldb,1     ! force off writing results to database
+*get,_wallstrt,active,,time,wall
+! ANSYS input file written by Workbench version 2023 R2
+! File used for geometry attach: C:\FE_models\Validacoes\TET10\elemento_quadratico_files\dp0\SYS-6\DM\SYS-6.scdoc
+/title,elemento_quadratico--Modal Acoustics (G5)
+! ****** Begin Custom Load Command Snippet ******
+/COM, ACT Extensions:
+/COM,     LSDYNA, 2023.2
+/COM,     5f463412-bd3e-484b-87e7-cbc0a665e474, wbex
+/COM,/COM,     ANSYSMotion, 2023.2
+/COM,     20180725-3f81-49eb-9f31-41364844c769, wbex
+/COM,
+! ****** End   Custom Load Command Snippet ******
+*DIM,_wb_ProjectScratch_dir,string,248
+_wb_ProjectScratch_dir(1) = 'C:\FE_models\Validacoes\TET10\elemento_quadratico_files\dp0\SYS-10\MECH\'
+*DIM,_wb_SolverFiles_dir,string,248
+_wb_SolverFiles_dir(1) = 'C:\FE_models\Validacoes\TET10\elemento_quadratico_files\dp0\SYS-10\MECH\'
+*DIM,_wb_userfiles_dir,string,248
+_wb_userfiles_dir(1) = 'C:\FE_models\Validacoes\TET10\elemento_quadratico_files\user_files\'
+/com,--- Data in consistent MKS units. See Solving Units in the help system for more information.
+/units,MKS
+/nopr
+/wb,file,start              !  signify a WB generated input file
+/prep7
+! Turn off shape checking because checks already performed inside WB mesher.
+! See help system for more information.
+SHPP,OFF,,NOWARN
+/nolist
+etcon,set             ! allow ANSYS to choose best KEYOP's for 180x elements, resets any applicable keyopt to MAPDL defaults
+/com,*********** Nodes for the whole assembly ***********
+nblock,3,,24
+(1i9,3e20.9e3)
+        1    -5.000000000E-01     5.000000000E-01     0.000000000E+00
+        2    -5.000000000E-01    -5.000000000E-01     1.000000000E+00
+        3    -5.000000000E-01    -1.110223025E-16     5.000000000E-01
+        4    -5.000000000E-01    -5.000000000E-01     0.000000000E+00
+        5     5.000000000E-01    -5.000000000E-01     0.000000000E+00
+        6     4.996003611E-16    -5.000000000E-01     5.000000000E-01
+        7     0.000000000E+00    -5.551115123E-17     0.000000000E+00
+        8    -5.000000000E-01     2.500000000E-01     2.500000000E-01
+        9    -5.000000000E-01    -1.110223025E-16     0.000000000E+00
+       10    -2.500000000E-01     2.500000000E-01     0.000000000E+00
+       11    -5.000000000E-01    -2.500000000E-01     7.500000000E-01
+       12    -5.000000000E-01    -5.000000000E-01     5.000000000E-01
+       13    -2.500000000E-01    -5.000000000E-01     7.500000000E-01
+       14    -5.000000000E-01    -2.500000000E-01     2.500000000E-01
+       15    -2.500000000E-01    -2.500000000E-01     5.000000000E-01
+       16    -2.500000000E-01    -8.326672685E-17     2.500000000E-01
+       17     0.000000000E+00    -5.000000000E-01     0.000000000E+00
+       18    -2.500000000E-01    -5.000000000E-01     2.500000000E-01
+       19    -2.500000000E-01    -2.500000000E-01     0.000000000E+00
+       20     2.500000000E-01    -5.000000000E-01     2.500000000E-01
+       21     2.500000000E-01    -2.500000000E-01     0.000000000E+00
+       22     2.498001805E-16    -2.500000000E-01     2.500000000E-01
+-1
+/wb,elem,start            !  set before creation of elements
+/com,*********** Elements for Body 1 "SYS-6\Corte-extrus_o1" ***********
+et,1,221
+r,1,2.e-005,101325.
+keyo,1,2,1          ! uncoupled acoustic element without FSI
+keyo,1,6,2          ! ignore damping matrix for fluid
+eblock,19,solid,,4
+(19i9)
+        1        1        1        1        0        0        0        0       10        0        1        4        7        6        5       19       22       18       17
+       21       20
+        1        1        1        1        0        0        0        0       10        0        2        3        4        7        6       14       19       16       15
+       18       22
+        1        1        1        1        0        0        0        0       10        0        3        1        4        7        3        9       19       10        8
+       14       16
+        1        1        1        1        0        0        0        0       10        0        4        2        6        4        3       13       18       12       11
+       15       14
+-1
+!Material Id = {9BE4B763-9F6E-4F5F-9545-09271DC3C72C}
+/wb,elem,end               !  done creating elements
+/com,*********** Send User Defined Coordinate System(s) ***********
+csys,0
+toffst,273.15,  ! Temperature offset from absolute zero
+/com,*********** Set Reference Temperature ***********
+tref,22.
+/wb,mat,start              !  starting to send materials
+/com,*********** Send Materials ***********
+MP,MURX,1,1,
+MP,DENS,1,1.204263,	! kg m^-3
+MP,SONC,1,343.395034,	! m s^-1
+MP,VISC,1,1.8247e-05,	! Pa s
+MP,KXX,1,0.025503,	! W m^-1 C^-1
+MP,C,1,1006.400178,	! J kg^-1 C^-1
+MP,UVID,1,a366eb33-702a-4122-8474-79ac86deaca4
+MP,UMID,1,ebc30918-a971-4959-8b6c-dac0b5566fc8
+
+/wb,mat,end                !  done sending materials
+!************************* Model Summary ********************
+!SYS-6\Corte-extrus_o1,	Air,	matid,	1
+!************************* End Model Summary ********************
+! get the diagonal of the bounding box. Needed later for other things
+*get,_xmin,node,,mnloc,x
+*get,_ymin,node,,mnloc,y
+*get,_zmin,node,,mnloc,z
+*get,_xmax,node,,mxloc,x
+*get,_ymax,node,,mxloc,y
+*get,_zmax,node,,mxloc,z
+_ASMDIAG=(_xmax-_xmin)*(_xmax-_xmin)+(_ymax-_ymin)*(_ymax-_ymin)+(_zmax-_zmin)*(_zmax-_zmin)
+_ASMDIAG=SQRT(_ASMDIAG)
+/wb,contact,start          !  starting to send contact
+/wb,contact,end            !  done creating contacts
+/com,*********** Send Named Selection as Element Component ***********
+esel,s,type,,1
+cm,NONE,elem
+esel,all
+/com,*********** Send Named Selection as Node Component ***********
+CMBLOCK,INPUT_FACE,NODE,        9
+(8i10)
+         2         4         5         6        12        13        17        18
+        20
+/com,*********** Send Named Selection as Node Component ***********
+CMBLOCK,OUTPUT_FACE,NODE,        9
+(8i10)
+         1         2         3         4         8         9        11        12
+        14
+/golist
+/wb,load,start             !  starting to send loads
+/gst,on,on
+fini
+*get,_numnode,node,0,count
+*get,_numelem,elem,0,count
+*get, _MAXELEMNUM, elem, 0, NUM, MAX
+*get, _MAXNODENUM, node, 0, NUM, MAX
+*get, _MAXELEMTYPE, etyp, 0, NUM, MAX
+*get, _MAXREALCONST, rcon, 0, NUM, MAX
+/go
+/wb,load,end               !  done creating loads
+/com,--- Number of total nodes = %_numnode%
+/com,--- Number of contact elements = 0
+/com,--- Number of spring elements = 0
+/com,--- Number of bearing elements = 0
+/com,--- Number of solid elements = 4
+/com,--- Number of condensed parts = 0
+/com,--- Number of total elements = %_numelem%
+*get,_wallbsol,active,,time,wall
+/solu
+antype,2                   ! modal analysis
+_thickRatio=  0     ! Ratio of thick parts in the model
+modopt,lanb,12,0.,100000000.
+outres,erase
+outres,all,none
+outres,nsol,all
+outres,eangl,all
+outres,veng,all
+mxpand,,,,yes,,no             ! expand requested element results, but not write them to file.mode
+! ****** Begin Command Snippet ******
+!   Commands inserted into this file will be executed just prior to the ANSYS SOLVE command.
+!   These commands may supersede command settings set by Workbench.
+
+!   Active UNIT system in Workbench when this object was created:  Metric (m, kg, N, s, V, A)
+!   NOTE:  Any data that requires units (such as mass) is assumed to be in the consistent solver unit system.
+!                See Solving Units in the help system for more information.
+
+
+!   Commands inserted into this file will be executed immediately after the ANSYS /POST1 command.
+
+!   Active UNIT system in Workbench when this object was created:  Metric (m, kg, N, s, V, A)
+!   NOTE:  Any data that requires units (such as mass) is assumed to be in the consistent solver unit system.
+!                See Solving Units in the help system for more information.
+
+! ****** End   Command Snippet ******
+! *********** WB SOLVE COMMAND ***********
+! check interactive state
+*get,ANSINTER_,active,,int
+*if,ANSINTER_,ne,0,then
+/eof
+*endif
+solve
+/com *************** Write FE CONNECTORS ********* 
+CEWRITE,file,ce,,INTE
+*get,_nmodalsolproc,active,0,numcpu
+fini
+/nopr
+*get,_numnode,node,0,count
+*get,_numelem,elem,0,count
+*get, _MAXELEMNUM, elem, 0, NUM, MAX
+*get, _MAXNODENUM, node, 0, NUM, MAX,,,INTERNAL
+*get, _MAXELEMTYPE, etyp, 0, NUM, MAX
+*get, _MAXREALCONST, rcon, 0, NUM, MAX
+*get,_NSOLTHREADS,active,0,ntfs
+*get,_NSOLPROCESSES,active,0,npfs
+/gopr
+*get,_wallasol,active,,time,wall
+/post1
+/nopr
+*dim,_direction,CHAR,6,1
+_direction(1) = 'X'
+_direction(2) = 'Y'
+_direction(3) = 'Z'
+_direction(4) = 'ROTX'
+_direction(5) = 'ROTY'
+_direction(6) = 'ROTZ'
+*get,_lastLS,active,0,set,LSTP
+*get,_beginset,active,0,set,nset,first,_lastLS
+*get,_endset,active,0,set,nset,last,_lastLS
+_nummodes = 0
+*if,_endset,gt,0,then
+_nummodes = _endset - _beginset + 1
+*endif
+*do,i_mode,1,_nummodes
+   *do,j_component,1,6
+			*get,PFACT_%i_mode%_%j_component%,MODE,%i_mode%,PFACT,,DIREC,_direction(%j_component%)
+   *enddo
+*enddo
+*dim,_tmdirection,CHAR,6,1
+_tmdirection(1) = 'X'
+_tmdirection(2) = 'Y'
+_tmdirection(3) = 'Z'
+_tmdirection(4) = 'X'
+_tmdirection(5) = 'Y'
+_tmdirection(6) = 'Z'
+*do,j_component,1,6
+    *if,j_component,gt,3,then
+        *get,TOTALMASS_%j_component%,ELEM,0,IOR,_tmdirection(%j_component%)
+    *else
+        *get,TOTALMASS_%j_component%,ELEM,0,MTOT,_tmdirection(%j_component%)
+    *endif
+*enddo
+/gopr
+! ****** Begin Command Snippet ******
+!   Commands inserted into this file will be executed just prior to the ANSYS SOLVE command.
+!   These commands may supersede command settings set by Workbench.
+
+!   Active UNIT system in Workbench when this object was created:  Metric (m, kg, N, s, V, A)
+!   NOTE:  Any data that requires units (such as mass) is assumed to be in the consistent solver unit system.
+!                See Solving Units in the help system for more information.
+
+
+!   Commands inserted into this file will be executed immediately after the ANSYS /POST1 command.
+
+!   Active UNIT system in Workbench when this object was created:  Metric (m, kg, N, s, V, A)
+!   NOTE:  Any data that requires units (such as mass) is assumed to be in the consistent solver unit system.
+!                See Solving Units in the help system for more information.
+
+N_MODES = 12
+
+*DIM,nat_frequencies,ARRAY,N_MODES,2
+*VFILL,nat_frequencies(1,1),ramp,1,1
+
+!FINISH
+
+*DO,i,1,N_MODES,1
+
+!SET,1,i,,0
+!*GET, nat_frequencies(i,2), ACTIVE, 0, SET, FREQ,
+
+*GET,nat_frequencies(i,2),MODE,i,FREQ
+*ENDDO
+
+*MWRITE,nat_frequencies,natural_frequencies_Ansys,dat
+(F10.0,TL1,10000E20.12)
+
+! ****** End   Command Snippet ******
+xmlo,ENCODING,ISO-8859-1
+xmlo,parm
+/xml,parm,xml
+fini
+/gopr
+*get,_walldone,active,,time,wall
+_preptime=(_wallbsol-_wallstrt)*3600
+_solvtime=(_wallasol-_wallbsol)*3600
+_posttime=(_walldone-_wallasol)*3600
+_totaltim=(_walldone-_wallstrt)*3600
+*get,_dlbratio,active,0,solu,dlbr
+*get,_combtime,active,0,solu,comb
+*get,_ssmode,active,0,solu,ssmm
+*get,_ndofs,active,0,solu,ndof
+/com,--- Total number of nodes = %_numnode%
+/com,--- Total number of elements = %_numelem%
+/com,--- Element load balance ratio = %_dlbratio%
+/com,--- Time to combine distributed files = %_combtime%
+/com,--- Sparse memory mode = %_ssmode%
+/com,--- Number of DOF = %_ndofs%
+/wb,file,end               ! done with WB generated input

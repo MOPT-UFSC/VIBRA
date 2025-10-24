@@ -1,6 +1,11 @@
 from PySide6.QtCore import Qt, QSize
-# from PySide6.QtGui import *
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QLabel, QComboBox
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QWidget,
+)
 
 from vibra import app
 
@@ -9,7 +14,6 @@ class AnalysisFilter(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.main_window = app().main_window
         self.initialize()
 
         grid_main = QHBoxLayout()
@@ -56,4 +60,4 @@ class AnalysisFilter(QWidget):
                                                             QComboBox:hover{border-radius: 4px; border-color: rgb(0, 170, 255); border-style: ridge; border-width: 2px; background-color: rgba(174, 213, 255, 100); font: 10pt "MS Shell Dlg 2"}
                                                             QComboBox:disabled{border-radius: 4px; border-style: ridge; border-width: 2px; font: 10pt "MS Shell Dlg 2"}   """)
         #
-        self.comboBox_analysis_selector.currentIndexChanged.connect(self.main_window.menu_widget.filter_analysis_type)
+        self.comboBox_analysis_selector.currentIndexChanged.connect(app().main_window.menu_widget.filter_analysis_type)

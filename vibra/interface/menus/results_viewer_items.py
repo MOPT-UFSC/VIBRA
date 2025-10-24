@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.menus.common_menu_items import CommonMenuItems
-
+from molde import Color
 
 class ResultsViewerItems(CommonMenuItems):
     """Menu Items
@@ -16,7 +16,6 @@ class ResultsViewerItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
-        self.main_window = app().main_window
         self.project = app().project
 
         self.setObjectName("results_viewer_items")
@@ -38,11 +37,14 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_results_viewer_acoustic = self.add_top_item("Results Viewer - Acoustic")
         self.item_child_acoustic_mode_shapes = self.add_item("Acoustic Mode Shapes")
         self.item_child_acoustic_pressure_field = self.add_item("Acoustic Pressure Field")
+        self.item_child_acoustic_pressure_waveform = self.add_item("Acoustic Pressure Waveform")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
         self.item_child_acoustic_pressure_frequency_response_function = self.add_item("Acoustic Presssure Frequency Response Function")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable pulsation (Reciprocating Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
-        self.item_child_acoustic_specific_impedance = self.add_item("Acoustic Specific Impedance")
+        self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
+        self.item_child_absorption_coefficient = self.add_item("Absorption Coefficient")
 
         self.top_level_items = [
                                 self.item_top_results_viewer_acoustic,
@@ -95,12 +97,15 @@ class ResultsViewerItems(CommonMenuItems):
     def modify_acoustic_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_acoustic.setHidden(key)
         self.item_child_acoustic_mode_shapes.setDisabled(key)
+        self.item_child_acoustic_pressure_field.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response_function.setDisabled(key)
-        self.item_child_acoustic_pressure_field.setDisabled(key)
+        self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
+        self.item_child_acoustic_pressure_waveform.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
-        self.item_child_acoustic_specific_impedance.setDisabled(key)
+        self.item_child_acoustic_impedance.setDisabled(key)
+        self.item_child_absorption_coefficient.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
@@ -113,20 +118,19 @@ class ResultsViewerItems(CommonMenuItems):
     def update_structural_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(True)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_acoustic_analysis_visibility_items(self):
         self.item_top_results_viewer_acoustic.setHidden(False)
         self.item_top_results_viewer_structural.setHidden(True)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_coupled_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(False)
-        self.main_window.model_setup_widget.model_setup_items.hide_all_top_items()
 
     def update_items(self):
-        """Enables and disables the Child Items on the menu after the solution is done."""
+        """
+        Enables and disables the Child Items on the menu after the solution is done.
+        """
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
@@ -134,35 +138,21 @@ class ResultsViewerItems(CommonMenuItems):
             return
 
         analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
+        if not isinstance(analysis_setup, dict):
             return
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        # analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.STRUCTURAL_MODAL,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.update_structural_analysis_visibility_items()
         
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             self.update_acoustic_analysis_visibility_items()
         
-        elif analysis_id in [
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:    
+        elif analysis_id == AnalysisID.COUPLED_HARMONIC:    
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
             self.item_child_structural_frequency_response.setDisabled(False)
             self.item_child_displacement_field.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
@@ -175,11 +165,7 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_acoustic_mode_shapes.setDisabled(False)
         
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
 
             if analysis_id != AnalysisID.ACOUSTIC_HARMONIC:
                 self.item_child_displacement_field.setDisabled(False)
@@ -188,49 +174,49 @@ class ResultsViewerItems(CommonMenuItems):
                 # self.item_child_stress_frequency_response.setDisabled(False)
                 # self.item_child_reaction_frequency_response.setDisabled(False)
 
+            self.item_child_acoustic_pressure_field.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response_function.setDisabled(False)
-            self.item_child_acoustic_pressure_field.setDisabled(False)
+            self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
+            self.item_child_acoustic_pressure_waveform.setDisabled(False)
             self.item_child_TL_NR.setDisabled(False)
             self.item_child_particle_velocity.setDisabled(False)
-            self.item_child_acoustic_specific_impedance.setDisabled(False)
+            self.item_child_acoustic_impedance.setDisabled(False)
+            self.item_child_absorption_coefficient.setDisabled(False)
 
+        self.update_allowable_pulsation_criteria_visibility(analysis_id)
         self.update_tree_visibility_after_solution()
-    
+
+    def update_allowable_pulsation_criteria_visibility(self, analysis_id: int):
+        compressor_exists = True
+        if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            compressor_exists = not app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(compressor_exists)
+
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
         analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-            AnalysisID.STRUCTURAL_MODAL,
-        ]:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)
 
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             self.expandItem(self.item_top_results_viewer_acoustic)
 
-        elif analysis_id in [
-            AnalysisID.COUPLED_HARMONIC_DIRECT_METHOD,
-            AnalysisID.COUPLED_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        elif analysis_id in [AnalysisID.COUPLED_HARMONIC]:
             self.expandItem(self.item_top_results_viewer_structural)
             self.expandItem(self.item_top_results_viewer_acoustic)
 
     def set_theme(self, theme : str):
 
         if theme == "dark":
-            self.line_color = QColor(26,115,232,150)
-            self.background_color = QColor(60,60,70)
+            self.line_color = Color(26,115,232,150).to_qt()
+            self.background_color = Color(60,60,70).to_qt()
         else:
-            self.line_color = QColor(26,115,232,150)
-            self.background_color = QColor(225,230,230)
+            self.line_color = Color(26,115,232,150).to_qt()
+            self.background_color = Color(225,230,230).to_qt()
     
         border_role = Qt.UserRole + 1
         border_pen = QPen(self.line_color)

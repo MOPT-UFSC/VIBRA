@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -228,10 +228,11 @@ class Ui_MainWindow(object):
         self.action_show_fluids.setObjectName(u"action_show_fluids")
         self.action_show_empty = QAction(MainWindow)
         self.action_show_empty.setObjectName(u"action_show_empty")
+        self.action_show_empty.setCheckable(True)
         self.action_import_geometry = QAction(MainWindow)
         self.action_import_geometry.setObjectName(u"action_import_geometry")
         icon30 = QIcon()
-        icon30.addFile(u":/icons/geometry_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon30.addFile(u":/icons/import_geometry.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.action_import_geometry.setIcon(icon30)
         self.action_home_exit = QAction(MainWindow)
         self.action_home_exit.setObjectName(u"action_home_exit")
@@ -241,7 +242,7 @@ class Ui_MainWindow(object):
         self.action_import_mesh = QAction(MainWindow)
         self.action_import_mesh.setObjectName(u"action_import_mesh")
         icon32 = QIcon()
-        icon32.addFile(u"../icons/mesh.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon32.addFile(u":/icons/import_mesh.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.action_import_mesh.setIcon(icon32)
         self.action_ghost_view = QAction(MainWindow)
         self.action_ghost_view.setObjectName(u"action_ghost_view")
@@ -310,7 +311,7 @@ class Ui_MainWindow(object):
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1055, 33))
+        self.menubar.setGeometry(QRect(0, 0, 1055, 25))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
@@ -326,6 +327,10 @@ class Ui_MainWindow(object):
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_new_project)
         self.renderer_toolbar.addAction(self.action_open_project)
+        self.renderer_toolbar.addAction(self.action_import_geometry)
+        self.renderer_toolbar.addAction(self.action_import_mesh)
+        self.renderer_toolbar.addAction(self.action_save)
+        self.renderer_toolbar.addAction(self.action_save_as)
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_top_view)
         self.renderer_toolbar.addAction(self.action_bottom_view)
@@ -374,8 +379,6 @@ class Ui_MainWindow(object):
         self.menu_view_mode.addAction(self.action_line_view)
         self.menu_view_mode.addAction(self.action_face_view)
         self.menu_view_mode.addSeparator()
-        self.menu_view_mode.addAction(self.action_show_materials)
-        self.menu_view_mode.addAction(self.action_show_fluids)
         self.menu_view_mode.addAction(self.action_show_empty)
         self.menu_help.addAction(self.action_about_vibra)
         self.advanced_results_menu.addAction(self.action_export_element_transfer_data)

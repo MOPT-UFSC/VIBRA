@@ -2,11 +2,11 @@ import numpy as np
 from vtkmodules.vtkCommonCore import vtkLookupTable
 from vtkmodules.vtkRenderingCore import vtkColorTransferFunction
 
+from molde.colors import Color
 from . import color_palettes
 
 
 class ColorTable(vtkLookupTable):
-
     def __init__(
         self,
         values_vector=None,
@@ -63,12 +63,12 @@ class ColorTable(vtkLookupTable):
             print(f'Invalid colormap "{self.colormap}". Using "viridis" instead.')
             self._set_colors(color_palettes.viridis_colors)
 
-    def get_color(self, value) -> tuple[int, int, int]:
-        # yes, vtk uses the list as a python pointer 
+    def get_color(self, value) -> Color:
+        # yes, vtk uses the list as a python pointer
         # instead of returning a tuple...
         tmp = [0, 0, 0]
         self.GetColor(np.real(value), tmp)
-        return tuple(int(i * 255) for i in tmp)
+        return Color.from_rgb_f(*tmp)
 
     def _set_colors(self, colors, shades=256):
         color_transfer = vtkColorTransferFunction()

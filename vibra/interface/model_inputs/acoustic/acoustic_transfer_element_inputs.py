@@ -6,7 +6,7 @@ from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -26,7 +26,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
-        app().main_window.action_model_workspace_callback()
+        app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
         self.model = app().project.model
@@ -49,7 +49,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle("Acoustic transfer element data")
+        self.setWindowTitle("Vibra")
 
     def _reset_variables(self):
         self.keep_window_open = True
@@ -141,11 +141,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls)"
 
         path, check = QFileDialog.getSaveFileName( 
-                                                  self, 
-                                                  caption, 
-                                                  last_path, 
-                                                  filter = _filter
-                                                  )
+            self, 
+            caption, 
+            last_path, 
+            filter = _filter
+        )
 
         if not check:
             return True
@@ -280,7 +280,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             return   
 
         if not app().project.model.generated_mesh:
-            obj = MeshSetupInputs()
+            obj = MesherSetupInputs()
             if obj.complete:
                 app().main_window.update_plots()
             else:
@@ -315,8 +315,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def remove_model_excitations(self):
 
+        model_excitations = [
+                             "acoustic_pressure", 
+                             "surface_velocity", 
+                             "reciprocating_compressor_excitation", 
+                             "specific_impedance",
+                             ]
+
         properties_to_remove = defaultdict(list)
-        for property in ["acoustic_pressure", "surface_velocity", "compressor_excitation", "specific_impedance"]:
+        for property in model_excitations:
             for key in self.properties.surface_properties.keys():
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
@@ -344,18 +351,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
             logging.info("Processing area... [60/100]")
-            self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+            self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
         LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 
-        element_3d, _ = self.project.acoustic_assembler.get_element()
-        element_3d.reorder_connect()
+        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
-        surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
-
-        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id)
         if rho is None:
             return None
         
@@ -439,19 +443,25 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
             for key, data in self.element_transfer_data.items():
 
+                if not isinstance(data, dict):
+                    continue
+
                 selection_type, selection_id = key
                 sheet_name = f"{selection_type}_{selection_id}"
 
+                unit = data["unit"]
                 x_data = data["x_data"]
                 y_data = data["y_data"]
-                unit = data["unit"]
+                x_label = data.get("x_label")
+                y_label = data.get("y_label")
 
                 if isinstance(y_data[0], complex):
-                    header = ["Frequency[Hz]", f"Real part [{unit}]", f"Imaginary part [{unit}]", f"Absolute [{unit}]"]
-                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T 
+                    header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
+                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
+ 
                 else:
                     data_type = data["data_type"]
-                    header = ["Frequency[Hz]", f"{data_type.capitalize()} [{unit}]"]
+                    header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
                 df = DataFrame(data_to_export, columns=header)
@@ -466,10 +476,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
         
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
         if theme == "dark":
-            icon_color = QColor("#5f9af4")
+            icon_color = DARK_ICON_COLOR.to_qt()
         else:
-            icon_color = QColor("#1a73e8")
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets = [self.pushButton_invert_selection, self.pushButton_search]
         change_icon_color_for_widgets(widgets, icon_color)

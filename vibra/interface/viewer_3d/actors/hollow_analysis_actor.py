@@ -1,5 +1,6 @@
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkUnsignedCharArray
+from vtkmodules.util.numpy_support import vtk_to_numpy
+from vtkmodules.vtkCommonCore import vtkFloatArray
 
 from ..coloring.color_table import ColorTable
 from .hollow_solids_actor import HollowSolidsActor
@@ -7,7 +8,6 @@ from .hollow_solids_actor import HollowSolidsActor
 
 class HollowAnalysisActor(HollowSolidsActor):
     def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
-
         if max_abs == 0:
             max_abs = 1
 
@@ -25,18 +25,19 @@ class HollowAnalysisActor(HollowSolidsActor):
             return
 
         self.color_table = color_table
-        point_colors: vtkUnsignedCharArray = self.data.GetPointData().GetScalars()
+        point_colors: vtkFloatArray = self.data.GetPointData().GetScalars()
         point_colors.Fill(0)
 
-        for i, val in enumerate(self.color_table.values_vector):
-            color = self.color_table.get_color(val)
-            point_colors.SetTuple(i, color)
+        _tmp = vtk_to_numpy(point_colors)
+        _tmp[:] = self.color_table.values_vector
 
         self.data.Modified()
+        self.GetMapper().UseLookupTableScalarRangeOn()
+        self.GetMapper().SetLookupTable(self.color_table)
         self.GetMapper().SetScalarModeToUsePointData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
-    
+
     def configure_appearance(self):
         super().configure_appearance()
         self.GetProperty().SetSpecular(0)

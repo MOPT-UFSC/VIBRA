@@ -1,8 +1,10 @@
 from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
+    vtkIdList,
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
+    vtkFloatArray,
 )
 from vtkmodules.vtkCommonDataModel import (
     VTK_HEXAHEDRON,
@@ -14,26 +16,34 @@ from vtkmodules.vtkCommonDataModel import (
     vtkSphere,
     vtkUnstructuredGrid,
 )
+from vtkmodules.vtkFiltersCore import vtkExtractCells
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
 from vibra.engine.mesher.element_type import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
 )
+
+from molde import Color
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.mesher.mesh import Mesh
 
 ALWAYS_FALSE = vtkSphere()
 ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
-    def __init__(self, mesh, allow_hidding=True):
+    def __init__(self, mesh: "Mesh", allow_hidding=True):
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding
+        self.has_distinguished_cells = False
 
         self.create_geometry()
         self.configure_appearance()
@@ -49,7 +59,7 @@ class SolidsActor(vtkActor):
         data = vtkUnstructuredGrid()
         points = vtkPoints()
         mapper = vtkDataSetMapper()
-        point_colors = vtkUnsignedCharArray()
+        point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
         solid_indexes = vtkIntArray()
         solid_indexes.SetName("solid_indexes")
@@ -69,12 +79,10 @@ class SolidsActor(vtkActor):
 
         elif self.mesh.element_type == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
-            # fmt: off
             nodes_order = (
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
                 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
-            )
-            # fmt: on
+            )  # fmt: skip
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
@@ -86,9 +94,8 @@ class SolidsActor(vtkActor):
 
         data.Allocate(number_of_elements * nodes_per_element)
 
-        point_colors.SetNumberOfComponents(3)
         point_colors.SetNumberOfTuples(number_of_nodes)
-        cell_colors.SetNumberOfComponents(3)
+        cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
         solid_indexes.Allocate(number_of_elements)
 
@@ -111,10 +118,16 @@ class SolidsActor(vtkActor):
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
         data.GetCellData().AddArray(solid_indexes)
-
         self.data: vtkPolyData = data
+
+        self.has_distinguished_cells = False
+        self.cell_extractor = vtkExtractCells()
+        self.cell_extractor.SetInputData(data)
+        self.cell_extractor.ExtractAllCellsOn()
+        self.cell_extractor.Update()
+
         self.clipper = vtkExtractGeometry()
-        self.clipper.SetInputData(self.data)
+        self.clipper.SetInputConnection(self.cell_extractor.GetOutputPort())
         self.clipper.SetImplicitFunction(ALWAYS_FALSE)
         self.clipper.ExtractInsideOff()
         self.clipper.Update()
@@ -122,12 +135,6 @@ class SolidsActor(vtkActor):
         mapper.InterpolateScalarsBeforeMappingOn()
         mapper.SetInputConnection(self.clipper.GetOutputPort())
         self.SetMapper(mapper)
-
-    def replace_data(self, data: vtkPolyData):
-        self.data = data
-        self.clipper.SetInputData(data)
-        self.clipper.Modified()
-        self.clipper.Update()
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -147,26 +154,30 @@ class SolidsActor(vtkActor):
         if self.data is None:
             return
 
-        color = (255, 255, 255)
+        if self.has_distinguished_cells:
+            color = Color(255, 0, 0)
+        else:
+            color = Color(255, 255, 255)
+
         self.set_color(color)
 
-    def set_color(self, color):
-        point_colors = self.data.GetPointData().GetScalars()
+    def set_color(self, color: Color):
         cell_colors = self.data.GetCellData().GetScalars()
-
-        point_colors.Fill(255)
         cell_colors.Fill(255)
-
+        color = color.to_rgb()
         for component, value in enumerate(color):
-            point_colors.FillComponent(component, value)
             cell_colors.FillComponent(component, value)
 
+        self.data.Modified()
+        self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()
+        self.GetMapper().ScalarVisibilityOn()
 
-    def paint_points(self, color, points):
+    def paint_points(self, color : Color, points):
         if self.data is None:
             return
 
+        color = color.to_rgb()
         point_colors = self.data.GetPointData().GetScalars()
         for i in points:
             if point_colors.GetNumberOfTuples() <= i:
@@ -177,15 +188,22 @@ class SolidsActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_cells(self, color: tuple[3], volumes: tuple[int]):
-        if self.data is None:
-            return
-
-        cell_colors = self.data.GetCellData().GetScalars()
-        for i in volumes:
+    def paint_solids(self, color: Color, solids: tuple[int]):
+        cells = []
+        for i in solids:
             visible_index = self.visible_indexes.get(i, -1)
             if visible_index >= 0:
-                cell_colors.SetTuple(visible_index, color)
+                cells.append(visible_index)
+        self.paint_cells(color, cells)
+
+    def paint_cells(self, color: Color, cells: tuple[int]):
+        if self.data is None:
+            return
+    
+        color = color.to_rgba()
+        cell_colors = self.data.GetCellData().GetScalars()
+        for cell in cells:
+            cell_colors.SetTuple(cell, color)
 
         self.data.Modified()
         self.GetMapper().SetScalarModeToUseCellData()
@@ -200,3 +218,30 @@ class SolidsActor(vtkActor):
 
     def disable_cut(self):
         self.clipper.SetImplicitFunction(ALWAYS_FALSE)
+
+    def distinguish_solids(self, solids: tuple[int]):
+        cells = []
+        for i in solids:
+            visible_index = self.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cells.append(visible_index)
+
+        self.distinguish_cells(cells)
+
+    def distinguish_cells(self, cells: tuple[int]):
+        if len(cells) == 0:  # disable if empty
+            self.has_distinguished_cells = False
+            self.cell_extractor.ExtractAllCellsOn()
+            return
+
+        self.has_distinguished_cells = True
+
+        ids = vtkIdList()
+        for cell in cells:
+            ids.InsertNextId(cell)
+
+        self.cell_extractor.ExtractAllCellsOff()
+        self.cell_extractor.SetCellList(ids)
+        self.cell_extractor.Update()
+
+        self.clear_colors()

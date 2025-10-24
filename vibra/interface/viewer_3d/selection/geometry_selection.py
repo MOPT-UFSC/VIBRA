@@ -32,18 +32,23 @@ class GeometrySelection:
         point_ids, point_distance = self._pick_point(x, y)
         line_ids, line_distance = self._pick_line(x, y)
         surface_ids, surface_distance = self._pick_surface(x, y)
-        volume_ids, _ = self._pick_volume(x, y)
 
-        # Cheating a bit to prioritize point selection
-        point_distance *= 0.96
-        line_distance *= 0.98
+        volume_ids = set()
+        mesh = app().project.model.mesh
+        for surface in surface_ids:
+            surface_volumes = mesh.volumes_from_surface.get(surface, [])
+            volume_ids.update(surface_volumes)
+
+        # Cheating a bit to prioritize selection of points and lines
+        point_distance *= 0.98
+        line_distance *= 0.99
         closest = min(point_distance, line_distance, surface_distance)
 
         if closest == point_distance:
-            return point_ids, set(), set(), volume_ids
+            return point_ids, set(), set(), set()
 
         elif closest == line_distance:
-            return set(), line_ids, set(), volume_ids
+            return set(), line_ids, set(), set()
 
         elif closest == surface_distance:
             return set(), set(), surface_ids, volume_ids
@@ -99,7 +104,6 @@ class GeometrySelection:
         view_coords = coordinate.GetComputedViewportValue(renderer)
         click = np.array([x, y])
 
-
         node_size = 15
         if np.linalg.norm(click - view_coords) < node_size / 2:
             equivalent_node_index = points_coords[i, 0].astype(int)
@@ -121,13 +125,21 @@ class GeometrySelection:
             return set(), line_distance
 
     def _pick_surface(self, x: int, y: int) -> set[int]:
+        # A actor can not be picked if it is not visible, so we make it
+        # visible and then revert it back to the previous state
+        default_actor = self.geometry_render_widget.multimaterial.default_actor
+
+        visibility = default_actor.GetVisibility()
+        default_actor.SetVisibility(True)
         surface_id, surface_distance = pick_actor_cell_info(
             x,
             y,
-            self.geometry_render_widget.faces_actor,
+            self.geometry_render_widget.multimaterial,
             "surface_indexes",
             self.geometry_render_widget.renderer,
         )
+        default_actor.SetVisibility(visibility)
+
         if surface_id >= 0:
             return {surface_id}, surface_distance
         else:
@@ -137,7 +149,7 @@ class GeometrySelection:
         volume_id, volume_distance = pick_actor_cell_info(
             x,
             y,
-            self.geometry_render_widget.faces_actor,
+            self.geometry_render_widget.multimaterial,
             "volume_indexes",
             self.geometry_render_widget.renderer,
         )

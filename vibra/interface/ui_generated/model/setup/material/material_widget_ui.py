@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'material_widget.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.0
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -113,30 +113,16 @@ class Ui_Form(object):
         self.gridLayout_5.setHorizontalSpacing(8)
         self.gridLayout_5.setVerticalSpacing(0)
         self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_remove_column = QPushButton(self.frame_6)
-        self.pushButton_remove_column.setObjectName(u"pushButton_remove_column")
-        self.pushButton_remove_column.setMinimumSize(QSize(26, 26))
-        self.pushButton_remove_column.setMaximumSize(QSize(26, 26))
-        font1 = QFont()
-        font1.setFamilies([u"MS Shell Dlg 2"])
-        font1.setPointSize(9)
-        font1.setBold(False)
-        font1.setItalic(False)
-        self.pushButton_remove_column.setFont(font1)
-        self.pushButton_remove_column.setStyleSheet(u"")
-
-        self.gridLayout_5.addWidget(self.pushButton_remove_column, 0, 3, 1, 1)
-
         self.pushButton_add_column = QPushButton(self.frame_6)
         self.pushButton_add_column.setObjectName(u"pushButton_add_column")
         self.pushButton_add_column.setMinimumSize(QSize(26, 26))
         self.pushButton_add_column.setMaximumSize(QSize(26, 26))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(9)
-        font2.setBold(True)
-        font2.setItalic(False)
-        self.pushButton_add_column.setFont(font2)
+        font1 = QFont()
+        font1.setFamilies([u"MS Shell Dlg 2"])
+        font1.setPointSize(9)
+        font1.setBold(True)
+        font1.setItalic(False)
+        self.pushButton_add_column.setFont(font1)
         self.pushButton_add_column.setStyleSheet(u"")
 
         self.gridLayout_5.addWidget(self.pushButton_add_column, 0, 2, 1, 1)
@@ -164,6 +150,33 @@ class Ui_Form(object):
 
 
         self.gridLayout_5.addWidget(self.frame_7, 0, 0, 1, 1)
+
+        self.pushButton_duplicate = QPushButton(self.frame_6)
+        self.pushButton_duplicate.setObjectName(u"pushButton_duplicate")
+        self.pushButton_duplicate.setMinimumSize(QSize(28, 28))
+        self.pushButton_duplicate.setMaximumSize(QSize(28, 28))
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(9)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.pushButton_duplicate.setFont(font2)
+        self.pushButton_duplicate.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/copy_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_duplicate.setIcon(icon)
+        self.pushButton_duplicate.setIconSize(QSize(18, 18))
+
+        self.gridLayout_5.addWidget(self.pushButton_duplicate, 0, 4, 1, 1)
+
+        self.pushButton_remove_column = QPushButton(self.frame_6)
+        self.pushButton_remove_column.setObjectName(u"pushButton_remove_column")
+        self.pushButton_remove_column.setMinimumSize(QSize(26, 26))
+        self.pushButton_remove_column.setMaximumSize(QSize(26, 26))
+        self.pushButton_remove_column.setFont(font2)
+        self.pushButton_remove_column.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_remove_column, 0, 3, 1, 1)
 
 
         self.gridLayout_2.addWidget(self.frame_6, 0, 0, 1, 1)
@@ -194,25 +207,29 @@ class Ui_Form(object):
         ___qtablewidgetitem2 = self.tableWidget_material_data.verticalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"Density [kg/m\u00b3]", None));
         ___qtablewidgetitem3 = self.tableWidget_material_data.verticalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"Elasticity modulus [GPa]", None));
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"Elasticity modulus [Pa]", None));
         ___qtablewidgetitem4 = self.tableWidget_material_data.verticalHeaderItem(4)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"Poisson", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"Poisson ratio", None));
         ___qtablewidgetitem5 = self.tableWidget_material_data.verticalHeaderItem(5)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("Form", u"Thermal expansion coefficient [1/K]", None));
         ___qtablewidgetitem6 = self.tableWidget_material_data.verticalHeaderItem(6)
         ___qtablewidgetitem6.setText(QCoreApplication.translate("Form", u"Color", None));
 #if QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Remove selected row</span></p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add row</span></p></body></html>", None))
+        self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add an empty material</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_add_column.setText(QCoreApplication.translate("Form", u"+", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_reset_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Reset to default material library</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset_library.setText(QCoreApplication.translate("Form", u"Reset", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_duplicate.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Duplicate the selected material</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_duplicate.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove the selected material</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
     # retranslateUi
 
 
@@ -231,11 +248,12 @@ class MaterialWidget_UI(QWidget, Ui_Form):
                             - tableWidget_material_data: QTableWidget
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
-                                        - pushButton_remove_column: QPushButton
                                         - pushButton_add_column: QPushButton
                                         - frame_7: QFrame
                                             - (Layout): QGridLayout
                                                     - pushButton_reset_library: QPushButton
+                                        - pushButton_duplicate: QPushButton
+                                        - pushButton_remove_column: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

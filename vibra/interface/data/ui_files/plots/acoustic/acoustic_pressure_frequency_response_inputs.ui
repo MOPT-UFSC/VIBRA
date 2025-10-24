@@ -287,7 +287,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset>
+            <iconset resource="../../../icons/resources.qrc">
              <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
            </property>
            <property name="iconSize">
@@ -467,17 +467,22 @@
            </property>
            <item>
             <property name="text">
-             <string>   Surfaces</string>
+             <string>Surfaces</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>   Line</string>
+             <string>Lines</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>   Nodes</string>
+             <string>Points</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Nodes</string>
             </property>
            </item>
           </widget>
@@ -538,6 +543,8 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

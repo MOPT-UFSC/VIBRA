@@ -1,0 +1,19 @@
+!ds_tubo_reto.dat
+!ds_silencer_suction_stg1.dat
+!ds_only_fluid_of_silencer_suction_stg1.dat
+!ds_viscous_thermal_reference_geometry.dat
+!ds_Lpipe_with_caps.dat
+!ds_piping_example.dat
+!ds_Lpipe_act_tet4_30mm.dat
+!ds_Lpipe_act_tet10_50mm.dat
+
+# Validation files for structural shell DKT-CST element
+!Ke_ref.dat
+!Me_ref.dat
+!K_bend_ref.dat
+!M_bend_ref.dat
+!K_memb_ref.dat
+!M_memb_ref.dat
+!natural_frequencies_Ansys.dat
+
+!mesh_info/*/*

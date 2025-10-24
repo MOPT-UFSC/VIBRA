@@ -1,11 +1,20 @@
-from pathlib import Path
+from PySide6.QtCore import Signal
+from PySide6.QtGui import Qt
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QGridLayout,
+    QLabel,
+    QHBoxLayout,
+    QPushButton,
+    QRadioButton,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
 
-from PySide6 import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
-
-from vibra import ICON_DIR
+from vibra import ICON_DIR, LIGHT_ICON_COLOR
 from vibra.utils.icons import load_icon
 
 
@@ -19,15 +28,15 @@ class StructuralModalAnalysisBar(QWidget):
         # Avoid using fixed sizes for all widgets!!
 
         self.create_sliders()
-
-        self.play_icon = load_icon(ICON_DIR / "play.png", QColor("#0055DD"))
-        self.pause_icon = load_icon(ICON_DIR / "pause.png", QColor("#0055DD"))
+        
+        self.play_icon = load_icon(ICON_DIR / "play.png", LIGHT_ICON_COLOR.to_qt())
+        self.pause_icon = load_icon(ICON_DIR / "pause.png", LIGHT_ICON_COLOR.to_qt())
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setToolTip("Play animation")
         self.play_pause_button.setMinimumWidth(80)
 
-        self.create_video_icon = load_icon(ICON_DIR / "create_video_icon.png", QColor("#0055DD"))
+        self.create_video_icon = load_icon(ICON_DIR / "create_video_icon.png", LIGHT_ICON_COLOR.to_qt())
         self.create_video_button = QPushButton(self.create_video_icon, "")
         self.create_video_button.setToolTip("Create video")
         self.create_video_button.setMinimumWidth(80)

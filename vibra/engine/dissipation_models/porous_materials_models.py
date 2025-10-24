@@ -1,5 +1,3 @@
-# fmt: off
-
 from vibra.engine.properties.fluid import Fluid
 
 from typing import TYPE_CHECKING
@@ -22,7 +20,10 @@ class PorousMaterialModels:
 
         self.effective_properties = dict()
 
-    def process_effective_properties(self, frequencies: np.ndarray):
+    def process_effective_properties(self, frequencies: np.ndarray | None = None):
+
+        if frequencies is None:
+            frequencies = self.model.frequencies
 
         self.effective_properties = dict()
         if frequencies[0] == 0:
@@ -184,5 +185,3 @@ class PorousMaterialModels:
         # alpha_r = 1 - np.abs(R_r)**2
 
         return rho_eff, C_eff
-
-# fmt: on

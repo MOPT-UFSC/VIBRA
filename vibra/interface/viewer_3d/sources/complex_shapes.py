@@ -1,5 +1,5 @@
 from vibra import SYMBOLS_DIR
-from vibra.utils.polydata_utils import read_obj_file, read_stl_file, transform_polydata
+from vibra.utils.vtk_utils import read_obj_file, read_stl_file, transform_polydata
 
 
 def create_spring_source():
@@ -82,19 +82,30 @@ def create_absorption_surface_source():
     )
 
 def create_acoustic_pressure_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol3.stl")
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
         scale=(.03, .03, .03),
     )
 
-def create_reciprocating_compressor_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_symbol2.stl")
+def create_compressor_discharge_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_discharge.stl")
     return transform_polydata(
         polydata,
-        scale=(.2, .2, .2),
+        rotation=(0, 0, 180),
+        scale=(1, 1, 1),
+        position=(1, 0, 0),
     )
+
+def create_compressor_suction_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "stl_files/compressor_suction.obj")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 0, 180),
+        scale=(1, 1, 1),
+        position=(1, 0, 0)
+    )   
 
 def create_dissipation_model_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.stl")
@@ -109,4 +120,40 @@ def create_acoustic_transfer_element_data_source():
         polydata,
         rotation=(0, 90, 180),
         scale=(1, 1, 1),
+    )
+
+def create_dof_cone_rotation_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_rotation.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, -90),
+        scale=(.4, .4, .4),
+    )
+
+def create_dof_cone_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, -90),
+        scale=(.4, .4, .4),
+    )
+
+def create_nodal_loads_momentum_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_double_arrow.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.15, .15, .15),
+    )
+
+def create_nodal_loads_force_arrow_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_arrow.stl")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(90, 0, -90),
+        scale=(.15, .15, .15),
     )
