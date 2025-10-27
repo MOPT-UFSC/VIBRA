@@ -23,7 +23,7 @@ class VisualMesh:
         self.clear()
 
     def clear(self):
-        self.coords = np.zeros((0, 3))
+        self.coordinates = np.zeros((0, 3))
         self.vertices = np.zeros((0, 1))
         self.segments = np.zeros((0, 2))
         self.triangles = np.zeros((0, 3))
@@ -45,7 +45,7 @@ class VisualMesh:
 
         loc = TopLoc_Location()
 
-        coords = list()
+        coordinates = list()
         segments = list()
         triangles = list()
 
@@ -59,14 +59,14 @@ class VisualMesh:
             visited_faces.add(face_index)
 
             triangulation = BRep_Tool.Triangulation_s(face, loc)
-            coord_shift = len(coords)
+            coordinate_shift = len(coordinates)
 
             for i in range(triangulation.NbNodes()):
-                coords.append(triangulation.Node(i + 1).Coord())
+                coordinates.append(triangulation.Node(i + 1).Coord())
 
             for triangle in triangulation.Triangles():
                 triangle_indexes = np.array(triangle.Get())
-                triangles.append(triangle_indexes + coord_shift - 1)
+                triangles.append(triangle_indexes + coordinate_shift - 1)
 
             for edge in iterate_edges(face):
                 edge_index = edge_mapper.FindIndex(edge)
@@ -76,11 +76,11 @@ class VisualMesh:
 
                 polygon = BRep_Tool.PolygonOnTriangulation_s(edge, triangulation, loc)
                 for a, b in pairwise(range(polygon.Nodes().Length())):
-                    index_a = polygon.Node(a + 1) + coord_shift - 1
-                    index_b = polygon.Node(b + 1) + coord_shift - 1
+                    index_a = polygon.Node(a + 1) + coordinate_shift - 1
+                    index_b = polygon.Node(b + 1) + coordinate_shift - 1
                     segments.append((index_a, index_b))
 
-        self.coords = np.array(coords)
+        self.coordinates = np.array(coordinates)
         self.segments = np.array(segments)
         self.triangles = np.array(triangles)
 
