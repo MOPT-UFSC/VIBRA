@@ -1,27 +1,21 @@
-import numpy as np
+from itertools import pairwise
 from pathlib import Path
 from time import perf_counter
-from OCC.Core.STEPControl import STEPControl_Reader
-from OCC.Core.IFSelect import IFSelect_RetDone
-
-from OCC.Core.TopExp import TopExp_Explorer, topexp
-from OCC.Core.TopAbs import TopAbs_FACE, TopAbs_EDGE
-from OCC.Core.TopoDS import topods
-from OCC.Core.BRep import BRep_Tool
-from OCC.Core.BRepMesh import BRepMesh_IncrementalMesh
-from OCC.Core.TopLoc import TopLoc_Location
-from OCC.Core.BRepAdaptor import BRepAdaptor_Curve
-from OCC.Core.GCPnts import GCPnts_QuasiUniformDeflection
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from OCC.Core.TopTools import TopTools_IndexedMapOfShape
-
-from OCC.Core.Poly import Poly_Triangulation, Poly_Triangle
-
-from itertools import pairwise
 from typing import Iterator
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+from OCP.STEPControl import STEPControl_Reader
+from OCP.IFSelect import IFSelect_RetDone
+from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE
+from OCP.TopTools import TopTools_IndexedMapOfShape
+from OCP.TopExp import TopExp_Explorer, TopExp
+from OCP.BRepMesh import BRepMesh_IncrementalMesh
+from OCP.BRep import BRep_Tool
+from OCP.TopLoc import TopLoc_Location
+from OCP.TopoDS import TopoDS
 
 
 class VisualMesh:
@@ -58,15 +52,13 @@ class VisualMesh:
         visited_faces = set()
         visited_edges = set()
 
-        triangle: Poly_Triangle
-
         for face in iterate_faces(shape):
             face_index = face_mapper.FindIndex(face)
             if face_index in visited_faces:
                 continue
             visited_faces.add(face_index)
 
-            triangulation = BRep_Tool.Triangulation(face, loc)
+            triangulation = BRep_Tool.Triangulation_s(face, loc)
             coord_shift = len(coords)
 
             for i in range(triangulation.NbNodes()):
@@ -82,11 +74,10 @@ class VisualMesh:
                     continue
                 visited_edges.add(edge_index)
 
-                polygon = BRep_Tool.PolygonOnTriangulation(edge, triangulation, loc)
-                indexes = polygon.Nodes()
-                for a, b in pairwise(range(indexes.Length())):
-                    index_a = indexes.Value(a + 1) + coord_shift - 1
-                    index_b = indexes.Value(b + 1) + coord_shift - 1
+                polygon = BRep_Tool.PolygonOnTriangulation_s(edge, triangulation, loc)
+                for a, b in pairwise(range(polygon.Nodes().Length())):
+                    index_a = polygon.Node(a + 1) + coord_shift - 1
+                    index_b = polygon.Node(b + 1) + coord_shift - 1
                     segments.append((index_a, index_b))
 
         self.coords = np.array(coords)
@@ -103,7 +94,7 @@ def _iterate_entities(shape, entity_type):
 
 def _map_repetitions(shape, entity_type):
     indexed_map = TopTools_IndexedMapOfShape()
-    topexp.MapShapes(shape, entity_type, indexed_map)
+    TopExp.MapShapes_s(shape, entity_type, indexed_map)
     return indexed_map
 
 
@@ -120,11 +111,13 @@ def _read_step(path: str | Path):
 
 
 def iterate_edges(shape):
-    yield from _iterate_entities(shape, TopAbs_EDGE)
+    for i in _iterate_entities(shape, TopAbs_EDGE):
+        yield TopoDS.Edge_s(i)
 
 
 def iterate_faces(shape):
-    yield from _iterate_entities(shape, TopAbs_FACE)
+    for i in _iterate_entities(shape, TopAbs_FACE):
+        yield TopoDS.Face_s(i)
 
 
 def map_edges(shape):
