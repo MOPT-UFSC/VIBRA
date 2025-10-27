@@ -6,9 +6,10 @@ from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
-
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from data.validation.load_external_data import LoadExternalData
+from vibra.utils.load_data_utils import load_spreadsheet_data
+
+from validation_files.data.WB.load_external_data import LoadExternalData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -20,8 +21,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from time import time
-from pandas import read_excel
-from openpyxl import load_workbook
 
 # valid mesh sizes: 20mm and 200mm.
 mesh_size = "200mm"
@@ -33,7 +32,7 @@ mesh_size = "200mm"
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"data/validation/structural/shell/L_pipe/mesh/ds_Lpipe_with_caps.dat"
+    mesh_path = f"validation_files/data/WB/structural/shell/L_pipe/mesh/ds_Lpipe_with_caps.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -74,13 +73,12 @@ def load_external_mesh_and_solve():
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        mesh.nodes_out_of_face_element[tag] = surf_data["outer_nodes"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
 
 
     # # Load the external data
-    # path = f"data/validation/structural/shell/pipes/results/results_for_L_pipe.xlsx"
+    # path = f"validation_files/data/WB/structural/shell/pipes/results/results_for_L_pipe.xlsx"
     # ext_data = LoadExternalData(path, rho_0)
 
     # assign the created fluid
@@ -160,7 +158,7 @@ def load_external_mesh_and_solve():
     # # Define the analysis setup
     # analysis_setup = {
     #                   "analysis_id" : 2, 
-    #                   "modes" : 40, 
+    #                   "modes_number" : 40, 
     #                   "sigma_factor" : 1e-2
     #                   }
     
@@ -190,7 +188,7 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # solution = modal_solver.solve()
-    harmonic_solver.solve_direct_method(print_log=True)
+    harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
 
@@ -231,7 +229,9 @@ def load_external_mesh_and_solve():
     if solution is not None:
 
         ## load external results data
-        imported_results = get_external_results()
+        results_path = f"validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
+        imported_results = load_spreadsheet_data(results_path)
+
         output_face_ux_lin = imported_results[f"output_face_ux_lin"]
         output_face_ux_quad = imported_results[f"output_face_ux_quad"]
 
@@ -270,41 +270,6 @@ def load_external_mesh_and_solve():
         ax2.legend()
 
         plt.show()
-
-
-def get_external_results():
-
-    imported_results = dict()
-    results_path = f"data/validation/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
-
-    if not os.path.exists(results_path):
-        return imported_results
-
-    wb = load_workbook(results_path)
-
-    skiprows = 0
-
-    sheetnames = wb.sheetnames
-    for sheetname in sheetnames:
-
-        try:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1,2]
-                                    ).to_numpy()
-        except:
-            sheet_data = read_excel(
-                                    results_path, 
-                                    sheet_name = sheetname, 
-                                    header = skiprows, 
-                                    usecols = [0,1]
-                                    ).to_numpy()
-
-        imported_results[sheetname] = sheet_data
-
-    return imported_results
 
 
 if __name__ == "__main__":

@@ -8,68 +8,6 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-def get_detJAC(JAC: np.ndarray) -> float:
-    """
-    This function computes the determinant of the Jacobian
-    matrix in both stacked and non-stacked matrices form.
-
-    Parameter
-    ---------
-    JAC: np.ndarray
-        The Jacobian 2D or 3D matrix.
-    
-    Return
-    ------
-    det_jac: float
-        The determinant of the Jacobian matrix.
-    """
-    if len(JAC.shape) == 3:
-        det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]
-        return det_jac.reshape(-1, 1, 1)
-
-    else:
-        det_jac = JAC[0, 0] * JAC[1, 1]  - JAC[0, 1] * JAC[1, 0]  
-        return det_jac
-
-
-def get_stacked_detJAC_and_invJAC(JAC: np.ndarray) -> np.ndarray:
-    """
-    This function computes the determinants and inverses
-    of Jacobian matrices in stacked form.
-
-    Parameters
-    ----------
-    JAC: np.array
-        The stacked Jacobian matrices.
-
-    Returns
-    -------
-    det_jacs: np.ndarray
-        The stacked determinants of Jacobian matrices.
-
-    inv_jacs: np.ndarray
-        The stacked inverse of Jacobian matrices.
-
-    """
-
-    # determinant of the Jacobian matrix
-    det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
-    det_jacs = det_jacs.reshape(-1, 1, 1)
-
-    # the adjoint matrix AUJJ
-    AUJJ = np.zeros((JAC.shape[0], 2, 2), dtype=float)
-
-    AUJJ[:, 0, 0] =  JAC[:, 1, 1]
-    AUJJ[:, 0, 1] = -JAC[:, 0, 1]
-    AUJJ[:, 1, 0] = -JAC[:, 1, 0]
-    AUJJ[:, 1, 1] =  JAC[:, 0, 0]
-
-    # inverse of the Jacobian matrix
-    inv_jacs = (1 / det_jacs) * AUJJ
-
-    return det_jacs, inv_jacs
-
-
 def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     """
     This funtion computes the local coordinates from global coordinates.
@@ -89,33 +27,33 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     YY1, YY2, YY3, YY4, YY5, YY6 = coords[:, 2]
     ZZ1, ZZ2, ZZ3, ZZ4, ZZ5, ZZ6 = coords[:, 3]
 
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-    vec41 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
-    vec51 = np.array([XX5-XX1, YY5-YY1, ZZ5-ZZ1]).T
-    vec61 = np.array([XX6-XX1, YY6-YY1, ZZ6-ZZ1]).T
+    vec_12 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+    vec_13 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+    vec_14 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
+    vec_15 = np.array([XX5-XX1, YY5-YY1, ZZ5-ZZ1]).T
+    vec_16 = np.array([XX6-XX1, YY6-YY1, ZZ6-ZZ1]).T
 
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)   # ---> normal
+    loc_x_axis = vec_12.copy()
+    loc_z_axis = np.cross(loc_x_axis, vec_13)   # ---> normal
     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
     unit_x_axis = loc_x_axis / np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis / np.linalg.norm(loc_y_axis)
     unit_z_axis = loc_z_axis / np.linalg.norm(loc_z_axis)
 
-    x1 = 0 
-    x2 = np.dot(vec21, unit_x_axis)
-    x3 = np.dot(vec31, unit_x_axis)
-    x4 = np.dot(vec41, unit_x_axis)
-    x5 = np.dot(vec51, unit_x_axis)
-    x6 = np.dot(vec61, unit_x_axis)
+    x1 = 0.
+    x2 = np.dot(vec_12, unit_x_axis)
+    x3 = np.dot(vec_13, unit_x_axis)
+    x4 = np.dot(vec_14, unit_x_axis)
+    x5 = np.dot(vec_15, unit_x_axis)
+    x6 = np.dot(vec_16, unit_x_axis)
 
-    y1 = 0 
-    y2 = np.dot(vec21, unit_y_axis)
-    y3 = np.dot(vec31, unit_y_axis)
-    y4 = np.dot(vec41, unit_y_axis)
-    y5 = np.dot(vec51, unit_y_axis)
-    y6 = np.dot(vec61, unit_y_axis)
+    y1 = 0.
+    y2 = np.dot(vec_12, unit_y_axis)
+    y3 = np.dot(vec_13, unit_y_axis)
+    y4 = np.dot(vec_14, unit_y_axis)
+    y5 = np.dot(vec_15, unit_y_axis)
+    y6 = np.dot(vec_16, unit_y_axis)
 
     coord_loc = np.array([[x1, y1],
                           [x2, y2],
@@ -137,29 +75,22 @@ class ACT_TRIANGLE_6(Element2D):
 
         self.model = model
 
-        self.initialize_variables()
+        self.connectivities = None
+        self.element_label = "acoustic_triangular_6"
+        self.nodal_coordinates = self.model.mesh.nodal_coordinates
+
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
 
-    def initialize_variables(self):
-        self.connectivities = None
-        self.element_label = "acoustic_triangular_3"
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
-
-
-    def define_integration_points(self):
+    def define_integration_points(self, integration_points: int = 6):
         """ 
         Defines the integration points and their respective weights
         for the numerical integration processing.
         """
-        self.nint = 3
-        con1 = 1/6
-        con2 = 2/3
-        self.wps = 1/3
-        self.pint = np.array([[con1, con1],
-                              [con2, con1],
-                              [con1, con2]], dtype=float)
+        self.nint = integration_points
+        self.num_int_data = self.integration_points_data_for_triangles(integration_points)
+        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -168,8 +99,8 @@ class ACT_TRIANGLE_6(Element2D):
         derivatives for all integration points.
         """
         ## coordinates from integration points
-        xi_1 = self.pint[:, 0]
-        xi_2 = self.pint[:, 1]
+        xi_1 = self.num_int_data[:, 0]
+        xi_2 = self.num_int_data[:, 1]
 
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
@@ -244,14 +175,14 @@ class ACT_TRIANGLE_6(Element2D):
         Y6 = self.nodal_coordinates[self.connectivities[:, 5], 2]
         Z6 = self.nodal_coordinates[self.connectivities[:, 5], 3]
 
-        vec_21 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
-        vec_31 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
-        vec_41 = np.array([X4-X1, Y4-Y1, Z4-Z1]).T
-        vec_51 = np.array([X5-X1, Y5-Y1, Z5-Z1]).T
-        vec_61 = np.array([X6-X1, Y6-Y1, Z6-Z1]).T
+        vec_12 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+        vec_13 = np.array([X3-X1, Y3-Y1, Z3-Z1]).T
+        vec_14 = np.array([X4-X1, Y4-Y1, Z4-Z1]).T
+        vec_15 = np.array([X5-X1, Y5-Y1, Z5-Z1]).T
+        vec_16 = np.array([X6-X1, Y6-Y1, Z6-Z1]).T
 
-        loc_x_axis = vec_21.copy()
-        loc_z_axis = np.cross(loc_x_axis, vec_31, axis=1)   # ---> normal
+        loc_x_axis = vec_12.copy()
+        loc_z_axis = np.cross(loc_x_axis, vec_13, axis=1)   # ---> normal
         loc_y_axis = np.cross(loc_z_axis, loc_x_axis, axis=1)
 
         nx = np.linalg.norm(loc_x_axis, axis=1).reshape(-1, 1, 1)
@@ -266,17 +197,17 @@ class ACT_TRIANGLE_6(Element2D):
         unit_y_axis = unit_y_axis.reshape(-1, 3)
         # unit_z_axis = unit_z_axis.reshape(-1, 3)
 
-        x2 = np.sum(vec_21 * unit_x_axis, axis=1)
-        x3 = np.sum(vec_31 * unit_x_axis, axis=1)
-        x4 = np.sum(vec_41 * unit_x_axis, axis=1)
-        x5 = np.sum(vec_51 * unit_x_axis, axis=1)
-        x6 = np.sum(vec_61 * unit_x_axis, axis=1)
+        x2 = np.sum(vec_12 * unit_x_axis, axis=1)
+        x3 = np.sum(vec_13 * unit_x_axis, axis=1)
+        x4 = np.sum(vec_14 * unit_x_axis, axis=1)
+        x5 = np.sum(vec_15 * unit_x_axis, axis=1)
+        x6 = np.sum(vec_16 * unit_x_axis, axis=1)
 
-        y2 = np.sum(vec_21 * unit_y_axis, axis=1)
-        y3 = np.sum(vec_31 * unit_y_axis, axis=1)
-        y4 = np.sum(vec_41 * unit_y_axis, axis=1)
-        y5 = np.sum(vec_51 * unit_y_axis, axis=1)
-        y6 = np.sum(vec_61 * unit_y_axis, axis=1)
+        y2 = np.sum(vec_12 * unit_y_axis, axis=1)
+        y3 = np.sum(vec_13 * unit_y_axis, axis=1)
+        y4 = np.sum(vec_14 * unit_y_axis, axis=1)
+        y5 = np.sum(vec_15 * unit_y_axis, axis=1)
+        y6 = np.sum(vec_16 * unit_y_axis, axis=1)
 
         nel = self.connectivities.shape[0]
         coord_loc = np.zeros((nel, self.NODES_PER_ELEMENT, 2), dtype=float)
@@ -292,7 +223,7 @@ class ACT_TRIANGLE_6(Element2D):
         coord_loc[:, 5, 0] = x6
         coord_loc[:, 5, 1] = y6
 
-        return coord_loc    
+        return coord_loc
 
 
     def stacked_matrices_NtN(self) -> np.ndarray:
@@ -319,12 +250,12 @@ class ACT_TRIANGLE_6(Element2D):
             JAC_stacked = self.dphi[i, :, :] @ local_coords
 
             # Jacobian determinants and inverses of all elements
-            det_jacs = get_detJAC(JAC_stacked)
+            det_jacs = self.get_detJAC(JAC_stacked)
 
             # shape functions
             N = self.phi[i, :, :]
 
-            int2d_NtN += (1 / 2) * N.T @ N * (det_jacs * self.wps)
+            int2d_NtN += N.T @ N * (det_jacs * self.wps[i])
 
         return int2d_NtN
 
@@ -357,7 +288,7 @@ class ACT_TRIANGLE_6(Element2D):
             JAC_stacked = self.dphi[i, :, :] @ local_coords
 
             # Jacobian determinants and inverses of all elements
-            det_jacs, inv_jacs = get_stacked_detJAC_and_invJAC(JAC_stacked)
+            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
             # shape functions
             N = self.phi[i, :, :]
@@ -367,8 +298,8 @@ class ACT_TRIANGLE_6(Element2D):
             B = inv_jacs @ self.dphi[i, :, :]
             B_t = np.transpose(B, axes=(0, 2, 1))
 
-            int2d_NtN += (1 / 2) * N_t @ N * (det_jacs * self.wps)
-            int2d_BtB += (1 / 2) * B_t @ B * (det_jacs * self.wps)
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
 
         return int2d_NtN, int2d_BtB
 
@@ -397,7 +328,7 @@ class ACT_TRIANGLE_6(Element2D):
         # nodal coordinates in the local CS
         coord_lcs = get_local_coordinates(coords)
 
-        # intialize variable
+        # initialize the variable Fe
         Fe = 0.
 
         # integration loop
@@ -407,12 +338,12 @@ class ACT_TRIANGLE_6(Element2D):
             JAC = self.dphi[i, :, :] @ coord_lcs
 
             # determinant of Jacobia matrix
-            det_JAC = get_detJAC(JAC)
+            det_JAC = self.get_detJAC(JAC)
 
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += (1 / 2) * load * N.T * (det_JAC * self.wps)
+            Fe += load * N.T * (det_JAC * self.wps[i])
 
         return Fe
 
@@ -444,7 +375,7 @@ class ACT_TRIANGLE_6(Element2D):
         # nodal coordinates in the local CS
         local_coords = get_local_coordinates(coords)
 
-        # intialize variable
+        # initialize variable We
         We = 0.
 
         # integration loop
@@ -454,12 +385,12 @@ class ACT_TRIANGLE_6(Element2D):
             JAC = self.dphi[i, :, :] @ local_coords
 
             # determinant of Jacobian matrix
-            det_jac = get_detJAC(JAC)
+            det_jac = self.get_detJAC(JAC)
 
             # shape functions
             N = self.phi[i, :, :]
 
-            We += (1 / 2) * P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps)
+            We += P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
 
         return We.flatten()
 

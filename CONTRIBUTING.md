@@ -16,12 +16,21 @@ git clone https://github.com/MOPT-UFSC/VIBRA.git
 
 # Running from source
 
+## Python
+
+A compatible python version is needed.[Python 3.12 is recommended](https://www.python.org/downloads/release/python-3129/).
+
+If you are using Windows, we highly recommend you to mark the option "Add python.exe to PATH". Otherwise you need to do it manually.
+
+You might need to restart your computer.
+
 ## Poetry
 The dependencies and environments in this project are managed mainly using Poetry.
 If you do not have poetry installed, you can install it running:
 ```
-pip install poetry
+pip install poetry -U
 ```
+*Note that poetry versions bellow 2.x.x are not supported*
 
 To download and install all dependencies in a local environment run:
 ```
@@ -29,8 +38,10 @@ poetry install
 ```
 This command is also usefull to reinstall the packages if some dependency changed.
 
-When the dependencies are installed in a local virtual environment poetry can run commands
-inside this environment as follows: 
+If you are using vscode, you may want to change the virtual environment to the local `.venv` directory.
+Usually this option is offered in a notification which can be safely accepted.
+
+When the dependencies are installed in a local virtual environment, poetry can run commands inside this environment as follows: 
 ```
 poetry run <you command here>
 ```
@@ -109,7 +120,7 @@ Pyinstaller is used to create executables.
 In linux run the following command to create a folder containing 
 a executable and its dependencies.
 ```
-poetry run pyinstaller vibra.spec --no-confirm
+poetry run pyinstaller vibra.spec
 ```
 
 ## Windows
@@ -132,11 +143,11 @@ To ensure consistency, use colors from [this palette](https://andrefpf.github.io
 from molde.colors import color_names
 
 example_colors = [
-    colornames.RED,
-    GREEN_6,
-    PURPLE_2,
-    PURPLE_9,
-    PINK_4,
+    color_names.RED,
+    color_names.GREEN_6,
+    color_names.PURPLE_2,
+    color_names.PURPLE_9,
+    color_names.PINK_4,
 ]
 ```
 

@@ -145,7 +145,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 475, 1038))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 465, 1064))
         self.gridLayout_11 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_11.setSpacing(0)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
@@ -972,7 +972,7 @@ class Ui_Dialog(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 492, 549))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 486, 537))
         self.gridLayout_18 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
         self.frame_4 = QFrame(self.scrollAreaWidgetContents_2)
@@ -1747,7 +1747,7 @@ class Ui_Dialog(object):
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Connection", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surface ID", None));
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
-        self.pushButton_remove.setProperty(u"status", QCoreApplication.translate("Dialog", u"danger", None))
+        self.pushButton_remove.setProperty(u"status", "")
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.label_5.setText(QCoreApplication.translate("Dialog", u"Selected surface ID:", None))

@@ -1,11 +1,13 @@
-import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QHeaderView, QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+
+import numpy as np
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -30,7 +32,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
     def _create_connections(self):
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
-        self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -41,13 +43,14 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         #
         self.load_user_preference_colormap()
 
-    def _config_widgets(self):
-
+    def _configure_qt_variables(self):
+        #
         self.frame_button.setVisible(False)
+        self.frame_transparency.setVisible(False)
+        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-        self.slider_transparency.setDisabled(True)
-
+        #
         if app().project.acoustic_modal_solver.complex_natural_frequencies.size:
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
@@ -69,7 +72,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def update_animation_widget_visibility(self):
-        index = self.comboBox_color_scale.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         if index >= 2:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
@@ -103,41 +106,14 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         if self.lineEdit_natural_frequency.text() == "":
             return
 
-        self.mode_index = self.natural_frequencies.index(self.selected_frequency)
-        app().main_window.results_widget.update_plot()
+        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def update_transparency_callback(self):
         return
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
-
-    def get_user_color_scale_setup(self):
-        return
-
-        absolute = False
-        real_values = False
-        imag_values = False
-        absolute_animation = False
-
-        index = self.comboBox_color_scale.currentIndex()
-
-        if index == 0:
-            absolute_animation = True
-        if index == 2:
-            absolute = True
-        elif index == 3:
-            real_values = True
-        elif index == 4:
-            imag_values = True
-
-        color_scale_setup = {
-            "absolute": absolute,
-            "real_values": real_values,
-            "imag_values": imag_values,
-            "absolute_animation": absolute_animation,
-        }
-
-        return color_scale_setup
 
     def get_plot_type(self):
         plot_types = [
@@ -147,14 +123,14 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             "real_values",
             "imag_values",
         ]
-        index = self.comboBox_color_scale.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         return plot_types[index]
 
     def load_natural_frequencies(self):
         if app().project.acoustic_modal_solver is None:
             return
 
-        self._config_widgets()
+        self._configure_qt_variables()
 
         if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
             self.natural_frequencies = list(
@@ -207,9 +183,9 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             damped_frequency = np.abs(selected_frequency) * ((1 - damping_ratio**2) ** (1 / 2))
             self.lineEdit_natural_frequency.setText(str(round(damped_frequency, 4)))
         else:
-            self.lineEdit_natural_frequency.setText(str(round(selected_frequency, 4)))
+            self.lineEdit_natural_frequency.setText(f"{selected_frequency : .6f}")
 
-        self.selected_frequency = selected_frequency
+        self.selected_natural_frequency = selected_frequency
         self.update_plot()
 
     def on_doubleclick_item(self, item):

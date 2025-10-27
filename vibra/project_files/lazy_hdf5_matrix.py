@@ -85,6 +85,7 @@ class LazyHDF5MatrixWriter:
 class LazyHDF5MatrixLoader:
     def __init__(self, filepath: Path):
         self.filepath = filepath
+        self._solution_cache = {}
 
     def __getitem__(self, key):
         with h5py.File(self.filepath, 'r') as f:
@@ -93,9 +94,13 @@ class LazyHDF5MatrixLoader:
             shape = solution.shape
 
             def _get_column_data(col_idx):
+                if col_idx in self._solution_cache:
+                    return self._solution_cache[col_idx]
                 if not status[col_idx]:
                     raise ValueError(COL_ERROR_MESSAGE_FORMAT.format(col_idx))
-                return solution[:, col_idx]
+                self._solution_cache[col_idx] = solution[:, col_idx]
+                return self._solution_cache[col_idx]
+
 
             if isinstance(key, tuple):
                 row_idx, col_idx = key
@@ -103,9 +108,7 @@ class LazyHDF5MatrixLoader:
                 row_idx, col_idx = key, slice(None)
 
             if isinstance(col_idx, (int, np.integer)):
-                if not status[col_idx]:
-                    raise ValueError(COL_ERROR_MESSAGE_FORMAT.format(col_idx))
-                return solution[row_idx, col_idx]
+                return _get_column_data(col_idx)[row_idx]
 
             if isinstance(col_idx, slice):
                 cols = range(*col_idx.indices(shape[1]))

@@ -130,18 +130,18 @@ class Ui_Form(object):
 
         self.gridLayout_9.addItem(self.horizontalSpacer, 0, 0, 1, 1)
 
-        self.comboBox_color_scale = QComboBox(self.frame_3)
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.addItem("")
-        self.comboBox_color_scale.setObjectName(u"comboBox_color_scale")
-        self.comboBox_color_scale.setMinimumSize(QSize(176, 26))
-        self.comboBox_color_scale.setMaximumSize(QSize(200, 26))
-        self.comboBox_color_scale.setFont(font)
+        self.comboBox_plot_type = QComboBox(self.frame_3)
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
+        self.comboBox_plot_type.setMinimumSize(QSize(176, 26))
+        self.comboBox_plot_type.setMaximumSize(QSize(200, 26))
+        self.comboBox_plot_type.setFont(font)
 
-        self.gridLayout_9.addWidget(self.comboBox_color_scale, 0, 2, 1, 1)
+        self.gridLayout_9.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_3, 4, 0, 1, 1)
@@ -192,7 +192,7 @@ class Ui_Form(object):
         self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
         self.lineEdit_selected_frequency.setEnabled(False)
         self.lineEdit_selected_frequency.setMinimumSize(QSize(80, 28))
-        self.lineEdit_selected_frequency.setMaximumSize(QSize(80, 28))
+        self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
         self.lineEdit_selected_frequency.setFont(font1)
         self.lineEdit_selected_frequency.setStyleSheet(u"")
         self.lineEdit_selected_frequency.setAlignment(Qt.AlignCenter)
@@ -255,16 +255,16 @@ class Ui_Form(object):
 
         self.gridLayout_5.addWidget(self.frame_treeWidget, 1, 0, 1, 1)
 
-        self.frame_5 = QFrame(self.frame_2)
-        self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setMinimumSize(QSize(0, 40))
-        self.frame_5.setMaximumSize(QSize(16777215, 40))
-        self.frame_5.setFrameShape(QFrame.NoFrame)
-        self.frame_5.setFrameShadow(QFrame.Raised)
-        self.gridLayout_8 = QGridLayout(self.frame_5)
+        self.frame_transparency = QFrame(self.frame_2)
+        self.frame_transparency.setObjectName(u"frame_transparency")
+        self.frame_transparency.setMinimumSize(QSize(0, 40))
+        self.frame_transparency.setMaximumSize(QSize(16777215, 40))
+        self.frame_transparency.setFrameShape(QFrame.NoFrame)
+        self.frame_transparency.setFrameShadow(QFrame.Raised)
+        self.gridLayout_8 = QGridLayout(self.frame_transparency)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.label_3 = QLabel(self.frame_5)
+        self.label_3 = QLabel(self.frame_transparency)
         self.label_3.setObjectName(u"label_3")
         self.label_3.setMinimumSize(QSize(90, 26))
         self.label_3.setMaximumSize(QSize(90, 26))
@@ -273,7 +273,7 @@ class Ui_Form(object):
 
         self.gridLayout_8.addWidget(self.label_3, 0, 1, 1, 1)
 
-        self.slider_transparency = QSlider(self.frame_5)
+        self.slider_transparency = QSlider(self.frame_transparency)
         self.slider_transparency.setObjectName(u"slider_transparency")
         self.slider_transparency.setMinimumSize(QSize(176, 0))
         self.slider_transparency.setMaximumSize(QSize(200, 16777215))
@@ -290,7 +290,7 @@ class Ui_Form(object):
         self.gridLayout_8.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_5, 3, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_transparency, 3, 0, 1, 1)
 
 
         self.gridLayout_2.addWidget(self.frame_2, 1, 0, 1, 1)
@@ -354,12 +354,12 @@ class Ui_Form(object):
         self.comboBox_colormaps.setItemText(10, QCoreApplication.translate("Form", u" Grayscale", None))
 
         self.label_6.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
-        self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Color scale:", None))
-        self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
-        self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
-        self.comboBox_color_scale.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
-        self.comboBox_color_scale.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
-        self.comboBox_color_scale.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
+        self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
+        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
+        self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
         self.pushButton_plot.setText(QCoreApplication.translate("Form", u"Plot pressure field", None))
         self.lineEdit_selected_frequency.setText("")
@@ -389,7 +389,7 @@ class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
                                         - label_color_scalling: QLabel
-                                        - comboBox_color_scale: QComboBox
+                                        - comboBox_plot_type: QComboBox
                             - frame_button: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_plot: QPushButton
@@ -401,7 +401,7 @@ class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
                             - frame_treeWidget: QFrame
                                 - (Layout): QGridLayout
                                         - treeWidget_frequencies: QTreeWidget
-                            - frame_5: QFrame
+                            - frame_transparency: QFrame
                                 - (Layout): QGridLayout
                                         - label_3: QLabel
                                         - slider_transparency: QSlider

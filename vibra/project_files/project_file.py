@@ -313,7 +313,7 @@ class ProjectFile:
 
     def read_mesh_data_from_file(self):
 
-        if not self.geometry_data_filepath.exists():
+        if not self.mesh_data_filepath.exists():
             return dict()
 
         try:
@@ -569,8 +569,13 @@ class ProjectFile:
         return read_image(self.thumbnail_filepath)
     
     def write_results_data_in_file(self):
+        acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
+        structural_harmonic_solver = app().project.structural_harmonic_solver
 
-        if app().project.acoustic_harmonic_solver is not None:
+        if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
+            return
+
+        if structural_harmonic_solver is not None and structural_harmonic_solver.project_file is not None:
             return
 
         with h5py.File(self.results_data_filepath, "w") as f:
@@ -597,29 +602,31 @@ class ProjectFile:
                     f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
                     f.create_dataset("modal_structural/displacement_dof", data=displacement_dof, dtype=int)
 
-            # acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
-            # if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is None:
-            #     if acoustic_harmonic_solver.solution is not None:
-            #         frequencies = app().project.model.frequencies
-            #         solution = acoustic_harmonic_solver.solution
-            #         f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
-            #         f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
+            acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
+            if acoustic_harmonic_solver is not None:
+                if acoustic_harmonic_solver.solution is not None:
+                    frequencies = app().project.model.frequencies
+                    solution = acoustic_harmonic_solver.solution
+                    f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
+                    f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
 
-            # structural_harmonic_solver = app().project.structural_harmonic_solver
-            # if structural_harmonic_solver is not None:
-            #     if structural_harmonic_solver.solution is not None:
-            #         frequencies = app().project.model.frequencies
-            #         solution = structural_harmonic_solver.solution
-            #         displacement_dof = structural_harmonic_solver.displacement_dof
-            #         f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
-            #         f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
-            #         f.create_dataset("harmonic_structural/displacement_dof", data=displacement_dof, dtype=int)
+            structural_harmonic_solver = app().project.structural_harmonic_solver
+            if structural_harmonic_solver is not None:
+                if structural_harmonic_solver.solution is not None:
+                    frequencies = app().project.model.frequencies
+                    solution = structural_harmonic_solver.solution
+                    displacement_dof = structural_harmonic_solver.displacement_dof
+                    f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
+                    f.create_dataset("harmonic_structural/solution", data=solution, dtype=complex)
+                    f.create_dataset("harmonic_structural/displacement_dof", data=displacement_dof, dtype=int)
 
             app().main_window.project_data_modified = True
 
     def handling_harmonic_solution_results(self, solver_tag: str):
+
         if not self.results_data_filepath.exists():
             return
+
         with h5py.File(self.results_data_filepath, "r") as f_src:
             # Converting Harmonic solution in the old form.
             analysis = f_src.get(solver_tag)

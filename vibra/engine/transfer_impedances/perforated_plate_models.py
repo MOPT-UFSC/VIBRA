@@ -15,7 +15,10 @@ class PerforatedPlateModels:
 
         self.perforated_plate_impedance_data = dict()
 
-    def process_acoustic_transfer_impedances(self, frequencies: np.ndarray):
+    def process_acoustic_transfer_impedances(self, frequencies: np.ndarray | None = None):
+
+        if frequencies is None:
+            frequencies = self.model.frequencies
 
         self.perforated_plate_impedance_data.clear()
 

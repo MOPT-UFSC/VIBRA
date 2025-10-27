@@ -1,19 +1,12 @@
-import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QComboBox,
-    QFrame,
-    QLineEdit,
-    QPushButton,
-    QSlider,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QWidget,
-)
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.structural.displacement_field_inputs_ui import DisplacementFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+
+import numpy as np
 
 
 class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
@@ -39,21 +32,21 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         self.frequency_index = None
 
     def _configure_qt_variables(self):
+        #
         self.frame_button.setVisible(False)
-
+        self.frame_transparency.setVisible(False)
+        #
+        self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
-
-        self._config_treeWidget()
+        #
+        for i, width in enumerate([80, 140]):
+            self.treeWidget_frequencies.setColumnWidth(i, width)
+            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
-        # self.comboBox_colormaps.setDisabled(True)
-        self.comboBox_color_scale.setDisabled(True)
-        self.slider_transparency.setDisabled(True)
-
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
-        self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_displacements.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -67,7 +60,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
     def update_animation_widget_visibility(self):
         return
-        index = self.comboBox_color_scale.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         if index >= 4:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
@@ -97,16 +90,8 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
             "u_y",
             "u_z",
         ]
-        index = self.comboBox_displacements.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         return plot_types[index]
-
-    def _config_treeWidget(self):
-        widths = [80, 140]
-        for i, width in enumerate(widths):
-            self.treeWidget_frequencies.setColumnWidth(i, width)
-            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-        #
-        self.lineEdit_selected_frequency.setDisabled(True)
 
     def update_transparency_callback(self):
         return
@@ -117,11 +102,14 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
             return
-
+        
         frequency_selected = float(self.lineEdit_selected_frequency.text())
-        if frequency_selected in self.frequencies:
-            self.frequency_index = self.frequencies.index(frequency_selected)
-            app().main_window.results_widget.update_plot()
+        self.frequency_index = self.frequency_to_index.get(frequency_selected)
+
+        if self.frequency_index is None:
+            return
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def current_frequency_index(self):
         if self.frequency_index is not None:
@@ -133,74 +121,6 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         if not (0 <= index < len(COLORMAP_NAMES)):
             return "jet"
         return COLORMAP_NAMES[index]
-
-    def get_user_color_scale_setup(self):
-        return
-
-        absolute = False
-        ux_abs_values = False
-        uy_abs_values = False
-        uz_abs_values = False
-        ux_real_values = False
-        uy_real_values = False
-        uz_real_values = False
-        ux_imag_values = False
-        uy_imag_values = False
-        uz_imag_values = False
-        absolute_animation = False
-        ux_animation = False
-        uy_animation = False
-        uz_animation = False
-
-        index = self.comboBox_color_scale.currentIndex()
-
-        if index == 0:
-            absolute_animation = True
-        elif index == 1:
-            ux_animation = True
-        elif index == 2:
-            uy_animation = True
-        elif index == 3:
-            uz_animation = True
-        elif index == 4:
-            absolute = True
-        elif index == 5:
-            ux_abs_values = True
-        elif index == 6:
-            uy_abs_values = True
-        elif index == 7:
-            uz_abs_values = True
-        elif index == 8:
-            ux_real_values = True
-        elif index == 9:
-            uy_real_values = True
-        elif index == 10:
-            uz_real_values = True
-        elif index == 11:
-            ux_imag_values = True
-        elif index == 12:
-            uy_imag_values = True
-        elif index == 13:
-            uz_imag_values = True
-
-        color_scale_setup = {
-            "absolute": absolute,
-            "ux_abs_values": ux_abs_values,
-            "uy_abs_values": uy_abs_values,
-            "uz_abs_values": uz_abs_values,
-            "ux_real_values": ux_real_values,
-            "uy_real_values": uy_real_values,
-            "uz_real_values": uz_real_values,
-            "ux_imag_values": ux_imag_values,
-            "uy_imag_values": uy_imag_values,
-            "uz_imag_values": uz_imag_values,
-            "absolute_animation": absolute_animation,
-            "ux_animation": ux_animation,
-            "uy_animation": uy_animation,
-            "uz_animation": uz_animation,
-        }
-
-        return color_scale_setup
 
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)
@@ -223,14 +143,6 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
-
-    def plot_displacement_for_static_analysis(self):
-        #
-        self.lineEdit_selected_frequency.setText("0.0")
-        color_scale_setup = self.get_user_color_scale_setup()
-        #
-        app().project.set_color_scale_setup(color_scale_setup)
-        app().main_window.results_widget.show_displacement_field(0)
 
     def on_click_item(self, item):
         self.lineEdit_selected_frequency.setText(item.text(1))

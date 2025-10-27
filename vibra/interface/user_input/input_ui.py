@@ -1,30 +1,30 @@
-from vibra.interface.model_inputs.structural.material.set_material_inputs import MaterialInputs
-from vibra.interface.model_inputs.acoustic.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.material.set_material_inputs import MaterialInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
-from vibra.interface.model_inputs.acoustic.acoustic_pressure_inputs import AcousticPressureInputs
-from vibra.interface.model_inputs.acoustic.mass_flow_rate_inputs import MassFlowRateInputs
-from vibra.interface.model_inputs.acoustic.mass_source_inputs import MassSourceInputs
-from vibra.interface.model_inputs.acoustic.surface_velocity_inputs import SurfaceVelocityInputs
-from vibra.interface.model_inputs.acoustic.incident_plane_wave_inputs import IncidentPlaneWaveInputs
-from vibra.interface.model_inputs.acoustic.specific_impedance_inputs import SpecificImpedanceInputs
-from vibra.interface.model_inputs.acoustic.transfer_impedance_inputs import TransferImpedanceInputs
-from vibra.interface.model_inputs.acoustic.anechoic_termination_inputs import AnechoicTerminationInputs
-from vibra.interface.model_inputs.acoustic.absorption_surface_inputs import AbsorptionSurfaceInputs
+from vibra.interface.model_inputs.acoustic.excitations.acoustic_pressure_inputs import AcousticPressureInputs
+from vibra.interface.model_inputs.acoustic.excitations.mass_flow_rate_inputs import MassFlowRateInputs
+from vibra.interface.model_inputs.acoustic.excitations.mass_source_inputs import MassSourceInputs
+from vibra.interface.model_inputs.acoustic.excitations.surface_velocity_inputs import SurfaceVelocityInputs
+from vibra.interface.model_inputs.acoustic.excitations.incident_plane_wave_inputs import IncidentPlaneWaveInputs
+from vibra.interface.model_inputs.acoustic.excitations.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
+from vibra.interface.model_inputs.acoustic.external_impedances.specific_impedance_inputs import SpecificImpedanceInputs
+from vibra.interface.model_inputs.acoustic.external_impedances.anechoic_termination_inputs import AnechoicTerminationInputs
+from vibra.interface.model_inputs.acoustic.external_impedances.absorption_surface_inputs import AbsorptionSurfaceInputs
 from vibra.interface.model_inputs.acoustic.dissipation_models.proportional_damping_inputs import ProportionalDampingInput
 from vibra.interface.model_inputs.acoustic.dissipation_models.porous_material_model_inputs import PorousMaterialModelInputs
-from vibra.interface.model_inputs.acoustic.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
-from vibra.interface.model_inputs.acoustic.perforated_plate_model_inputs import PerforatedPlateModelInputs
+from vibra.interface.model_inputs.acoustic.dissipation_models.viscous_thermal_loss_model_inputs import ViscousThermalLossModelInputs
+from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_model_inputs import PerforatedPlateModelInputs
+from vibra.interface.model_inputs.acoustic.internal_impedances.transfer_impedance_inputs import TransferImpedanceInputs
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
-from vibra.interface.model_inputs.acoustic.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
-from vibra.interface.model_inputs.acoustic.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
+from vibra.interface.model_inputs.structural.excitations.dof_prescription_inputs import DofPrescriptionInputs
+from vibra.interface.model_inputs.structural.excitations.nodal_loads_inputs import NodalLoadsInputs
+from vibra.interface.model_inputs.structural.excitations.normal_pressure_load_inputs import NormalPressureLoadInputs
+from vibra.interface.model_inputs.structural.excitations.distributed_loads_inputs import DistributedLoadsInputs
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.model_inputs.structural.dof_prescription_inputs import DofPrescriptionInputs
-from vibra.interface.model_inputs.structural.nodal_loads_inputs import NodalLoadsInputs
-from vibra.interface.model_inputs.structural.normal_pressure_load_inputs import NormalPressureLoadInputs
-from vibra.interface.model_inputs.structural.distributed_loads_inputs import DistributedLoadsInputs
 #
 from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
@@ -179,24 +179,15 @@ class InputUi:
         self.process_input(ReciprocatingCompressorInputs)
 
     def plot_structural_mode_shapes(self):
-        if self.project.analysis_id in [
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        if self.project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
             return self.process_input(PlotStructuralModeShapeInputs)     
 
     def plot_displacement_field(self):
-        if self.project.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if self.project.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return self.process_input(PlotDisplacementFieldInputs)
 
     def plot_structural_frequency_response(self):
-        if self.project.analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD,
-            AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION,
-        ]:
+        if self.project.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return self.process_input(PlotStructuralFrequencyResponseInputs)
 
     def plot_reaction_frequency_response(self):

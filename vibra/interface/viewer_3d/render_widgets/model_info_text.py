@@ -828,20 +828,25 @@ def analysis_info_text(frequency_index: int):
     if not project.is_there_a_valid_solution():
         return ""
 
-    display_name = {
-                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
-                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
-                    AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD : "Structural Harmonic Analysis",
-                    AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
-                    }
+    analysis_setup = project.model.analysis_setup
+    analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-    analysis_id = project.analysis_id
+    if analysis_id == AnalysisID.NO_ANALYSIS:
+        return ""
+
+    display_name = {
+        AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
+        AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
+        AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
+        AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
+        AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
+        }
+
     tree = TreeInfo(display_name[analysis_id])
 
-    if project.analysis_id in [
-        AnalysisID.STRUCTURAL_MODAL,
-        AnalysisID.ACOUSTIC_MODAL,
-    ]:
+    if project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
+
+        ## modal analysis info texts
 
         frequencies = None
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
@@ -860,10 +865,6 @@ def analysis_info_text(frequency_index: int):
             print(f"frequency index: {frequency_index}")
             print(f"frequencies: {frequencies}")
             return ""
-        
-        # This works beacuse there is only this method for now
-        # TODO: add logic for other methods
-        tree.add_item("Method", "Direct")
 
         mode = frequency_index + 1
         tree.add_item("Mode", mode)
@@ -881,6 +882,8 @@ def analysis_info_text(frequency_index: int):
 
     else:
 
+        ## harmonic analysis info texts
+
         frequencies = project.model.frequencies
         if frequencies is None:
             return ""
@@ -888,11 +891,11 @@ def analysis_info_text(frequency_index: int):
         if frequency_index-1 >= len(frequencies):
             return ""
 
-        # TODO: add logic for other methods
-        tree.add_item("Method", "Direct")
+        method = analysis_setup.get("analysis_method", "none").replace("_", " ")
+        tree.add_item("Method", method)
 
-        frequency = frequencies[frequency_index-1]
-        tree.add_item("Frequency", f"{frequency:.2f}", "Hz")
+        frequency = frequencies[frequency_index - 1]
+        tree.add_item("Frequency", f"{frequency:.4f}", "Hz")
 
     return str(tree)
 

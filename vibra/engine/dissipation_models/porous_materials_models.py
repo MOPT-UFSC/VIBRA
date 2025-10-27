@@ -20,7 +20,10 @@ class PorousMaterialModels:
 
         self.effective_properties = dict()
 
-    def process_effective_properties(self, frequencies: np.ndarray):
+    def process_effective_properties(self, frequencies: np.ndarray | None = None):
+
+        if frequencies is None:
+            frequencies = self.model.frequencies
 
         self.effective_properties = dict()
         if frequencies[0] == 0:
