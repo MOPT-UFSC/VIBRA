@@ -174,7 +174,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             return
 
         # Ensure cell ids are valid, ignore otherwise
-        cells = np.array(cells)
+        cells = np.array(cells, dtype=int)
         cells = cells[(0 <= cells) & (cells < array.size)]
 
         array[cells] = color_fmt
@@ -290,6 +290,12 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
         self.data: vtkPolyData = add_tangents.GetOutput()
 
+        # Small workaround to fix a bug in some versions of VTK.
+        # The vtkPolyDataTangents filter sometimes removes my
+        # precious surface indexes. So I have to add them back.
+        surface_indexes = combined_surfaces.GetOutput().GetCellData().GetArray("surface_indexes")
+        self.data.GetCellData().AddArray(surface_indexes)
+
         self.cell_colors = fill_array(self.data, "color", (255, 255, 255, 255))
         self.data.GetCellData().SetScalars(self.cell_colors)
 
@@ -392,15 +398,16 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _new_actor_extraction(self, name: str):
         extractor = vtkExtractCells()
+        extractor.SetInputData(self.data)
         self.extractors[name] = extractor
 
         mapper = vtkDataSetMapper()
         mapper.SetScalarModeToUseCellData()
         mapper.ScalarVisibilityOn()
+        mapper.SetInputConnection(extractor.GetOutputPort())
 
-        self.data >> extractor >> mapper
-
-        self.actor = vtkActor(mapper=mapper)
+        self.actor = vtkActor()
+        self.actor.SetMapper(mapper)
         self.actor.PickableOff()
 
         self.AddPart(self.actor)
