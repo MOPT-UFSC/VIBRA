@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1056</width>
-    <height>587</height>
+    <height>586</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -791,6 +791,11 @@
   <action name="action_model_workspace_2">
    <property name="text">
     <string>Model workspace</string>
+   </property>
+  </action>
+  <action name="actionaaaaaa">
+   <property name="text">
+    <string>aaaaaa</string>
    </property>
   </action>
  </widget>

@@ -38,7 +38,6 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.viewer_3d.render_tools import (
     RenderTool,
-    SelectionTool,
     RotationTool,
     GrabTool,
     ZoomTool
@@ -500,8 +499,17 @@ class MainWindow(MainWindow_UI):
     def set_default_render_tool_in_render_widgets(self):
         renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
         for render in renders:
-            render.add_render_tool(SelectionTool())
+            render.set_default_interactor_style()
+    
+    def show_selection_tool(self):
+        self.action_selection_tool.setVisible(True)
+        self.render_tools_toolbar.actions()[2].setVisible(True)
 
+    
+    def hide_selection_tool(self):
+        self.action_selection_tool.setVisible(False)
+        self.render_tools_toolbar.actions()[2].setVisible(False)
+        
     def action_user_preferences_callback(self):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
@@ -573,6 +581,8 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(True)
         self.action_mesh_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
+        
+        self.show_selection_tool()
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
@@ -597,6 +607,8 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
 
+        self.show_selection_tool()
+
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
         else:
@@ -619,6 +631,8 @@ class MainWindow(MainWindow_UI):
         self.action_results_workspace.setChecked(True)
         self.action_model_workspace.setChecked(False)
         self.action_mesh_workspace.setChecked(False)
+
+        self.hide_selection_tool()
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)

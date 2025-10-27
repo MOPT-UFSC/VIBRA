@@ -4,11 +4,8 @@ from threading import Lock
 from time import time
 
 import numpy as np
-<<<<<<< HEAD
-=======
-from molde.interactor_styles import ArcballCameraInteractorStyle
->>>>>>> dev
 from molde.render_widgets import AnimatedRenderWidget
+from molde.interactor_styles import ArcballCameraInteractorStyle
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
@@ -17,7 +14,6 @@ from vibra import app, ICON_DIR
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
-from vibra.interface.viewer_3d.render_tools.selection_tool import SelectionTool
 
 from ..actors import (
     AnalysisActor,
@@ -34,11 +30,7 @@ from .model_info_text import (
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-<<<<<<< HEAD
-        self.set_interactor_style(SelectionTool())
-=======
-        self.set_interactor_style(ArcballCameraInteractorStyle())
->>>>>>> dev
+        self.set_default_interactor_style()
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
@@ -554,5 +546,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
+    
+    def set_default_interactor_style(self):
+        self.set_interactor_style(ArcballCameraInteractorStyle())
 
 

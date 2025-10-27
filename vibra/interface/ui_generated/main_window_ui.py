@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,7 +24,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1056, 587)
+        MainWindow.resize(1056, 586)
         self.action_new_project = QAction(MainWindow)
         self.action_new_project.setObjectName(u"action_new_project")
         icon = QIcon()
@@ -284,6 +284,8 @@ class Ui_MainWindow(object):
         self.action_zoom_out.setIcon(icon38)
         self.action_model_workspace_2 = QAction(MainWindow)
         self.action_model_workspace_2.setObjectName(u"action_model_workspace_2")
+        self.actionaaaaaa = QAction(MainWindow)
+        self.actionaaaaaa.setObjectName(u"actionaaaaaa")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -531,6 +533,7 @@ class Ui_MainWindow(object):
         self.action_zoom_in.setText(QCoreApplication.translate("MainWindow", u"Zoom in", None))
         self.action_zoom_out.setText(QCoreApplication.translate("MainWindow", u"Zoom out", None))
         self.action_model_workspace_2.setText(QCoreApplication.translate("MainWindow", u"Model workspace", None))
+        self.actionaaaaaa.setText(QCoreApplication.translate("MainWindow", u"aaaaaa", None))
         self.renderer_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
         self.menu_project.setTitle(QCoreApplication.translate("MainWindow", u"Project", None))
         self.menu_settings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))

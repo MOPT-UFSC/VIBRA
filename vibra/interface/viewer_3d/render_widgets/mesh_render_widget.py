@@ -29,7 +29,7 @@ from .model_info_text import (
 class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(SelectionTool())
+        self.set_default_interactor_style()
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)
@@ -417,3 +417,6 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
+    
+    def set_default_interactor_style(self):
+        self.set_interactor_style(SelectionTool())
