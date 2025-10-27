@@ -114,11 +114,11 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         analysis_setup = app().project.analysis_setup
 
         if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD:
-                self.analysis_method = "Direct method"
+            analysis_method = analysis_setup.get("analysis_method", "direct")
+            if isinstance(analysis_method, str):
+                analysis_method = analysis_method.capitalize().replace("_", " ")
 
-            elif analysis_setup["analysis_id"] == AnalysisID.STRUCTURAL_HARMONIC_MODE_SUPERPOSITION:
-                self.analysis_method = "Mode Superposition method"
+            self.analysis_method = f"{analysis_method} method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = app().project.structural_harmonic_solver.solution
@@ -175,29 +175,23 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         surface_ids = list()
 
         if selection_type == "surface":
-            surface_ids.append(selected_id)
-            nodes = self.mesh.nodes_from_surfaces[selected_id]
+            surface_ids = [selected_id]
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
 
         elif selection_type == "line":           
             surface_ids = self.mesh.surfaces_from_line[selected_id]
-            nodes = self.mesh.nodes_from_lines[selected_id]
+            nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":
             node_id = selected_id - 1
-            for surf_id, surf_nodes in self.mesh.nodes_from_surfaces.items():
-                if node_id in surf_nodes:
-                    if surf_id not in surface_ids:
-                        surface_ids.append(surf_id)
-
             nodes = np.array([node_id], dtype=int)
 
         else:
-            for surf_id, surf_nodes in self.mesh.nodes_from_surfaces.items():
-                if selected_id in surf_nodes:
-                    if surf_id not in surface_ids:
-                        surface_ids.append(surf_id)
-
             nodes = np.array([selected_id], dtype=int)
+        
+        if selection_type in ["point", "node"]:   
+            mask = np.sum(np.isin(self.mesh.faces_connectivity[:, 4:], nodes), axis=1) == 1
+            surface_ids = [int(surf_id) for surf_id in np.unique(self.mesh.faces_connectivity[:, 1][mask])]
 
         for surf_id in surface_ids:
 
@@ -205,15 +199,15 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             if isinstance(surf_data, dict):
                 if self.model.structural_element_2d is None:
                     self.model.set_structural_elements()
-                dofs_per_node = self.model.structural_element_2d.DOFS_PER_NODE
+                dof_per_node = self.model.structural_element_2d.DOF_PER_NODE
 
             else:
                 if self.model.structural_element_3d is None:
                     self.model.set_structural_elements()
-                dofs_per_node = self.model.structural_element_3d.DOFS_PER_NODE
+                dof_per_node = self.model.structural_element_3d.DOF_PER_NODE
 
-            gdofs = dofs_per_node * nodes.reshape(-1, 1) + np.arange(dofs_per_node, dtype=int)
-            rows = gdofs[:, dof_index]
+            gdof = dof_per_node * nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+            rows = gdof[:, dof_index]
 
         if isinstance(rows, int):
             response = self.solution[rows,:]

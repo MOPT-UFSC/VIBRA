@@ -1,4 +1,3 @@
-# fmt: off
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -7,7 +6,7 @@ from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
-from vibra.interface.model_inputs.acoustic.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import DelanyBazleyData
 from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JCAData
@@ -41,6 +40,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
+        app().main_window.volume_selection_mode = True
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
@@ -77,6 +77,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.update_tabs = True
         self.keep_window_open = True
         self.material_model_data = dict()
+        app().main_window.volume_selection_mode = True
 
     def _create_connections(self):
         #
@@ -877,6 +878,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if isinstance(self.auxiliar_dialog, QDialog):
             self.auxiliar_dialog.close()
 
-        return super().closeEvent(a0)
+        app().main_window.volume_selection_mode = False
 
-# fmt: on
+        return super().closeEvent(a0)

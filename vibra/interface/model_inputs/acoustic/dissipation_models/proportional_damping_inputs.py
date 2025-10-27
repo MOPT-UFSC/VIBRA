@@ -1,5 +1,3 @@
-# fmt: off
-
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -19,6 +17,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
+        app().main_window.volume_selection_mode = True
 
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -292,4 +291,5 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.volume_selection_mode = False
         return super().closeEvent(a0)

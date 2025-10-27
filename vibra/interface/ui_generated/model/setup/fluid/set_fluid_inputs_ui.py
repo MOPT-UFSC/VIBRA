@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'set_fluid_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -173,6 +173,12 @@ class Ui_Dialog(object):
         __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(5, __qtablewidgetitem5)
         self.tableWidget_model_fluids.setObjectName(u"tableWidget_model_fluids")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tableWidget_model_fluids.sizePolicy().hasHeightForWidth())
+        self.tableWidget_model_fluids.setSizePolicy(sizePolicy)
+        self.tableWidget_model_fluids.setMinimumSize(QSize(0, 350))
         self.tableWidget_model_fluids.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
         self.tableWidget_model_fluids.verticalHeader().setVisible(False)
 
@@ -199,6 +205,7 @@ class Ui_Dialog(object):
         font2.setItalic(False)
         self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -208,6 +215,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 

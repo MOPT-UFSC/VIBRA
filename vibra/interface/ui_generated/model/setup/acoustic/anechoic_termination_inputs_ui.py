@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'anechoic_termination_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -155,6 +155,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font3)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -164,6 +165,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font3)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -259,6 +261,7 @@ class Ui_Dialog(object):
         self.pushButton_attribute.setMaximumSize(QSize(100, 28))
         self.pushButton_attribute.setFont(font3)
         self.pushButton_attribute.setStyleSheet(u"")
+        self.pushButton_attribute.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_attribute, 0, 1, 1, 1)
 
@@ -268,6 +271,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMaximumSize(QSize(100, 28))
         self.pushButton_exit.setFont(font3)
         self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_exit.setAutoDefault(False)
 
         self.gridLayout_14.addWidget(self.pushButton_exit, 0, 0, 1, 1)
 

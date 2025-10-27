@@ -2,12 +2,11 @@ import logging
 import re
 from time import sleep
 
-from molde import load_ui
-
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QLabel, QProgressBar, QWidget
+from PySide6.QtWidgets import QApplication
 
 from vibra import UI_DIR, app
+from vibra.interface.ui_generated.messages.loading_window_ui import LoadingWindow_UI
 
 # Catches every message that contains something like [n/N]
 PROGRESS_FRACTION_REGEX = re.compile(r"\[\d+/\d+\]")
@@ -16,7 +15,7 @@ PROGRESS_FRACTION_REGEX = re.compile(r"\[\d+/\d+\]")
 PROGRESS_PERCENTAGE_REGEX = re.compile(r"\d+%")
 
 
-class LoadingWindow(QWidget):
+class LoadingWindow(LoadingWindow_UI):
     """
     This function is intended to be called for functions that take
     a long time to run and should run together with a progress bar.
@@ -58,14 +57,14 @@ class LoadingWindow(QWidget):
     update the progress bar and progress label.
     """
 
-    def __init__(self, _function):
+    def __init__(self, _function, _interrupt=None):
         super().__init__()
 
-        ui_path = UI_DIR / "messages/loading_window.ui"
-        load_ui(ui_path, self)
-
         self._function = _function
+        self._interrupt = _interrupt
+
         self._config_window()
+        self._create_connections()
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -74,10 +73,14 @@ class LoadingWindow(QWidget):
         self.setWindowModality(Qt.ApplicationModal)
         self.update_position()
         self.progress_bar.setValue(0)
+        self.push_button_stop_processing.setVisible(self._interrupt is not None)
 
-    def _define_qt_variables(self):
-        self.progress_bar: QProgressBar
-        self.progress_label: QLabel
+    def _create_connections(self):
+        self.push_button_stop_processing.clicked.connect(self.stop_processing_callback)
+
+    def stop_processing_callback(self):
+        if self._interrupt is not None:
+            self._interrupt()
 
     def update_position(self):
         """
@@ -128,6 +131,11 @@ class LoadingWindow(QWidget):
 
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
+    
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.stop_processing_callback()
+        return super().keyPressEvent(event)
 
 
 class ProgressBarLogUpdater(logging.Handler):

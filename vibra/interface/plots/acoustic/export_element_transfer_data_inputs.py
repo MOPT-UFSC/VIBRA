@@ -195,15 +195,15 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
             logging.info("Processing area... [60/100]")
-            self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+            self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
         LoadingWindow(function_callback).run()
 
     def get_response(self, surface_id: int):
 
-        surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
+        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
-        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id)
         if rho is None:
             return None
 

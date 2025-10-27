@@ -6,7 +6,7 @@ from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
-from vibra.interface.mesh.set_mesh_setup_inputs import MeshSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -280,7 +280,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             return   
 
         if not app().project.model.generated_mesh:
-            obj = MeshSetupInputs()
+            obj = MesherSetupInputs()
             if obj.complete:
                 app().main_window.update_plots()
             else:
@@ -351,15 +351,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         def function_callback():
             surface_ids = [self.input_selection_id, self.output_selection_id]
             logging.info("Processing area... [60/100]")
-            self.mesh._process_face_elements_connected_to_nodes(surface_ids)
+            self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
         LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 
-        surface_nodes = self.mesh.nodes_from_surfaces[surface_id]
+        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
-        rho, _ = self.model.get_fluid_properties_from_surface(surface_id, self.frequencies)
+        rho, _ = self.model.get_fluid_properties_from_surface(surface_id)
         if rho is None:
             return None
         
@@ -443,19 +443,25 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
             for key, data in self.element_transfer_data.items():
 
+                if not isinstance(data, dict):
+                    continue
+
                 selection_type, selection_id = key
                 sheet_name = f"{selection_type}_{selection_id}"
 
+                unit = data["unit"]
                 x_data = data["x_data"]
                 y_data = data["y_data"]
-                unit = data["unit"]
+                x_label = data.get("x_label")
+                y_label = data.get("y_label")
 
                 if isinstance(y_data[0], complex):
-                    header = ["Frequency[Hz]", f"Real part [{unit}]", f"Imaginary part [{unit}]", f"Absolute [{unit}]"]
-                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T 
+                    header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
+                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
+ 
                 else:
                     data_type = data["data_type"]
-                    header = ["Frequency[Hz]", f"{data_type.capitalize()} [{unit}]"]
+                    header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
                 df = DataFrame(data_to_export, columns=header)

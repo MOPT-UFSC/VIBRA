@@ -4,6 +4,7 @@ from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
+    vtkFloatArray,
 )
 from vtkmodules.vtkCommonDataModel import (
     VTK_HEXAHEDRON,
@@ -20,20 +21,25 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from molde import Color
 from vibra.engine.mesher.element_type import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
 )
+
+from molde import Color
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.mesher.mesh import Mesh
 
 ALWAYS_FALSE = vtkSphere()
 ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
-    def __init__(self, mesh, allow_hidding=True):
+    def __init__(self, mesh: "Mesh", allow_hidding=True):
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding
@@ -53,7 +59,7 @@ class SolidsActor(vtkActor):
         data = vtkUnstructuredGrid()
         points = vtkPoints()
         mapper = vtkDataSetMapper()
-        point_colors = vtkUnsignedCharArray()
+        point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
         solid_indexes = vtkIntArray()
         solid_indexes.SetName("solid_indexes")
@@ -88,7 +94,6 @@ class SolidsActor(vtkActor):
 
         data.Allocate(number_of_elements * nodes_per_element)
 
-        point_colors.SetNumberOfComponents(4)
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
@@ -157,14 +162,10 @@ class SolidsActor(vtkActor):
         self.set_color(color)
 
     def set_color(self, color: Color):
-        point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
-
-        point_colors.Fill(255)
         cell_colors.Fill(255)
         color = color.to_rgb()
         for component, value in enumerate(color):
-            point_colors.FillComponent(component, value)
             cell_colors.FillComponent(component, value)
 
         self.data.Modified()

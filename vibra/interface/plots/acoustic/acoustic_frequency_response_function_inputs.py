@@ -99,7 +99,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         else:
             self.lineEdit_input_selected_id.setStyleSheet("")
 
-        self.current_lineEdit.setStyleSheet("""border-color: rgb(200, 0, 0); border-width: 2px;""")
+        self.current_lineEdit.setStyleSheet("""border-color: rgb(32, 207, 255); border-width: 2px;""")
 
     def alternate_selected_line_edit(self):
         if self.current_lineEdit == self.lineEdit_input_selected_id:
@@ -227,11 +227,11 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
-            rows_num = self.project.model.mesh.nodes_from_surfaces.get(self.output_selection_id)
-            rows_den = self.project.model.mesh.nodes_from_surfaces.get(self.input_selection_id)
+            rows_num = self.project.model.mesh.get_nodes_from_surface(self.output_selection_id)
+            rows_den = self.project.model.mesh.get_nodes_from_surface(self.input_selection_id)
         elif index == 1:
-            rows_num = self.project.model.mesh.nodes_from_lines.get(self.output_selection_id)
-            rows_den = self.project.model.mesh.nodes_from_lines.get(self.input_selection_id)
+            rows_num = self.project.model.mesh.get_nodes_from_line(self.output_selection_id)
+            rows_den = self.project.model.mesh.get_nodes_from_line(self.input_selection_id)
         elif index == 2:
             rows_num = self.project.model.mesh.nodes_from_points.get(self.output_selection_id)
             rows_den = self.project.model.mesh.nodes_from_points.get(self.input_selection_id)

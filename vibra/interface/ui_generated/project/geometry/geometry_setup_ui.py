@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'geometry_setup.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -151,7 +151,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.comboBox_length_units.setItemText(0, QCoreApplication.translate("Dialog", u"milimeter", None))
+        self.comboBox_length_units.setItemText(0, QCoreApplication.translate("Dialog", u"millimeter", None))
         self.comboBox_length_units.setItemText(1, QCoreApplication.translate("Dialog", u"meter", None))
         self.comboBox_length_units.setItemText(2, QCoreApplication.translate("Dialog", u"inch", None))
 
@@ -163,11 +163,11 @@ class Ui_Dialog(object):
 
         self.label.setText(QCoreApplication.translate("Dialog", u"Geometry setup", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_proceed.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><br/></p></body></html>", None))
+        self.pushButton_proceed.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.pushButton_proceed.setText(QCoreApplication.translate("Dialog", u"Proceed", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_exit.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><br/></p></body></html>", None))
+        self.pushButton_exit.setToolTip("")
 #endif // QT_CONFIG(tooltip)
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
     # retranslateUi

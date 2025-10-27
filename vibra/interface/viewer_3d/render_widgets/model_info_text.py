@@ -16,8 +16,10 @@ from numbers import Number
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
 
+    mesh = app().project.model.mesh
+
     selected_points = app().main_window.selected_geometry_points
-    node_ids = [int(point_id)-1 for point_id in selected_points]
+    node_ids = [mesh.nodes_from_points.get(point_id) for point_id in selected_points]
     point_ids = list(selected_points)
 
     if len(node_ids) == 0:
@@ -26,14 +28,14 @@ def points_info_text():
     text = ""
 
     if len(point_ids) == 1:
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+        coords = mesh.nodal_coordinates[node_ids[0], 1:].round(6)
         tree = TreeInfo(f"POINT {point_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
         text += str(tree)
 
     elif len(point_ids) == 2:
-        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        coord_A = mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = mesh.nodal_coordinates[node_ids[1], 1:]
         dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
         distance = np.linalg.norm(coord_A - coord_B)
 
@@ -70,14 +72,7 @@ def lines_info_text():
         tree = TreeInfo(f"LINE {line_ids[0]}")
         tree.add_item("Length", f"{length : .6e}", "m")
 
-        # nodes_from_line = app().project.model.mesh.nodes_from_lines.get(line_ids[0])
-        # if nodes_from_line is not None:
-        #     print()
-        #     print(f"There are {len(nodes_from_line)} nodes in line {line_ids[0]}")
-        #     print(f"Nodes: {[int(node) for node in nodes_from_line]}")
-
     else:
-
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
             sequence = sequence[:20 - 4] + " ..."
@@ -109,12 +104,6 @@ def faces_info_text():
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
-
-        # nodes_from_surface = app().project.model.mesh.nodes_from_surfaces.get(surface_ids[0])
-        # if nodes_from_surface is not None:
-        #     print(f"There are {len(nodes_from_surface)} nodes in surface {surface_ids[0]}")
-        #     print(f"Nodes: {nodes_from_surface}")
-        #     print()
 
         surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
@@ -332,8 +321,6 @@ def perforated_plate_info_text():
 
     tree.add_item("Formulation", pp_data["formulation"].replace("_", " "))
     if pp_data["formulation"] == "circular_hole":
-
-        tree.add_item("Coupling type", pp_data.get("coupling_type").replace("_", " "))
         tree.add_item("Plate thickness", pp_data.get("plate_thickness"), "m")
         tree.add_item("Hole diameter", pp_data.get("hole_diameter"), "m")
         tree.add_item("Porosity", pp_data.get("porosity"), "--")
@@ -549,7 +536,7 @@ def mass_source_info_text():
 def structural_boundary_conditions_info_text():
     text = ""
     distributed_loads_line = None
-    prescribed_dofs = None
+    prescribed_dof = None
     nodal_loads = None
     distributed_loads_area = None
     normal_pressure_load = None
@@ -558,8 +545,8 @@ def structural_boundary_conditions_info_text():
     selected_lines = list(app().main_window.selected_geometry_lines)
 
     if len(selected_faces) == 1:
-        prescribed_dofs = app().project.model.properties._get_property(
-            "prescribed_dofs", surface=selected_faces[0]
+        prescribed_dof = app().project.model.properties._get_property(
+            "prescribed_dof", surface=selected_faces[0]
         )
         nodal_loads = app().project.model.properties._get_property(
             "nodal_loads", surface=selected_faces[0]
@@ -580,7 +567,7 @@ def structural_boundary_conditions_info_text():
         return text
 
     boundary_conditions = [
-        prescribed_dofs,
+        prescribed_dof,
         nodal_loads,
         distributed_loads_area,
         normal_pressure_load,
@@ -590,9 +577,9 @@ def structural_boundary_conditions_info_text():
     if all(bc is None for bc in boundary_conditions):
         return text
 
-    if prescribed_dofs is not None:
-        values = prescribed_dofs["values"]
-        loaded_table = "table_names" in prescribed_dofs.keys()
+    if prescribed_dof is not None:
+        values = prescribed_dof["values"]
+        loaded_table = "table_names" in prescribed_dof.keys()
         if are_there_values_different_from_zero(values):
             property_label = "Prescribed DOF"
         else:
@@ -711,9 +698,9 @@ def mesh_material_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         material = app().project.model.properties._get_property("material", volume=current_solid)
-        if material is None:
+        if not isinstance(material, Material):
             return text
 
         tree = TreeInfo("Material")
@@ -738,9 +725,9 @@ def mesh_fluid_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.volume_from_element[elements[0]]
+        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
         fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
-        if fluid is None:
+        if not isinstance(fluid, Fluid):
             return text
 
         tree = TreeInfo("Fluid")
@@ -763,20 +750,20 @@ def mesh_structural_boundary_conditions_info_text():
     if len(selected_nodes) != 1:
         return text
 
-    prescribed_dofs = app().project.model.properties._get_property(
-        "prescribed_dofs", node=selected_nodes[0]
+    prescribed_dof = app().project.model.properties._get_property(
+        "prescribed_dof", node=selected_nodes[0]
     )
     nodal_loads = app().project.model.properties._get_property(
         "nodal_loads", node=selected_nodes[0]
     )
-    boundary_conditions_list = [prescribed_dofs, nodal_loads]
+    boundary_conditions_list = [prescribed_dof, nodal_loads]
 
     if all(condition is None for condition in boundary_conditions_list):
         return text
 
-    if prescribed_dofs is not None:
-        values = prescribed_dofs["values"]
-        loaded_table = "table_names" in prescribed_dofs.keys()
+    if prescribed_dof is not None:
+        values = prescribed_dof["values"]
+        loaded_table = "table_names" in prescribed_dof.keys()
         text += structural_format(
             "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
         )
@@ -841,20 +828,25 @@ def analysis_info_text(frequency_index: int):
     if not project.is_there_a_valid_solution():
         return ""
 
-    display_name = {
-                    AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
-                    AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
-                    AnalysisID.STRUCTURAL_HARMONIC_DIRECT_METHOD : "Structural Harmonic Analysis",
-                    AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
-                    }
+    analysis_setup = project.model.analysis_setup
+    analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-    analysis_id = project.analysis_id
+    if analysis_id == AnalysisID.NO_ANALYSIS:
+        return ""
+
+    display_name = {
+        AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
+        AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
+        AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
+        AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
+        AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
+        }
+
     tree = TreeInfo(display_name[analysis_id])
 
-    if project.analysis_id in [
-        AnalysisID.STRUCTURAL_MODAL,
-        AnalysisID.ACOUSTIC_MODAL,
-    ]:
+    if project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
+
+        ## modal analysis info texts
 
         frequencies = None
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
@@ -873,10 +865,6 @@ def analysis_info_text(frequency_index: int):
             print(f"frequency index: {frequency_index}")
             print(f"frequencies: {frequencies}")
             return ""
-        
-        # This works beacuse there is only this method for now
-        # TODO: add logic for other methods
-        tree.add_item("Method", "Direct")
 
         mode = frequency_index + 1
         tree.add_item("Mode", mode)
@@ -894,6 +882,8 @@ def analysis_info_text(frequency_index: int):
 
     else:
 
+        ## harmonic analysis info texts
+
         frequencies = project.model.frequencies
         if frequencies is None:
             return ""
@@ -901,11 +891,11 @@ def analysis_info_text(frequency_index: int):
         if frequency_index-1 >= len(frequencies):
             return ""
 
-        # TODO: add logic for other methods
-        tree.add_item("Method", "Direct")
+        method = analysis_setup.get("analysis_method", "none").replace("_", " ")
+        tree.add_item("Method", method)
 
-        frequency = frequencies[frequency_index-1]
-        tree.add_item("Frequency", f"{frequency:.2f}", "Hz")
+        frequency = frequencies[frequency_index - 1]
+        tree.add_item("Frequency", f"{frequency:.4f}", "Hz")
 
     return str(tree)
 

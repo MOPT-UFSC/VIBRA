@@ -1,20 +1,59 @@
+from typing import Sequence
+
+
 class VibraException(Exception):
-    def __init__(self, message, context=""):
-        super().__init__(message)
-        self.context = context
+    show_traceback: bool = False
 
 
-class IncompleteSetupError(VibraException):
+class MeshException(VibraException):
+    def __init__(
+        self,
+        *args,
+        nodes: Sequence | None = None,
+        faces: Sequence | None = None,
+        solids: Sequence | None = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.nodes = nodes if (nodes is not None) else set()
+        self.faces = faces if (faces is not None) else set()
+        self.solids = solids if (solids is not None) else set()
+
+
+class ModelException(VibraException):
+    def __init__(
+        self,
+        *args,
+        points: Sequence | None = None,
+        surfaces: Sequence | None = None,
+        volumes: Sequence | None = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.points = points if (points is not None) else set()
+        self.surfaces = surfaces if (surfaces is not None) else set()
+        self.volumes = volumes if (volumes is not None) else set()
+
+
+class InvalidModelSetupError(ModelException):
     pass
 
 
-class IncompleteMeshSetup(VibraException):
+class InvalidModelExcitationError(ModelException):
     pass
 
 
-class MeshError(VibraException):
+class InvalidGeometryForAcousticAnalysisError(ModelException):
     pass
 
 
-class UnsuportedFileError(VibraException):
+class IncompleteSetupError(ModelException):
     pass
+
+
+class AnalysisCanceledException(VibraException):
+    pass
+
+
+class MeshingAlgorithmException(MeshException):
+    show_traceback = True

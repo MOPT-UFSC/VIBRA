@@ -1,9 +1,7 @@
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QItemDelegate, QTextEdit
-from PySide6.QtGui import QIcon, QFont, QPixmap, QColor, QLinearGradient, QBrush, QPen
-from PySide6.QtCore import Qt, QSize, QRect, Signal, QObject
-from pathlib import Path
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtCore import Qt
 
-from vibra.interface.formatters.icons import *
 from vibra.interface.menus.border_item_delegate import BorderItemDelegate
 from vibra import ICON_DIR
 from vibra.interface.menus.tool_tip import ToolTip
@@ -12,6 +10,7 @@ from molde import Color
 from molde.colors import color_names
 
 import re
+from pathlib import Path
 
 # class MyDelegate(QItemDelegate):      
 #     def __init__(self):    
@@ -149,7 +148,6 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
     
     def set_property_name(self, name: str):
         name = name.lower()
-        name = re.match(r"item_child_(?:set_|add_)*(.+)", name).group(1)
         name = name.strip()
         self.property_name = name
 

@@ -1,13 +1,12 @@
-import numpy as np
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (
-    QTreeWidgetItem,
-    QWidget,
-)
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+
+import numpy as np
 
 
 class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
@@ -35,18 +34,21 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.current_frequency = None
 
     def _configure_qt_variables(self):
+        #
         self.frame_button.setVisible(False)
-
+        self.frame_transparency.setVisible(False)
+        #
+        self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
-
-        self._config_treeWidget()
+        #
+        for i, width in enumerate([80, 140]):
+            self.treeWidget_frequencies.setColumnWidth(i, width)
+            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
-        # self.comboBox_colormaps.setDisabled(True)
-        self.slider_transparency.setDisabled(True)
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
-        self.comboBox_color_scale.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_plot.clicked.connect(self.update_plot)
         #
@@ -57,14 +59,8 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         #
         self.load_user_preference_colormap()
 
-    def _config_treeWidget(self):
-        widths = [80, 140]
-        for i, width in enumerate(widths):
-            self.treeWidget_frequencies.setColumnWidth(i, width)
-            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-
     def update_animation_widget_visibility(self):
-        index = self.comboBox_color_scale.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         if index >= 2:
             app().main_window.animation_toolbar.setDisabled(True)
         else:
@@ -98,42 +94,18 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             return
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
-        self.current_frequency = self.frequency_to_index[frequency_selected]
-        app().main_window.results_widget.update_plot()
+        self.current_frequency = self.frequency_to_index.get(frequency_selected)
+
+        if self.current_frequency is None:
+            return
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()
         if not (0 <= index < len(COLORMAP_NAMES)):
             return "jet"
         return COLORMAP_NAMES[index]
-
-    def get_user_color_scale_setup(self):
-        return
-
-        absolute = False
-        real_values = False
-        imag_values = False
-        absolute_animation = False
-
-        index = self.comboBox_color_scale.currentIndex()
-
-        if index == 0:
-            absolute_animation = True
-        if index == 2:
-            absolute = True
-        elif index == 3:
-            real_values = True
-        elif index == 4:
-            imag_values = True
-
-        color_scale_setup = {
-            "absolute": absolute,
-            "real_values": real_values,
-            "imag_values": imag_values,
-            "absolute_animation": absolute_animation,
-        }
-
-        return color_scale_setup
 
     def get_plot_type(self):
         plot_types = [
@@ -143,7 +115,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             "real_values",
             "imag_values",
         ]
-        index = self.comboBox_color_scale.currentIndex()
+        index = self.comboBox_plot_type.currentIndex()
         return plot_types[index]
 
     def load_frequencies(self):

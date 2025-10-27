@@ -10,12 +10,7 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (
-    QAbstractButton,
-    QFileDialog,
-    QMenu,
-    QMessageBox,
-)
+from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
@@ -44,6 +39,7 @@ from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
+import gmsh
 
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
@@ -57,6 +53,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
+        # TODO: move this to a separate class
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
         self.selected_mesh_solids = set()
@@ -64,6 +61,7 @@ class MainWindow(MainWindow_UI):
         self.selected_geometry_lines = set()
         self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
+        self.volume_selection_mode = False
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
@@ -138,12 +136,15 @@ class MainWindow(MainWindow_UI):
         self.splitter.widget(0).setMinimumWidth(360)        
 
     def _config_window(self):
-        self.setMinimumSize(800, 600)
+        self.setMinimumHeight(768)
         self.showMinimized()
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
         self.installEventFilter(self)
+
+        # to ensure everything has been processed before proceeding
+        app().processEvents()
 
         # for qdarktheme
         self.custom_colors = {
@@ -293,6 +294,8 @@ class MainWindow(MainWindow_UI):
         if volumes is None:
             volumes = set()
 
+        surfaces = set(surfaces) - set(self.hidden_surfaces)
+        volumes = set(volumes) - set(self.hidden_volumes)
         mesh = app().project.model.mesh
 
         # Select the surfaces associated to the selected volumes
@@ -419,17 +422,12 @@ class MainWindow(MainWindow_UI):
             self.action_theme.setIcon(self.theme_moon_icon)
 
         app().config.update_config_file()
-    
-    def action_show_materials_callback(self):
-        self.visualization_filter.color_mode = ColorMode.MATERIAL
-        self.visualization_changed.emit()
 
-    def action_show_fluids_callback(self):
-        self.visualization_filter.color_mode = ColorMode.FLUID
-        self.visualization_changed.emit()
-
-    def action_show_empty_callback(self):
-        self.visualization_filter.color_mode = ColorMode.EMPTY
+    def action_show_empty_callback(self, condition: bool):
+        if condition:
+            self.visualization_filter.color_mode = ColorMode.EMPTY
+        else:
+            self.visualization_filter.color_mode = ColorMode.COLORED        
         self.visualization_changed.emit()
 
     def action_user_preferences_callback(self):
@@ -517,6 +515,10 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
 
+        if self.visualization_filter.normal_symbols:
+            self.visualization_filter.normal_symbols = False
+            self.update_symbols()
+
     def action_mesh_workspace_callback(self):
         self.action_node_view.setToolTip("Nodes view")
         self.action_mesh_workspace.setChecked(True)
@@ -597,15 +599,26 @@ class MainWindow(MainWindow_UI):
     def action_hide_selection_callback(self):
         mesh = app().project.model.mesh
 
+        if not mesh.are_there_volumes_in_geometry():
+            PrintMessageInput(
+                [
+                    "Warning",
+                    "No volumes were found in the geometry",
+                    "Since the current geometry does not contains volumes, the operation can not be performed.",
+                ]
+            )
+
         volumes_to_hide = set()
         if self.selected_geometry_volumes:
             volumes_to_hide |= self.selected_geometry_volumes
+
         elif self.selected_geometry_surfaces:
             for surface in self.selected_geometry_surfaces:
                 volumes_to_hide |= set(mesh.volumes_from_surface[surface])
+
         elif self.selected_mesh_solids:
             for element in self.selected_mesh_solids:
-                volumes_to_hide.add(mesh.volume_from_element[element])
+                volumes_to_hide.add(mesh.get_volume_from_element(element))
 
         self.hide_volumes(volumes_to_hide)
         self.clear_selection()
@@ -824,8 +837,9 @@ class MainWindow(MainWindow_UI):
         if not check:
             return False
 
-        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
+        self.clear_selection()
 
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
         app().project.reset_variables()
         app().project.reset_solutions()
 
@@ -876,44 +890,54 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
 
         try:
-            if project_path is not None:
-                project_path = Path(project_path)
-                app().config.add_recent_file(project_path)
-                app().config.write_last_folder_path_in_file("project_folder", project_path)
-                self.update_recents_menu()
-                app().file.extract_project(project_path)
-                self.update_window_title(project_path)
 
-            app().project.reset_variables()
-            app().project.reset_solutions()
+            def open_callback(project_path):
 
-            if project_path is not None:
-                app().project.name = project_path.stem
-                app().project.save_path = project_path
+                if project_path is not None:
+                    project_path = Path(project_path)
+                    app().config.add_recent_file(project_path)
+                    app().config.write_last_folder_path_in_file("project_folder", project_path)
+                    self.update_recents_menu()
 
-            app().load_project.initialize()
-            LoadingWindow(app().load_project.load).run()
+                    logging.info("Loading project... [15/100]")
+                    app().file.extract_project(project_path)
+                    self.update_window_title(project_path)
 
-            self.update_toolbar_and_menu_items_after_load_project()
-            self.analysis_toolbar.check_analysis_setup_callback()
-            self.status_bar.setVisible(True)
-            self.action_front_view_callback()
-            self.update_mesh_information()
+                app().project.reset_variables()
+                app().project.reset_solutions()
 
-            LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
+                if project_path is not None:
+                    app().project.name = project_path.stem
+                    app().project.save_path = project_path
 
-            self.action_results_workspace.setDisabled(True)
-            self.action_model_workspace_callback()
-            self.model_setup_widget.model_setup_items.update_items_appearance()
+                app().load_project.initialize()
+                app().load_project.load()
+
+                self.update_toolbar_and_menu_items_after_load_project()
+                self.analysis_toolbar.check_analysis_setup_callback()
+                self.status_bar.setVisible(True)
+                self.action_front_view_callback()
+                self.update_mesh_information()
+
+                self.mesh_widget.update_plot()
+                self.geometry_widget.update_plot()
+
+                self.action_results_workspace.setDisabled(True)
+                self.action_model_workspace_callback()
+                self.model_setup_widget.model_setup_items.update_items_appearance()
             
+            LoadingWindow(open_callback).run(project_path)
+
             if app().project.can_resume_solution:
-                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records",
-                               "Click on the 'Resume the analysis' button to solve remaining frequencies"])
+                window_title = "Acoustic Harmonic results"
+                title = "Missing solution frequency records"
+                message = "Click on the 'Resume the analysis' button to solve remaining frequencies"
+                PrintMessageInput([window_title, title, message])
 
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
+
             window_title = "Error"
             title = "Error while processing the 'open_project' method"
             message = str(error_log)
@@ -925,14 +949,14 @@ class MainWindow(MainWindow_UI):
 
     def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
 
-        geometry_file = self.check_path_for_geometry_file(path)
+        is_geometry_file = app().project.model.check_path_for_geometry_file(path)
 
         if app().file.read_mesh_data_from_file():
-            app().project.load_project_without_process_mesh(path, geometry_file)
+            app().project.load_project_without_process_mesh(path, is_geometry_file)
 
         else:
 
-            if geometry_file:
+            if is_geometry_file:
                 if LoadingWindow(app().project.import_geometry).run(path) == -1:
                     return
 
@@ -941,9 +965,10 @@ class MainWindow(MainWindow_UI):
                     return
 
                 self.update_mesh_information()
-                app().file.write_geometry_data_in_file()
                 app().file.write_mesh_data_in_file()
-                app().main_window.project_data_modified = False
+                self.project_data_modified = False
+
+            app().file.write_geometry_data_in_file()
 
             self.update_geometry_information()
             self.update_toolbar_and_menu_items_after_load_project()
@@ -963,7 +988,7 @@ class MainWindow(MainWindow_UI):
             if ignore_workspaces:
                 return
 
-            if geometry_file:
+            if is_geometry_file:
                 self.action_model_workspace_callback()
             else:
                 self.action_mesh_workspace_callback()
@@ -971,26 +996,11 @@ class MainWindow(MainWindow_UI):
         except Exception as error_log:
             from traceback import print_exception
             print_exception(error_log)
-            
+
             window_title = "Error"
-            title = "Error while processing geometry"
+            title = "Error while processing 'import_geometry_or_mesh' method"
             message = str(error_log)
             PrintMessageInput([window_title, title, message])
-
-    def check_path_for_geometry_file(self, path: Path | str):
-        """
-        This method returns True if a CAD extension file is detected 
-        in the input path, otherwise, it returns False.
-        """
-
-        if isinstance(path, Path):
-            path = str(path)
-
-        ext = path.split(".")[-1]
-        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
-            return True
-
-        return False
     
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
@@ -1139,6 +1149,12 @@ class MainWindow(MainWindow_UI):
                 return
 
         self.reset_temporary_vibra_folder()
+
+        # finalize the gmsh before closing the application
+        if gmsh.isInitialized():
+            gmsh.finalize()
+            app().processEvents()
+
         app().quit()
 
     def close_dialogs(self):

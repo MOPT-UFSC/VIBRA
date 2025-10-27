@@ -30,10 +30,10 @@ class LinesActor(vtkActor):
         nodes_per_line = len(self.mesh.lines_connectivity[0, 4:])
         number_of_lines = self.mesh.lines_connectivity.shape[0]
 
-        data = vtkUnstructuredGrid()
+        self.data = vtkUnstructuredGrid()
         points = vtkPoints()
         mapper = vtkDataSetMapper()
-        data.Allocate(number_of_lines * 3)
+        self.data.Allocate(number_of_lines * 3)
 
         line_indexes = vtkIntArray()
         line_indexes.SetName("line_indexes")
@@ -47,25 +47,25 @@ class LinesActor(vtkActor):
 
         # Vertices need to be added first
         for _, line_id, _, _, *values in self.mesh.lines_connectivity:
-            data.InsertNextCell(VTK_VERTEX, 1, [values[0]])
+            self.data.InsertNextCell(VTK_VERTEX, 1, [values[0]])
             line_indexes.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
-            data.InsertNextCell(VTK_VERTEX, 1, [values[1]])
+            self.data.InsertNextCell(VTK_VERTEX, 1, [values[1]])
             line_indexes.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
         cell_type = self.NODES_TO_VTK_CELL[nodes_per_line]
         for _, line_id, _, _, *values in self.mesh.lines_connectivity:
-            data.InsertNextCell(cell_type, nodes_per_line, values)
+            self.data.InsertNextCell(cell_type, nodes_per_line, values)
             line_indexes.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
-        data.SetPoints(points)
-        data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(line_indexes)
+        self.data.SetPoints(points)
+        self.data.GetCellData().SetScalars(cell_colors)
+        self.data.GetCellData().AddArray(line_indexes)
 
-        mapper.SetInputData(data)
+        mapper.SetInputData(self.data)
         self.SetMapper(mapper)
         self.clear_colors()
 
@@ -103,8 +103,7 @@ class LinesActor(vtkActor):
             yield number_of_vertices + line_element
 
     def set_color(self, color: Color):
-        data = self.GetMapper().GetInput()
-        cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
+        cell_colors: vtkUnsignedCharArray = self.data.GetCellData().GetScalars()
         r, g, b, a = color.to_rgba()
 
         cell_colors.FillComponent(0, r)
@@ -135,8 +134,7 @@ class LinesActor(vtkActor):
         self.paint_cells(color, cells)
 
     def paint_cells(self, color: Color, cells: tuple[int]):
-        data = self.GetMapper().GetInput()
-        cell_colors: vtkUnsignedCharArray = data.GetCellData().GetScalars()
+        cell_colors: vtkUnsignedCharArray = self.data.GetCellData().GetScalars()
 
         color = color.to_rgba()
         for i in cells:
@@ -146,7 +144,6 @@ class LinesActor(vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOn()
         self.GetMapper().Update()
-
 
     def disable_cut(self):
         self.GetMapper().RemoveAllClippingPlanes()

@@ -119,6 +119,7 @@ class AnimationToolbar(QToolBar):
 
         self.phase_slider.sliderPressed.connect(self.pause_animation)
         self.phase_slider.valueChanged.connect(self.phase_slider_callback)
+        self.magnification_factor_slider.sliderPressed.connect(self.pause_animation)
         self.magnification_factor_slider.valueChanged.connect(self.magnification_factor_slider_callback)
 
         self.pushButton_animate.clicked.connect(self.process_animation)
@@ -207,6 +208,8 @@ class AnimationToolbar(QToolBar):
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()
         self.update_phase_slider_steps()
+        app().main_window.results_widget.stop_animation()
+        app().main_window.results_widget.clear_cache()
 
     def cycles_value_changed(self):
         self.cycles = self.spinBox_cycles.value()
@@ -242,7 +245,7 @@ class AnimationToolbar(QToolBar):
             )
         else:
             app().main_window.results_widget.stop_animation()
-
+        
     def update_animate_button_icons(self, state: bool):
         if state:
             self.pushButton_animate.setIcon(self.pause_icon)

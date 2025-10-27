@@ -3,7 +3,7 @@ from PySide6.QtGui import QIcon, QPen, QColor
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QToolTip
 
-from vibra import ICON_DIR, app
+from vibra import app, DEVELOPER_MODE, ICON_DIR
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
 from molde import Color
@@ -24,6 +24,7 @@ class ModelSetupItems(CommonMenuItems):
         self._create_items()
         self._create_connections()
         self._initial_configuration()
+        self._filter_visible_items_based_on_current_mode()
         self.update_items_appearance()
     
     def _create_items(self):
@@ -48,7 +49,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
         
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
-        self.item_child_prescribe_dof = self.add_item("Prescribe DOF")
+        self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
@@ -79,6 +80,34 @@ class ModelSetupItems(CommonMenuItems):
             self.item_top_structural_model_setup,
             self.item_top_acoustic_model_setup,
         ]
+        
+        # correlate each menu item with the name of the related property.
+        self.property_names = {
+            "item_child_material": "material",
+            "item_child_fluid": "fluid",
+            "item_child_mesh_setup": "mesh_setup",
+            "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
+            "item_child_surface_thickness": "surface_thickness",
+            "item_child_prescribed_dof": "prescribed_dof",
+            "item_child_nodal_loads": "nodal_loads",
+            "item_child_distributed_loads": "distributed_loads",
+            "item_child_normal_pressure_load": "normal_pressure_load",
+            "item_child_acoustic_pressure": "acoustic_pressure",
+            "item_child_mass_source": "mass_source",
+            "item_child_surface_velocity": "surface_velocity",
+            "item_child_incident_plane_wave": "incident_plane_wave",
+            "item_child_anechoic_termination": "anechoic_termination",
+            "item_child_absorption_surface": "absorption_surface",
+            "item_child_specific_impedance": "specific_impedance",
+            "item_child_transfer_impedance": "transfer_impedance",
+            "item_child_perforated_plate_model": "perforated_plate_model",
+            "item_child_proportional_damping": "proportional_damping",
+            "item_child_porous_material_model": "porous_material_model",
+            "item_child_viscous_thermal_model": "viscous_thermal_model",
+            "item_child_acoustic_properties_gradient": "acoustic_properties_gradient",
+            "item_child_reciprocating_compressor_excitation": "reciprocating_compressor_excitation",
+            "item_child_acoustic_transfer_element_setup": "acoustic_transfer_element_setup",
+        }
 
     def _create_connections(self):
         """
@@ -96,7 +125,9 @@ class ModelSetupItems(CommonMenuItems):
 
                 if item_child_name is None:
                     continue
-
+                
+                item_child.set_property_name(self.property_names[item_child_name])
+                
                 function_name = item_child_name + "_callback"
                 function_exists = hasattr(self, function_name)
 
@@ -117,6 +148,11 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material.setDisabled(True)
         self.item_child_fluid.setDisabled(True)
 
+    def _filter_visible_items_based_on_current_mode(self):
+        self.item_child_incident_plane_wave.setHidden(not DEVELOPER_MODE)
+        self.item_child_acoustic_properties_gradient.setHidden(not DEVELOPER_MODE)
+        self.item_child_acoustic_transfer_element_setup.setHidden(not DEVELOPER_MODE)
+
     def _find_qtree_widget_item_name(self, qtree_widet_item):
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
@@ -125,8 +161,9 @@ class ModelSetupItems(CommonMenuItems):
     def _contains_property(self, property_name: str):
 
         model = app().project.model
+        mesh = app().project.model.mesh
         properties = app().project.model.properties
-        
+
         property_dicts = [
             properties.acoustic_imported_tables,
             properties.structural_imported_tables,
@@ -141,36 +178,36 @@ class ModelSetupItems(CommonMenuItems):
             ]
 
         if property_name == "material":
-            if model.mesh.are_there_volumes_in_geometry():
-                volume_ids = model.mesh.geometry_information.get("volumes")
-                volumes_without_material = model.properties.get_entities_without_property("material", volumes=volume_ids)
+            if mesh.are_there_volumes_in_geometry():
+                volume_ids = mesh.geometry_information.get("volumes")
+                volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
                 return not bool(len(volumes_without_material))
             else:
-                surface_ids = model.mesh.geometry_information.get("surfaces")
-                surfaces_without_material = model.properties.get_entities_without_property("material", surfaces=surface_ids)
+                surface_ids = mesh.geometry_information.get("surfaces")
+                surfaces_without_material = properties.get_entities_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
-            if model.mesh.are_there_volumes_in_geometry():
-                volume_ids = model.mesh.geometry_information.get("volumes")
-                volumes_without_fluid = model.properties.get_entities_without_property("fluid", volumes=volume_ids)
+            if mesh.are_there_volumes_in_geometry():
+                volume_ids = mesh.geometry_information.get("volumes")
+                volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
                 return not bool(len(volumes_without_fluid))
             # else:
-            #     surface_ids = model.mesh.geometry_information.get("surfaces")
-            #     surfaces_without_fluid = model.properties.get_entities_without_property("fluid", surfaces=surface_ids)
+            #     surface_ids = mesh.geometry_information.get("surfaces")
+            #     surfaces_without_fluid = properties.get_entities_without_property("fluid", surfaces=surface_ids)
             #     return not bool(len(surfaces_without_fluid))
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            mesh = model.mesh
-            collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-            if collapsed:
+            disconnected_nodes = bool(mesh.disconnected_nodes)
+            collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+            if collapsed_elements or disconnected_nodes:
                 return False
             return model.mesh_setup is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
         if property_name == "surface_thickness":
-            if model.mesh is not None:
+            if mesh is not None:
                 st_check = model.is_surface_thickness_properly_applied_in_model()
                 if isinstance(st_check, list) and st_check:
                     if st_check:
@@ -199,7 +236,7 @@ class ModelSetupItems(CommonMenuItems):
             for key in property_dict.keys():
                 if key[0] == property_name:
                     if property_name == "degrees_of_freedom_decoupling":
-                        pp_data = model.properties._get_property("perforated_plate_model", surface=key[1])
+                        pp_data = properties._get_property("perforated_plate_model", surface=key[1])
                         if isinstance(pp_data, dict):
                             continue
 
@@ -318,9 +355,6 @@ class ModelSetupItems(CommonMenuItems):
                 if item_child_name is None:
                     continue
 
-                # just to make sure the name is correct (there was a bug in the previous versions)
-                item_child.set_property_name(item_child_name)
-
                 item_child.set_warning(False)
                 item_child.set_tool_tip()
                 
@@ -361,7 +395,7 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_surface_thickness_callback(self):
         app().main_window.input_ui.set_surface_thickness()
 
-    def item_child_prescribe_dof_callback(self):
+    def item_child_prescribed_dof_callback(self):
         app().main_window.input_ui.prescribe_structural_dof()
 
     def item_child_nodal_loads_callback(self):
@@ -432,7 +466,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_structural_model_setup_items_acces(self, key: bool):
         self.item_child_surface_thickness.setDisabled(key)
-        self.item_child_prescribe_dof.setDisabled(key)
+        self.item_child_prescribed_dof.setDisabled(key)
         self.item_child_nodal_loads.setDisabled(key)
         self.item_child_normal_pressure_load.setDisabled(key)
         self.item_child_distributed_loads.setDisabled(key)

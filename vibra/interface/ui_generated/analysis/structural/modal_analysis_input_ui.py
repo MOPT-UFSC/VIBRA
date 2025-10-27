@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'modal_analysis_input.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -228,7 +228,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label_title.setText(QCoreApplication.translate("Dialog", u"Structural modal analysis", None))
+        self.label_title.setText(QCoreApplication.translate("Dialog", u"Structural modal analysis setup", None))
         self.label_modes.setText(QCoreApplication.translate("Dialog", u"Modes:", None))
 #if QT_CONFIG(tooltip)
         self.lineEdit_number_modes.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Number of modes to find in acoustic modal analysis</p></body></html>", None))

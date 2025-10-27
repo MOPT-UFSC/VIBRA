@@ -1,5 +1,6 @@
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkUnsignedCharArray
+from vtkmodules.vtkCommonCore import vtkFloatArray
+from vtkmodules.util.numpy_support import vtk_to_numpy
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from ..coloring.color_table import ColorTable
@@ -26,14 +27,15 @@ class AnalysisActor(SolidsActor):
             return
 
         self.color_table = color_table
-        point_colors: vtkUnsignedCharArray = self.data.GetPointData().GetScalars()
+        point_colors: vtkFloatArray = self.data.GetPointData().GetScalars()
         point_colors.Fill(0)
 
-        for i, val in enumerate(self.color_table.values_vector):
-            color = self.color_table.get_color(val)
-            point_colors.SetTuple(i, color)
+        _tmp = vtk_to_numpy(point_colors)
+        _tmp[:] = self.color_table.values_vector
 
         self.data.Modified()
+        self.GetMapper().UseLookupTableScalarRangeOn()
+        self.GetMapper().SetLookupTable(self.color_table)
         self.GetMapper().SetScalarModeToUsePointData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()

@@ -15,7 +15,10 @@ class PerforatedPlateModels:
 
         self.perforated_plate_impedance_data = dict()
 
-    def process_acoustic_transfer_impedances(self, frequencies: np.ndarray):
+    def process_acoustic_transfer_impedances(self, frequencies: np.ndarray | None = None):
+
+        if frequencies is None:
+            frequencies = self.model.frequencies
 
         self.perforated_plate_impedance_data.clear()
 
@@ -33,7 +36,6 @@ class PerforatedPlateModels:
             property, surface_ids = key
             if property == "perforated_plate_model":
                 if data["formulation"] == "circular_hole":
-
                     normalized_impedances = self.get_transfer_impedance_for_circular_holes(omega, data)
                     if normalized_impedances is None:
                         continue
@@ -64,17 +66,17 @@ class PerforatedPlateModels:
         Cd_nl = pp_data.get("non_linear_discharge_coefficient", 0.76)
         f_nl = pp_data.get("non_linear_correction_factor", 0)
 
-        pp_fluid = pp_data.get("fluid_data")
-        if not isinstance(pp_fluid, dict):
+        pp_fluid = pp_data.get("fluid")
+        if not isinstance(pp_fluid, Fluid):
             return None
 
         # unpacking the fluid properties
-        rho_0 = pp_fluid.get("fluid_density")
-        c_0 = pp_fluid.get("speed_of_sound")
-        mu_0 = pp_fluid.get("dynamic_viscosity")
-        gamma = pp_fluid.get("isentropic_exponent")
-        Cp = pp_fluid.get("specific_heat_Cp")
-        k_t = pp_fluid.get("thermal_conductivity")
+        rho_0 = pp_fluid.fluid_density
+        c_0 = pp_fluid.speed_of_sound
+        mu_0 = pp_fluid.dynamic_viscosity
+        gamma = pp_fluid.isentropic_exponent
+        Cp = pp_fluid.specific_heat_Cp
+        k_t = pp_fluid.thermal_conductivity
 
         Z_0 = rho_0 * c_0
         Pr = mu_0 * Cp / k_t
@@ -118,7 +120,7 @@ class PerforatedPlateModels:
         # user-defined normalized transfer impedance
         z_ud = 0.
         if "table_names" in pp_data.keys():
-            values = pp_data.get("values")[0]
+            values = pp_data.get("values")
             if isinstance(values, list) and len(values) == 1:
                 z_ud = values[0]
 
