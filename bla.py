@@ -7,7 +7,7 @@ from time import perf_counter
 
 def show_faces():
     vm = VisualMesh()
-    vm.load_file("./data/examples/geometry_files/cilindro.step")
+    vm.load_file("./data/examples/geometry_files/cylinder.step")
 
     triangles = vm.coords[vm.triangles]
 
@@ -24,7 +24,7 @@ def show_faces():
 
 def show_lines():
     vm = VisualMesh()
-    vm.load_file("./data/examples/geometry_files/cilindro.step")
+    vm.load_file("./data/examples/geometry_files/cylinder.step")
 
     triangles = vm.coords[vm.segments]
 
