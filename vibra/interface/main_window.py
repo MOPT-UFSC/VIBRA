@@ -528,9 +528,11 @@ class MainWindow(MainWindow_UI):
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.show_selection_tool()
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.show_selection_tool()
     
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
@@ -631,8 +633,6 @@ class MainWindow(MainWindow_UI):
         self.action_results_workspace.setChecked(True)
         self.action_model_workspace.setChecked(False)
         self.action_mesh_workspace.setChecked(False)
-
-        self.hide_selection_tool()
 
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
