@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.engine.geometry.geometry import Geometry
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -24,6 +25,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry: Geometry = app().project.model.geometry
         self.acoustic_post = self.project.acoustic_postprocessing
 
         self._config_window()
@@ -105,7 +107,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
+            volumes_from_surface = list(self.geometry.surfaces_to_solids(surface_id))
             if len(volumes_from_surface) == 1:
                 external_surfaces_map[surface_id] = volumes_from_surface[0]
 
@@ -189,7 +191,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
     def get_response(self, selected_id: int):
 
         if self.comboBox_volumes.currentText() == "Multiple":
-            volume_id = self.mesh.volumes_from_surface.get(selected_id)[0]
+            volume_id = list(self.geometry.surfaces_to_solids(selected_id))[0]
         else:
             volume_id = int(self.comboBox_volumes.currentText())
 
