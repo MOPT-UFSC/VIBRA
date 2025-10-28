@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
 from typing import Iterator, Literal
 
@@ -21,6 +22,10 @@ class Geometry:
         self._surfaces_to_solids = defaultdict()
         self._curves_to_surfaces = defaultdict()
         self._points_to_curves = defaultdict()
+
+        self._cache_solids_to_surfaces = defaultdict()
+        self._cache_surfaces_to_curves = defaultdict()
+        self._cache_curves_to_points = defaultdict()
 
         self._solids_centers = defaultdict()
         self._surfaces_centers = defaultdict()
@@ -77,6 +82,10 @@ class Geometry:
         self._surfaces_to_solids.clear()
         self._curves_to_surfaces.clear()
         self._points_to_curves.clear()
+
+        self._cache_solids_to_surfaces.clear()
+        self._cache_surfaces_to_curves.clear()
+        self._cache_curves_to_points.clear()
 
         self._solids_centers.clear()
         self._surfaces_centers.clear()
@@ -422,3 +431,20 @@ class Geometry:
             return 0.0254
         else:
             raise ValueError(f'Invalid length unit "{length_unit}"')
+
+
+def cache_geometry_information(self):
+    self._cache_solids_to_surfaces = deepcopy(self._solids_to_surfaces)
+    self._cache_surfaces_to_curves = deepcopy(self._surfaces_to_curves)
+    self._cache_curves_to_points = deepcopy(self._curves_to_points)
+
+
+def restore_data_from_cache(self):
+    self._solids_to_surfaces = deepcopy(self._cache_solids_to_surfaces)
+    self._surfaces_to_curves = deepcopy(self._cache_surfaces_to_curves)
+    self._curves_to_points = deepcopy(self._cache_curves_to_points)
+
+    self._cache_solids_to_surfaces.clear()
+    self._cache_surfaces_to_curves.clear()
+    self._cache_curves_to_points.clear()
+    
