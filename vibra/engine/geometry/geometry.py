@@ -89,11 +89,19 @@ class Geometry:
 
         self._surfaces_areas.clear()
         self._curves_lengths.clear()
-
         self._solids_volumes.clear()
+
+        self._bounding_lines.clear()
+        self._bounding_surfaces.clear()
+        self._bounding_solids.clear()
 
         self._straight_curves.clear()
         self._straight_surfaces.clear()
+
+        self.points.clear()
+        self.curves.clear()
+        self.surfaces.clear()
+        self.solids.clear()
 
     def set_length_unit(self, length_unit: LengthUnits):
         old_factor = self.length_unit_factor
