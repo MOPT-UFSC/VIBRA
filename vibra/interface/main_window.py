@@ -9,11 +9,11 @@ import platform
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 
-from PySide6.QtCore import QEvent, Qt, Signal, QSize
-from PySide6.QtGui import QAction, QPixmap, QCursor
+from PySide6.QtCore import QEvent, Qt, Signal
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 
-from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR, ICON_DIR
+from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -176,6 +176,7 @@ class MainWindow(MainWindow_UI):
         app().splash.update_progress(30)
         self._load_menu_widgets()
         self._load_render_widgets()
+        self._configure_render_widgets_style_interactor()
 
         app().splash.update_progress(60)
         self._create_basic_layout()
@@ -253,6 +254,10 @@ class MainWindow(MainWindow_UI):
 
     def _configure_render_widgets_stack(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
+    
+    def _configure_render_widgets_style_interactor(self):
+        for render in self.get_renderer_widgets():
+            render.set_default_interactor_style()
 
     def _configure_stacked_setup(self):
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
@@ -442,7 +447,6 @@ class MainWindow(MainWindow_UI):
     def action_grab_tool_callback(self):
         if self.action_grab_tool.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
-            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"cursors/pan_cursor.png")
 
             self.add_render_tool_in_render_widgets(GrabTool)
         else:
@@ -450,13 +454,11 @@ class MainWindow(MainWindow_UI):
     
     def action_selection_tool_callback(self):
         self.discheck_all_actions_of_render_tools_toolbar_except(self.action_selection_tool)
-        self.update_mouse_cursor_in_render_widgets("default")
         self.set_default_render_tool_in_render_widgets()
 
     def action_rotation_tool_callback(self):
         if self.action_rotation_tool.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_rotation_tool)
-            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"cursors/rotation_cursor.png")
 
             self.add_render_tool_in_render_widgets(RotationTool)
         else:
@@ -465,7 +467,6 @@ class MainWindow(MainWindow_UI):
     def action_zoom_in_callback(self):
         if self.action_zoom_in.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_zoom_in)
-            self.update_mouse_cursor_in_render_widgets(ICON_DIR/"cursors/zoom_cursor.png")
 
             self.add_render_tool_in_render_widgets(ZoomTool)
         else:
@@ -477,35 +478,22 @@ class MainWindow(MainWindow_UI):
         
         action.setChecked(True)
     
-    def update_mouse_cursor_in_render_widgets(self, path: str):
-        custom_pixmap = QPixmap(path)
-
-        renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
-        for render in renders:
-
-            if custom_pixmap.isNull():
-                render.setCursor(Qt.CursorShape.ArrowCursor)
-            else:
-                custom_pixmap = custom_pixmap.scaled(QSize(24, 24), Qt.KeepAspectRatio)
-                custom_cursor = QCursor(custom_pixmap, hotX=0, hotY=0)
-                render.setCursor(custom_cursor)
-    
     def add_render_tool_in_render_widgets(self, tool_class: RenderTool):
-        renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
-        for render in renders:
+        for render in self.get_renderer_widgets():
             tool = tool_class()
             render.add_render_tool(tool)
         
     def set_default_render_tool_in_render_widgets(self):
-        renders = [self.geometry_widget, self.mesh_widget, self.results_widget]
-        for render in renders:
+        for render in self.get_renderer_widgets():
             render.set_default_interactor_style()
+
+    def get_renderer_widgets(self) -> list[CommonRenderWidget]:
+        return [self.geometry_widget, self.mesh_widget, self.results_widget]
     
     def show_selection_tool(self):
         self.action_selection_tool.setVisible(True)
         self.render_tools_toolbar.actions()[2].setVisible(True)
 
-    
     def hide_selection_tool(self):
         self.action_selection_tool.setVisible(False)
         self.render_tools_toolbar.actions()[2].setVisible(False)

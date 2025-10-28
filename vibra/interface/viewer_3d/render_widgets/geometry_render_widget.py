@@ -39,7 +39,6 @@ from .model_info_text import (
 class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_default_interactor_style()
 
         self.geometry_selection = GeometrySelection(self)
         self.mouse_click = (0, 0)
