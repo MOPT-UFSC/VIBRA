@@ -206,6 +206,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
+        if not self.actors_exists():
+            return
+
         if app().project.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
@@ -394,6 +397,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = self._cache_hollow_solids_actor
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.update_color_and_deformation()
+        self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
 
     def switch_to_solids_actor(self):
@@ -416,6 +420,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = self._cache_full_solids_actor
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.update_color_and_deformation()
+        self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
 
     def update_section_plane(self):

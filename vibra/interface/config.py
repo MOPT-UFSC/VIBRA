@@ -123,6 +123,9 @@ class Config:
         return None
     
     def get_config_data(self) -> dict:
+        if not self.config_path.exists():
+            return dict()
+
         try:
             with open(self.config_path, "r") as file:
                 return json.load(file)

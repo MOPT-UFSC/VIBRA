@@ -1,17 +1,20 @@
+import os
+import re
+from pathlib import Path
+
+import numpy as np
 from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.utils import get_new_path
-
-from pathlib import Path
-
-import os
-import numpy as np
 
 error_title = "Error"
 warning_title = "Warning"
+IS_ERROR_REGEX = re.compile(r"\[\w+\s+error")
+IS_WARNING_REGEX = re.compile(r"\[\w+\s+warning")
+
 
 class RefpropInterface:
     def __init__(self, *args, **kwargs):
@@ -171,15 +174,25 @@ class RefpropInterface:
                                         molar_fractions
                                         )
 
-        if read.herr:
-            return None, read.herr
+        if IS_ERROR_REGEX.match(read.herr):
+            errors = read.herr
+        else:
+            errors = ""
 
+        if IS_WARNING_REGEX.match(read.herr):
+            warnings = read.herr
+        else: 
+            warnings = ""
+        
+        if errors:
+            return None, errors, warnings
+                
         if property_key == "M":
             fluid_property = 1000*read.Output[0]   
         else:
             fluid_property = read.Output[0]
 
-        return fluid_property, None
+        return fluid_property, errors, warnings
     
     def compute_fluid_properties_for_multiple_state_properties(self, **kwargs):
 
@@ -207,7 +220,7 @@ class RefpropInterface:
             fluid_properties["color"] = rgb_colors[j]
 
             for prop_key, prop_label in self.map_properties.items():
-                fluid_property, errors = self.get_specific_fluid_property(
+                fluid_property, errors, warnings = self.get_specific_fluid_property(
                                                                           key_mixture = key_mixture,
                                                                           molar_fractions = molar_fractions,
                                                                           property_key = prop_key,

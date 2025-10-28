@@ -453,6 +453,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
         run_analysis_button.setDisabled(bool(collapsed_elements) or bool(self.mesh.disconnected_nodes))
 
+        if app().project.model.analysis_setup is None:
+            run_analysis_button.setDisabled(True)
+
         if disconnected_nodes:
             title = "The generated mesh contains disconnected nodes"
             message = "Disconnected nodes: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes) + "."

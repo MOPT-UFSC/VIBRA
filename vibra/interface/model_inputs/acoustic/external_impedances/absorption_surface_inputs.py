@@ -113,7 +113,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.lineEdit_table_path.setText(data.get("table_paths")[0])
         else:
             self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_real_value.setText(f"{data.get("real_values")[0]}")
+            self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
 
     def load_model_info(self):
 
