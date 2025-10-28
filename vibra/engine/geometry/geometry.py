@@ -447,4 +447,6 @@ def restore_data_from_cache(self):
     self._cache_solids_to_surfaces.clear()
     self._cache_surfaces_to_curves.clear()
     self._cache_curves_to_points.clear()
-    
+
+    # To be continued
+
