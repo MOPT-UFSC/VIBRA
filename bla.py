@@ -9,7 +9,7 @@ def show_faces():
     vm = VisualMesh()
     vm.load_file("./data/examples/geometry_files/cylinder.step")
 
-    triangles = vm.coords[vm.triangles]
+    triangles = vm.coordinates[vm.triangles]
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
@@ -26,7 +26,7 @@ def show_lines():
     vm = VisualMesh()
     vm.load_file("./data/examples/geometry_files/cylinder.step")
 
-    triangles = vm.coords[vm.segments]
+    triangles = vm.coordinates[vm.segments]
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
