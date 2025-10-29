@@ -21,6 +21,7 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
             "reciprocating_compressor_excitation": self._build_reciprocating_compressor,
+            "external_compressor_excitation": self._build_reciprocating_compressor,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
@@ -84,6 +85,7 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
             shape = sources.create_compressor_discharge_source
             # vermelho, seta entra é azul
             color = color_names.RED_3
+
         elif property["connection_type"] == "suction":
             shape = sources.create_compressor_suction_source
             color = color_names.BLUE_3
