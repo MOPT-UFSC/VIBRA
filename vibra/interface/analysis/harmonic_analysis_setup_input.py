@@ -286,8 +286,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.model.set_analysis_setup(analysis_setup)
 
         app().file.write_analysis_setup_in_file(analysis_setup)
-
-        self.project.set_analysis_setup(analysis_setup)
+        # self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()
 
         self.setup_defined = True
