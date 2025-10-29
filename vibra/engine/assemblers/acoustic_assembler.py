@@ -261,9 +261,9 @@ class AcousticAssembler:
 
         if aux_connect:
             integration_data = {
-                                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
-                                }
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
 
         return integration_data
 
@@ -299,17 +299,23 @@ class AcousticAssembler:
             _complex_values = data.get("values")[0]
 
             if property_label == "external_compressor_excitation":
-                if data.get("excitation_type") == "mass_flow_rate":
+                excitation_type = data.get("excitation_type")
 
-                    # get the fluid density
-                    density, _ = self.get_fluid_properties_from_surface(surface_id)
-
+                if excitation_type in ["mass flow rate", "volumetric flow rate"]:
                     # compute the nozzle area
                     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)
+                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)                    
 
-                    # convert the mass flow rate to normal surface velocity
-                    _complex_values /= (density * area)
+                    if excitation_type == "mass flow rate":
+                        # get the fluid density
+                        density, _ = self.get_fluid_properties_from_surface(surface_id)
+
+                        # convert the mass flow rate to normal surface velocity
+                        _complex_values /= (density * area)
+
+                    else:
+                        # convert the volumetric flow rate to normal surface velocity
+                        _complex_values /= area
 
             complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
 
@@ -322,9 +328,9 @@ class AcousticAssembler:
 
         if aux_connect:
             integration_data = {
-                                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
-                                }
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
 
         return integration_data
 
