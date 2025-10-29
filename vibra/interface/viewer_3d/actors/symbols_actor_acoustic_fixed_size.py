@@ -20,8 +20,8 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
-            "reciprocating_compressor_excitation": self._build_reciprocating_compressor,
-            "external_compressor_excitation": self._build_reciprocating_compressor,
+            "reciprocating_compressor_excitation": self._build_compressor_symbol,
+            "external_compressor_excitation": self._build_compressor_symbol,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
@@ -70,13 +70,13 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
         dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
         index = np.argmax(dist)
-        
+
         return center_coords, avg_normal, dist[index]
 
-    def _build_reciprocating_compressor(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+    def _build_compressor_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
