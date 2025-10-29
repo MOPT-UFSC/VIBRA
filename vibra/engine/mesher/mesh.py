@@ -1333,7 +1333,7 @@ class Mesh:
             for el_index in self.solids_connectivity[mask, 0]:
                 self.surface_from_solid_element[el_index].append(surface_id)
 
-    def process_mesh_related_mappings(self, label: str):
+    def process_mesh_related_mappings(self, label: str = "Loading"):
 
         logging.info(f"{label} mesh... [70/100]")
         self.map_elements_from_volumes()
