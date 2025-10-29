@@ -8,6 +8,7 @@ from vibra.interface.model_inputs.acoustic.excitations.mass_flow_rate_inputs imp
 from vibra.interface.model_inputs.acoustic.excitations.mass_source_inputs import MassSourceInputs
 from vibra.interface.model_inputs.acoustic.excitations.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.excitations.incident_plane_wave_inputs import IncidentPlaneWaveInputs
+from vibra.interface.model_inputs.acoustic.excitations.external_compressor_excitation_inputs import ExternalCompressorExcitationInputs
 from vibra.interface.model_inputs.acoustic.excitations.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.external_impedances.specific_impedance_inputs import SpecificImpedanceInputs
 from vibra.interface.model_inputs.acoustic.external_impedances.anechoic_termination_inputs import AnechoicTerminationInputs
@@ -174,6 +175,9 @@ class InputUi:
     def set_acoustic_transfer_element_setup(self):
         if not self.model_setup_items.item_child_acoustic_transfer_element_setup.isDisabled():
             self.process_input(AcousticTransferElementInputs)
+
+    def external_compressor_excitation(self):
+        self.process_input(ExternalCompressorExcitationInputs)
 
     def add_reciprocating_compressor_excitation(self):
         self.process_input(ReciprocatingCompressorInputs)
