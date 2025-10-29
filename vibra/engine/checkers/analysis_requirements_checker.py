@@ -111,6 +111,7 @@ class AnalysisRequirementsChecker:
                        "surface_velocity",
                        "mass_flow_rate",
                        "incident_plane_wave",
+                       "external_compressor_excitation",
                        "reciprocating_compressor_excitation",
                        "mass_source",
                        ]

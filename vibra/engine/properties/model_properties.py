@@ -81,17 +81,17 @@ class ModelProperties:
         rho_0 = fluid.fluid_density
         if proportional_damping is None:
             return rho_0
-        else:
-            factor = proportional_damping.get("fluid_density_factor", 0)
-            return (1 + factor * 1j) * rho_0
+
+        factor = proportional_damping.get("fluid_density_factor", 0)
+        return (1 + factor * 1j) * rho_0
 
     def get_speed_of_sound(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         c_0 = fluid.speed_of_sound
         if proportional_damping is None:
             return c_0
-        else:
-            factor = proportional_damping.get("speed_of_sound_factor", 0)
-            return (1 + factor * 1j) * c_0
+
+        factor = proportional_damping.get("speed_of_sound_factor", 0)
+        return (1 + factor * 1j) * c_0
 
     def _set_property(
                       self, 
@@ -342,6 +342,7 @@ class ModelProperties:
                            "perforated_plate_model",
                            "reciprocating_compressor_excitation",
                            "reciprocating_pump_excitation",
+                           "external_compressor_excitation",
                            "acoustic_transfer_element",
                            "mass_source",
                            ]

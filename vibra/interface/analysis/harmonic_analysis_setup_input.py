@@ -134,9 +134,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 self.lineEdit_constant_structural_coefficient.setText(str(global_damping[2]))
 
     def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
-        self.lineEdit_fmin.setText(str(round(f_min, 6)))
-        self.lineEdit_fmax.setText(str(round(f_max, 6)))
-        self.lineEdit_fstep.setText(str(round(f_step, 6)))
+        self.lineEdit_fmin.setText(f"{f_min : .12f}")
+        self.lineEdit_fmax.setText(f"{f_max : .12f}")
+        self.lineEdit_fstep.setText(f"{f_step : .12f}")
 
         key = app().project.model.properties.check_if_there_are_tables_at_the_model()
 
