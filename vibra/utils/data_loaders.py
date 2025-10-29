@@ -44,7 +44,7 @@ def load_spreadsheet_data(path: str) -> dict:
 
     return imported_results
 
-def load_simulation_data_from_hdf_file(path: str | Path):
+def load_cfd_simulation_data_from_hdf_file(path: str | Path):
 
     simulation_data = dict()
 

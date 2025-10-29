@@ -376,7 +376,7 @@ class LoadProject:
             f_step = analysis_setup.get("f_step")
 
             if ([f_min, f_max, f_step]).count(None) == 0:
-                analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
+                analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step, dtype=float)
 
         app().project.set_analysis_setup(analysis_setup)
         app().project.create_solver()
