@@ -344,19 +344,22 @@ def acoustic_boundary_conditions_info_text():
     if len(selected_faces) != 1:
         return text
     
+    surface_id = selected_faces[0]
     properties = app().project.model.properties
 
-    acoustic_pressure = properties._get_property("acoustic_pressure", surface=selected_faces[0])
-    surface_velocity = properties._get_property("surface_velocity", surface=selected_faces[0])
-    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=selected_faces[0])
-    incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
-    mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
-    absorption_surface = properties._get_property("absorption_surface", surface=selected_faces[0])
-    specific_impedance = properties._get_property("specific_impedance", surface=selected_faces[0])
+    acoustic_pressure = properties._get_property("acoustic_pressure", surface=surface_id)
+    surface_velocity = properties._get_property("surface_velocity", surface=surface_id)
+    external_compressor_excitation = properties._get_property("external_compressor_excitation", surface=surface_id)
+    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
+    incident_plane_wave = properties._get_property("incident_plane_wave", surface=surface_id)
+    mass_flow_rate = properties._get_property("mass_flow_rate", surface=surface_id)
+    absorption_surface = properties._get_property("absorption_surface", surface=surface_id)
+    specific_impedance = properties._get_property("specific_impedance", surface=surface_id)
 
     boundary_conditions_list = [
                                 acoustic_pressure,
                                 surface_velocity,
+                                external_compressor_excitation,
                                 recip_compressor_excitation,
                                 incident_plane_wave,
                                 mass_flow_rate,
@@ -374,6 +377,9 @@ def acoustic_boundary_conditions_info_text():
     if surface_velocity is not None:
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
+
+    if isinstance(external_compressor_excitation, dict):
+        text += get_external_compressor_excitation(external_compressor_excitation)
 
     if isinstance(recip_compressor_excitation, dict):
         text += get_reciprocating_compressor_text(recip_compressor_excitation)
@@ -466,6 +472,17 @@ def get_reciprocating_compressor_text(rc_data: dict):
     tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""), "--")
 
     return str(tree_rc)
+
+def get_external_compressor_excitation(data: dict):
+    tree_ec = TreeInfo("External compressor excitation")
+    tree_ec.add_item("Data source", data.get("data_source"))
+    tree_ec.add_item("Compressor type", data.get("compressor_type"))
+    tree_ec.add_item("Connection type", data.get("connection_type"))
+    tree_ec.add_item("Excitation type", data.get("excitation_type"), data.get("excitation_units"))
+    tree_ec.add_item("Excitation mapping", data.get("excitation_mapping"))
+    tree_ec.add_item("Angular resolution", data.get("angular_resolution"), "deg")
+
+    return str(tree_ec)
 
 def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
     text = ""
