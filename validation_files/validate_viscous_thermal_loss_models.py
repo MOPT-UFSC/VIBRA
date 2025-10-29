@@ -7,7 +7,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.utils.load_data_utils import load_spreadsheet_data
+from vibra.utils.data_loaders import load_spreadsheet_data
 
 import os
 import matplotlib.pyplot as plt

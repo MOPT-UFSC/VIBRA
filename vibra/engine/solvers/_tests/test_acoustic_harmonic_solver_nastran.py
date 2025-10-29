@@ -7,7 +7,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
-from vibra.utils.load_data_utils import load_spreadsheet_data
+from vibra.utils.data_loaders import load_spreadsheet_data
 
 from os.path import dirname
 import pytest
