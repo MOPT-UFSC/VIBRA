@@ -11,14 +11,13 @@ import os
 
 
 class DataImporter:
-  
+
     @staticmethod
     def __import_files(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
-        path = app().config.get_last_folder_for(last_folder)
-        if path is None:
+
+        folder_path = app().config.get_last_folder_for(last_folder)
+        if folder_path is None:
             folder_path = os.path.expanduser("~")
-        else:
-            folder_path = path
 
         kwargs = dict()
         if platform.system() == "Linux":
@@ -46,7 +45,7 @@ class DataImporter:
                                                                 folder_path, 
                                                                 str_extensions,
                                                                 **kwargs)
-        
+
         if not file_extension:
             return
         
@@ -65,6 +64,44 @@ class DataImporter:
         
         return imported_data
 
+    @staticmethod
+    def get_file_paths(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
+
+        folder_path = app().config.get_last_folder_for(last_folder)
+        if folder_path is None:
+            folder_path = os.path.expanduser("~")
+
+        kwargs = dict()
+        if platform.system() == "Linux":
+                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        str_extensions = "Files ("
+        for extension in file_extensions:
+            str_extensions += "*."
+            str_extensions += extension
+            str_extensions += " "
+        
+        str_extensions = str_extensions.strip()
+        str_extensions += ")"
+
+        if (multiple_files):
+            imported_paths, file_extension = QFileDialog.getOpenFileNames( None, 
+                                                                caption, 
+                                                                folder_path, 
+                                                                str_extensions,
+                                                                **kwargs)
+        else:
+            imported_paths, file_extension = QFileDialog.getOpenFileName( None, 
+                                                                caption, 
+                                                                folder_path, 
+                                                                str_extensions,
+                                                                **kwargs)
+            
+        if not file_extension:
+            return None, None
+
+        return imported_paths, file_extension
+  
     @staticmethod
     def import_multiple_files(last_folder: str, file_extensions: List[str], caption: str = "Open file") -> List[ImportedData]:
         return DataImporter.__import_files(caption, last_folder, file_extensions, True)
