@@ -71,7 +71,8 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
         self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
-        
+        self.item_child_external_compressor_excitation = self.add_item("External Compressor Excitation")
+
         self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
         # self.item_child_acoustic_properties_gradient.setHidden(True)
 
@@ -106,6 +107,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_viscous_thermal_model": "viscous_thermal_model",
             "item_child_acoustic_properties_gradient": "acoustic_properties_gradient",
             "item_child_reciprocating_compressor_excitation": "reciprocating_compressor_excitation",
+            "item_child_external_compressor_excitation": "external_compressor_excitation",
             "item_child_acoustic_transfer_element_setup": "acoustic_transfer_element_setup",
         }
 
@@ -449,9 +451,12 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_perforated_plate_model_callback(self):
         app().main_window.input_ui.set_perforated_plate_model()
 
+    def item_child_external_compressor_excitation_callback(self):
+        app().main_window.input_ui.external_compressor_excitation()
+
     def item_child_reciprocating_compressor_excitation_callback(self):
         app().main_window.input_ui.add_reciprocating_compressor_excitation()
-    
+
     def item_child_acoustic_properties_gradient_callback(self):
         app().main_window.input_ui.set_acoustic_properties_grandient()
     
@@ -487,6 +492,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_perforated_plate_model.setDisabled(key)
         self.item_child_degrees_of_freedom_decoupling.setDisabled(key)
         self.item_child_acoustic_properties_gradient.setDisabled(key)
+        self.item_child_external_compressor_excitation.setDisabled(key)
         self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_acoustic_transfer_element_setup.setDisabled(key)
 
