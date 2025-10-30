@@ -70,6 +70,10 @@ class Geometry:
         gmsh.open(file_path)
         gmsh.model.occ.synchronize()
 
+        volumes_list = gmsh.model.getEntities(3)
+        gmsh.model.occ.fragment(volumes_list, volumes_list)
+        gmsh.model.occ.synchronize()
+
         self._process_geometry_information()
         self._process_curves_normals()
         self._process_points_normals()
