@@ -6,6 +6,7 @@ from vibra import app
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.setup.acoustic.external_compressor_excitation_inputs_ui import ExternalCompressorExcitationInputs_UI
 
 from utils.data_loaders import load_cfd_simulation_data_from_hdf_file
@@ -48,8 +49,17 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
+        self.model_results = dict()
+
+        self.spectrum_plotter = None
+        self.waveform_plotter = None
+
+        self.reset_plotting_attributes()
 
     def _configure_qt_variables(self):
+        #
+        self.pushButton_spectrum_data.setDisabled(True)
+        self.pushButton_waveform_data.setDisabled(True)
         #
         for i, w in enumerate([120]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
@@ -71,6 +81,8 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         self.pushButton_load_table.clicked.connect(self.load_external_compressor_excitation_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_spectrum_data.clicked.connect(self.plot_spectrum_data_callback)
+        self.pushButton_waveform_data.clicked.connect(self.plot_waveform_data_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
@@ -139,16 +151,22 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
     def load_external_compressor_excitation_data(self):
         self.hide()
-        if self.comboBox_data_source.currentText() == "SCORG":
-            self.load_non_cfd_data()
-        else:
+        self.pushButton_spectrum_data.setDisabled(True)
+        self.pushButton_waveform_data.setDisabled(True)
+
+        if self.comboBox_data_source.currentText() == "CFD":
             self.load_cfd_data()
+        else:
+            self.load_non_cfd_data()
 
     def load_non_cfd_data(self, direct_load: bool=False):
         self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=direct_load)
         mass_flow_spectrum = self.process_mass_flow_spectrum()
         if mass_flow_spectrum is None:
             return
+        
+        self.pushButton_spectrum_data.setEnabled(True)
+        self.pushButton_waveform_data.setEnabled(True)
 
         df = mass_flow_spectrum[0, 0]
         self.lineEdit_frequency_resolution.setText(f"{df}")
@@ -193,6 +211,9 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         # freq = surface_velocity_spectrum_data[:, 0]
         # Xf = surface_velocity_spectrum_data[:, 1] + 1j * surface_velocity_spectrum_data[:, 2]
         # plot(freq, Xf, "Frequency [Hz]", "Surface velocity [m/s]", "", absolute=True)
+
+        self.pushButton_spectrum_data.setEnabled(True)
+        self.pushButton_waveform_data.setEnabled(True)
 
     def compute_compressor_excitation_spectrum(self):
 
@@ -309,7 +330,19 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         return self.compute_signal_spectrum(time_vector, mass_flow)
 
+    def reset_plotting_attributes(self):
+
+        # reset attributes for waveform plot
+        self.time_vector = np.ndarray([])
+        self.x_data = np.ndarray([])
+
+        # reset attributes for spectrum plot
+        self.frequencies_vector = np.ndarray([])
+        self.Xf_data = np.ndarray([])
+
     def compute_signal_spectrum(self, time_vector: np.ndarray, x_data: np.ndarray, export=False, filename="", y_label=""):
+
+        self.reset_plotting_attributes()
 
         # the desired frequency resolution
         f_step = self.check_inputs(self.lineEdit_frequency_resolution_required, "Frequency resolution")
@@ -329,10 +362,10 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         dt = time_vector[-1] - time_vector[-2]
 
         # time to complete one revolution of the male rotor
-        T_cycle = time_vector[-1] - time_vector[0]
+        T_rev = time_vector[-1] - time_vector[0]
 
         # number of repetitions to reach the desired frequency resolution
-        N_rep = int(np.ceil(T_req / T_cycle))
+        N_rep = int(np.ceil(T_req / T_rev))
 
         # extend the signal by 'N_rep' times to adjust the frequency resolution
         x_data_ext = extend_signal(x_data, N_rep)
@@ -340,6 +373,17 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         # process one-sided spectrum
         freq, Xf = process_one_sided_spectrum(x_data_ext, dt)
+        
+        # update attributes for waveform plot
+        self.time_vector = time_ext
+        self.x_data = x_data_ext
+
+        # update attributes for spectrum plot
+        self.frequencies_vector = freq
+        self.Xf_data = Xf
+
+        # process the frequency resolution
+        df = 1 / (x_data_ext.size * dt)
 
         # output data matrix
         output_data = np.array([freq, np.real(Xf), np.imag(Xf)], dtype=float).T
@@ -351,10 +395,31 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #     np.savetxt(filename, np.array([time_ext, x_data_ext]).T, delimiter=",", fmt="%.16e")
         #     plot(time_ext, x_data_ext, "Time [s]", y_label, "", absolute=False)
 
+        # update the signal processing parameters
+        self.update_signal_processing_parameters(
+            time_increment = dt,
+            revolution_time = T_rev,
+            number_of_revolutions = N_rep,
+            frequency_resolution = df,
+        )
+
         return output_data[mask_min * mask_max, :]
 
+    def update_signal_processing_parameters(self, **kwargs):
+        dt = kwargs.get("time_increment", "--")
+        T_rev = kwargs.get("revolution_time", "--")
+        N_rev = kwargs.get("number_of_revolutions", "--")
+        df = kwargs.get("frequency_resolution", "--")
+
+        self.lineEdit_time_increment.setText(f"{dt}")
+        self.lineEdit_revolution_time.setText(f"{T_rev}")
+        self.lineEdit_number_of_revolutions.setText(f"{N_rev}")
+        self.lineEdit_sampling_time_block.setText(f"{N_rev*T_rev}")
+        self.lineEdit_sampling_frequency.setText(f"{1/dt}")
+        self.lineEdit_frequency_resolution_plot.setText(f"{df}")
+
     def load_property_data(self, surface_id: int):
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() != 0:
             return
 
         data = self.properties._get_property("external_compressor_excitation", surface=surface_id)
@@ -385,7 +450,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             self.lineEdit_frequency_resolution.setText("not calculated")
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() != 0:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
@@ -487,7 +552,6 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         app().file.write_analysis_setup_in_file(analysis_setup)
 
     def attribute_callback(self):
-
         if self.tabWidget_main.currentIndex() != 0:
             return
 
@@ -685,11 +749,11 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         for key in self.properties.surface_properties.keys():
             property, *args = key
             if property == "external_compressor_excitation":
-                self.tabWidget_main.setTabVisible(1, True)
+                self.tabWidget_main.setTabVisible(2, True)
                 return
 
         self.tabWidget_main.setCurrentIndex(0)    
-        self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -733,7 +797,80 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         self.keep_window_open = False
         app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
-    
+
+    def join_spectrum_data(self):
+
+        self.model_results.clear()
+
+        excitation_type, unit_label = self.comboBox_excitation_type.currentText().split(" -> ")
+        plot_type = excitation_type.capitalize()
+
+        f_max = self.spinBox_maximum_frequency.value()
+        mask = self.frequencies_vector < f_max
+
+        key = ("surface", (0))
+        legend_label = f"external compressor excitation"
+
+        self.model_results[key] = { 
+                                    "x_data" : self.frequencies_vector[mask],
+                                    "y_data" : self.Xf_data[mask],
+                                    "x_label" : "Frequency [Hz]",
+                                    "y_label" : plot_type,
+                                    "title" : f"{excitation_type} spectrum",
+                                    "data_type" : plot_type.lower(),
+                                    "legend" : legend_label,
+                                    "unit" : unit_label,
+                                    "color" : (0,0,1),
+                                    "linestyle" : "-"  
+                                    }
+
+    def join_waveform_data(self):
+
+        self.model_results.clear()
+
+        excitation_type, unit_label = self.comboBox_excitation_type.currentText().split(" -> ")
+        plot_type = excitation_type.capitalize()
+
+        key = ("surface", (0))
+        legend_label = f"external compressor excitation"
+
+        self.model_results[key] = { 
+                                    "x_data" : self.time_vector,
+                                    "y_data" : self.x_data,
+                                    "x_label" : "Time [s]",
+                                    "y_label" : plot_type,
+                                    "title" : f"{excitation_type} waveform",
+                                    "data_type" : plot_type.lower(),
+                                    "legend" : legend_label,
+                                    "unit" : unit_label,
+                                    "color" : (0,0,1),
+                                    "linestyle" : "-"  
+                                    }
+
+    def plot_spectrum_data_callback(self):
+        if self.imported_values is None:
+            return
+
+        if isinstance(self.spectrum_plotter, FrequencyResponsePlotter):
+            self.spectrum_plotter.close()
+
+        self.join_spectrum_data()
+
+        self.spectrum_plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.spectrum_plotter._set_model_results_data_to_plot(self.model_results)
+        
+    def plot_waveform_data_callback(self):
+        if self.imported_values is None:
+            return
+
+        if isinstance(self.waveform_plotter, FrequencyResponsePlotter):
+            self.waveform_plotter.close()
+
+        self.join_waveform_data()
+        self.waveform_plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.waveform_plotter.radioButton_real.setChecked(True)
+        self.waveform_plotter._update_comboBox()
+        self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
 
 def plot(x, y, x_label, y_label, title, label="", absolute=False):
 
