@@ -25,7 +25,7 @@ class SelectionTool(RenderTool):
 
     def left_button_release_event(self, obj, event):
         super().left_button_release_event(obj, event)
-        self.stop_selection()
+        self.stop_all_actions()
 
     def mouse_move_event(self, obj, event):
         super().mouse_move_event(obj, event)
@@ -33,6 +33,9 @@ class SelectionTool(RenderTool):
         self.update_selection()
 
     def start_selection(self):
+        if any([self.is_panning, self.is_rotating, self.is_zooming]):
+            return
+
         self.is_selecting = True
 
         size = self.GetInteractor().GetSize()
@@ -88,3 +91,25 @@ class SelectionTool(RenderTool):
         self.is_selecting = False
         render_window = self.GetInteractor().GetRenderWindow()
         render_window.Render()
+
+    def start_rotating(self):
+        if self.is_selecting:
+            return
+        
+        super().start_rotating()
+
+    def start_panning(self):
+        if self.is_selecting:
+            return
+
+        super().start_panning()
+    
+    def start_zooming(self):
+        if self.is_selecting:
+            return
+
+        super().start_zooming()
+
+    def stop_all_actions(self):
+        self.stop_selection()
+        super().stop_all_actions()

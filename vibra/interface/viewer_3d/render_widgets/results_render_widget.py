@@ -5,12 +5,12 @@ from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from molde.interactor_styles import ArcballCameraInteractorStyle
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app, ICON_DIR
+from vibra.interface.viewer_3d.render_tools.render_tool import RenderTool
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
@@ -547,6 +547,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property.SetFontSize(font_size_px)
     
     def set_default_interactor_style(self):
-        self.set_interactor_style(ArcballCameraInteractorStyle())
+        self.set_interactor_style(RenderTool())
 
 

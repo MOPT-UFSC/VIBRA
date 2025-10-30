@@ -342,7 +342,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         
         if not isinstance(self.interactor_style, SelectionTool):
             return
-
+        
+        if not self.interactor_style.is_selecting:
+            return
+        
+        
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
