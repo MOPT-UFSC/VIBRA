@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -516,7 +516,6 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         real_values = imported_values[:, 1]
         imag_values = imported_values[:, 2]
-
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
@@ -618,21 +617,21 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             table_path = self.lineEdit_table_path.text()
 
             data = {
-                    "data_source" : data_source,
-                    "compressor_type" : compressor_type,
-                    "excitation_type" : excitation_type,
-                    "excitation_units" : excitation_units,
-                    "connection_type" : connection_type,
-                    "excitation_mapping" : excitation_mapping,
-                    "single_revolution" : single_revolution,
-                    "angular_resolution" : angular_resolution,
-                    "frequency_resolution_req" : frequency_resolution_req,
-                    "table_names" : [table_name],
-                    "table_paths" : [table_path],
-                    "values" : [complex_values],                   
-                    "averaged" : False,
-                    "nodal_attribution" : False,
-                    }
+                "data_source" : data_source,
+                "compressor_type" : compressor_type,
+                "excitation_type" : excitation_type,
+                "excitation_units" : excitation_units,
+                "connection_type" : connection_type,
+                "excitation_mapping" : excitation_mapping,
+                "single_revolution" : single_revolution,
+                "angular_resolution" : angular_resolution,
+                "frequency_resolution_req" : frequency_resolution_req,
+                "table_names" : [table_name],
+                "table_paths" : [table_path],
+                "values" : [complex_values],
+                "averaged" : False,
+                "nodal_attribution" : False,
+                }
 
             self.properties._set_property("external_compressor_excitation", data, surface=surface_id)
 
@@ -650,13 +649,13 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-                  "acoustic_pressure",
-                  "surface_velocity",
-                  "incident_plane_wave",
-                  "mass_flow_rate",
-                  "external_compressor_excitation",
-                  "reciprocating_compressor_excitation",
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "mass_flow_rate",
+            "external_compressor_excitation",
+            "reciprocating_compressor_excitation",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:
