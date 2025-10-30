@@ -585,7 +585,15 @@ class Ui_Dialog(object):
         self.label_34.setMaximumSize(QSize(16777215, 28))
         self.label_34.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_16.addWidget(self.label_34, 11, 1, 1, 1)
+        self.gridLayout_16.addWidget(self.label_34, 12, 1, 1, 1)
+
+        self.label_35 = QLabel(self.frame_8)
+        self.label_35.setObjectName(u"label_35")
+        self.label_35.setMinimumSize(QSize(140, 28))
+        self.label_35.setMaximumSize(QSize(16777215, 28))
+        self.label_35.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_16.addWidget(self.label_35, 11, 1, 1, 1)
 
         self.pushButton_waveform_data = QPushButton(self.frame_8)
         self.pushButton_waveform_data.setObjectName(u"pushButton_waveform_data")
@@ -594,15 +602,25 @@ class Ui_Dialog(object):
         self.pushButton_waveform_data.setFont(font3)
         self.pushButton_waveform_data.setAutoDefault(False)
 
-        self.gridLayout_16.addWidget(self.pushButton_waveform_data, 10, 2, 1, 1)
+        self.gridLayout_16.addWidget(self.pushButton_waveform_data, 11, 2, 1, 1)
 
-        self.label_35 = QLabel(self.frame_8)
-        self.label_35.setObjectName(u"label_35")
-        self.label_35.setMinimumSize(QSize(140, 28))
-        self.label_35.setMaximumSize(QSize(16777215, 28))
-        self.label_35.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_data_to_be_plotted = QLabel(self.frame_8)
+        self.label_data_to_be_plotted.setObjectName(u"label_data_to_be_plotted")
+        self.label_data_to_be_plotted.setMinimumSize(QSize(140, 28))
+        self.label_data_to_be_plotted.setMaximumSize(QSize(16777215, 28))
+        self.label_data_to_be_plotted.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_16.addWidget(self.label_35, 10, 1, 1, 1)
+        self.gridLayout_16.addWidget(self.label_data_to_be_plotted, 10, 1, 1, 1)
+
+        self.comboBox_data_to_plot = QComboBox(self.frame_8)
+        self.comboBox_data_to_plot.addItem("")
+        self.comboBox_data_to_plot.addItem("")
+        self.comboBox_data_to_plot.addItem("")
+        self.comboBox_data_to_plot.setObjectName(u"comboBox_data_to_plot")
+        self.comboBox_data_to_plot.setMinimumSize(QSize(0, 28))
+        self.comboBox_data_to_plot.setMaximumSize(QSize(16777215, 28))
+
+        self.gridLayout_16.addWidget(self.comboBox_data_to_plot, 10, 2, 1, 1)
 
         self.pushButton_spectrum_data = QPushButton(self.frame_8)
         self.pushButton_spectrum_data.setObjectName(u"pushButton_spectrum_data")
@@ -611,7 +629,40 @@ class Ui_Dialog(object):
         self.pushButton_spectrum_data.setFont(font3)
         self.pushButton_spectrum_data.setAutoDefault(False)
 
-        self.gridLayout_16.addWidget(self.pushButton_spectrum_data, 11, 2, 1, 1)
+        self.gridLayout_16.addWidget(self.pushButton_spectrum_data, 12, 2, 1, 1)
+
+        self.label_21 = QLabel(self.frame_8)
+        self.label_21.setObjectName(u"label_21")
+
+        self.gridLayout_16.addWidget(self.label_21, 9, 3, 1, 1)
+
+        self.label_23 = QLabel(self.frame_8)
+        self.label_23.setObjectName(u"label_23")
+        self.label_23.setMinimumSize(QSize(140, 28))
+        self.label_23.setMaximumSize(QSize(16777215, 28))
+        self.label_23.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_16.addWidget(self.label_23, 9, 1, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_16.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
+
+        self.spinBox_maximum_frequency = QSpinBox(self.frame_8)
+        self.spinBox_maximum_frequency.setObjectName(u"spinBox_maximum_frequency")
+        self.spinBox_maximum_frequency.setMinimumSize(QSize(0, 28))
+        self.spinBox_maximum_frequency.setMaximumSize(QSize(16777215, 28))
+        self.spinBox_maximum_frequency.setAlignment(Qt.AlignCenter)
+        self.spinBox_maximum_frequency.setMinimum(1000)
+        self.spinBox_maximum_frequency.setMaximum(20000)
+        self.spinBox_maximum_frequency.setSingleStep(100)
+        self.spinBox_maximum_frequency.setValue(2000)
+
+        self.gridLayout_16.addWidget(self.spinBox_maximum_frequency, 9, 2, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_16.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
 
         self.label_24 = QLabel(self.frame_8)
         self.label_24.setObjectName(u"label_24")
@@ -634,39 +685,6 @@ class Ui_Dialog(object):
         self.label_19.setObjectName(u"label_19")
 
         self.gridLayout_16.addWidget(self.label_19, 8, 3, 1, 1)
-
-        self.label_23 = QLabel(self.frame_8)
-        self.label_23.setObjectName(u"label_23")
-        self.label_23.setMinimumSize(QSize(140, 28))
-        self.label_23.setMaximumSize(QSize(16777215, 28))
-        self.label_23.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_16.addWidget(self.label_23, 9, 1, 1, 1)
-
-        self.spinBox_maximum_frequency = QSpinBox(self.frame_8)
-        self.spinBox_maximum_frequency.setObjectName(u"spinBox_maximum_frequency")
-        self.spinBox_maximum_frequency.setMinimumSize(QSize(0, 28))
-        self.spinBox_maximum_frequency.setMaximumSize(QSize(16777215, 28))
-        self.spinBox_maximum_frequency.setAlignment(Qt.AlignCenter)
-        self.spinBox_maximum_frequency.setMinimum(1000)
-        self.spinBox_maximum_frequency.setMaximum(20000)
-        self.spinBox_maximum_frequency.setSingleStep(100)
-        self.spinBox_maximum_frequency.setValue(2000)
-
-        self.gridLayout_16.addWidget(self.spinBox_maximum_frequency, 9, 2, 1, 1)
-
-        self.label_21 = QLabel(self.frame_8)
-        self.label_21.setObjectName(u"label_21")
-
-        self.gridLayout_16.addWidget(self.label_21, 9, 3, 1, 1)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
 
 
         self.gridLayout_15.addWidget(self.frame_8, 1, 0, 1, 1)
@@ -803,7 +821,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.comboBox_single_revolution.setCurrentIndex(1)
+        self.comboBox_single_revolution.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -836,32 +854,32 @@ class Ui_Dialog(object):
         self.lineEdit_frequency_resolution_required.setText(QCoreApplication.translate("Dialog", u"10", None))
         self.label_10.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.label_11.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.comboBox_single_revolution.setItemText(0, QCoreApplication.translate("Dialog", u"Yes", None))
-        self.comboBox_single_revolution.setItemText(1, QCoreApplication.translate("Dialog", u"No", None))
+        self.comboBox_single_revolution.setItemText(0, QCoreApplication.translate("Dialog", u"yes", None))
+        self.comboBox_single_revolution.setItemText(1, QCoreApplication.translate("Dialog", u"no", None))
 
         self.label_14.setText(QCoreApplication.translate("Dialog", u"Single revolution?:", None))
-        self.comboBox_excitation_mapping.setItemText(0, QCoreApplication.translate("Dialog", u"Surface averaged", None))
-        self.comboBox_excitation_mapping.setItemText(1, QCoreApplication.translate("Dialog", u"Nodal mapping", None))
+        self.comboBox_excitation_mapping.setItemText(0, QCoreApplication.translate("Dialog", u"surface averaged", None))
+        self.comboBox_excitation_mapping.setItemText(1, QCoreApplication.translate("Dialog", u"nodal mapping", None))
 
         self.label_5.setText(QCoreApplication.translate("Dialog", u"Data source:", None))
         self.label_15.setText(QCoreApplication.translate("Dialog", u"Connection type:", None))
         self.label_excitation_mapping.setText(QCoreApplication.translate("Dialog", u"Excitation mapping:", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Freq. step (req.):", None))
-        self.comboBox_connection_type.setItemText(0, QCoreApplication.translate("Dialog", u"Discharge", None))
-        self.comboBox_connection_type.setItemText(1, QCoreApplication.translate("Dialog", u"Suction", None))
+        self.comboBox_connection_type.setItemText(0, QCoreApplication.translate("Dialog", u"discharge", None))
+        self.comboBox_connection_type.setItemText(1, QCoreApplication.translate("Dialog", u"suction", None))
 
         self.label_16.setText(QCoreApplication.translate("Dialog", u"Compressor type:", None))
         self.lineEdit_angular_resolution.setText("")
-        self.comboBox_compressor_type.setItemText(0, QCoreApplication.translate("Dialog", u"Screw", None))
-        self.comboBox_compressor_type.setItemText(1, QCoreApplication.translate("Dialog", u"Centrifugal", None))
-        self.comboBox_compressor_type.setItemText(2, QCoreApplication.translate("Dialog", u"Reciprocating", None))
+        self.comboBox_compressor_type.setItemText(0, QCoreApplication.translate("Dialog", u"screw", None))
+        self.comboBox_compressor_type.setItemText(1, QCoreApplication.translate("Dialog", u"centrifugal", None))
+        self.comboBox_compressor_type.setItemText(2, QCoreApplication.translate("Dialog", u"reciprocating", None))
 
         self.label_12.setText(QCoreApplication.translate("Dialog", u"Freq. step (final):", None))
         self.lineEdit_frequency_resolution.setText(QCoreApplication.translate("Dialog", u"not calculated", None))
         self.label_13.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.comboBox_excitation_type.setItemText(0, QCoreApplication.translate("Dialog", u"Mass flow rate -> kg/s", None))
-        self.comboBox_excitation_type.setItemText(1, QCoreApplication.translate("Dialog", u"Surface velocity -> m/s", None))
-        self.comboBox_excitation_type.setItemText(2, QCoreApplication.translate("Dialog", u"Volumetric flow rate -> m\u00b3/s", None))
+        self.comboBox_excitation_type.setItemText(0, QCoreApplication.translate("Dialog", u"mass flow rate -> kg/s", None))
+        self.comboBox_excitation_type.setItemText(1, QCoreApplication.translate("Dialog", u"surface velocity -> m/s", None))
+        self.comboBox_excitation_type.setItemText(2, QCoreApplication.translate("Dialog", u"volumetric flow rate -> m\u00b3/s", None))
 
         self.label_17.setText(QCoreApplication.translate("Dialog", u"Excitation type:", None))
         self.pushButton_load_table.setText("")
@@ -883,14 +901,19 @@ class Ui_Dialog(object):
         self.lineEdit_sampling_frequency.setText(QCoreApplication.translate("Dialog", u"--", None))
         self.label_28.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.label_34.setText(QCoreApplication.translate("Dialog", u"Frequency domain plot:", None))
-        self.pushButton_waveform_data.setText(QCoreApplication.translate("Dialog", u"Plot waveform data", None))
         self.label_35.setText(QCoreApplication.translate("Dialog", u"Time domain plot:", None))
+        self.pushButton_waveform_data.setText(QCoreApplication.translate("Dialog", u"Plot waveform data", None))
+        self.label_data_to_be_plotted.setText(QCoreApplication.translate("Dialog", u"Data type:", None))
+        self.comboBox_data_to_plot.setItemText(0, QCoreApplication.translate("Dialog", u"mass flow rate -> kg/s", None))
+        self.comboBox_data_to_plot.setItemText(1, QCoreApplication.translate("Dialog", u"surface velocity -> m/s", None))
+        self.comboBox_data_to_plot.setItemText(2, QCoreApplication.translate("Dialog", u"volumetric flow rate -> m\u00b3/s", None))
+
         self.pushButton_spectrum_data.setText(QCoreApplication.translate("Dialog", u"Plot spectrum data", None))
+        self.label_21.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        self.label_23.setText(QCoreApplication.translate("Dialog", u"Freq. max:", None))
         self.label_24.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
         self.lineEdit_frequency_resolution_plot.setText(QCoreApplication.translate("Dialog", u"--", None))
         self.label_19.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.label_23.setText(QCoreApplication.translate("Dialog", u"Freq. max:", None))
-        self.label_21.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_plots), QCoreApplication.translate("Dialog", u"Plots", None))
         ___qtreewidgetitem = self.treeWidget_surface_velocity.headerItem()
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Angular resolution [deg]", None));
@@ -985,15 +1008,17 @@ class ExternalCompressorExcitationInputs_UI(QDialog, Ui_Dialog):
                                                                                     - lineEdit_sampling_frequency: QLineEdit
                                                                                     - label_28: QLabel
                                                                                     - label_34: QLabel
-                                                                                    - pushButton_waveform_data: QPushButton
                                                                                     - label_35: QLabel
+                                                                                    - pushButton_waveform_data: QPushButton
+                                                                                    - label_data_to_be_plotted: QLabel
+                                                                                    - comboBox_data_to_plot: QComboBox
                                                                                     - pushButton_spectrum_data: QPushButton
+                                                                                    - label_21: QLabel
+                                                                                    - label_23: QLabel
+                                                                                    - spinBox_maximum_frequency: QSpinBox
                                                                                     - label_24: QLabel
                                                                                     - lineEdit_frequency_resolution_plot: QLineEdit
                                                                                     - label_19: QLabel
-                                                                                    - label_23: QLabel
-                                                                                    - spinBox_maximum_frequency: QSpinBox
-                                                                                    - label_21: QLabel
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_7: QFrame

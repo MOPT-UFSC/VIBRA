@@ -532,16 +532,16 @@
                     </size>
                    </property>
                    <property name="currentIndex">
-                    <number>1</number>
+                    <number>0</number>
                    </property>
                    <item>
                     <property name="text">
-                     <string>Yes</string>
+                     <string>yes</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>No</string>
+                     <string>no</string>
                     </property>
                    </item>
                   </widget>
@@ -584,12 +584,12 @@
                    </property>
                    <item>
                     <property name="text">
-                     <string>Surface averaged</string>
+                     <string>surface averaged</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Nodal mapping</string>
+                     <string>nodal mapping</string>
                     </property>
                    </item>
                   </widget>
@@ -711,12 +711,12 @@
                    </property>
                    <item>
                     <property name="text">
-                     <string>Discharge</string>
+                     <string>discharge</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Suction</string>
+                     <string>suction</string>
                     </property>
                    </item>
                   </widget>
@@ -781,17 +781,17 @@
                    </property>
                    <item>
                     <property name="text">
-                     <string>Screw</string>
+                     <string>screw</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Centrifugal</string>
+                     <string>centrifugal</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Reciprocating</string>
+                     <string>reciprocating</string>
                     </property>
                    </item>
                   </widget>
@@ -879,17 +879,17 @@
                    </property>
                    <item>
                     <property name="text">
-                     <string>Mass flow rate -&gt; kg/s</string>
+                     <string>mass flow rate -&gt; kg/s</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Surface velocity -&gt; m/s</string>
+                     <string>surface velocity -&gt; m/s</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Volumetric flow rate -&gt; m³/s</string>
+                     <string>volumetric flow rate -&gt; m³/s</string>
                     </property>
                    </item>
                   </widget>
@@ -1489,7 +1489,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="11" column="1">
+                    <item row="12" column="1">
                      <widget class="QLabel" name="label_34">
                       <property name="minimumSize">
                        <size>
@@ -1511,7 +1511,29 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="10" column="2">
+                    <item row="11" column="1">
+                     <widget class="QLabel" name="label_35">
+                      <property name="minimumSize">
+                       <size>
+                        <width>140</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Time domain plot:</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="11" column="2">
                      <widget class="QPushButton" name="pushButton_waveform_data">
                       <property name="minimumSize">
                        <size>
@@ -1539,7 +1561,7 @@
                      </widget>
                     </item>
                     <item row="10" column="1">
-                     <widget class="QLabel" name="label_35">
+                     <widget class="QLabel" name="label_data_to_be_plotted">
                       <property name="minimumSize">
                        <size>
                         <width>140</width>
@@ -1553,14 +1575,45 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>Time domain plot:</string>
+                       <string>Data type:</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                      </widget>
                     </item>
-                    <item row="11" column="2">
+                    <item row="10" column="2">
+                     <widget class="QComboBox" name="comboBox_data_to_plot">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <item>
+                       <property name="text">
+                        <string>mass flow rate -&gt; kg/s</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>surface velocity -&gt; m/s</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>volumetric flow rate -&gt; m³/s</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                    <item row="12" column="2">
                      <widget class="QPushButton" name="pushButton_spectrum_data">
                       <property name="minimumSize">
                        <size>
@@ -1586,6 +1639,92 @@
                        <bool>false</bool>
                       </property>
                      </widget>
+                    </item>
+                    <item row="9" column="3">
+                     <widget class="QLabel" name="label_21">
+                      <property name="text">
+                       <string>[Hz]</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="9" column="1">
+                     <widget class="QLabel" name="label_23">
+                      <property name="minimumSize">
+                       <size>
+                        <width>140</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Freq. max:</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="4">
+                     <spacer name="horizontalSpacer_4">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item row="9" column="2">
+                     <widget class="QSpinBox" name="spinBox_maximum_frequency">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>28</height>
+                       </size>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignCenter</set>
+                      </property>
+                      <property name="minimum">
+                       <number>1000</number>
+                      </property>
+                      <property name="maximum">
+                       <number>20000</number>
+                      </property>
+                      <property name="singleStep">
+                       <number>100</number>
+                      </property>
+                      <property name="value">
+                       <number>2000</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="0">
+                     <spacer name="horizontalSpacer_3">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
                     </item>
                     <item row="8" column="1">
                      <widget class="QLabel" name="label_24">
@@ -1640,92 +1779,6 @@
                        <string>[Hz]</string>
                       </property>
                      </widget>
-                    </item>
-                    <item row="9" column="1">
-                     <widget class="QLabel" name="label_23">
-                      <property name="minimumSize">
-                       <size>
-                        <width>140</width>
-                        <height>28</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>28</height>
-                       </size>
-                      </property>
-                      <property name="text">
-                       <string>Freq. max:</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="9" column="2">
-                     <widget class="QSpinBox" name="spinBox_maximum_frequency">
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>28</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>28</height>
-                       </size>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignCenter</set>
-                      </property>
-                      <property name="minimum">
-                       <number>1000</number>
-                      </property>
-                      <property name="maximum">
-                       <number>20000</number>
-                      </property>
-                      <property name="singleStep">
-                       <number>100</number>
-                      </property>
-                      <property name="value">
-                       <number>2000</number>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="9" column="3">
-                     <widget class="QLabel" name="label_21">
-                      <property name="text">
-                       <string>[Hz]</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="4">
-                     <spacer name="horizontalSpacer_4">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                    <item row="0" column="0">
-                     <spacer name="horizontalSpacer_3">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
                     </item>
                    </layout>
                   </widget>
