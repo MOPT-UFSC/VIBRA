@@ -161,8 +161,6 @@ class DataImporter:
                     if use_first_sheet:
                         break
 
-                    # return ImportedData(sheet_data, filename, sufix, sheetname, file_path)
-
             return output_data
 
     @staticmethod                      
