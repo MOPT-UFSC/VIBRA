@@ -79,6 +79,7 @@ class Model:
         self.geometry_path = None
         self.initial_element_size = None
         self.length_unit = None
+        self.stop_processing = False
 
         self.f_min = 5
         self.f_max = 600

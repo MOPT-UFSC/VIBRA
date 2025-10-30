@@ -42,9 +42,9 @@ def acoustic_model(fluid: Fluid) -> Model:
     }
     model.properties._set_property("fluid", fluid, surface=4)
     model.properties._set_property("surface_velocity", data_Vn, surface=4)
-    model.set_geometry_path(path)
     model.set_length_unit()
     model.set_geometry_quality_factor()
+    model.set_geometry_path(path)
     model.initialize_mesh()
     model.set_mesh_setup(mesh_setup)
     model.process_mesh()
