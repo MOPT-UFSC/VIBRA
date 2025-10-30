@@ -131,7 +131,7 @@ class Ui_Form(object):
         self.lineEdit_natural_frequency = QLineEdit(self.frame_selector)
         self.lineEdit_natural_frequency.setObjectName(u"lineEdit_natural_frequency")
         self.lineEdit_natural_frequency.setEnabled(False)
-        self.lineEdit_natural_frequency.setMinimumSize(QSize(80, 28))
+        self.lineEdit_natural_frequency.setMinimumSize(QSize(160, 28))
         self.lineEdit_natural_frequency.setMaximumSize(QSize(180, 28))
         self.lineEdit_natural_frequency.setFont(font1)
         self.lineEdit_natural_frequency.setStyleSheet(u"")

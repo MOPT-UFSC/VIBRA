@@ -191,7 +191,7 @@ class Ui_Form(object):
         self.lineEdit_selected_frequency = QLineEdit(self.frame_selector)
         self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
         self.lineEdit_selected_frequency.setEnabled(False)
-        self.lineEdit_selected_frequency.setMinimumSize(QSize(80, 28))
+        self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
         self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
         self.lineEdit_selected_frequency.setFont(font1)
         self.lineEdit_selected_frequency.setStyleSheet(u"")
