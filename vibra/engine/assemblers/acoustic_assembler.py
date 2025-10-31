@@ -310,11 +310,11 @@ class AcousticAssembler:
                         # get the fluid density
                         density, _ = self.get_fluid_properties_from_surface(surface_id)
 
-                        # convert the mass flow rate to normal surface velocity
+                        # convert the mass flow rate to surface velocity (oscilatting flow)
                         _complex_values /= (density * area)
 
                     else:
-                        # convert the volumetric flow rate to normal surface velocity
+                        # convert the volumetric flow rate to surface velocity (oscilatting flow)
                         _complex_values /= area
 
             complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
