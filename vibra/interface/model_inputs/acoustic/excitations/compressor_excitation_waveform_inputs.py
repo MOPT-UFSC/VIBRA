@@ -71,6 +71,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.comboBox_excitation_mapping.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
         self.comboBox_data_source.currentIndexChanged.connect(self.data_source_callback)
         self.comboBox_single_revolution.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
+        self.comboBox_excitation_type.currentIndexChanged.connect(self.update_data_to_plot_combo_box)
         #
         self.lineEdit_angular_resolution.textEdited.connect(self.compute_compressor_excitation_spectrum)
         self.lineEdit_frequency_resolution_required.textEdited.connect(self.compute_compressor_excitation_spectrum)
@@ -105,9 +106,11 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.pushButton_spectrum_data.setDisabled(True)
         self.pushButton_waveform_data.setDisabled(True)
 
-        if not cfd_source:
+        if not cfd_source:           
             self.comboBox_single_revolution.setCurrentText("yes")
             if self.comboBox_data_source.currentText() == "SCORG":
+                if self.comboBox_excitation_type.currentText() =="surface velocity -> m/s":
+                    self.comboBox_excitation_type.setCurrentText("mass flow rate -> kg/s")
                 self.comboBox_compressor_type.setCurrentText("screw")
                 self.comboBox_compressor_type.setDisabled(True)
             else:

@@ -929,7 +929,7 @@ class Ui_Dialog(object):
         self.pushButton_waveform_data.setText(QCoreApplication.translate("Dialog", u"Plot waveform data", None))
         self.label_34.setText(QCoreApplication.translate("Dialog", u"Frequency domain plot:", None))
         self.label_28.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.label_data_to_be_plotted.setText(QCoreApplication.translate("Dialog", u"Data type:", None))
+        self.label_data_to_be_plotted.setText(QCoreApplication.translate("Dialog", u"Data to plot:", None))
         self.label_35.setText(QCoreApplication.translate("Dialog", u"Time domain plot:", None))
         self.label_31.setText(QCoreApplication.translate("Dialog", u"Number of revolutions:", None))
         self.label_33.setText(QCoreApplication.translate("Dialog", u"[s]", None))

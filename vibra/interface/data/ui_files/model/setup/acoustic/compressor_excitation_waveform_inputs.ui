@@ -1376,7 +1376,7 @@
                        </size>
                       </property>
                       <property name="text">
-                       <string>Data type:</string>
+                       <string>Data to plot:</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
