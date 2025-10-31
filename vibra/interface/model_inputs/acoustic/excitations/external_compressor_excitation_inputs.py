@@ -69,7 +69,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #
         self.comboBox_normal_velocity_axis.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
         self.comboBox_excitation_mapping.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
-        self.comboBox_data_source.currentIndexChanged.connect(self.source_data_callback)
+        self.comboBox_data_source.currentIndexChanged.connect(self.data_source_callback)
         self.comboBox_single_revolution.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
         #
         self.lineEdit_angular_resolution.textEdited.connect(self.compute_compressor_excitation_spectrum)
@@ -90,10 +90,10 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.source_data_callback()
+        self.data_source_callback()
         self.geometry_selection_callback()
 
-    def source_data_callback(self):
+    def data_source_callback(self):
         self.imported_values = None
         self.comboBox_data_to_plot.clear()
 
@@ -222,6 +222,21 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         self.pushButton_spectrum_data.setEnabled(True)
         self.pushButton_waveform_data.setEnabled(True)
+        self.update_velocity_axis_by_coordinates()
+
+    def update_velocity_axis_by_coordinates(self):
+        if self.imported_values is None:
+            return
+        
+        coords = self.imported_values.get("nodal_coordinates")
+        if isinstance(coords, np.ndarray):
+            min_coords = np.min(coords, axis=0)
+            max_coords = np.max(coords, axis=0)
+            range_coords = np.abs(max_coords - min_coords)
+            indexes = np.argsort(range_coords)
+            if round(range_coords[indexes[0]], 4) == 0:
+                axis_labels = ["x-axis (+)", "y-axis (+)", "z-axis (+)"]
+                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indexes[0]])
 
     def compute_compressor_excitation_spectrum(self):
 
@@ -419,7 +434,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         excitation_units = data.get("excitation_units", "kg/s")
         excitation_type_label = f"{excitation_type} -> {excitation_units}"
 
-        self.comboBox_data_source.setCurrentText(data.get("source_data", "SCORG"))
+        self.comboBox_data_source.setCurrentText(data.get("data_source", "SCORG"))
         self.comboBox_connection_type.setCurrentText(data.get("connection_type", "discharge"))
         self.comboBox_excitation_type.setCurrentText(excitation_type_label)
         self.comboBox_excitation_mapping.setCurrentText(data.get("excitation_mapping", "surface averaged"))
@@ -655,6 +670,8 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             "mass_flow_rate",
             "external_compressor_excitation",
             "reciprocating_compressor_excitation",
+            "reciprocating_pump_excitation",
+            "mass_source",
             ]
 
         for surface_id in surface_ids:
