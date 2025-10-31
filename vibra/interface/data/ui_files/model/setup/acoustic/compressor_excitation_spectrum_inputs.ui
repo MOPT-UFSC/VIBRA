@@ -1334,7 +1334,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set mass flow rate acoustic excitation</string>
+         <string>Compressor excitation (frequency domain)</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
