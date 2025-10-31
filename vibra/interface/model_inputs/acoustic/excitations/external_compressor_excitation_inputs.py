@@ -454,7 +454,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         extensions = ["h5", "hdf5"]
         caption = "Choose the HDF file to import the external compressor excitation data"
 
-        imported_path, file_extension = DataImporter.get_file_paths(caption, "imported_table_folder", extensions)
+        imported_path, file_extension = DataImporter.import_single_file("imported_table_folder", extensions, caption)
         if not file_extension:
             return
 

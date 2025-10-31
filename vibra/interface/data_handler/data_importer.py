@@ -45,6 +45,9 @@ class DataImporter:
                                                                 folder_path, 
                                                                 str_extensions,
                                                                 **kwargs)
+            
+        if "h5" in file_extensions or "hdf5" in file_extensions:
+            return imported_paths, file_extension
 
         if not file_extension:
             return
@@ -64,43 +67,43 @@ class DataImporter:
         
         return imported_data
 
-    @staticmethod
-    def get_file_paths(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
+    # @staticmethod
+    # def get_file_paths(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
 
-        folder_path = app().config.get_last_folder_for(last_folder)
-        if folder_path is None:
-            folder_path = os.path.expanduser("~")
+    #     folder_path = app().config.get_last_folder_for(last_folder)
+    #     if folder_path is None:
+    #         folder_path = os.path.expanduser("~")
 
-        kwargs = dict()
-        if platform.system() == "Linux":
-                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+    #     kwargs = dict()
+    #     if platform.system() == "Linux":
+    #             kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
-        str_extensions = "Files ("
-        for extension in file_extensions:
-            str_extensions += "*."
-            str_extensions += extension
-            str_extensions += " "
+    #     str_extensions = "Files ("
+    #     for extension in file_extensions:
+    #         str_extensions += "*."
+    #         str_extensions += extension
+    #         str_extensions += " "
         
-        str_extensions = str_extensions.strip()
-        str_extensions += ")"
+    #     str_extensions = str_extensions.strip()
+    #     str_extensions += ")"
 
-        if (multiple_files):
-            imported_paths, file_extension = QFileDialog.getOpenFileNames( None, 
-                                                                caption, 
-                                                                folder_path, 
-                                                                str_extensions,
-                                                                **kwargs)
-        else:
-            imported_paths, file_extension = QFileDialog.getOpenFileName( None, 
-                                                                caption, 
-                                                                folder_path, 
-                                                                str_extensions,
-                                                                **kwargs)
+    #     if (multiple_files):
+    #         imported_paths, file_extension = QFileDialog.getOpenFileNames( None, 
+    #                                                             caption, 
+    #                                                             folder_path, 
+    #                                                             str_extensions,
+    #                                                             **kwargs)
+    #     else:
+    #         imported_paths, file_extension = QFileDialog.getOpenFileName( None, 
+    #                                                             caption, 
+    #                                                             folder_path, 
+    #                                                             str_extensions,
+    #                                                             **kwargs)
             
-        if not file_extension:
-            return None, None
+    #     if not file_extension:
+    #         return None, None
 
-        return imported_paths, file_extension
+    #     return imported_paths, file_extension
   
     @staticmethod
     def import_multiple_files(last_folder: str, file_extensions: List[str], caption: str = "Open file") -> List[ImportedData]:
@@ -109,6 +112,9 @@ class DataImporter:
     @staticmethod
     def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData | None:
         imported_data = DataImporter.__import_files(caption, last_folder, file_extensions)
+        if "hdf" in file_extensions or "hdf5" in file_extensions:
+            return imported_data
+
         if isinstance(imported_data, list):
             if imported_data:
                 return imported_data[0]
