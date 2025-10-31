@@ -193,7 +193,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             return
 
         self.lineEdit_table_path.setText(table_path)
-        self.imported_values = load_cfd_simulation_data_from_hdf_file(table_path)
+        self.imported_values = DataImporter.load_cfd_simulation_data_from_hdf_file(table_path)
 
         angular_resolution = self.imported_values.get("delta_theta")
         if angular_resolution is None:
@@ -451,10 +451,10 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
     def load_hdf_file(self):
 
-        extensions = ["h5", "hdf5"]
+        extensions = ["h5", "hd5", "hdf5"]
         caption = "Choose the HDF file to import the external compressor excitation data"
 
-        imported_path, file_extension = DataImporter.import_single_file("imported_table_folder", extensions, caption)
+        imported_path, file_extension = DataImporter.get_file_paths(caption, "imported_table_folder", extensions)
         if not file_extension:
             return
 

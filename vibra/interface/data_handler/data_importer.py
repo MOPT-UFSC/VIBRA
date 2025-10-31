@@ -8,12 +8,36 @@ from pathlib import Path
 import numpy as np
 import platform
 import os
+import h5py
 
 
 class DataImporter:
 
     @staticmethod
     def __import_files(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
+
+        imported_paths, file_extension = DataImporter.get_file_paths(caption, last_folder, file_extensions, multiple_files)
+        
+        if not file_extension:
+            return
+        
+        imported_data = None
+        last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
+
+        imported_data = list()
+        if isinstance(imported_paths, list):
+            for imported_path in imported_paths:
+                imported_data.extend(DataImporter.read_data_in_file(imported_path, use_first_sheet=False))
+
+        else:
+            imported_data.extend(DataImporter.read_data_in_file(imported_paths, use_first_sheet=True))
+
+        app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
+        
+        return imported_data
+
+    @staticmethod
+    def get_file_paths(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
 
         folder_path = app().config.get_last_folder_for(last_folder)
         if folder_path is None:
@@ -45,27 +69,8 @@ class DataImporter:
                                                                 folder_path, 
                                                                 str_extensions,
                                                                 **kwargs)
-            
-        if "h5" in file_extensions or "hdf5" in file_extensions:
-            return imported_paths, file_extension
 
-        if not file_extension:
-            return
-        
-        imported_data = None
-        last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
-
-        imported_data = list()
-        if isinstance(imported_paths, list):
-            for imported_path in imported_paths:
-                imported_data.extend(DataImporter.read_data_in_file(imported_path, use_first_sheet=False))
-
-        else:
-            imported_data.extend(DataImporter.read_data_in_file(imported_paths, use_first_sheet=True))
-
-        app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
-        
-        return imported_data
+        return imported_paths, file_extension
   
     @staticmethod
     def import_multiple_files(last_folder: str, file_extensions: List[str], caption: str = "Open file") -> List[ImportedData]:
@@ -74,8 +79,6 @@ class DataImporter:
     @staticmethod
     def import_single_file(last_folder: str, file_extensions: List[str], caption: str = "Open File") -> ImportedData | None:
         imported_data = DataImporter.__import_files(caption, last_folder, file_extensions)
-        if "hdf" in file_extensions or "hdf5" in file_extensions:
-            return imported_data
 
         if isinstance(imported_data, list):
             if imported_data:
@@ -154,3 +157,79 @@ class DataImporter:
                 output_data.append(line_values)
 
         return np.array(output_data, dtype=float)
+
+    @staticmethod
+    def load_cfd_simulation_data_from_hdf_file(path: str | Path):
+
+        simulation_data = dict()
+
+        with h5py.File(path, 'r') as hf:
+
+            # Read key data
+            nodal_data = hf.get("nodal_data")
+            variables = hf.get("variables")
+            metadata = hf.get("metadata")
+
+            # Save the nodal coordinates matrix
+            simulation_data["nodal_area"] = np.array(nodal_data.get("nodal_area"), dtype=float)
+            simulation_data["nodal_coordinates"] = np.array(nodal_data.get("coords"), dtype=float)
+
+            # Save other attributes
+            for attr_key in metadata.attrs:
+                simulation_data[attr_key] = metadata.attrs[attr_key]
+
+            # Calculate the start point from last revolution
+            delta_theta = metadata.attrs["delta_theta"]
+            steps_per_rev = int(360 / delta_theta)
+            start = steps_per_rev + 1
+
+            # filter the last revolution data for metadata
+            for key, values in metadata.items():
+                simulation_data[key] = values[-start:]
+
+            # filter the last revolution data for variables
+            for key, values in variables.items():
+                simulation_data[key] = values[:, -start:]
+
+        return simulation_data
+
+    @staticmethod
+    def load_spreadsheet_data_for_validation(path: str) -> dict:
+
+        imported_results = dict()
+
+        if not Path(path).exists():
+            return imported_results
+        
+        from pandas import read_excel
+        from openpyxl import load_workbook
+
+        wb = load_workbook(path)
+
+        skiprows = 0
+        sheetnames = wb.sheetnames
+
+        for sheetname in sheetnames:
+
+            try:
+                sheet_data = read_excel(
+                                        path, 
+                                        sheet_name = sheetname, 
+                                        header = skiprows, 
+                                        usecols = [0, 1, 2]
+                                        ).to_numpy()
+
+            except:
+                sheet_data = read_excel(
+                                        path, 
+                                        sheet_name = sheetname, 
+                                        header = skiprows, 
+                                        usecols = [0, 1]
+                                        ).to_numpy()
+                
+            filtered_data = [row_data for row_data in sheet_data if not isinstance(row_data[0], str)]
+            sheet_data = np.array(filtered_data, dtype=float)
+
+            imported_results[sheetname] = sheet_data
+
+        return imported_results
