@@ -119,19 +119,21 @@ def example_of_simulated_signal(df_req, window_type: str="hann", correction_type
 
     # angular resolution
     d_theta = 1
+
+    # points to complete one revolution
     Np = int(360 / d_theta) + 1
+
+    # number of male lobes
+    N_lobes = 4
 
     # rotational frequency
     f_rot = 5296 / 60
-    
+
     # revolution time
     T_rev = 1 / f_rot
 
     # time step
     dt = T_rev / (Np - 1)
-
-    # sampling frequency
-    fs = 1 / dt
 
     # sampling period for required frequency resolution
     T_req = 1 / df_req
@@ -141,9 +143,6 @@ def example_of_simulated_signal(df_req, window_type: str="hann", correction_type
 
     # signal time block
     T = N_rev * T_rev
-
-    # number of male lobes
-    N_lobes = 4
 
     # number of time steps
     N = int(T / dt)
@@ -189,4 +188,4 @@ def example_of_simulated_signal(df_req, window_type: str="hann", correction_type
 
 
 if __name__ == "__main__":
-    example_of_simulated_signal(5, window_type="hann", correction_type="amplitude")
+    example_of_simulated_signal(5.0, window_type="hann", correction_type="amplitude")
