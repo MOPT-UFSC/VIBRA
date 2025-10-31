@@ -59,6 +59,9 @@ class RenderTool(ArcballCameraInteractorStyle):
     def stop_zooming(self):
         self.stop_all_actions()
     
+    def left_button_release_event(self, obj, event):
+        self.stop_all_actions()
+    
     def stop_all_actions(self):
         super().stop_zooming()
         super().stop_panning()
