@@ -7,7 +7,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.setup.acoustic.external_compressor_excitation_inputs_ui import ExternalCompressorExcitationInputs_UI
+from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 
 from utils.data_loaders import load_cfd_simulation_data_from_hdf_file
 from utils.signal_processing import extend_signal, process_one_sided_spectrum
@@ -18,7 +18,7 @@ from pathlib import Path
 error_title = "Error"
 
 
-class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
+class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -78,7 +78,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_load_table.clicked.connect(self.load_external_compressor_excitation_data)
+        self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_spectrum_data.clicked.connect(self.plot_spectrum_data_callback)
@@ -133,7 +133,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         if self.tabWidget_main.currentIndex() != 0:
             return
 
-        data = self.properties._get_property("external_compressor_excitation", surface=surface_id)
+        data = self.properties._get_property("compressor_excitation_waveform", surface=surface_id)
         if not isinstance(data, dict):
             return
 
@@ -191,7 +191,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         return value
 
-    def load_external_compressor_excitation_data(self):
+    def load_compressor_excitation_data(self):
         self.hide()
         self.pushButton_spectrum_data.setDisabled(True)
         self.pushButton_waveform_data.setDisabled(True)
@@ -610,7 +610,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                     return
 
                 if self.normal_surface_velocity_sdata.shape[1] >= 3:
-                    table_name = f"external_compressor_excitation_at_surface_{surface_id}"
+                    table_name = f"compressor_excitation_waveform_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.normal_surface_velocity_sdata):
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
@@ -623,7 +623,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                     return
 
                 if self.mass_flow_sdata.shape[1] >= 3:
-                    table_name = f"external_compressor_excitation_at_surface_{surface_id}"
+                    table_name = f"compressor_excitation_waveform_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.mass_flow_sdata):
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
@@ -650,7 +650,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                 "nodal_attribution" : False,
                 }
 
-            self.properties._set_property("external_compressor_excitation", data, surface=surface_id)
+            self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
         self.actions_to_finalize()
 
@@ -670,7 +670,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             "surface_velocity",
             "incident_plane_wave",
             "mass_flow_rate",
-            "external_compressor_excitation",
+            "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "reciprocating_pump_excitation",
             "mass_source",
@@ -683,7 +683,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_property_related_table_names("external_compressor_excitation", surface_id, "surfaces")
+        table_names = self.properties.get_property_related_table_names("compressor_excitation_waveform", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -694,7 +694,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         surface_id = int(self.lineEdit_selection_id.text())
         self.remove_table_files_from_surfaces(surface_id)
 
-        self.properties._remove_surface_property("external_compressor_excitation", surface_id)
+        self.properties._remove_surface_property("compressor_excitation_waveform", surface_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -714,13 +714,13 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
             surface_ids = list()
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "external_compressor_excitation":
+                if property == "compressor_excitation_waveform":
                     surface_id = args[0]
                     surface_ids.append(surface_id)
 
             self.remove_table_files_from_surfaces(surface_ids)
 
-            self.properties._reset_property("external_compressor_excitation")
+            self.properties._reset_property("compressor_excitation_waveform")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
@@ -740,7 +740,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                 "surface_velocity",
                 "incident_plane_wave",
                 "specific_impedance",
-                "external_compressor_excitation",
+                "compressor_excitation_waveform",
                 "reciprocating_compressor_excitation",
                 ]:
                 if "table_names" in data.keys():
@@ -755,7 +755,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "external_compressor_excitation":
+            if property == "compressor_excitation_waveform":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
@@ -776,7 +776,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         self.treeWidget_surface_velocity.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property != "external_compressor_excitation":
+            if property != "compressor_excitation_waveform":
                 continue
 
             data_source = data.get("data_source")

@@ -347,7 +347,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             "surface_velocity",
             "incident_plane_wave",
             "mass_flow_rate",
-            "external_compressor_excitation",
+            "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "reciprocating_pump_excitation",
             "mass_source",

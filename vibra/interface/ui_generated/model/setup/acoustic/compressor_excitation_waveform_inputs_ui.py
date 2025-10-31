@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'external_compressor_excitation_inputs.ui'
+## Form generated from reading UI file 'compressor_excitation_waveform_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -832,7 +832,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label.setText(QCoreApplication.translate("Dialog", u"External compressor excitation", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Compressor excitation (time domain)", None))
         self.pushButton_attribute.setText(QCoreApplication.translate("Dialog", u"Attribute", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
         self.comboBox_data_source.setItemText(0, QCoreApplication.translate("Dialog", u"SCORG", None))
@@ -930,7 +930,7 @@ class Ui_Dialog(object):
 
 
 
-class ExternalCompressorExcitationInputs_UI(QDialog, Ui_Dialog):
+class CompressorExcitationWaveformInputs_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
     - Dialog: QDialog

@@ -342,7 +342,7 @@ class ModelProperties:
                            "perforated_plate_model",
                            "reciprocating_compressor_excitation",
                            "reciprocating_pump_excitation",
-                           "external_compressor_excitation",
+                           "compressor_excitation_waveform",
                            "acoustic_transfer_element",
                            "mass_source",
                            ]

@@ -298,7 +298,7 @@ class AcousticAssembler:
             data: dict
             _complex_values = data.get("values")[0]
 
-            if property_label == "external_compressor_excitation":
+            if property_label == "compressor_excitation_waveform":
                 excitation_type = data.get("excitation_type")
 
                 if excitation_type in ["mass flow rate", "volumetric flow rate"]:
@@ -1677,7 +1677,7 @@ class AcousticAssembler:
         total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
-        for excitation_label in ["surface_velocity", "external_compressor_excitation", "reciprocating_compressor_excitation"]:
+        for excitation_label in ["surface_velocity", "compressor_excitation_waveform", "reciprocating_compressor_excitation"]:
 
             integration_data_sv = self.get_excitation_data_for_element_integration(excitation_label)
 
