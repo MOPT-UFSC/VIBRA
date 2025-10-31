@@ -193,9 +193,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-                  "specific_impedance"
-                  "incident_plane_wave"
-                  ]
+            "absorption_surface",
+            "specific_impedance",
+            "incident_plane_wave",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:

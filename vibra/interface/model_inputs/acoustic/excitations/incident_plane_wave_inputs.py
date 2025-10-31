@@ -583,15 +583,15 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-                  "acoustic_pressure",
-                  "surface_velocity",
-                  "incident_plane_wave",
-                  "mass_flow_rate",
-                  "reciprocating_compressor_excitation",
-                  "reciprocating_pump_excitation",
-                  "specific_impedance",
-                  "absorption_surface",
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "mass_flow_rate",
+            "external_compressor_excitation",
+            "reciprocating_compressor_excitation",
+            "reciprocating_pump_excitation",
+            "mass_source",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:
