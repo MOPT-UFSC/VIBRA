@@ -9,7 +9,6 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.setup.acoustic.external_compressor_excitation_inputs_ui import ExternalCompressorExcitationInputs_UI
 
-from utils.data_loaders import load_cfd_simulation_data_from_hdf_file
 from utils.signal_processing import extend_signal, process_one_sided_spectrum
 
 import numpy as np
