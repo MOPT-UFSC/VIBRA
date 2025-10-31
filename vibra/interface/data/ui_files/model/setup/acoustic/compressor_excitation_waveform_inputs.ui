@@ -99,7 +99,7 @@
          </font>
         </property>
         <property name="text">
-         <string>External compressor excitation</string>
+         <string>Compressor excitation (time domain)</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>

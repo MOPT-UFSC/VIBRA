@@ -340,9 +340,10 @@ class ModelProperties:
                            "transfer_impedance",
                            "absorption_surface",
                            "perforated_plate_model",
+                           "compressor_excitation_spectrum",
+                           "compressor_excitation_waveform",
                            "reciprocating_compressor_excitation",
                            "reciprocating_pump_excitation",
-                           "external_compressor_excitation",
                            "acoustic_transfer_element",
                            "mass_source",
                            ]

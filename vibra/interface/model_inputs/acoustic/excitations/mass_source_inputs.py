@@ -710,9 +710,15 @@ class MassSourceInputs(MassSourceInputs_UI):
             selection_ids = [selection_ids]
 
         labels = [
-                  "acoustic_pressure",
-                  "mass_source",
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "mass_flow_rate",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "reciprocating_pump_excitation",
+            "mass_source",
+            ]
 
         for label in labels:
             for selection_id in selection_ids:

@@ -55,25 +55,30 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
     
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
+        # acoustic model excitations
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
-        # self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
         self.item_child_mass_source = self.add_item("Mass Source")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_incident_plane_wave = self.add_item("Incident Plane Wave")
+        self.item_child_compressor_excitation_spectrum = self.add_item("Compressor Excitation (spectrum)")
+        self.item_child_compressor_excitation_waveform = self.add_item("Compressor Excitation (waveform)")
+        self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
+        # external impedances
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
+        self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
+        # internal impedances
         self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
         self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
+        # dissipation models
         self.item_child_proportional_damping = self.add_item("Proportional Damping")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
+        # other features
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
-        self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
-        self.item_child_external_compressor_excitation = self.add_item("External Compressor Excitation")
 
-        self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
         # self.item_child_acoustic_properties_gradient.setHidden(True)
 
         self.top_level_items = [
@@ -107,7 +112,8 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_viscous_thermal_model": "viscous_thermal_model",
             "item_child_acoustic_properties_gradient": "acoustic_properties_gradient",
             "item_child_reciprocating_compressor_excitation": "reciprocating_compressor_excitation",
-            "item_child_external_compressor_excitation": "external_compressor_excitation",
+            "item_child_compressor_excitation_waveform": "compressor_excitation_waveform",
+            "item_child_compressor_excitation_spectrum": "compressor_excitation_spectrum",
             "item_child_acoustic_transfer_element_setup": "acoustic_transfer_element_setup",
         }
 
@@ -412,8 +418,14 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_acoustic_pressure_callback(self):
         app().main_window.input_ui.set_acoustic_pressure()
     
-    def item_child_mass_flow_rate_callback(self):
-        app().main_window.input_ui.set_mass_flow_rate()
+    def item_child_compressor_excitation_waveform_callback(self):
+        app().main_window.input_ui.compressor_excitation_waveform()
+
+    def item_child_compressor_excitation_spectrum_callback(self):
+        app().main_window.input_ui.compressor_excitation_spectrum()
+
+    def item_child_reciprocating_compressor_excitation_callback(self):
+        app().main_window.input_ui.add_reciprocating_compressor_excitation()
 
     def item_child_mass_source_callback(self):
         app().main_window.input_ui.set_mass_source()
@@ -451,12 +463,6 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_perforated_plate_model_callback(self):
         app().main_window.input_ui.set_perforated_plate_model()
 
-    def item_child_external_compressor_excitation_callback(self):
-        app().main_window.input_ui.external_compressor_excitation()
-
-    def item_child_reciprocating_compressor_excitation_callback(self):
-        app().main_window.input_ui.add_reciprocating_compressor_excitation()
-
     def item_child_acoustic_properties_gradient_callback(self):
         app().main_window.input_ui.set_acoustic_properties_grandient()
     
@@ -478,10 +484,12 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_acoustic_pressure.setDisabled(key)
-        # self.item_child_mass_flow_rate.setDisabled(key)
         self.item_child_mass_source.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
         self.item_child_incident_plane_wave.setDisabled(key)
+        self.item_child_compressor_excitation_spectrum.setDisabled(key)
+        self.item_child_compressor_excitation_waveform.setDisabled(key)
+        self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)
         self.item_child_anechoic_termination.setDisabled(key)
         self.item_child_absorption_surface.setDisabled(key)
@@ -492,8 +500,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_perforated_plate_model.setDisabled(key)
         self.item_child_degrees_of_freedom_decoupling.setDisabled(key)
         self.item_child_acoustic_properties_gradient.setDisabled(key)
-        self.item_child_external_compressor_excitation.setDisabled(key)
-        self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_acoustic_transfer_element_setup.setDisabled(key)
 
     def hide_all_top_items(self):

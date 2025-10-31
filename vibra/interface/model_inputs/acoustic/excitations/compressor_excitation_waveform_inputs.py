@@ -7,7 +7,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.setup.acoustic.external_compressor_excitation_inputs_ui import ExternalCompressorExcitationInputs_UI
+from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 
 from utils.signal_processing import extend_signal, process_one_sided_spectrum
 
@@ -17,7 +17,7 @@ from pathlib import Path
 error_title = "Error"
 
 
-class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
+class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -68,7 +68,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #
         self.comboBox_normal_velocity_axis.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
         self.comboBox_excitation_mapping.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
-        self.comboBox_data_source.currentIndexChanged.connect(self.source_data_callback)
+        self.comboBox_data_source.currentIndexChanged.connect(self.data_source_callback)
         self.comboBox_single_revolution.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
         #
         self.lineEdit_angular_resolution.textEdited.connect(self.compute_compressor_excitation_spectrum)
@@ -77,7 +77,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_load_table.clicked.connect(self.load_external_compressor_excitation_data)
+        self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_spectrum_data.clicked.connect(self.plot_spectrum_data_callback)
@@ -89,10 +89,10 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.source_data_callback()
+        self.data_source_callback()
         self.geometry_selection_callback()
 
-    def source_data_callback(self):
+    def data_source_callback(self):
         self.imported_values = None
         self.comboBox_data_to_plot.clear()
 
@@ -128,6 +128,39 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             surface_id = list(surfaces)[0]
             self.load_property_data(surface_id)
 
+    def load_property_data(self, surface_id: int):
+        if self.tabWidget_main.currentIndex() != 0:
+            return
+
+        data = self.properties._get_property("compressor_excitation_waveform", surface=surface_id)
+        if not isinstance(data, dict):
+            return
+
+        excitation_type = data.get("excitation_type", "mass flow rate")
+        excitation_units = data.get("excitation_units", "kg/s")
+        excitation_type_label = f"{excitation_type} -> {excitation_units}"
+
+        self.comboBox_data_source.setCurrentText(data.get("data_source", "SCORG"))
+        self.comboBox_connection_type.setCurrentText(data.get("connection_type", "discharge"))
+        self.comboBox_excitation_type.setCurrentText(excitation_type_label)
+        self.comboBox_excitation_mapping.setCurrentText(data.get("excitation_mapping", "surface averaged"))
+        self.comboBox_compressor_type.setCurrentText(data.get("compressor_type", "screw"))
+        self.comboBox_single_revolution.setCurrentText(data.get("single_revolution", "yes"))
+
+        angular_resolution = data.get("angular_resolution", 1.0)
+        self.lineEdit_angular_resolution.setText(f"{angular_resolution}")
+
+        frequency_resolution_req = data.get("frequency_resolution_req", 1.0)
+        self.lineEdit_frequency_resolution_required.setText(f"{frequency_resolution_req}")
+
+        if "table_paths" in data.keys():
+            table_path = data.get("table_paths")[0]
+            self.lineEdit_table_path.setText(table_path)
+            self.tabWidget_main.setCurrentIndex(0)
+            self.lineEdit_frequency_resolution.setText("not calculated")
+
+
+
     def check_inputs(self, line_edit: QLineEdit, label: str):
 
         message = ""
@@ -157,7 +190,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         return value
 
-    def load_external_compressor_excitation_data(self):
+    def load_compressor_excitation_data(self):
         self.hide()
         self.pushButton_spectrum_data.setDisabled(True)
         self.pushButton_waveform_data.setDisabled(True)
@@ -171,14 +204,14 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
     def load_non_cfd_data(self, direct_load: bool=False):
         self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=direct_load)
-        mass_flow_spectrum = self.process_signal_spectrum_for_non_cfd_data()
-        if mass_flow_spectrum is None:
+        spectrum_data = self.process_signal_spectrum_for_non_cfd_data()
+        if spectrum_data is None:
             return
         
         self.pushButton_spectrum_data.setEnabled(True)
         self.pushButton_waveform_data.setEnabled(True)
 
-        df = mass_flow_spectrum[0, 0]
+        df = spectrum_data[0, 0]
         self.lineEdit_frequency_resolution.setText(f"{df}")
 
     def load_cfd_data(self, table_path: str|None = None):
@@ -208,19 +241,34 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         self.lineEdit_angular_resolution.blockSignals(False)
 
         data_label, invert_signal  = self.get_velocity_label_and_signal()
-        surface_velocity_spectrum_data = self.process_signal_spectrum_for_cfd_data(
+        spectrum_data = self.process_signal_spectrum_for_cfd_data(
             data_label, 
             invert_signal = invert_signal
             )
 
-        if surface_velocity_spectrum_data is None:
+        if spectrum_data is None:
             return
-
-        df = surface_velocity_spectrum_data[0, 0]
-        self.lineEdit_frequency_resolution.setText(f"{df}")
 
         self.pushButton_spectrum_data.setEnabled(True)
         self.pushButton_waveform_data.setEnabled(True)
+        self.update_velocity_axis_by_coordinates()
+
+        df = spectrum_data[0, 0]
+        self.lineEdit_frequency_resolution.setText(f"{df}")
+
+    def update_velocity_axis_by_coordinates(self):
+        if self.imported_values is None:
+            return
+        
+        coords = self.imported_values.get("nodal_coordinates")
+        if isinstance(coords, np.ndarray):
+            min_coords = np.min(coords, axis=0)
+            max_coords = np.max(coords, axis=0)
+            range_coords = np.abs(max_coords - min_coords)
+            indexes = np.argsort(range_coords)
+            if round(range_coords[indexes[0]], 4) == 0:
+                axis_labels = ["x-axis (+)", "y-axis (+)", "z-axis (+)"]
+                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indexes[0]])
 
     def compute_compressor_excitation_spectrum(self):
 
@@ -406,37 +454,6 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         self.lineEdit_sampling_frequency.setText(f"{1/dt}")
         self.lineEdit_frequency_resolution_plot.setText(f"{df}")
 
-    def load_property_data(self, surface_id: int):
-        if self.tabWidget_main.currentIndex() != 0:
-            return
-
-        data = self.properties._get_property("external_compressor_excitation", surface=surface_id)
-        if not isinstance(data, dict):
-            return
-
-        excitation_type = data.get("excitation_type", "mass flow rate")
-        excitation_units = data.get("excitation_units", "kg/s")
-        excitation_type_label = f"{excitation_type} -> {excitation_units}"
-
-        self.comboBox_data_source.setCurrentText(data.get("source_data", "SCORG"))
-        self.comboBox_connection_type.setCurrentText(data.get("connection_type", "discharge"))
-        self.comboBox_excitation_type.setCurrentText(excitation_type_label)
-        self.comboBox_excitation_mapping.setCurrentText(data.get("excitation_mapping", "surface averaged"))
-        self.comboBox_compressor_type.setCurrentText(data.get("compressor_type", "screw"))
-        self.comboBox_single_revolution.setCurrentText(data.get("single_revolution", "yes"))
-
-        angular_resolution = data.get("angular_resolution", 1.0)
-        self.lineEdit_angular_resolution.setText(f"{angular_resolution}")
-
-        frequency_resolution_req = data.get("frequency_resolution_req", 1.0)
-        self.lineEdit_frequency_resolution_required.setText(f"{frequency_resolution_req}")
-
-        if "table_paths" in data.keys():
-            table_path = data.get("table_paths")[0]
-            self.lineEdit_table_path.setText(table_path)
-            self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_frequency_resolution.setText("not calculated")
-
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() != 0:
             self.lineEdit_selection_id.setText("")
@@ -592,7 +609,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                     return
 
                 if self.normal_surface_velocity_sdata.shape[1] >= 3:
-                    table_name = f"external_compressor_excitation_at_surface_{surface_id}"
+                    table_name = f"compressor_excitation_waveform_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.normal_surface_velocity_sdata):
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
@@ -605,7 +622,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                     return
 
                 if self.mass_flow_sdata.shape[1] >= 3:
-                    table_name = f"external_compressor_excitation_at_surface_{surface_id}"
+                    table_name = f"compressor_excitation_waveform_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.mass_flow_sdata):
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
@@ -632,7 +649,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                 "nodal_attribution" : False,
                 }
 
-            self.properties._set_property("external_compressor_excitation", data, surface=surface_id)
+            self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
         self.actions_to_finalize()
 
@@ -652,8 +669,10 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
             "surface_velocity",
             "incident_plane_wave",
             "mass_flow_rate",
-            "external_compressor_excitation",
+            "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
+            "reciprocating_pump_excitation",
+            "mass_source",
             ]
 
         for surface_id in surface_ids:
@@ -663,7 +682,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_property_related_table_names("external_compressor_excitation", surface_id, "surfaces")
+        table_names = self.properties.get_property_related_table_names("compressor_excitation_waveform", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -674,7 +693,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         surface_id = int(self.lineEdit_selection_id.text())
         self.remove_table_files_from_surfaces(surface_id)
 
-        self.properties._remove_surface_property("external_compressor_excitation", surface_id)
+        self.properties._remove_surface_property("compressor_excitation_waveform", surface_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -694,13 +713,13 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
             surface_ids = list()
             for (property, *args) in self.properties.surface_properties.keys():
-                if property == "external_compressor_excitation":
+                if property == "compressor_excitation_waveform":
                     surface_id = args[0]
                     surface_ids.append(surface_id)
 
             self.remove_table_files_from_surfaces(surface_ids)
 
-            self.properties._reset_property("external_compressor_excitation")
+            self.properties._reset_property("compressor_excitation_waveform")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
@@ -720,7 +739,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
                 "surface_velocity",
                 "incident_plane_wave",
                 "specific_impedance",
-                "external_compressor_excitation",
+                "compressor_excitation_waveform",
                 "reciprocating_compressor_excitation",
                 ]:
                 if "table_names" in data.keys():
@@ -735,7 +754,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "external_compressor_excitation":
+            if property == "compressor_excitation_waveform":
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
@@ -756,7 +775,7 @@ class ExternalCompressorExcitationInputs(ExternalCompressorExcitationInputs_UI):
         self.treeWidget_surface_velocity.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property != "external_compressor_excitation":
+            if property != "compressor_excitation_waveform":
                 continue
 
             data_source = data.get("data_source")

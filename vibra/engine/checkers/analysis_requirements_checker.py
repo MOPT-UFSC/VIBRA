@@ -107,11 +107,12 @@ class AnalysisRequirementsChecker:
     def check_acoustic_harmonic_excitations(self):
 
         prop_labels = [
-                       "acoustic_pressure", 
+                       "acoustic_pressure",
                        "surface_velocity",
                        "mass_flow_rate",
                        "incident_plane_wave",
-                       "external_compressor_excitation",
+                       "compressor_excitation_specturm",
+                       "compressor_excitation_waveform",
                        "reciprocating_compressor_excitation",
                        "mass_source",
                        ]

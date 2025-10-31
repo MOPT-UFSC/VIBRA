@@ -343,14 +343,15 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-                  "acoustic_pressure",
-                  "surface_velocity",
-                  "incident_plane_wave",
-                  "mass_flow_rate",
-                  "reciprocating_compressor_excitation",
-                  "reciprocating_pump_excitation",
-                  "mass_source",
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "mass_flow_rate",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "reciprocating_pump_excitation",
+            "mass_source",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:

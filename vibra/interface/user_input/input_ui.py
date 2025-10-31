@@ -4,11 +4,11 @@ from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetup
 from vibra.interface.model_inputs.general.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.acoustic.excitations.acoustic_pressure_inputs import AcousticPressureInputs
-from vibra.interface.model_inputs.acoustic.excitations.mass_flow_rate_inputs import MassFlowRateInputs
+from vibra.interface.model_inputs.acoustic.excitations.compressor_excitation_spectrum_inputs import CompressorExcitationSpectrumInputs
 from vibra.interface.model_inputs.acoustic.excitations.mass_source_inputs import MassSourceInputs
 from vibra.interface.model_inputs.acoustic.excitations.surface_velocity_inputs import SurfaceVelocityInputs
 from vibra.interface.model_inputs.acoustic.excitations.incident_plane_wave_inputs import IncidentPlaneWaveInputs
-from vibra.interface.model_inputs.acoustic.excitations.external_compressor_excitation_inputs import ExternalCompressorExcitationInputs
+from vibra.interface.model_inputs.acoustic.excitations.compressor_excitation_waveform_inputs import CompressorExcitationWaveformInputs
 from vibra.interface.model_inputs.acoustic.excitations.reciprocating_compressor_inputs import ReciprocatingCompressorInputs
 from vibra.interface.model_inputs.acoustic.external_impedances.specific_impedance_inputs import SpecificImpedanceInputs
 from vibra.interface.model_inputs.acoustic.external_impedances.anechoic_termination_inputs import AnechoicTerminationInputs
@@ -117,10 +117,6 @@ class InputUi:
     def set_acoustic_pressure(self):
         if not self.model_setup_items.item_child_acoustic_pressure.isDisabled():
             self.process_input(AcousticPressureInputs)
-        
-    def set_mass_flow_rate(self):
-        if not self.model_setup_items.item_child_mass_flow_rate.isDisabled():
-            self.process_input(MassFlowRateInputs)
 
     def set_mass_source(self):
         if not self.model_setup_items.item_child_mass_source.isDisabled():
@@ -133,6 +129,15 @@ class InputUi:
     def set_incident_plane_wave(self):
         if not self.model_setup_items.item_child_incident_plane_wave.isDisabled():
             self.process_input(IncidentPlaneWaveInputs)
+
+    def compressor_excitation_waveform(self):
+        self.process_input(CompressorExcitationWaveformInputs)
+
+    def compressor_excitation_spectrum(self):
+        self.process_input(CompressorExcitationSpectrumInputs)
+
+    def add_reciprocating_compressor_excitation(self):
+        self.process_input(ReciprocatingCompressorInputs)
 
     def set_specific_impedance(self):
         self.process_input(SpecificImpedanceInputs)
@@ -175,12 +180,6 @@ class InputUi:
     def set_acoustic_transfer_element_setup(self):
         if not self.model_setup_items.item_child_acoustic_transfer_element_setup.isDisabled():
             self.process_input(AcousticTransferElementInputs)
-
-    def external_compressor_excitation(self):
-        self.process_input(ExternalCompressorExcitationInputs)
-
-    def add_reciprocating_compressor_excitation(self):
-        self.process_input(ReciprocatingCompressorInputs)
 
     def plot_structural_mode_shapes(self):
         if self.project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:

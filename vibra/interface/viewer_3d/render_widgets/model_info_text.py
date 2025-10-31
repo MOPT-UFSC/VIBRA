@@ -349,25 +349,25 @@ def acoustic_boundary_conditions_info_text():
 
     acoustic_pressure = properties._get_property("acoustic_pressure", surface=surface_id)
     surface_velocity = properties._get_property("surface_velocity", surface=surface_id)
-    external_compressor_excitation = properties._get_property("external_compressor_excitation", surface=surface_id)
+    compressor_excitation_waveform = properties._get_property("compressor_excitation_waveform", surface=surface_id)
     recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
     incident_plane_wave = properties._get_property("incident_plane_wave", surface=surface_id)
     mass_flow_rate = properties._get_property("mass_flow_rate", surface=surface_id)
     absorption_surface = properties._get_property("absorption_surface", surface=surface_id)
     specific_impedance = properties._get_property("specific_impedance", surface=surface_id)
 
-    boundary_conditions_list = [
-                                acoustic_pressure,
-                                surface_velocity,
-                                external_compressor_excitation,
-                                recip_compressor_excitation,
-                                incident_plane_wave,
-                                mass_flow_rate,
-                                absorption_surface,
-                                specific_impedance,
-                                ]
+    properties_data = [
+        acoustic_pressure,
+        surface_velocity,
+        compressor_excitation_waveform,
+        recip_compressor_excitation,
+        incident_plane_wave,
+        mass_flow_rate,
+        absorption_surface,
+        specific_impedance,
+        ]
 
-    if all(condition is None for condition in boundary_conditions_list):
+    if all(condition is None for condition in properties_data):
         return text
 
     if acoustic_pressure is not None:
@@ -378,8 +378,8 @@ def acoustic_boundary_conditions_info_text():
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
-    if isinstance(external_compressor_excitation, dict):
-        text += get_external_compressor_excitation(external_compressor_excitation)
+    if isinstance(compressor_excitation_waveform, dict):
+        text += get_compressor_excitation_waveform(compressor_excitation_waveform)
 
     if isinstance(recip_compressor_excitation, dict):
         text += get_reciprocating_compressor_text(recip_compressor_excitation)
@@ -473,8 +473,8 @@ def get_reciprocating_compressor_text(rc_data: dict):
 
     return str(tree_rc)
 
-def get_external_compressor_excitation(data: dict):
-    tree_ec = TreeInfo("External compressor excitation")
+def get_compressor_excitation_waveform(data: dict):
+    tree_ec = TreeInfo("Compressor excitation (time)")
     tree_ec.add_item("Data source", data.get("data_source"))
     tree_ec.add_item("Compressor type", data.get("compressor_type"))
     tree_ec.add_item("Connection type", data.get("connection_type"))

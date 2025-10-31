@@ -485,7 +485,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["transfer_impedance", "interior_impedance"]
+        labels = [
+            "perforated_plate_model", 
+            "interior_impedance",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:
