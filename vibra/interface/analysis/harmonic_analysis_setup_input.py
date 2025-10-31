@@ -134,9 +134,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 self.lineEdit_constant_structural_coefficient.setText(str(global_damping[2]))
 
     def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
-        self.lineEdit_fmin.setText(f"{f_min : .12f}")
-        self.lineEdit_fmax.setText(f"{f_max : .12f}")
-        self.lineEdit_fstep.setText(f"{f_step : .12f}")
+
+        self.lineEdit_fmin.setText("{}".format(round(f_min, 14)))
+        self.lineEdit_fmax.setText("{}".format(round(f_max, 14)))
+        self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
         key = app().project.model.properties.check_if_there_are_tables_at_the_model()
 
@@ -280,13 +281,13 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        if app().project.model.properties.check_if_there_are_tables_at_the_model():
-            self.frequencies = self.model.frequencies
-        else:
-            self.model.set_analysis_setup(analysis_setup)
+        # if app().project.model.properties.check_if_there_are_tables_at_the_model():
+        #     self.frequencies = self.model.frequencies
+        # else:
+        #     self.model.set_analysis_setup(analysis_setup)
 
         app().file.write_analysis_setup_in_file(analysis_setup)
-        # self.project.set_analysis_setup(analysis_setup)
+        self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()
 
         self.setup_defined = True
