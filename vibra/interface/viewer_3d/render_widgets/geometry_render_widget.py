@@ -287,6 +287,12 @@ class GeometryRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
+    
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
+        
+        if not self.interactor_style.is_selecting:
+            return
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
@@ -339,13 +345,6 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_selection(self):
         if not self.actors_exists():
             return
-        
-        if not isinstance(self.interactor_style, SelectionTool):
-            return
-        
-        if not self.interactor_style.is_selecting:
-            return
-        
         
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()

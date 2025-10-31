@@ -200,6 +200,12 @@ class MeshRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
+    
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
+        
+        if not self.interactor_style.is_selecting:
+            return
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
@@ -236,12 +242,6 @@ class MeshRenderWidget(CommonRenderWidget):
         Update the visualization of selected data.
         """
         if not self.actors_exists():
-            return
-    
-        if not isinstance(self.interactor_style, SelectionTool):
-            return
-        
-        if not self.interactor_style.is_selecting:
             return
 
         self.update_info_text()
