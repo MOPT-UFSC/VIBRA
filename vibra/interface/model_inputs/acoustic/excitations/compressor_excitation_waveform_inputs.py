@@ -10,7 +10,7 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 
 from utils.data_loaders import load_cfd_simulation_data_from_hdf_file
-from utils.signal_processing import extend_signal, process_one_sided_spectrum
+from utils.signal_processing import extend_signal, process_one_sided_spectrum, get_window_and_correction_factor
 
 import numpy as np
 from pathlib import Path
@@ -409,8 +409,23 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         x_data_ext = extend_signal(x_data, N_rep)
         time_ext = np.arange(x_data_ext.size, dtype=float) * dt
 
+        # get window type
+        window_type = self.comboBox_window_type.currentText()
+
+        # get the correction type
+        correction_type = self.comboBox_correction_type.currentText()
+
+        # get window and corerction factor
+        window, correction_factor = get_window_and_correction_factor(window_type, correction_type, time_ext.size + 1)
+
+        # windowing the signal
+        x_window = x_data_ext * window[:-1]
+
         # process one-sided spectrum
-        freq, Xf = process_one_sided_spectrum(x_data_ext, dt)
+        freq, Xf = process_one_sided_spectrum(x_window, dt)
+
+        # apply correction factor
+        Xf[1:] *= correction_factor
         
         # update attributes for waveform plot
         self.time_vector = time_ext
