@@ -9,7 +9,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 
-from utils.signal_processing import extend_signal, process_one_sided_spectrum
+from utils.signal_processing import extend_signal, process_one_sided_spectrum, get_window_and_correction_factor
 
 import numpy as np
 from pathlib import Path
@@ -70,6 +70,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.comboBox_excitation_mapping.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
         self.comboBox_data_source.currentIndexChanged.connect(self.data_source_callback)
         self.comboBox_single_revolution.currentIndexChanged.connect(self.compute_compressor_excitation_spectrum)
+        self.comboBox_excitation_type.currentIndexChanged.connect(self.update_data_to_plot_combo_box)
         #
         self.lineEdit_angular_resolution.textEdited.connect(self.compute_compressor_excitation_spectrum)
         self.lineEdit_frequency_resolution_required.textEdited.connect(self.compute_compressor_excitation_spectrum)
@@ -104,9 +105,11 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.pushButton_spectrum_data.setDisabled(True)
         self.pushButton_waveform_data.setDisabled(True)
 
-        if not cfd_source:
+        if not cfd_source:           
             self.comboBox_single_revolution.setCurrentText("yes")
             if self.comboBox_data_source.currentText() == "SCORG":
+                if self.comboBox_excitation_type.currentText() =="surface velocity -> m/s":
+                    self.comboBox_excitation_type.setCurrentText("mass flow rate -> kg/s")
                 self.comboBox_compressor_type.setCurrentText("screw")
                 self.comboBox_compressor_type.setDisabled(True)
             else:
@@ -408,8 +411,23 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         x_data_ext = extend_signal(x_data, N_rep)
         time_ext = np.arange(x_data_ext.size, dtype=float) * dt
 
+        # get window type
+        window_type = self.comboBox_window_type.currentText()
+
+        # get the correction type
+        correction_type = self.comboBox_correction_type.currentText()
+
+        # get window and corerction factor
+        window, correction_factor = get_window_and_correction_factor(window_type, correction_type, time_ext.size + 1)
+
+        # windowing the signal
+        x_window = x_data_ext * window[:-1]
+
         # process one-sided spectrum
-        freq, Xf = process_one_sided_spectrum(x_data_ext, dt)
+        freq, Xf = process_one_sided_spectrum(x_window, dt)
+
+        # apply correction factor
+        Xf[1:] *= correction_factor
         
         # update attributes for waveform plot
         self.time_vector = time_ext
