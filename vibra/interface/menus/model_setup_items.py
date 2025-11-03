@@ -4,7 +4,7 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QToolTip
 
 from vibra import app, DEVELOPER_MODE, ICON_DIR
-from vibra.interface.menus.common_menu_items import CommonMenuItems
+from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
 
 from molde import Color
 
@@ -133,7 +133,7 @@ class ModelSetupItems(CommonMenuItems):
 
                 if item_child_name is None:
                     continue
-                
+
                 item_child.set_property_name(self.property_names[item_child_name])
                 
                 function_name = item_child_name + "_callback"
@@ -357,7 +357,7 @@ class ModelSetupItems(CommonMenuItems):
 
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
-                item_child = top_level_items.child(index)
+                item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
 
                 if item_child_name is None:
