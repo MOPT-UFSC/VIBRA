@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -81,14 +81,33 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.pushButton_attribute.setEnabled(True)
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            self.pushButton_remove.setEnabled(True)
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+
+        if not surface_ids:
+            return
+            
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
+
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(selection_text)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+    
+    def get_selected_surfaces_and_selection_text(self):
+        selected_items = self.treeWidget_absorption_surface.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        surface_ids = list()
+
+        for item in selected_items:
+            selection_text += item.text(0) + ", "
+            surface_ids.append(int(item.text(0)))
+        
+        return surface_ids, selection_text[:-2]
 
     def geometry_selection_callback(self):
 
@@ -109,10 +128,12 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             return
 
         if "table_paths" in data.keys():
-            self.tabWidget_main.setCurrentIndex(1)
+            if self.tabWidget_main.currentIndex() != 2:
+                self.tabWidget_main.setCurrentIndex(1)
             self.lineEdit_table_path.setText(data.get("table_paths")[0])
         else:
-            self.tabWidget_main.setCurrentIndex(0)
+            if self.tabWidget_main.currentIndex() != 2:
+                self.tabWidget_main.setCurrentIndex(0)
             self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
 
     def load_model_info(self):
@@ -386,15 +407,19 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
-        
-        str_selection_id = self.lineEdit_selection_id.text()
-        if str_selection_id == "":
+        selected_items = self.treeWidget_absorption_surface.selectedItems()
+    
+        if not selected_items:
             return
+        
+        for item in selected_items:
+            surface_id = int(item.text(0))
 
-        surface_id = int(str_selection_id)
-        self.remove_table_files_from_surfaces(surface_id)
+            self.remove_table_files_from_surfaces(surface_id)
+            self.properties._remove_surface_property("absorption_surface", surface_id)
 
-        self.properties._remove_surface_property("absorption_surface", surface_id)
+        self.lineEdit_selection_id.setText("")
+        app().main_window.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -487,8 +512,14 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        else:
-            return
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False

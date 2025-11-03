@@ -220,6 +220,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.properties._remove_surface_property("specific_impedance", surface_id)
 
         self.lineEdit_selection_id.setText("")
+        app().main_window.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -288,8 +289,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if not surface_ids:
             return
     
-        self.lineEdit_selection_id.setText(selection_text)
         app().main_window.set_geometry_selection(surfaces=surface_ids)
+
+        self.pushButton_remove.setDisabled(False)
+        self.lineEdit_selection_id.setText(selection_text)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)

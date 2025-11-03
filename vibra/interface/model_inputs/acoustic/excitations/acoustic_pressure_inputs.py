@@ -375,6 +375,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.properties._remove_surface_property("acoustic_pressure", surface_id)
         
         self.lineEdit_selection_id.setText("")
+        app().main_window.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -451,8 +452,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def on_click_item(self, item):
         surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
         
-        self.lineEdit_selection_id.setText(selection_text)
         app().main_window.set_geometry_selection(surfaces=surface_ids)
+
+        self.pushButton_remove.setDisabled(False)
+        self.lineEdit_selection_id.setText(selection_text)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
