@@ -374,6 +374,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("acoustic_pressure", surface_id)
         
+        self.lineEdit_selection_id.setText("")
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -466,12 +467,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         surface_ids = list()
 
         for item in selected_items:
-            selection_text += item.text(0) + ","
+            selection_text += item.text(0) + ", "
             surface_ids.append(int(item.text(0)))
         
-        selection_text = selection_text[:-1]
-
-        return surface_ids, selection_text
+        return surface_ids, selection_text[:-2]
 
     def load_model_info(self):
         self.treeWidget_acoustic_pressure.clear()

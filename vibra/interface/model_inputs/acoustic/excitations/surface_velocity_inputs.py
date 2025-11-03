@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -9,7 +9,6 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 
-import os
 import numpy as np
 
 window_title_1 = "Error"
@@ -412,14 +411,19 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        selected_items = self.treeWidget_surface_velocity.selectedItems()
 
-        if self.lineEdit_selection_id.text() != "":
+        if not selected_items:
+            return
+        
+        for item in selected_items:
+            surface_id = int(item.text(0))
 
-            surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("surface_velocity", surface_id)
-            self.actions_to_finalize()
+
+        self.lineEdit_selection_id.setText("")
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -503,14 +507,33 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            self.pushButton_remove.setDisabled(False)
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+
+        if not surface_ids:
+            return
+        
+        self.pushButton_remove.setDisabled(False)
+        self.lineEdit_selection_id.setText(selection_text)
+       
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+    
+    def get_selected_surfaces_and_selection_text(self):
+        selected_items = self.treeWidget_surface_velocity.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        surface_ids = list()
+
+        for item in selected_items:
+            selection_text += item.text(0) + ", "
+            surface_ids.append(int(item.text(0)))
+        
+        return surface_ids, selection_text[:-2]
 
     def load_model_info(self):
         self.treeWidget_surface_velocity.clear()
@@ -540,8 +563,14 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        else:
-            return
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
