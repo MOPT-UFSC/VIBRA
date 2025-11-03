@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -363,14 +363,18 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        selected_items = self.treeWidget_acoustic_pressure.selectedItems()
 
-        if self.lineEdit_selection_id.text() != "":
+        if not selected_items:
+            return
+        
+        for item in selected_items:
+            surface_id = int(item.text(0))
 
-            surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("acoustic_pressure", surface_id)
-            self.actions_to_finalize()
+        
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -444,13 +448,30 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+        
+        self.lineEdit_selection_id.setText(selection_text)
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+    
+    def get_selected_surfaces_and_selection_text(self):
+        selected_items = self.treeWidget_acoustic_pressure.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        surface_ids = list()
+
+        for item in selected_items:
+            selection_text += item.text(0) + ","
+            surface_ids.append(int(item.text(0)))
+        
+        selection_text = selection_text[:-1]
+
+        return surface_ids, selection_text
 
     def load_model_info(self):
         self.treeWidget_acoustic_pressure.clear()
@@ -480,8 +501,14 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        else:
-            return
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
