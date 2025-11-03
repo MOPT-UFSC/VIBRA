@@ -1,6 +1,6 @@
 # fmt: on
 
-from PySide6.QtWidgets import QComboBox, QDialog, QLineEdit, QPushButton, QTabWidget, QTreeWidget, QTreeWidgetItem 
+from PySide6.QtWidgets import QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -92,7 +92,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if faces:
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.update_volumes_from_faces()  
+            self.update_volumes_from_faces()
 
     def update_volumes_from_faces(self):
 
@@ -208,14 +208,19 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        selected_items = self.treeWidget_anechoic_termination.selectedItems()
 
-        if self.lineEdit_selection_id.text() != "":
+        if not selected_items:
+            return
+    
+        for item in selected_items:
+            surface_id = int(item.text(0))
 
-            surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("specific_impedance", surface_id)
-            self.actions_to_finalize()
+
+        self.lineEdit_selection_id.setText("")
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -278,13 +283,31 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.tabWidget_main.setTabVisible(1, False)
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+
+        if not surface_ids:
+            return
+    
+        self.lineEdit_selection_id.setText(selection_text)
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+
+    def get_selected_surfaces_and_selection_text(self):
+        selected_items = self.treeWidget_anechoic_termination.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        surface_ids = list()
+
+        for item in selected_items:
+            selection_text += item.text(0) + ", "
+            surface_ids.append(int(item.text(0)))
+        
+        return surface_ids, selection_text[:-2]
 
     def load_model_info(self):
         self.treeWidget_anechoic_termination.clear()
@@ -307,8 +330,14 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        else:
-            return
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
