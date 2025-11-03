@@ -77,6 +77,7 @@ class Geometry:
         self._process_geometry_information()
         self._process_curves_normals()
         self._process_points_normals()
+        gmsh.finalize()
 
     def clear(self):
         self._solids_to_surfaces.clear()
