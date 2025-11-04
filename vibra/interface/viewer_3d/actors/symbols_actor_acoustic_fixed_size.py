@@ -40,7 +40,6 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
         surface_properties = app().project.model.properties.surface_properties
         for property_name, surface_id in surface_properties.keys():
             self._call_build_functions(property_name, surface_id=surface_id)
-            # self._call_build_functions("reciprocating_compressor_excitation", surface_id=8)
 
         super().build()
 
