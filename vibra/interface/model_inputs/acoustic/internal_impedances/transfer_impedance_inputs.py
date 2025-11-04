@@ -577,6 +577,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
                 app().file.remove_mesh_data_from_project_file()
                 app().file.remove_results_data_from_project_file()
+                # self.restore_mesh_data_modified_by_decoupling()
                 
         self.lineEdit_selection_id.setText("")
         self.pushButton_remove.setDisabled(True)

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -186,15 +186,23 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             self.properties._set_property("proportional_damping", data, volume=volume_id)
 
         self.actions_to_finalize()
+        self.load_info()
 
     def remove_callback(self):
+        selected_items = self.treeWidget_proportional_damping.selectedItems()
 
-        if self.lineEdit_selection_id.text() == "":
+        if not selected_items:
             return
 
-        volume_id = int(self.lineEdit_selection_id.text())
-        self.properties._remove_volume_property("proportional_damping", volume_id)
+        for item in selected_items:
+            volume_id = int(item.text(0))
+            self.properties._remove_volume_property("proportional_damping", volume_id)
+
+        self.lineEdit_selection_id.setText("")
+        app().main_window.clear_selection()
+
         self.actions_to_finalize()
+        self.load_info()
 
     def reset_callback(self):
 
@@ -230,17 +238,40 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.comboBox_attribution_type.setDisabled(list_tab)
         if list_tab:
             self.lineEdit_selection_id.setText("")
+            self.pushButton_remove.setDisabled(True)
+            self.treeWidget_proportional_damping.clearSelection()
 
     def on_click_item(self, item):
-        volume_id = int(item.text(0))
-        self.lineEdit_selection_id.setText(item.text(0))
-        app().main_window.set_geometry_selection(volumes=[volume_id])
+        volume_ids, selection_text = self.get_selected_volumes_and_selection_text()
+
+        if not volume_ids:
+            return
+
+        app().main_window.set_geometry_selection(volumes=volume_ids)
+
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(selection_text)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+    
+    def get_selected_volumes_and_selection_text(self):
+        selected_items = self.treeWidget_proportional_damping.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        volume_ids = list()
+
+        for item in selected_items:
+            volume_id = item.text(0)
+            selection_text += volume_id + ", "
+            volume_ids.append(int(volume_id))
+        
+        return volume_ids, selection_text[:-2]
 
     def load_info(self):
-
         self.treeWidget_proportional_damping.clear()
         self.treeWidget_proportional_damping.setColumnWidth(0, 80)
         self.treeWidget_proportional_damping.setColumnWidth(1, 160)
@@ -273,7 +304,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
     def actions_to_finalize(self):
-        self.load_info()
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().main_window.update_symbols()
@@ -285,8 +315,14 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        else:
-            return
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
