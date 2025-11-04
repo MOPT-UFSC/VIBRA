@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QTreeWidgetItem
+from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -146,21 +146,22 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if not selected_items:
             return
         
-        selected_item = selected_items[0]
+        for item in selected_items:    
+            selection_id = int(item.text(0))
+            model_id = int(item.text(1))
+            model = self.map_model_id_to_models[model_id]
 
-        selection_id = int(selected_item.text(0))
-        model_id = int(selected_item.text(1))
+            self.properties._remove_volume_property("viscous_thermal_model", selection_id)
 
-        model = self.map_model_id_to_models[model_id]
+            if len(self.map_model_id_to_volumes[model_id]) == 1:
+                self.models.remove(model)
 
-        self.properties._remove_volume_property("viscous_thermal_model", selection_id)
+        self.pushButton_remove.setDisabled(True)
+        self.lineEdit_selection_id.setText("")
 
-        if len(self.map_model_id_to_volumes[model_id]) == 1:
-            self.models.remove(model)
-
+        app().main_window.clear_selection()
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
-        self.pushButton_remove.setDisabled(True)
         self.load_info()
 
         if self.map_model_id_to_volumes:
@@ -169,7 +170,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def reset_callback(self):
 
         volume_ids = list()
-        for key, data in self.properties.volume_properties.items():
+        for key in self.properties.volume_properties:
             property, volume_id = key
             if property == "viscous_thermal_model":
                 volume_ids.append(volume_id)
@@ -227,15 +228,34 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
+        volume_ids, selection_text = self.get_selected_volumes_and_selection_text()
 
-        volume_id = int(item.text(0))
-        app().main_window.set_geometry_selection(volumes=[volume_id])
+        if not volume_ids:
+            return
 
-        self.lineEdit_selection_id.setText(item.text(0))
+        app().main_window.set_geometry_selection(volumes=volume_ids)
+
+        self.lineEdit_selection_id.setText(selection_text)
         self.pushButton_remove.setEnabled(True)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+    
+    def get_selected_volumes_and_selection_text(self):
+        selected_items = self.treeWidget_viscous_thermal_model.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        volume_ids = list()
+
+        for item in selected_items:
+            volume_id = item.text(0)
+            selection_text += volume_id + ", "
+            volume_ids.append(int(volume_id))
+        
+        return volume_ids, selection_text[:-2]
 
     def rectangular_section_type_callback(self):
 
@@ -859,7 +879,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.SingleSelection)
+        
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         app().main_window.volume_selection_mode = False
