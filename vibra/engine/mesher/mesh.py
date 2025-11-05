@@ -117,7 +117,7 @@ class Mesh:
 
         self.nodal_area = defaultdict(list)
 
-        self.nodes_collapsed_elements = None
+        self.nodes_collapsed_elements = list()
 
         self.cache_nodal_coordinates = None
         self.cache_lines_connectivity = None
@@ -1090,7 +1090,7 @@ class Mesh:
 
         if self.collapsed_3d_elements:
             elements = list(self.collapsed_3d_elements)
-            self.nodes_collapsed_elements = np.unique(self.solids_connectivity[elements, 4:].flatten())
+            self.nodes_collapsed_elements = np.unique(self.solids_connectivity[elements, 4:].flatten()).tolist()
             print("Existem elementos sólidos colapsados...")
             print(f"{self.nodes_collapsed_elements}")
 

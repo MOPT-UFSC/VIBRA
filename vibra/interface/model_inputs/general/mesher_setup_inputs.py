@@ -495,7 +495,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.complete = True
 
         app().main_window.set_mesh_selection(nodes=self.mesh.disconnected_nodes)
-        app().main_window.set_mesh_selection(nodes=list(self.mesh.nodes_collapsed_elements))
+        app().main_window.set_mesh_selection(nodes=self.mesh.nodes_collapsed_elements)
 
     def process_degress_of_freedom_if_necessary(self):
         if not app().project.model.properties.is_the_surface_property_present_in_the_model(
