@@ -20,8 +20,8 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
-            "reciprocating_compressor_excitation": self._build_compressor_symbol,
-            "compressor_excitation_waveform": self._build_compressor_symbol,
+            "reciprocating_compressor_excitation": self._build_reciprocating_compressor_excitation_symbol,
+            "compressor_excitation_waveform": self._build_compressor_excitation_waveform_symbol,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
@@ -72,22 +72,91 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
         return center_coords, avg_normal, dist[index]
 
-    def _build_compressor_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+    def _build_reciprocating_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
+        shape = None
         color = None
+        letter_color = None
         if property["connection_type"] == "discharge":
             shape = sources.create_compressor_discharge_source
             # vermelho, seta entra é azul
             color = color_names.RED_3
+            letter_color = color_names.RED_1
 
         elif property["connection_type"] == "suction":
             shape = sources.create_compressor_suction_source
             color = color_names.BLUE_3
+            letter_color = color_names.BLUE_1
 
         coords, normal, max_dist = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(shape, coords, normal, color=color, scale=1.985 * max_dist)
+        self.add_symbol(sources.create_compressor_r_reciprocating_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
+    
+    def _build_compressor_excitation_waveform_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+        if surface_id == -1:
+            return
+
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+
+        shape = None
+        color = None
+        compressor_type_shape = None
+        letter_color = None
+        if property["connection_type"] == "discharge":
+            shape = sources.create_compressor_discharge_source
+            color = color_names.RED_3
+            letter_color = color_names.RED_1
+
+        else: # elif property["connection_type"] == "suction":
+            shape = sources.create_compressor_suction_source
+            color = color_names.BLUE_3
+            letter_color = color_names.BLUE_1
+            
+        # draw a letter on the compressor
+        if property["compressor_type"] == "screw":
+            compressor_type_shape = sources.create_compressor_s_screw_source
+        else:
+            compressor_type_shape = sources.create_compressor_r_reciprocating_source
+            
+        coords, normal, max_dist = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol(shape, coords, normal, color=color, scale=1.985 * max_dist)
+        self.add_symbol(sources.create_compressor_f_frequency_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
+        self.add_symbol(compressor_type_shape, coords, normal, color=letter_color, scale=1.985 * max_dist)
+    
+    def _build_compressor_excitation_spectrum_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+        if surface_id == -1:
+            return
+
+        surface_properties = app().project.model.properties.surface_properties
+        property = surface_properties[property_name, surface_id]
+
+        shape = None
+        color = None
+        compressor_type_shape = None
+        letter_color = None
+        if property["connection_type"] == "discharge":
+            shape = sources.create_compressor_discharge_source
+            color = color_names.RED_3
+            letter_color = color_names.RED_1
+
+        else: # elif property["connection_type"] == "suction":
+            shape = sources.create_compressor_suction_source
+            color = color_names.BLUE_3
+            letter_color = color_names.BLUE_1
+        
+        # draw a letter on the compressor
+        if property["compressor_type"] == "screw":
+            compressor_type_shape = sources.create_compressor_s_screw_source
+        else:
+            compressor_type_shape = sources.create_compressor_r_reciprocating_source
+
+        coords, normal, max_dist = self._get_center_coords_and_normals(surface_id)
+        self.add_symbol(shape, coords, normal, color=color, scale=1.985 * max_dist)
+        self.add_symbol(sources.create_compressor_t_time_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
+        self.add_symbol(compressor_type_shape, coords, normal, color=letter_color, scale=1.985 * max_dist)

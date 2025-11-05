@@ -105,7 +105,43 @@ def create_compressor_suction_source():
         rotation=(0, 0, 180),
         scale=(1, 1, 1),
         position=(1, 0, 0)
-    )   
+    )
+
+def create_compressor_f_frequency_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_F.stl")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 0, 180),
+        scale=(1, 1, 1),
+        position=(1, 0, 0)
+    )
+
+def create_compressor_t_time_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_T.stl")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 0, 180),
+        scale=(1, 1, 1),
+        position=(1, 0, 0)
+    )
+
+def create_compressor_r_reciprocating_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_R.stl")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 0, 180),
+        scale=(1, 1, 1),
+        position=(1, 0, 0)
+    )
+
+def create_compressor_s_screw_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_S.stl")
+    return transform_polydata(
+        polydata,
+        rotation=(0, 0, 180),
+        scale=(1, 1, 1),
+        position=(1, 0, 0)
+    )
 
 def create_dissipation_model_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.stl")
