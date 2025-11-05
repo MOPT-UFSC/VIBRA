@@ -7,7 +7,7 @@ class RotationTool(RenderTool):
         super().__init__()
 
         self.update_mouse_cursor_in_render_widgets(self.rotation_cursor_path)
-        self.last_cursor = self.rotation_cursor_path
+        self.default_cursor = self.rotation_cursor_path
 
     def left_button_press_event(self, obj, event):
         super().start_rotating()

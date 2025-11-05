@@ -176,7 +176,7 @@ class MainWindow(MainWindow_UI):
         app().splash.update_progress(30)
         self._load_menu_widgets()
         self._load_render_widgets()
-        self._configure_render_widgets_style_interactor()
+        self.set_default_render_tool_in_render_widgets()
 
         app().splash.update_progress(60)
         self._create_basic_layout()
@@ -254,10 +254,6 @@ class MainWindow(MainWindow_UI):
 
     def _configure_render_widgets_stack(self):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
-    
-    def _configure_render_widgets_style_interactor(self):
-        for render in self.get_renderer_widgets():
-            render.set_default_interactor_style()
 
     def _configure_stacked_setup(self):
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
@@ -485,7 +481,7 @@ class MainWindow(MainWindow_UI):
         
     def set_default_render_tool_in_render_widgets(self):
         for render in self.get_renderer_widgets():
-            render.set_default_interactor_style()
+            render.set_default_render_tool()
 
     def get_renderer_widgets(self) -> list[CommonRenderWidget]:
         return [self.geometry_widget, self.mesh_widget, self.results_widget]

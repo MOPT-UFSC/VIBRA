@@ -546,7 +546,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
     
-    def set_default_interactor_style(self):
-        self.set_interactor_style(RenderTool())
+    def set_default_render_tool(self):
+        tool = RenderTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+
 
 

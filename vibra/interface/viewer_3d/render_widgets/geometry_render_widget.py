@@ -482,7 +482,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.set_info_text(text)
         self.update()
     
-    def set_default_interactor_style(self):
-        self.set_interactor_style(SelectionTool())
+    def set_default_render_tool(self):
+        tool = SelectionTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+        
 
 
