@@ -1088,6 +1088,12 @@ class Mesh:
         logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
 
+        if self.collapsed_3d_elements:
+            elements = list(self.collapsed_3d_elements)
+            self.nodes_collapsed_elements = np.unique(self.solids_connectivity[elements, 4:].flatten())
+            print("Existem elementos sólidos colapsados...")
+            print(f"{self.nodes_collapsed_elements}")
+
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
 
