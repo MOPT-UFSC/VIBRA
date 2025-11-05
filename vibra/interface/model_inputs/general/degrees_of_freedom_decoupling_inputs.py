@@ -147,7 +147,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 PrintMessageInput([warning_title, title, message])
                 return
 
-            data = {"volume_to_decouple" : volumes_from_surface[0]}
+            data = {"volume_to_decouple" : list(volumes_from_surface)[0]}
             self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.hide()
