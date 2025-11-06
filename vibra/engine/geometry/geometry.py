@@ -438,20 +438,20 @@ class Geometry:
             raise ValueError(f'Invalid length unit "{length_unit}"')
 
 
-def cache_geometry_information(self):
-    self._cache_solids_to_surfaces = deepcopy(self._solids_to_surfaces)
-    self._cache_surfaces_to_curves = deepcopy(self._surfaces_to_curves)
-    self._cache_curves_to_points = deepcopy(self._curves_to_points)
+    def cache_geometry_information(self):
+        self._cache_solids_to_surfaces = deepcopy(self._solids_to_surfaces)
+        self._cache_surfaces_to_curves = deepcopy(self._surfaces_to_curves)
+        self._cache_curves_to_points = deepcopy(self._curves_to_points)
 
 
-def restore_data_from_cache(self):
-    self._solids_to_surfaces = deepcopy(self._cache_solids_to_surfaces)
-    self._surfaces_to_curves = deepcopy(self._cache_surfaces_to_curves)
-    self._curves_to_points = deepcopy(self._cache_curves_to_points)
+    def restore_data_from_cache(self):
+        self._solids_to_surfaces = deepcopy(self._cache_solids_to_surfaces)
+        self._surfaces_to_curves = deepcopy(self._cache_surfaces_to_curves)
+        self._curves_to_points = deepcopy(self._cache_curves_to_points)
 
-    self._cache_solids_to_surfaces.clear()
-    self._cache_surfaces_to_curves.clear()
-    self._cache_curves_to_points.clear()
+        self._cache_solids_to_surfaces.clear()
+        self._cache_surfaces_to_curves.clear()
+        self._cache_curves_to_points.clear()
 
-    # To be continued
+        # To be continued
 
