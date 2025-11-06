@@ -783,7 +783,7 @@ class Model:
             if prop != "porous_material_model":
                 continue
 
-            if not volume_id in self.geometry._solids_to_surfaces.keys():
+            if volume_id not in self.geometry._solids_to_surfaces.keys():
                 continue
 
             if surface_id in self.geometry.solids_to_surfaces(volume_id):
@@ -831,7 +831,7 @@ class Model:
             if prop != "viscous_thermal_model":
                 continue
 
-            if not volume_id in self.geometry._solids_to_surfaces.keys():
+            if volume_id not in self.geometry._solids_to_surfaces.keys():
                 continue
 
             if surface_id in self.geometry.solids_to_surfaces(volume_id):
