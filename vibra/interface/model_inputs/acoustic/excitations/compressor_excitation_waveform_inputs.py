@@ -162,8 +162,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.tabWidget_main.setCurrentIndex(0)
             self.lineEdit_frequency_resolution.setText("not calculated")
 
-
-
     def check_inputs(self, line_edit: QLineEdit, label: str):
 
         message = ""
@@ -686,10 +684,9 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             "acoustic_pressure",
             "surface_velocity",
             "incident_plane_wave",
-            "mass_flow_rate",
+            "compressor_excitation_spectrum",
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
-            "reciprocating_pump_excitation",
             "mass_source",
             ]
 

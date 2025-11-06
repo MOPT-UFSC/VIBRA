@@ -334,7 +334,6 @@ class ModelProperties:
         acoustic_labels = [ 
                            "acoustic_pressure",
                            "surface_velocity",
-                           "mass_flow_rate",
                            "incident_plane_wave",
                            "specific_impedance",
                            "transfer_impedance",
@@ -343,7 +342,6 @@ class ModelProperties:
                            "compressor_excitation_spectrum",
                            "compressor_excitation_waveform",
                            "reciprocating_compressor_excitation",
-                           "reciprocating_pump_excitation",
                            "acoustic_transfer_element",
                            "mass_source",
                            ]

@@ -80,7 +80,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
 
         # self.item_child_acoustic_properties_gradient.setHidden(True)
-        self.item_child_compressor_excitation_spectrum.setHidden(True)
+        # self.item_child_compressor_excitation_spectrum.setHidden(True)
 
         self.top_level_items = [
             self.item_top_general_settings,

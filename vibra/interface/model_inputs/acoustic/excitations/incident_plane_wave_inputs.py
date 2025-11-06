@@ -586,10 +586,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             "acoustic_pressure",
             "surface_velocity",
             "incident_plane_wave",
-            "mass_flow_rate",
+            "compressor_excitation_spectrum",
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
-            "reciprocating_pump_excitation",
             "mass_source",
             ]
 

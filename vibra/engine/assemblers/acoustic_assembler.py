@@ -1599,32 +1599,7 @@ class AcousticAssembler:
         acoustic_excitation = defaultdict(float)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
-            if property == "mass_flow_rate":
-
-                _complex_values = data["values"][0]
-                if isinstance(_complex_values, complex):
-                    complex_values = _complex_values * aux_ones
-                elif isinstance(_complex_values, np.ndarray):
-                    if _complex_values.shape[0] == 1:
-                        complex_values = _complex_values * aux_ones
-                    elif len(_complex_values.shape) == 1:
-                        complex_values = _complex_values.reshape(1,-1)
-                    else:
-                        complex_values = _complex_values
-
-                if data["nodal_attribution"]:
-                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                    if nodes is None:
-                        continue
-
-                    N = len(nodes)
-                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                        if data["averaged"]:
-                            acoustic_excitation[index] += complex_values / N
-                        else:
-                            acoustic_excitation[index] += complex_values
-
-            elif property in ["surface_velocity", "reciprocating_compressor_excitation"]:
+            if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
@@ -1677,9 +1652,15 @@ class AcousticAssembler:
         total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
-        for excitation_label in ["surface_velocity", "compressor_excitation_waveform", "reciprocating_compressor_excitation"]:
+        prop_labels = [
+            "surface_velocity",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            ]
 
-            integration_data_sv = self.get_excitation_data_for_element_integration(excitation_label)
+        for prop_label in prop_labels:
+            integration_data_sv = self.get_excitation_data_for_element_integration(prop_label)
 
             if integration_data_sv:
                 connectivities_sv = integration_data_sv.get("connectivities")
@@ -1692,7 +1673,6 @@ class AcousticAssembler:
                     output[indices, :] += int2d_N @ complex_values.reshape(1, -1)
 
         if self.integration_data_pw:
-
             k_wave = self.integration_data_pw.get("k_wave")
             e_normals = self.integration_data_pw.get("e_normals")
             pressures = self.integration_data_pw.get("pressures")

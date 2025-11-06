@@ -109,7 +109,6 @@ class AnalysisRequirementsChecker:
         prop_labels = [
                        "acoustic_pressure",
                        "surface_velocity",
-                       "mass_flow_rate",
                        "incident_plane_wave",
                        "compressor_excitation_specturm",
                        "compressor_excitation_waveform",

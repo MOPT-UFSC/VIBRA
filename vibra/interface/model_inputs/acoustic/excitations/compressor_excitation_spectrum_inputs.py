@@ -6,7 +6,6 @@ from vibra import app
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
 
 import numpy as np
@@ -48,59 +47,67 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.keep_window_open = True
 
     def _config_widgets(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)        
-        self.radioButton_element_integration_constant.setDisabled(True)
-        self.radioButton_element_integration_table.setDisabled(True)
-
-        self.treeWidget_mass_flow_rate.setColumnWidth(1, 20)
-        self.treeWidget_mass_flow_rate.setColumnWidth(2, 80)
-        #
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
         #
         for i, w in enumerate([120]):
-            self.treeWidget_mass_flow_rate.setColumnWidth(i, w)
-            self.treeWidget_mass_flow_rate.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_compressor_excitation_spectrum.setColumnWidth(i, w)
+            self.treeWidget_compressor_excitation_spectrum.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_spectrum_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        self.pushButton_load_table.clicked.connect(self.load_mass_flow_rate_table)
-        #
-        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
-        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
-        self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_compressor_excitation_spectrum.itemClicked.connect(self.on_click_item)
+        self.treeWidget_compressor_excitation_spectrum.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
-        #
-        self.update_controls_for_constant_value()
-        self.update_controls_for_table_of_values()
+
+    def geometry_selection_callback(self):
+        surfaces = app().main_window.selected_geometry_surfaces
+        if not surfaces:
+            return
+
+        text = ", ".join([str(i) for i in surfaces])
+        self.lineEdit_selection_id.setText(text)
+
+        if len(surfaces) == 1:
+            surface_id = list(surfaces)[0]
+            self.load_property_data(surface_id)
+
+    def load_property_data(self, surface_id: int):
+        if self.tabWidget_main.currentIndex() != 0:
+            return
+
+        data = self.properties._get_property("compressor_excitation_spectrum", surface=surface_id)
+        if not isinstance(data, dict):
+            return
+
+        excitation_type = data.get("excitation_type", "mass flow rate")
+        excitation_units = data.get("excitation_units", "kg/s")
+        excitation_type_label = f"{excitation_type} -> {excitation_units}"
+
+        self.comboBox_connection_type.setCurrentText(data.get("connection_type", "discharge"))
+        self.comboBox_excitation_type.setCurrentText(excitation_type_label)
+        self.comboBox_compressor_type.setCurrentText(data.get("compressor_type", "screw"))
+
+        if "table_paths" in data.keys():
+            table_path = data.get("table_paths")[0]
+            self.lineEdit_table_path.setText(table_path)
+            self.tabWidget_main.setCurrentIndex(0)
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+            return
 
-    def attribute_callback(self):
-        tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
-            self.check_constant_values()
-        elif tab_index == 1:
-            self.check_table_values()
+        self.lineEdit_selection_id.setDisabled(False)
+        self.pushButton_attribute.setEnabled(True)
 
     def on_click_item(self, item):
         self.lineEdit_selection_id.setText(item.text(0))
@@ -110,10 +117,10 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.remove_callback()
 
     def load_model_info(self):
-        self.treeWidget_mass_flow_rate.clear()
+        self.treeWidget_compressor_excitation_spectrum.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "mass_flow_rate":
+            if property == "compressor_excitation_spectrum":
 
                 if "table_names" in data.keys():
                     str_value = "Table of values"
@@ -126,89 +133,13 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 new = QTreeWidgetItem([str(surface_id), str_value])
                 new.setTextAlignment(0, Qt.AlignCenter)
                 new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_mass_flow_rate.addTopLevelItem(new)
+                self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
-    def geometry_selection_callback(self):
-
-        faces = app().main_window.selected_geometry_surfaces
-
-        if faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
-
-    def check_complex_entries(self, lineEdit_real, lineEdit_imag):
-
-        title = "Invalid entry to the mass flow rate"
-        if lineEdit_real.text() != "":
-            try:
-                real_F = float(lineEdit_real.text())
-            except Exception:
-                message = "Wrong input for real part of mass flow rate."
-                PrintMessageInput([error_title, title, message])
-                self.lineEdit_real_value.setFocus()
-                return None
-        else:
-            real_F = 0
-
-        if lineEdit_imag.text() != "":
-            try:
-                imag_F = float(lineEdit_imag.text())
-            except Exception:
-                message = "Wrong input for imaginary part of mass flow rate."
-                PrintMessageInput([error_title, title, message])
-                self.lineEdit_imag_value.setFocus()
-                return None
-        else:
-            imag_F = 0
-
-        if real_F == 0 and imag_F == 0:
-            return None
-        else:
-            return real_F + 1j * imag_F
-
-    def check_constant_values(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
-
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return
-
-        self.remove_conflicting_excitations(surface_ids)
-
-        mass_flow_rate = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
-
-        if isinstance(mass_flow_rate, complex):
-
-            real_values = [np.real(mass_flow_rate)]
-            imag_values = [np.imag(mass_flow_rate)]
-
-            nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-
-            data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
-                    }
-
-            for surface_id in surface_ids:
-                self.properties._set_property("mass_flow_rate", data, surface=surface_id)
-
-            self.actions_to_finalize()
-            
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
-        title = "Error reached while loading 'mass flow rate' table"
+        title = "Error reached while loading compressor excitation data"
         imported_file = None
 
         try:
@@ -218,7 +149,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt"], "Choose a table to import the mass flow rate")
+                    ["csv", "dat", "txt"], "Choose a table to import the compressor excitation spectrum")
                                 
                 if not imported_data:
                     return
@@ -282,16 +213,19 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         app().project.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def load_mass_flow_rate_table(self):
+    def load_compressor_excitation_spectrum_data(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def check_table_values(self):
+    def attribute_callback(self):
+
+        if self.tabWidget_main.currentIndex() != 0:
+            return
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+            input_ids, 
+            selection = "surfaces"
+            )
 
         if error_data is not None:
             self.hide()
@@ -301,57 +235,62 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids)
 
-        if self.lineEdit_table_path.text() != "":
-
-            if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
-
-            for surface_id in surface_ids:
-
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] >= 3:
-
-                        table_name = f"surface_velocity_at_surface_{surface_id}"
-                        if self.save_table_values(table_name, self.imported_values):
-                            self.lineEdit_table_path.setFocus()
-                            self.imported_values = None
-                            return
-
-                else:
-                    return
-
-                if self.imported_values is None:
-                    return
-
-                nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
-                key_avg = self.checkBox_averaged_constant_values.isChecked()
-
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-                table_path = self.lineEdit_table_path.text()
-
-                data = {
-                        "table_paths" : [table_path],
-                        "table_names" : [table_name],
-                        "values" : [complex_values],
-                        "nodal_attribution": nodal_attribution,
-                        "averaged": key_avg,
-                        }
-
-                self.properties._set_property("mass_flow_rate", data, surface=surface_id)
-
-            self.actions_to_finalize()
-
-        else:
+        if self.lineEdit_table_path.text() == "":
+            self.hide()
             title = "Additional inputs required"
             message = "You must inform at least one mass flow rate\n"
             message += "table path before confirming the input!"
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
+            return
+
+        compressor_type = self.comboBox_compressor_type.currentText()
+        (excitation_type, excitation_units) = self.comboBox_excitation_type.currentText().split(" -> ")
+        connection_type = self.comboBox_connection_type.currentText()
+
+        if self.imported_values is None:
+            self.imported_values = self.load_table( 
+                self.lineEdit_table_path, 
+                direct_load = True,
+                )
+
+        for surface_id in surface_ids:
+
+            if isinstance(self.imported_values, np.ndarray):
+                if self.imported_values.shape[1] >= 3:
+
+                    table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return
+
+            else:
+                return
+
+            complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+            table_path = self.lineEdit_table_path.text()
+
+            data = {
+                "compressor_type" : compressor_type,
+                "excitation_type" : excitation_type,
+                "excitation_units" : excitation_units,
+                "connection_type" : connection_type,
+                "table_paths" : [table_path],
+                "table_names" : [table_name],
+                "values" : [complex_values],
+                "nodal_attribution": False,
+                "averaged": False,
+                }
+
+            self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
+
+        self.actions_to_finalize()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
+
         if table_names:
             app().file.write_imported_table_data_in_file()
 
@@ -364,10 +303,9 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             "acoustic_pressure",
             "surface_velocity",
             "incident_plane_wave",
-            "mass_flow_rate",
+            "compressor_excitation_spectrum",
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
-            "reciprocating_pump_excitation",
             "mass_source",
             ]
 
@@ -378,7 +316,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 self.process_table_file_removal(table_names)
 
     def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("mass_flow_rate", surface_id, "surfaces")
+        table_names = self.properties.get_property_related_table_names("compressor_excitation_spectrum", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
@@ -388,15 +326,15 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             surface_id = int(self.lineEdit_selection_id.text())
             self.remove_table_files_from_surfaces(surface_id)
 
-            self.properties._remove_surface_property("mass_flow_rate", surface_id)
+            self.properties._remove_surface_property("compressor_excitation_spectrum", surface_id)
             self.actions_to_finalize()
 
     def reset_callback(self):
 
         self.hide()
 
-        title = "Specific impedance resetting"
-        message = "Would you like to remove the all applied specific impedances from model?"
+        title = "Compressor excitation reseting"
+        message = "Would you like to remove the all compressor excitations in frequency domain from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -408,13 +346,13 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
             surface_ids = list()
             for (property, *args), data in self.properties.surface_properties.items():
-                if property == "mass_flow_rate":
+                if property == "compressor_excitation_spectrum":
                     surface_id = args[0]
                     surface_ids.append(surface_id)
 
             self.remove_table_files_from_surfaces(surface_ids)
 
-            self.properties._reset_property("mass_flow_rate")
+            self.properties._reset_property("compressor_excitation_spectrum")
             self.actions_to_finalize()
 
     def actions_to_finalize(self):
@@ -425,18 +363,20 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
-
     def check_model_frequency_controls(self):
+
+        properties = [
+            "acoustic_pressure",
+            "surface_velocity",
+            "specific_impedance",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            ]
 
         for key, data in self.properties.surface_properties.items():
             property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "mass_flow_rate", "reciprocating_compressor_excitation"]:
+            if property in properties:
                 if "table_names" in data.keys():
                     return
 
@@ -445,38 +385,20 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             self.project.set_analysis_setup(analysis_setup)
             app().file.write_analysis_setup_in_file(analysis_setup)
 
-    def reset_input_fields(self):
-        self.lineEdit_real_value.setText("")
-        self.lineEdit_imag_value.setText("")
-        self.lineEdit_table_path.setText("")
-
-    def update_controls_for_constant_value(self):
-        _bool = self.radioButton_element_integration_constant.isChecked()
-        self.checkBox_averaged_constant_values.setChecked(not _bool)
-        self.checkBox_averaged_constant_values.setDisabled(_bool)
-
-    def update_controls_for_table_of_values(self):
-        _bool = self.radioButton_element_integration_table.isChecked()
-        self.checkBox_averaged_table_values.setChecked(not _bool)
-        self.checkBox_averaged_table_values.setDisabled(_bool)
-
     def update_tabs_visibility(self):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "mass_flow_rate":
-                self.tabWidget_main.setTabVisible(2, True)
+            if property == "compressor_excitation_spectrum":
+                self.tabWidget_main.setTabVisible(1, True)
                 return
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setTabVisible(1, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_main.currentIndex() == 0:
-                self.check_constant_values()
-            if self.tabWidget_main.currentIndex() == 1:
-                self.check_table_values()
+            self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

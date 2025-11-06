@@ -23,7 +23,6 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "surface_velocity": self._build_surface_velocity,
             "specific_impedance": self._build_specific_impedance,
             "transfer_impedance": self._build_transfer_impedance,
-            "mass_flow_rate": self._build_mass_flow_rate,
             "degrees_of_freedom_decoupling": self._build_dof_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,

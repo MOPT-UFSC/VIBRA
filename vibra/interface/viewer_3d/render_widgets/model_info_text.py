@@ -349,20 +349,20 @@ def acoustic_boundary_conditions_info_text():
 
     acoustic_pressure = properties._get_property("acoustic_pressure", surface=surface_id)
     surface_velocity = properties._get_property("surface_velocity", surface=surface_id)
+    compressor_excitation_spectrum = properties._get_property("compressor_excitation_spectrum", surface=surface_id)
     compressor_excitation_waveform = properties._get_property("compressor_excitation_waveform", surface=surface_id)
     recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
     incident_plane_wave = properties._get_property("incident_plane_wave", surface=surface_id)
-    mass_flow_rate = properties._get_property("mass_flow_rate", surface=surface_id)
     absorption_surface = properties._get_property("absorption_surface", surface=surface_id)
     specific_impedance = properties._get_property("specific_impedance", surface=surface_id)
 
     properties_data = [
         acoustic_pressure,
         surface_velocity,
+        compressor_excitation_spectrum,
         compressor_excitation_waveform,
         recip_compressor_excitation,
         incident_plane_wave,
-        mass_flow_rate,
         absorption_surface,
         specific_impedance,
         ]
@@ -386,10 +386,6 @@ def acoustic_boundary_conditions_info_text():
 
     if isinstance(incident_plane_wave, dict):
         text += get_incident_plane_wave_text(incident_plane_wave)
-
-    if mass_flow_rate is not None:
-        values = mass_flow_rate["values"][0]
-        text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
 
     if absorption_surface is not None:
         values = absorption_surface["values"][0]
