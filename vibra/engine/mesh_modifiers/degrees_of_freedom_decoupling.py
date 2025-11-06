@@ -15,7 +15,6 @@ class DegreesOfFreedomDecoupling:
     def __init__(self, model: "Model"):
         self.model = model
         self.mesh = model.mesh
-        self.geometry = model.geometry
         self.properties = model.properties
 
         self.initialize()
@@ -24,9 +23,6 @@ class DegreesOfFreedomDecoupling:
     def initialize(self):
         self.decouple_info = dict()
         self.nodes_mapping = dict()
-        self.surfaces_mapping = dict()
-        self.lines_mapping = dict()
-        self.points_mapping = dict()
 
 
     def gathering_decoupling_information(self):
@@ -39,7 +35,7 @@ class DegreesOfFreedomDecoupling:
         if self.mesh.cache_nodal_coordinates is None:
             return
 
-        max_surface_id = max(self.geometry.surfaces) if self.geometry.surfaces else 0
+        max_surface_id = int(np.max(self.mesh.cache_faces_connectivity[:, 1]))
 
         for key, data in self.properties.surface_properties.items():
             (property, surface_id) = key
@@ -92,11 +88,11 @@ class DegreesOfFreedomDecoupling:
 
         """
         surface_ids = list(self.decouple_info.keys())
-        point_ids = list(self.geometry.surfaces_to_points(*surface_ids))
-
-        max_point_id = max(self.geometry.points) if self.geometry.points else 0
+        point_ids, _ = self.mesh.get_points_and_lines_from_surfaces(surface_ids)
+        max_point_id = max(self.mesh.get_points_from_geometry())
         new_point_ids = np.arange(len(point_ids), dtype=int) + max_point_id + 1
-        point_ids_mapping = dict(zip(point_ids, new_point_ids.tolist()))
+        new_point_ids = [int(point_id) for point_id in new_point_ids]
+        point_ids_mapping = dict(zip(point_ids, new_point_ids))
 
         return point_ids_mapping
 
@@ -113,11 +109,11 @@ class DegreesOfFreedomDecoupling:
 
         """
         surface_ids = list(self.decouple_info.keys())
-        line_ids = list(self.geometry.surfaces_to_curves(*surface_ids))
-
-        max_line_id = max(self.geometry.curves) if self.geometry.curves else 0
+        _, line_ids = self.mesh.get_points_and_lines_from_surfaces(surface_ids)
+        max_line_id = max(self.mesh.get_lines_from_geometry())
         new_line_ids = np.arange(len(line_ids), dtype=int) + max_line_id + 1
-        lines_mapping = dict(zip(line_ids, new_line_ids.tolist()))
+        new_line_ids = [int(line_id) for line_id in new_line_ids]
+        lines_mapping = dict(zip(line_ids, new_line_ids))
 
         return lines_mapping
 
@@ -135,9 +131,10 @@ class DegreesOfFreedomDecoupling:
 
         """
         surface_ids = list(self.decouple_info.keys())
-        max_surface_id = max(self.geometry.surfaces) if self.geometry.surfaces else 0
+        max_surface_id = max(self.mesh.get_surfaces_from_geometry())
         new_surface_ids = np.arange(len(surface_ids), dtype=int) + max_surface_id + 1
-        surfaces_mapping = dict(zip(surface_ids, new_surface_ids.tolist()))
+        new_surface_ids = [int(surface_id) for surface_id in new_surface_ids]
+        surfaces_mapping = dict(zip(surface_ids, new_surface_ids))
 
         return surfaces_mapping
 
@@ -197,7 +194,7 @@ class DegreesOfFreedomDecoupling:
         # process all non-repeated nodes from decoupled surfaces
         nodes_from_surfaces = set()
         for surface_id in self.decouple_info.keys():
-            nodes = self.mesh.get_nodes_from_surface(surface_id, from_cache=True)
+            nodes = self.mesh.get_nodes_from_surface(surface_id)
             nodes_from_surfaces |= set(nodes)
 
         nodes_from_surfaces = list(nodes_from_surfaces)
@@ -235,18 +232,27 @@ class DegreesOfFreedomDecoupling:
         """
         nodes_from_lines = set()
         valid_surface_ids = set()
+        surfaces_to_remove = list()
+
+        surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
+        lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
 
         for surface_id, vol_id in self.decouple_info.items():
-            all_surfaces_from_vol = self.geometry.solids_to_surfaces(vol_id)
-            valid_surface_ids.update(all_surfaces_from_vol - {surface_id})
 
-            curves_on_surface = self.geometry.surfaces_to_curves(surface_id)
-            for curve_id in curves_on_surface:
-                nodes = self.mesh.get_nodes_from_line(curve_id, from_cache=True)
-                if nodes is not None:
-                    nodes_from_lines.update(nodes)
+            valid_surface_ids |= set(surfaces_from_volume.get(vol_id))
+            surfaces_to_remove.append(surface_id)
+
+            for i, line_id in enumerate(lines_from_surface[surface_id]):
+                nodes = self.mesh.get_nodes_from_line(line_id)
+                if nodes is None:
+                    continue
+
+                nodes_from_lines |= set(nodes)
+
+        valid_surface_ids -= set(surfaces_to_remove)
 
         return list(valid_surface_ids), list(nodes_from_lines)
+
 
     def get_line_element_tag_and_nodes_number(self, input_line_id: int):
         """ Returns the 1D element tag and the number of 
@@ -328,7 +334,7 @@ class DegreesOfFreedomDecoupling:
         """
 
         cols = self.mesh.lines_connectivity.shape[1]
-        lines_from_surface = self.geometry.surfaces_to_curves(surface_id)
+        lines_from_surface = self.mesh.lines_from_surface[surface_id]
 
         for i, line_id in enumerate(lines_from_surface):
 
@@ -399,20 +405,22 @@ class DegreesOfFreedomDecoupling:
         line_ids = set()
         lines_nodes = set()
         for surface_id, vol_id in self.decouple_info.items():
-            decoupling_curves = self.geometry.surfaces_to_curves(surface_id)
-            surfaces_in_volume = self.geometry.solids_to_surfaces(vol_id)
 
-            for surf_id in surfaces_in_volume:
+            lines_from_surface = self.mesh.cache_lines_from_surface[surface_id]
+    
+            for surf_id in self.mesh.cache_surfaces_from_volume[vol_id]:
                 if surf_id == surface_id:
                     continue
-                line_ids.update(self.geometry.surfaces_to_curves(surf_id))
+                
+                line_ids |= set(self.mesh.cache_lines_from_surface[surf_id])
             
-            line_ids -= decoupling_curves
+            line_ids -= set(lines_from_surface)
 
         for line_id in line_ids:
-            nodes = self.mesh.get_nodes_from_line(line_id, from_cache=True)
-            if nodes is not None:
-                lines_nodes.update(nodes)
+            nodes = self.mesh.get_nodes_from_line(line_id)
+            if nodes is None:
+                continue
+            lines_nodes |= set(nodes)
 
         return list(line_ids), list(lines_nodes)
 
@@ -490,7 +498,7 @@ class DegreesOfFreedomDecoupling:
 
             fluid = self.model.properties._get_property("fluid", surface=surface_id)
             if fluid is None:
-                continue
+                return
 
             fluid_id = self.model.properties._get_property("fluid_id", surface=surface_id)
             self.model.properties._set_property("fluid", fluid, surface=new_surface_id)
@@ -508,45 +516,64 @@ class DegreesOfFreedomDecoupling:
 
         logging.info("Processing degress of freedom decoupling... [90/100]")
 
-        # Groups surfaces to be decoupled by their parent volume.
-        temp_decouple_map = defaultdict(list)
+        surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
+        lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
+        points_from_line = deepcopy(self.mesh.cache_points_from_line)
+
+        geometry_information = deepcopy(self.mesh.geometry_information)
+        area_from_surfaces = deepcopy(self.mesh.area_from_surfaces)
+        length_from_lines = deepcopy(self.mesh.length_from_lines)
+
+        surface_ids = set(geometry_information["surfaces"])
+        point_ids = set(geometry_information["points"])
+        line_ids = set(geometry_information["lines"])
+
+        aux = defaultdict(list)
         for surf_id, vol_id in self.decouple_info.items():
-            temp_decouple_map[vol_id].append(surf_id)
+            aux[vol_id].append(surf_id)
 
-        # For each volume, replaces the old shared surface IDs with the new,
-        # independent surface IDs in its definition.
-        for vol_id, decoupled_surf_ids in temp_decouple_map.items():
-            original_surfaces = set(self.geometry.solids_to_surfaces(vol_id))
-            surfaces_to_keep = original_surfaces - set(decoupled_surf_ids)
-            newly_added_surfaces = {self.surfaces_mapping[sid] for sid in decoupled_surf_ids}
-            updated_surfaces = surfaces_to_keep | newly_added_surfaces
-            self.geometry._solids_to_surfaces[vol_id] = tuple(sorted(list(updated_surfaces)))
+        for vol_id, surf_ids in aux.items():
 
-        
-        # Iterates through the original shared surfaces to create the new,
-        # independent geometric entities (surfaces, curves, and points).
-        for surf_id in self.decouple_info.keys():
-            new_surf_id = self.surfaces_mapping[surf_id]
-            self.geometry.surfaces.append(new_surf_id)
-            self.geometry._surfaces_areas[new_surf_id] = self.geometry.surface_area(surf_id)
+            volume_surfaces = set(surfaces_from_volume[vol_id])
+            volume_surfaces -= set(surf_ids)
 
-            original_curves = self.geometry.surfaces_to_curves(surf_id)
-            new_curve_ids = [self.lines_mapping[cid] for cid in original_curves]
-            self.geometry._surfaces_to_curves[new_surf_id] = tuple(new_curve_ids)
+            for surf_id in surf_ids:
+                new_surf_id = self.surfaces_mapping.get(surf_id)
+                volume_surfaces |= set({new_surf_id})
 
-            for i, curve_id in enumerate(original_curves):
-                new_curve_id = new_curve_ids[i]
-                if new_curve_id not in self.geometry.curves:
-                    self.geometry.curves.append(new_curve_id)
-                    self.geometry._curves_lengths[new_curve_id] = self.geometry.arc_length(curve_id)
+            self.mesh.surfaces_from_volume[vol_id] = [int(surf_id) for surf_id in volume_surfaces]
 
-                original_points = self.geometry.curves_to_points(curve_id)
-                new_point_ids = [self.points_mapping[pid] for pid in original_points]
-                self.geometry._curves_to_points[new_curve_id] = tuple(new_point_ids)
+        for surf_id, vol_id in self.decouple_info.items():
 
-                for point_id in new_point_ids:
-                    if point_id not in self.geometry.points:
-                        self.geometry.points.append(point_id)
+            new_surf_id = self.surfaces_mapping.get(surf_id)
+            surface_ids |= set({new_surf_id})
+
+            new_line_ids = [self.lines_mapping[_line_id] for _line_id in lines_from_surface[surf_id]]
+            self.mesh.lines_from_surface[new_surf_id] = new_line_ids
+
+            if area_from_surfaces:
+                self.mesh.area_from_surfaces.update({new_surf_id : area_from_surfaces[surf_id]})
+
+            for i, line_id in enumerate(lines_from_surface[surf_id]):
+
+                new_line_id = int(new_line_ids[i])
+                line_ids |= set({new_line_id})               
+
+                new_point_ids = [self.points_mapping[point_id] for point_id in points_from_line[line_id]]
+                self.mesh.points_from_line[new_line_id] = new_point_ids
+                point_ids |= set(new_point_ids)
+
+                if length_from_lines:
+                    self.mesh.length_from_lines.update({new_line_id : length_from_lines[line_id]})
+
+        self.mesh.geometry_information["surfaces"] = list(surface_ids)
+        self.mesh.geometry_information["lines"] = list(line_ids)
+        self.mesh.geometry_information["points"] = list(point_ids)
+
+        self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
+        self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
+        self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
+
 
     def process_degrees_of_freedom_decoupling(self):
         """ This method processes all required actions to decouple
