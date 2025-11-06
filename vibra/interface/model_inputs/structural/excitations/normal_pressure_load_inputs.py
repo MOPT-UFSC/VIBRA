@@ -132,7 +132,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         return
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.geometry.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.contains_volumes()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_complex_entries(self, real_input: str, imag_input: str, label: str):

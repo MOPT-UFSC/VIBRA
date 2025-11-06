@@ -595,7 +595,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        volume_exists = self.geometry.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.contains_volumes()
         if not volume_exists:
             self.comboBox_element_type.removeItem(1)
             self.comboBox_shape_function.removeItem(1)
@@ -673,7 +673,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def config_control_quality_table(self):
 
-        volume_exists = self.geometry.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.contains_volumes()
         self.tabWidget_main.setTabVisible(2, volume_exists)                
         if not volume_exists:
             return

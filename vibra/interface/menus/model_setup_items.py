@@ -178,7 +178,7 @@ class ModelSetupItems(CommonMenuItems):
             ]
 
         if property_name == "material":
-            if model.geometry.are_there_volumes_in_geometry():
+            if model.geometry.contains_volumes():
                 volume_ids = model.mesh.geometry_information.get("volumes")
                 volumes_without_material = model.properties.get_entities_without_property("material", volumes=volume_ids)
                 return not bool(len(volumes_without_material))
@@ -188,7 +188,7 @@ class ModelSetupItems(CommonMenuItems):
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
-            if model.geometry.are_there_volumes_in_geometry():
+            if model.geometry.contains_volumes():
                 volume_ids = model.mesh.geometry_information.get("volumes")
                 volumes_without_fluid = model.properties.get_entities_without_property("fluid", volumes=volume_ids)
                 return not bool(len(volumes_without_fluid))
@@ -257,7 +257,7 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "surface_thickness":
             if physical_domain == "structural":
                 if app().project.model.mesh is not None:
-                    volume_exists = app().project.model.geometry.are_there_volumes_in_geometry()
+                    volume_exists = app().project.model.geometry.contains_volumes()
                     if not volume_exists:
                         return True
 
@@ -280,7 +280,7 @@ class ModelSetupItems(CommonMenuItems):
         toolbar = app().main_window.analysis_toolbar
 
         if mesh is not None:
-            volume_exists = geometry.are_there_volumes_in_geometry()
+            volume_exists = geometry.contains_volumes()
             self.item_child_surface_thickness.setHidden(volume_exists)
             self.item_child_distributed_loads.setHidden(volume_exists)
             self.item_child_normal_pressure_load.setHidden(volume_exists)

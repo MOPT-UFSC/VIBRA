@@ -322,7 +322,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
-        if not geometry.are_there_volumes_in_geometry():
+        if not geometry.contains_volumes():
             return
 
         if not isinstance(self._cache_full_solids_actor, SolidsActor):

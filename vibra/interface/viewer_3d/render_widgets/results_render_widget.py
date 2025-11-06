@@ -386,7 +386,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self._cache_hollow_solids_actor, HollowAnalysisActor):
             self._cache_hollow_solids_actor = HollowAnalysisActor(mesh)
 
-        if actor_is_hollow and geometry.are_there_volumes_in_geometry():
+        if actor_is_hollow and geometry.contains_volumes():
             self.remove_actors(self.analysis_actor, self.edges_actor)
             self.analysis_actor = AnalysisActor(mesh)
             self.edges_actor = EdgesActor(self.analysis_actor.data)
@@ -405,10 +405,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         mesh = app().project.model.mesh
+        geometry = app().project.model.geometry
         if mesh is None:
             return
 
-        if not mesh.are_there_volumes_in_geometry():
+        if not geometry.contains_volumes():
             return
 
         if not isinstance(self._cache_full_solids_actor, AnalysisActor):

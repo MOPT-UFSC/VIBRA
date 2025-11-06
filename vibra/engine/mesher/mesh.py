@@ -2146,13 +2146,6 @@ class Mesh:
             for point_id in point_ids:
                 self.lines_from_point[point_id].append(line_id)
 
-    def are_there_volumes_in_geometry(self) -> bool:
-        volumes = self.geometry_information.get("volumes")
-        if isinstance(volumes, list):
-            if volumes:
-                return True
-        return False
-
     def _get_connectivity_array(self, input_dict):
         """
         The returned value is an array where each line is a connectivity

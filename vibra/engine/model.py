@@ -872,7 +872,7 @@ class Model:
 
 
     def is_surface_thickness_properly_applied_in_model(self):
-        volume_exists = self.geometry.are_there_volumes_in_geometry()
+        volume_exists = self.geometry.contains_volumes()
         if volume_exists:
             return None
 
