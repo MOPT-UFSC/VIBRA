@@ -171,9 +171,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         line_properties = deepcopy(self.properties.line_properties)
         for new_surface_id in new_surface_ids:
             lines_from_surface = self.geometry.surfaces_to_curves(new_surface_id)
-            if lines_from_surface is None:
-                continue
-
             for line_from_surface in lines_from_surface:
                 for (property, line_id) in line_properties.keys():
                     if line_from_surface == line_id:

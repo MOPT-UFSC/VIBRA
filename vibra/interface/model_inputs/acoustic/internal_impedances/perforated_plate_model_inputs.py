@@ -691,10 +691,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def decouple_degrees_of_freedom(self, surface_id: int):
 
         volumes_from_surface = self.geometry.surfaces_to_solids(surface_id)
-        if volumes_from_surface is None:
-            return 
-
-        volume_id = volumes_from_surface[0]
+        volume_id = list(volumes_from_surface)[0]
         data = {"volume_to_decouple" : volume_id}
         self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
@@ -738,9 +735,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         line_properties = deepcopy(self.properties.line_properties)
         for new_surface_id in new_surface_ids:
             lines_from_surface = self.geometry.surfaces_to_curves(new_surface_id)
-            if lines_from_surface is None:
-                continue
-
             for line_from_surface in lines_from_surface:
                 for (property, line_id) in line_properties.keys():
                     if line_from_surface == line_id:
