@@ -298,7 +298,7 @@ class AcousticAssembler:
             data: dict
             _complex_values = data.get("values")[0]
 
-            if property_label == "compressor_excitation_waveform":
+            if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                 excitation_type = data.get("excitation_type")
 
                 if excitation_type in ["mass flow rate", "volumetric flow rate"]:

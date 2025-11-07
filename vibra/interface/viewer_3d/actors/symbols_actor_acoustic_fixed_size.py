@@ -20,8 +20,9 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
-            "reciprocating_compressor_excitation": self._build_reciprocating_compressor_excitation_symbol,
+            "compressor_excitation_spectrum": self._build_compressor_excitation_spectrum_symbol,
             "compressor_excitation_waveform": self._build_compressor_excitation_waveform_symbol,
+            "reciprocating_compressor_excitation": self._build_reciprocating_compressor_excitation_symbol,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):

@@ -110,7 +110,7 @@ class AnalysisRequirementsChecker:
                        "acoustic_pressure",
                        "surface_velocity",
                        "incident_plane_wave",
-                       "compressor_excitation_specturm",
+                       "compressor_excitation_spectrum",
                        "compressor_excitation_waveform",
                        "reciprocating_compressor_excitation",
                        "mass_source",

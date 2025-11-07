@@ -378,6 +378,9 @@ def acoustic_boundary_conditions_info_text():
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
+    if isinstance(compressor_excitation_spectrum, dict):
+        text += get_compressor_excitation_spectrum(compressor_excitation_spectrum)
+
     if isinstance(compressor_excitation_waveform, dict):
         text += get_compressor_excitation_waveform(compressor_excitation_waveform)
 
@@ -412,6 +415,27 @@ def get_incident_plane_wave_text(ipw_data: dict):
     tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
 
     return str(tree_pw)
+
+def get_compressor_excitation_spectrum(data: dict):
+    tree_ec = TreeInfo("Compressor excitation")
+    tree_ec.add_item("Data domain", "frequency")
+    tree_ec.add_item("Compressor type", data.get("compressor_type"))
+    tree_ec.add_item("Connection type", data.get("connection_type"))
+    tree_ec.add_item("Excitation type", data.get("excitation_type"), data.get("excitation_units"))
+
+    return str(tree_ec)
+
+def get_compressor_excitation_waveform(data: dict):
+    tree_ec = TreeInfo("Compressor excitation")
+    tree_ec.add_item("Data domain", "time")
+    tree_ec.add_item("Data source", data.get("data_source"))
+    tree_ec.add_item("Compressor type", data.get("compressor_type"))
+    tree_ec.add_item("Connection type", data.get("connection_type"))
+    tree_ec.add_item("Excitation type", data.get("excitation_type"), data.get("excitation_units"))
+    tree_ec.add_item("Excitation mapping", data.get("excitation_mapping"))
+    tree_ec.add_item("Angular resolution", data.get("angular_resolution"), "deg")
+
+    return str(tree_ec)
 
 def get_reciprocating_compressor_text(rc_data: dict):
 
@@ -468,17 +492,6 @@ def get_reciprocating_compressor_text(rc_data: dict):
     tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""), "--")
 
     return str(tree_rc)
-
-def get_compressor_excitation_waveform(data: dict):
-    tree_ec = TreeInfo("Compressor excitation (time)")
-    tree_ec.add_item("Data source", data.get("data_source"))
-    tree_ec.add_item("Compressor type", data.get("compressor_type"))
-    tree_ec.add_item("Connection type", data.get("connection_type"))
-    tree_ec.add_item("Excitation type", data.get("excitation_type"), data.get("excitation_units"))
-    tree_ec.add_item("Excitation mapping", data.get("excitation_mapping"))
-    tree_ec.add_item("Angular resolution", data.get("angular_resolution"), "deg")
-
-    return str(tree_ec)
 
 def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
     text = ""
