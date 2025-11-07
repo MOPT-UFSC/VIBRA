@@ -127,7 +127,7 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
             
         coords, normal, max_dist = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(shape, coords, normal, color=color, scale=1.985 * max_dist)
-        self.add_symbol(sources.create_compressor_f_frequency_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
+        self.add_symbol(sources.create_compressor_t_time_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
         self.add_symbol(compressor_type_shape, coords, normal, color=letter_color, scale=1.985 * max_dist)
     
     def _build_compressor_excitation_spectrum_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
@@ -159,5 +159,5 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
         coords, normal, max_dist = self._get_center_coords_and_normals(surface_id)
         self.add_symbol(shape, coords, normal, color=color, scale=1.985 * max_dist)
-        self.add_symbol(sources.create_compressor_t_time_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
+        self.add_symbol(sources.create_compressor_f_frequency_source, coords, normal, color=letter_color, scale=1.985 * max_dist)
         self.add_symbol(compressor_type_shape, coords, normal, color=letter_color, scale=1.985 * max_dist)
