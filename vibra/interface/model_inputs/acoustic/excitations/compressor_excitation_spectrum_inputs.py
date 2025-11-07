@@ -43,6 +43,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.complex_values = None
         self.imported_values = None
         self.keep_window_open = True
 
@@ -172,10 +173,15 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return None
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
+        
+        # filter the zero-frequency component
+        mask = imported_values[:, 0] > 0
+        imported_values = imported_values[mask, :]
 
-        _frequencies = imported_values[:, 0]
+        # define the frequencies vector
+        frequencies = imported_values[:, 0]
 
-        if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
+        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -185,12 +191,18 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        self.update_analysis_setup_in_file(frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+        
+        # imaginary values vector
         imag_values = imported_values[:, 2]
 
-        data = np.array([_frequencies, real_values, imag_values], dtype=float).T
+        # complex values vector
+        self.complex_values = real_values + 1j * imag_values
+
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
@@ -262,13 +274,13 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                     table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
+                        self.complex_values = None
                         self.imported_values = None
                         return
 
             else:
                 return
 
-            complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
             table_path = self.lineEdit_table_path.text()
 
             data = {
@@ -278,7 +290,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "connection_type" : connection_type,
                 "table_paths" : [table_path],
                 "table_names" : [table_name],
-                "values" : [complex_values],
+                "values" : [self.complex_values],
                 "nodal_attribution": False,
                 "averaged": False,
                 }

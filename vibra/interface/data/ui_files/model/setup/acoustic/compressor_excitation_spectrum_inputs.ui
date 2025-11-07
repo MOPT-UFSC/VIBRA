@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>400</height>
+    <width>440</width>
+    <height>440</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,8 +27,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>420</width>
-    <height>400</height>
+    <width>440</width>
+    <height>440</height>
    </size>
   </property>
   <property name="font">
@@ -73,7 +73,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>420</width>
+       <width>16777215</width>
        <height>480</height>
       </size>
      </property>
@@ -94,7 +94,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>380</width>
+          <width>16777215</width>
           <height>40</height>
          </size>
         </property>
@@ -227,7 +227,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>380</width>
+          <width>16777215</width>
           <height>16777215</height>
          </size>
         </property>
@@ -274,11 +274,23 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout">
+             <property name="leftMargin">
+              <number>4</number>
+             </property>
+             <property name="topMargin">
+              <number>4</number>
+             </property>
+             <property name="rightMargin">
+              <number>4</number>
+             </property>
+             <property name="bottomMargin">
+              <number>4</number>
+             </property>
              <item row="0" column="2">
               <widget class="QComboBox" name="comboBox_compressor_type">
                <property name="minimumSize">
                 <size>
-                 <width>180</width>
+                 <width>210</width>
                  <height>28</height>
                 </size>
                </property>
@@ -309,7 +321,7 @@
               <widget class="QLabel" name="label_16">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>120</width>
                  <height>28</height>
                 </size>
                </property>
@@ -331,7 +343,7 @@
               <widget class="QLabel" name="label_15">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>120</width>
                  <height>28</height>
                 </size>
                </property>
@@ -353,7 +365,7 @@
               <widget class="QComboBox" name="comboBox_connection_type">
                <property name="minimumSize">
                 <size>
-                 <width>180</width>
+                 <width>210</width>
                  <height>28</height>
                 </size>
                </property>
@@ -379,7 +391,7 @@
               <widget class="QLabel" name="label_17">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>120</width>
                  <height>28</height>
                 </size>
                </property>
@@ -401,7 +413,7 @@
               <widget class="QComboBox" name="comboBox_excitation_type">
                <property name="minimumSize">
                 <size>
-                 <width>180</width>
+                 <width>210</width>
                  <height>28</height>
                 </size>
                </property>
@@ -539,7 +551,7 @@
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>300</width>
+                 <width>330</width>
                  <height>28</height>
                 </size>
                </property>
@@ -877,7 +889,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>420</width>
+       <width>16777215</width>
        <height>48</height>
       </size>
      </property>
@@ -927,7 +939,7 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>100</height>
+       <height>40</height>
       </size>
      </property>
      <property name="frameShape">
