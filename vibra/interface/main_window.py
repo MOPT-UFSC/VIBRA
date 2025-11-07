@@ -1032,25 +1032,25 @@ class MainWindow(MainWindow_UI):
 
         user_option = ChoosePropertytoDelete("Remove Property", "Choose a property", options=properties_founded, buttons_config=buttons_config, window_title="Vibra")
 
-        if user_option._remove:
-            prop = user_option._property_to_delete.lower().replace(' ', '_')
-            for surf_id in self.selected_geometry_surfaces:
-                app().project.model.properties._remove_surface_property(prop, surf_id)
+        # if user_option._remove:
+        #     prop = user_option._property_to_delete.lower().replace(' ', '_')
+        #     for surf_id in self.selected_geometry_surfaces:
+        #         app().project.model.properties._remove_surface_property(prop, surf_id)
             
-            for line_id in self.selected_geometry_lines:
-                app().project.model.properties._remove_line_property(prop, line_id)
+        #     for line_id in self.selected_geometry_lines:
+        #         app().project.model.properties._remove_line_property(prop, line_id)
             
-            for point_id in self.selected_geometry_points:
-                app().project.model.properties._remove_point_property(prop, point_id)
-        elif user_option._remove_all:
-            for surf_id in self.selected_geometry_surfaces:
-                app().project.model.properties.remove_all_surface_properties(surf_id, physical_domain)
+        #     for point_id in self.selected_geometry_points:
+        #         app().project.model.properties._remove_point_property(prop, point_id)
+        # elif user_option._remove_all:
+        #     for surf_id in self.selected_geometry_surfaces:
+        #         app().project.model.properties.remove_all_surface_properties(surf_id, physical_domain)
             
-            for point_id in self.selected_geometry_lines:
-                app().project.model.properties.remove_all_line_properties(point_id, physical_domain)
+        #     for point_id in self.selected_geometry_lines:
+        #         app().project.model.properties.remove_all_line_properties(point_id, physical_domain)
             
-            for point_id in self.selected_geometry_points:
-                app().project.model.properties.remove_all_point_properties(point_id, physical_domain)
+        #     for point_id in self.selected_geometry_points:
+        #         app().project.model.properties.remove_all_point_properties(point_id, physical_domain)
 
         self.update_symbols()
 
