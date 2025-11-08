@@ -17,12 +17,8 @@ class DataImporter:
     def __import_files(caption: str, last_folder: str, file_extensions: List[str], multiple_files: bool = False):
 
         imported_paths, file_extension = DataImporter.get_file_paths(caption, last_folder, file_extensions, multiple_files)
-        
         if not file_extension:
             return
-        
-        imported_data = None
-        last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
 
         imported_data = list()
         if isinstance(imported_paths, list):
@@ -32,8 +28,6 @@ class DataImporter:
         else:
             imported_data.extend(DataImporter.read_data_in_file(imported_paths, use_first_sheet=True))
 
-        app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
-        
         return imported_data
 
     @staticmethod
@@ -45,7 +39,7 @@ class DataImporter:
 
         kwargs = dict()
         if platform.system() == "Linux":
-                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
         str_extensions = "Files ("
         for extension in file_extensions:
@@ -58,17 +52,27 @@ class DataImporter:
 
         imported_paths, file_extension = None, None
         if (multiple_files):
-            imported_paths, file_extension = QFileDialog.getOpenFileNames( None, 
-                                                                caption, 
-                                                                folder_path, 
-                                                                str_extensions,
-                                                                **kwargs)
+            imported_paths, file_extension = QFileDialog.getOpenFileNames(
+                None,
+                caption,
+                folder_path,
+                str_extensions,
+                **kwargs
+                )
+    
         else:
-            imported_paths, file_extension = QFileDialog.getOpenFileName( None, 
-                                                                caption, 
-                                                                folder_path, 
-                                                                str_extensions,
-                                                                **kwargs)
+            imported_paths, file_extension = QFileDialog.getOpenFileName(
+                None,
+                caption,
+                folder_path,
+                str_extensions,
+                **kwargs
+                )
+
+        if file_extension:
+            last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
+            app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
+            print(last_folder, last_imported_file)
 
         return imported_paths, file_extension
   
