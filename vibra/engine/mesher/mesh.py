@@ -1548,14 +1548,19 @@ class Mesh:
         return mask
 
     def get_disconnected_nodes(self):
-        if not self.geometry_information.get("volumes"):
-            return list()
 
         disconnected_nodes = list()
-        nodes_from_solid_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
-        if self.nodal_coordinates[:, 0].size != nodes_from_solid_elements.size:
-            _disconnected_nodes = np.delete(self.nodal_coordinates[:, 0], nodes_from_solid_elements)
-            disconnected_nodes = [int(node_id) for node_id in _disconnected_nodes]
+        if self.geometry_information.get("volumes"):
+            nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
+            if self.nodal_coordinates[:, 0].size != nodes_from_3d_elements.size:
+                _disconnected_nodes = np.delete(self.nodal_coordinates[:, 0], nodes_from_3d_elements)
+                disconnected_nodes = [int(node_id) for node_id in _disconnected_nodes]
+
+        else:
+            nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
+            if self.nodal_coordinates[:, 0].size != nodes_from_2d_elements.size:
+                _disconnected_nodes = np.delete(self.nodal_coordinates[:, 0], nodes_from_2d_elements)
+                disconnected_nodes = [int(node_id) for node_id in _disconnected_nodes]
 
         return disconnected_nodes
 

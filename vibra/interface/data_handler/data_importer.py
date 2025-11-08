@@ -72,7 +72,6 @@ class DataImporter:
         if file_extension:
             last_imported_file = imported_paths if isinstance(imported_paths, str) else imported_paths[-1]
             app().config.write_last_folder_path_in_file(last_folder, last_imported_file)
-            print(last_folder, last_imported_file)
 
         return imported_paths, file_extension
   
