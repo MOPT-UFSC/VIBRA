@@ -31,6 +31,7 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
+from vibra.interface.viewer_3d.render_tools.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.viewer_3d.render_widgets import (
     GeometryRenderWidget,
     MeshRenderWidget,
@@ -57,7 +58,7 @@ class MainWindow(MainWindow_UI):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
@@ -81,7 +82,7 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = None
 
         self._initialize()
-    
+
     def _initialize(self):
         self.dialog = None
         self.project_data_modified = False
@@ -133,6 +134,11 @@ class MainWindow(MainWindow_UI):
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
         self.insertToolBarBreak(self.animation_toolbar)
+        self.render_tools_toolbar = RenderToolsToolbar(self)
+        self.render_tools_toolbar.render_tool_changed.connect(self.geometry_widget.setRenderTool)
+        self.render_tools_toolbar.render_tool_changed.connect(self.mesh_widget.setRenderTool)
+        self.render_tools_toolbar.render_tool_changed.connect(self.results_widget.setRenderTool)
+        self.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
         self.render_tools_toolbar.setVisible(False)
 
         self.analysis_toolbar.setDisabled(True)
@@ -176,7 +182,6 @@ class MainWindow(MainWindow_UI):
         app().splash.update_progress(30)
         self._load_menu_widgets()
         self._load_render_widgets()
-        self.set_default_render_tool_in_render_widgets()
 
         app().splash.update_progress(60)
         self._create_basic_layout()
@@ -440,59 +445,11 @@ class MainWindow(MainWindow_UI):
             self.visualization_filter.color_mode = ColorMode.COLORED        
         self.visualization_changed.emit()
     
-    def action_grab_tool_callback(self):
-        if self.action_grab_tool.isChecked():
-            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
-
-            self.add_render_tool_in_render_widgets(GrabTool)
-        else:
-            self.action_selection_tool_callback()
-    
-    def action_selection_tool_callback(self):
-        self.discheck_all_actions_of_render_tools_toolbar_except(self.action_selection_tool)
-        self.set_default_render_tool_in_render_widgets()
-
-    def action_rotation_tool_callback(self):
-        if self.action_rotation_tool.isChecked():
-            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_rotation_tool)
-
-            self.add_render_tool_in_render_widgets(RotationTool)
-        else:
-            self.action_selection_tool_callback()
-        
-    def action_zoom_in_callback(self):
-        if self.action_zoom_in.isChecked():
-            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_zoom_in)
-
-            self.add_render_tool_in_render_widgets(ZoomTool)
-        else:
-            self.action_selection_tool_callback()
-        
-    def discheck_all_actions_of_render_tools_toolbar_except(self, action: QAction):
-        for _action in self.render_tools_toolbar.actions():
-            _action.setChecked(False)
-        
-        action.setChecked(True)
-    
-    def add_render_tool_in_render_widgets(self, tool_class: RenderTool):
-        for render in self.get_renderer_widgets():
-            tool = tool_class()
-            render.add_render_tool(tool)
-        
-    def set_default_render_tool_in_render_widgets(self):
-        for render in self.get_renderer_widgets():
-            render.set_default_render_tool()
-
-    def get_renderer_widgets(self) -> list[CommonRenderWidget]:
-        return [self.geometry_widget, self.mesh_widget, self.results_widget]
-    
     def show_selection_tool(self):
-        self.action_selection_tool.setVisible(True)
-        self.render_tools_toolbar.actions()[2].setVisible(True)
+        self.render_tools_toolbar.action_selection_tool.setVisible(True)
 
     def hide_selection_tool(self):
-        self.action_selection_tool.setVisible(False)
-        self.render_tools_toolbar.actions()[2].setVisible(False)
+        self.render_tools_toolbar.action_selection_tool.setVisible(False)
         
     def action_user_preferences_callback(self):
         self.close_dialogs()

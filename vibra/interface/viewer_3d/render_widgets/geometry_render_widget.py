@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from vibra import app, ICON_DIR
 from vibra.utils.image_functions import removes_image_background
+from .render_tool_mixin import RenderToolMixin
 
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
@@ -36,7 +37,7 @@ from .model_info_text import (
 )
 
 
-class GeometryRenderWidget(CommonRenderWidget):
+class GeometryRenderWidget(CommonRenderWidget, RenderToolMixin):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -485,7 +486,6 @@ class GeometryRenderWidget(CommonRenderWidget):
     def set_default_render_tool(self):
         tool = SelectionTool()
         self.set_interactor_style(tool)
-        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
         
 
 

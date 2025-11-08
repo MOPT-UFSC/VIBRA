@@ -10,7 +10,7 @@ class SelectionTool(RenderTool):
 
     def __init__(self):
         super().__init__()
-        self.update_mouse_cursor_in_render_widgets("default")
+        self.cursor_path = "default"
 
         self.is_selecting = False
         self._click_position = (0, 0)

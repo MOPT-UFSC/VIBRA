@@ -21,7 +21,7 @@
        <number>1</number>
       </property>
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <property name="opaqueResize">
        <bool>true</bool>
@@ -37,7 +37,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::NoContextMenu</enum>
+        <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -141,7 +141,7 @@
      <x>0</x>
      <y>0</y>
      <width>1056</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -196,39 +196,6 @@
    <addaction name="menu_view_mode"/>
    <addaction name="advanced_results_menu"/>
    <addaction name="menu_help"/>
-  </widget>
-  <widget class="QToolBar" name="render_tools_toolbar">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">
-            QToolBar {
-                border-style: solid;
-                border-width: 1px;
-                border-color: #888888;
-            }</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>RightToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="separator"/>
-   <addaction name="action_selection_tool"/>
-   <addaction name="separator"/>
-   <addaction name="action_grab_tool"/>
-   <addaction name="separator"/>
-   <addaction name="action_rotation_tool"/>
-   <addaction name="separator"/>
-   <addaction name="action_zoom_in"/>
   </widget>
   <action name="action_new_project">
    <property name="icon">
@@ -722,58 +689,7 @@
     <string>Ghost</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_grab_tool">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/pan_icon.png</normaloff>:/icons/pan_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Grab tool</string>
-   </property>
-  </action>
-  <action name="action_selection_tool">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/selection_icon.png</normaloff>:/icons/selection_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Selection tool</string>
-   </property>
-  </action>
-  <action name="action_rotation_tool">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/rotation_icon.png</normaloff>:/icons/rotation_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Rotation tool</string>
-   </property>
-  </action>
-  <action name="action_zoom_in">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/zoom_in_icon.png</normaloff>:/icons/zoom_in_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom in</string>
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
   <action name="action_zoom_out">

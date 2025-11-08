@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from vibra import ICON_DIR, app
 from vibra.interface.loading_window import LoadingWindow
+from .render_tool_mixin import RenderToolMixin
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -26,7 +27,7 @@ from .model_info_text import (
 )
 
 
-class MeshRenderWidget(CommonRenderWidget):
+class MeshRenderWidget(CommonRenderWidget, RenderToolMixin):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -423,4 +424,3 @@ class MeshRenderWidget(CommonRenderWidget):
     def set_default_render_tool(self):
         tool = SelectionTool()
         self.set_interactor_style(tool)
-        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)

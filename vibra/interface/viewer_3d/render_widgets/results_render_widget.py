@@ -14,6 +14,7 @@ from vibra.interface.viewer_3d.render_tools.render_tool import RenderTool
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
+from .render_tool_mixin import RenderToolMixin
 
 from ..actors import (
     AnalysisActor,
@@ -27,7 +28,7 @@ from .model_info_text import (
 )
 
 
-class ResultsRenderWidget(AnimatedRenderWidget):
+class ResultsRenderWidget(AnimatedRenderWidget, RenderToolMixin):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -549,7 +550,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def set_default_render_tool(self):
         tool = RenderTool()
         self.set_interactor_style(tool)
-        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
 
 
 
