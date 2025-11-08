@@ -110,6 +110,13 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.lineEdit_selection_id.setDisabled(False)
         self.pushButton_attribute.setEnabled(True)
 
+        surfaces = app().main_window.selected_geometry_surfaces
+        if not surfaces:
+            return
+
+        text = ", ".join([str(i) for i in surfaces])
+        self.lineEdit_selection_id.setText(text)
+
     def on_click_item(self, item):
         self.lineEdit_selection_id.setText(item.text(0))
 

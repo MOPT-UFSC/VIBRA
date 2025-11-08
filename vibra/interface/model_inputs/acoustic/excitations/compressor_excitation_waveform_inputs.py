@@ -471,15 +471,22 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_frequency_resolution_plot.setText(f"{df}")
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() != 0:
+        if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
             self.pushButton_remove.setDisabled(True)
             return
-
+        
         self.lineEdit_selection_id.setDisabled(False)
         self.pushButton_attribute.setEnabled(True)
+
+        surfaces = app().main_window.selected_geometry_surfaces
+        if not surfaces:
+            return
+
+        text = ", ".join([str(i) for i in surfaces])
+        self.lineEdit_selection_id.setText(text)
 
     def load_hdf_file(self):
 
@@ -859,8 +866,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         f_max = self.spinBox_maximum_frequency.value()
         mask = self.frequencies_vector < f_max
 
-        key = ("surface", (0))
-        legend_label = f"external compressor excitation"
+        key = ("compressor", "excitation")
+        legend_label = f"compressor excitation signal"
         title = f"{excitation_type} spectrum".capitalize()
 
         self.model_results[key] = { 
@@ -883,8 +890,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         excitation_type, unit_label = self.comboBox_data_to_plot.currentText().split(" -> ")
         plot_type = excitation_type.capitalize()
 
-        key = ("surface", (0))
-        legend_label = f"external compressor excitation"
+        key = ("compressor", "excitation")
+        legend_label = f"compressor excitation signal"
         title = f"{excitation_type} waveform".capitalize()
 
         self.model_results[key] = { 
