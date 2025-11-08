@@ -16,9 +16,9 @@ from vtkmodules.vtkCommonDataModel import (
     vtkSphere,
     vtkUnstructuredGrid,
 )
-from vtkmodules.vtkFiltersCore import vtkExtractCells
+from vtkmodules.vtkFiltersCore import vtkExtractCells, vtkCutter
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPolyDataMapper
 
 from vibra import app
 from vibra.engine.mesher.element_type import (
@@ -58,7 +58,6 @@ class SolidsActor(vtkActor):
     def create_geometry(self):
         data = vtkUnstructuredGrid()
         points = vtkPoints()
-        mapper = vtkDataSetMapper()
         point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
         solid_indexes = vtkIntArray()
@@ -132,9 +131,17 @@ class SolidsActor(vtkActor):
         self.clipper.ExtractInsideOff()
         self.clipper.Update()
 
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputConnection(self.clipper.GetOutputPort())
-        self.SetMapper(mapper)
+        self.clipper_mapper = vtkDataSetMapper()
+        self.clipper_mapper.InterpolateScalarsBeforeMappingOn()
+        self.clipper_mapper.SetInputConnection(self.clipper.GetOutputPort())
+
+        self.cutter = vtkCutter()
+        self.cutter.SetInputData(self.data)
+
+        self.cutter_mapper = vtkPolyDataMapper()
+        self.cutter_mapper.SetInputConnection(self.cutter.GetOutputPort())
+        self.cutter_mapper.InterpolateScalarsBeforeMappingOn()
+        self.SetMapper(self.cutter_mapper)
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -215,6 +222,7 @@ class SolidsActor(vtkActor):
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
         self.clipper.SetImplicitFunction(plane)
+        self.SetMapper(self.clipper_mapper)
 
     def disable_cut(self):
         self.clipper.SetImplicitFunction(ALWAYS_FALSE)
@@ -245,3 +253,16 @@ class SolidsActor(vtkActor):
         self.cell_extractor.Update()
 
         self.clear_colors()
+
+    def apply_cutter(self, origin, normal):
+        if self.data is None:
+            return
+
+        plane = vtkPlane()
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
+
+        self.cutter.SetCutFunction(plane)
+        self.cutter.SetInputData(self.data)
+        self.cutter.Update()
+        self.SetMapper(self.cutter_mapper)

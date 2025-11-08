@@ -435,6 +435,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         position = section_plane.get_position()
         rotation = section_plane.get_rotation()
         inverted = section_plane.get_inverted()
+        is_mesh_field = section_plane.check_mesh_field_results.isChecked()
 
         if section_plane.editing:
             self.plane_actor.configure_section_plane(position, rotation)
@@ -448,11 +449,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 rotation,
                 inverted,
                 show_plane,
+                is_mesh_field,
             )
 
         self.update()
 
-    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True, is_mesh_field=False):
         logging.info("Switching to solid actor... [50/100]")
         self.switch_to_solids_actor()
 
@@ -462,7 +464,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             normal = -normal
 
         logging.info("Applying cut... [70/100]")
-        self.analysis_actor.apply_cut(xyz, normal)
+        if is_mesh_field:
+            self.analysis_actor.apply_cut(xyz, normal)
+        else:
+            self.analysis_actor.apply_cutter(xyz, normal)
         self.edges_actor.apply_cut(xyz, normal)
 
         logging.info("Updating visualization... [80/100]")
