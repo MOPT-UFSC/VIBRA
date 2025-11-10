@@ -455,14 +455,26 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             run_analysis_button.setDisabled(True)
 
         if disconnected_nodes:
+
+            message = ""
             title = "The generated mesh contains disconnected nodes"
-            message = "Disconnected nodes: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes) + "."
+
+            if disconnected_nodes.get("elements_3D"):
+                message = "Disconnected nodes from 3d elements: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes.get("elements_3D")) + "."
+   
+            if disconnected_nodes.get("elements_2D"):
+                message = "Disconnected nodes from 2d elements: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes.get("elements_2D")) + "."
+
+            if disconnected_nodes.get("elements_1D"):
+                message = "Disconnected nodes from 1d elements: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes.get("elements_1D")) + "."
+
             PrintMessageInput([error_title, title, message])
 
         if collapsed_elements:
-            title = "The generated mesh contains collapsed elements"
 
             message = ""
+            title = "The generated mesh contains collapsed elements"
+
             if self.mesh.collapsed_3d_elements:
                 message += "Collapsed 3d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_3d_elements) + ".\n\n"
 
