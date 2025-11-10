@@ -179,8 +179,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         visualization = app().main_window.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(visualization.faces)
-        self.solids_actor.SetVisibility(visualization.solids)
+        self.faces_actor.SetVisibility(visualization.faces and not visualization.disconected_nodes)
+        self.solids_actor.SetVisibility(visualization.solids and not visualization.disconected_nodes)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if app().main_window.distinguished_solids:

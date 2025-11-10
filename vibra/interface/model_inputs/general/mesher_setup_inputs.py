@@ -494,10 +494,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
 
-        # disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
-        # if disconnected_nodes:
-        #     app().main_window.set_mesh_selection(nodes=disconnected_nodes)
+        disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        if disconnected_nodes:
+            app().main_window.visualization_filter.disconected_nodes = True
+        else:
+            app().main_window.visualization_filter.disconected_nodes = False
 
+        app().main_window.visualization_changed.emit()
     def process_degress_of_freedom_if_necessary(self):
         if not app().project.model.properties.is_the_surface_property_present_in_the_model(
             "degrees_of_freedom_decoupling"

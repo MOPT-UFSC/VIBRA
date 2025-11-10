@@ -24,7 +24,7 @@ class VisualizationFilter:
     symbols: bool = False
     ghost: bool = True
     normal_symbols: bool = False
-    error_nodes: bool = True
+    disconected_nodes: bool = False
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
     @classmethod

@@ -52,6 +52,7 @@ class MainWindow(MainWindow_UI):
         
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
+        self.visualization_filter.disconected_nodes = False
 
         # TODO: move this to a separate class
         self.selected_mesh_nodes = set()
@@ -651,6 +652,7 @@ class MainWindow(MainWindow_UI):
                 len(self.hidden_surfaces) != 0,
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
+                self.visualization_filter.disconected_nodes,
             ]
         )
 
