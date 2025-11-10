@@ -445,11 +445,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             PrintMessageInput([error_title, title, message])
             return
 
-        disconnected_nodes = self.mesh.disconnected_nodes
+        disconnected_nodes = self.mesh.disconnected_nodes_data
         collapsed_elements = (self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
 
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
-        run_analysis_button.setDisabled(bool(collapsed_elements) or bool(self.mesh.disconnected_nodes))
+        run_analysis_button.setDisabled(bool(collapsed_elements) or bool(disconnected_nodes))
 
         if app().project.model.analysis_setup is None:
             run_analysis_button.setDisabled(True)
@@ -494,7 +494,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
 
-        app().main_window.set_mesh_selection(nodes=self.mesh.disconnected_nodes)
+        disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        if disconnected_nodes:
+            app().main_window.set_mesh_selection(nodes=disconnected_nodes)
 
     def process_degress_of_freedom_if_necessary(self):
         if not app().project.model.properties.is_the_surface_property_present_in_the_model(

@@ -81,7 +81,7 @@ class Mesh:
 
         self.mesh_quality_data = dict()
 
-        self.disconnected_nodes = list()
+        self.disconnected_nodes_data = dict()
         self.collapsed_3d_elements = set()
         self.collapsed_2d_elements = set()
         self.collapsed_1d_elements = set()
@@ -893,7 +893,7 @@ class Mesh:
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
-        self.disconnected_nodes.clear()
+        self.disconnected_nodes_data.clear()
         self.collapsed_1d_elements.clear()
         self.collapsed_2d_elements.clear()
         self.collapsed_3d_elements.clear()
@@ -1083,7 +1083,7 @@ class Mesh:
         self.process_mesh_related_mappings("Post-processing")
 
         logging.info("Post-processing mesh... [80/100]")
-        self.disconnected_nodes = self.get_disconnected_nodes()
+        self.disconnected_nodes_data = self.process_disconnected_nodes_criterion()
 
         logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
@@ -1541,14 +1541,51 @@ class Mesh:
         )
         return mask
 
-    def get_disconnected_nodes(self):
-        disconnected_nodes = list()
-        nodes_from_solid_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
-        if self.nodal_coordinates[:, 0].size != nodes_from_solid_elements.size:
-            _disconnected_nodes = np.delete(self.nodal_coordinates[:, 0], nodes_from_solid_elements)
-            disconnected_nodes = [int(node_id) for node_id in _disconnected_nodes]
+    def process_disconnected_nodes_criterion(self):
+        """
+        This method processes the disconnected nodes criterion for volumes,
+        surfaces and lines-related elements.
+        """
+        disconnected_nodes = dict()
+        nodes_indexes = self.nodal_coordinates[:, 0]
+
+        if self.geometry_information.get("volumes"):
+            nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
+            if nodes_indexes.size != nodes_from_3d_elements.size:
+                _disconnected_nodes = np.delete(nodes_indexes, nodes_from_3d_elements)
+                disconnected_nodes["element_3D"] = [int(node_id) for node_id in _disconnected_nodes]
+
+        if self.geometry_information.get("surfaces"):
+            nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
+            if nodes_indexes.size != nodes_from_2d_elements.size:
+                _disconnected_nodes = np.delete(nodes_indexes, nodes_from_2d_elements)
+                disconnected_nodes["element_2D"] = [int(node_id) for node_id in _disconnected_nodes]
+
+        if self.geometry_information.get("lines"):
+            nodes_from_1d_elements = np.unique(self.lines_connectivity[:, 4:].flatten())
+            if nodes_indexes.size != nodes_from_1d_elements.size:
+                _disconnected_nodes = np.delete(nodes_indexes, nodes_from_1d_elements)
+                disconnected_nodes["element_1D"] = [int(node_id) for node_id in _disconnected_nodes]
 
         return disconnected_nodes
+    
+    def get_list_of_disconnected_nodes(self):
+        """
+        This method returns the disconnected nodes list if they exist.
+        """
+        disconnected_nodes = self.disconnected_nodes_data.get("element_3D")
+        if isinstance(disconnected_nodes, list) and len(disconnected_nodes):
+            return disconnected_nodes
+
+        disconnected_nodes = self.disconnected_nodes_data.get("element_2D")
+        if isinstance(disconnected_nodes, list) and len(disconnected_nodes):
+            return disconnected_nodes
+
+        disconnected_nodes = self.disconnected_nodes_data.get("element_1D")
+        if isinstance(disconnected_nodes, list) and len(disconnected_nodes):
+            return disconnected_nodes
+
+        return list()
 
     def get_face_elements_connected_to_nodes(
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None
