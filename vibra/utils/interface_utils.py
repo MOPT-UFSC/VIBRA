@@ -7,16 +7,12 @@ from vtkmodules.vtkRenderingCore import vtkCoordinate
 window_title = "Error"
 
 
-class ColorMode(IntEnum):
+class GeometryColorMode(IntEnum):
     EMPTY = auto()
     COLORED = auto()
     MATERIAL = auto()
     FLUID = auto()
-    MESH_QUALITY_VOLUME = auto()
-    MESH_QUALITY_GAMMA = auto()
-    MESH_QUALITY_MINSJ = auto()
-    MESH_QUALITY_MINSIGE = auto()
-    MESH_QUALITY_MINSICN = auto()
+    
 
 
 @dataclass
@@ -28,18 +24,19 @@ class VisualizationFilter:
     symbols: bool = False
     ghost: bool = True
     normal_symbols: bool = False
-    color_mode: ColorMode = ColorMode.COLORED
+    error_nodes: bool = True
+    color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
     @classmethod
     def all_false(cls):
         # It is dumb, but it works
-        args = [False] * 7
+        args = [False] * 8
         return cls(*args)
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
-        args = [True] * 7
+        args = [True] * 8
         return cls(*args)
 
 

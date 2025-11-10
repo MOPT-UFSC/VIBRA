@@ -37,7 +37,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import ColorMode, VisualizationFilter
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
 
 import gmsh
 
@@ -425,9 +425,9 @@ class MainWindow(MainWindow_UI):
 
     def action_show_empty_callback(self, condition: bool):
         if condition:
-            self.visualization_filter.color_mode = ColorMode.EMPTY
+            self.visualization_filter.color_mode = GeometryColorMode.EMPTY
         else:
-            self.visualization_filter.color_mode = ColorMode.COLORED        
+            self.visualization_filter.color_mode = GeometryColorMode.COLORED        
         self.visualization_changed.emit()
 
     def action_user_preferences_callback(self):
