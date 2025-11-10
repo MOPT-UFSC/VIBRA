@@ -1033,18 +1033,18 @@ class Mesh:
         self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
 
-        nodes_from_surfaces = gmsh.model.mesh.getNodes(dim=2, includeBoundary=True)[0] - 1
-        nodes_from_lines = gmsh.model.mesh.getNodes(dim=1, includeBoundary=True)[0] - 1
-        nodes_from_volumes = gmsh.model.mesh.getNodes(dim=3, includeBoundary=True)[0] - 1
+        nodes_from_volumes = gmsh.model.mesh.getNodes(dim=3, includeBoundary=True)[0]
+        nodes_from_surfaces = gmsh.model.mesh.getNodes(dim=2, includeBoundary=True)[0]
+        nodes_from_lines = gmsh.model.mesh.getNodes(dim=1, includeBoundary=True)[0]
 
         if isinstance(nodes_from_volumes, np.ndarray):
-            self.nodes_from_volumes = np.unique(nodes_from_volumes)
+            self.nodes_from_volumes = np.unique(nodes_from_volumes) - 1
 
         if isinstance(nodes_from_surfaces, np.ndarray):
-            self.nodes_from_surfaces = np.unique(nodes_from_surfaces)
+            self.nodes_from_surfaces = np.unique(nodes_from_surfaces) - 1
 
         if isinstance(nodes_from_lines, np.ndarray):
-            self.nodes_from_lines = np.unique(nodes_from_lines)
+            self.nodes_from_lines = np.unique(nodes_from_lines) - 1
 
         connectivity_dim1 = dict()
         connectivity_dim2 = dict()
