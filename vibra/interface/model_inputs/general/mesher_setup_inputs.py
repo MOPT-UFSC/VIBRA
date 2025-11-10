@@ -445,35 +445,16 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             PrintMessageInput([error_title, title, message])
             return
 
-        disconnected_nodes = self.mesh.disconnected_nodes
-        collapsed_elements = (self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
+        disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
+        collapsed_elements = bool(self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
 
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
-        run_analysis_button.setDisabled(bool(collapsed_elements) or bool(self.mesh.disconnected_nodes))
+        run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
 
         if app().project.model.analysis_setup is None:
             run_analysis_button.setDisabled(True)
 
-        if disconnected_nodes:
-            title = "The generated mesh contains disconnected nodes"
-            message = "Disconnected nodes: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes) + "."
-            PrintMessageInput([error_title, title, message])
-
-        if collapsed_elements:
-            title = "The generated mesh contains collapsed elements"
-
-            message = ""
-            if self.mesh.collapsed_3d_elements:
-                message += "Collapsed 3d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_3d_elements) + ".\n\n"
-
-            if self.mesh.collapsed_2d_elements:
-                message += "Collapsed 2d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_2d_elements) + ".\n\n"
-
-            if self.mesh.collapsed_1d_elements:
-                message += "Collapsed 1d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_1d_elements) + "."
-
-            PrintMessageInput([error_title, title, message])
-
+        self.check_post_process_mesh_criteria()
         self.process_degress_of_freedom_if_necessary()
 
         app().file.write_mesh_data_in_file()
@@ -494,8 +475,45 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
 
-        app().main_window.set_mesh_selection(nodes=self.mesh.disconnected_nodes)
-        app().main_window.set_mesh_selection(nodes=self.mesh.nodes_collapsed_elements)
+        disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        if disconnected_nodes:
+            app().main_window.set_mesh_selection(nodes=disconnected_nodes)
+
+    def check_post_process_mesh_criteria(self):
+
+        disconnected_nodes = self.mesh.disconnected_nodes_data
+        if disconnected_nodes:
+
+            message = ""
+            title = "The generated mesh contains disconnected nodes"
+
+            if disconnected_nodes.get("elements_3D"):
+                message = "Disconnected nodes from 3d elements: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes.get("elements_3D")) + "."
+
+            if disconnected_nodes.get("elements_2D"):
+                message = "Disconnected nodes from 2d elements: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes.get("elements_2D")) + "."
+
+            if disconnected_nodes.get("elements_1D"):
+                message = "Disconnected nodes from 1d elements: " + ", ".join(str(int(node_id)) for node_id in disconnected_nodes.get("elements_1D")) + "."
+
+            PrintMessageInput([error_title, title, message])
+
+        collapsed_elements = self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements
+        if collapsed_elements:
+
+            message = ""
+            title = "The generated mesh contains collapsed elements"
+
+            if self.mesh.collapsed_3d_elements:
+                message += "Collapsed 3d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_3d_elements) + ".\n\n"
+
+            if self.mesh.collapsed_2d_elements:
+                message += "Collapsed 2d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_2d_elements) + ".\n\n"
+
+            if self.mesh.collapsed_1d_elements:
+                message += "Collapsed 1d elements: " + ", ".join(str(elem_id) for elem_id in self.mesh.collapsed_1d_elements) + "."
+
+            PrintMessageInput([error_title, title, message])
 
     def process_degress_of_freedom_if_necessary(self):
         if not app().project.model.properties.is_the_surface_property_present_in_the_model(

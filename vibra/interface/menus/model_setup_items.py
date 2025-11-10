@@ -208,7 +208,7 @@ class ModelSetupItems(CommonMenuItems):
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            disconnected_nodes = bool(mesh.disconnected_nodes)
+            disconnected_nodes = bool(mesh.disconnected_nodes_data)
             collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
             if collapsed_elements or disconnected_nodes:
                 return False
