@@ -254,7 +254,7 @@ class MeshRenderWidget(CommonRenderWidget):
         selection_faces_color = app().config.user_preferences.selection_faces_color
         selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
 
-        self.nodes_actor.paint_cells(selection_nodes_points_color, nodes)
+        self.nodes_actor.paint_nodes(selection_nodes_points_color, nodes)
         self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4), faces)
         self.solids_actor.paint_solids(selection_faces_color, solids)
         self.edges_actor.configure_appearance()

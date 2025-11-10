@@ -95,14 +95,17 @@ class NodesActor(vtkActor):
         self.GetMapper().SetScalarModeToUseCellData()
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
+    
+    def paint_nodes(self, color: Color, nodes: tuple[int]):
+        self.paint_cells(color, nodes)
 
-    def paint_cells(self, color: Color, volumes: tuple[int]):
+    def paint_cells(self, color: Color, cells: tuple[int]):
         if self.data is None:
             return
 
         color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
-        for i in volumes:
+        for i in cells:
             cell_colors.SetTuple(i, color)
 
         self.data.Modified()
