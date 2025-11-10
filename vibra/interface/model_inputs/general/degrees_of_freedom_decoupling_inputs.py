@@ -295,10 +295,13 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             return
 
         self.mesh.restore_data_from_cache()
+        self.geometry.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
+        self.geometry.rebuild_inverse_maps()
 
         if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             self.mesh.cache_mesh_information()
+            self.geometry.cache_geometry_information()
 
         self.process_decoupling_actions()
 
@@ -377,10 +380,14 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         if self.mesh.cache_nodal_coordinates is None:
             self.mesh.cache_mesh_information()
+            self.geometry.cache_geometry_information()
         else:
             self.mesh.restore_data_from_cache()
+            self.geometry.restore_data_from_cache()
             self.mesh.process_upwards_adjacencies_from_entities()
+            self.geometry.rebuild_inverse_maps()
             self.mesh.cache_mesh_information()
+            self.geometry.cache_geometry_information()
 
         self.process_decoupling_actions()
 
