@@ -72,8 +72,13 @@ class NodesActor(vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
+        visualization = app().main_window.visualization_filter
         color = app().config.user_preferences.nodes_points_color
-        self.set_color(color)
+
+        if visualization.points:
+            self.set_color(color)
+        else:
+            self.set_color(Color(0, 0, 0, 0))
     
     def set_color(self, color: Color):
         if self.data is None:

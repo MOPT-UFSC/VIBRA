@@ -240,17 +240,12 @@ class MeshRenderWidget(CommonRenderWidget):
             return
 
         self.update_info_text()
-        visualization = app().main_window.visualization_filter
 
         # In this renderer the faces should be transparent
         # all the time, except when they are selected
         self.faces_actor.set_color(Color(0, 0, 0, 0))
         self.solids_actor.clear_colors()
-
-        if visualization.points:
-            self.nodes_actor.clear_colors()
-        else:
-            self.nodes_actor.set_color(Color(0, 0, 0, 0))
+        self.nodes_actor.clear_colors()
 
         nodes = app().main_window.selected_mesh_nodes
         faces = app().main_window.selected_mesh_faces
