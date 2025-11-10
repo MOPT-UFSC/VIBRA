@@ -259,6 +259,16 @@ class Geometry:
 
     def volume(self, *volume_ids: int) -> float:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
+    
+    def line_bounding_box(self, line_id: int) -> np.ndarray | None:
+        return self._bounding_lines.get(line_id)
+    
+    def surface_bounding_box(self, surface_id: int) -> np.ndarray | None:
+        return self._bounding_surfaces.get(surface_id)
+    
+    def solid_bounding_box(self, solid_id: int) -> np.ndarray | None:
+        return self._bounding_solids.get(solid_id)
+    
 
     def _process_geometry_information(self):
         """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
@@ -520,7 +530,8 @@ class Geometry:
                   center: np.ndarray,
                   length: float,
                   normal: np.ndarray = None,
-                  is_straight: bool = False):
+                  is_straight: bool = False,
+                  bouding_box: np.ndarray = None):
         
         """ Adds a new curve to the geometry. """
         if curve_id not in self.curves:
@@ -534,8 +545,17 @@ class Geometry:
 
             if is_straight:
                 self._straight_curves.add(curve_id)
+            
+            if bouding_box is not None:
+                self._bounding_lines[curve_id] = bouding_box
 
-    def add_surface(self, surface_id: int, curve_ids: tuple[int, ...], center: np.ndarray, normal: np.ndarray, area: float, is_straight: bool = False):
+    def add_surface(self, surface_id: int,
+                    curve_ids: tuple[int, ...],
+                    center: np.ndarray,
+                    normal: np.ndarray,
+                    area: float,
+                    is_straight: bool = False,
+                    bounding_box: np.ndarray = None):
         """ Adds a new surface to the geometry. """
 
         if surface_id not in self.surfaces:
@@ -547,6 +567,9 @@ class Geometry:
 
             if is_straight:
                 self._straight_surfaces.add(surface_id)
+            
+            if bounding_box is not None:
+                self._bounding_surfaces[surface_id] = bounding_box
 
     def update_solid_adjacencies(self, solid_id: int, new_surface_id: int, old_surface_id: int):
         """

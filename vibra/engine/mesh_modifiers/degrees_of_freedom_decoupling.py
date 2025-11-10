@@ -570,9 +570,53 @@ class DegreesOfFreedomDecoupling:
         self.mesh.geometry_information["lines"] = list(line_ids)
         self.mesh.geometry_information["points"] = list(point_ids)
 
+        geometry = self.model.geometry
+
+        # Add new entities to the geometry, reusing the original ones' properties
+        for point_id, new_point_id in self.points_mapping.items():
+            center = geometry.point_center(point_id)
+            normal = geometry.point_normal(point_id)
+            geometry.add_point(new_point_id, center, normal)
+
+        for line_id, new_line_id in self.lines_mapping.items():
+            original_point_ids = geometry.curves_to_points(line_id)
+            new_point_ids = tuple()
+
+            for point_id in original_point_ids:
+                new_point_ids += (self.points_mapping[point_id],)
+
+            center = geometry.curve_center(line_id)
+            length = geometry.arc_length(line_id)
+            normal = geometry.curve_normal(line_id)
+            is_straight = geometry.is_curve_straight(line_id)
+            bounding_box = geometry.line_bounding_box(line_id)
+
+            geometry.add_curve(new_line_id, new_point_ids, center, length, normal, is_straight, bounding_box)
+
+        for surface_id, new_surface_id in self.surfaces_mapping.items():
+            original_line_ids = geometry.surfaces_to_curves(surface_id)
+            new_line_ids = tuple()
+
+            for line_id in original_line_ids:
+                new_line_ids += (self.lines_mapping[line_id],)
+
+            center = geometry.surface_center(surface_id)
+            normal = geometry.surface_normal(surface_id)
+            area = geometry.surface_area(surface_id)
+            is_straight = geometry.is_surface_straight(surface_id)
+            bounding_box = geometry.surface_bounding_box(surface_id)
+
+            geometry.add_surface(new_surface_id, new_line_ids, center, normal, area, is_straight, bounding_box)
+
+            volume_id = self.decouple_info[surface_id]
+            geometry.update_solid_adjacencies(volume_id, new_surface_id, surface_id)
+
+
         self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
         self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
         self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
+
+        geometry.rebuild_inverse_maps()
 
 
     def process_degrees_of_freedom_decoupling(self):
