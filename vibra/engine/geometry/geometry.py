@@ -437,21 +437,130 @@ class Geometry:
         else:
             raise ValueError(f'Invalid length unit "{length_unit}"')
 
-
     def cache_geometry_information(self):
+        """ Caches the complete geometry state before modification. """
+        
+        self._cache_points = deepcopy(self.points)
+        self._cache_curves = deepcopy(self.curves)
+        self._cache_surfaces = deepcopy(self.surfaces)
+        self._cache_solids = deepcopy(self.solids)
+        
         self._cache_solids_to_surfaces = deepcopy(self._solids_to_surfaces)
         self._cache_surfaces_to_curves = deepcopy(self._surfaces_to_curves)
         self._cache_curves_to_points = deepcopy(self._curves_to_points)
 
+        self._cache_surfaces_to_solids = deepcopy(self._surfaces_to_solids)
+        self._cache_curves_to_surfaces = deepcopy(self._curves_to_surfaces)
+        self._cache_points_to_curves = deepcopy(self._points_to_curves)
+        
+        self._cache_solids_centers = deepcopy(self._solids_centers)
+        self._cache_surfaces_centers = deepcopy(self._surfaces_centers)
+        self._cache_curves_centers = deepcopy(self._curves_centers)
+        self._cache_points_centers = deepcopy(self._points_centers)
+
+        self._cache_surfaces_normals = deepcopy(self._surfaces_normals)
+        self._cache_curves_normals = deepcopy(self._curves_normals)
+        self._cache_points_normals = deepcopy(self._points_normals)
+
+        self._cache_surfaces_areas = deepcopy(self._surfaces_areas)
+        self._cache_curves_lengths = deepcopy(self._curves_lengths)
+        self._cache_solids_volumes = deepcopy(self._solids_volumes)
+
+        self._cache_straight_curves = deepcopy(self._straight_curves)
+        self._cache_straight_surfaces = deepcopy(self._straight_surfaces)
+
 
     def restore_data_from_cache(self):
+        """ Restores the complete geometry state from the cache. """
+        
+        self.points = deepcopy(self._cache_points)
+        self.curves = deepcopy(self._cache_curves)
+        self.surfaces = deepcopy(self._cache_surfaces)
+        self.solids = deepcopy(self._cache_solids)
+
         self._solids_to_surfaces = deepcopy(self._cache_solids_to_surfaces)
         self._surfaces_to_curves = deepcopy(self._cache_surfaces_to_curves)
         self._curves_to_points = deepcopy(self._cache_curves_to_points)
+        self._surfaces_to_solids = deepcopy(self._cache_surfaces_to_solids)
+        self._curves_to_surfaces = deepcopy(self._cache_curves_to_surfaces)
+        self._points_to_curves = deepcopy(self._cache_points_to_curves)
 
-        self._cache_solids_to_surfaces.clear()
-        self._cache_surfaces_to_curves.clear()
-        self._cache_curves_to_points.clear()
+        self._solids_centers = deepcopy(self._cache_solids_centers)
+        self._surfaces_centers = deepcopy(self._cache_surfaces_centers)
+        self._curves_centers = deepcopy(self._cache_curves_centers)
+        self._points_centers = deepcopy(self._cache_points_centers)
 
-        # To be continued
+        self._surfaces_normals = deepcopy(self._cache_surfaces_normals)
+        self._curves_normals = deepcopy(self._cache_curves_normals)
+        self._points_normals = deepcopy(self._cache_points_normals)
 
+        self._surfaces_areas = deepcopy(self._cache_surfaces_areas)
+        self._curves_lengths = deepcopy(self._cache_curves_lengths)
+        self._solids_volumes = deepcopy(self._cache_solids_volumes)
+
+        self._straight_curves = deepcopy(self._cache_straight_curves)
+        self._straight_surfaces = deepcopy(self._cache_straight_surfaces)
+
+        self._cache_points.clear()
+        self._cache_curves.clear()
+
+
+    def add_point(self, point_id: int, center: np.ndarray, normal: np.ndarray = None):
+        """ Adds a new point to the geometry. """
+
+        if point_id not in self.points:
+            self.points.append(point_id)
+            self._points_centers[point_id] = center
+            if normal is not None:
+                self._points_normals[point_id] = normal
+
+
+    def add_curve(self, curve_id: int,
+                  point_ids: tuple[int, ...],
+                  center: np.ndarray,
+                  length: float,
+                  normal: np.ndarray = None,
+                  is_straight: bool = False):
+        
+        """ Adds a new curve to the geometry. """
+        if curve_id not in self.curves:
+            self.curves.append(curve_id)
+            self._curves_to_points[curve_id] = point_ids
+            self._curves_centers[curve_id] = center
+            self._curves_lengths[curve_id] = length
+
+            if normal is not None:
+                self._curves_normals[curve_id] = normal
+
+            if is_straight:
+                self._straight_curves.add(curve_id)
+
+    def add_surface(self, surface_id: int, curve_ids: tuple[int, ...], center: np.ndarray, normal: np.ndarray, area: float, is_straight: bool = False):
+        """ Adds a new surface to the geometry. """
+
+        if surface_id not in self.surfaces:
+            self.surfaces.append(surface_id)
+            self._surfaces_to_curves[surface_id] = curve_ids
+            self._surfaces_centers[surface_id] = center
+            self._surfaces_normals[surface_id] = normal
+            self._surfaces_areas[surface_id] = area
+
+            if is_straight:
+                self._straight_surfaces.add(surface_id)
+
+    def update_solid_adjacencies(self, solid_id: int, new_surface_id: int, old_surface_id: int):
+        """
+        Updates the adjacencies of a solid, replacing an old surface with a new one.
+        """
+        solid_surfaces = list(self._solids_to_surfaces.get(solid_id, []))
+        if old_surface_id in solid_surfaces:
+            solid_surfaces.remove(old_surface_id)
+        
+        if new_surface_id not in solid_surfaces:
+            solid_surfaces.append(new_surface_id)
+            
+        self._solids_to_surfaces[solid_id] = tuple(solid_surfaces)
+
+    def rebuild_inverse_maps(self):
+        """ Rebuilds the inverse maps for the geometry. """
+        self._create_inverse_maps()
