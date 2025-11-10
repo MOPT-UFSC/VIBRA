@@ -370,6 +370,7 @@ class Ui_MainWindow(object):
 "                border-style: solid;\n"
 "                border-width: 1px;\n"
 "                border-color: #888888;\n"
+"				spacing: 10px;\n"
 "            }")
         MainWindow.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
 
@@ -431,13 +432,9 @@ class Ui_MainWindow(object):
         self.menu_view_mode.addAction(self.action_show_empty)
         self.menu_help.addAction(self.action_about_vibra)
         self.advanced_results_menu.addAction(self.action_export_element_transfer_data)
-        self.render_tools_toolbar.addSeparator()
         self.render_tools_toolbar.addAction(self.action_selection_tool)
-        self.render_tools_toolbar.addSeparator()
         self.render_tools_toolbar.addAction(self.action_grab_tool)
-        self.render_tools_toolbar.addSeparator()
         self.render_tools_toolbar.addAction(self.action_rotation_tool)
-        self.render_tools_toolbar.addSeparator()
         self.render_tools_toolbar.addAction(self.action_zoom_in)
 
         self.retranslateUi(MainWindow)
@@ -530,7 +527,7 @@ class Ui_MainWindow(object):
         self.action_grab_tool.setText(QCoreApplication.translate("MainWindow", u"Grab tool", None))
         self.action_selection_tool.setText(QCoreApplication.translate("MainWindow", u"Selection tool", None))
         self.action_rotation_tool.setText(QCoreApplication.translate("MainWindow", u"Rotation tool", None))
-        self.action_zoom_in.setText(QCoreApplication.translate("MainWindow", u"Zoom in", None))
+        self.action_zoom_in.setText(QCoreApplication.translate("MainWindow", u"Zoom", None))
         self.action_zoom_out.setText(QCoreApplication.translate("MainWindow", u"Zoom out", None))
         self.action_model_workspace_2.setText(QCoreApplication.translate("MainWindow", u"Model workspace", None))
         self.actionaaaaaa.setText(QCoreApplication.translate("MainWindow", u"aaaaaa", None))

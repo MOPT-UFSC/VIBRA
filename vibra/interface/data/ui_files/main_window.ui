@@ -213,6 +213,7 @@
                 border-style: solid;
                 border-width: 1px;
                 border-color: #888888;
+				spacing: 10px;
             }</string>
    </property>
    <attribute name="toolBarArea">
@@ -221,13 +222,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
    <addaction name="action_selection_tool"/>
-   <addaction name="separator"/>
    <addaction name="action_grab_tool"/>
-   <addaction name="separator"/>
    <addaction name="action_rotation_tool"/>
-   <addaction name="separator"/>
    <addaction name="action_zoom_in"/>
   </widget>
   <action name="action_new_project">
@@ -773,7 +770,7 @@
      <normaloff>:/icons/zoom_in_icon.png</normaloff>:/icons/zoom_in_icon.png</iconset>
    </property>
    <property name="text">
-    <string>Zoom in</string>
+    <string>Zoom</string>
    </property>
   </action>
   <action name="action_zoom_out">
