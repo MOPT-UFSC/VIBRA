@@ -89,58 +89,40 @@ def create_acoustic_pressure_source():
         scale=(.03, .03, .03),
     )
 
-def create_compressor_discharge_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_discharge.stl")
+def create_discharge_reciprocating_compressor_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_discharge.stl")
     return transform_polydata(
         polydata,
-        rotation=(0, 0, 180),
+        rotation=(0, 180, 0),
         scale=(1, 1, 1),
-        position=(1, 0, 0),
+        position=(0, 0, 0),
     )
 
-def create_compressor_suction_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_suction.stl")
+def create_suction_reciprocating_compressor_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_suction.stl")
     return transform_polydata(
         polydata,
-        rotation=(0, 0, 180),
+        rotation=(0, 180, 0),
         scale=(1, 1, 1),
-        position=(1, 0, 0)
+        position=(0, 0, 0)
     )
 
-def create_compressor_f_frequency_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_F.stl")
+def create_discharge_screw_compressor_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/screw_compressor_discharge.stl")
     return transform_polydata(
         polydata,
-        rotation=(0, 0, 180),
+        rotation=(0, 180, 90),
         scale=(1, 1, 1),
-        position=(1, 0, 0)
+        position=(0, 0, 0)
     )
 
-def create_compressor_t_time_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_T.stl")
+def create_suction_screw_compressor_source():
+    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/screw_compressor_suction.stl")
     return transform_polydata(
         polydata,
-        rotation=(0, 0, 180),
+        rotation=(0, 0, 90),
         scale=(1, 1, 1),
-        position=(1, 0, 0)
-    )
-
-def create_compressor_r_reciprocating_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_R.stl")
-    return transform_polydata(
-        polydata,
-        rotation=(0, 0, 180),
-        scale=(1, 1, 1),
-        position=(1, 0, 0)
-    )
-
-def create_compressor_s_screw_source():
-    polydata = read_stl_file(SYMBOLS_DIR / "stl_files/compressor_S.stl")
-    return transform_polydata(
-        polydata,
-        rotation=(0, 0, 180),
-        scale=(1, 1, 1),
-        position=(1, 0, 0)
+        position=(0, 0, 0)
     )
 
 def create_dissipation_model_source():

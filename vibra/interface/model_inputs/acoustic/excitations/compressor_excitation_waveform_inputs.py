@@ -284,7 +284,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         if self.imported_values is None:
             return True
 
-        if self.comboBox_data_source.currentText() == "SCORG":
+        if self.comboBox_data_source.currentText() in ["SCORG", "Other"]:
             self.mass_flow_sdata = self.process_signal_spectrum_for_non_cfd_data()
             if self.mass_flow_sdata is None:
                 return True
