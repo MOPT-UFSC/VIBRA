@@ -241,7 +241,6 @@ class MainWindow(MainWindow_UI):
         widgets = list()
         for widget_type in widgets_type:
             widgets += self.findChildren(widget_type)
-        
         change_icon_color_for_widgets(widgets, icon_color)
 
         self.theme_changed.emit(theme)

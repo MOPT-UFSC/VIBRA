@@ -10,7 +10,10 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app, ICON_DIR
-from vibra.interface.viewer_3d.render_tools.render_tool import RenderTool
+from vibra.interface.viewer_3d.render_tools import (
+    SelectionTool,
+    RenderTool
+)
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
@@ -546,6 +549,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
+    
+    def add_render_tool(self, tool_class):
+        if tool_class == SelectionTool:
+            super().add_render_tool(RenderTool)
+        else:
+            super().add_render_tool(tool_class)
     
     def set_default_render_tool(self):
         tool = RenderTool()
