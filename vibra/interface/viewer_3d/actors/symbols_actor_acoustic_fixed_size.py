@@ -20,9 +20,9 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
-            "compressor_excitation_spectrum": self._build_compressor_excitation_spectrum_symbol,
-            "compressor_excitation_waveform": self._build_compressor_excitation_waveform_symbol,
-            "reciprocating_compressor_excitation": self._build_reciprocating_compressor_excitation_symbol,
+            "compressor_excitation_spectrum": self._build_compressor_excitation_symbol,
+            "compressor_excitation_waveform": self._build_compressor_excitation_symbol,
+            "reciprocating_compressor_excitation": self._build_compressor_excitation_symbol,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
@@ -72,37 +72,14 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
         index = np.argmax(dist)
 
         return center_coords, avg_normal, dist[index]
-
-    def _build_reciprocating_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
-        if surface_id == -1:
-            return
-
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
-
-        coords, normal, _ = self._get_center_coords_and_normals(surface_id)
-        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
-        if area is None:
-            scale = 1
-        else:
-            scale = np.sqrt(4*area/np.pi)
-
-        if property["connection_type"] == "discharge":
-            color = color_names.RED_3
-            compressor_type_shape = sources.create_discharge_reciprocating_compressor_source
-
-        else:
-            color = color_names.BLUE_3
-            compressor_type_shape = sources.create_suction_reciprocating_compressor_source
-
-        self.add_symbol(compressor_type_shape, coords, normal, color=color, scale=scale)
     
-    def _build_compressor_excitation_waveform_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
+        property_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        if not isinstance(property_data, dict):
+            return
 
         coords, normal, _ = self._get_center_coords_and_normals(surface_id)
         area = app().project.model.mesh.area_from_surfaces.get(surface_id)
@@ -112,42 +89,9 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
             scale = np.sqrt(4*area/np.pi)
 
         compressor_type_shape = None
-        compressor_type = property["compressor_type"]
+        compressor_type = property_data.get("compressor_type", "reciprocating")
 
-        if property["connection_type"] == "discharge":
-            color = color_names.RED_3
-            if compressor_type == "screw":
-                compressor_type_shape = sources.create_discharge_screw_compressor_source
-            else:
-                compressor_type_shape = sources.create_discharge_reciprocating_compressor_source
-
-        else:
-            color = color_names.BLUE_3
-            if compressor_type == "screw":
-                compressor_type_shape = sources.create_suction_screw_compressor_source
-            else:
-                compressor_type_shape = sources.create_suction_reciprocating_compressor_source
-
-        self.add_symbol(compressor_type_shape, coords, normal, color=color, scale=scale)
-    
-    def _build_compressor_excitation_spectrum_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
-        if surface_id == -1:
-            return
-
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
-
-        coords, normal, _ = self._get_center_coords_and_normals(surface_id)
-        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
-        if area is None:
-            scale = 1
-        else:
-            scale = np.sqrt(4*area/np.pi)
-
-        compressor_type_shape = None
-        compressor_type = property["compressor_type"]
-
-        if property["connection_type"] == "discharge":
+        if property_data["connection_type"] == "discharge":
             color = color_names.RED_3
             if compressor_type == "screw":
                 compressor_type_shape = sources.create_discharge_screw_compressor_source
