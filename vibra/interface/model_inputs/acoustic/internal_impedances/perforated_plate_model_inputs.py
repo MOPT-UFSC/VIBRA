@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QTableWidgetItem
+from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QTableWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -229,10 +229,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def tab_event_callback(self):
-
         self.pushButton_remove.setDisabled(True)
+        self.lineEdit_selection_id.setText("")
+        self.treeWidget_perforated_plate_model.clearSelection()
+
         if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             return
 
@@ -241,11 +242,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def on_tree_widget_click_item(self, item):
 
-        self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id.setText(item.text(0))
+        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
 
-        text = item.text(0).replace(",", "")
-        surface_ids = [int(surf_id) for surf_id in text.split()]
+        if not surface_ids:
+            return
 
         decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids[0])
         if isinstance(decoupling_data, dict):
@@ -254,8 +254,27 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
             app().main_window.set_geometry_selection(surfaces=surface_ids)
 
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(selection_text)
+
     def on_tree_widget_doubleclick_item(self, item):
         self.on_tree_widget_click_item(item)
+    
+    def get_selected_surfaces_and_selection_text(self):
+        selected_items = self.treeWidget_perforated_plate_model.selectedItems()
+
+        if not selected_items:
+            return list(), str()
+
+        selection_text = ""
+        surface_ids = list()
+
+        for item in selected_items:
+            surface_id = item.text(0)
+            selection_text += surface_id + ", "
+            surface_ids.append(int(surface_id))
+        
+        return surface_ids, selection_text[:-2]
 
     def check_selection_type(self, surface_ids: list[int]) -> bool:
 
@@ -745,44 +764,44 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                         self.properties._remove_line_property(property, line_id)
 
     def remove_callback(self):
+        input_ids, _ = self.get_selected_surfaces_and_selection_text()
 
-        input_ids = self.lineEdit_selection_id.text()
+        if not input_ids:
+            return
 
-        if input_ids != "":
-            input_ids = input_ids.replace("(", "").replace(")", "")
-            surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                   input_ids, 
-                                                                   selection = "surfaces", 
-                                                                   single_id = False,
-                                                                   )
+        surface_ids, error_data = self.mesh.check_selected_ids(
+                                                                input_ids, 
+                                                                selection = "surfaces", 
+                                                                )
 
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return
 
-            if len(surface_ids) == 1:
-                surface_ids = surface_ids[0]
-            else:
-                surface_ids = tuple(surface_ids)
+        self.remove_table_files_from_surfaces(surface_ids)
 
-            self.remove_table_files_from_surfaces(surface_ids)
-            self.properties._remove_surface_property("perforated_plate_model", surface_ids)
+        for surface_id in surface_ids:
+            self.properties._remove_surface_property("perforated_plate_model", surface_id)
 
-            data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
+            data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
                 if isinstance(new_surface_id, int):   
                     self.remove_all_surface_properties_from_surface([new_surface_id])
                     self.remove_all_line_properties_boundind_surface([new_surface_id]) 
 
-                self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_ids)
+                self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
+        
+        self.lineEdit_selection_id.setText("")
+        self.pushButton_remove.setDisabled(True)
 
-            self.hide()
-            self.actions_to_finalize()
-            self.restore_mesh_data_modified_by_decoupling()
-            self.pushButton_remove.setDisabled(True)
+        self.hide()
+        self.actions_to_finalize()
+        self.restore_mesh_data_modified_by_decoupling()
+        app().main_window.clear_selection()
+
 
     def reset_callback(self):
 
@@ -1089,6 +1108,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 

@@ -555,11 +555,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        if len(surface_ids) == 1:
-            surface_ids = surface_ids[0]
-        else:
-            surface_ids = tuple(surface_ids)
-
         self.remove_table_files_from_surfaces(surface_ids)
 
         for surface_id in surface_ids:
