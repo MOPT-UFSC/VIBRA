@@ -45,6 +45,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
 
+        self.set_default_render_tool()
         self.remove_all_actors()
         self.create_axes()
         self.create_logos()

@@ -251,41 +251,6 @@ class Ui_MainWindow(object):
         icon33.addFile(u":/icons/visibility/ghost.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.action_ghost_view.setIcon(icon33)
         self.action_ghost_view.setMenuRole(QAction.NoRole)
-        self.action_grab_tool = QAction(MainWindow)
-        self.action_grab_tool.setObjectName(u"action_grab_tool")
-        self.action_grab_tool.setCheckable(True)
-        icon34 = QIcon()
-        icon34.addFile(u":/icons/pan_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_grab_tool.setIcon(icon34)
-        self.action_selection_tool = QAction(MainWindow)
-        self.action_selection_tool.setObjectName(u"action_selection_tool")
-        self.action_selection_tool.setCheckable(True)
-        self.action_selection_tool.setChecked(True)
-        icon35 = QIcon()
-        icon35.addFile(u":/icons/selection_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_selection_tool.setIcon(icon35)
-        self.action_rotation_tool = QAction(MainWindow)
-        self.action_rotation_tool.setObjectName(u"action_rotation_tool")
-        self.action_rotation_tool.setCheckable(True)
-        icon36 = QIcon()
-        icon36.addFile(u":/icons/rotation_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_rotation_tool.setIcon(icon36)
-        self.action_zoom_in = QAction(MainWindow)
-        self.action_zoom_in.setObjectName(u"action_zoom_in")
-        self.action_zoom_in.setCheckable(True)
-        icon37 = QIcon()
-        icon37.addFile(u":/icons/zoom_in_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_zoom_in.setIcon(icon37)
-        self.action_zoom_out = QAction(MainWindow)
-        self.action_zoom_out.setObjectName(u"action_zoom_out")
-        self.action_zoom_out.setCheckable(True)
-        icon38 = QIcon()
-        icon38.addFile(u":/icons/zoom_out_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_zoom_out.setIcon(icon38)
-        self.action_model_workspace_2 = QAction(MainWindow)
-        self.action_model_workspace_2.setObjectName(u"action_model_workspace_2")
-        self.actionaaaaaa = QAction(MainWindow)
-        self.actionaaaaaa.setObjectName(u"actionaaaaaa")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -358,21 +323,6 @@ class Ui_MainWindow(object):
         self.advanced_results_menu = QMenu(self.menubar)
         self.advanced_results_menu.setObjectName(u"advanced_results_menu")
         MainWindow.setMenuBar(self.menubar)
-        self.render_tools_toolbar = QToolBar(MainWindow)
-        self.render_tools_toolbar.setObjectName(u"render_tools_toolbar")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.render_tools_toolbar.sizePolicy().hasHeightForWidth())
-        self.render_tools_toolbar.setSizePolicy(sizePolicy1)
-        self.render_tools_toolbar.setStyleSheet(u"\n"
-"            QToolBar {\n"
-"                border-style: solid;\n"
-"                border-width: 1px;\n"
-"                border-color: #888888;\n"
-"				spacing: 10px;\n"
-"            }")
-        MainWindow.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
 
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_new_project)
@@ -432,10 +382,6 @@ class Ui_MainWindow(object):
         self.menu_view_mode.addAction(self.action_show_empty)
         self.menu_help.addAction(self.action_about_vibra)
         self.advanced_results_menu.addAction(self.action_export_element_transfer_data)
-        self.render_tools_toolbar.addAction(self.action_selection_tool)
-        self.render_tools_toolbar.addAction(self.action_grab_tool)
-        self.render_tools_toolbar.addAction(self.action_rotation_tool)
-        self.render_tools_toolbar.addAction(self.action_zoom_in)
 
         self.retranslateUi(MainWindow)
 
@@ -524,23 +470,12 @@ class Ui_MainWindow(object):
         self.action_home_exit.setText(QCoreApplication.translate("MainWindow", u"Home Exit", None))
         self.action_import_mesh.setText(QCoreApplication.translate("MainWindow", u"Import mesh", None))
         self.action_ghost_view.setText(QCoreApplication.translate("MainWindow", u"Ghost", None))
-        self.action_grab_tool.setText(QCoreApplication.translate("MainWindow", u"Grab tool", None))
-        self.action_selection_tool.setText(QCoreApplication.translate("MainWindow", u"Selection tool", None))
-        self.action_rotation_tool.setText(QCoreApplication.translate("MainWindow", u"Rotation tool", None))
-        self.action_zoom_in.setText(QCoreApplication.translate("MainWindow", u"Zoom", None))
-#if QT_CONFIG(tooltip)
-        self.action_zoom_in.setToolTip(QCoreApplication.translate("MainWindow", u"Zoom tool", None))
-#endif // QT_CONFIG(tooltip)
-        self.action_zoom_out.setText(QCoreApplication.translate("MainWindow", u"Zoom out", None))
-        self.action_model_workspace_2.setText(QCoreApplication.translate("MainWindow", u"Model workspace", None))
-        self.actionaaaaaa.setText(QCoreApplication.translate("MainWindow", u"aaaaaa", None))
         self.renderer_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
         self.menu_project.setTitle(QCoreApplication.translate("MainWindow", u"Project", None))
         self.menu_settings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menu_view_mode.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
         self.menu_help.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
         self.advanced_results_menu.setTitle(QCoreApplication.translate("MainWindow", u"Advanced Results", None))
-        self.render_tools_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 
 
@@ -566,7 +501,6 @@ class MainWindow_UI(QMainWindow, Ui_MainWindow):
             - menu_view_mode: QMenu
             - menu_help: QMenu
             - advanced_results_menu: QMenu
-        - render_tools_toolbar: QToolBar
     """
 
     def __init__(self, *args, **kwargs):

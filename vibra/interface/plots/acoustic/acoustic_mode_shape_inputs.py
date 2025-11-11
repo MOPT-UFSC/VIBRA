@@ -25,7 +25,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
-        app().main_window.hide_selection_tool()
+        app().main_window.render_tools_toolbar.hide_selection_tool()
 
     def _initialize(self):
         self.mode_index = None

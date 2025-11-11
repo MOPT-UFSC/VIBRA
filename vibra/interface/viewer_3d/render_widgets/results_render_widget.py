@@ -46,6 +46,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.frequency_index = None
         self.mode_index = None
 
+        self.set_default_render_tool()
         self.remove_all_actors()
         self.create_logos()
         self.create_axes()

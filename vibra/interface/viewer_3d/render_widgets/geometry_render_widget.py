@@ -54,6 +54,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
 
+        self.set_default_render_tool()
+
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
