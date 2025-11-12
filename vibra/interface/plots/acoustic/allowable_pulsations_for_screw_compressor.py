@@ -320,7 +320,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
                 "linestyle" : "-" 
                 }
         
-        # create an auxiliar vector
+        # create an auxiliar vector of ones values
         aux_ones = np.ones_like(time_vector, dtype=float)
 
         # absolute average line pressure P_AM in kPa(a)
@@ -350,35 +350,35 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
             "legend" : legend_label_upper,
             "unit" : "kPa (a)",
             "color" : [1, 0, 0],
-            "linestyle" : "--",
+            "linestyle" : "-",
             }
 
         key = ("allowable pulsation limits (lower)", (None))
         legend_label_lower = "Allowable pulsation (lower bound)"
 
         self.model_results[key] = { 
-                                   "x_data" : time_vector,
-                                   "y_data" : -factor * pulsation_criteria_peak,
-                                   "x_label" : "Time [s]",
-                                   "y_label" : "Acoustic pressure",
-                                   "title" : title,
-                                   "data_information" : legend_label_lower,
-                                   "legend" : legend_label_lower,
-                                   "unit" : "kPa (a)",
-                                   "color" : [1, 0, 0],
-                                   "linestyle" : "--"  
-                                   }
+            "x_data" : time_vector,
+            "y_data" : -factor * pulsation_criteria_peak,
+            "x_label" : "Time [s]",
+            "y_label" : "Acoustic pressure",
+            "title" : title,
+            "data_information" : legend_label_lower,
+            "legend" : legend_label_lower,
+            "unit" : "kPa (a)",
+            "color" : [1, 0, 0],
+            "linestyle" : "-"  
+            }
 
     def get_color(self, index):
 
         colors = [  
-                  (0,0,1),
-                  (0,0,0),
-                  (0,1,1),
-                  (1,0,1),
-                  (1,1,0),
-                  (0.25,0.25,0.25),
-                  ]
+            (0,0,1),
+            (0,0,0),
+            (0,1,1),
+            (1,0,1),
+            (1,1,0),
+            (0.25,0.25,0.25),
+            ]
 
         if index <= 5:
             return colors[index]
