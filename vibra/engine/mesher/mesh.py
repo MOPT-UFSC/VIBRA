@@ -1104,9 +1104,18 @@ class Mesh:
 
         logging.info("Post-processing mesh... [80/100]")
         self.disconnected_nodes_data = self.process_disconnected_nodes_criterion()
+        if self.disconnected_nodes_data:
+            self.disconnected_nodes_exists = True
+        else:
+            self.disconnected_nodes_exists = False
 
         logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
+        if self.collapsed_1d_elements or self.collapsed_2d_elements or self.collapsed_3d_elements:
+            self.collapsed_elements_exists = True
+        else:
+            self.collapsed_elements_exists = False
+
 
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
@@ -1611,6 +1620,17 @@ class Mesh:
             return disconnected_nodes
 
         return list()
+    
+    def get_list_of_nodes_from_collapsed_elements(self):
+        """
+        This method returns the related to the collapsed elements.
+        """
+        nodes_from_collapsed_1d_elements = np.unique(self.lines_connectivity[np.array(list(self.collapsed_1d_elements)), 4:].flatten())
+        nodes_from_collapsed_2d_elements = np.unique(self.faces_connectivity[np.array(list(self.collapsed_2d_elements)), 4:].flatten())
+        nodes_from_collapsed_3d_elements = np.unique(self.solids_connectivity[np.array(list(self.collapsed_3d_elements)), 4:].flatten())
+
+        return nodes_from_collapsed_1d_elements, nodes_from_collapsed_2d_elements, nodes_from_collapsed_3d_elements
+
 
     def get_face_elements_connected_to_nodes(
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None

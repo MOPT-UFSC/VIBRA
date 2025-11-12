@@ -77,10 +77,21 @@ class NodesActor(vtkActor):
         visualization = app().main_window.visualization_filter
         color = app().config.user_preferences.nodes_points_color
         disconected_nodes_color = color_names.GREEN
+        collapsed_element_1d_nodes_color = color_names.PINK
+        collapsed_element_2d_nodes_color = color_names.BLUE
+        collapsed_element_3d_nodes_color = color_names.PURPLE
 
-        if visualization.disconected_nodes:
+        if self.mesh.disconnected_nodes_exists:
             self.set_color(Color(0, 0, 0, 0))
             self.paint_nodes(disconected_nodes_color, self.mesh.get_list_of_disconnected_nodes())
+
+        if self.mesh.collapsed_elements_exists:
+            
+            nodes_collapsed_elements_1d, nodes_collapsed_elements_2d, nodes_collapsed_elements_3d = self.mesh.get_list_of_nodes_from_collapsed_elements()
+            self.set_color(Color(0, 0, 0, 0))
+            self.paint_nodes(collapsed_element_1d_nodes_color, nodes_collapsed_elements_1d)
+            self.paint_nodes(collapsed_element_2d_nodes_color, nodes_collapsed_elements_2d)
+            # self.paint_nodes(collapsed_element_3d_nodes_color, nodes_collapsed_elements_3d)
 
         elif visualization.points:
             self.set_color(color)
