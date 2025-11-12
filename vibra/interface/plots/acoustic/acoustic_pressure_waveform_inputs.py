@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
@@ -174,17 +175,17 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
                 )
 
             self.model_results[key] = { 
-                                        "x_data" : time_vector,
-                                        "y_data" : acoustic_pressure,
-                                        "x_label" : "Time [s]",
-                                        "y_label" : "Acoustic pressure",
-                                        "title" : self.title,
-                                        "data_type" : "acoustic pressure",
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
+                "x_data" : time_vector,
+                "y_data" : acoustic_pressure,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : self.title,
+                "data_type" : "acoustic pressure",
+                "legend" : legend_label,
+                "unit" : self.unit_label,
+                "color" : self.get_color(i),
+                "linestyle" : "-"  
+            }
 
     def get_color(self, index):
 

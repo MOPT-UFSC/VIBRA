@@ -2,8 +2,8 @@ from PySide6.QtWidgets import QDialog, QLineEdit
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -52,6 +52,8 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         self.fluid_dialog = None
         self.selected_fluid = None
 
+        self.model_results = dict()
+
         self.unit_label = "Pa"
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
@@ -94,21 +96,84 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         else:
             self.lineEdit_selection_id.setText("")
 
-        if len(surfaces) == 1:
-            surface_id = list(surfaces)[0]
-
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
-            if len(volumes_from_surface) == 1:
-                selected_fluid = self.properties._get_property("fluid", volume=volumes_from_surface[0])
-                self.get_selected_fluid(selected_fluid=selected_fluid)
-            elif len(volumes_from_surface) == 2:
-                fluid_A = self.properties._get_property("fluid", volume=volumes_from_surface[0])
-                fluid_B = self.properties._get_property("fluid", volume=volumes_from_surface[1])
-                if fluid_A == fluid_B:
-                    self.get_selected_fluid(selected_fluid=fluid_A)
-
-            if self.tabWidget_main.currentIndex() == 1:
+        if surfaces:
+            fluid = self.get_fluids_related_to_surfaces_selection(list(surfaces))
+            if isinstance(fluid, Fluid):
+                self.get_selected_fluid(selected_fluid=fluid)
                 return
+
+        if lines:
+            fluid = self.get_fluids_related_to_lines_selection(list(lines))
+            if isinstance(fluid, Fluid):
+                self.get_selected_fluid(selected_fluid=fluid)
+                return
+
+        if points:
+            fluid = self.get_fluids_related_to_points_selection(list(points))
+            if isinstance(fluid, Fluid):
+                self.get_selected_fluid(selected_fluid=fluid)
+                return
+
+        if nodes:
+            fluid = self.get_fluids_related_to_nodes_selection(list(nodes))
+            if isinstance(fluid, Fluid):
+                self.get_selected_fluid(selected_fluid=fluid)
+                return            
+
+    def get_fluids_related_to_surfaces_selection(self, selected_surfaces: list[int]):
+        fluids = list()
+        for surface_id in selected_surfaces:
+            for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+                fluid = self.properties._get_property("fluid", volume=volume_id)
+                if fluid not in fluids:
+                    fluids.append(fluid)
+
+        if len(fluids) == 1:
+            return fluids[0]
+
+        return list()
+
+    def get_fluids_related_to_lines_selection(self, selected_lines: list[int]):
+        fluids = list()
+        for line_id in selected_lines:
+            for surface_id in self.mesh.surfaces_from_line.get(line_id):
+                for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+                    fluid = self.properties._get_property("fluid", volume=volume_id)
+                    if fluid not in fluids:
+                        fluids.append(fluid)
+
+        if len(fluids) == 1:
+            return fluids[0]
+
+        return list()
+
+    def get_fluids_related_to_points_selection(self, selected_points: list[int]):
+        fluids = list()
+        for point_id in selected_points:
+            for line_id in self.mesh.lines_from_point.get(point_id):
+                for surface_id in self.mesh.surfaces_from_line.get(line_id):
+                    for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+                        fluid = self.properties._get_property("fluid", volume=volume_id)
+                        if fluid not in fluids:
+                            fluids.append(fluid)
+
+        if len(fluids) == 1:
+            return fluids[0]
+
+        return list()
+
+    def get_fluids_related_to_nodes_selection(self, selected_nodes: list[int]):
+        fluids = list()
+        volume_ids = self.mesh.get_volumes_from_selected_nodes(selected_nodes, return_volumes=True)
+        for volume_id in volume_ids:
+            fluid = self.properties._get_property("fluid", volume=volume_id)
+            if fluid not in fluids:
+                fluids.append(fluid)
+
+        if len(fluids) == 1:
+            return fluids[0]
+
+        return list()
 
     def selection_filter_callback(self):
 
@@ -229,7 +294,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         title = "Allowable Pulsation Levels on the process piping\n "
         title += "side of the inlet and discharge silencers"
 
-        self.model_results = dict()
+        self.model_results.clear()
         for i, selected_id in enumerate(self.selected_ids):
 
             key = ("pressure", (selected_id))
@@ -243,28 +308,18 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
                 )
 
             self.model_results[key] = { 
-                                       "x_data" : time_vector,
-                                       "y_data" : acoustic_pressure / 1e3,
-                                       "x_label" : "Time [s]",
-                                       "y_label" : "Acoustic pressure",
-                                       "title" : title,
-                                       "data_information" : legend_label,
-                                       "legend" : legend_label,
-                                       "unit" : "kPa (a)",
-                                       "color" : self.get_color(i),
-                                       "linestyle" : "-" 
-                                       }
-
-        if self.checkBox_pre_study_analysis.isChecked():
-            factor = 0.7
-            legend_label_lower = "lower bound (pre-study)"
-            legend_label_upper = "upper bound (pre-study)"
-
-        else:
-            factor = 1.0
-            legend_label_lower = "lower bound"
-            legend_label_upper = "upper bound"
-
+                "x_data" : time_vector,
+                "y_data" : acoustic_pressure / 1e3,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : title,
+                "data_information" : legend_label,
+                "legend" : legend_label,
+                "unit" : "kPa (a)",
+                "color" : self.get_color(i),
+                "linestyle" : "-" 
+                }
+        
         # create an auxiliar vector
         aux_ones = np.ones_like(time_vector, dtype=float)
 
@@ -279,22 +334,27 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         # allowable pulsation bounds 0-peak in kPa (a)
         pulsation_criteria_peak = (allowable_levels_percentual / 200) * P_AM * aux_ones
 
+        # penalization factor for pre-study analysis
+        factor = 0.7 if self.checkBox_pre_study_analysis.isChecked() else 1.0
+
         key = ("allowable pulsation limits (upper)", (None))
+        legend_label_upper = "Allowable pulsation (upper bound)"
 
         self.model_results[key] = { 
-                                   "x_data" : time_vector,
-                                   "y_data" : factor * pulsation_criteria_peak,
-                                   "x_label" : "Time [s]",
-                                   "y_label" : "Acoustic pressure",
-                                   "title" : title,
-                                   "data_information" : legend_label_upper,
-                                   "legend" : legend_label_upper,
-                                   "unit" : "kPa (a)",
-                                   "color" : [1, 0, 0],
-                                   "linestyle" : "--"  
-                                   }
+            "x_data" : time_vector,
+            "y_data" : factor * pulsation_criteria_peak,
+            "x_label" : "Time [s]",
+            "y_label" : "Acoustic pressure",
+            "title" : title,
+            "data_information" : legend_label_upper,
+            "legend" : legend_label_upper,
+            "unit" : "kPa (a)",
+            "color" : [1, 0, 0],
+            "linestyle" : "--",
+            }
 
         key = ("allowable pulsation limits (lower)", (None))
+        legend_label_lower = "Allowable pulsation (lower bound)"
 
         self.model_results[key] = { 
                                    "x_data" : time_vector,
