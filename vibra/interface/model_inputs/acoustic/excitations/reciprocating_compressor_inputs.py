@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
@@ -189,6 +189,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def tab_event_callback(self):
         self.pushButton_remove.setDisabled(True)
+        self.treeWidget_compressor_excitation.clearSelection()
+
         check = self.tabWidget_main.currentIndex() == 2
         self.pushButton_confirm.setDisabled(check)
         if check:
@@ -848,14 +850,20 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        surface_ids = [int(selected_item.text(0)) for selected_item in self.treeWidget_compressor_excitation.selectedItems()]
 
-        if self.lineEdit_selection_id.text() != "":   
-
-            surface_id = int(self.lineEdit_selection_id.text())
+        if not surface_ids:
+            return
+        
+        for surface_id in surface_ids:
             self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
-            self.actions_to_finalize()
+        
+        self.lineEdit_selection_id.setText("")
+        self.lineEdit_connection_type.setText("")
+
+        app().main_window.clear_selection()
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -907,12 +915,35 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.update_tabs_visibility()
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            self.lineEdit_connection_type.setText(item.text(1))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
-            self.pushButton_remove.setDisabled(False)
+        surface_ids, selection_text, connection_type = self.get_selected_surfaces_and_texts()
+
+        if not surface_ids:
+            return
+        
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_connection_type.setText(connection_type)
+        self.pushButton_remove.setDisabled(False)
+
+    def get_selected_surfaces_and_texts(self):
+        selected_items = self.treeWidget_compressor_excitation.selectedItems()
+
+        if not selected_items:
+            return list(), str(), str()
+
+        selection_text = ""
+        connection_type = set()
+        surface_ids = list()
+
+        for item in selected_items:
+            surface_id = item.text(0)
+            connection_type.add(item.text(1))
+            selection_text += surface_id + ", "
+            surface_ids.append(int(surface_id))
+
+        connection_text = connection_type.pop() if len(connection_type) == 1 else "--"
+        
+        return surface_ids, selection_text[:-2], connection_text
 
     def update_tabs_visibility(self):
         self.lineEdit_selection_id.setText("")
@@ -1144,8 +1175,16 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
-        if event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key_Escape:
             self.close()
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
