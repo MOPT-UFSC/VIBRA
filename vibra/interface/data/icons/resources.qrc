@@ -51,7 +51,9 @@
         <file>model_setup_items/anechoic_termination.png</file>
         <file>model_setup_items/anechoic_termination2.png</file>
         <file>model_setup_items/compressor_excitation_spectrum.png</file>
+        <file>model_setup_items/compressor_excitation_spectrum2.png</file>
         <file>model_setup_items/compressor_excitation_waveform.png</file>
+        <file>model_setup_items/compressor_excitation_waveform2.png</file>
         <file>model_setup_items/damping.png</file>
         <file>model_setup_items/degrees_of_freedom_decoupling.png</file>
         <file>model_setup_items/deployed_code.png</file>
@@ -74,6 +76,8 @@
         <file>model_setup_items/prescribed_dof.png</file>
         <file>model_setup_items/proportional_damping.png</file>
         <file>model_setup_items/reciprocating_compressor_excitation.png</file>
+        <file>model_setup_items/reciprocating_f.png</file>
+        <file>model_setup_items/reciprocating_t.png</file>
         <file>model_setup_items/s.png</file>
         <file>model_setup_items/specific_impedance.png</file>
         <file>model_setup_items/structural_help.png</file>
