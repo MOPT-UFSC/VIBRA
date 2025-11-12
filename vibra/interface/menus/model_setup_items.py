@@ -129,7 +129,7 @@ class ModelSetupItems(CommonMenuItems):
 
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
-                item_child = top_level_items.child(index)
+                item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
 
                 if item_child_name is None:
@@ -162,12 +162,12 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_properties_gradient.setHidden(not DEVELOPER_MODE)
         self.item_child_acoustic_transfer_element_setup.setHidden(not DEVELOPER_MODE)
 
-    def _find_qtree_widget_item_name(self, qtree_widet_item):
+    def _find_qtree_widget_item_name(self, qtree_widet_item) -> str | None:
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
                 return attr_name
     
-    def _contains_property(self, property_name: str):
+    def _contains_property(self, property_name: str) -> bool:
 
         model = app().project.model
         mesh = app().project.model.mesh
@@ -253,7 +253,7 @@ class ModelSetupItems(CommonMenuItems):
 
         return False
 
-    def _needs_property(self, property_name: str, analysis_type: str | None = None, physical_domain: str | None = None):
+    def _needs_property(self, property_name: str, analysis_type: str | None = None, physical_domain: str | None = None) -> bool:
         if property_name == "mesh_setup":
             return True
 
@@ -332,7 +332,7 @@ class ModelSetupItems(CommonMenuItems):
             self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(True)
 
-    def _are_there_collapsed_elements(self, item_child):
+    def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
             mesh = app().project.model.mesh
             if mesh is not None:
@@ -375,7 +375,34 @@ class ModelSetupItems(CommonMenuItems):
 
                 if self._contains_property(item_child.property_name):
                     item_child.set_icon()
+
+                    # special treatment for compressors
+                    if item_child.property_name == "compressor_excitation_waveform":
+                        surface_properties = app().project.model.properties.surface_properties
+                        for key in surface_properties.items():
+                            if key[0][0] == "compressor_excitation_waveform":
+                                # compressor_type = property_data.get("compressor_type", "reciprocating")
+                                compressor_type = key[1].get("compressor_type")
+                                if compressor_type == "screw":
+                                    item_child.set_icon("screw_compressor")
+                                elif compressor_type == "reciprocating":
+                                    item_child.set_icon("reciprocating_compressor_excitation")
+                                else:
+                                    item_child.set_icon("other_compressor")
                     
+                    if item_child.property_name == "compressor_excitation_spectrum":
+                        surface_properties = app().project.model.properties.surface_properties
+                        for key in surface_properties.items():
+                            if key[0][0] == "compressor_excitation_spectrum":
+                                # compressor_type = property_data.get("compressor_type", "reciprocating")
+                                compressor_type = key[1].get("compressor_type")
+                                if compressor_type == "screw":
+                                    item_child.set_icon("screw_compressor")
+                                elif compressor_type == "reciprocating":
+                                    item_child.set_icon("reciprocating_compressor_excitation")
+                                else:
+                                    item_child.set_icon("other_compressor")
+
                 elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
                     item_child.set_warning(True)
                     item_child.set_tool_tip(requirement=True)
@@ -386,7 +413,7 @@ class ModelSetupItems(CommonMenuItems):
     def reset_items_appearance(self):
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
-                item_child = top_level_items.child(index)
+                item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child.set_icon(visible=False)
                 item_child.set_warning(False)
                 item_child.set_tool_tip()

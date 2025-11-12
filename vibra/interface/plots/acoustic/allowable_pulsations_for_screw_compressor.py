@@ -236,7 +236,11 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             acoustic_pressure = self.get_response(index, selected_id)
-            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(self.frequencies, acoustic_pressure, dc_included=False)
+            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
+                self.frequencies, 
+                acoustic_pressure, 
+                dc_included=False
+                )
 
             self.model_results[key] = { 
                                        "x_data" : time_vector,
@@ -251,52 +255,58 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
                                        "linestyle" : "-" 
                                        }
 
-        # create an auxiliar vector
-        aux_ones = np.ones_like(time_vector, dtype=float)
-
-        factor = 1.0
         if self.checkBox_pre_study_analysis.isChecked():
             factor = 0.7
+            legend_label_lower = "lower bound (pre-study)"
+            legend_label_upper = "upper bound (pre-study)"
 
-        legend_label = "Pulsation criteria"
-        key = ("allowable pulsation limits (upper)", (None))
+        else:
+            factor = 1.0
+            legend_label_lower = "lower bound"
+            legend_label_upper = "upper bound"
+
+        # create an auxiliar vector
+        aux_ones = np.ones_like(time_vector, dtype=float)
 
         # absolute average line pressure P_AM in kPa(a)
         P_AM = self.get_fluid_property("pressure")
         if P_AM is None:
             return True
 
-        # peak-to-peak allowable pulsation limits
+        # allowable pulsation levels as a percentage of absolute mean line pressure in kPa
         allowable_levels_percentual =  min(2, (28.6 / (P_AM**(1/3))))
-        pulsation_criteria = (allowable_levels_percentual / 100) * P_AM * aux_ones
+
+        # allowable pulsation bounds 0-peak in kPa (a)
+        pulsation_criteria_peak = (allowable_levels_percentual / 200) * P_AM * aux_ones
+
+        key = ("allowable pulsation limits (upper)", (None))
 
         self.model_results[key] = { 
                                    "x_data" : time_vector,
-                                   "y_data" : factor * pulsation_criteria,
+                                   "y_data" : factor * pulsation_criteria_peak,
                                    "x_label" : "Time [s]",
                                    "y_label" : "Acoustic pressure",
                                    "title" : title,
-                                   "data_information" : legend_label,
-                                   "legend" : legend_label + " (upper)",
+                                   "data_information" : legend_label_upper,
+                                   "legend" : legend_label_upper,
                                    "unit" : "kPa (a)",
                                    "color" : [1, 0, 0],
-                                   "linestyle" : "-"  
+                                   "linestyle" : "--"  
                                    }
 
         key = ("allowable pulsation limits (lower)", (None))
-        legend_label = "Pulsation criteria"
 
         self.model_results[key] = { 
                                    "x_data" : time_vector,
-                                   "y_data" : -factor * pulsation_criteria,
+                                   "y_data" : -factor * pulsation_criteria_peak,
                                    "x_label" : "Time [s]",
                                    "y_label" : "Acoustic pressure",
                                    "title" : title,
-                                   "data_information" : legend_label,
-                                   "legend" : legend_label + " (lower)",
+                                   "data_information" : legend_label_lower,
+                                   "legend" : legend_label_lower,
                                    "unit" : "kPa (a)",
                                    "color" : [1, 0, 0],
-                                   "linestyle" : "-"  
+                                   "linestyle" : "--"  
                                    }
 
     def get_color(self, index):

@@ -71,14 +71,17 @@
         <file>model_setup_items/normal_pressure_load.png</file>
         <file>model_setup_items/normal_pressure_load1.png</file>
         <file>model_setup_items/normal_pressure_load3.png</file>
+        <file>model_setup_items/other_compressor.png</file>
         <file>model_setup_items/perforated_plate_model.png</file>
         <file>model_setup_items/porous_material_model.png</file>
         <file>model_setup_items/prescribed_dof.png</file>
         <file>model_setup_items/proportional_damping.png</file>
         <file>model_setup_items/reciprocating_compressor_excitation.png</file>
+        <file>model_setup_items/reciprocating_compressor_excitation2.png</file>
         <file>model_setup_items/reciprocating_f.png</file>
         <file>model_setup_items/reciprocating_t.png</file>
         <file>model_setup_items/s.png</file>
+        <file>model_setup_items/screw_compressor.png</file>
         <file>model_setup_items/specific_impedance.png</file>
         <file>model_setup_items/structural_help.png</file>
         <file>model_setup_items/surface_thickness.png</file>
