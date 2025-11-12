@@ -349,7 +349,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
             "data_information" : legend_label_upper,
             "legend" : legend_label_upper,
             "unit" : "kPa (a)",
-            "color" : [1, 0, 0],
+            "color" : [0.7, 0, 0],
             "linestyle" : "-",
             }
 

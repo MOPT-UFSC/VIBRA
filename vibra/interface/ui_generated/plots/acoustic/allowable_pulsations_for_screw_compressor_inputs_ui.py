@@ -306,9 +306,7 @@ class Ui_Form(object):
         self.label_12.setObjectName(u"label_12")
         self.label_12.setMinimumSize(QSize(0, 32))
         self.label_12.setMaximumSize(QSize(16777215, 32))
-        font5 = QFont()
-        font5.setPointSize(11)
-        self.label_12.setFont(font5)
+        self.label_12.setFont(font1)
         self.label_12.setAlignment(Qt.AlignCenter)
         self.label_12.setWordWrap(False)
 
@@ -351,9 +349,9 @@ class Ui_Form(object):
         self.lineEdit_speed_of_sound.setEnabled(False)
         self.lineEdit_speed_of_sound.setMinimumSize(QSize(90, 28))
         self.lineEdit_speed_of_sound.setMaximumSize(QSize(100, 28))
-        font6 = QFont()
-        font6.setPointSize(9)
-        self.lineEdit_speed_of_sound.setFont(font6)
+        font5 = QFont()
+        font5.setPointSize(9)
+        self.lineEdit_speed_of_sound.setFont(font5)
         self.lineEdit_speed_of_sound.setFocusPolicy(Qt.ClickFocus)
         self.lineEdit_speed_of_sound.setAlignment(Qt.AlignCenter)
 
@@ -378,7 +376,7 @@ class Ui_Form(object):
         self.lineEdit_average_line_pressure.setEnabled(False)
         self.lineEdit_average_line_pressure.setMinimumSize(QSize(90, 28))
         self.lineEdit_average_line_pressure.setMaximumSize(QSize(100, 28))
-        self.lineEdit_average_line_pressure.setFont(font6)
+        self.lineEdit_average_line_pressure.setFont(font5)
         self.lineEdit_average_line_pressure.setFocusPolicy(Qt.ClickFocus)
         self.lineEdit_average_line_pressure.setAlignment(Qt.AlignCenter)
 
