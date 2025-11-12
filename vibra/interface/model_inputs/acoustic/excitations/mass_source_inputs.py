@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -11,6 +11,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 
 import numpy as np
 
+from collections import defaultdict
 from enum import IntEnum
 from traceback import print_exception
 
@@ -879,37 +880,55 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.tabWidget_main.setTabVisible(3, False)
 
     def on_click_item(self, item):
-        if item.text(0) == "":
+        selected_items, selection_text, selection_type_text = self.get_selected_items_and_texts()
+
+        if not selected_items:
             return
 
-        selection_id = int(item.text(0))
-        selection_label = item.text(1)
-        self.lineEdit_selection_id.setText(item.text(0))
+        self.lineEdit_selection_id.setText(selection_text)
+        self.comboBox_attribution_type.setCurrentText(selection_type_text)
 
         self.pushButton_remove.setEnabled(True)
 
-        if selection_label == "node":
-            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.NODES)
-            app().main_window.set_mesh_selection(nodes=[selection_id])
+        for key, values in selected_items.items():
+            if key == "node":
+                app().main_window.set_mesh_selection(nodes=values)
 
-        elif selection_label == "point":
-            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.POINTS)
-            app().main_window.set_geometry_selection(points=[selection_id])
+            elif key == "point":
+                app().main_window.set_geometry_selection(points=values)
 
-        elif selection_label == "line":
-            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.LINES)
-            app().main_window.set_geometry_selection(lines=[selection_id])
+            elif key == "line":
+                app().main_window.set_geometry_selection(lines=values)
 
-        elif selection_label == "surface":
-            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.SURFACES)
-            app().main_window.set_geometry_selection(surfaces=[selection_id])
+            elif key == "surface":
+                app().main_window.set_geometry_selection(surfaces=values)
 
-        elif selection_label == "volume":
-            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.VOLUMES)
-            app().main_window.set_geometry_selection(volumes=[selection_id])
+            elif key == "volume":
+                app().main_window.set_geometry_selection(volumes=values)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
+    
+    def get_selected_items_and_texts(self):
+        _selected_items = self.treeWidget_mass_source.selectedItems()
+
+        if not _selected_items:
+            return list(), str(), str()
+
+        selection_text = ""
+        selected_items = defaultdict(list)
+
+        for item in _selected_items:
+            selected_id = item.text(0)
+            selected_type = item.text(1)
+
+            selection_text += selected_id + ", "
+
+            selected_items[selected_type].append(int(selected_id))
+
+        selection_type_text = "Selected " + list(selected_items.keys())[0] + "s" if len(selected_items) == 1 else "--"
+        
+        return  selected_items, selection_text[:-2], selection_type_text
 
     def load_model_info(self):
 
@@ -951,8 +970,14 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        else:
-            return
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_mass_source.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_mass_source.setSelectionMode(QAbstractItemView.ContiguousSelection)
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_mass_source.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
