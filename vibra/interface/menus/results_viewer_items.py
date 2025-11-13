@@ -40,17 +40,17 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_waveform = self.add_item("Acoustic Pressure Waveform")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
         self.item_child_acoustic_pressure_frequency_response_function = self.add_item("Acoustic Presssure Frequency Response Function")
-        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable pulsation (Reciprocating Compressor)")
-        self.item_child_allowable_pulsations_for_screw_compressor = self.add_item("Allowable pulsation (Screw Compressor)")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable Pulsation (Reciprocating Compressor)")
+        self.item_child_allowable_pulsations_for_screw_compressor = self.add_item("Allowable Pulsation (Screw Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
         self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
         self.item_child_absorption_coefficient = self.add_item("Absorption Coefficient")
 
         self.top_level_items = [
-                                self.item_top_results_viewer_acoustic,
-                                self.item_top_results_viewer_structural
-                                ]
+            self.item_top_results_viewer_acoustic,
+            self.item_top_results_viewer_structural
+            ]
 
     def _create_connections(self):
         """
