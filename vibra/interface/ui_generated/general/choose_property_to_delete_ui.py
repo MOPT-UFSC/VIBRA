@@ -15,9 +15,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QFrame,
     QHBoxLayout, QHeaderView, QLabel, QPushButton,
-    QSizePolicy, QSpacerItem, QTreeWidget, QTreeWidgetItem,
+    QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
@@ -32,8 +32,8 @@ class Ui_Dialog(object):
         Dialog.setSizePolicy(sizePolicy)
         Dialog.setMinimumSize(QSize(450, 150))
         Dialog.setMaximumSize(QSize(1200, 1000))
-        self.gridLayout_2 = QGridLayout(Dialog)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.verticalLayout_3 = QVBoxLayout(Dialog)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.frame = QFrame(Dialog)
@@ -43,7 +43,7 @@ class Ui_Dialog(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
         self.frame.setSizePolicy(sizePolicy1)
-        self.frame.setMinimumSize(QSize(0, 30))
+        self.frame.setMinimumSize(QSize(0, 20))
         self.frame.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.frame)
@@ -60,7 +60,19 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.frame)
 
 
-        self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
+        self.verticalLayout_3.addLayout(self.verticalLayout)
+
+        self.verticalLayout_4 = QVBoxLayout()
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.tableWidget = QTableWidget(Dialog)
+        self.tableWidget.setObjectName(u"tableWidget")
+        self.tableWidget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+
+        self.verticalLayout_4.addWidget(self.tableWidget)
+
+
+        self.verticalLayout_3.addLayout(self.verticalLayout_4)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -87,15 +99,7 @@ class Ui_Dialog(object):
         self.horizontalLayout.addItem(self.horizontalSpacer_3)
 
 
-        self.gridLayout_2.addLayout(self.horizontalLayout, 2, 0, 1, 1)
-
-        self.treeWidget = QTreeWidget(Dialog)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setText(0, u"1");
-        self.treeWidget.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget.setObjectName(u"treeWidget")
-
-        self.gridLayout_2.addWidget(self.treeWidget, 1, 0, 1, 1)
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
 
 
         self.retranslateUi(Dialog)
@@ -116,15 +120,16 @@ class ChoosePropertyToDelete_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
     - Dialog: QDialog
-        - (Layout): QGridLayout
+        - (Layout): QVBoxLayout
                 - (Layout): QVBoxLayout
                         - frame: QFrame
                             - (Layout): QVBoxLayout
                                     - label_title: QLabel
+                - (Layout): QVBoxLayout
+                        - tableWidget: QTableWidget
                 - (Layout): QHBoxLayout
                         - pushButton_cancel: QPushButton
                         - pushButton_remove: QPushButton
-                - treeWidget: QTreeWidget
     """
 
     def __init__(self, *args, **kwargs):

@@ -999,38 +999,43 @@ class MainWindow(MainWindow_UI):
     def remove_property(self):
         physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
 
-        if physical_domain == "Structural":
-            properties_names = app().project.model.properties.structural_properties_names
-        else:
-            properties_names = app().project.model.properties.acoustic_properties_names
+        # if physical_domain == "Structural":
+        #     properties_names = app().project.model.properties.get_data_group_label()
+        # else:
+        #     properties_names = app().project.model.properties.get_data_group_label()
 
-        properties_founded: list[str] = list()
-        for surf_id in self.selected_geometry_surfaces:
-            prop_id = app().project.model.properties.surface_properties.keys()
-            prop = [prop for prop, id in prop_id if (surf_id == id and prop in properties_names)]
-            properties_founded.extend(prop)
+        # properties_founded: list[str] = list()
+        # for surf_id in self.selected_geometry_surfaces:
+        #     prop_id = app().project.model.properties.surface_properties.keys()
+        #     prop = [prop for prop, id in prop_id if (surf_id == id and prop in properties_names)]
+        #     properties_founded.extend(prop)
         
-        for line_id in self.selected_geometry_lines:
-            prop_id = app().project.model.properties.line_properties.keys()
-            prop = [prop for prop, id in prop_id if (line_id == id and prop in properties_names)]
-            properties_founded.extend(prop)
+        # for line_id in self.selected_geometry_lines:
+        #     prop_id = app().project.model.properties.line_properties.keys()
+        #     prop = [prop for prop, id in prop_id if (line_id == id and prop in properties_names)]
+        #     properties_founded.extend(prop)
         
-        for point_id in self.selected_geometry_points:
-            prop_id = app().project.model.properties.point_properties.keys()
-            prop = [prop for prop, id in prop_id if (point_id == id and prop in properties_names)]
-            properties_founded.extend(prop)
+        # for point_id in self.selected_geometry_points:
+        #     prop_id = app().project.model.properties.point_properties.keys()
+        #     prop = [prop for prop, id in prop_id if (point_id == id and prop in properties_names)]
+            # properties_founded.extend(prop)
         
-        properties_founded = list(set([p.replace('_', ' ').title() for p in properties_founded]))
+        # properties_founded = list(set([p.replace('_', ' ').title() for p in properties_founded]))
 
-        buttons_config = {
-                          "left_button_label": "Cancel",
-                          "middle_button_label": "Remove all",
-                          "right_button_label": "Remove",
-                          "middle_toolTip" : "Remove all selected property from the model",
-                          "right_toolTip" : "Remove selected property from the model"
-                          }
+        self.close_dialogs()
+        selected_geometry_entities = {"lines": self.selected_geometry_lines,
+                                      "points": self.selected_geometry_points,
+                                      "surfaces": self.selected_geometry_surfaces,
+                                      "volumes": self.selected_geometry_volumes}
 
-        user_option = ChoosePropertytoDelete("Remove Property", "Choose a property", options=properties_founded, buttons_config=buttons_config, window_title="Vibra")
+        buttons_config = {"left_button_label": "Cancel",
+                          "right_button_label": "Remove"}
+
+        user_option = ChoosePropertytoDelete("Remove Property", 
+                                             "Choose a property",
+                                             data=selected_geometry_entities,
+                                             buttons_config=buttons_config, 
+                                             window_title="Vibra")
 
         # if user_option._remove:
         #     prop = user_option._property_to_delete.lower().replace(' ', '_')
@@ -1052,7 +1057,6 @@ class MainWindow(MainWindow_UI):
         #     for point_id in self.selected_geometry_points:
         #         app().project.model.properties.remove_all_point_properties(point_id, physical_domain)
 
-        self.update_symbols()
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
