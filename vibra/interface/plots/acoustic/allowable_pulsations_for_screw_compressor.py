@@ -291,7 +291,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index]
 
-        title = "Allowable Pulsation Levels on the process piping\n "
+        title = "Allowable pulsation levels on the process piping\n "
         title += "side of the inlet and discharge silencers"
 
         self.model_results.clear()
