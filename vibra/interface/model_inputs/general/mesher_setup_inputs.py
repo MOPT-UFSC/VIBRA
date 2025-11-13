@@ -475,9 +475,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
 
-        disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
-        if disconnected_nodes:
-            app().main_window.set_mesh_selection(nodes=disconnected_nodes)
+        # disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        # if disconnected_nodes:
+        #     app().main_window.set_mesh_selection(nodes=disconnected_nodes)
 
     def check_post_process_mesh_criteria(self):
 

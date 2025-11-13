@@ -28,7 +28,6 @@ from vibra.engine.mesher.element_type import (
     TETRAHEDRON_10,
     ElementType,
 )
-from vibra.errors import MeshingAlgorithmException
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
@@ -1625,11 +1624,19 @@ class Mesh:
         """
         This method returns the related to the collapsed elements.
         """
-        nodes_from_collapsed_1d_elements = np.unique(self.lines_connectivity[np.array(list(self.collapsed_1d_elements)), 4:].flatten())
-        nodes_from_collapsed_2d_elements = np.unique(self.faces_connectivity[np.array(list(self.collapsed_2d_elements)), 4:].flatten())
-        nodes_from_collapsed_3d_elements = np.unique(self.solids_connectivity[np.array(list(self.collapsed_3d_elements)), 4:].flatten())
+        nodes_from_collapsed_1d_elements = self.lines_connectivity[np.array(list(self.collapsed_1d_elements)), 4:].flatten()
+        nodes_from_collapsed_2d_elements = self.faces_connectivity[np.array(list(self.collapsed_2d_elements)), 4:].flatten()
+        nodes_from_collapsed_3d_elements = self.solids_connectivity[np.array(list(self.collapsed_3d_elements)), 4:].flatten()
 
-        return nodes_from_collapsed_1d_elements, nodes_from_collapsed_2d_elements, nodes_from_collapsed_3d_elements
+        nodes_from_collapsed_elements = np.concatenate([
+            nodes_from_collapsed_1d_elements, 
+            nodes_from_collapsed_2d_elements, 
+            nodes_from_collapsed_3d_elements,
+        ])
+        
+        nodes_from_collapsed_elements = np.unique(nodes_from_collapsed_elements)
+
+        return nodes_from_collapsed_elements
 
 
     def get_face_elements_connected_to_nodes(

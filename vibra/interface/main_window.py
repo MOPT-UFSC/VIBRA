@@ -653,8 +653,8 @@ class MainWindow(MainWindow_UI):
                 len(self.hidden_surfaces) != 0,
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
-                self.visualization_filter.disconected_nodes,
-                self.visualization_filter.collapsed_element_nodes,
+                app().project.model.mesh.collapsed_elements_exists,
+                app().project.model.mesh.disconnected_nodes_exists,
             ]
         )
 
