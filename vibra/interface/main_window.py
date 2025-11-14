@@ -1022,11 +1022,13 @@ class MainWindow(MainWindow_UI):
         
         # properties_founded = list(set([p.replace('_', ' ').title() for p in properties_founded]))
 
-        self.close_dialogs()
         selected_geometry_entities = {"lines": self.selected_geometry_lines,
                                       "points": self.selected_geometry_points,
                                       "surfaces": self.selected_geometry_surfaces,
                                       "volumes": self.selected_geometry_volumes}
+        # print(selected_geometry_entities.values())
+        # print(any(selected_geometry_entities.values()))
+        self.close_dialogs()
 
         buttons_config = {"left_button_label": "Cancel",
                           "right_button_label": "Remove"}

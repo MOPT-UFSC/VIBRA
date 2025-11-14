@@ -1,4 +1,3 @@
-import pprint
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QListWidgetItem, QTableWidgetItem, QTreeWidgetItem, QHeaderView
@@ -27,8 +26,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._configure_table()
         self._mount_properties_list_from_data()
 
-        while self.keep_window_open:
-            self.exec()
+        self.exec()
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -37,7 +35,8 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.setWindowTitle(self.window_title)
     
     def _initialize(self):
-        self.keep_window_open = True
+        ...
+        # self.keep_window_open = True
     
     def _create_connections(self):
         self.pushButton_remove.clicked.connect(self.remove_action)
@@ -62,31 +61,41 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.adjustSize()
 
     def _configure_table(self):
-        self.tableWidget.setColumnCount(3)
-        self.tableWidget.setHorizontalHeaderLabels(["id", "property", "entity"])
+        labels = ["Property", "Entity ID"]
+
+        self.tableWidget.setColumnCount(len(labels))
+        self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(value=3))
+
+        self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _mount_properties_list_from_data(self):
         properties_founded: list[tuple[str, int, str]] = list()
 
         not_to_remove = ["fluid", "material"]
-
         properties = app().project.model.properties.point_properties.keys()
+
         for point_id in self.data.get("points"):
-            prop = [(id, prop, "points") for prop, id in properties if (point_id == id and prop not in not_to_remove)]
+            prop = [(prop.replace("_", " "), f'point  {id}') for prop, id in properties if (point_id == id and prop not in not_to_remove)]
             properties_founded.extend(prop)
         
         properties = app().project.model.properties.line_properties.keys()
         for line_id in self.data.get("lines"):
-            prop = [(id, prop, "lines") for prop, id in properties if (line_id == id and prop not in not_to_remove)]
+            prop = [(prop.replace("_", " "), f'line  {id}') for prop, id in properties if (line_id == id and prop not in not_to_remove)]
             properties_founded.extend(prop)
         
         properties = app().project.model.properties.surface_properties.keys()
         for surface_id in self.data.get("surfaces"):
-            prop = [(id, prop, "surface") for prop, id in properties if (surface_id == id and prop not in not_to_remove)]
+            prop = [(prop.replace("_", " "), f'surface  {id}') for prop, id in properties if (surface_id == id and prop not in not_to_remove)]
+            properties_founded.extend(prop)
+
+        properties = app().project.model.properties.volume_properties.keys()
+        for volume_id in self.data.get("volumes"):
+            prop = [(prop.replace("_", " "), f'volume  {id}') for prop, id in properties if (volume_id == id and prop not in not_to_remove)]
             properties_founded.extend(prop)
         
+        properties_founded.sort(key=lambda item: item[0])
+
         self._fill_table(properties_founded)
     
     def _fill_table(self, data: list[tuple[int, str, str]]):
@@ -114,5 +123,5 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
-        self.keep_window_open = False
+        # self.keep_window_open = False
         return super().closeEvent(a0)
