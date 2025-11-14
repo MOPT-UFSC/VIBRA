@@ -268,24 +268,26 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             logging.info("Processing degress of freedom decoupling... [10/100]")
             self.model.process_degrees_of_freedom_decoupling()
 
-            logging.info("Processing degress of freedom decoupling... [70/100]")
+            logging.info("Processing degress of freedom decoupling... [65/100]")
             app().file.write_mesh_data_in_file()
             
-            logging.info("Processing degress of freedom decoupling... [75/100]")
+            logging.info("Processing degress of freedom decoupling... [70/100]")
             app().file.write_geometry_data_in_file()
 
             # the degrees of freedom modifies the surfaces properties
-            logging.info("Processing degress of freedom decoupling... [80/100]")
+            logging.info("Processing degress of freedom decoupling... [75/100]")
             app().file.write_model_properties_in_file()
 
-            logging.info("Processing degress of freedom decoupling... [85/100]")
+            logging.info("Processing degress of freedom decoupling... [80/100]")
             app().main_window.update_mesh_information()
 
-            logging.info("Processing degress of freedom decoupling... [90/100]")
+            logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_geometry_information()
         
-            logging.info("Processing degress of freedom decoupling... [95/100]")
+            logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_plots()
+            logging.info("Processing degress of freedom decoupling... [95/100]")
+            app().main_window.recompute_hidden_volumes()
 
         LoadingWindow(callback).run()
 
