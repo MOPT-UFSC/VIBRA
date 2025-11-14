@@ -59,19 +59,6 @@ class ModelProperties:
         self.disable_resume_callback = disable_resume_callback
 
         self._reset_variables()
-        self._set_properties_names()
-
-    def _set_properties_names(self):
-        self.structural_properties_names = ["surface_thickness", "prescribed_dof",
-                                            "nodal_loads", "distributed_loads", 
-                                            "normal_pressure_load",
-                                            ]
-        self.acoustic_properties_names = ["acoustic_pressure", "mass_source", "surface_velocity",
-                                        "incident_plane_wave", "anechoic_termination", "absorption_surface",
-                                        "specific_impedance", "transfer_impedance", "perforated_plate_model",
-                                        "proportional_damping", "porous_material_model", "viscous_thermal_model",
-                                        "acoustic_properties_gradient", "reciprocating_compressor_excitation", "acoustic_transfer_element_setup",
-                                        ]
     
     def _reset_variables(self):
 
@@ -401,10 +388,20 @@ class ModelProperties:
                            "mass_source",
                            ]
 
+        structural_labels = [
+                            "surface_thickness",
+                            "prescribed_dof",
+                            "nodal_loads", 
+                            "distributed_loads", 
+                            "normal_pressure_load",
+                            ]
+
         if property in acoustic_labels:
             return "acoustic"
-        else:
+        elif property in structural_labels:
             return "structural"
+        else:
+            return "general"
 
     def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
