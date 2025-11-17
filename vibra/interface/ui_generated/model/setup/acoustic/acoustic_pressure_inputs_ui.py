@@ -103,6 +103,7 @@ class Ui_Dialog(object):
         self.tabWidget_main.setMaximumSize(QSize(380, 16777215))
         font2 = QFont()
         font2.setPointSize(10)
+        font2.setBold(False)
         self.tabWidget_main.setFont(font2)
         self.tab_constant_data = QWidget()
         self.tab_constant_data.setObjectName(u"tab_constant_data")
@@ -313,11 +314,7 @@ class Ui_Dialog(object):
         self.treeWidget_acoustic_pressure.setObjectName(u"treeWidget_acoustic_pressure")
         self.treeWidget_acoustic_pressure.setMinimumSize(QSize(320, 100))
         self.treeWidget_acoustic_pressure.setMaximumSize(QSize(320, 200))
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(10)
-        font4.setItalic(False)
-        self.treeWidget_acoustic_pressure.setFont(font4)
+        self.treeWidget_acoustic_pressure.setFont(font1)
         self.treeWidget_acoustic_pressure.setIndentation(1)
         self.treeWidget_acoustic_pressure.setHeaderHidden(False)
         self.treeWidget_acoustic_pressure.header().setHighlightSections(False)
@@ -344,12 +341,12 @@ class Ui_Dialog(object):
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.label = QLabel(self.frame)
         self.label.setObjectName(u"label")
-        font5 = QFont()
-        font5.setFamilies([u"MS Shell Dlg 2"])
-        font5.setPointSize(11)
-        font5.setBold(False)
-        font5.setItalic(False)
-        self.label.setFont(font5)
+        font4 = QFont()
+        font4.setFamilies([u"MS Shell Dlg 2"])
+        font4.setPointSize(11)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.label.setFont(font4)
         self.label.setTextFormat(Qt.AutoText)
         self.label.setAlignment(Qt.AlignCenter)
 
@@ -394,7 +391,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -422,7 +419,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_acoustic_pressure.headerItem()
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Values", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Nodes", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surfaces", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_acoustic_pressure.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)

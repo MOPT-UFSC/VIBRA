@@ -234,10 +234,12 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
          </font>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tab_constant_data">
          <attribute name="title">
@@ -884,7 +886,9 @@
              <font>
               <family>MS Shell Dlg 2</family>
               <pointsize>10</pointsize>
+              <weight>50</weight>
               <italic>false</italic>
+              <bold>false</bold>
              </font>
             </property>
             <property name="toolTip">
@@ -907,7 +911,7 @@
             </attribute>
             <column>
              <property name="text">
-              <string>Nodes</string>
+              <string>Surfaces</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

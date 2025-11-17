@@ -107,9 +107,13 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+
+        self.lineEdit_selection_id.clear()
+        self.treeWidget_acoustic_pressure.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
         tab_list = self.tabWidget_main.currentIndex() == 2
-        if tab_list:
-            self.lineEdit_selection_id.setText("")
 
         self.lineEdit_selection_id.setDisabled(tab_list)
         self.pushButton_attribute.setDisabled(tab_list)
@@ -374,7 +378,9 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("acoustic_pressure", surface_id)
         
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
+
         app().main_window.clear_selection()
         self.actions_to_finalize()
 
