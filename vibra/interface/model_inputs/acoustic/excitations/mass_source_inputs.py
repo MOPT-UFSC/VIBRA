@@ -774,6 +774,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                     self.properties._remove_volume_property("mass_source", selected_id)
 
         self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
         self.actions_to_finalize()
 
     def reset_callback(self):

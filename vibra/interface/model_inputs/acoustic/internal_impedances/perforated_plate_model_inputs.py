@@ -229,9 +229,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def tab_event_callback(self):
-        self.pushButton_remove.setDisabled(True)
-        self.lineEdit_selection_id.setText("")
+        app().main_window.clear_selection()
+
+        self.lineEdit_selection_id.clear()
         self.treeWidget_perforated_plate_model.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         if self.tabWidget_main.currentIndex() == 2:
             self.lineEdit_selection_id.setDisabled(True)
@@ -671,7 +673,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
 
         self.hide()
         self.actions_to_finalize()
@@ -794,7 +796,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
         
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
 
         self.hide()

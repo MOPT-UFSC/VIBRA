@@ -77,8 +77,13 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+
+        self.lineEdit_selection_id.clear()
+        self.treeWidget_anechoic_termination.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
         if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
         else:
@@ -219,7 +224,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("specific_impedance", surface_id)
 
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
+
         app().main_window.clear_selection()
         self.actions_to_finalize()
 

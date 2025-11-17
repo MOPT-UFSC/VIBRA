@@ -157,7 +157,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.models.remove(model)
 
         self.pushButton_remove.setDisabled(True)
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
 
         app().main_window.clear_selection()
         app().file.write_model_properties_in_file()
@@ -199,24 +199,27 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.actions_to_finalize()
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
 
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
+
         if self.tabWidget_main.currentIndex() == TabType.EDIT:
             self.comboBox_attribution_type.setCurrentIndex(1)
             self.comboBox_attribution_type.setDisabled(True)
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.frame_fluid_info.setDisabled(True)
             self.frame_plot_buttons.setDisabled(True)
 
             self.label_12.setDisabled(True)
 
+        elif self.tabWidget_main.currentIndex() == TabType.LIST:
+            self.lineEdit_selection_id.setDisabled(True)
+            self.treeWidget_viscous_thermal_model.clearSelection()
+
         else:
             current_index = self.comboBox_attribution_type.currentIndex()
             self.comboBox_attribution_type.currentIndexChanged.emit(current_index)
-
-            if "-" in self.lineEdit_selection_id.text():
-                self.lineEdit_selection_id.setText("")
 
             self.frame_fluid_info.setDisabled(False)
             self.frame_plot_buttons.setDisabled(False)

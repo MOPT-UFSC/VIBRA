@@ -140,8 +140,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+        self.lineEdit_selection_id.clear()
+        self.treeWidget_surface_velocity.clearSelection()
+
         if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
             self.pushButton_remove.setDisabled(True)
@@ -422,7 +425,9 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("surface_velocity", surface_id)
 
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
+
         app().main_window.clear_selection()
         self.actions_to_finalize()
 

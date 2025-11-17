@@ -188,14 +188,17 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                 self.update_compressor_inputs(data)
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
         self.treeWidget_compressor_excitation.clearSelection()
 
         check = self.tabWidget_main.currentIndex() == 2
         self.pushButton_confirm.setDisabled(check)
+        self.lineEdit_selection_id.setDisabled(check)  
         if check:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_connection_type.setText("")      
+            self.lineEdit_connection_type.clear()   
 
     def update_compressing_cylinders_setup(self):
 
@@ -859,8 +862,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
         
-        self.lineEdit_selection_id.setText("")
-        self.lineEdit_connection_type.setText("")
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_connection_type.clear()
+        self.pushButton_remove.setDisabled(True)
 
         app().main_window.clear_selection()
         self.actions_to_finalize()

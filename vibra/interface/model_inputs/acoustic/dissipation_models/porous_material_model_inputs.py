@@ -217,13 +217,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
             self.properties._remove_volume_property("porous_material_model", volume_id)
             
-        self.lineEdit_selection_id.setText("")
-        app().main_window.clear_selection()
+        self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
 
+        app().main_window.clear_selection()
         app().file.write_model_properties_in_file()
         self.load_info()
         self.actions_to_finalize()
-
 
         if len(self.map_model_id_to_model) > 0:
             self.tabWidget_main.setCurrentIndex(5)
@@ -259,12 +259,15 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 self.close()
 
     def tab_event_porous_material_model(self):
+        app().main_window.clear_selection()
 
         pm_tab = self.tabWidget_main.currentIndex() <= 3
 
         self.frame_plot_setup.setVisible(pm_tab)
         self.frame_plot_buttons.setVisible(pm_tab)
         self.pushButton_confirm.setEnabled(pm_tab)
+
+        self.lineEdit_selection_id.clear()
 
         if pm_tab:
             self.comboBox_attribution_type.setDisabled(False)
@@ -274,9 +277,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.lineEdit_selection_id.setDisabled(False)
 
         else:
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.comboBox_attribution_type.setDisabled(True)
+
+            self.pushButton_remove.setDisabled(True)
+            self.treeWidget_porous_material_model.clearSelection()
 
     def on_click_item(self, item):
         volume_ids, selection_text = self.get_selected_volumes_and_selection_text()
@@ -285,8 +290,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         self.update_tabs = False
+
         app().main_window.set_geometry_selection(volumes=volume_ids)
+        self.pushButton_remove.setDisabled(False)
         self.lineEdit_selection_id.setText(selection_text)
+
         self.update_tabs = True
 
     def on_doubleclick_item(self, item):
@@ -349,7 +357,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.lineEdit_selection_id.setText("All bodies")
             self.lineEdit_selection_id.setEnabled(False)
         elif index == 1:
-            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.clear()
             self.lineEdit_selection_id.setEnabled(True)
         # self.comboBox_attribution_type.setCurrentIndex(index)
 

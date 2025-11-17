@@ -71,9 +71,13 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
+        self.treeWidget_absorption_surface.clearSelection()
+
         if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
         else:
@@ -418,7 +422,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("absorption_surface", surface_id)
 
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
+
         app().main_window.clear_selection()
         self.actions_to_finalize()
 

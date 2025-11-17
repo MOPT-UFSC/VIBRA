@@ -321,10 +321,13 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.process_table_file_removal(table_names)
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
 
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
+        self.treeWidget_transfer_impedance.clearSelection()
+
         if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             return
 
@@ -574,7 +577,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 app().file.remove_results_data_from_project_file()
                 # self.restore_mesh_data_modified_by_decoupling()
                 
-        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.clear_selection()

@@ -198,9 +198,10 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             volume_id = int(item.text(0))
             self.properties._remove_volume_property("proportional_damping", volume_id)
 
-        self.lineEdit_selection_id.setText("")
-        app().main_window.clear_selection()
+        self.lineEdit_selection_id.clear()
+        self.treeWidget_proportional_damping.clearSelection()
 
+        app().main_window.clear_selection()
         self.actions_to_finalize()
         self.load_info()
 
@@ -232,12 +233,17 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
                 self.actions_to_finalize()
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+
         list_tab = self.tabWidget_main.currentIndex() == 1
+
         self.pushButton_confirm.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.comboBox_attribution_type.setDisabled(list_tab)
+
+        self.lineEdit_selection_id.clear()
+
         if list_tab:
-            self.lineEdit_selection_id.setText("")
             self.pushButton_remove.setDisabled(True)
             self.treeWidget_proportional_damping.clearSelection()
 
