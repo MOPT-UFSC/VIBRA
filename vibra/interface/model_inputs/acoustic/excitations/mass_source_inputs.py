@@ -103,6 +103,11 @@ class MassSourceInputs(MassSourceInputs_UI):
         points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
+        tab_list = self.tabWidget_main.currentIndex() == 3
+
+        if tab_list:
+            return
+
         text = ""
         if volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -157,9 +162,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.check_fluid_inheritance()
 
     def load_property_data(self, selection_id: int, selection_type: str):
-
-        if self.tabWidget_main.currentIndex() == 3:
-            return
 
         if selection_type == "points":
             data = self.model.properties._get_property("mass_source", point=selection_id)
@@ -416,21 +418,32 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.set_mesh_selection(nodes=[nearest_node])
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+        self.treeWidget_mass_source.clearSelection()
 
+        self.lineEdit_selection_id.clear()
         self.pushButton_remove.setDisabled(True)
+
         tab_list = self.tabWidget_main.currentIndex() == 3
 
         if tab_list:
             self.comboBox_attribution_type.setDisabled(True)
-            app().main_window.clear_selection()
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
+
+            self.comboBox_attribution_type.setVisible(False)
+            self.comboBox_inherit_fluid_from.setVisible(False)
+            self.label_10.setVisible(False)
 
         else:
             self.comboBox_attribution_type.setEnabled(True)
             self.lineEdit_selection_id.setDisabled(False)
             self.pushButton_attribute.setEnabled(True)
+
+            self.comboBox_attribution_type.setVisible(True)
+            self.comboBox_inherit_fluid_from.setVisible(True)
+            self.label_10.setVisible(True)
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
@@ -736,33 +749,31 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        selected_items, _ = self.get_selected_items_and_selection_text()
 
-        if self.lineEdit_selection_id.text() == "":
+        if not selected_items:
             return
 
-        selection_id = int(self.lineEdit_selection_id.text())
-        attribution_type = self.comboBox_attribution_type.currentIndex()
+        for selected_type, selected_ids in selected_items.items():
+            self.remove_table_files_from_selection(selected_ids, selected_type)
 
-        if attribution_type == AssignmentType.NODES:
-            self.remove_table_files_from_selection(selection_id, "nodes")
-            self.properties._remove_nodal_property("mass_source", selection_id)
+            for selected_id in selected_ids:
+                if selected_type == "nodes":
+                    self.properties._remove_nodal_property("mass_source", selected_id)
 
-        elif attribution_type == AssignmentType.POINTS:
-            self.remove_table_files_from_selection(selection_id, "points")
-            self.properties._remove_point_property("mass_source", selection_id)
+                elif selected_type == "points":
+                    self.properties._remove_point_property("mass_source", selected_id)
 
-        elif attribution_type == AssignmentType.LINES:
-            self.remove_table_files_from_selection(selection_id, "lines")
-            self.properties._remove_line_property("mass_source", selection_id)
+                elif selected_type == "lines":
+                        self.properties._remove_line_property("mass_source", selected_id)
 
-        elif attribution_type == AssignmentType.SURFACES:
-            self.remove_table_files_from_selection(selection_id, "surfaces")
-            self.properties._remove_surface_property("mass_source", selection_id)
+                elif selected_type == "surfaces":
+                    self.properties._remove_surface_property("mass_source", selected_id)
 
-        else:
-            self.remove_table_files_from_selection(selection_id, "volumes")
-            self.properties._remove_volume_property("mass_source", selection_id)
+                else:
+                    self.properties._remove_volume_property("mass_source", selected_id)
 
+        self.lineEdit_selection_id.clear()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -880,55 +891,40 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.tabWidget_main.setTabVisible(3, False)
 
     def on_click_item(self, item):
-        selected_items, selection_text, selection_type_text = self.get_selected_items_and_texts()
+        selected_items, selection_text = self.get_selected_items_and_selection_text()
 
         if not selected_items:
             return
 
-        self.lineEdit_selection_id.setText(selection_text)
-        self.comboBox_attribution_type.setCurrentText(selection_type_text)
-
         self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(selection_text)
 
-        for key, values in selected_items.items():
-            if key == "node":
-                app().main_window.set_mesh_selection(nodes=values)
+        nodes = selected_items.pop("nodes") if "nodes" in selected_items else set()
 
-            elif key == "point":
-                app().main_window.set_geometry_selection(points=values)
-
-            elif key == "line":
-                app().main_window.set_geometry_selection(lines=values)
-
-            elif key == "surface":
-                app().main_window.set_geometry_selection(surfaces=values)
-
-            elif key == "volume":
-                app().main_window.set_geometry_selection(volumes=values)
+        app().main_window.set_mesh_selection(nodes=nodes)
+        app().main_window.set_geometry_selection(**selected_items)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_items_and_texts(self):
+    def get_selected_items_and_selection_text(self):
         _selected_items = self.treeWidget_mass_source.selectedItems()
 
         if not _selected_items:
-            return list(), str(), str()
+            return list(), str()
 
         selection_text = ""
-        selected_items = defaultdict(list)
+        selected_items = defaultdict(set)
 
         for item in _selected_items:
             selected_id = item.text(0)
-            selected_type = item.text(1)
+            selected_type = item.text(1) + "s"
 
             selection_text += selected_id + ", "
 
-            selected_items[selected_type].append(int(selected_id))
-
-        selection_type_text = "Selected " + list(selected_items.keys())[0] + "s" if len(selected_items) == 1 else "--"
+            selected_items[selected_type].add(int(selected_id))
         
-        return  selected_items, selection_text[:-2], selection_type_text
+        return selected_items, selection_text[:-2]
 
     def load_model_info(self):
 
