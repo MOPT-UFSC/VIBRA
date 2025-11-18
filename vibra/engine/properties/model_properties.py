@@ -474,24 +474,24 @@ class ModelProperties:
     
         return entities_without_property
 
-    def get_properties_from_points(self, point_ids: set[int]) -> list[str]:
+    def get_properties_from_points(self, point_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(point_ids, self.point_properties)
     
-    def get_properties_from_lines(self, line_ids: set[int]) -> list[str]:
+    def get_properties_from_lines(self, line_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(line_ids, self.line_properties)
 
-    def get_properties_from_surfaces(self, surface_ids: set[int]) -> list[str]:
+    def get_properties_from_surfaces(self, surface_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(surface_ids, self.surface_properties)
 
-    def get_properties_from_volumes(self, volume_ids: set[int]) -> list[str]:
+    def get_properties_from_volumes(self, volume_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(volume_ids, self.volume_properties)
 
-    def _get_properties_from_entities(self, entity_ids: set[int], entity_properties: dict) -> list[str]:
-        properties_found: list[str] = list()
+    def _get_properties_from_entities(self, entity_ids: set[int], entity_properties: dict) -> list[tuple[str, int]]:
+        properties_found: list[tuple[str, int]] = list()
 
         for property_name, entity_id in entity_properties.keys():
             if entity_id in entity_ids:
-                properties_found.append(property_name)
+                properties_found.append((property_name, entity_id))
         
         return properties_found
 
