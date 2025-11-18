@@ -34,6 +34,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.acoustic_post = app().project.acoustic_postprocessing
@@ -464,14 +465,21 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             normal = -normal
 
         logging.info("Applying cut... [70/100]")
+        visualization = app().main_window.visualization_filter
         if is_mesh_field:
             self.analysis_actor.apply_cut(xyz, normal)
+            self.edges_actor.VisibilityOn()
+            visualization.lines = True
+            app().main_window.action_line_view.setChecked(True)
         else:
             self.analysis_actor.apply_cutter(xyz, normal)
+            self.edges_actor.VisibilityOff()
+            visualization.lines = False
+            app().main_window.action_line_view.setChecked(False)
+
         self.edges_actor.apply_cut(xyz, normal)
 
         logging.info("Updating visualization... [80/100]")
-        visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)

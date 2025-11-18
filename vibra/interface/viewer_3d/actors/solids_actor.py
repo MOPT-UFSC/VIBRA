@@ -222,6 +222,7 @@ class SolidsActor(vtkActor):
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
         self.clipper.SetImplicitFunction(plane)
+        self.clipper.Update()
         self.SetMapper(self.clipper_mapper)
 
     def disable_cut(self):
