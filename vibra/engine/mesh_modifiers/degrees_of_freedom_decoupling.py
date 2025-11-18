@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+from vibra.engine.geometry.geometry import Geometry
 from collections import defaultdict
 from copy import deepcopy
 from time import time
@@ -15,6 +16,7 @@ class DegreesOfFreedomDecoupling:
     def __init__(self, model: "Model"):
         self.model = model
         self.mesh = model.mesh
+        self.geometry: Geometry = model.geometry
         self.properties = model.properties
 
         self.initialize()
@@ -88,8 +90,8 @@ class DegreesOfFreedomDecoupling:
 
         """
         surface_ids = list(self.decouple_info.keys())
-        point_ids, _ = self.mesh.get_points_and_lines_from_surfaces(surface_ids)
-        max_point_id = max(self.mesh.get_points_from_geometry())
+        point_ids = self.geometry.surfaces_to_points(*surface_ids)
+        max_point_id = max(self.geometry.points)
         new_point_ids = np.arange(len(point_ids), dtype=int) + max_point_id + 1
         new_point_ids = [int(point_id) for point_id in new_point_ids]
         point_ids_mapping = dict(zip(point_ids, new_point_ids))
@@ -109,8 +111,8 @@ class DegreesOfFreedomDecoupling:
 
         """
         surface_ids = list(self.decouple_info.keys())
-        _, line_ids = self.mesh.get_points_and_lines_from_surfaces(surface_ids)
-        max_line_id = max(self.mesh.get_lines_from_geometry())
+        line_ids = self.geometry.surfaces_to_curves(*surface_ids)
+        max_line_id = max(self.geometry.curves)
         new_line_ids = np.arange(len(line_ids), dtype=int) + max_line_id + 1
         new_line_ids = [int(line_id) for line_id in new_line_ids]
         lines_mapping = dict(zip(line_ids, new_line_ids))
@@ -131,7 +133,7 @@ class DegreesOfFreedomDecoupling:
 
         """
         surface_ids = list(self.decouple_info.keys())
-        max_surface_id = max(self.mesh.get_surfaces_from_geometry())
+        max_surface_id = max(self.geometry.surfaces)
         new_surface_ids = np.arange(len(surface_ids), dtype=int) + max_surface_id + 1
         new_surface_ids = [int(surface_id) for surface_id in new_surface_ids]
         surfaces_mapping = dict(zip(surface_ids, new_surface_ids))
@@ -234,8 +236,8 @@ class DegreesOfFreedomDecoupling:
         valid_surface_ids = set()
         surfaces_to_remove = list()
 
-        surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
-        lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
+        surfaces_from_volume = deepcopy(self.geometry._cache_solids_to_surfaces)
+        lines_from_surface = deepcopy(self.geometry._cache_surfaces_to_curves)
 
         for surface_id, vol_id in self.decouple_info.items():
 
@@ -334,7 +336,7 @@ class DegreesOfFreedomDecoupling:
         """
 
         cols = self.mesh.lines_connectivity.shape[1]
-        lines_from_surface = self.mesh.lines_from_surface[surface_id]
+        lines_from_surface = self.geometry.surfaces_to_curves(surface_id)
 
         for i, line_id in enumerate(lines_from_surface):
 
@@ -406,13 +408,13 @@ class DegreesOfFreedomDecoupling:
         lines_nodes = set()
         for surface_id, vol_id in self.decouple_info.items():
 
-            lines_from_surface = self.mesh.cache_lines_from_surface[surface_id]
-    
-            for surf_id in self.mesh.cache_surfaces_from_volume[vol_id]:
+            lines_from_surface = self.geometry._cache_surfaces_to_curves[surface_id]
+
+            for surf_id in self.geometry._cache_solids_to_surfaces[vol_id]:
                 if surf_id == surface_id:
                     continue
                 
-                line_ids |= set(self.mesh.cache_lines_from_surface[surf_id])
+                line_ids |= set(self.geometry._cache_surfaces_to_curves[surf_id])
             
             line_ids -= set(lines_from_surface)
 
@@ -516,13 +518,13 @@ class DegreesOfFreedomDecoupling:
 
         logging.info("Processing degress of freedom decoupling... [90/100]")
 
-        surfaces_from_volume = deepcopy(self.mesh.cache_surfaces_from_volume)
-        lines_from_surface = deepcopy(self.mesh.cache_lines_from_surface)
-        points_from_line = deepcopy(self.mesh.cache_points_from_line)
+        surfaces_from_volume = deepcopy(self.geometry._cache_solids_to_surfaces)
+        lines_from_surface = deepcopy(self.geometry._cache_surfaces_to_curves)
+        points_from_line = deepcopy(self.geometry._cache_curves_to_points)
 
         geometry_information = deepcopy(self.mesh.geometry_information)
-        area_from_surfaces = deepcopy(self.mesh.area_from_surfaces)
-        length_from_lines = deepcopy(self.mesh.length_from_lines)
+        area_from_surfaces = deepcopy(self.geometry._surfaces_areas)
+        length_from_lines = deepcopy(self.geometry._curves_lengths)
 
         surface_ids = set(geometry_information["surfaces"])
         point_ids = set(geometry_information["points"])
