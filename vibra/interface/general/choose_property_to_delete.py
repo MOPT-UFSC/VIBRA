@@ -61,44 +61,44 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.adjustSize()
 
     def _configure_table(self):
-        labels = ["Property", "Entity ID"]
+        labels = ["Property", "Entity ID", "Entity"]
 
         self.tableWidget.setColumnCount(len(labels))
         self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
 
         self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def _mount_properties_list_from_data(self):
-        properties_founded: list[tuple[str, int, str]] = list()
+        properties_found: list[tuple[str, str, int]] = list()
 
-        not_to_remove = ["fluid", "material"]
-        properties = app().project.model.properties.point_properties.keys()
+        def filter_properties_to_not_show(prop: tuple[str, str, int]) -> list[tuple[str, str]]:
+            return prop[0] not in ["fluid", "material"]
 
-        for point_id in self.data.get("points"):
-            prop = [(prop.replace("_", " "), f'point  {id}') for prop, id in properties if (point_id == id and prop not in not_to_remove)]
-            properties_founded.extend(prop)
-        
-        properties = app().project.model.properties.line_properties.keys()
-        for line_id in self.data.get("lines"):
-            prop = [(prop.replace("_", " "), f'line  {id}') for prop, id in properties if (line_id == id and prop not in not_to_remove)]
-            properties_founded.extend(prop)
-        
-        properties = app().project.model.properties.surface_properties.keys()
-        for surface_id in self.data.get("surfaces"):
-            prop = [(prop.replace("_", " "), f'surface  {id}') for prop, id in properties if (surface_id == id and prop not in not_to_remove)]
-            properties_founded.extend(prop)
+        prop = app().project.model.properties.get_properties_from_points(self.data.get("points"))
+        prop = [(name, id_number, "point") for name, id_number in prop]
+        properties_found.extend(prop)
 
-        properties = app().project.model.properties.volume_properties.keys()
-        for volume_id in self.data.get("volumes"):
-            prop = [(prop.replace("_", " "), f'volume  {id}') for prop, id in properties if (volume_id == id and prop not in not_to_remove)]
-            properties_founded.extend(prop)
-        
-        properties_founded.sort(key=lambda item: item[0])
+        prop = app().project.model.properties.get_properties_from_lines(self.data.get("lines"))
+        prop = [(name, id_number, "line") for name, id_number in prop]
+        properties_found.extend(prop)
 
-        self._fill_table(properties_founded)
+        prop = app().project.model.properties.get_properties_from_surfaces(self.data.get("surfaces"))
+        prop = [(name, id_number, "surface") for name, id_number in prop]
+        properties_found.extend(prop)
+
+        prop = app().project.model.properties.get_properties_from_volumes(self.data.get("volumes"))
+        prop = [(name, id_number, "volume") for name, id_number in prop]
+        properties_found.extend(prop)
+
+        # it is filtered to exclude properties that are not meant to be removed
+        properties_found = list(filter(filter_properties_to_not_show, properties_found))
+        properties_found.sort(key=lambda item: item[0])
+
+        self._fill_table(properties_found)
     
-    def _fill_table(self, data: list[tuple[int, str, str]]):
+    def _fill_table(self, data: list[tuple[str, str, int]]):
         self.tableWidget.setRowCount(len(data))
 
         for row_index, line in enumerate(data):
@@ -109,11 +109,12 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.tableWidget.resizeColumnsToContents()
 
     def actions_to_finalize(self):
-        self.update_symbols()
+        app().main_window.update_symbols()
 
     def remove_action(self):
         self._remove = True
         self._cancel = False
+
         self.actions_to_finalize()
         self.close()
     
