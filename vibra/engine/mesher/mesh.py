@@ -132,6 +132,8 @@ class Mesh:
         self.cache_points_from_line = dict()
 
         self.error_data = dict()
+        self.disconnected_nodes_exists = False
+        self.collapsed_elements_exists = False
 
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
