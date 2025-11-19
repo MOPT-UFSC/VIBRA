@@ -950,11 +950,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         print("reproduce_audio_callback")
 
         if sd._last_callback is not None:
-            sd.stop()
-            sd._last_callback = None
-            return
+            if sd.get_stream().active:
+                sd.stop()
+                return
 
-        print("passei aqui")
         # frequency sampling for audio
         fs_audio = 44100
 
