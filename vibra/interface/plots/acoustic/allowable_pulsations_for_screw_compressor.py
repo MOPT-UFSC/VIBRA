@@ -123,7 +123,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
     def get_fluids_related_to_surfaces_selection(self, selected_surfaces: list[int]):
         fluids = list()
         for surface_id in selected_surfaces:
-            for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+            for volume_id in self.mesh.volumes_from_surface.get(surface_id, list()):
                 fluid = self.properties._get_property("fluid", volume=volume_id)
                 if fluid not in fluids:
                     fluids.append(fluid)
@@ -136,8 +136,8 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
     def get_fluids_related_to_lines_selection(self, selected_lines: list[int]):
         fluids = list()
         for line_id in selected_lines:
-            for surface_id in self.mesh.surfaces_from_line.get(line_id):
-                for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+            for surface_id in self.mesh.surfaces_from_line.get(line_id, list()):
+                for volume_id in self.mesh.volumes_from_surface.get(surface_id, list()):
                     fluid = self.properties._get_property("fluid", volume=volume_id)
                     if fluid not in fluids:
                         fluids.append(fluid)
@@ -150,9 +150,9 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
     def get_fluids_related_to_points_selection(self, selected_points: list[int]):
         fluids = list()
         for point_id in selected_points:
-            for line_id in self.mesh.lines_from_point.get(point_id):
-                for surface_id in self.mesh.surfaces_from_line.get(line_id):
-                    for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+            for line_id in self.mesh.lines_from_point.get(point_id, list()):
+                for surface_id in self.mesh.surfaces_from_line.get(line_id, list()):
+                    for volume_id in self.mesh.volumes_from_surface.get(surface_id, list()):
                         fluid = self.properties._get_property("fluid", volume=volume_id)
                         if fluid not in fluids:
                             fluids.append(fluid)

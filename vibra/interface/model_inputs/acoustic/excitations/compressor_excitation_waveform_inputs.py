@@ -13,6 +13,8 @@ from vibra.utils.signal_processing import extend_signal, process_one_sided_spect
 
 import numpy as np
 from pathlib import Path
+from scipy.io import wavfile
+import sounddevice as sd
 
 error_title = "Error"
 
@@ -46,10 +48,14 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.imported_values = None
-        self.keep_window_open = True
+        
+        self.T_audio = 5
         self.model_results = dict()
 
+        self.auralize_signal = False
+        self.keep_window_open = True
+
+        self.imported_values = None
         self.spectrum_plotter = None
         self.waveform_plotter = None
 
@@ -83,6 +89,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_spectrum_data.clicked.connect(self.plot_spectrum_data_callback)
         self.pushButton_waveform_data.clicked.connect(self.plot_waveform_data_callback)
+        self.pushButton_reproduce_audio.clicked.connect(self.reproduce_audio_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
@@ -339,9 +346,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         else:
             return
 
-        surface_velocity_spectrum_data = self.compute_signal_spectrum(time_vector, x_data)
-
-        return surface_velocity_spectrum_data
+        return self.compute_signal_spectrum(time_vector, x_data)
 
     def process_signal_spectrum_for_non_cfd_data(self):
 
@@ -393,14 +398,17 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.lineEdit_maximum_frequency.setFocus()
             return None
 
-        # Sampling time to obtain desired frequency resolution
-        T_req = 1 / f_step
-
         # calculat the time step
         dt = time_vector[-1] - time_vector[-2]
 
         # time to complete one revolution of the male rotor
         T_rev = time_vector[-1] - time_vector[0]
+
+        if self.auralize_signal:
+            T_req = self.T_audio
+        else:
+            # Sampling time to obtain desired frequency resolution
+            T_req = 1 / f_step
 
         # number of repetitions to reach the desired frequency resolution
         N_rep = int(np.ceil(T_req / T_rev))
@@ -408,6 +416,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         # extend the signal by 'N_rep' times to adjust the frequency resolution
         x_data_ext = extend_signal(x_data, N_rep)
         time_ext = np.arange(x_data_ext.size, dtype=float) * dt
+
+        # update attributes for waveform plot
+        self.time_vector = time_ext
+        self.x_data = x_data_ext
+        if self.auralize_signal:
+            return None
 
         # get window type
         window_type = self.comboBox_window_type.currentText()
@@ -427,10 +441,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         # apply correction factor
         Xf[1:] *= correction_factor
         
-        # update attributes for waveform plot
-        self.time_vector = time_ext
-        self.x_data = x_data_ext
-
         # update attributes for spectrum plot
         self.frequencies_vector = freq
         self.Xf_data = Xf
@@ -934,6 +944,39 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.waveform_plotter.radioButton_real.setChecked(True)
         self.waveform_plotter._update_comboBox()
         self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
+
+    def reproduce_audio_callback(self):
+
+        print("reproduce_audio_callback")
+
+        if sd._last_callback is not None:
+            sd.stop()
+            sd._last_callback = None
+            return
+
+        print("passei aqui")
+        # frequency sampling for audio
+        fs_audio = 44100
+
+        self.auralize_signal = True
+        self.process_signals_to_plot()
+
+        time_vector_audio = np.arange(0, self.T_audio, 1/fs_audio)
+        audio_signal = np.interp(time_vector_audio, self.time_vector, self.x_data)
+        audio_signal /= np.max(np.abs(audio_signal))
+
+        # Play the signal
+        sd.play(audio_signal, fs_audio)
+
+        # Wait until the sound finishes playing
+        # sd.wait()
+
+        # # Save the signal to a WAV file
+        # file_name = "sine_wave.wav"
+        # wavfile.write(file_name, fs_audio, (audio_signal * 32767).astype(np.int16)) # Scale for 16-bit PCM
+        # print(f"Signal saved to {file_name}")
+
+        self.auralize_signal = False
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

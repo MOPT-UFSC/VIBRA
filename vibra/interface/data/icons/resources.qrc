@@ -44,6 +44,8 @@
         <file>user_preferences_icon.png</file>
         <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
+        <file>model_configuration/listen_audio.png</file>
+        <file>model_configuration/play_audio.png</file>
         <file>model_setup_items/absorption_surface.png</file>
         <file>model_setup_items/absorption_surface1.png</file>
         <file>model_setup_items/acoustic_pressure.png</file>
