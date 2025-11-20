@@ -11,9 +11,12 @@ from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_wav
 
 from vibra.utils.signal_processing import extend_signal, process_one_sided_spectrum, get_window_and_correction_factor
 
-import numpy as np
+from copy import deepcopy
 from pathlib import Path
 from scipy.io import wavfile
+from scipy.signal.windows import hann
+
+import numpy as np
 import sounddevice as sd
 
 error_title = "Error"
@@ -50,6 +53,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def _initialize(self):
         
         self.T_audio = 5
+        self.fading_samples = 4096
+
         self.model_results = dict()
 
         self.auralize_signal = False
@@ -947,14 +952,11 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def reproduce_audio_callback(self):
 
-        print("reproduce_audio_callback")
-
         if sd._last_callback is not None:
-            sd.stop()
-            sd._last_callback = None
-            return
+            if sd.get_stream().active:
+                sd.stop()
+                return
 
-        print("passei aqui")
         # frequency sampling for audio
         fs_audio = 44100
 
@@ -963,18 +965,33 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         time_vector_audio = np.arange(0, self.T_audio, 1/fs_audio)
         audio_signal = np.interp(time_vector_audio, self.time_vector, self.x_data)
+        
+        # remove dc component
+        audio_signal -= np.average(audio_signal)
+
+        # rescale signal to oscillate between -1 and 1
         audio_signal /= np.max(np.abs(audio_signal))
 
-        # Play the signal
-        sd.play(audio_signal, fs_audio)
-
-        # Wait until the sound finishes playing
-        # sd.wait()
-
-        # # Save the signal to a WAV file
-        # file_name = "sine_wave.wav"
+        ## save the signal to a WAV file
+        # file_name = "compressor_signal.wav"
         # wavfile.write(file_name, fs_audio, (audio_signal * 32767).astype(np.int16)) # Scale for 16-bit PCM
-        # print(f"Signal saved to {file_name}")
+
+        # create a hann window for fading purposes
+        hann_window = hann(2*self.fading_samples)
+
+        # deepcopy the audio signal
+        audio_signal_faded = deepcopy(audio_signal)
+
+        # apply the fade-in to audio signal
+        N_ws = self.fading_samples
+        audio_signal_faded[:N_ws] = audio_signal_faded[:N_ws] * hann_window[:N_ws]
+        
+        # apply the fade-out to audio signal
+        N_fout = audio_signal_faded.size - N_ws
+        audio_signal_faded[N_fout:] = audio_signal_faded[N_fout:] * hann_window[N_ws:]
+
+        # play the signal
+        sd.play(audio_signal_faded, fs_audio)
 
         self.auralize_signal = False
 
