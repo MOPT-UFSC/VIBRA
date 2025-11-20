@@ -67,6 +67,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.imported_values = None
         self.assignment_complete = False
         self.keep_window_open = True
+        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _create_connections(self):
         #
@@ -229,14 +230,20 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == 2
 
-        self.lineEdit_selection_id.clear()
-        self.treeWidget_perforated_plate_model.clearSelection()
-        self.pushButton_remove.setDisabled(True)
+        if self.last_tab == 2 or tab_list:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
 
-        if self.tabWidget_main.currentIndex() == 2:
+        self.last_tab = current_tab
+
+        if tab_list:
+            self.pushButton_remove.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
+            self.treeWidget_perforated_plate_model.clearSelection()
+
             return
 
         self.geometry_selection_callback()

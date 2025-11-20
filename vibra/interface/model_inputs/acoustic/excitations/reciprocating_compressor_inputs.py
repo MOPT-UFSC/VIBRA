@@ -66,6 +66,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.exporter = None
 
+        self.last_tab = self.tabWidget_main.currentIndex()
+
     def _config_widget(self):
         #
         widths = [100, 120, 120, 200]
@@ -188,17 +190,22 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                 self.update_compressor_inputs(data)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == 2
 
-        self.lineEdit_selection_id.clear()
-        self.pushButton_remove.setDisabled(True)
-        self.treeWidget_compressor_excitation.clearSelection()
+        self.pushButton_confirm.setDisabled(tab_list)
+        self.lineEdit_selection_id.setDisabled(tab_list)
 
-        check = self.tabWidget_main.currentIndex() == 2
-        self.pushButton_confirm.setDisabled(check)
-        self.lineEdit_selection_id.setDisabled(check)  
-        if check:
+        if self.last_tab == 2 or tab_list:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
+
+        if tab_list:
             self.lineEdit_connection_type.clear()   
+            self.pushButton_remove.setDisabled(True)
+            self.treeWidget_compressor_excitation.clearSelection()
+        
+        self.last_tab = current_tab
 
     def update_compressing_cylinders_setup(self):
 

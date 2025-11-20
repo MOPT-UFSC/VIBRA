@@ -73,6 +73,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.keep_window_open = True
         self.material_model_data = dict()
         self.models: list[RectangularDuctData|CircularDuctData] = list()
+        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _create_connections(self):
         #
@@ -199,21 +200,24 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.actions_to_finalize()
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        current_tab = self.tabWidget_main.currentIndex()
+        list_or_edit_tab = [TabType.LIST, TabType.EDIT]
 
-        self.lineEdit_selection_id.clear()
-        self.pushButton_remove.setDisabled(True)
+        if self.last_tab in list_or_edit_tab or current_tab in list_or_edit_tab:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
 
-        if self.tabWidget_main.currentIndex() == TabType.EDIT:
+        self.last_tab = current_tab
+
+        if current_tab == TabType.EDIT:
             self.comboBox_attribution_type.setCurrentIndex(1)
             self.comboBox_attribution_type.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
             self.frame_fluid_info.setDisabled(True)
             self.frame_plot_buttons.setDisabled(True)
 
-            self.label_12.setDisabled(True)
-
-        elif self.tabWidget_main.currentIndex() == TabType.LIST:
+        elif current_tab == TabType.LIST:
+            self.pushButton_remove.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
             self.treeWidget_viscous_thermal_model.clearSelection()
 

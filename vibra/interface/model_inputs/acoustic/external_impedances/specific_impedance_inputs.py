@@ -46,6 +46,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
+        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _configure_qt_variables(self):
         #
@@ -71,18 +72,21 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == 2
 
-        self.lineEdit_selection_id.clear()
-        self.treeWidget_specific_impedance.clearSelection()
-        self.pushButton_remove.setDisabled(True)
+        if self.last_tab == 2 or tab_list:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
 
-        if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+        if tab_list:
+            self.treeWidget_specific_impedance.clearSelection()
+            self.pushButton_remove.setDisabled(True)
+        
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_attribute.setDisabled(tab_list)
+
+        self.last_tab = current_tab
 
     def on_click_item(self, item):
         surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()

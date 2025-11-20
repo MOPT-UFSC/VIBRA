@@ -53,6 +53,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.assignment_complete = False
         self.keep_window_open = True
         self.ti_data = dict()
+        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _configure_qt_variables(self):
         #
@@ -321,14 +322,20 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.process_table_file_removal(table_names)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == 2
 
-        self.lineEdit_selection_id.clear()
-        self.pushButton_remove.setDisabled(True)
-        self.treeWidget_transfer_impedance.clearSelection()
+        if self.last_tab == 2 or tab_list:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
 
-        if self.tabWidget_main.currentIndex() == 2:
+        self.last_tab = current_tab
+
+        if tab_list:
+            self.pushButton_remove.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
+            self.treeWidget_transfer_impedance.clearSelection()
+
             return
 
         self.geometry_selection_callback()

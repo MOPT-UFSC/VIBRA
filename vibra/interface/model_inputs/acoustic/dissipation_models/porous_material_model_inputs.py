@@ -77,6 +77,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.update_tabs = True
         self.keep_window_open = True
         self.material_model_data = dict()
+        self.last_tab = self.tabWidget_main.currentIndex()
         app().main_window.volume_selection_mode = True
 
     def _create_connections(self):
@@ -123,6 +124,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         app().main_window.update_symbols()
     
     def geometry_selection_callback(self):
+        pm_tabs = self.tabWidget_main.currentIndex() <= 3
+
+        if not pm_tabs:
+            return
 
         volumes = app().main_window.selected_geometry_volumes
 
@@ -259,18 +264,22 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 self.close()
 
     def tab_event_porous_material_model(self):
-        app().main_window.clear_selection()
+        current_tab = self.tabWidget_main.currentIndex()
+        edit_or_list_tabs = [4, 5]
+        pm_tab = current_tab <= 3
 
-        pm_tab = self.tabWidget_main.currentIndex() <= 3
+        if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
 
         self.frame_plot_setup.setVisible(pm_tab)
         self.frame_plot_buttons.setVisible(pm_tab)
         self.pushButton_confirm.setEnabled(pm_tab)
+        self.comboBox_attribution_type.setEnabled(pm_tab)
 
-        self.lineEdit_selection_id.clear()
+        self.last_tab = current_tab
 
         if pm_tab:
-            self.comboBox_attribution_type.setDisabled(False)
             if self.comboBox_attribution_type.currentIndex() == 0:
                 return
 
@@ -278,7 +287,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         else:
             self.lineEdit_selection_id.setDisabled(True)
-            self.comboBox_attribution_type.setDisabled(True)
 
             self.pushButton_remove.setDisabled(True)
             self.treeWidget_porous_material_model.clearSelection()

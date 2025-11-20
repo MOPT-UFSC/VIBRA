@@ -64,6 +64,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                                3 : "surfaces",
                                4 : "volumes"
                                }
+        self.last_tab = self.treeWidget_mass_source.currentIndex()
 
     def _configure_qt_variables(self):
         #
@@ -418,32 +419,26 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.set_mesh_selection(nodes=[nearest_node])
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
-        self.treeWidget_mass_source.clearSelection()
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == 3
 
-        self.lineEdit_selection_id.clear()
-        self.pushButton_remove.setDisabled(True)
-
-        tab_list = self.tabWidget_main.currentIndex() == 3
+        if self.last_tab == 3 or tab_list:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
 
         if tab_list:
-            self.comboBox_attribution_type.setDisabled(True)
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+            self.pushButton_remove.setDisabled(True)
+            self.treeWidget_mass_source.clearSelection()
+    
+        self.comboBox_attribution_type.setDisabled(tab_list)
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_attribute.setDisabled(tab_list)
 
-            self.comboBox_attribution_type.setVisible(False)
-            self.comboBox_inherit_fluid_from.setVisible(False)
-            self.label_10.setVisible(False)
-
-        else:
-            self.comboBox_attribution_type.setEnabled(True)
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
-
-            self.comboBox_attribution_type.setVisible(True)
-            self.comboBox_inherit_fluid_from.setVisible(True)
-            self.label_10.setVisible(True)
+        self.comboBox_attribution_type.setVisible(not tab_list)
+        self.comboBox_inherit_fluid_from.setVisible(not tab_list)
+        self.label_10.setVisible(not tab_list)
+        
+        self.last_tab = current_tab
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()

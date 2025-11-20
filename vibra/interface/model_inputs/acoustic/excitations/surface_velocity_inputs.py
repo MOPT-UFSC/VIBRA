@@ -48,6 +48,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
+        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _configure_qt_variables(self):
         self.pushButton_change_frequency_setup.setDisabled(True)
@@ -140,17 +141,21 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
-        self.lineEdit_selection_id.clear()
-        self.treeWidget_surface_velocity.clearSelection()
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == 2
 
-        if self.tabWidget_main.currentIndex() == 2:
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+        if self.last_tab == 2 or tab_list:
+            app().main_window.clear_selection()
+            self.lineEdit_selection_id.clear()
+
+        if tab_list:
             self.pushButton_remove.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+            self.treeWidget_surface_velocity.clearSelection()
+        
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_attribute.setDisabled(tab_list)
+
+        self.last_tab = current_tab
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
