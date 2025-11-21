@@ -8,6 +8,7 @@ from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui imp
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 
 import numpy as np
 
@@ -21,6 +22,12 @@ class AssignmentType(IntEnum):
     LINES = 2
     SURFACES = 3
     VOLUMES = 4
+
+class MSTabType(IntEnum):
+    CONSTANT_DATA = StandardTabType.CONSTANT_DATA
+    TABULAR_DATA = StandardTabType.TABULAR_DATA
+    ADVANCED_SEARCH = 2
+    LIST = 3
 
 error_title = "Error"
 
@@ -104,7 +111,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         points = app().main_window.selected_geometry_points
         nodes = app().main_window.selected_mesh_nodes
 
-        tab_list = self.tabWidget_main.currentIndex() == 3
+        tab_list = self.tabWidget_main.currentIndex() == MSTabType.LIST
 
         if tab_list:
             return
@@ -113,27 +120,27 @@ class MassSourceInputs(MassSourceInputs_UI):
         if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(4)
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.VOLUMES)
 
         elif surfaces:
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(3)
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.SURFACES)
 
         elif lines:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(2)
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.LINES)
 
         elif points:
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.POINTS)
 
         elif nodes:
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.NODES)
 
         if len(nodes) == 1:
             node_id = list(nodes)[0]
@@ -178,10 +185,10 @@ class MassSourceInputs(MassSourceInputs_UI):
         if isinstance(data, dict):
 
             if "table_paths" in data.keys():
-                self.tabWidget_main.setCurrentIndex(1)
+                self.tabWidget_main.setCurrentIndex(MSTabType.TABULAR_DATA)
                 self.lineEdit_table_path.setText(data["table_paths"][0])
             else:
-                self.tabWidget_main.setCurrentIndex(0)
+                self.tabWidget_main.setCurrentIndex(MSTabType.CONSTANT_DATA)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
 
@@ -390,7 +397,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def compute_nearest_node_from_coordinate(self):
 
-        self.comboBox_attribution_type.setCurrentIndex(0)
+        self.comboBox_attribution_type.setCurrentIndex(AssignmentType.NODES)
 
         coord_x = self.check_inputs(self.lineEdit_point_coord_x, "Point coord. x")
         if coord_x is None:
@@ -420,9 +427,9 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == 3
+        tab_list = current_tab == MSTabType.LIST
 
-        if self.last_tab == 3 or tab_list:
+        if self.last_tab == MSTabType.LIST or tab_list:
             app().main_window.clear_selection()
             self.lineEdit_selection_id.clear()
 
@@ -442,9 +449,10 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == MSTabType.CONSTANT_DATA:
             self.check_constant_values()
-        elif tab_index == 1:
+
+        elif tab_index == MSTabType.TABULAR_DATA:
             self.check_table_values()
 
     def check_selection_data(self, print_message: bool = True):
@@ -880,11 +888,11 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if property != "mass_source":
                     continue
 
-                self.tabWidget_main.setTabVisible(3, True)
+                self.tabWidget_main.setTabVisible(MSTabType.LIST, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(0)    
-        self.tabWidget_main.setTabVisible(3, False)
+        self.tabWidget_main.setCurrentIndex(MSTabType.CONSTANT_DATA)    
+        self.tabWidget_main.setTabVisible(MSTabType.LIST, False)
 
     def on_click_item(self, item):
         selected_items, selection_text = self.get_selected_items_and_selection_text()
