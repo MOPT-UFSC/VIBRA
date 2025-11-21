@@ -912,14 +912,14 @@ tbb = "==2022.*"
 
 [[package]]
 name = "molde"
-version = "0.1.17"
+version = "0.1.18"
 description = ""
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "molde-0.1.17-py3-none-any.whl", hash = "sha256:bd10786060f570b5b12a7a9c56057ea4f145aadcb145f62e1fad0ca90a29542a"},
-    {file = "molde-0.1.17.tar.gz", hash = "sha256:5b0c520f8246808ebb464b325a0f0258265651dcf8cbb5a099d3420c6c431771"},
+    {file = "molde-0.1.18-py3-none-any.whl", hash = "sha256:f50fd11920a8decb93e8761bff3b2209732855b5a20770b939203c469b869205"},
+    {file = "molde-0.1.18.tar.gz", hash = "sha256:ca348943d64ee53530d01d8b5095ecce83e7cc190ff8d09c24d0abae433ce65c"},
 ]
 
 [package.dependencies]
@@ -2141,4 +2141,4 @@ web = ["wslink (>=1.0.4)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "e8490839955ed36281b2c65d113d4adb3c2be150461de8dd498b9cd2d7442d99"
+content-hash = "981d0bfe39da45baffe337f86bb5efa6fb7cc8b0e867a23b1605062c40b0a179"
