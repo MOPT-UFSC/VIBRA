@@ -912,25 +912,21 @@ tbb = "==2022.*"
 
 [[package]]
 name = "molde"
-version = "0.1.15"
+version = "0.1.17"
 description = ""
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "molde-0.1.17-py3-none-any.whl", hash = "sha256:bd10786060f570b5b12a7a9c56057ea4f145aadcb145f62e1fad0ca90a29542a"},
+    {file = "molde-0.1.17.tar.gz", hash = "sha256:5b0c520f8246808ebb464b325a0f0258265651dcf8cbb5a099d3420c6c431771"},
+]
 
 [package.dependencies]
-moviepy = "^1.0.3"
-numpy = "^2.0"
-qtpy = "^2.4.2"
-vtk = "^9.3.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/andrefpf/molde.git"
-reference = "update_camera_interactor_style"
-resolved_reference = "3d14e646895a3af87d94b69161a8122e1cb5079f"
+moviepy = ">=1.0.3,<2.0.0"
+numpy = ">=2.0,<3.0"
+qtpy = ">=2.4.2,<3.0.0"
+vtk = ">=9.3.1,<10.0.0"
 
 [[package]]
 name = "moviepy"
@@ -2145,4 +2141,4 @@ web = ["wslink (>=1.0.4)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "ba38274aa9edebbb2fbbc37a510ff705ba3ac75e20379a099221a69f815fc827"
+content-hash = "e8490839955ed36281b2c65d113d4adb3c2be150461de8dd498b9cd2d7442d99"
