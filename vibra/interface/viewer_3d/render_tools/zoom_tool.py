@@ -15,5 +15,9 @@ class ZoomTool(RenderTool):
     def left_button_release_event(self, obj, event):
         super().stop_zooming()
         self.update_mouse_cursor_in_render_widgets(self.zoom_cursor_path)
+    
+    
+    def key_release_event(self, obj, event):
+        pass
 
         
