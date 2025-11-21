@@ -9,6 +9,9 @@ from vibra.interface.model_inputs.general.material.material_widget import Materi
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+from collections import defaultdict
+from enum import IntEnum
+
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
@@ -18,6 +21,10 @@ def getColorRGB(color):
         color = color[1:-1]
     tokens = color.split(',')
     return list(map(int, tokens))
+
+class TabType(IntEnum):
+    SETUP = 0
+    LIST = 1
 
 
 class MaterialInputs(SetMaterial_UI):
@@ -76,7 +83,7 @@ class MaterialInputs(SetMaterial_UI):
         self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
 
     def reset_selected_material_lineEdit(self):
-        self.lineEdit_selected_material_name.setText("")
+        self.lineEdit_selected_material_name.clear()
 
     def _create_connections(self):
         #
@@ -102,27 +109,54 @@ class MaterialInputs(SetMaterial_UI):
         self.selected_column = current_col
         self.update_material_selection()
 
-    def cell_clicked_callback(self, row, col):
+    def cell_clicked_callback(self, row, col):  
+        selected_items, selection_text, material_text = self.get_selected_items_and_texts()
 
-        selection_id = self.tableWidget_model_materials.item(row, 0).text()
-        fluid_name = self.tableWidget_model_materials.item(row, 1).text()
+        if not selected_items:
+            return
+    
+        app().main_window.set_geometry_selection(**selected_items)
 
-        if "-" in selection_id:
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+        self.lineEdit_selected_material_name.setText(material_text)
 
-            selection, _selected_id = selection_id.split("-")
-            selected_id = int(_selected_id)
+        app().main_window.action_model_workspace_callback()
+        
+    def get_selected_items_and_texts(self) -> tuple[dict, str, str]:
+        selected_cells = self.tableWidget_model_materials.selectedItems()
 
-            if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [selected_id])
+        if not selected_cells:
+            return dict(), str(), str()
 
-            elif selection == "Volume":
-                app().main_window.set_geometry_selection(volumes = [selected_id])
+        selected_items = defaultdict(list)
+        selection_text = str()
+        material_types = set()
 
-            self.pushButton_remove.setEnabled(True)
-            self.lineEdit_selection_id.setText(selection_id)
-            self.lineEdit_selected_material_name.setText(fluid_name)
+        for i in range(len(selected_cells) // 6):
+            index = i * 6
 
-            app().main_window.action_model_workspace_callback()
+            selected_item = selected_cells[index].text()
+            material_type = selected_cells[index + 1].text()
+
+            selected_type, selected_id = selected_item.split("-")
+            selected_type = selected_type.lower() + "s"
+
+            selected_items[selected_type].append(int(selected_id))
+            material_types.add(material_type)
+        
+        material_text = material_types.pop() if len(material_types) == 1 else "--"
+
+        for selected_type, ids in selected_items.items():
+            ids.sort()
+
+            ids = map(str, ids)
+            selection_text += selected_type.capitalize() + ": " + ", ".join(ids) + " "
+
+        self.selected_items = selected_items
+
+        return selected_items, selection_text, material_text
 
     def reset_material_library_callback(self):
         self.hide()
@@ -131,7 +165,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def geometry_selection_callback(self):
 
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == TabType.LIST:
             return
 
         volumes = app().main_window.selected_geometry_volumes
@@ -146,15 +180,13 @@ class MaterialInputs(SetMaterial_UI):
                 selected_ids = volumes
                 self.comboBox_attribution_type.setCurrentIndex(1)
             elif surfaces and index == 1:
-                self.lineEdit_selection_id.setText("")
-
+                self.lineEdit_selection_id.clear()
         else:
             if surfaces:
                 selected_ids = surfaces
                 self.comboBox_attribution_type.setCurrentIndex(1)
             elif volumes and index == 1:
-                self.lineEdit_selection_id.setText("")
-
+                self.lineEdit_selection_id.clear()
         if len(selected_ids):
             text = ", ".join([str(i) for i in selected_ids])
             self.lineEdit_selection_id.setText(text)
@@ -163,6 +195,7 @@ class MaterialInputs(SetMaterial_UI):
         self.tableWidget_model_materials.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget_model_materials.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.tableWidget_model_materials.setEditTriggers(QAbstractItemView.EditTrigger(0))
+        self.tableWidget_model_materials.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def update_material_selection(self):
 
@@ -174,14 +207,14 @@ class MaterialInputs(SetMaterial_UI):
             return
 
         material_name = item.text()
-        self.lineEdit_selected_material_name.setText("")
+        self.lineEdit_selected_material_name.clear()
         if material_name != "":
             self.lineEdit_selected_material_name.setText(material_name)
 
     def attribution_type_callback(self):
 
         if self.comboBox_attribution_type.currentIndex():
-            self.lineEdit_selection_id.setText("")
+            self.lineEdit_selection_id.clear()
             self.lineEdit_selection_id.setEnabled(True)
 
         else:
@@ -265,24 +298,24 @@ class MaterialInputs(SetMaterial_UI):
         self.close()
 
     def remove_callback(self):
+        if not self.selected_items:
+            return
 
-        text = self.lineEdit_selection_id.text()
+        for selection_type, ids in self.selected_items.items():
+            for id in ids:
+                if selection_type == "surfaces":
+                    self.properties._remove_surface_property("material", id)
+                    self.properties._remove_surface_property("material_id", id)
 
-        if "-" in text:
+                elif selection_type == "volumes":
+                    self.properties._remove_volume_property("material", id)
+                    self.properties._remove_volume_property("material_id", id)
+        
+        self.lineEdit_selection_id.clear()
+        self.pushButton_remove.setDisabled(True)
 
-            selection, _selected_id = text.split("-")
-            selected_id = int(_selected_id)
-
-            if selection == "Surface":
-                self.properties._remove_surface_property("material", selected_id)
-                self.properties._remove_surface_property("material_id", selected_id)
-
-            elif selection == "Volume":
-                self.properties._remove_volume_property("material", selected_id)
-                self.properties._remove_volume_property("material_id", selected_id)
-
-            self.actions_to_finalize()
-            app().main_window.set_geometry_selection()
+        self.actions_to_finalize()
+        app().main_window.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -306,8 +339,8 @@ class MaterialInputs(SetMaterial_UI):
             app().main_window.set_geometry_selection()
 
     def actions_to_finalize(self):
-        self.lineEdit_selection_id.setText("")
-        self.lineEdit_selected_material_name.setText("")
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selected_material_name.clear()
         self.pushButton_remove.setDisabled(True)
 
         self.load_model_info()
@@ -367,26 +400,29 @@ class MaterialInputs(SetMaterial_UI):
         for key in self.properties.volume_properties.keys():
             property, _ = key
             if property == "material":
-                self.tabWidget_main.setTabVisible(1, True)
+                self.tabWidget_main.setTabVisible(TabType.LIST, True)
                 return
 
         for key in self.properties.surface_properties.keys():
             property, _ = key
             if property == "material":
-                self.tabWidget_main.setTabVisible(1, True)
+                self.tabWidget_main.setTabVisible(TabType.LIST, True)
                 return
 
-        self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
     def tab_event_callback(self):
+        app().main_window.clear_selection()
+        
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selected_material_name.clear()
 
-        self.lineEdit_selected_material_name.setText("")
-
-        if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
+        if self.tabWidget_main.currentIndex() == TabType.LIST:
             self.pushButton_remove.setDisabled(True)
+            self.lineEdit_selection_id.setDisabled(True)
             self.comboBox_attribution_type.setDisabled(True)
+
+            self.tableWidget_model_materials.clearSelection()
 
         else:
             self.comboBox_attribution_type.setDisabled(False)
@@ -415,7 +451,6 @@ class MaterialInputs(SetMaterial_UI):
         self.on_click_item(item)
 
     def keyPressEvent(self, event):
-
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
 
@@ -424,6 +459,16 @@ class MaterialInputs(SetMaterial_UI):
 
         elif event.key() == Qt.Key_Escape:
             self.close()
+        
+        elif event.key() == Qt.Key_Control:
+            self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.MultiSelection)
+        
+        elif event.key() == Qt.Key_Shift:
+            self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.ContiguousSelection)
+        
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
