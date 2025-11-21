@@ -16,9 +16,9 @@ from vtkmodules.vtkCommonDataModel import (
     vtkSphere,
     vtkUnstructuredGrid,
 )
-from vtkmodules.vtkFiltersCore import vtkExtractCells, vtkCutter
+from vtkmodules.vtkFiltersCore import vtkExtractCells
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPolyDataMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
 from vibra.engine.mesher.element_type import (
@@ -135,13 +135,7 @@ class SolidsActor(vtkActor):
         self.clipper_mapper.InterpolateScalarsBeforeMappingOn()
         self.clipper_mapper.SetInputConnection(self.clipper.GetOutputPort())
 
-        self.cutter = vtkCutter()
-        self.cutter.SetInputData(self.data)
-
-        self.cutter_mapper = vtkPolyDataMapper()
-        self.cutter_mapper.SetInputConnection(self.cutter.GetOutputPort())
-        self.cutter_mapper.InterpolateScalarsBeforeMappingOn()
-        self.SetMapper(self.cutter_mapper)
+        self.SetMapper(self.clipper_mapper)
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -222,8 +216,6 @@ class SolidsActor(vtkActor):
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
         self.clipper.SetImplicitFunction(plane)
-        self.clipper.Update()
-        self.SetMapper(self.clipper_mapper)
 
     def disable_cut(self):
         self.clipper.SetImplicitFunction(ALWAYS_FALSE)
@@ -254,16 +246,3 @@ class SolidsActor(vtkActor):
         self.cell_extractor.Update()
 
         self.clear_colors()
-
-    def apply_cutter(self, origin, normal):
-        if self.data is None:
-            return
-
-        plane = vtkPlane()
-        plane.SetOrigin(origin)
-        plane.SetNormal(normal)
-
-        self.cutter.SetCutFunction(plane)
-        self.cutter.SetInputData(self.data)
-        self.cutter.Update()
-        self.SetMapper(self.cutter_mapper)
