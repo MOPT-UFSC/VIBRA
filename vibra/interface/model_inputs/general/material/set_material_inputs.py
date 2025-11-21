@@ -427,29 +427,7 @@ class MaterialInputs(SetMaterial_UI):
         else:
             self.comboBox_attribution_type.setDisabled(False)
             self.attribution_type_callback()
-
-    def on_click_item(self, item):
-
-        self.pushButton_remove.setDisabled(False)
-
-        if item.text(0) != "":
-            selection, _selected_id = item.text(0).split("-")
-            selected_id = int(_selected_id)
-
-            if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
-
-            elif selection == "Volume":
-                app().main_window.set_geometry_selection(volumes = [int(selected_id)])
-
-            app().main_window.action_model_workspace_callback()
-
-            self.lineEdit_selection_id.setText(item.text(0))
-            self.lineEdit_selected_material_name.setText(item.text(1))
-
-    def on_double_click_item(self, item):
-        self.on_click_item(item)
-
+            
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
