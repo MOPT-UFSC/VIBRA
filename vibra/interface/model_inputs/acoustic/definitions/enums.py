@@ -7,3 +7,7 @@ class StandardTabType(IntEnum):
 
 class SetupTabType(IntEnum): 
     SETUP = 0
+
+class AttributionBodiesType(IntEnum):
+    ALL_BODIES = 0
+    SELECTED_BODIES = 1
