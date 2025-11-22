@@ -141,7 +141,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_fluids.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 700, 413))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 702, 412))
         self.scrollArea_table_of_fluids.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_fluids, 0, 0, 1, 1)
@@ -155,22 +155,16 @@ class Ui_Dialog(object):
         if (self.tableWidget_model_fluids.columnCount() < 6):
             self.tableWidget_model_fluids.setColumnCount(6)
         __qtablewidgetitem = QTableWidgetItem()
-        __qtablewidgetitem.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
-        __qtablewidgetitem1.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
-        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
-        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
-        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(4, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
-        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
         self.tableWidget_model_fluids.setHorizontalHeaderItem(5, __qtablewidgetitem5)
         self.tableWidget_model_fluids.setObjectName(u"tableWidget_model_fluids")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -270,7 +264,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Selected fluid:", None))
         self.lineEdit_selection_id.setText("")
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selected id:", None))
         self.lineEdit_selected_fluid_name.setText("")
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"All bodies", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected bodies", None))

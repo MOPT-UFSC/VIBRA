@@ -62,6 +62,8 @@ class MaterialInputs(SetMaterial_UI):
         self.keep_window_open = True
         self.material = None
         self.selected_column = None
+        self.selected_items = defaultdict(list)
+        self.table_model_materials_cell_clicked = False
 
     def _configure_qt_variables(self):
         self.grid_layout = QGridLayout()
@@ -110,44 +112,44 @@ class MaterialInputs(SetMaterial_UI):
         self.update_material_selection()
 
     def cell_clicked_callback(self, row, col):  
-        selected_items, selection_text, material_text = self.get_selected_items_and_texts()
+        selection_text = self.set_selected_items_and_get_selection_text()
 
-        if not selected_items:
+        if not self.selected_items:
             return
+        
+        self.table_model_materials_cell_clicked = True
     
-        app().main_window.set_geometry_selection(**selected_items)
+        app().main_window.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-        self.lineEdit_selected_material_name.setText(material_text)
 
         app().main_window.action_model_workspace_callback()
+
+        self.table_model_materials_cell_clicked = False
         
-    def get_selected_items_and_texts(self) -> tuple[dict, str, str]:
+    def set_selected_items_and_get_selection_text(self) -> str:
         selected_cells = self.tableWidget_model_materials.selectedItems()
 
         if not selected_cells:
-            return dict(), str(), str()
+            return str()
 
         selected_items = defaultdict(list)
         selection_text = str()
-        material_types = set()
 
-        for i in range(len(selected_cells) // 6):
-            index = i * 6
+        num_of_columns = self.tableWidget_model_materials.columnCount()
+
+        for row in range(len(selected_cells) // num_of_columns):
+            index = row * num_of_columns
 
             selected_item = selected_cells[index].text()
-            material_type = selected_cells[index + 1].text()
 
             selected_type, selected_id = selected_item.split("-")
             selected_type = selected_type.lower() + "s"
 
             selected_items[selected_type].append(int(selected_id))
-            material_types.add(material_type)
         
-        material_text = material_types.pop() if len(material_types) == 1 else "--"
-
         for selected_type, ids in selected_items.items():
             ids.sort()
 
@@ -156,7 +158,7 @@ class MaterialInputs(SetMaterial_UI):
 
         self.selected_items = selected_items
 
-        return selected_items, selection_text, material_text
+        return selection_text
 
     def reset_material_library_callback(self):
         self.hide()
@@ -166,6 +168,7 @@ class MaterialInputs(SetMaterial_UI):
     def geometry_selection_callback(self):
 
         if self.tabWidget_main.currentIndex() == TabType.LIST:
+            self.verify_if_selected_volumes_belongs_to_table_model_materials()
             return
 
         volumes = app().main_window.selected_geometry_volumes
@@ -190,6 +193,58 @@ class MaterialInputs(SetMaterial_UI):
         if len(selected_ids):
             text = ", ".join([str(i) for i in selected_ids])
             self.lineEdit_selection_id.setText(text)
+    
+    def verify_if_selected_volumes_belongs_to_table_model_materials(self):
+        if self.table_model_materials_cell_clicked:
+            return
+
+        selected_volumes = app().main_window.selected_geometry_volumes
+
+        if not selected_volumes:
+            return
+
+        table_model_materials_map = self.get_table_widget_model_materials_items_map()
+
+        self.lineEdit_selection_id.clear()
+        self.tableWidget_model_materials.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        if not selected_volumes <= set(table_model_materials_map.keys()):
+            return
+
+        self.pushButton_remove.setEnabled(True)
+        self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.MultiSelection)
+
+        self.selected_items["volumes"].clear()
+
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selection_text = "Volumes: "
+        for volume in selected_volumes:
+            self.tableWidget_model_materials.selectRow(table_model_materials_map[volume])
+            selection_text += str(volume) + ", "
+
+            self.selected_items["volumes"].append(volume)
+
+        selection_text = selection_text[:-2]
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+
+        self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.SingleSelection)
+
+    def get_table_widget_model_materials_items_map(self) -> dict:
+        num_of_rows = self.tableWidget_model_materials.rowCount()
+        map_id_to_row = dict()
+
+        for row in range(num_of_rows):
+            selected_item = self.tableWidget_model_materials.item(row, 0)
+
+            _, id = selected_item.text().split("-")
+
+            map_id_to_row[int(id)] = row
+        
+        return map_id_to_row
 
     def _config_widgets(self):
         self.tableWidget_model_materials.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -417,16 +472,20 @@ class MaterialInputs(SetMaterial_UI):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selected_material_name.clear()
 
-        if self.tabWidget_main.currentIndex() == TabType.LIST:
+        is_tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
+
+        if is_tab_list:
             self.pushButton_remove.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
-            self.comboBox_attribution_type.setDisabled(True)
 
             self.tableWidget_model_materials.clearSelection()
 
         else:
-            self.comboBox_attribution_type.setDisabled(False)
             self.attribution_type_callback()
+
+        self.label_3.setVisible(not is_tab_list)
+        self.comboBox_attribution_type.setVisible(not is_tab_list)
+        self.lineEdit_selected_material_name.setVisible(not is_tab_list)
             
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

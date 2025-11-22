@@ -72,6 +72,8 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.complete = False
         self.fluid = None
         self.selected_column = None
+        self.selected_items = defaultdict(list)
+        self.table_model_fluids_cell_clicked = False
 
     def _configure_qt_variables(self):
         self.grid_layout = QGridLayout()
@@ -122,19 +124,22 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.update_fluid_selection()
 
     def cell_clicked_callback(self, row, col):
-        selected_items, selection_text, fluid_text = self.get_selected_items_and_texts()
+        self.table_model_fluids_cell_clicked = True
 
-        if not selected_items:
+        selection_text = self.set_selected_items_and_get_selection_text()
+
+        if not self.selected_items:
             return
 
-        app().main_window.set_geometry_selection(**selected_items)
+        app().main_window.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-        self.lineEdit_selected_fluid_name.setText(fluid_text)
 
         app().main_window.action_model_workspace_callback()
+
+        self.table_model_fluids_cell_clicked = False
 
     def reset_fluid_library_callback(self):
         self.hide()
@@ -143,6 +148,8 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def geometry_selection_callback(self):
         if self.tabWidget_main.currentIndex() == TabType.LIST:
+            self.verify_if_selected_volumes_belongs_to_table_model_fluids()
+
             return
 
         volumes = app().main_window.selected_geometry_volumes
@@ -152,6 +159,58 @@ class SetFluidInputs(SetFluidInputs_UI):
             if len(volumes):
                 text = ", ".join([str(i) for i in volumes])
                 self.lineEdit_selection_id.setText(text)
+    
+    def verify_if_selected_volumes_belongs_to_table_model_fluids(self):
+        if self.table_model_fluids_cell_clicked:
+            return
+
+        selected_volumes = app().main_window.selected_geometry_volumes
+
+        if not selected_volumes:
+            return
+
+        table_model_fluids_map = self.get_table_widget_model_fluids_items_map()
+
+        self.lineEdit_selection_id.clear()
+        self.tableWidget_model_fluids.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        if not selected_volumes <= set(table_model_fluids_map.keys()):
+            return
+
+        self.pushButton_remove.setEnabled(True)
+        self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.MultiSelection)
+
+        self.selected_items["volumes"].clear()
+
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selection_text = "Volumes: "
+        for volume in selected_volumes:
+            self.tableWidget_model_fluids.selectRow(table_model_fluids_map[volume])
+            selection_text += str(volume) + ", "
+
+            self.selected_items["volumes"].append(volume)
+
+        selection_text = selection_text[:-2]
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+
+        self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.SingleSelection)
+
+    def get_table_widget_model_fluids_items_map(self) -> dict:
+        num_of_rows = self.tableWidget_model_fluids.rowCount()
+        map_id_to_row = dict()
+
+        for row in range(num_of_rows):
+            selected_item = self.tableWidget_model_fluids.item(row, 0)
+
+            _, id = selected_item.text().split("-")
+
+            map_id_to_row[int(id)] = row
+        
+        return map_id_to_row
 
     def _config_widgets(self):
         self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
@@ -354,42 +413,45 @@ class SetFluidInputs(SetFluidInputs_UI):
         app().main_window.clear_selection()
 
         self.lineEdit_selection_id.clear()
-        self.lineEdit_selected_fluid_name.clear()
 
-        if self.tabWidget_main.currentIndex() == TabType.LIST:
-            self.lineEdit_selection_id.setDisabled(True)
+        is_tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
+
+        if is_tab_list:
             self.pushButton_remove.setDisabled(True)
-            self.comboBox_attribution_type.setDisabled(True)
+            self.lineEdit_selection_id.setDisabled(True)
 
             self.tableWidget_model_fluids.clearSelection()
 
         else:
-            self.comboBox_attribution_type.setDisabled(False)
+            self.lineEdit_selected_fluid_name.clear()
+            self.lineEdit_selection_id.setDisabled(False)
+
             self.attribution_type_callback()
-    
-    def get_selected_items_and_texts(self) -> tuple[dict, str, str]:
+        
+        self.label_4.setVisible(not is_tab_list)
+        self.comboBox_attribution_type.setVisible(not is_tab_list)
+        self.lineEdit_selected_fluid_name.setVisible(not is_tab_list)
+
+    def set_selected_items_and_get_selection_text(self) -> str:
         selected_cells = self.tableWidget_model_fluids.selectedItems()
 
         if not selected_cells:
-            return dict(), str(), str()
-
+            return str()
+        
         selected_items = defaultdict(list)
         selection_text = str()
-        fluid_types = set()
 
-        for i in range(len(selected_cells) // 5):
-            index = i * 5
+        num_of_columns = self.tableWidget_model_fluids.columnCount()
+
+        for row in range(len(selected_cells) // num_of_columns):
+            index = row * num_of_columns
 
             selected_item = selected_cells[index].text()
-            fluid_type = selected_cells[index + 1].text()
 
             selected_type, selected_id = selected_item.split("-")
             selected_type = selected_type.lower() + "s"
 
             selected_items[selected_type].append(int(selected_id))
-            fluid_types.add(fluid_type)
-        
-        fluid_text = fluid_types.pop() if len(fluid_types) == 1 else "--"
 
         for selected_type, ids in selected_items.items():
             ids.sort()
@@ -399,7 +461,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         self.selected_items = selected_items
 
-        return selected_items, selection_text, fluid_text
+        return selection_text
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

@@ -181,7 +181,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Selected bodies:</string>
+            <string>Selected id:</string>
            </property>
            <property name="textFormat">
             <enum>Qt::AutoText</enum>
@@ -351,8 +351,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>700</width>
-                  <height>413</height>
+                  <width>702</width>
+                  <height>412</height>
                  </rect>
                 </property>
                </widget>
@@ -389,48 +389,30 @@
                 <property name="text">
                  <string>Selection-ID</string>
                 </property>
-                <property name="textAlignment">
-                 <set>AlignCenter</set>
-                </property>
                </column>
                <column>
                 <property name="text">
                  <string>Name</string>
-                </property>
-                <property name="textAlignment">
-                 <set>AlignCenter</set>
                 </property>
                </column>
                <column>
                 <property name="text">
                  <string>Identifier</string>
                 </property>
-                <property name="textAlignment">
-                 <set>AlignCenter</set>
-                </property>
                </column>
                <column>
                 <property name="text">
                  <string>Density [kg/m³]</string>
-                </property>
-                <property name="textAlignment">
-                 <set>AlignCenter</set>
                 </property>
                </column>
                <column>
                 <property name="text">
                  <string>Speed of sound [m/s]</string>
                 </property>
-                <property name="textAlignment">
-                 <set>AlignCenter</set>
-                </property>
                </column>
                <column>
                 <property name="text">
                  <string>Dynamic viscosity [Pa.s]</string>
-                </property>
-                <property name="textAlignment">
-                 <set>AlignCenter</set>
                 </property>
                </column>
               </widget>
