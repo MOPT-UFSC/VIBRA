@@ -111,9 +111,11 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if "table_paths" in data.keys():
             self.tabWidget_main.setCurrentIndex(1)
             self.lineEdit_table_path.setText(data.get("table_paths")[0])
+
         else:
             self.tabWidget_main.setCurrentIndex(0)
             self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
+            self.lineEdit_imag_value.setText(f"{data.get('imag_values')[0]}")
 
     def load_model_info(self):
         self.treeWidget_specific_impedance.clear()
@@ -146,46 +148,50 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         elif tab_index == 1:
             self.check_table_values()
 
-    def check_complex_entries(self, lineEdit_real, lineEdit_imag):
-        self.stop = False
+    def check_complex_entries(self, lineEdit_real: QLineEdit, lineEdit_imag: QLineEdit):
+
         title = "Invalid entry to the specific impedance"
         if lineEdit_real.text() != "":
             try:
-                real_F = float(lineEdit_real.text())
+                str_real = lineEdit_real.text()
+                str_real = str_real.replace(",", ".")
+                real_value = float(str_real)
             except Exception:
                 message = "Wrong input for real part of specific impedance."
                 PrintMessageInput([error_title, title, message])
                 self.lineEdit_real_value.setFocus()
-                self.stop = True
-                return
+                return None
+
         else:
-            real_F = 0
+            real_value = 0
 
         if lineEdit_imag.text() != "":
             try:
-                imag_F = float(lineEdit_imag.text())
+                str_imag = lineEdit_imag.text()
+                str_imag = str_imag.replace(",", ".")
+                imag_value = float(str_imag)
             except Exception:
                 message = "Wrong input for imaginary part of specific impedance."
                 PrintMessageInput([error_title, title, message])
                 self.lineEdit_imag_value.setFocus()
-                self.stop = True
-                return
-        else:
-            imag_F = 0
+                return None
 
-        if real_F == 0 and imag_F == 0:
+        else:
+            imag_value = 0
+
+        if real_value == 0 and imag_value == 0:
             return None
         else:
-            return real_F + 1j * imag_F
+            return real_value + 1j * imag_value
 
     def check_constant_values(self):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
+            input_ids, 
+            selection = "surfaces",
+            single_id = False,
+            )
 
         if error_data is not None:
             self.hide()
@@ -196,9 +202,12 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         specific_impedance = self.check_complex_entries(
-                                                        self.lineEdit_real_value, 
-                                                        self.lineEdit_imag_value
-                                                        )
+            self.lineEdit_real_value, 
+            self.lineEdit_imag_value
+            )
+        
+        if specific_impedance is None:
+            return
 
         if specific_impedance is not None:
 
@@ -206,9 +215,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             imag_values = [np.imag(specific_impedance)]
 
             data = {
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    }
+                "real_values" : real_values,
+                "imag_values" : imag_values,
+                }
 
             for surface_id in surface_ids:
                 self.properties._set_property("specific_impedance", data, surface=surface_id)
@@ -217,7 +226,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         else:
             title = "Additional inputs required"
-            message = "You must enter the specific impedance to"
+            message = "You must enter the specific impedance to "
             message += "proceed with the attribution."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
