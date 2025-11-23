@@ -68,6 +68,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def _configure_qt_variables(self):
         #
+        self.pushButton_reproduce_audio.setToolTip("Auralize the signal")
         self.pushButton_spectrum_data.setDisabled(True)
         self.pushButton_waveform_data.setDisabled(True)
         #
@@ -381,12 +382,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def reset_plotting_attributes(self):
 
         # reset attributes for waveform plot
-        self.time_vector = np.ndarray([])
-        self.x_data = np.ndarray([])
+        self.time_vector = None
+        self.x_data = None
 
         # reset attributes for spectrum plot
-        self.frequencies_vector = np.ndarray([])
-        self.Xf_data = np.ndarray([])
+        self.frequencies_vector = None
+        self.Xf_data = None
 
     def compute_signal_spectrum(self, time_vector: np.ndarray, x_data: np.ndarray, export=False, filename=""):
 
@@ -951,6 +952,9 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
 
     def reproduce_audio_callback(self):
+
+        if self.x_data is None:
+            return
 
         if sd._last_callback is not None:
             if sd.get_stream().active:
