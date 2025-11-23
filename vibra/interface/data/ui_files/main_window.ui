@@ -20,9 +20,6 @@
       <property name="lineWidth">
        <number>1</number>
       </property>
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
@@ -37,7 +34,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
+        <enum>Qt::NoContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -141,7 +138,7 @@
      <x>0</x>
      <y>0</y>
      <width>1055</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -187,7 +184,7 @@
    </widget>
    <widget class="QMenu" name="advanced_results_menu">
     <property name="title">
-     <string>Advanced Results</string>
+     <string>Advanced</string>
     </property>
     <addaction name="action_export_element_transfer_data"/>
    </widget>
@@ -536,24 +533,6 @@
     <string>Configure Section Plane</string>
    </property>
   </action>
-  <action name="action_plot_particle_velocity">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/image-plus.png</normaloff>:/icons/image-plus.png</iconset>
-   </property>
-   <property name="text">
-    <string>Plot particle velocity</string>
-   </property>
-  </action>
-  <action name="action_plot_specific_acoustic_impedance">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/image-plus.png</normaloff>:/icons/image-plus.png</iconset>
-   </property>
-   <property name="text">
-    <string>Plot specific acoustic impedance</string>
-   </property>
-  </action>
   <action name="action_export_element_transfer_data">
    <property name="icon">
     <iconset resource="../icons/resources.qrc">
@@ -689,7 +668,7 @@
     <string>Ghost</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
+    <enum>QAction::NoRole</enum>
    </property>
   </action>
  </widget>
