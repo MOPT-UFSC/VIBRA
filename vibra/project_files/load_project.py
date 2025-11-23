@@ -409,7 +409,7 @@ class LoadProject:
 
             elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
                 project.acoustic_harmonic_solver.solution = data.get("solution")
-                app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                app().main_window.action_export_element_transfer_data.setDisabled(False)
 
             elif key == "harmonic_structural" and project.structural_harmonic_solver is not None and project.structural_harmonic_solver.project_file is None:
                 project.structural_harmonic_solver.displacement_dof = data.get("displacement_dof")
@@ -443,7 +443,7 @@ class LoadProject:
                 structural_harmonic_solver.solution = None
                 project.can_resume_solution = True
 
-        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+        app().main_window.action_export_element_transfer_data.setDisabled(False)
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

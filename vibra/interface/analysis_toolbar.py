@@ -326,7 +326,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
         app().main_window.project_data_modified = True
         app().main_window.action_model_workspace_callback()
-        app().main_window.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.action_export_element_transfer_data.setDisabled(True)
 
     def configure_analysis(self):
 
