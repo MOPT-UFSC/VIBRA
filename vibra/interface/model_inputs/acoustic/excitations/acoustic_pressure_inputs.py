@@ -122,27 +122,22 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         map_id_to_model_index = self.get_tree_widget_acoustic_pressure_items_map()
         selected_ids = set(map_id_to_model_index.keys())
+        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
 
-        if not selected_surfaces.intersection(selected_ids):
+        if not selected_surfaces_in_tree_widget:
             return
         
         self.pushButton_remove.setEnabled(True)
         
         model_selector = self.treeWidget_acoustic_pressure.selectionModel()
-        surfaces_not_in_tree_widget = list()
 
-        for surface_id in selected_surfaces:
-
-            if surface_id not in map_id_to_model_index:
-                surfaces_not_in_tree_widget.append(surface_id)
-                continue
-
+        for surface_id in selected_surfaces_in_tree_widget:
             model_index = map_id_to_model_index[surface_id]
 
             model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
 
-        surfaces_in_tree_widget = [surf for surf in selected_surfaces if surf not in surfaces_not_in_tree_widget]
-        self.set_selection_text(surfaces_in_tree_widget)
+        self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_surfaces_in_tree_widget)
 
     def get_tree_widget_acoustic_pressure_items_map(self) -> dict:
         map_id_to_model_index = dict()
@@ -547,7 +542,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             return list()
 
         surface_ids = list()
-        
+
         for item in selected_items:
             surface_ids.append(int(item.text(0)))
         

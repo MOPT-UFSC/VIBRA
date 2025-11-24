@@ -176,28 +176,21 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         selected_ids = set(table_model_fluids_map.keys())
+        volumes_in_table_widget = selected_volumes.intersection(selected_ids)
 
-        if not selected_volumes.intersection(selected_ids):
+        if not volumes_in_table_widget:
             return
 
         self.pushButton_remove.setEnabled(True)
         self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.MultiSelection)
 
         self.selected_items["volumes"].clear()
-        volumes_not_in_table_widget = list()
 
-        for volume in selected_volumes:
-            
-            if volume not in table_model_fluids_map:
-                volumes_not_in_table_widget.append(volume)
-                continue
-
+        for volume in volumes_in_table_widget:
             self.tableWidget_model_fluids.selectRow(table_model_fluids_map[volume])
             self.selected_items["volumes"].append(volume)
 
-        volumes_in_table_widget = [vol for vol in selected_volumes if vol not in volumes_not_in_table_widget]
         self.set_selection_text(volumes_in_table_widget)
-
         self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def get_table_widget_model_fluids_items_map(self) -> dict:
