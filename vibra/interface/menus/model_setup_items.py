@@ -333,6 +333,16 @@ class ModelSetupItems(CommonMenuItems):
                     return True
         return False
 
+    def _are_there_disconnected_nodes(self, item_child):
+        if item_child.property_name == "mesh_setup":
+            mesh = app().project.model.mesh
+            if mesh is not None:
+                disconnected = mesh.disconnected_nodes_exists
+                item_child.set_error(disconnected)
+                if disconnected:
+                    return True
+        return False
+
     def update_items_appearance(self):
 
         # It may happen that the analysis toolbar has not been created yet. If so, 
@@ -362,6 +372,9 @@ class ModelSetupItems(CommonMenuItems):
                     continue
 
                 if self._are_there_collapsed_elements(item_child):
+                    continue
+                    
+                if self._are_there_disconnected_nodes(item_child):
                     continue
 
                 if self._contains_property(item_child.property_name):
