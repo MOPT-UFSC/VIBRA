@@ -171,31 +171,32 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         table_model_fluids_map = self.get_table_widget_model_fluids_items_map()
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.tableWidget_model_fluids.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
-        if not selected_volumes <= set(table_model_fluids_map.keys()):
+        selected_ids = set(table_model_fluids_map.keys())
+
+        if not selected_volumes.intersection(selected_ids):
             return
 
         self.pushButton_remove.setEnabled(True)
         self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.MultiSelection)
 
         self.selected_items["volumes"].clear()
+        volumes_not_in_table_widget = list()
 
-        selected_volumes = list(selected_volumes)
-        selected_volumes.sort()
-
-        selection_text = "Volumes: "
         for volume in selected_volumes:
-            self.tableWidget_model_fluids.selectRow(table_model_fluids_map[volume])
-            selection_text += str(volume) + ", "
+            
+            if volume not in table_model_fluids_map:
+                volumes_not_in_table_widget.append(volume)
+                continue
 
+            self.tableWidget_model_fluids.selectRow(table_model_fluids_map[volume])
             self.selected_items["volumes"].append(volume)
 
-        selection_text = selection_text[:-2]
-        self.lineEdit_selection_id.setText(selection_text)
-        self.lineEdit_selection_id.setToolTip(selection_text)
+        volumes_in_table_widget = [vol for vol in selected_volumes if vol not in volumes_not_in_table_widget]
+        self.set_selection_text(volumes_in_table_widget)
 
         self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.SingleSelection)
 
@@ -211,6 +212,21 @@ class SetFluidInputs(SetFluidInputs_UI):
             map_id_to_row[int(id)] = row
         
         return map_id_to_row
+
+    def set_selection_text(self, selected_volumes: list | set):
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selected_volumes = map(str, selected_volumes)
+        selection_text = "Volumes: "
+        selection_text += ", ".join(selected_volumes)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_seletction_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def _config_widgets(self):
         self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
@@ -306,7 +322,7 @@ class SetFluidInputs(SetFluidInputs_UI):
                         self.properties._remove_surface_property("fluid", surface_id)
                         self.properties._remove_surface_property("fluid_id", surface_id)
     
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
@@ -334,7 +350,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             app().main_window.set_geometry_selection()
 
     def actions_to_finalize(self):
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
 
@@ -412,7 +428,7 @@ class SetFluidInputs(SetFluidInputs_UI):
     def tab_event_callback(self):
         app().main_window.clear_selection()
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
 
         is_tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
 

@@ -183,13 +183,13 @@ class MaterialInputs(SetMaterial_UI):
                 selected_ids = volumes
                 self.comboBox_attribution_type.setCurrentIndex(1)
             elif surfaces and index == 1:
-                self.lineEdit_selection_id.clear()
+                self.clear_line_edit_seletction_id()
         else:
             if surfaces:
                 selected_ids = surfaces
                 self.comboBox_attribution_type.setCurrentIndex(1)
             elif volumes and index == 1:
-                self.lineEdit_selection_id.clear()
+                self.clear_line_edit_seletction_id()
         if len(selected_ids):
             text = ", ".join([str(i) for i in selected_ids])
             self.lineEdit_selection_id.setText(text)
@@ -205,31 +205,33 @@ class MaterialInputs(SetMaterial_UI):
 
         table_model_materials_map = self.get_table_widget_model_materials_items_map()
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.tableWidget_model_materials.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
-        if not selected_volumes <= set(table_model_materials_map.keys()):
+        selected_ids = set(table_model_materials_map.keys())
+
+        if not selected_volumes.intersection(selected_ids):
             return
 
         self.pushButton_remove.setEnabled(True)
         self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.MultiSelection)
 
         self.selected_items["volumes"].clear()
+        volumes_not_in_table_widget = list()
 
-        selected_volumes = list(selected_volumes)
-        selected_volumes.sort()
-
-        selection_text = "Volumes: "
         for volume in selected_volumes:
+
+            if volume not in table_model_materials_map:
+                volumes_not_in_table_widget.append(volume)
+                continue
+
             self.tableWidget_model_materials.selectRow(table_model_materials_map[volume])
-            selection_text += str(volume) + ", "
 
             self.selected_items["volumes"].append(volume)
 
-        selection_text = selection_text[:-2]
-        self.lineEdit_selection_id.setText(selection_text)
-        self.lineEdit_selection_id.setToolTip(selection_text)
+        volumes_in_table_widget = [vol for vol in selected_volumes if vol not in volumes_not_in_table_widget]
+        self.set_selection_text(volumes_in_table_widget)
 
         self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.SingleSelection)
 
@@ -245,6 +247,21 @@ class MaterialInputs(SetMaterial_UI):
             map_id_to_row[int(id)] = row
         
         return map_id_to_row
+    
+    def set_selection_text(self, selected_volumes: list | set):
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selected_volumes = map(str, selected_volumes)
+        selection_text = "Volumes: "
+        selection_text += ", ".join(selected_volumes)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_seletction_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def _config_widgets(self):
         self.tableWidget_model_materials.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -269,7 +286,7 @@ class MaterialInputs(SetMaterial_UI):
     def attribution_type_callback(self):
 
         if self.comboBox_attribution_type.currentIndex():
-            self.lineEdit_selection_id.clear()
+            self.clear_line_edit_seletction_id()
             self.lineEdit_selection_id.setEnabled(True)
 
         else:
@@ -366,7 +383,7 @@ class MaterialInputs(SetMaterial_UI):
                     self.properties._remove_volume_property("material", id)
                     self.properties._remove_volume_property("material_id", id)
         
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
@@ -394,7 +411,7 @@ class MaterialInputs(SetMaterial_UI):
             app().main_window.set_geometry_selection()
 
     def actions_to_finalize(self):
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
         self.pushButton_remove.setDisabled(True)
 
@@ -469,7 +486,7 @@ class MaterialInputs(SetMaterial_UI):
     def tab_event_callback(self):
         app().main_window.clear_selection()
         
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
 
         is_tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
