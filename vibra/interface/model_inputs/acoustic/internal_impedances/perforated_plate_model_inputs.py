@@ -12,6 +12,7 @@ from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import S
 from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import PerforatedPlateData
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.setup.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
+from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
@@ -23,10 +24,27 @@ from typing import Dict, List
 
 import logging, warnings
 import numpy as np
+from enum import IntEnum
 
 error_title = "Error"
 warning_title = "Warning"
 
+class PPMMainTabType(IntEnum):
+    SETUP = SetupTabType.SETUP
+    EDIT = 1
+    LIST = 2
+
+class PPlateModelsTabType(IntEnum):
+    CIRCULAR_HOLES = 0
+
+class PlotTypeBoxType(IntEnum):
+    ACOUSTIC_IMPEDANCE = 0
+
+class IncludeEffectsBoxType(IntEnum):
+    NONE = 0
+    NON_LINEAR = 1
+    USER_DEFINED = 2
+    NON_LINEAR_AND_USER_DEFINED = 3
 
 class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -99,7 +117,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def geometry_selection_callback(self):
 
-        if self.tabWidget_main.currentIndex() != 0:
+        if self.tabWidget_main.currentIndex() != PPMMainTabType.SETUP:
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
@@ -121,7 +139,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         formulation = data.get("formulation")
         if formulation == "circular_hole":
-            self.tabWidget_perforated_plate_models.setCurrentIndex(0)
+            self.tabWidget_perforated_plate_models.setCurrentIndex(PPlateModelsTabType.CIRCULAR_HOLES)
 
         t_p = data.get("plate_thickness")
         if isinstance(t_p, float | int):
@@ -156,7 +174,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         table_path = data.get("table_paths")
         if table_path is None:
             if self.lineEdit_non_linear_discharge_coefficient.isEnabled():
-                self.comboBox_include_effects.setCurrentIndex(1)
+                self.comboBox_include_effects.setCurrentIndex(IncludeEffectsBoxType.NON_LINEAR)
 
             self.pushButton_load_path.setEnabled(False)
             self.lineEdit_user_defined_transfer_impedance_path.setText("")
@@ -165,9 +183,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         elif isinstance(table_path, list):
             if self.lineEdit_non_linear_discharge_coefficient.isEnabled():
-                self.comboBox_include_effects.setCurrentIndex(3)
+                self.comboBox_include_effects.setCurrentIndex(IncludeEffectsBoxType.NON_LINEAR_AND_USER_DEFINED)
             else:
-                self.comboBox_include_effects.setCurrentIndex(2)
+                self.comboBox_include_effects.setCurrentIndex(IncludeEffectsBoxType.USER_DEFINED)
 
             self.pushButton_load_path.setEnabled(True)
             self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
@@ -231,9 +249,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == 2
+        tab_list = current_tab == PPMMainTabType.LIST
 
-        if self.last_tab == 2 or tab_list:
+        if self.last_tab == PPMMainTabType.LIST or tab_list:
             app().main_window.clear_selection()
             self.lineEdit_selection_id.clear()
 
@@ -479,14 +497,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def update_tabs_visibility(self):
 
         if len(self.map_model_id_to_model) > 0:
-            self.tabWidget_main.setTabVisible(1, True)
-            self.tabWidget_main.setTabVisible(2, True)
+            self.tabWidget_main.setTabVisible(PPMMainTabType.EDIT, True)
+            self.tabWidget_main.setTabVisible(PPMMainTabType.LIST, True)
 
             return
 
-        self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(1, False)
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(PPMMainTabType.SETUP)
+        self.tabWidget_main.setTabVisible(PPMMainTabType.EDIT, False)
+        self.tabWidget_main.setTabVisible(PPMMainTabType.LIST, False)
 
     def load_table(self, lineEdit : QLineEdit = None, direct_load: bool=False) -> np.ndarray:
 
@@ -569,7 +587,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def get_inputs_for_perforated_plate_with_circular_holes(self) -> PerforatedPlateData:
 
-        if self.tabWidget_perforated_plate_models.currentIndex() != 0:
+        if self.tabWidget_perforated_plate_models.currentIndex() != PPlateModelsTabType.CIRCULAR_HOLES:
             return
         
         if self.selected_fluid is None:
@@ -1030,12 +1048,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def get_perforated_plate_model(self):
         tab_index = self.tabWidget_main.currentIndex()
         
-        if tab_index == 0:
+        if tab_index == PPMMainTabType.SETUP:
             return "circular hole"
 
     def plot_data_callback(self):
         plot_key = self.comboBox_plot_type.currentIndex()
-        if plot_key == 0:
+        if plot_key == PlotTypeBoxType.ACOUSTIC_IMPEDANCE:
             self.plot_perforated_plate_impedance()
 
     def plot_perforated_plate_impedance(self):
