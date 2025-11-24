@@ -535,18 +535,13 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_surfaces_from_tree_widget_acoustic_pressure(self):
+    def get_selected_surfaces_from_tree_widget_acoustic_pressure(self) -> list:
         selected_items = self.treeWidget_acoustic_pressure.selectedItems()
 
         if not selected_items:
             return list()
 
-        surface_ids = list()
-
-        for item in selected_items:
-            surface_ids.append(int(item.text(0)))
-        
-        return surface_ids
+        return [int(item.text(0)) for item in selected_items]
 
     def load_model_info(self):
         self.treeWidget_acoustic_pressure.clear()
