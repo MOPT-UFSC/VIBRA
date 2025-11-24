@@ -49,12 +49,15 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _reset_variables(self):
-        self.unit_label = "m/s"
         self.keep_window_open = True
         self.exporter = None
         self.plotter = None
 
+        self.model_results = dict()
+
     def _create_connections(self):
+        #
+        self.checkBox_convert_to_volume_velocity.stateChanged.connect(self.convert_to_volume_velocity_callback)
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
@@ -67,7 +70,18 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         #
         self.geometry_selection_callback()
 
+    def convert_to_volume_velocity_callback(self):
+        volume_velocity = False
+        if self.checkBox_convert_to_volume_velocity.isEnabled():
+            volume_velocity = self.checkBox_convert_to_volume_velocity.isChecked()
+            self.comboBox_component_selector.setCurrentText("normal")
+
+        self.comboBox_component_selector.setDisabled(volume_velocity)
+
     def update_render_according_to_selector(self):
+        surface_selector = self.comboBox_selector_filter.currentText() == "Surfaces"
+        self.checkBox_convert_to_volume_velocity.setEnabled(surface_selector)
+
         self.geometry_selection_callback()
         if self.comboBox_selector_filter.currentIndex() == 0:
             app().main_window.show_geometry_render_widget()
@@ -256,41 +270,51 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def join_model_data(self):
 
+        self.model_results.clear()
         component_label = self.get_component_label()
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
-        self.model_results = dict()
-        self.title = "Particle velocity frequency response"
-
         for i, selected_id in enumerate(self.selected_ids):
 
+            factor = 1.0
+            unit_label = "m/s"
+            data_type = "Particle velocity"
+
+            if self.checkBox_convert_to_volume_velocity.isEnabled():
+                if self.checkBox_convert_to_volume_velocity.isChecked():
+                    unit_label = "m³/s"
+                    data_type = "Volume velocity"
+                    self.mesh.process_face_elements_connected_to_nodes(selected_id)
+                    factor = self.mesh.surface_area_from_element_integration[selected_id]
+
             key = (selection_type, (selected_id))
-            legend_label = f"Particle velocity at {selection_type} [{selected_id}]"
+            y_data = self.get_response(selection_type, selected_id)
+            legend_label = f"{data_type} at {selection_type[:-1]} [{selected_id}]"
 
             self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(selection_type, selected_id),
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : f"Particle velocity {component_label}",
-                                        "title" : self.title,
-                                        "data_type" : "particle velocity",
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
+                "x_data" : self.frequencies,
+                "y_data" : y_data * factor,
+                "x_label" : "Frequency [Hz]",
+                "y_label" : f"{data_type} {component_label}",
+                "title" : f"{data_type} frequency response",
+                "data_type" : data_type.lower(),
+                "legend" : legend_label,
+                "unit" : unit_label,
+                "color" : self.get_color(i),
+                "linestyle" : "-"  
+                }
 
     def get_color(self, index):
 
         colors = [  
-                  (0,0,1), 
-                  (0,0,0), 
-                  (1,0,0),
-                  (0,1,1), 
-                  (1,0,1), 
-                  (1,1,0),
-                  (0.25,0.25,0.25)
-                  ]
+            (0,0,1),
+            (0,0,0),
+            (1,0,0),
+            (0,1,1),
+            (1,0,1),
+            (1,1,0),
+            (0.25,0.25,0.25),
+            ]
 
         if index <= 6:
             return colors[index]
