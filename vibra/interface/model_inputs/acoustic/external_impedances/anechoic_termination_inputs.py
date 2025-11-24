@@ -92,9 +92,8 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.pushButton_attribute.setEnabled(True)
 
     def geometry_selection_callback(self):
-        self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
-
         if self.tabWidget_main.currentIndex() == 1:
+            self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
             return
 
         faces = app().main_window.selected_geometry_surfaces

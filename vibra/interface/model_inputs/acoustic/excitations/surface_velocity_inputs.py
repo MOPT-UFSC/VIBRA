@@ -95,9 +95,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
-        self.verify_if_selected_surfaces_are_in_tree_widget_surface_velocity()
-
         if self.tabWidget_main.currentIndex() == 2:
+            self.verify_if_selected_surfaces_are_in_tree_widget_surface_velocity()
             return
         
         faces = app().main_window.selected_geometry_surfaces

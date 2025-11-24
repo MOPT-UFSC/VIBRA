@@ -80,9 +80,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
-        self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
-
         if self.tabWidget_main.currentIndex() == 2:
+            self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
             return
         
         faces = app().main_window.selected_geometry_surfaces

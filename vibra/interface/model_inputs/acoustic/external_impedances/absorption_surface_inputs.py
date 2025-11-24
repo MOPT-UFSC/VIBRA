@@ -130,9 +130,8 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.lineEdit_selection_id.setToolTip("")
 
     def geometry_selection_callback(self):
-        self.verify_if_selected_surfaces_are_in_tree_widget_absorption_surface()
-
         if self.tabWidget_main.currentIndex() == 2:
+            self.verify_if_selected_surfaces_are_in_tree_widget_absorption_surface()
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
