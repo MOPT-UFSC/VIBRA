@@ -168,7 +168,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.clear_line_edit_selection_id()
         self.treeWidget_absorption_surface.clearSelection()
 
-        map_id_to_model_index = self.get_tree_widget_surface_velocity_items_map()
+        map_id_to_model_index = self.get_tree_widget_absorption_surface_items_map()
         selected_ids = set(map_id_to_model_index.keys())
         selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
 
@@ -187,7 +187,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.SingleSelection)
         self.set_selection_text(selected_surfaces_in_tree_widget)
 
-    def get_tree_widget_surface_velocity_items_map(self) -> dict:
+    def get_tree_widget_absorption_surface_items_map(self) -> dict:
         map_id_to_model_index = dict()
 
         index = self.treeWidget_absorption_surface.indexAt(QPoint(0, 0))

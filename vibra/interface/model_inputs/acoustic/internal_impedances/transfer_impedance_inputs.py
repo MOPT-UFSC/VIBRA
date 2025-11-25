@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -54,6 +54,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.keep_window_open = True
         self.ti_data = dict()
         self.last_tab = self.tabWidget_main.currentIndex()
+        self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
         #
@@ -95,8 +96,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         change_icon_color_for_widgets(widgets, icon_color)
 
     def geometry_selection_callback(self):
+        current_tab = self.tabWidget_main.currentIndex()
 
-        if self.tabWidget_main.currentIndex() != 0:
+        if current_tab != 0:
+            if current_tab == 2:
+                self.verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance()
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
@@ -129,6 +133,51 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.tabWidget_main.setCurrentIndex(0)
             self.lineEdit_real_value.setText(str(pp_data["real_values"][0]))
             self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
+        
+    def verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_surfaces = app().main_window.selected_geometry_surfaces
+
+        if not selected_surfaces:
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_transfer_impedance.clearSelection()
+
+        map_id_to_model_index = self.get_tree_widget_transfer_impedance_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
+
+        if not selected_surfaces_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_transfer_impedance.selectionModel()
+
+        for surface_id in selected_surfaces_in_tree_widget:
+            model_index = map_id_to_model_index[surface_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_surfaces_in_tree_widget)
+
+    def get_tree_widget_transfer_impedance_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_transfer_impedance.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_transfer_impedance.itemFromIndex(index)
+            surface_id = item.text(0)
+
+            map_id_to_model_index[int(surface_id)] = index
+
+            index = self.treeWidget_transfer_impedance.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def check_selected_surfaces(self):
 
@@ -199,7 +248,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id.setText("")
+        self.clear_line_edit_selection_id()
 
         self.hide()
         self.actions_to_finalize()
@@ -306,7 +355,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id.setText("")
+        self.clear_line_edit_selection_id()
 
         self.hide()
         self.actions_to_finalize()
@@ -327,7 +376,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if self.last_tab == 2 or tab_list:
             app().main_window.clear_selection()
-            self.lineEdit_selection_id.clear()
+            self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
 
@@ -342,7 +391,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.lineEdit_selection_id.setEnabled(True)
 
     def on_click_item(self, item):
-        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+        self.tree_item_clicked = True
+
+        surface_ids = self.get_selected_surfaces_from_tree_widget_transfer_impedance()
 
         if not surface_ids:
             return
@@ -350,31 +401,39 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         app().main_window.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id.setText(selection_text)
+        self.set_selection_text(surface_ids)
+
+        self.tree_item_clicked = False
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_surfaces_and_selection_text(self):
+    def get_selected_surfaces_from_tree_widget_transfer_impedance(self) -> list:
         selected_items = self.treeWidget_transfer_impedance.selectedItems()
 
         if not selected_items:
-            return list(), str()
-
-        selection_text = ""
-        surface_ids = list()
-
-        for item in selected_items:
-            surface_id = item.text(0)
-            selection_text += surface_id + ", "
-            surface_ids.append(int(surface_id))
+            return list()
         
-        return surface_ids, selection_text[:-2]
+        return [int(item.text(0)) for item in selected_items]
+    
+    def set_selection_text(self, selected_surfaces: list | set):
+        selected_surfaces = list(selected_surfaces)
+        selected_surfaces.sort()
+
+        selected_surfaces = map(str, selected_surfaces)
+        selection_text = ", ".join(selected_surfaces)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
                 
     def clear_all_inputs(self):
-        self.lineEdit_real_value.setText("")
-        self.lineEdit_imag_value.setText("")
-        self.lineEdit_table_path.setText("")
+        self.lineEdit_real_value.clear()
+        self.lineEdit_imag_value.clear()
+        self.lineEdit_table_path.clear()
 
     def check_selection_type(self, surface_ids: list[int]):
 
@@ -549,7 +608,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                         self.properties._remove_line_property(property, line_id)
 
     def remove_callback(self):
-        input_ids, _ = self.get_selected_surfaces_and_selection_text()
+        input_ids = self.get_selected_surfaces_from_tree_widget_transfer_impedance()
 
         if not input_ids:
             return
@@ -584,7 +643,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 app().file.remove_results_data_from_project_file()
                 # self.restore_mesh_data_modified_by_decoupling()
                 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.clear_selection()

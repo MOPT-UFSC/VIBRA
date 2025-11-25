@@ -148,7 +148,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.clear_line_edit_selection_id()
         self.treeWidget_anechoic_termination.clearSelection()
 
-        map_id_to_model_index = self.get_tree_widget_surface_velocity_items_map()
+        map_id_to_model_index = self.get_tree_widget_anechoic_termination_items_map()
         selected_ids = set(map_id_to_model_index.keys())
         selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
 
@@ -167,7 +167,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.SingleSelection)
         self.set_selection_text(selected_surfaces_in_tree_widget)
 
-    def get_tree_widget_surface_velocity_items_map(self) -> dict:
+    def get_tree_widget_anechoic_termination_items_map(self) -> dict:
         map_id_to_model_index = dict()
 
         index = self.treeWidget_anechoic_termination.indexAt(QPoint(0, 0))
