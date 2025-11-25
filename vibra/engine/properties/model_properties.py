@@ -268,47 +268,47 @@ class ModelProperties:
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
-    def remove_all_surface_properties(self, surface_id: int, physical_domain: str):
-        properties = None
-        if physical_domain == "Structural":
-            properties = self.structural_properties_names
-        else:
-            properties = self.acoustic_properties_names
-            
-        prop_to_remove = list()
-        for key in self.surface_properties.keys():
-            if key[1] == surface_id and key[0] in properties:
-                prop_to_remove.append(key)
-        for key in prop_to_remove:
-            self.surface_properties.pop(key)
-    
-    def remove_all_line_properties(self, line_id: int, physical_domain: str):
-        properties = None
-        if physical_domain == "Structural":
-            properties = self.structural_properties_names
-        else:
-            properties = self.acoustic_properties_names
-            
-        prop_to_remove = list()
-        for key in self.line_properties.keys():
-            if key[1] == line_id and key[0] in properties:
-                prop_to_remove.append(key)
-        for key in prop_to_remove:
-            self.line_properties.pop(key)
-    
-    def remove_all_point_properties(self, point_id: int, physical_domain: str):
-        properties = None
-        if physical_domain == "Structural":
-            properties = self.structural_properties_names
-        else:
-            properties = self.acoustic_properties_names
-            
-        prop_to_remove = list()
-        for key in self.point_properties.keys():
-            if key[1] == point_id and key[0] in properties:
-                prop_to_remove.append(key)
-        for key in prop_to_remove:
-            self.point_properties.pop(key)
+    # def remove_all_surface_properties(self, surface_id: int, physical_domain: str):
+    #     properties = None
+    #     if physical_domain == "Structural":
+    #         properties = self.structural_properties_names
+    #     else:
+    #         properties = self.acoustic_properties_names
+    #
+    #     prop_to_remove = list()
+    #     for key in self.surface_properties.keys():
+    #         if key[1] == surface_id and key[0] in properties:
+    #             prop_to_remove.append(key)
+    #     for key in prop_to_remove:
+    #         self.surface_properties.pop(key)
+    #
+    # def remove_all_line_properties(self, line_id: int, physical_domain: str):
+    #     properties = None
+    #     if physical_domain == "Structural":
+    #         properties = self.structural_properties_names
+    #     else:
+    #         properties = self.acoustic_properties_names
+    #
+    #     prop_to_remove = list()
+    #     for key in self.line_properties.keys():
+    #         if key[1] == line_id and key[0] in properties:
+    #             prop_to_remove.append(key)
+    #     for key in prop_to_remove:
+    #         self.line_properties.pop(key)
+    #
+    # def remove_all_point_properties(self, point_id: int, physical_domain: str):
+    #     properties = None
+    #     if physical_domain == "Structural":
+    #         properties = self.structural_properties_names
+    #     else:
+    #         properties = self.acoustic_properties_names
+    #
+    #     prop_to_remove = list()
+    #     for key in self.point_properties.keys():
+    #         if key[1] == point_id and key[0] in properties:
+    #             prop_to_remove.append(key)
+    #     for key in prop_to_remove:
+    #         self.point_properties.pop(key)
     
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""

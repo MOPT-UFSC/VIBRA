@@ -1,13 +1,19 @@
+from numpy import int64
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QListWidgetItem, QTableWidgetItem, QTreeWidgetItem, QHeaderView
+from PySide6.QtWidgets import (
+    QTableWidgetItem,
+    QHeaderView,
+)
 
 from vibra import app, __version__
-from vibra.interface.ui_generated.general.choose_property_to_delete_ui import ChoosePropertyToDelete_UI
+from vibra.interface.ui_generated.general.choose_property_to_delete_ui import (
+    ChoosePropertyToDelete_UI,
+)
 
 
 class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
-    def __init__(self, title, message, data: dict[set], *args, **kwargs):
+    def __init__(self, title, message, data: dict[str, set[int64]], *args, **kwargs):
         super().__init__(*args)
 
         app().main_window.set_input_widget(self)
@@ -15,7 +21,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.title = title
         self.message = message
         self.data = data
-        self.window_title = kwargs.get('window_title', f'Vibra v{__version__}')
+        self.window_title = kwargs.get("window_title", f"Vibra v{__version__}")
 
         self._config_window()
         self._initialize()
@@ -25,27 +31,29 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._reset_variables()
         self._configure_table()
         self._mount_properties_list_from_data()
+        
+        self.properties_formated: list[tuple[str, str, int]]
 
         self.exec()
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowTitle(self.window_title)
-    
-    def _initialize(self):
-        ...
-        # self.keep_window_open = True
-    
+
+    def _initialize(self): ...
+
+    # self.keep_window_open = True
+
     def _create_connections(self):
-        self.pushButton_remove.clicked.connect(self.remove_action)
-        self.pushButton_cancel.clicked.connect(self.cancel_action)
-    
+        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_cancel.clicked.connect(self.cancel_callback)
+
     def _configure_buttons(self):
         self.pushButton_cancel.setText("Cancel")
         self.pushButton_remove.setText("Remove")
-    
+
     def _reset_variables(self):
         self._remove = False
         self._cancel = True
@@ -54,50 +62,57 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _configure_labels(self):
         self.label_title.setText("Remove Property")
         self.label_title.setWordWrap(True)
-        self.label_title.setAlignment(Qt.AlignJustify)
-        self.label_title.setAlignment(Qt.AlignCenter)
+        self.label_title.setAlignment(Qt.AlignmentFlag.AlignJustify)
+        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_title.setMargin(12)
         self.label_title.adjustSize()
         self.adjustSize()
 
     def _configure_table(self):
+        # table will always have 3 collumns
         labels = ["Property", "Entity ID", "Entity"]
 
         self.tableWidget.setColumnCount(len(labels))
         self.tableWidget.setHorizontalHeaderLabels(labels)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
+        self.tableWidget.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.ResizeToContents
+        )
 
-        self.tableWidget.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.tableWidget.verticalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents
+        )
 
     def _mount_properties_list_from_data(self):
-        properties_found: list[tuple[str, str, int]] = list()
+        self.properties_formated: list[tuple[str, str, int]] = list()
 
-        def filter_properties_to_not_show(prop: tuple[str, str, int]) -> list[tuple[str, str]]:
+        def filter_properties_to_not_show(prop: tuple[str, str, int]) -> bool:
             return prop[0] not in ["fluid", "material"]
 
         prop = app().project.model.properties.get_properties_from_points(self.data.get("points"))
         prop = [(name, id_number, "point") for name, id_number in prop]
-        properties_found.extend(prop)
+        self.properties_formated.extend(prop)
 
         prop = app().project.model.properties.get_properties_from_lines(self.data.get("lines"))
         prop = [(name, id_number, "line") for name, id_number in prop]
-        properties_found.extend(prop)
+        self.properties_formated.extend(prop)
 
         prop = app().project.model.properties.get_properties_from_surfaces(self.data.get("surfaces"))
         prop = [(name, id_number, "surface") for name, id_number in prop]
-        properties_found.extend(prop)
+        self.properties_formated.extend(prop)
 
         prop = app().project.model.properties.get_properties_from_volumes(self.data.get("volumes"))
         prop = [(name, id_number, "volume") for name, id_number in prop]
-        properties_found.extend(prop)
+        self.properties_formated.extend(prop)
 
         # it is filtered to exclude properties that are not meant to be removed
-        properties_found = list(filter(filter_properties_to_not_show, properties_found))
-        properties_found.sort(key=lambda item: item[0])
+        self.properties_formated = list(filter(filter_properties_to_not_show, self.properties_formated))
+        self.properties_formated.sort(key=lambda item: item[0])
 
-        self._fill_table(properties_found)
-    
+        self._fill_table(self.properties_formated)
+
     def _fill_table(self, data: list[tuple[str, str, int]]):
         self.tableWidget.setRowCount(len(data))
 
@@ -111,16 +126,32 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def actions_to_finalize(self):
         app().main_window.update_symbols()
 
-    def remove_action(self):
-        self._remove = True
-        self._cancel = False
+    def remove_callback(self):
+        # starts from index 0
+        rows_selected: list[int] = list()
+        for sr in self.tableWidget.selectedRanges():
+            rows_selected.extend(range(sr.topRow(), sr.bottomRow() + 1))
+
+        for row in rows_selected:
+            property_selct = self.tableWidget.item(row, 0)
+            entity_id = self.tableWidget.item(row, 1)
+            entity = self.tableWidget.item(row, 2)
+            if property_selct is None or entity is None or entity_id is None:
+                continue
+
+            if entity.text() == "point":
+                app().project.model.properties._remove_point_property(property_selct.text(), int(entity_id.text()))
+            elif entity.text() == "line":
+                app().project.model.properties._remove_line_property(property_selct.text(), int(entity_id.text()))
+            elif entity.text() == "surface":
+                app().project.model.properties._remove_surface_property(property_selct.text(), int(entity_id.text()))
+            elif entity.text() == "volume":
+                app().project.model.properties._remove_volume_property(property_selct.text(), int(entity_id.text()))
 
         self.actions_to_finalize()
         self.close()
-    
-    def cancel_action(self):
-        self._remove = False
-        self._cancel = True
+
+    def cancel_callback(self):
         self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
 )
+from numpy import int64
 
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
@@ -1022,7 +1023,7 @@ class MainWindow(MainWindow_UI):
         
         # properties_founded = list(set([p.replace('_', ' ').title() for p in properties_founded]))
 
-        selected_geometry_entities = {"lines": self.selected_geometry_lines,
+        selected_geometry_entities: dict[str, set[int64]] = {"lines": self.selected_geometry_lines,
                                       "points": self.selected_geometry_points,
                                       "surfaces": self.selected_geometry_surfaces,
                                       "volumes": self.selected_geometry_volumes}
