@@ -88,9 +88,6 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _mount_properties_list_from_data(self):
         self.properties_formated: list[tuple[str, str, int]] = list()
 
-        def filter_properties_to_not_show(prop: tuple[str, str, int]) -> bool:
-            return prop[0] not in ["fluid", "material"]
-
         prop = app().project.model.properties.get_properties_from_points(self.data.get("points"))
         prop = [(name, id_number, "point") for name, id_number in prop]
         self.properties_formated.extend(prop)
@@ -108,6 +105,9 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.properties_formated.extend(prop)
 
         # it is filtered to exclude properties that are not meant to be removed
+        def filter_properties_to_not_show(prop: tuple[str, str, int]) -> bool:
+            return prop[0] not in ["fluid", "material"]
+
         self.properties_formated = list(filter(filter_properties_to_not_show, self.properties_formated))
         self.properties_formated.sort(key=lambda item: item[0])
 
