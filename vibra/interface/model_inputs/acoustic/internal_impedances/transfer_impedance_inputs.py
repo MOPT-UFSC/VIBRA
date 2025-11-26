@@ -98,9 +98,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
 
+        if current_tab == 2:
+            self.verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance()
+            return
+        
         if current_tab != 0:
-            if current_tab == 2:
-                self.verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance()
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
@@ -145,6 +147,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.clear_line_edit_selection_id()
         self.treeWidget_transfer_impedance.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         map_id_to_model_index = self.get_tree_widget_transfer_impedance_items_map()
         selected_ids = set(map_id_to_model_index.keys())

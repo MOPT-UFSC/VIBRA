@@ -151,6 +151,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         self.clear_line_edit_selection_id()
         self.treeWidget_surface_velocity.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         map_id_to_model_index = self.get_tree_widget_surface_velocity_items_map()
         selected_ids = set(map_id_to_model_index.keys())

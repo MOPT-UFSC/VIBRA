@@ -167,6 +167,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         self.clear_line_edit_selection_id()
         self.treeWidget_specific_impedance.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         map_id_to_model_index = self.get_tree_widget_specific_impedance_items_map()
         selected_ids = set(map_id_to_model_index.keys())

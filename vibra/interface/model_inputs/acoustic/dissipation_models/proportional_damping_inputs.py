@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -38,6 +38,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def _initialize(self):
         self.keep_window_open = True
+        self.tree_item_clicked = False
 
     def _create_connections(self):
         #
@@ -63,16 +64,18 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         if index == 0:
             self.lineEdit_selection_id.setText("All bodies")
         elif index == 1:
-            self.lineEdit_selection_id.setText("")
+            self.clear_line_edit_selection_id()
 
         self.lineEdit_selection_id.setEnabled(bool(index))
 
     def geometry_selection_callback(self):
+        if self.tabWidget_main.currentIndex() == 1:
+            self.verify_if_selected_volumes_are_in_tree_widget_proportional_damping()
+            return
 
         volumes = app().main_window.selected_geometry_volumes
 
         if volumes:
-
             volume_ids = [int(vol_id) for vol_id in volumes]
 
             if self.comboBox_attribution_type.currentIndex() == 0:
@@ -90,8 +93,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def load_dissipation_model_data(self, data: dict):
 
-        self.lineEdit_speed_of_sound_complex_factor.setText("")
-        self.lineEdit_fluid_density_complex_factor.setText("")
+        self.lineEdit_speed_of_sound_complex_factor.clear()
+        self.lineEdit_fluid_density_complex_factor.clear()
 
         if not isinstance(data, dict):
             return
@@ -102,6 +105,52 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         density_factor = data.get("density_factor", 0.)
         self.lineEdit_fluid_density_complex_factor.setText(f"{density_factor : .4f}")
         self.actions_to_finalize()
+    
+    def verify_if_selected_volumes_are_in_tree_widget_proportional_damping(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_volumes = app().main_window.selected_geometry_volumes
+
+        if not selected_volumes:
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_proportional_damping.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_proportional_damping_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_volumes_in_tree_widget = selected_volumes.intersection(selected_ids)
+
+        if not selected_volumes_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_proportional_damping.selectionModel()
+
+        for volume_id in selected_volumes_in_tree_widget:
+            model_index = map_id_to_model_index[volume_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_proportional_damping.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_volumes_in_tree_widget)
+
+    def get_tree_widget_proportional_damping_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_proportional_damping.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_proportional_damping.itemFromIndex(index)
+            volume_id = int(item.text(0))
+
+            map_id_to_model_index[volume_id] = index
+
+            index = self.treeWidget_proportional_damping.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, only_positive=False, zero_included=True, _float=True):
 
@@ -198,8 +247,9 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             volume_id = int(item.text(0))
             self.properties._remove_volume_property("proportional_damping", volume_id)
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.treeWidget_proportional_damping.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         app().main_window.clear_selection()
         self.actions_to_finalize()
@@ -241,14 +291,16 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.comboBox_attribution_type.setDisabled(list_tab)
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
 
         if list_tab:
             self.pushButton_remove.setDisabled(True)
             self.treeWidget_proportional_damping.clearSelection()
 
     def on_click_item(self, item):
-        volume_ids, selection_text = self.get_selected_volumes_and_selection_text()
+        self.tree_item_clicked = True
+
+        volume_ids = self.get_selected_volumes_from_tree_widget_proportional_damping()
 
         if not volume_ids:
             return
@@ -256,26 +308,34 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.set_geometry_selection(volumes=volume_ids)
 
         self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id.setText(selection_text)
+        self.set_selection_text(volume_ids)
+
+        self.tree_item_clicked = False
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_volumes_and_selection_text(self):
+    def get_selected_volumes_from_tree_widget_proportional_damping(self) -> list:
         selected_items = self.treeWidget_proportional_damping.selectedItems()
 
         if not selected_items:
-            return list(), str()
-
-        selection_text = ""
-        volume_ids = list()
-
-        for item in selected_items:
-            volume_id = item.text(0)
-            selection_text += volume_id + ", "
-            volume_ids.append(int(volume_id))
+            return list()
         
-        return volume_ids, selection_text[:-2]
+        return [int(item.text(0)) for item in selected_items]
+    
+    def set_selection_text(self, selected_volumes: list | set):
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selected_volumes = map(str, selected_volumes)
+        selection_text = ", ".join(selected_volumes)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def load_info(self):
         self.treeWidget_proportional_damping.clear()

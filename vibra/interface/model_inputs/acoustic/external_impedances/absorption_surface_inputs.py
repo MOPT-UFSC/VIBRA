@@ -167,6 +167,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         self.clear_line_edit_selection_id()
         self.treeWidget_absorption_surface.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         map_id_to_model_index = self.get_tree_widget_absorption_surface_items_map()
         selected_ids = set(map_id_to_model_index.keys())

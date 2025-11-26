@@ -118,6 +118,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         self.clear_line_edit_selection_id()
         self.treeWidget_acoustic_pressure.clearSelection()
+        self.pushButton_remove.setDisabled(True)
 
         map_id_to_model_index = self.get_tree_widget_acoustic_pressure_items_map()
         selected_ids = set(map_id_to_model_index.keys())
