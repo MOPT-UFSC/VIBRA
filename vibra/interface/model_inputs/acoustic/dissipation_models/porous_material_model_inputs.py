@@ -13,7 +13,7 @@ from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JC
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType
+from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
@@ -39,13 +39,6 @@ class PMModels(IntEnum):
 class PMEditModelsTab(IntEnum):
     DB_DBM = 0
     JCA_JCAL = 1
-
-class PlotTypesTab(IntEnum):
-    FLUID_DENSITY = 0
-    SPEED_OF_SOUND = 1
-    SURFACE_IMPEDANCE = 2
-    ABSORPTION_COEFFICIENT = 3
-
 
 class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -797,7 +790,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         elif plot_key == PlotTypesTab.SURFACE_IMPEDANCE:
             self.plot_surface_impedance()
-            
+
         else:
             self.plot_absorption_coefficient()
 

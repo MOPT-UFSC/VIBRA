@@ -12,3 +12,9 @@ class SetupTabType(IntEnum):
 class AttributionBodiesType(IntEnum):
     ALL_BODIES = 0
     SELECTED_BODIES = 1
+
+class PlotTypesTab(IntEnum):
+    FLUID_DENSITY = 0
+    SPEED_OF_SOUND = 1
+    SURFACE_IMPEDANCE = 2
+    ABSORPTION_COEFFICIENT = 3
