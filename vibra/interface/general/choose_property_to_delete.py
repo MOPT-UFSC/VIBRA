@@ -31,7 +31,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._reset_variables()
         self._configure_table()
         self._mount_properties_list_from_data()
-        
+
         self.properties_formated: list[tuple[str, str, int]]
 
         self.exec()
@@ -88,19 +88,27 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _mount_properties_list_from_data(self):
         self.properties_formated: list[tuple[str, str, int]] = list()
 
-        prop = app().project.model.properties.get_properties_from_points(self.data.get("points"))
+        prop = app().project.model.properties.get_properties_from_points(
+            self.data.get("points")
+        )
         prop = [(name, id_number, "point") for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        prop = app().project.model.properties.get_properties_from_lines(self.data.get("lines"))
+        prop = app().project.model.properties.get_properties_from_lines(
+            self.data.get("lines")
+        )
         prop = [(name, id_number, "line") for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        prop = app().project.model.properties.get_properties_from_surfaces(self.data.get("surfaces"))
+        prop = app().project.model.properties.get_properties_from_surfaces(
+            self.data.get("surfaces")
+        )
         prop = [(name, id_number, "surface") for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        prop = app().project.model.properties.get_properties_from_volumes(self.data.get("volumes"))
+        prop = app().project.model.properties.get_properties_from_volumes(
+            self.data.get("volumes")
+        )
         prop = [(name, id_number, "volume") for name, id_number in prop]
         self.properties_formated.extend(prop)
 
@@ -108,7 +116,9 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         def filter_properties_to_not_show(prop: tuple[str, str, int]) -> bool:
             return prop[0] not in ["fluid", "material"]
 
-        self.properties_formated = list(filter(filter_properties_to_not_show, self.properties_formated))
+        self.properties_formated = list(
+            filter(filter_properties_to_not_show, self.properties_formated)
+        )
         self.properties_formated.sort(key=lambda item: item[0])
 
         self._fill_table(self.properties_formated)
@@ -136,17 +146,26 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             property_selct = self.tableWidget.item(row, 0)
             entity_id = self.tableWidget.item(row, 1)
             entity = self.tableWidget.item(row, 2)
+
             if property_selct is None or entity is None or entity_id is None:
                 continue
 
             if entity.text() == "point":
-                app().project.model.properties._remove_point_property(property_selct.text(), int(entity_id.text()))
+                app().project.model.properties._remove_point_property(
+                    property_selct.text(), int(entity_id.text())
+                )
             elif entity.text() == "line":
-                app().project.model.properties._remove_line_property(property_selct.text(), int(entity_id.text()))
+                app().project.model.properties._remove_line_property(
+                    property_selct.text(), int(entity_id.text())
+                )
             elif entity.text() == "surface":
-                app().project.model.properties._remove_surface_property(property_selct.text(), int(entity_id.text()))
+                app().project.model.properties._remove_surface_property(
+                    property_selct.text(), int(entity_id.text())
+                )
             elif entity.text() == "volume":
-                app().project.model.properties._remove_volume_property(property_selct.text(), int(entity_id.text()))
+                app().project.model.properties._remove_volume_property(
+                    property_selct.text(), int(entity_id.text())
+                )
 
         self.actions_to_finalize()
         self.close()
