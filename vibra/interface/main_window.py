@@ -1006,15 +1006,11 @@ class MainWindow(MainWindow_UI):
 
         self.close_dialogs()
 
-        buttons_config = {"left_button_label": "Cancel",
-                          "right_button_label": "Remove"}
-
         ChoosePropertytoDelete(
-            "Remove Property", 
+            "Remove Property",
             "Choose a property",
             data=selected_geometry_entities,
-            buttons_config=buttons_config, 
-            window_title="Vibra",)
+            window_title="Vibra")
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
