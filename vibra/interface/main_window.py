@@ -998,68 +998,23 @@ class MainWindow(MainWindow_UI):
             PrintMessageInput([window_title, title, message])
     
     def remove_property(self):
-        physical_domain = self.analysis_toolbar.combo_box_physical_domain.currentText()
+        selected_geometry_entities = {
+            "lines": self.selected_geometry_lines,
+            "points": self.selected_geometry_points,
+            "surfaces": self.selected_geometry_surfaces,
+            "volumes": self.selected_geometry_volumes}
 
-        # if physical_domain == "Structural":
-        #     properties_names = app().project.model.properties.get_data_group_label()
-        # else:
-        #     properties_names = app().project.model.properties.get_data_group_label()
-
-        # properties_founded: list[str] = list()
-        # for surf_id in self.selected_geometry_surfaces:
-        #     prop_id = app().project.model.properties.surface_properties.keys()
-        #     prop = [prop for prop, id in prop_id if (surf_id == id and prop in properties_names)]
-        #     properties_founded.extend(prop)
-        
-        # for line_id in self.selected_geometry_lines:
-        #     prop_id = app().project.model.properties.line_properties.keys()
-        #     prop = [prop for prop, id in prop_id if (line_id == id and prop in properties_names)]
-        #     properties_founded.extend(prop)
-        
-        # for point_id in self.selected_geometry_points:
-        #     prop_id = app().project.model.properties.point_properties.keys()
-        #     prop = [prop for prop, id in prop_id if (point_id == id and prop in properties_names)]
-            # properties_founded.extend(prop)
-        
-        # properties_founded = list(set([p.replace('_', ' ').title() for p in properties_founded]))
-
-        selected_geometry_entities: dict[str, set[int64]] = {"lines": self.selected_geometry_lines,
-                                      "points": self.selected_geometry_points,
-                                      "surfaces": self.selected_geometry_surfaces,
-                                      "volumes": self.selected_geometry_volumes}
-        # print(selected_geometry_entities.values())
-        # print(any(selected_geometry_entities.values()))
         self.close_dialogs()
 
         buttons_config = {"left_button_label": "Cancel",
                           "right_button_label": "Remove"}
 
-        user_option = ChoosePropertytoDelete("Remove Property", 
-                                             "Choose a property",
-                                             data=selected_geometry_entities,
-                                             buttons_config=buttons_config, 
-                                             window_title="Vibra")
-
-        # if user_option._remove:
-        #     prop = user_option._property_to_delete.lower().replace(' ', '_')
-        #     for surf_id in self.selected_geometry_surfaces:
-        #         app().project.model.properties._remove_surface_property(prop, surf_id)
-            
-        #     for line_id in self.selected_geometry_lines:
-        #         app().project.model.properties._remove_line_property(prop, line_id)
-            
-        #     for point_id in self.selected_geometry_points:
-        #         app().project.model.properties._remove_point_property(prop, point_id)
-        # elif user_option._remove_all:
-        #     for surf_id in self.selected_geometry_surfaces:
-        #         app().project.model.properties.remove_all_surface_properties(surf_id, physical_domain)
-            
-        #     for point_id in self.selected_geometry_lines:
-        #         app().project.model.properties.remove_all_line_properties(point_id, physical_domain)
-            
-        #     for point_id in self.selected_geometry_points:
-        #         app().project.model.properties.remove_all_point_properties(point_id, physical_domain)
-
+        ChoosePropertytoDelete(
+            "Remove Property", 
+            "Choose a property",
+            data=selected_geometry_entities,
+            buttons_config=buttons_config, 
+            window_title="Vibra",)
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()

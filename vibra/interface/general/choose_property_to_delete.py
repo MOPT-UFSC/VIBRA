@@ -22,6 +22,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.message = message
         self.data = data
         self.window_title = kwargs.get("window_title", f"Vibra v{__version__}")
+        self.properties_formated: list[tuple[str, str, int]] = list()
 
         self._config_window()
         self._initialize()
@@ -32,9 +33,8 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._configure_table()
         self._mount_properties_list_from_data()
 
-        self.properties_formated: list[tuple[str, str, int]]
-
-        self.exec()
+        if len(self.properties_formated) > 0:
+            self.exec()
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
