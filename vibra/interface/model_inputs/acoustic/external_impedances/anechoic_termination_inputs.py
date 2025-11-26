@@ -263,14 +263,12 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
-        selected_items = self.treeWidget_anechoic_termination.selectedItems()
+        selected_surfaces = self.get_selected_surfaces_from_tree_widget_anechoic_termination()
 
-        if not selected_items:
+        if not selected_surfaces:
             return
     
-        for item in selected_items:
-            surface_id = int(item.text(0))
-
+        for surface_id in selected_surfaces:
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("specific_impedance", surface_id)
 

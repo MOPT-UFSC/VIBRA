@@ -238,13 +238,12 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.load_info()
 
     def remove_callback(self):
-        selected_items = self.treeWidget_proportional_damping.selectedItems()
+        selected_volumes = self.get_selected_volumes_from_tree_widget_proportional_damping()
 
-        if not selected_items:
+        if not selected_volumes:
             return
 
-        for item in selected_items:
-            volume_id = int(item.text(0))
+        for volume_id in selected_volumes:
             self.properties._remove_volume_property("proportional_damping", volume_id)
 
         self.clear_line_edit_selection_id()

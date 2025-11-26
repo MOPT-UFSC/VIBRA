@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -74,6 +74,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.material_model_data = dict()
         self.models: list[RectangularDuctData|CircularDuctData] = list()
         self.last_tab = self.tabWidget_main.currentIndex()
+        self.tree_item_clicked = False
 
     def _create_connections(self):
         #
@@ -158,7 +159,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.models.remove(model)
 
         self.pushButton_remove.setDisabled(True)
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
 
         app().main_window.clear_selection()
         app().file.write_model_properties_in_file()
@@ -205,7 +206,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         if self.last_tab in list_or_edit_tab or current_tab in list_or_edit_tab:
             app().main_window.clear_selection()
-            self.lineEdit_selection_id.clear()
+            self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
 
@@ -235,34 +236,44 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_selection_id.setDisabled(False)
 
     def on_click_item(self, item):
-        volume_ids, selection_text = self.get_selected_volumes_and_selection_text()
+        self.tree_item_clicked = True
+
+        volume_ids = self.get_selected_volumes_from_tree_widget_viscous_thermal_model()
 
         if not volume_ids:
             return
 
         app().main_window.set_geometry_selection(volumes=volume_ids)
 
-        self.lineEdit_selection_id.setText(selection_text)
+        self.set_selection_text(volume_ids)
         self.pushButton_remove.setEnabled(True)
+
+        self.tree_item_clicked = False
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_volumes_and_selection_text(self):
+    def get_selected_volumes_from_tree_widget_viscous_thermal_model(self) -> list:
         selected_items = self.treeWidget_viscous_thermal_model.selectedItems()
 
         if not selected_items:
-            return list(), str()
-
-        selection_text = ""
-        volume_ids = list()
-
-        for item in selected_items:
-            volume_id = item.text(0)
-            selection_text += volume_id + ", "
-            volume_ids.append(int(volume_id))
+            return list()
         
-        return volume_ids, selection_text[:-2]
+        return [int(item.text(0)) for item in selected_items]
+
+    def set_selection_text(self, selected_volumes: list | set):
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selected_volumes = map(str, selected_volumes)
+        selection_text = ", ".join(selected_volumes)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def rectangular_section_type_callback(self):
 
@@ -519,6 +530,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
     def geometry_selection_callback(self):
+        if self.tabWidget_main.currentIndex() == TabType.LIST:
+            self.verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model()
+            return
 
         volumes = app().main_window.selected_geometry_volumes
 
@@ -527,6 +541,52 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_selection_id.setText(text)
             if self.comboBox_attribution_type.currentIndex() != AttributionType.SELECTED_BODIES:
                 self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
+    
+    def verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_volumes = app().main_window.selected_geometry_volumes
+
+        if not selected_volumes:
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_viscous_thermal_model.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_viscous_thermal_model_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_volumes_in_tree_widget = selected_volumes.intersection(selected_ids)
+
+        if not selected_volumes_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_viscous_thermal_model.selectionModel()
+
+        for volume_id in selected_volumes_in_tree_widget:
+            model_index = map_id_to_model_index[volume_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_volumes_in_tree_widget)
+
+    def get_tree_widget_viscous_thermal_model_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_viscous_thermal_model.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_viscous_thermal_model.itemFromIndex(index)
+            volume_id = int(item.text(0))
+
+            map_id_to_model_index[volume_id] = index
+
+            index = self.treeWidget_viscous_thermal_model.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def generate_mesh(self):
         if not app().project.model.generated_mesh:
