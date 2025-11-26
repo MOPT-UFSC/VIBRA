@@ -2,6 +2,7 @@ from numpy import int64
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QTableWidgetItem,
     QHeaderView,
 )
@@ -72,6 +73,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         # table will always have 3 collumns
         labels = ["Property", "Entity ID", "Entity"]
 
+        self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget.setColumnCount(len(labels))
         self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(
