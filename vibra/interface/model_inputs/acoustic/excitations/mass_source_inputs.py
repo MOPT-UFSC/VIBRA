@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -65,6 +65,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                                4 : "volumes"
                                }
         self.last_tab = self.treeWidget_mass_source.currentIndex()
+        self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
         #
@@ -107,6 +108,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         tab_list = self.tabWidget_main.currentIndex() == 3
 
         if tab_list:
+            self.verify_if_selected_items_are_in_tree_mass_source_inputs()
             return
 
         text = ""
@@ -184,6 +186,67 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.tabWidget_main.setCurrentIndex(0)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
+    
+    def verify_if_selected_items_are_in_tree_mass_source_inputs(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_volumes = {(volume_id, "volume") for volume_id in app().main_window.selected_geometry_volumes}
+        selected_surfaces = {(surface_id, "surface") for surface_id in app().main_window.selected_geometry_surfaces}
+        selected_points = {(point_id, "point") for point_id  in app().main_window.selected_geometry_points}
+        selected_nodes = {(node_id, "node")  for node_id in app().main_window.selected_mesh_nodes}
+        selected_lines = {(line_id, "line") for line_id in app().main_window.selected_geometry_lines}
+
+        selected_items = [selected_volumes, selected_surfaces, selected_points, selected_nodes, selected_lines]
+
+        if not any(selected_items):
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_mass_source.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_viscous_thermal_model_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+
+        selected_items_in_tree_widget = set()
+        for selected_item in selected_items:
+            selected_items_in_tree_widget = selected_items_in_tree_widget.union(selected_ids.intersection(selected_item))
+
+        if not selected_items_in_tree_widget:
+            return
+
+        self.pushButton_remove.setEnabled(True)
+        model_selector = self.treeWidget_mass_source.selectionModel()
+
+        selected_items_in_tree_widget_map = defaultdict(list)
+
+        for selected_item in selected_items_in_tree_widget:
+            model_index = map_id_to_model_index[selected_item]
+
+            selected_id, selected_type = selected_item
+            selected_items_in_tree_widget_map[selected_type + "s"].append(selected_id)
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_mass_source.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_items_in_tree_widget_map)
+
+    def get_tree_widget_viscous_thermal_model_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_mass_source.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_mass_source.itemFromIndex(index)
+            selected_id = int(item.text(0))
+            selected_type = item.text(1)
+
+            map_id_to_model_index[(selected_id, selected_type)] = index
+
+            index = self.treeWidget_mass_source.indexBelow(index)
+        
+        return map_id_to_model_index
+
 
     def attribution_type_callback(self):
 
@@ -744,7 +807,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
-        selected_items, _ = self.get_selected_items_and_selection_text()
+        selected_items = self.get_selected_items_from_tree_widget_mass_source()
 
         if not selected_items:
             return
@@ -768,7 +831,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 else:
                     self.properties._remove_volume_property("mass_source", selected_id)
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
         self.actions_to_finalize()
 
@@ -887,40 +950,60 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.tabWidget_main.setTabVisible(3, False)
 
     def on_click_item(self, item):
-        selected_items, selection_text = self.get_selected_items_and_selection_text()
+        self.tree_item_clicked = True
+
+        selected_items = self.get_selected_items_from_tree_widget_mass_source()
 
         if not selected_items:
             return
 
         self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id.setText(selection_text)
+        self.set_selection_text(selected_items)
 
         nodes = selected_items.pop("nodes") if "nodes" in selected_items else set()
 
         app().main_window.set_mesh_selection(nodes=nodes)
         app().main_window.set_geometry_selection(**selected_items)
 
+        self.tree_item_clicked = False
+
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_items_and_selection_text(self):
+    def get_selected_items_from_tree_widget_mass_source(self) -> dict:
         _selected_items = self.treeWidget_mass_source.selectedItems()
 
         if not _selected_items:
-            return list(), str()
+            return dict()
 
-        selection_text = ""
         selected_items = defaultdict(set)
 
         for item in _selected_items:
             selected_id = item.text(0)
             selected_type = item.text(1) + "s"
 
-            selection_text += selected_id + ", "
-
             selected_items[selected_type].add(int(selected_id))
         
-        return selected_items, selection_text[:-2]
+        return selected_items
+    
+    def set_selection_text(self, selected_items: dict):
+        selection_text = ""
+
+        for selected_type, selected_ids in selected_items.items():
+            selection_text += selected_type.capitalize() + ": "
+
+            selected_ids = map(str, selected_ids)
+            selected_ids = list(selected_ids)
+            selected_ids.sort()
+
+            selection_text += ", ".join(selected_ids) + " "
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def load_model_info(self):
 
