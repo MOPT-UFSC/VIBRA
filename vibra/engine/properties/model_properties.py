@@ -318,6 +318,18 @@ class ModelProperties:
         elif group_label == "structural":
             self.structural_imported_tables[table_name] = data
 
+    def process_table_file_removal(self, table_names: list):
+        for table_name in table_names:
+            self.properties.remove_imported_tables("acoustic", table_name)
+
+        if table_names:
+            app().file.write_imported_table_data_in_file()
+
+    def remove_table_files_from_surface(self, surface_id : list):
+        table_names = self.properties.get_property_related_table_names("acoustic_pressure", surface_id, "surfaces")
+        self.process_table_file_removal(table_names)
+
+
     def remove_imported_tables(self, group_label: str, table_name: str):
         """
         """

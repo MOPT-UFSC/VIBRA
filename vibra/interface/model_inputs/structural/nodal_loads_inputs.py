@@ -960,7 +960,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.remove_property_from(property, selected_id, selection)
                 self.process_table_file_removal(table_names)
 
-    def remove_table_files_from(self, selected_id : list, selection: str):
+    def remove_table_files_from(self, selected_id : int, selection: str):
         table_names = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
         self.process_table_file_removal(table_names)
 
