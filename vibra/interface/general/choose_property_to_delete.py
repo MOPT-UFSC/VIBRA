@@ -148,18 +148,18 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             rows_selected.extend(range(sr.topRow(), sr.bottomRow() + 1))
 
         for row in rows_selected:
-            property_selcted_table_item = self.tableWidget.item(row, 0)
+            property_selected_table_item = self.tableWidget.item(row, 0)
             entity_id_table_item = self.tableWidget.item(row, 1)
             entity_name_table_item = self.tableWidget.item(row, 2)
 
             if (
-                property_selcted_table_item is None
+                property_selected_table_item is None
                 or entity_name_table_item is None
                 or entity_id_table_item is None
             ):
                 continue
 
-            property_selected = property_selcted_table_item.text()
+            property_selected = property_selected_table_item.text()
             entity_name = entity_name_table_item.text()
             entity_id = int(entity_id_table_item.text())
 
