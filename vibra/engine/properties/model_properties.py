@@ -335,12 +335,6 @@ class ModelProperties:
         self._remove_table_files(table_names)
 
     def _remove_table_files(self, table_names: list):
-        '''
-        Args:
-            entity_id (int): id number of the entity
-            property_name (str): name of the property to be removed
-            entity_type (str): can be points, lines, surfaces and volumes (plural needed)
-        '''
         for table_name in table_names:
             self.remove_imported_tables("", table_name)
 
