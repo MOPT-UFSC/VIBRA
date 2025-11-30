@@ -131,6 +131,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         for row_index, line in enumerate(data):
             for column_index, cell_data in enumerate(line):
                 item = QTableWidgetItem(str(cell_data))
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.tableWidget.setItem(row_index, column_index, item)
 
         self.tableWidget.resizeColumnsToContents()
