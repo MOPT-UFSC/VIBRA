@@ -136,6 +136,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.tableWidget.resizeColumnsToContents()
 
     def actions_to_finalize(self):
+        app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
     def remove_callback(self):
@@ -145,29 +146,40 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             rows_selected.extend(range(sr.topRow(), sr.bottomRow() + 1))
 
         for row in rows_selected:
-            property_selct = self.tableWidget.item(row, 0)
-            entity_id = self.tableWidget.item(row, 1)
-            entity = self.tableWidget.item(row, 2)
+            property_selcted_table_item = self.tableWidget.item(row, 0)
+            entity_id_table_item = self.tableWidget.item(row, 1)
+            entity_name_table_item = self.tableWidget.item(row, 2)
 
-            if property_selct is None or entity is None or entity_id is None:
+            if property_selcted_table_item is None or entity_name_table_item is None or entity_id_table_item is None:
                 continue
+ 
+            property_selected = property_selcted_table_item.text()
+            entity_name = entity_name_table_item.text()
+            entity_id = int(entity_id_table_item.text())
 
-            if entity.text() == "point":
+            if entity_name == "point":
                 app().project.model.properties._remove_point_property(
-                    property_selct.text(), int(entity_id.text())
+                    property_selected, entity_id
                 )
-            elif entity.text() == "line":
+                app().project.model.properties.remove_table_files_from_point(entity_id, property_selected)
+
+            elif entity_name == "line":
                 app().project.model.properties._remove_line_property(
-                    property_selct.text(), int(entity_id.text())
+                    property_selected, entity_id
                 )
-            elif entity.text() == "surface":
+                app().project.model.properties.remove_table_files_from_line(entity_id, property_selected)
+
+            elif entity_name == "surface":
                 app().project.model.properties._remove_surface_property(
-                    property_selct.text(), int(entity_id.text())
+                    property_selected, entity_id
                 )
-            elif entity.text() == "volume":
+                app().project.model.properties.remove_table_files_from_surface(entity_id, property_selected)
+ 
+            elif entity_name_table_item == "volume":
                 app().project.model.properties._remove_volume_property(
-                    property_selct.text(), int(entity_id.text())
+                    property_selected, entity_id
                 )
+                app().project.model.properties.remove_table_files_from_volume(entity_id, property_selected)
 
         self.actions_to_finalize()
         self.close()

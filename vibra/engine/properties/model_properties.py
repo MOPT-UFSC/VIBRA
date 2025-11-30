@@ -318,28 +318,40 @@ class ModelProperties:
         elif group_label == "structural":
             self.structural_imported_tables[table_name] = data
 
-    def process_table_file_removal(self, table_names: list):
+    def remove_table_files_from_point(self, point_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, point_id, "points")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_line(self, line_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, line_id, "lines")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_surface(self, surface_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, surface_id, "surfaces")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_volume(self, volume_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, volume_id, "volumes")
+        self._remove_table_files(table_names)
+
+    def _remove_table_files(self, table_names: list):
+        '''
+        Args:
+            entity_id (int): id number of the entity
+            property_name (str): name of the property to be removed
+            entity_type (str): can be points, lines, surfaces and volumes (plural needed)
+        '''
         for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
+            self.remove_imported_tables("", table_name)
 
-        if table_names:
-            app().file.write_imported_table_data_in_file()
-
-    def remove_table_files_from_surface(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("acoustic_pressure", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
-
-
+    # TODO: group_label argument is used on calls across the program. Need to remove later
     def remove_imported_tables(self, group_label: str, table_name: str):
-        """
-        """
-        if group_label == "acoustic":
-            if table_name in self.acoustic_imported_tables.keys():
-                self.acoustic_imported_tables.pop(table_name)
+        #TODO: is it possible both have the same table_names? I am counting with this, need to check for problems
+        if table_name in self.acoustic_imported_tables.keys():
+            self.acoustic_imported_tables.pop(table_name)
 
-        elif group_label == "structural":
-            if table_name in self.structural_imported_tables.keys():
-                self.structural_imported_tables.pop(table_name)
+        if table_name in self.structural_imported_tables.keys():
+            self.structural_imported_tables.pop(table_name)
 
     def get_data_group_label(self, property : str) -> str:
 
