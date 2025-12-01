@@ -86,7 +86,6 @@ class NodesActor(vtkActor):
 
         if self.mesh.disconnected_nodes_exists:
             visualization.disconected_nodes = True
-            print("detectou nós desconectados", self.mesh.get_list_of_disconnected_nodes())
             self.paint_nodes(disconected_nodes_color, self.mesh.get_list_of_disconnected_nodes())
 
         if self.mesh.collapsed_elements_exists:

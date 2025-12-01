@@ -264,7 +264,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.configure_appearance()
         if app().project.model.mesh.collapsed_elements_exists or app().project.model.mesh.disconnected_nodes_exists:
             self.add_problematic_mesh_legend()
-            print("a")
         self.update()
 
     def clear_selection_spheres(self):
@@ -428,35 +427,35 @@ class MeshRenderWidget(CommonRenderWidget):
         mapper.SetInputConnection(sphere.GetOutputPort())
         ball_actor = vtkActor()
         ball_actor.SetMapper(mapper)
-        
+
         # text_property = vtkTextProperty()
         # font = molde.fonts
         # legend_actor.SetEntryTextProperty()
-        
+
         disconnected_nodes = app().project.model.mesh.disconnected_nodes_exists
         collapsed_elements = app().project.model.mesh.collapsed_elements_exists
         problem_type = (disconnected_nodes, collapsed_elements)
 
         if problem_type == (True, False):
             ball_actor.GetProperty().SetColor(*color_names.GREEN.to_rgb())
-            
-            legend_actor.SetEntry(0, ball_actor.GetMapper().GetInput(), "Disconnected nodes", (1, 1, 1))
-        
+
+            legend_actor.SetEntry(
+                0, ball_actor.GetMapper().GetInput(), "Disconnected nodes", color_names.GREEN.to_rgb()
+            )
+
         elif problem_type == (False, True):
-            ball_actor.update()
             ball_actor.GetProperty().SetColor(*color_names.ORANGE.to_rgb())
-            legend_actor.SetEntry(0, ball_actor.GetMapper().GetInput(), "Collapsed elements", (1, 1, 1))
-        
+            legend_actor.SetEntry(
+                0, ball_actor.GetMapper().GetInput(), "Collapsed elements", color_names.ORANGE.to_rgb()
+            )
+
         elif problem_type == (True, True):
             pass
             # legend_actor.SetNumberOfEntries(2)
             # legend_actor.SetEntry(0, ball_actor.GetMapper().GetInput(), "Disconnected nodes")
             # legend_actor.SetEntry(1, ball_actor.GetMapper().GetInput(), "Collapsed elements")
-        
+
         else:
             raise ValueError("Not implemented error type")
-        
-        self.add_actors(legend_actor)
 
-        
-        
+        self.add_actors(legend_actor)
