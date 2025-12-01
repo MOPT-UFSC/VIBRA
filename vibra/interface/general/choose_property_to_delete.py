@@ -28,7 +28,6 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.properties_formated: list[tuple[str, str, int]] = list()
 
         self._config_window()
-        self._initialize()
         self._configure_labels()
         self._configure_buttons()
         self._create_connections()
@@ -45,10 +44,6 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowTitle(self.window_title)
 
-    def _initialize(self): ...
-
-    # self.keep_window_open = True
-
     def _create_connections(self):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_cancel.clicked.connect(self.cancel_callback)
@@ -56,6 +51,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _configure_buttons(self):
         self.pushButton_cancel.setText("Cancel")
         self.pushButton_remove.setText("Remove")
+        self.pushButton_remove.setDefault(True)
 
     def _reset_variables(self):
         self._remove = False
