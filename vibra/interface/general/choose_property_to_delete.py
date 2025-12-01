@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 )
 
 from vibra import app, __version__
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.general.choose_property_to_delete_ui import (
     ChoosePropertyToDelete_UI,
 )
@@ -142,11 +144,45 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
+    def _get_user_confirmation(self, properties_count: int) -> bool:
+        text = "property" if properties_count == 1 else "properties"
+
+        title = "Remove property?"
+        if properties_count > 1:
+            title = f"Remove {properties_count} {text}?"
+
+        message = (
+            f"You have selected {properties_count} {text} for removal. Are you sure?"
+        )
+
+        buttons_config = {
+            "left_button_label": "Cancel",
+            "right_button_label": "Remove",
+            "right_toolTip": "Remove selected items",
+        }
+
+        read = GetUserConfirmationInput(
+            title, message, buttons_config=buttons_config, window_title="Vibra"
+        )
+
+        return read._continue
+
     def remove_callback(self):
         # starts from index 0
         rows_selected: list[int] = list()
         for sr in self.tableWidget.selectedRanges():
             rows_selected.extend(range(sr.topRow(), sr.bottomRow() + 1))
+
+        properties_count: int = len(rows_selected)
+        if properties_count == 0:
+            title = "No property selected"
+            message = "Please select at least one property."
+            PrintMessageInput(["Error", title, message])
+            return
+
+        user_accept = self._get_user_confirmation(properties_count)
+        if not user_accept:
+            return
 
         for row in rows_selected:
             property_selected_table_item = self.tableWidget.item(row, 0)
@@ -188,7 +224,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
                     property_selected, entity_id
                 )
 
-            elif entity_name_table_item == "volume":
+            elif entity_name == "volume":
                 app().project.model.properties.remove_table_files_from_volume(
                     entity_id, property_selected
                 )
