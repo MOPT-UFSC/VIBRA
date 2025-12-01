@@ -57,14 +57,3 @@ class PressureUnitComboBox(IntEnum):
 class TemperatureUnitComboBox(IntEnum):
     KELVIN = 0
     CELSIUS = 1
-
-class OutputDataComboBox(IntEnum):
-    SURFACE_VELOCITY = 0
-    FLOW_RATE = 1
-
-class InitialFrequencyComboBox(IntEnum):
-    _0_DOT_1_HZ = 0
-    _0_DOT_2_HZ = 1
-    _0_DOT_5_HZ = 2
-    _1_DOT_0_HZ = 3
-    _2_DOT_0_HZ = 4
