@@ -1,7 +1,6 @@
 import logging
 
 from molde import Color
-from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
@@ -18,6 +17,7 @@ from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
 from ..selection.mesh_selection import MeshSelection
+from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     mesh_faces_info_text,
     mesh_solids_info_text,
@@ -29,7 +29,6 @@ from .model_info_text import (
 class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)
@@ -46,6 +45,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.renderer.GetActiveCamera().ParallelProjectionOn()
         self.renderer.RemoveAllLights()
 
+        self.set_default_render_tool()
         self.remove_all_actors()
         self.create_axes()
         self.create_logos()
@@ -200,6 +200,12 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def selection_callback(self, x, y):
         if not self.actors_exists():
+            return
+    
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
+        
+        if not self.interactor_style.is_selecting:
             return
 
         section_plane_widget = app().main_window.section_plane
@@ -414,3 +420,8 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
+    
+    def set_default_render_tool(self):
+        tool = SelectionTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)

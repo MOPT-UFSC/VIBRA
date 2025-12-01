@@ -24,7 +24,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1055, 587)
+        MainWindow.resize(1056, 586)
         self.action_new_project = QAction(MainWindow)
         self.action_new_project.setObjectName(u"action_new_project")
         icon = QIcon()

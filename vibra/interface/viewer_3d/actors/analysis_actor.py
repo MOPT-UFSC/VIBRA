@@ -1,12 +1,25 @@
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.util.numpy_support import vtk_to_numpy
+from vtkmodules.vtkCommonDataModel import vtkPlane
+from vtkmodules.vtkFiltersCore import vtkCutter
+from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
 
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
 from ..coloring.color_table import ColorTable
 
 
 class AnalysisActor(SolidsActor):
+
+    def create_geometry(self):
+        super().create_geometry()
+        self.cutter = vtkCutter()
+        self.cutter.SetInputData(self.data)
+
+        self.cutter_mapper = vtkPolyDataMapper()
+        self.cutter_mapper.SetInputConnection(self.cutter.GetOutputPort())
+        self.cutter_mapper.InterpolateScalarsBeforeMappingOn()
+        self.SetMapper(self.cutter_mapper)
 
     def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
 
@@ -43,3 +56,22 @@ class AnalysisActor(SolidsActor):
     def configure_appearance(self):
         super().configure_appearance()
         self.GetProperty().SetSpecular(0)
+
+    def apply_cut(self, origin, normal):
+        super().apply_cut(origin, normal)
+        self.clipper.Update()
+        self.SetMapper(self.clipper_mapper)
+
+
+    def apply_cutter(self, origin, normal):
+        if self.data is None:
+            return
+
+        plane = vtkPlane()
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
+
+        self.cutter.SetCutFunction(plane)
+        self.cutter.SetInputData(self.data)
+        self.cutter.Update()
+        self.SetMapper(self.cutter_mapper)
