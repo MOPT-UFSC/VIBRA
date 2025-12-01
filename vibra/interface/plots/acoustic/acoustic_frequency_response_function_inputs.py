@@ -122,7 +122,10 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def geometry_selection_callback(self):
-        
+
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
         surfaces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
         points = app().main_window.selected_geometry_points
