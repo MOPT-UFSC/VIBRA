@@ -166,6 +166,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def geometry_selection_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
             self.verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation()
+            return
 
         selected_surfaces = app().main_window.selected_geometry_surfaces
 
@@ -1013,6 +1014,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         selected_surfaces = map(str, selected_surfaces)
         selection_text = ", ".join(selected_surfaces)
+
+        print(selection_text)
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
