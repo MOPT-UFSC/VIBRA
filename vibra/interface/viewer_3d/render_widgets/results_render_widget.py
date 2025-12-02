@@ -1,15 +1,19 @@
+from scipy.special._ufuncs import loggamma
 import logging
 from threading import Lock
 from time import time
 
 import numpy as np
-from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app, ICON_DIR
+from vibra.interface.viewer_3d.render_tools import (
+    SelectionTool,
+    RenderTool
+)
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
@@ -29,10 +33,10 @@ from .model_info_text import (
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.acoustic_post = app().project.acoustic_postprocessing
@@ -46,12 +50,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.frequency_index = None
         self.mode_index = None
 
+        self.set_default_render_tool()
         self.remove_all_actors()
         self.create_logos()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
         self.update_plot()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_section_plane()
 
     def create_logos(self):
         if hasattr(self, "vibra_logo"):
@@ -88,11 +97,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if mesh is None:
             return
 
+        logging.info("Updating the results render... [10/100]")
         self.remove_all_actors()
 
+        logging.info("Updating the results render... [25/100]")
         self.analysis_actor = HollowAnalysisActor(mesh)
+
+        logging.info("Updating the results render... [75/100]")
         self.edges_actor = EdgesActor(self.analysis_actor.data)
+        
+        logging.info("Updating the results render... [80/100]")
         self.ghost_actor = GhostActor(mesh)
+
+        logging.info("Updating the results render... [85/100]")
         self.plane_actor = SectionPlaneActor(self.analysis_actor.GetBounds())
 
         # Create empty variables to be used when switching actors
@@ -110,6 +127,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
+        logging.info("Updating the results render... [90/100]")
         with self.update_lock:
             self.update_theme()
             self.update_section_plane()
@@ -121,6 +139,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
+        logging.info("Updating the results render... [98/100]")
         self.update()
     
     def enable_scale_bar(self):
@@ -191,6 +210,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
+        if not self.actors_exists():
+            return
+
         if app().project.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
@@ -252,7 +274,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self.min_value = min_value
                 self.max_value = max_value
 
-        elif analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.current_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
@@ -374,6 +396,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = self._cache_hollow_solids_actor
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.update_color_and_deformation()
+        self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
 
     def switch_to_solids_actor(self):
@@ -396,10 +419,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = self._cache_full_solids_actor
         self.edges_actor = EdgesActor(self.analysis_actor.data)
         self.update_color_and_deformation()
+        self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
 
     def update_section_plane(self):
         if not self.actors_exists():
+            return
+
+        if not self.isVisible():
             return
 
         section_plane = app().main_window.section_plane
@@ -412,6 +439,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         position = section_plane.get_position()
         rotation = section_plane.get_rotation()
         inverted = section_plane.get_inverted()
+        is_mesh_field = section_plane.check_mesh_field_results.isChecked()
 
         if section_plane.editing:
             self.plane_actor.configure_section_plane(position, rotation)
@@ -420,26 +448,48 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor.GetProperty().SetOpacity(0.8)
         else:
             show_plane = not section_plane.keep_section_plane
-            self._apply_section_plane(position, rotation, inverted, show_plane)
+            LoadingWindow(self._apply_section_plane).run(
+                position,
+                rotation,
+                inverted,
+                show_plane,
+                is_mesh_field,
+            )
 
         self.update()
 
-    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True, is_mesh_field=False):
+        logging.info("Switching to solid actor... [50/100]")
         self.switch_to_solids_actor()
 
+        logging.info("Configuring section plane... [60/100]")
         xyz, normal = self.plane_actor.configure_section_plane(position, rotation)
         if inverted:
             normal = -normal
 
-        self.analysis_actor.apply_cut(xyz, normal)
-        self.edges_actor.apply_cut(xyz, normal)
-        self.update()
-
+        logging.info("Applying cut... [70/100]")
         visualization = app().main_window.visualization_filter
+        if is_mesh_field:
+            self.analysis_actor.apply_cut(xyz, normal)
+            self.edges_actor.VisibilityOn()
+            visualization.lines = True
+            app().main_window.action_line_view.setChecked(True)
+        else:
+            self.analysis_actor.apply_cutter(xyz, normal)
+            self.edges_actor.VisibilityOff()
+            visualization.lines = False
+            app().main_window.action_line_view.setChecked(False)
+
+        self.edges_actor.apply_cut(xyz, normal)
+
+        logging.info("Updating visualization... [80/100]")
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
+        
+        logging.info("Updating... [99/100]")
+        self.update()
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
@@ -466,13 +516,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if  self.frequency_index is None and self.mode_index is None:
             return
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
+        if analysis_id in [
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.ACOUSTIC_HARMONIC
+            ]:
             text += analysis_info_text(self.frequency_index + 1)
 
         if analysis_id in [
             AnalysisID.STRUCTURAL_MODAL,
             AnalysisID.ACOUSTIC_MODAL,
-        ]:
+            ]:
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)
@@ -509,5 +562,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
+    
+    def add_render_tool(self, tool_class):
+        if tool_class == SelectionTool:
+            super().add_render_tool(RenderTool)
+        else:
+            super().add_render_tool(tool_class)
+    
+    def set_default_render_tool(self):
+        tool = RenderTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+
 
 

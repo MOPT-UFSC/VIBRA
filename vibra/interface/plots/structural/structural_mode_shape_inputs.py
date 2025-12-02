@@ -1,15 +1,12 @@
-import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QTreeWidgetItem,
-)
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+import numpy as np
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -30,6 +27,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
+        app().main_window.render_tools_toolbar.hide_selection_tool()
 
     def _initialize(self):
         self.mode_index = -1
@@ -96,9 +94,10 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_natural_frequency.text() == "":
             return
-
+        
         self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
-        app().main_window.results_widget.update_plot()
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def update_displacements(self):
         pass

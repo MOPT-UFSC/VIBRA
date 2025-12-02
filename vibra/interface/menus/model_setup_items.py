@@ -161,8 +161,9 @@ class ModelSetupItems(CommonMenuItems):
     def _contains_property(self, property_name: str):
 
         model = app().project.model
+        mesh = app().project.model.mesh
         properties = app().project.model.properties
-        
+
         property_dicts = [
             properties.acoustic_imported_tables,
             properties.structural_imported_tables,
@@ -177,36 +178,36 @@ class ModelSetupItems(CommonMenuItems):
             ]
 
         if property_name == "material":
-            if model.mesh.are_there_volumes_in_geometry():
-                volume_ids = model.mesh.geometry_information.get("volumes")
-                volumes_without_material = model.properties.get_entities_without_property("material", volumes=volume_ids)
+            if mesh.are_there_volumes_in_geometry():
+                volume_ids = mesh.geometry_information.get("volumes")
+                volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
                 return not bool(len(volumes_without_material))
             else:
-                surface_ids = model.mesh.geometry_information.get("surfaces")
-                surfaces_without_material = model.properties.get_entities_without_property("material", surfaces=surface_ids)
+                surface_ids = mesh.geometry_information.get("surfaces")
+                surfaces_without_material = properties.get_entities_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
-            if model.mesh.are_there_volumes_in_geometry():
-                volume_ids = model.mesh.geometry_information.get("volumes")
-                volumes_without_fluid = model.properties.get_entities_without_property("fluid", volumes=volume_ids)
+            if mesh.are_there_volumes_in_geometry():
+                volume_ids = mesh.geometry_information.get("volumes")
+                volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
                 return not bool(len(volumes_without_fluid))
             # else:
-            #     surface_ids = model.mesh.geometry_information.get("surfaces")
-            #     surfaces_without_fluid = model.properties.get_entities_without_property("fluid", surfaces=surface_ids)
+            #     surface_ids = mesh.geometry_information.get("surfaces")
+            #     surfaces_without_fluid = properties.get_entities_without_property("fluid", surfaces=surface_ids)
             #     return not bool(len(surfaces_without_fluid))
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            mesh = model.mesh
-            collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-            if collapsed:
+            disconnected_nodes = bool(mesh.disconnected_nodes)
+            collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+            if collapsed_elements or disconnected_nodes:
                 return False
             return model.mesh_setup is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
         if property_name == "surface_thickness":
-            if model.mesh is not None:
+            if mesh is not None:
                 st_check = model.is_surface_thickness_properly_applied_in_model()
                 if isinstance(st_check, list) and st_check:
                     if st_check:
@@ -235,7 +236,7 @@ class ModelSetupItems(CommonMenuItems):
             for key in property_dict.keys():
                 if key[0] == property_name:
                     if property_name == "degrees_of_freedom_decoupling":
-                        pp_data = model.properties._get_property("perforated_plate_model", surface=key[1])
+                        pp_data = properties._get_property("perforated_plate_model", surface=key[1])
                         if isinstance(pp_data, dict):
                             continue
 

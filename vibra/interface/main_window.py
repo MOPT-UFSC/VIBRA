@@ -8,19 +8,15 @@ import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
+
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (
-    QAbstractButton,
-    QFileDialog,
-    QMenu,
-    QMessageBox,
-)
-from numpy import int64
+from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
+from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.choose_property_to_delete import ChoosePropertytoDelete
@@ -48,6 +44,7 @@ from vibra.utils.interface_utils import ColorMode, VisualizationFilter
 
 import gmsh
 
+
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
     visualization_changed = Signal()
@@ -60,6 +57,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
 
+        # TODO: move this to a separate class
         self.selected_mesh_nodes = set()
         self.selected_mesh_faces = set()
         self.selected_mesh_solids = set()
@@ -67,6 +65,7 @@ class MainWindow(MainWindow_UI):
         self.selected_geometry_lines = set()
         self.selected_geometry_surfaces = set()
         self.selected_geometry_volumes = set()
+        self.volume_selection_mode = False
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
@@ -108,6 +107,7 @@ class MainWindow(MainWindow_UI):
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
         self.animation_toolbar = AnimationToolbar()
+        self.render_tools_toolbar = RenderToolsToolbar(self)
 
         self.create_recents_menu()
         self.create_status_bar()
@@ -130,6 +130,11 @@ class MainWindow(MainWindow_UI):
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
         self.insertToolBarBreak(self.animation_toolbar)
+        self.render_tools_toolbar.setVisible(False)
+        self.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
+
+        for render in self.get_renderer_widgets():
+            self.render_tools_toolbar.render_tool_changed.connect(render.add_render_tool)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -434,7 +439,10 @@ class MainWindow(MainWindow_UI):
         else:
             self.visualization_filter.color_mode = ColorMode.COLORED        
         self.visualization_changed.emit()
-
+    
+    def get_renderer_widgets(self) -> list[CommonRenderWidget]:
+        return [self.geometry_widget, self.mesh_widget, self.results_widget]
+        
     def action_user_preferences_callback(self):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
@@ -453,9 +461,11 @@ class MainWindow(MainWindow_UI):
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_tools_toolbar.show_selection_tool()
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.render_tools_toolbar.show_selection_tool()
     
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
@@ -506,6 +516,8 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(True)
         self.action_mesh_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
+        
+        self.render_tools_toolbar.show_selection_tool()
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
@@ -529,6 +541,8 @@ class MainWindow(MainWindow_UI):
         self.action_mesh_workspace.setChecked(True)
         self.action_model_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
+
+        self.render_tools_toolbar.show_selection_tool()
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
@@ -572,6 +586,7 @@ class MainWindow(MainWindow_UI):
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
+        self.render_tools_toolbar.setVisible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
@@ -842,8 +857,9 @@ class MainWindow(MainWindow_UI):
         if not check:
             return False
 
-        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
+        self.clear_selection()
 
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
         app().project.reset_variables()
         app().project.reset_solutions()
 
@@ -894,40 +910,50 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
 
         try:
-            if project_path is not None:
-                project_path = Path(project_path)
-                app().config.add_recent_file(project_path)
-                app().config.write_last_folder_path_in_file("project_folder", project_path)
-                self.update_recents_menu()
-                app().file.extract_project(project_path)
-                self.update_window_title(project_path)
 
-            app().project.reset_variables()
-            app().project.reset_solutions()
+            def open_callback(project_path):
 
-            if project_path is not None:
-                app().project.name = project_path.stem
-                app().project.save_path = project_path
+                if project_path is not None:
+                    project_path = Path(project_path)
+                    app().config.add_recent_file(project_path)
+                    app().config.write_last_folder_path_in_file("project_folder", project_path)
+                    self.update_recents_menu()
 
-            app().load_project.initialize()
-            LoadingWindow(app().load_project.load).run()
+                    logging.info("Loading project... [15/100]")
+                    app().file.extract_project(project_path)
+                    self.update_window_title(project_path)
 
-            self.update_toolbar_and_menu_items_after_load_project()
-            self.analysis_toolbar.check_analysis_setup_callback()
-            self.status_bar.setVisible(True)
-            self.action_front_view_callback()
-            self.update_mesh_information()
+                app().project.reset_variables()
+                app().project.reset_solutions()
 
-            LoadingWindow(self.mesh_widget.update_plot).run()
-            LoadingWindow(self.geometry_widget.update_plot).run()
+                if project_path is not None:
+                    app().project.name = project_path.stem
+                    app().project.save_path = project_path
 
-            self.action_results_workspace.setDisabled(True)
-            self.action_model_workspace_callback()
-            self.model_setup_widget.model_setup_items.update_items_appearance()
+                app().load_project.initialize()
+                app().load_project.load()
+
+                self.update_toolbar_and_menu_items_after_load_project()
+                self.analysis_toolbar.check_analysis_setup_callback()
+                self.status_bar.setVisible(True)
+                self.action_front_view_callback()
+                self.update_mesh_information()
+
+                self.mesh_widget.update_plot()
+                self.geometry_widget.update_plot()
+
+                self.action_results_workspace.setDisabled(True)
+                self.action_model_workspace_callback()
+                self.render_tools_toolbar.setVisible(True)
+                self.model_setup_widget.model_setup_items.update_items_appearance()
             
+            LoadingWindow(open_callback).run(project_path)
+
             if app().project.can_resume_solution:
-                PrintMessageInput(["Acoustic Harmonic results", "Missing solution frequency records",
-                               "Click on the 'Resume the analysis' button to solve remaining frequencies"])
+                window_title = "Acoustic Harmonic results"
+                title = "Missing solution frequency records"
+                message = "Click on the 'Resume the analysis' button to solve remaining frequencies"
+                PrintMessageInput([window_title, title, message])
 
         except Exception as error_log:
             from traceback import print_exception

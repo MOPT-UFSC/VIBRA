@@ -1,7 +1,6 @@
 import logging
 
 from molde import Color
-from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
@@ -19,6 +18,7 @@ from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
+from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     acoustic_boundary_conditions_info_text,
     faces_info_text,
@@ -39,7 +39,6 @@ from .model_info_text import (
 class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.geometry_selection = GeometrySelection(self)
         self.mouse_click = (0, 0)
@@ -54,6 +53,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
+
+        self.set_default_render_tool()
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -160,7 +161,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = SectionPlaneActor(self.ghost_actor.GetBounds())
         self.plane_actor.VisibilityOff()
 
-        logging.info("Updating the mesh render... [75/100]")
+        logging.info("Updating the geometry render... [75/100]")
         self.add_actors(
             self.points_actor,
             self.lines_actor,
@@ -181,7 +182,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if reset_camera:
             self.renderer.ResetCamera()
 
-        logging.info("Updating the mesh render... [95/100]")
+        logging.info("Updating the geometry render... [95/100]")
         self.update()
 
         if app().project.thumbnail is None:
@@ -288,6 +289,12 @@ class GeometryRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
+    
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
+        
+        if not self.interactor_style.is_selecting:
+            return
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
@@ -323,7 +330,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if not shift_pressed:
+        if not (shift_pressed or app().main_window.volume_selection_mode):
             picked_volumes.clear()
 
         app().main_window.set_geometry_selection(
@@ -340,7 +347,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_selection(self):
         if not self.actors_exists():
             return
-
+        
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
@@ -476,3 +483,11 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
+    
+    def set_default_render_tool(self):
+        tool = SelectionTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+        
+
+

@@ -13,8 +13,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pandas import read_excel
-from openpyxl import load_workbook
 from time import time
 
 def load_external_mesh_and_solve():

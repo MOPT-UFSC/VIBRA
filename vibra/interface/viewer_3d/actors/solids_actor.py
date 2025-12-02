@@ -4,6 +4,7 @@ from vtkmodules.vtkCommonCore import (
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
+    vtkFloatArray,
 )
 from vtkmodules.vtkCommonDataModel import (
     VTK_HEXAHEDRON,
@@ -57,8 +58,7 @@ class SolidsActor(vtkActor):
     def create_geometry(self):
         data = vtkUnstructuredGrid()
         points = vtkPoints()
-        mapper = vtkDataSetMapper()
-        point_colors = vtkUnsignedCharArray()
+        point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
         solid_indexes = vtkIntArray()
         solid_indexes.SetName("solid_indexes")
@@ -93,7 +93,6 @@ class SolidsActor(vtkActor):
 
         data.Allocate(number_of_elements * nodes_per_element)
 
-        point_colors.SetNumberOfComponents(4)
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
@@ -132,9 +131,11 @@ class SolidsActor(vtkActor):
         self.clipper.ExtractInsideOff()
         self.clipper.Update()
 
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputConnection(self.clipper.GetOutputPort())
-        self.SetMapper(mapper)
+        self.clipper_mapper = vtkDataSetMapper()
+        self.clipper_mapper.InterpolateScalarsBeforeMappingOn()
+        self.clipper_mapper.SetInputConnection(self.clipper.GetOutputPort())
+
+        self.SetMapper(self.clipper_mapper)
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -162,14 +163,10 @@ class SolidsActor(vtkActor):
         self.set_color(color)
 
     def set_color(self, color: Color):
-        point_colors = self.data.GetPointData().GetScalars()
         cell_colors = self.data.GetCellData().GetScalars()
-
-        point_colors.Fill(255)
         cell_colors.Fill(255)
         color = color.to_rgb()
         for component, value in enumerate(color):
-            point_colors.FillComponent(component, value)
             cell_colors.FillComponent(component, value)
 
         self.data.Modified()

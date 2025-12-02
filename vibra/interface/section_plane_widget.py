@@ -30,14 +30,14 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
             | Qt.WindowCloseButtonHint
             | Qt.FramelessWindowHint
             | Qt.WindowShadeButtonHint
-            | Qt.WindowMinimizeButtonHint
         )
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
         self.setGeometry(200, 200, 400, 400)
     
-    def show(self):
-        super().show()
+    def showEvent(self, event):
+        super().showEvent(event)
+        app().processEvents()
         self.keep_section_plane = False
         self.cutting = True
         self.value_changed.emit()
@@ -48,28 +48,13 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.pushButton_reset.clicked.connect(self.reset_button_callback)
         self.pushButton_apply.clicked.connect(self.apply_button_callback)
         self.pushButton_cancel.clicked.connect(self.close)
+        self.check_mesh_field_results.setChecked(False)
+        self.check_mesh_field_results.clicked.connect(self.check_mesh_field_results_callback)
         #
         for slider in self._sliders():
             slider.valueChanged.connect(self.value_change_callback)
             slider.sliderReleased.connect(self.slider_release_callback)
             slider.sliderPressed.connect(self.slider_pressed_callback)
-
-    def show(self):
-        super().show()
-        self.cutting = True
-        self.keep_section_plane = False
-        self.value_changed.emit()
-
-    def closeEvent(self, event):
-        if not self.keep_section_plane:
-            app().main_window.action_section_plane.blockSignals(True)
-            app().main_window.action_section_plane.setChecked(False)
-            app().main_window.action_section_plane.blockSignals(False)
-            self.cutting = False
-        else:
-            self.cutting = True
-        self.value_changed.emit()
-        # self.closed.emit()
 
     def get_position(self, get_from: str = "spinboxes"):
         if get_from == "sliders":
@@ -140,6 +125,9 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
     def apply_button_callback(self):
         self.keep_section_plane = True
         self.close()
+
+    def check_mesh_field_results_callback(self):
+        self.value_changed.emit()
 
     def closeEvent(self, event):
         if not self.keep_section_plane:

@@ -149,7 +149,7 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             self.update_acoustic_analysis_visibility_items()
         
-        elif analysis_id in [AnalysisID.COUPLED_HARMONIC]:    
+        elif analysis_id == AnalysisID.COUPLED_HARMONIC:    
             self.update_coupled_analysis_visibility_items()
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:

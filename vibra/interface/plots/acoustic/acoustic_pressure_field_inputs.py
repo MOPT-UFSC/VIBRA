@@ -1,13 +1,12 @@
-import numpy as np
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (
-    QTreeWidgetItem,
-    QWidget,
-)
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+
+import numpy as np
 
 
 class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
@@ -30,6 +29,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
+        app().main_window.render_tools_toolbar.hide_selection_tool()
 
     def _initialize(self):
         self.current_frequency = None
@@ -95,8 +95,12 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             return
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
-        self.current_frequency = self.frequency_to_index[frequency_selected]
-        app().main_window.results_widget.update_plot()
+        self.current_frequency = self.frequency_to_index.get(frequency_selected)
+
+        if self.current_frequency is None:
+            return
+
+        LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()

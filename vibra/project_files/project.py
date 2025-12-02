@@ -12,13 +12,13 @@ from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.checkers.analysis_requirements_checker import AnalysisRequirementsChecker
 
 from vibra.interface.process_analysis import ProcessAnalysis
-from vibra.interface.mesh.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.loading_window import LoadingWindow
+
+from vibra.project_files.project_file import ProjectFile
 
 import logging
 from time import sleep, time
-
-from vibra.project_files.project_file import ProjectFile
 
 
 class Project(QObject):
@@ -50,7 +50,6 @@ class Project(QObject):
 
         def disable_resume_callback():
             self.can_resume_solution = False
-
 
         self.model = Model(disable_resume_callback)
         self.acoustic_assembler = AcousticAssembler(self.model)
@@ -124,9 +123,9 @@ class Project(QObject):
             return
         self.model.process_mesh()
 
-    def set_analysis_setup(self, data: dict):
-        self.analysis_setup = data
-        self.model.set_analysis_setup(data)
+    def set_analysis_setup(self, analysis_setup: dict):
+        self.analysis_setup = analysis_setup
+        self.model.set_analysis_setup(analysis_setup)
 
     def is_analysis_setup_complete(self):
 
@@ -243,7 +242,9 @@ class Project(QObject):
             return
 
         t0 = time()
-        self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume)
+        if self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume):
+            return
+
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
 
@@ -272,13 +273,11 @@ class Project(QObject):
 
         if not self.model.generated_mesh:
             obj = MesherSetupInputs(close_after_generate=True)
-            if obj.complete:
-                app().main_window.update_plots()
-            else:
-                return
+            if not obj.complete:
+                return True
 
         if len(self.analysis_setup) == 0:
-            return
+            return True
 
         analysis = ProcessAnalysis()
         analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
@@ -286,7 +285,7 @@ class Project(QObject):
         checker = AnalysisRequirementsChecker()
         interrupt_function = app().project.model.toggle_processing_callback
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             if checker.check_structural_harmonic_analysis():
                 return True
 
@@ -304,6 +303,7 @@ class Project(QObject):
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             if checker.check_acoustic_harmonic_analysis():
                 return True
+
             LoadingWindow(
                 analysis.process_acoustic_harmonic_analysis,
                 interrupt_function,    
@@ -338,7 +338,7 @@ class Project(QObject):
 
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             if self.structural_harmonic_solver is None:
                 return
 
@@ -394,7 +394,7 @@ class Project(QObject):
         if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
             physical_domain = "acoustic"
 
-        elif analysis_id in [AnalysisID.COUPLED_HARMONIC]:
+        elif analysis_id == AnalysisID.COUPLED_HARMONIC:
             physical_domain = "coupled"
 
         else:
@@ -418,16 +418,22 @@ class Project(QObject):
             if analysis_id != current_analysis_id:
                 return False
 
-        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+        if analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC, 
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.COUPLED_HARMONIC
+            ]:
+
             for key in ["f_min", "f_max", "f_step"]:
                 if key not in analysis_setup.keys():
                     return False
             return True
 
         elif analysis_id in [
-                             AnalysisID.ACOUSTIC_MODAL, 
-                             AnalysisID.STRUCTURAL_MODAL
-                             ]:
+            AnalysisID.ACOUSTIC_MODAL, 
+            AnalysisID.STRUCTURAL_MODAL
+            ]:
+
             for key in ["modes_number", "sigma_factor"]:
                 if key not in analysis_setup.keys():
                     return False
