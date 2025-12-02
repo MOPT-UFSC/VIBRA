@@ -24,7 +24,7 @@ from .model_info_text import (
     mesh_structural_boundary_conditions_info_text,
     nodes_info_text,
 )
-from vtk import vtkLegendBoxActor, vtkSphereSource, vtkTextProperty, vtkPolyDataMapper, vtkActor
+from vtk import vtkLegendBoxActor, vtkSphereSource, vtkTextProperty, vtkPolyDataMapper, vtkActor, vtkTransform, vtkTransformPolyDataFilter, vtkUnsignedCharArray
 from molde.colors import Color, color_names
 import molde.fonts
 
@@ -421,33 +421,64 @@ class MeshRenderWidget(CommonRenderWidget):
         legend_actor.BorderOff()
         legend_actor.SetNumberOfEntries(1)
 
+        # because vtk forces all legends elements to be one color, we need to call this method to stop this
+        legend_actor.ScalarVisibilityOn() 
+
         sphere = vtkSphereSource()
         sphere.Update()
-        mapper = vtkPolyDataMapper()
-        mapper.SetInputConnection(sphere.GetOutputPort())
-        ball_actor = vtkActor()
-        ball_actor.SetMapper(mapper)
+        sphere_mapper = vtkPolyDataMapper()
+        sphere_mapper.SetInputConnection(sphere.GetOutputPort())
 
-        # text_property = vtkTextProperty()
-        # font = molde.fonts
-        # legend_actor.SetEntryTextProperty()
+        # get te bounds to calculate the center to centralize the symbol
+        sphere_to_be_translated = sphere_mapper.GetInput()
+        bounds = sphere_to_be_translated.GetBounds()
+        
+        # get the center of each axis of the symbol
+        center_x = (bounds[0] + bounds[1]) / 2.0
+        center_y = (bounds[2] + bounds[3]) / 2.0
+        center_z = (bounds[4] + bounds[5]) / 2.0
+        # 0.5 up is the vertical center
+        vertical_alignment = 0.5 
+
+        transform = vtkTransform()
+        transform.Translate(-center_x, -center_y + vertical_alignment, -center_z)
+        transform_filter = vtkTransformPolyDataFilter()
+        transform_filter.SetTransform(transform)
+        transform_filter.SetInputData(sphere_to_be_translated)
+        transform_filter.Update()
+
+        # create another PolyMapper to paint and put in the legend
+        sphere_translated_mapper = vtkPolyDataMapper()
+        sphere_translated_mapper.SetInputData(transform_filter.GetOutput())
+
+        # create an array of colors to paint the sphere
+        colors = vtkUnsignedCharArray()
+        colors.SetNumberOfComponents(3)
+        colors.SetName("Colors")
 
         disconnected_nodes = app().project.model.mesh.disconnected_nodes_exists
         collapsed_elements = app().project.model.mesh.collapsed_elements_exists
         problem_type = (disconnected_nodes, collapsed_elements)
 
         if problem_type == (True, False):
-            ball_actor.GetProperty().SetColor(*color_names.GREEN.to_rgb())
+            for _ in range(sphere_translated_mapper.GetInput().GetNumberOfPoints()):
+                colors.InsertNextTuple3(*color_names.GREEN.to_rgb())
 
-            legend_actor.SetEntry(
-                0, ball_actor.GetMapper().GetInput(), "Disconnected nodes", color_names.GREEN.to_rgb()
-            )
+            sphere_translated_mapper.GetInput().GetPointData().SetScalars(colors)
+
+            legend_actor.SetEntryString(0, "Disconnected nodes")
+            legend_actor.SetEntryColor(0, [1, 1, 1])
+            legend_actor.SetEntrySymbol(0, sphere_translated_mapper.GetInput())
 
         elif problem_type == (False, True):
-            ball_actor.GetProperty().SetColor(*color_names.ORANGE.to_rgb())
-            legend_actor.SetEntry(
-                0, ball_actor.GetMapper().GetInput(), "Collapsed elements", color_names.ORANGE.to_rgb()
-            )
+            for _ in range(sphere_translated_mapper.GetInput().GetNumberOfPoints()):
+                colors.InsertNextTuple3(*color_names.ORANGE.to_rgb())
+
+            sphere_translated_mapper.GetInput().GetPointData().SetScalars(colors)
+
+            legend_actor.SetEntryString(0, "Collapsed elements")
+            legend_actor.SetEntryColor(0, [1, 1, 1])
+            legend_actor.SetEntrySymbol(0, sphere_translated_mapper.GetInput())
 
         elif problem_type == (True, True):
             pass
