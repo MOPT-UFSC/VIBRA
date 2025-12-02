@@ -33,7 +33,9 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._create_connections()
         self._reset_variables()
         self._configure_table()
+
         self._mount_properties_list_from_data()
+        self._fill_table()
 
         if len(self.properties_formated) > 0:
             self.exec()
@@ -73,16 +75,13 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget.setColumnCount(len(labels))
+
         self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
         )
         self.tableWidget.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.ResizeToContents
-        )
-
-        self.tableWidget.verticalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
+            0, QHeaderView.ResizeMode.Interactive
         )
 
     def _mount_properties_list_from_data(self):
@@ -112,21 +111,33 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         prop = [(name, id_number, "volume") for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        # it is filtered to exclude properties that are not meant to be removed
+        # filters the property list, removing fields
         def filter_properties_to_not_show(prop: tuple[str, str, int]) -> bool:
             return prop[0] not in ["fluid", "material"]
+
+        def filter_physical_domain_properties(prop: tuple[str, str, int]) -> bool:
+            current_physical_domain = (
+                app()
+                .main_window.analysis_toolbar.combo_box_physical_domain.currentText()
+                .lower()
+            )
+            prop_physical_domain = app().project.model.properties.get_data_group_label(
+                prop[0]
+            )
+            return prop_physical_domain == current_physical_domain
 
         self.properties_formated = list(
             filter(filter_properties_to_not_show, self.properties_formated)
         )
+        self.properties_formated = list(
+            filter(filter_physical_domain_properties, self.properties_formated)
+        )
         self.properties_formated.sort(key=lambda item: item[0])
 
-        self._fill_table(self.properties_formated)
+    def _fill_table(self):
+        self.tableWidget.setRowCount(len(self.properties_formated))
 
-    def _fill_table(self, data: list[tuple[str, str, int]]):
-        self.tableWidget.setRowCount(len(data))
-
-        for row_index, line in enumerate(data):
+        for row_index, line in enumerate(self.properties_formated):
             for column_index, cell_data in enumerate(line):
                 item = QTableWidgetItem(str(cell_data))
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
