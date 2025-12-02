@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.utils.bidict import bidict
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -55,6 +56,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.ti_data = dict()
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
+        self.decoupling_map = bidict()
 
     def _configure_qt_variables(self):
         #
@@ -174,9 +176,16 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         index = self.treeWidget_transfer_impedance.indexAt(QPoint(0, 0))
         while index.isValid():
             item = self.treeWidget_transfer_impedance.itemFromIndex(index)
-            surface_id = item.text(0)
+            surface_id = int(item.text(0))
 
             map_id_to_model_index[int(surface_id)] = index
+
+            decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
+            if isinstance(decoupling_data, dict):
+                new_surface_id = decoupling_data.get("new_surface_id")
+
+                map_id_to_model_index[new_surface_id] = index
+                self.decoupling_map[surface_id] = new_surface_id
 
             index = self.treeWidget_transfer_impedance.indexBelow(index)
         
@@ -403,6 +412,13 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         app().main_window.set_geometry_selection(surfaces=surface_ids)
 
+        for surface_id in surface_ids:
+            decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
+
+            if isinstance(decoupling_data, dict):
+                new_surface_id = decoupling_data.get("new_surface_id")
+                self.decoupling_map[surface_id] = new_surface_id
+
         self.pushButton_remove.setEnabled(True)
         self.set_selection_text(surface_ids)
 
@@ -420,11 +436,18 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         return [int(item.text(0)) for item in selected_items]
     
     def set_selection_text(self, selected_surfaces: list | set):
-        selected_surfaces = list(selected_surfaces)
-        selected_surfaces.sort()
+        selected_surfaces_decoupled = list()
 
-        selected_surfaces = map(str, selected_surfaces)
-        selection_text = ", ".join(selected_surfaces)
+        for selected_surface in selected_surfaces:
+            decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
+
+            decouple_pair = [selected_surface, decouple_surface]
+            decouple_pair.sort()
+            decouple_pair = tuple(decouple_pair)
+
+            selected_surfaces_decoupled.append(str(decouple_pair))
+
+        selection_text = ", ".join(selected_surfaces_decoupled)
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)

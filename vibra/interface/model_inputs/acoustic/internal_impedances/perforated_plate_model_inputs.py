@@ -70,7 +70,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.keep_window_open = True
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
-        self.decouple_map = bidict()
+        self.decoupling_map = bidict()
 
     def _create_connections(self):
         #
@@ -232,7 +232,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 new_surface_id = decoupling_data.get("new_surface_id")
                 map_id_to_model_index[new_surface_id] = index
 
-                self.decouple_map[surface_id] = new_surface_id
+                self.decoupling_map[surface_id] = new_surface_id
 
             index = self.treeWidget_perforated_plate_model.indexBelow(index)
         
@@ -321,17 +321,14 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not surface_ids:
             return
 
-        decouple_surface_ids = surface_ids.copy()
         for surface_id in surface_ids:
             decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
 
             if isinstance(decoupling_data, dict):
                 new_surface_id = decoupling_data.get("new_surface_id")
-                decouple_surface_ids.append(new_surface_id)
+                self.decoupling_map[surface_id] = new_surface_id
 
-                self.decouple_map[surface_id] = new_surface_id
-
-        app().main_window.set_geometry_selection(surfaces=decouple_surface_ids)
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setEnabled(True)
         self.set_selection_text(surface_ids)
@@ -353,7 +350,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         selected_surfaces_decoupled = list()
 
         for selected_surface in selected_surfaces:
-            decouple_surface = self.decouple_map[selected_surface] if selected_surface in self.decouple_map.keys() else self.decouple_map.inverse[selected_surface][0]
+            decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
 
             decouple_pair = [selected_surface, decouple_surface]
             decouple_pair.sort()
