@@ -686,7 +686,7 @@ class ReciprocatingCompressorModel:
             fname_log = f"temporary_data\\log_info_crank_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
-                os.mkdir("temporary_data")
+                Path("temporary_data").mkdir(exist_ok=True)
 
             header = "Index, Time [s], Angle [deg], Velocity [m/s], Volumes [m³], Pressures [Pa], Suction valve open [bool], Discharge valve open [bool]\n\n"
             header += f"V1 = {V1}\n"
@@ -695,14 +695,16 @@ class ReciprocatingCompressorModel:
             header += f"V4 = {V4}\n"
 
             indexes = np.arange(N)
-            data = np.array([   indexes,
-                                time,
-                                angle,
-                                v_piston,
-                                volumes,
-                                pressures,
-                                open_suc,
-                                open_disc   ])
+            data = np.array([   
+                indexes,
+                time,
+                angle,
+                v_piston,
+                volumes,
+                pressures,
+                open_suc,
+                open_disc
+                ])
 
             np.savetxt(fname, data.T, delimiter=",", header=header, fmt="%i, %.14e, %.14e, %.14e, %.14e, %.14e, %i, %i")
    
