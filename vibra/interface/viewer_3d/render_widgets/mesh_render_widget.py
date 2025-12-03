@@ -1,10 +1,22 @@
 import logging
 
-from molde import Color
+from molde import MOLDE_DIR, Color
+from molde.colors import Color, color_names
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
+from vtk import (
+    vtkActor,
+    vtkLegendBoxActor,
+    vtkPolyDataMapper,
+    vtkSphereSource,
+    vtkTextProperty,
+    vtkTransform,
+    vtkTransformPolyDataFilter,
+    vtkUnsignedCharArray,
+)
+from vtkmodules.vtkCommonCore import VTK_FONT_FILE
 
 from vibra import ICON_DIR, app
 from vibra.interface.loading_window import LoadingWindow
@@ -24,11 +36,7 @@ from .model_info_text import (
     mesh_structural_boundary_conditions_info_text,
     nodes_info_text,
 )
-from vtk import vtkLegendBoxActor, vtkSphereSource, vtkTextProperty, vtkPolyDataMapper, vtkActor, vtkTransform, vtkTransformPolyDataFilter, vtkUnsignedCharArray
-from molde.colors import Color, color_names
-import molde.fonts
-
-
+from ..actors.legend_actor import LegendActor
 
 class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
@@ -417,76 +425,17 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def add_problematic_mesh_legend(self):
-        legend_actor = vtkLegendBoxActor()
-        legend_actor.BorderOff()
-        legend_actor.SetNumberOfEntries(1)
 
-        # because vtk forces all legends elements to be one color, we need to call this method to stop this
-        legend_actor.ScalarVisibilityOn() 
-
-        sphere = vtkSphereSource()
-        sphere.Update()
-        sphere_mapper = vtkPolyDataMapper()
-        sphere_mapper.SetInputConnection(sphere.GetOutputPort())
-
-        # get te bounds to calculate the center to centralize the symbol
-        sphere_to_be_translated = sphere_mapper.GetInput()
-        bounds = sphere_to_be_translated.GetBounds()
-        
-        # get the center of each axis of the symbol
-        center_x = (bounds[0] + bounds[1]) / 2.0
-        center_y = (bounds[2] + bounds[3]) / 2.0
-        center_z = (bounds[4] + bounds[5]) / 2.0
-        # 0.5 up is the vertical center
-        vertical_alignment = 0.5 
-
-        transform = vtkTransform()
-        transform.Translate(-center_x, -center_y + vertical_alignment, -center_z)
-        transform_filter = vtkTransformPolyDataFilter()
-        transform_filter.SetTransform(transform)
-        transform_filter.SetInputData(sphere_to_be_translated)
-        transform_filter.Update()
-
-        # create another PolyMapper to paint and put in the legend
-        sphere_translated_mapper = vtkPolyDataMapper()
-        sphere_translated_mapper.SetInputData(transform_filter.GetOutput())
-
-        # create an array of colors to paint the sphere
-        colors = vtkUnsignedCharArray()
-        colors.SetNumberOfComponents(3)
-        colors.SetName("Colors")
+        legend_actor = LegendActor()
 
         disconnected_nodes = app().project.model.mesh.disconnected_nodes_exists
         collapsed_elements = app().project.model.mesh.collapsed_elements_exists
-        problem_type = (disconnected_nodes, collapsed_elements)
 
-        if problem_type == (True, False):
-            for _ in range(sphere_translated_mapper.GetInput().GetNumberOfPoints()):
-                colors.InsertNextTuple3(*color_names.GREEN.to_rgb())
+        if disconnected_nodes:
+            legend_actor.add_item("Disconnected nodes", color_names.GREEN)
+            legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
 
-            sphere_translated_mapper.GetInput().GetPointData().SetScalars(colors)
-
-            legend_actor.SetEntryString(0, "Disconnected nodes")
-            legend_actor.SetEntryColor(0, [1, 1, 1])
-            legend_actor.SetEntrySymbol(0, sphere_translated_mapper.GetInput())
-
-        elif problem_type == (False, True):
-            for _ in range(sphere_translated_mapper.GetInput().GetNumberOfPoints()):
-                colors.InsertNextTuple3(*color_names.ORANGE.to_rgb())
-
-            sphere_translated_mapper.GetInput().GetPointData().SetScalars(colors)
-
-            legend_actor.SetEntryString(0, "Collapsed elements")
-            legend_actor.SetEntryColor(0, [1, 1, 1])
-            legend_actor.SetEntrySymbol(0, sphere_translated_mapper.GetInput())
-
-        elif problem_type == (True, True):
-            pass
-            # legend_actor.SetNumberOfEntries(2)
-            # legend_actor.SetEntry(0, ball_actor.GetMapper().GetInput(), "Disconnected nodes")
-            # legend_actor.SetEntry(1, ball_actor.GetMapper().GetInput(), "Collapsed elements")
-
-        else:
-            raise ValueError("Not implemented error type")
+        if collapsed_elements:
+            legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
 
         self.add_actors(legend_actor)
