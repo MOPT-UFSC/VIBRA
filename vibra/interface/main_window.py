@@ -731,6 +731,8 @@ class MainWindow(MainWindow_UI):
         self.reset_temporary_vibra_folder()
         self.import_geometry_or_mesh_dialog()
 
+        self.render_tools_toolbar.setVisible(True)
+
     def save_project_dialog(self):
         if app().project.save_path is None:
             return self.save_project_as_dialog()
