@@ -433,7 +433,6 @@ class MeshRenderWidget(CommonRenderWidget):
 
         if disconnected_nodes:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
-            legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
 
         if collapsed_elements:
             legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
