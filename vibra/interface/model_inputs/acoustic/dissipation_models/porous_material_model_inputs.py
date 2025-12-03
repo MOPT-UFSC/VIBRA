@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -84,6 +84,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.keep_window_open = True
         self.material_model_data = dict()
         self.last_tab = self.tabWidget_main.currentIndex()
+        self.tree_item_clicked = False
         app().main_window.volume_selection_mode = True
 
     def _create_connections(self):
@@ -130,7 +131,12 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         app().main_window.update_symbols()
     
     def geometry_selection_callback(self):
-        pm_tabs = self.tabWidget_main.currentIndex() <= TabType.JCAL
+        current_tab = self.tabWidget_main.currentIndex()
+
+        if current_tab == TabType.LIST:
+            self.verify_if_selected_volumes_are_in_tree_widget_porous_material_model()
+
+        pm_tabs = current_tab <= TabType.JCAL
 
         if not pm_tabs:
             return
@@ -153,6 +159,52 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     return
 
                 self.load_porous_material_model_inputs(pm_data)
+    
+    def verify_if_selected_volumes_are_in_tree_widget_porous_material_model(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_volumes = app().main_window.selected_geometry_volumes
+
+        if not selected_volumes:
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_porous_material_model.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_porous_material_model_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_volumes_in_tree_widget = selected_volumes.intersection(selected_ids)
+
+        if not selected_volumes_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_porous_material_model.selectionModel()
+
+        for volume_id in selected_volumes_in_tree_widget:
+            model_index = map_id_to_model_index[volume_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_porous_material_model.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_volumes_in_tree_widget)
+
+    def get_tree_widget_porous_material_model_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_porous_material_model.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_porous_material_model.itemFromIndex(index)
+            volume_id = int(item.text(0))
+
+            map_id_to_model_index[volume_id] = index
+
+            index = self.treeWidget_porous_material_model.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def load_porous_material_model_inputs(self, pm_data: dict):
 
@@ -218,17 +270,15 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.doubleSpinBox_porous_material_depth.setDisabled(False)
 
     def remove_callback(self):
-        selected_items = self.treeWidget_porous_material_model.selectedItems()
+        selected_volumes = self.get_selected_volumes_from_tree_widget_porous_material_model()
 
-        if not selected_items:
+        if not selected_volumes:
             return
         
-        for item in selected_items:
-            volume_id = int(item.text(0))
-
+        for volume_id in selected_volumes:
             self.properties._remove_volume_property("porous_material_model", volume_id)
             
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.clear_selection()
@@ -276,7 +326,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
             app().main_window.clear_selection()
-            self.lineEdit_selection_id.clear()
+            self.clear_line_edit_selection_id()
 
         self.frame_plot_setup.setVisible(pm_tab)
         self.frame_plot_buttons.setVisible(pm_tab)
@@ -298,7 +348,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.treeWidget_porous_material_model.clearSelection()
 
     def on_click_item(self, item):
-        volume_ids, selection_text = self.get_selected_volumes_and_selection_text()
+        self.tree_item_clicked = True
+
+        volume_ids = self.get_selected_volumes_from_tree_widget_porous_material_model()
 
         if not volume_ids:
             return
@@ -307,27 +359,35 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         app().main_window.set_geometry_selection(volumes=volume_ids)
         self.pushButton_remove.setDisabled(False)
-        self.lineEdit_selection_id.setText(selection_text)
-
+        self.set_selection_text(volume_ids)
         self.update_tabs = True
+
+        self.tree_item_clicked = False
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
     
-    def get_selected_volumes_and_selection_text(self):
+    def get_selected_volumes_from_tree_widget_porous_material_model(self) -> list:
         selected_items = self.treeWidget_porous_material_model.selectedItems()
 
         if not selected_items:
-            return list(), str()
+            return list()
 
-        selection_text = ""
-        volume_ids = list()
+        return [int(item.text(0)) for item in selected_items]
 
-        for item in selected_items:
-            selection_text += item.text(0) + ", "
-            volume_ids.append(int(item.text(0)))
-        
-        return volume_ids, selection_text[:-2]
+    def set_selection_text(self, selected_volumes: list | set):
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selected_volumes = map(str, selected_volumes)
+        selection_text = ", ".join(selected_volumes)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def cell_changed_callback(self, row, column, model):        
         item = None
@@ -370,9 +430,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if index == AttributionBodiesType.ALL_BODIES:
             self.lineEdit_selection_id.setText("All bodies")
             self.lineEdit_selection_id.setEnabled(False)
-
         elif index == AttributionBodiesType.SELECTED_BODIES:
-            self.lineEdit_selection_id.clear()
+            self.clear_line_edit_selection_id()
             self.lineEdit_selection_id.setEnabled(True)
         # self.comboBox_attribution_type.setCurrentIndex(index)
 

@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QTableWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.utils.bidict import bidict
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -86,6 +87,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.assignment_complete = False
         self.keep_window_open = True
         self.last_tab = self.tabWidget_main.currentIndex()
+        self.tree_item_clicked = False
+        self.decoupling_map = bidict()
 
     def _create_connections(self):
         #
@@ -116,8 +119,13 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.include_effects_callback()
 
     def geometry_selection_callback(self):
+        current_tab = self.tabWidget_main.currentIndex()
 
-        if self.tabWidget_main.currentIndex() != PPMMainTabType.SETUP:
+        if current_tab == PPMMainTabType.LIST:
+            self.verify_if_selected_surfaces_are_in_tree_widget_perforated_plate_model()
+            return
+    
+        if current_tab != PPMMainTabType.SETUP:
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
@@ -177,7 +185,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.comboBox_include_effects.setCurrentIndex(IncludeEffectsBoxType.NON_LINEAR)
 
             self.pushButton_load_path.setEnabled(False)
-            self.lineEdit_user_defined_transfer_impedance_path.setText("")
+            self.lineEdit_user_defined_transfer_impedance_path.clear()
             self.lineEdit_user_defined_transfer_impedance_path.setToolTip("")
             self.lineEdit_user_defined_transfer_impedance_path.setEnabled(False)
 
@@ -191,15 +199,71 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_user_defined_transfer_impedance_path.setEnabled(True)
             self.lineEdit_user_defined_transfer_impedance_path.setText(table_path[0])
             self.lineEdit_user_defined_transfer_impedance_path.setToolTip(table_path[0])
+        
+    def verify_if_selected_surfaces_are_in_tree_widget_perforated_plate_model(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_surfaces = app().main_window.selected_geometry_surfaces
+
+        if not selected_surfaces:
+            return
+                
+        self.clear_line_edit_selection_id()
+        self.treeWidget_perforated_plate_model.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_perforated_plate_model_items_map()
+
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
+
+        if not selected_surfaces_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_perforated_plate_model.selectionModel()
+
+        for surface_id in selected_surfaces_in_tree_widget:
+            model_index = map_id_to_model_index[surface_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        self.set_selection_text(selected_surfaces_in_tree_widget)
+
+    def get_tree_widget_perforated_plate_model_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_perforated_plate_model.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_perforated_plate_model.itemFromIndex(index)
+
+            surface_id = int(item.text(0))
+            map_id_to_model_index[surface_id] = index
+
+            decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
+
+            if isinstance(decoupling_data, dict):
+                new_surface_id = decoupling_data.get("new_surface_id")
+                map_id_to_model_index[new_surface_id] = index
+
+                self.decoupling_map[surface_id] = new_surface_id
+
+            index = self.treeWidget_perforated_plate_model.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def clear_all_inputs(self):
-        self.lineEdit_plate_thickness.setText("")
-        self.lineEdit_hole_diameter.setText("")
-        self.lineEdit_porosity.setText("")
-        self.lineEdit_linear_discharge_coefficient.setText("")
-        self.lineEdit_non_linear_discharge_coefficient.setText("")
-        self.lineEdit_non_linear_correction_factor.setText("")
-        self.lineEdit_user_defined_transfer_impedance_path.setText("")
+        self.lineEdit_plate_thickness.clear()
+        self.lineEdit_hole_diameter.clear()
+        self.lineEdit_porosity.clear()
+        self.lineEdit_linear_discharge_coefficient.clear()
+        self.lineEdit_non_linear_discharge_coefficient.clear()
+        self.lineEdit_non_linear_correction_factor.clear()
+        self.lineEdit_user_defined_transfer_impedance_path.clear()
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
@@ -253,7 +317,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if self.last_tab == PPMMainTabType.LIST or tab_list:
             app().main_window.clear_selection()
-            self.lineEdit_selection_id.clear()
+            self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
 
@@ -268,40 +332,58 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.lineEdit_selection_id.setEnabled(True)
 
     def on_tree_widget_click_item(self, item):
+        self.tree_item_clicked = True
 
-        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+        surface_ids = self.get_selected_surfaces_from_tree_widget_perforated_plate_model()
 
         if not surface_ids:
             return
 
-        decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids[0])
-        if isinstance(decoupling_data, dict):
-            new_surface_id = decoupling_data.get("new_surface_id")
-            surface_ids.append(new_surface_id)
+        for surface_id in surface_ids:
+            decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
 
-            app().main_window.set_geometry_selection(surfaces=surface_ids)
+            if isinstance(decoupling_data, dict):
+                new_surface_id = decoupling_data.get("new_surface_id")
+                self.decoupling_map[surface_id] = new_surface_id
+
+        app().main_window.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setEnabled(True)
-        self.lineEdit_selection_id.setText(selection_text)
+        self.set_selection_text(surface_ids)
+    
+        self.tree_item_clicked = False
 
     def on_tree_widget_doubleclick_item(self, item):
         self.on_tree_widget_click_item(item)
     
-    def get_selected_surfaces_and_selection_text(self):
+    def get_selected_surfaces_from_tree_widget_perforated_plate_model(self) -> list:
         selected_items = self.treeWidget_perforated_plate_model.selectedItems()
 
         if not selected_items:
-            return list(), str()
-
-        selection_text = ""
-        surface_ids = list()
-
-        for item in selected_items:
-            surface_id = item.text(0)
-            selection_text += surface_id + ", "
-            surface_ids.append(int(surface_id))
+            return list()
         
-        return surface_ids, selection_text[:-2]
+        return [int(item.text(0)) for item in selected_items]
+
+    def set_selection_text(self, selected_surfaces: list | set):
+        selected_surfaces_decoupled = list()
+
+        for selected_surface in selected_surfaces:
+            decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
+
+            decouple_pair = [selected_surface, decouple_surface]
+            decouple_pair.sort()
+            decouple_pair = tuple(decouple_pair)
+
+            selected_surfaces_decoupled.append(str(decouple_pair))
+
+        selection_text = ", ".join(selected_surfaces_decoupled)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def check_selection_type(self, surface_ids: list[int]) -> bool:
 
@@ -450,7 +532,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 self.properties._set_property("perforated_plate_model", pp_model_data, surface=surface_id)
 
             self.imported_values = None
-            self.lineEdit_user_defined_transfer_impedance_path.setText("")
+            self.lineEdit_user_defined_transfer_impedance_path.clear()
             app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
 
         app().file.write_model_properties_in_file()
@@ -698,7 +780,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.decouple_degrees_of_freedom(surface_id)
 
         self.assignment_complete = True
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
 
         self.hide()
         self.actions_to_finalize()
@@ -791,7 +873,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                         self.properties._remove_line_property(property, line_id)
 
     def remove_callback(self):
-        input_ids, _ = self.get_selected_surfaces_and_selection_text()
+        input_ids = self.get_selected_surfaces_from_tree_widget_perforated_plate_model()
 
         if not input_ids:
             return
@@ -821,7 +903,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
         
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
         self.hide()

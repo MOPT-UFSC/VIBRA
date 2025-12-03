@@ -1,7 +1,7 @@
 # fmt: on
 
 from PySide6.QtWidgets import QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
@@ -47,6 +47,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.anechoic_termination = None
+        self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
         self.comboBox_volume_id.setDisabled(True)
@@ -80,7 +81,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def tab_event_callback(self):
         app().main_window.clear_selection()
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.treeWidget_anechoic_termination.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
@@ -92,6 +93,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.pushButton_attribute.setEnabled(True)
 
     def geometry_selection_callback(self):
+        if self.tabWidget_main.currentIndex() == 1:
+            self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
+            return
 
         faces = app().main_window.selected_geometry_surfaces
 
@@ -132,6 +136,52 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             else:
                 self.comboBox_volume_id.clear()
                 self.comboBox_volume_id.addItem("multiple")
+    
+    def verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_surfaces = app().main_window.selected_geometry_surfaces
+
+        if not selected_surfaces:
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_anechoic_termination.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_anechoic_termination_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
+
+        if not selected_surfaces_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_anechoic_termination.selectionModel()
+
+        for surface_id in selected_surfaces_in_tree_widget:
+            model_index = map_id_to_model_index[surface_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_surfaces_in_tree_widget)
+
+    def get_tree_widget_anechoic_termination_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_anechoic_termination.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_anechoic_termination.itemFromIndex(index)
+            surface_id = item.text(0)
+
+            map_id_to_model_index[int(surface_id)] = index
+
+            index = self.treeWidget_anechoic_termination.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def attribute_callback(self):
 
@@ -214,18 +264,16 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
-        selected_items = self.treeWidget_anechoic_termination.selectedItems()
+        selected_surfaces = self.get_selected_surfaces_from_tree_widget_anechoic_termination()
 
-        if not selected_items:
+        if not selected_surfaces:
             return
     
-        for item in selected_items:
-            surface_id = int(item.text(0))
-
+        for surface_id in selected_surfaces:
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("specific_impedance", surface_id)
 
-        self.lineEdit_selection_id.clear()
+        self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.clear_selection()
@@ -292,7 +340,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
 
     def on_click_item(self, item):
-        surface_ids, selection_text = self.get_selected_surfaces_and_selection_text()
+        self.tree_item_clicked = True
+
+        surface_ids = self.get_selected_surfaces_from_tree_widget_anechoic_termination()
 
         if not surface_ids:
             return
@@ -300,25 +350,34 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         app().main_window.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setDisabled(False)
-        self.lineEdit_selection_id.setText(selection_text)
+        self.set_selection_text(surface_ids)
+
+        self.tree_item_clicked = False
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
 
-    def get_selected_surfaces_and_selection_text(self):
+    def get_selected_surfaces_from_tree_widget_anechoic_termination(self) -> list:
         selected_items = self.treeWidget_anechoic_termination.selectedItems()
 
         if not selected_items:
-            return list(), str()
+            return list()
 
-        selection_text = ""
-        surface_ids = list()
+        return [int(item.text(0)) for item in selected_items]
+    
+    def set_selection_text(self, selected_surfaces: list | set):
+        selected_surfaces = list(selected_surfaces)
+        selected_surfaces.sort()
 
-        for item in selected_items:
-            selection_text += item.text(0) + ", "
-            surface_ids.append(int(item.text(0)))
-        
-        return surface_ids, selection_text[:-2]
+        selected_surfaces = map(str, selected_surfaces)
+        selection_text = ", ".join(selected_surfaces)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def load_model_info(self):
         self.treeWidget_anechoic_termination.clear()
