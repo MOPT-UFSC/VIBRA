@@ -7,8 +7,10 @@ from molde.colors import Color, color_names
 from vtkmodules.vtkCommonCore import VTK_FONT_FILE
 from vtkmodules.vtkFiltersSources import vtkSphereSource
 from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkRenderingCore import vtkTextProperty
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
 from vibra.utils.vtk_utils import fill_array, transform_polydata
+
 
 
 from vibra import app
@@ -20,13 +22,12 @@ class LegendActor(vtkLegendBoxActor):
         self.BorderOff()
         self.ScalarVisibilityOn()
 
-        text_property = self.GetEntryTextProperty()
 
         font_file = MOLDE_DIR / "fonts/IBMPlexMono-Regular.ttf"
+        text_property: vtkTextProperty = self.GetEntryTextProperty()
         text_property.SetFontFamily(VTK_FONT_FILE)
         text_property.SetFontFile(font_file)
-
-        pass
+        text_property.SetFontSize(16)
 
     def add_item(self, text: str, color: Color):
         position = len(self)
@@ -69,11 +70,6 @@ class LegendActor(vtkLegendBoxActor):
 
         transform = vtkTransform()
         transform.Translate(-center_x, -center_y + vertical_alignment, -center_z)
-
-        # transform_filter = vtkTransformPolyDataFilter()
-        # transform_filter.SetTransform(transform)
-        # transform_filter.SetInputData(sphere.GetOutput())
-        # transform_filter.Update()
 
         data = transform_polydata(
             sphere.GetOutput(),
