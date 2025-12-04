@@ -361,6 +361,7 @@ class ModelProperties:
                            "reciprocating_compressor_excitation",
                            "reciprocating_pump_excitation",
                            "acoustic_transfer_element",
+                            "porous_material_model",
                            "mass_source",
                            ]
 

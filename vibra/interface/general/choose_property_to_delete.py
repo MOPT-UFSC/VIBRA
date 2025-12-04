@@ -139,7 +139,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         for row_index, line in enumerate(self.properties_formated):
             for column_index, cell_data in enumerate(line):
-                item = QTableWidgetItem(str(cell_data))
+                item = QTableWidgetItem(str(cell_data).replace("_", " ").capitalize())
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.tableWidget.setItem(row_index, column_index, item)
 
@@ -203,8 +203,8 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             ):
                 continue
 
-            property_selected = property_selected_table_item.text()
-            entity_name = entity_name_table_item.text()
+            property_selected = property_selected_table_item.text().lower().replace(" ", "_")
+            entity_name = entity_name_table_item.text().lower()
             entity_id = int(entity_id_table_item.text())
 
             if entity_name == "point":
