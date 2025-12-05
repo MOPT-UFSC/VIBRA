@@ -10,6 +10,7 @@ from vtkmodules.vtkCommonTransforms import vtkTransform
 from vtkmodules.vtkRenderingCore import vtkTextProperty
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
 from vibra.utils.vtk_utils import fill_array, transform_polydata
+from vibra import app
 
 
 
@@ -21,25 +22,34 @@ class LegendActor(vtkLegendBoxActor):
     def __init__(self):
         self.BorderOff()
         self.ScalarVisibilityOn()
+        self.number_of_entries = 0
 
 
         font_file = MOLDE_DIR / "fonts/IBMPlexMono-Regular.ttf"
         text_property: vtkTextProperty = self.GetEntryTextProperty()
         text_property.SetFontFamily(VTK_FONT_FILE)
         text_property.SetFontFile(font_file)
-        text_property.SetFontSize(16)
 
     def add_item(self, text: str, color: Color):
+        n_spaces = 35 - len(text)
+        if n_spaces > 0:
+            text += n_spaces*" "
+            
         position = len(self)
         self.SetNumberOfEntries(position + 1)
 
         sphere = self._create_sphere(color)
 
         self.SetEntryString(position, text)
-        self.SetEntryColor(position, [1, 1, 1])  # TODO: change according to theme
-        self.SetEntrySymbol(position, sphere)
+        if app().config.user_preferences.interface_theme == "dark":
+            text_color = [1, 1, 1]
+        else:
+            text_color = [0, 0, 0]
 
-        pass
+        self.SetEntryColor(position, text_color)  
+        self.SetEntrySymbol(position, sphere)
+        self.number_of_entries += 1
+        self.set_legend_position()
 
     def clear_legend(self):
         self.SetNumberOfEntries(0)
@@ -50,9 +60,6 @@ class LegendActor(vtkLegendBoxActor):
 
     def __len__(self) -> int:
         return self.GetNumberOfEntries()
-
-    def set_legend_position(self, x: float, y: float):
-        pass
 
     def set_font_size(self):
         pass
@@ -81,9 +88,17 @@ class LegendActor(vtkLegendBoxActor):
         colors.SetName("Colors")
         colors.InsertNextTuple3(*color.to_rgb())
 
-        # data = transform_filter.GetOutput()
         for _ in range(data.GetNumberOfPoints()):
             colors.InsertNextTuple(color.to_rgb())
         data.GetPointData().SetScalars(colors)
 
         return data
+    
+    def set_legend_position(self):        
+        x_pos = 0.7  
+        y_pos = 0.1  
+        width = 0.25 
+        height = 0.1 * self.number_of_entries
+        self.LockBorderOff()
+        self.GetPositionCoordinate().SetValue(x_pos, y_pos)
+        self.GetPosition2Coordinate().SetValue(width, height)
