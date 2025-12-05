@@ -151,6 +151,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.properties_formated.sort(key=lambda item: item.get("name", ""))
 
     def _fill_table(self, properties_list: list[dict[str, str]]):
+        self.tableWidget.setSortingEnabled(False)
         self.tableWidget.setRowCount(len(properties_list))
 
         for row_index, line in enumerate(properties_list):
@@ -164,6 +165,8 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.tableWidget.setItem(row_index, column_index, item)
+
+        self.tableWidget.setSortingEnabled(True)
 
     def filter_table(self):
         filter_text = self.lineEdit_filter.text().lower().replace(" ", "_")
