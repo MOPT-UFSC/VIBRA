@@ -1,5 +1,5 @@
 from numpy import int64
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -25,17 +25,18 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.message = message
         self.data = data
         self.window_title = kwargs.get("window_title", f"Vibra v{__version__}")
-        self.properties_formated: list[tuple[str, str, int]] = list()
+        self.properties_formated: list[dict[str, str]] = list()
 
         self._config_window()
         self._configure_labels()
         self._configure_buttons()
         self._create_connections()
-        self._reset_variables()
+        self._configure_filter_timer()
         self._configure_table()
-
+        self._configure_lineEdit()
+        
         self._mount_properties_list_from_data()
-        self._fill_table()
+        self._fill_table(self.properties_formated)
 
         if len(self.properties_formated) > 0:
             self.exec()
@@ -49,16 +50,12 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _create_connections(self):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_cancel.clicked.connect(self.cancel_callback)
+        self.lineEdit_filter.textChanged.connect(self._start_timer)
 
     def _configure_buttons(self):
         self.pushButton_cancel.setText("Cancel")
         self.pushButton_remove.setText("Remove")
         self.pushButton_remove.setDefault(True)
-
-    def _reset_variables(self):
-        self._remove = False
-        self._cancel = True
-        self._property_to_delete = None
 
     def _configure_labels(self):
         self.label_title.setText("Remove Property")
@@ -69,60 +66,79 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.label_title.adjustSize()
         self.adjustSize()
 
+    def _configure_lineEdit(self):
+        self.lineEdit_filter.setPlaceholderText("Search...")
+
+        style = """
+        QLineEdit::placeholder {
+            color: #cccccc;
+            font-style: italic;
+        }
+        """
+        self.lineEdit_filter.setStyleSheet(style)
+
     def _configure_table(self):
         # table will always have 3 collumns
-        labels = ["Property", "Entity ID", "Entity"]
+        labels = ["Entity ID", "Entity", "Property"]
 
+        self.tableWidget.setSortingEnabled(True)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget.setColumnCount(len(labels))
 
         self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
+            QHeaderView.ResizeMode.Interactive
         )
-        self.tableWidget.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Interactive
-        )
+        self.tableWidget.resizeColumnsToContents()
+        self.tableWidget.horizontalHeader().setStretchLastSection(True)
+
+    def _configure_filter_timer(self):
+        self.filter_timer = QTimer()
+        self.filter_timer.setInterval(300)
+        self.filter_timer.setSingleShot(True)
+        self.filter_timer.timeout.connect(self.filter_table)
+
+    def _start_timer(self):
+        self.filter_timer.start()
 
     def _mount_properties_list_from_data(self):
-        self.properties_formated: list[tuple[str, str, int]] = list()
-
         prop = app().project.model.properties.get_properties_from_points(
             self.data.get("points")
         )
-        prop = [(name, id_number, "point") for name, id_number in prop]
+        prop = [{"id": str(id_number), "entity": "point", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
         prop = app().project.model.properties.get_properties_from_lines(
             self.data.get("lines")
         )
-        prop = [(name, id_number, "line") for name, id_number in prop]
+        prop = [{"id": str(id_number), "entity": "line", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
         prop = app().project.model.properties.get_properties_from_surfaces(
             self.data.get("surfaces")
         )
-        prop = [(name, id_number, "surface") for name, id_number in prop]
+        prop = [{"id": str(id_number), "entity": "surface", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
         prop = app().project.model.properties.get_properties_from_volumes(
             self.data.get("volumes")
         )
-        prop = [(name, id_number, "volume") for name, id_number in prop]
+        prop = [{"id": str(id_number), "entity": "volume", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
         # filters the property list, removing fields
-        def filter_properties_to_not_show(prop: tuple[str, str, int]) -> bool:
-            return prop[0] not in ["fluid", "material"]
+        def filter_properties_to_not_show(prop: dict[str, str]) -> bool:
+            return prop.get("name") not in ["fluid", "material"]
 
-        def filter_physical_domain_properties(prop: tuple[str, str, int]) -> bool:
+        def filter_physical_domain_properties(prop: dict[str, str]) -> bool:
             current_physical_domain = (
                 app()
                 .main_window.analysis_toolbar.combo_box_physical_domain.currentText()
                 .lower()
             )
             prop_physical_domain = app().project.model.properties.get_data_group_label(
-                prop[0]
+                prop.get("name", "")
             )
             return prop_physical_domain == current_physical_domain
 
@@ -132,24 +148,31 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.properties_formated = list(
             filter(filter_physical_domain_properties, self.properties_formated)
         )
-        self.properties_formated.sort(key=lambda item: item[0])
+        self.properties_formated.sort(key=lambda item: item.get("name", ""))
 
-    def _fill_table(self):
-        self.tableWidget.setRowCount(len(self.properties_formated))
+    def _fill_table(self, properties_list: list[dict[str, str]]):
+        self.tableWidget.setRowCount(len(properties_list))
 
-        for row_index, line in enumerate(self.properties_formated):
-            for column_index, cell_data in enumerate(line):
-                item = QTableWidgetItem(str(cell_data).replace("_", " ").capitalize())
+        for row_index, line in enumerate(properties_list):
+            for column_index, cell_data in enumerate(line.values()):
+                item = None
+                if cell_data.isnumeric():
+                    item = QTableWidgetItem()
+                    item.setData(Qt.ItemDataRole.DisplayRole, int(cell_data))
+                else:
+                    item = QTableWidgetItem(str(cell_data).replace("_", " ").capitalize())
+
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.tableWidget.setItem(row_index, column_index, item)
 
-        self.tableWidget.resizeColumnsToContents()
+    def filter_table(self):
+        filter_text = self.lineEdit_filter.text().lower().replace(" ", "_")
 
-    def actions_to_finalize(self):
-        app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
-        app().main_window.update_symbols()
+        def filter_properties_formated(prop: dict[str, str]) -> bool:
+            return filter_text in prop.get("name", "") or filter_text in prop.get("entity", "") or filter_text in prop.get("id", "")
+
+        properties_filtered = list(filter(filter_properties_formated, self.properties_formated))
+        self._fill_table(properties_filtered)
 
     def _get_user_confirmation(self, properties_count: int) -> bool:
         text = "property" if properties_count == 1 else "properties"
@@ -192,9 +215,9 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             return
 
         for row in rows_selected:
-            property_selected_table_item = self.tableWidget.item(row, 0)
-            entity_id_table_item = self.tableWidget.item(row, 1)
-            entity_name_table_item = self.tableWidget.item(row, 2)
+            entity_id_table_item = self.tableWidget.item(row, 0)
+            entity_name_table_item = self.tableWidget.item(row, 1)
+            property_selected_table_item = self.tableWidget.item(row, 2)
 
             if (
                 property_selected_table_item is None
@@ -241,6 +264,12 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         self.actions_to_finalize()
         self.close()
+
+    def actions_to_finalize(self):
+        app().main_window.update_info_text()
+        app().file.write_model_properties_in_file()
+        app().file.write_imported_table_data_in_file()
+        app().main_window.update_symbols()
 
     def cancel_callback(self):
         self.close()
