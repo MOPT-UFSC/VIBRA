@@ -76,6 +76,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         }
         """
         self.lineEdit_filter.setStyleSheet(style)
+        self.lineEdit_filter.setFocus()
 
     def _configure_table(self):
         # table will always have 3 collumns
