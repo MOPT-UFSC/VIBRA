@@ -18,7 +18,8 @@ class SelectionHandler:
         self.hidden_volumes = set()
 
     def clear_selection(self):
-        pass
+        self.set_geometry_selection()
+        self.set_mesh_selection()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         if points is None:
@@ -100,6 +101,18 @@ class SelectionHandler:
 
         self.selection_changed.emit()
 
-    def action_hide_selection_callback(self):
-        pass
+    def calculate_volumes_to_hide(self):
+        mesh = app().project.model.mesh
+        volumes_to_hide = set()
+        if self.geometry_volumes:
+            volumes_to_hide |= self.geometry_volumes
+
+        elif self.geometry_surfaces:
+            for surface in self.geometry_surfaces:
+                volumes_to_hide |= set(mesh.volumes_from_surface[surface])
+
+        elif self.mesh_solids:
+            for element in self.mesh_solids:
+                volumes_to_hide.add(mesh.get_volume_from_element(element))
+
 
