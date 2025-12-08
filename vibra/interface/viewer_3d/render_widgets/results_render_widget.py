@@ -4,13 +4,16 @@ from threading import Lock
 from time import time
 
 import numpy as np
-from molde.interactor_styles import ArcballCameraInteractorStyle
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import app, ICON_DIR
+from vibra.interface.viewer_3d.render_tools import (
+    SelectionTool,
+    RenderTool
+)
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.math_functions import lerp
@@ -30,10 +33,10 @@ from .model_info_text import (
 class ResultsRenderWidget(AnimatedRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(ArcballCameraInteractorStyle())
 
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
+        app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.acoustic_post = app().project.acoustic_postprocessing
@@ -47,6 +50,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.frequency_index = None
         self.mode_index = None
 
+        self.set_default_render_tool()
         self.remove_all_actors()
         self.create_logos()
         self.create_axes()
@@ -435,6 +439,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         position = section_plane.get_position()
         rotation = section_plane.get_rotation()
         inverted = section_plane.get_inverted()
+        is_mesh_field = section_plane.check_mesh_field_results.isChecked()
 
         if section_plane.editing:
             self.plane_actor.configure_section_plane(position, rotation)
@@ -448,11 +453,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 rotation,
                 inverted,
                 show_plane,
+                is_mesh_field,
             )
 
         self.update()
 
-    def _apply_section_plane(self, position, rotation, inverted, show_plane=True):
+    def _apply_section_plane(self, position, rotation, inverted, show_plane=True, is_mesh_field=False):
         logging.info("Switching to solid actor... [50/100]")
         self.switch_to_solids_actor()
 
@@ -462,11 +468,21 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             normal = -normal
 
         logging.info("Applying cut... [70/100]")
-        self.analysis_actor.apply_cut(xyz, normal)
+        visualization = app().main_window.visualization_filter
+        if is_mesh_field:
+            self.analysis_actor.apply_cut(xyz, normal)
+            self.edges_actor.VisibilityOn()
+            visualization.lines = True
+            app().main_window.action_line_view.setChecked(True)
+        else:
+            self.analysis_actor.apply_cutter(xyz, normal)
+            self.edges_actor.VisibilityOff()
+            visualization.lines = False
+            app().main_window.action_line_view.setChecked(False)
+
         self.edges_actor.apply_cut(xyz, normal)
 
         logging.info("Updating visualization... [80/100]")
-        visualization = app().main_window.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
@@ -546,5 +562,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
+    
+    def add_render_tool(self, tool_class):
+        if tool_class == SelectionTool:
+            super().add_render_tool(RenderTool)
+        else:
+            super().add_render_tool(tool_class)
+    
+    def set_default_render_tool(self):
+        tool = RenderTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+
 
 

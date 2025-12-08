@@ -8,6 +8,7 @@ import platform
 
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
+
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
+from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -40,6 +42,7 @@ from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
 
 import gmsh
+
 
 class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
@@ -105,6 +108,7 @@ class MainWindow(MainWindow_UI):
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
         self.animation_toolbar = AnimationToolbar()
+        self.render_tools_toolbar = RenderToolsToolbar(self)
 
         self.create_recents_menu()
         self.create_status_bar()
@@ -127,6 +131,11 @@ class MainWindow(MainWindow_UI):
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
         self.insertToolBarBreak(self.animation_toolbar)
+        self.render_tools_toolbar.setVisible(False)
+        self.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
+
+        for render in self.get_renderer_widgets():
+            self.render_tools_toolbar.render_tool_changed.connect(render.add_render_tool)
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
@@ -431,7 +440,10 @@ class MainWindow(MainWindow_UI):
         else:
             self.visualization_filter.color_mode = GeometryColorMode.COLORED        
         self.visualization_changed.emit()
-
+    
+    def get_renderer_widgets(self) -> list[CommonRenderWidget]:
+        return [self.geometry_widget, self.mesh_widget, self.results_widget]
+        
     def action_user_preferences_callback(self):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
@@ -450,9 +462,11 @@ class MainWindow(MainWindow_UI):
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_tools_toolbar.show_selection_tool()
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
+        self.render_tools_toolbar.show_selection_tool()
     
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
@@ -503,6 +517,8 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(True)
         self.action_mesh_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
+        
+        self.render_tools_toolbar.show_selection_tool()
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
@@ -526,6 +542,8 @@ class MainWindow(MainWindow_UI):
         self.action_mesh_workspace.setChecked(True)
         self.action_model_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
+
+        self.render_tools_toolbar.show_selection_tool()
 
         if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
@@ -569,6 +587,7 @@ class MainWindow(MainWindow_UI):
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
+        self.render_tools_toolbar.setVisible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
@@ -928,6 +947,7 @@ class MainWindow(MainWindow_UI):
 
                 self.action_results_workspace.setDisabled(True)
                 self.action_model_workspace_callback()
+                self.render_tools_toolbar.setVisible(True)
                 self.model_setup_widget.model_setup_items.update_items_appearance()
             
             LoadingWindow(open_callback).run(project_path)
