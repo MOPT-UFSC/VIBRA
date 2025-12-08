@@ -16,7 +16,6 @@ class LegendActor(vtkLegendBoxActor):
     def __init__(self):
         self.BorderOff()
         self.ScalarVisibilityOn()
-        self.number_of_entries = 0
 
         font_file = MOLDE_DIR / "fonts/IBMPlexMono-Regular.ttf"
         text_property: vtkTextProperty = self.GetEntryTextProperty()
@@ -41,7 +40,6 @@ class LegendActor(vtkLegendBoxActor):
 
         self.SetEntryColor(position, text_color)
         self.SetEntrySymbol(position, sphere)
-        self.number_of_entries += 1
         self.set_legend_position()
 
     def clear_legend(self):
@@ -91,7 +89,7 @@ class LegendActor(vtkLegendBoxActor):
         x_pos = 0.8
         y_pos = 0.1
         width = 0.25
-        height = 0.1 * self.number_of_entries
+        height = 0.1 * len(self)
         self.LockBorderOff()
         self.GetPositionCoordinate().SetValue(x_pos, y_pos)
         self.GetPosition2Coordinate().SetValue(width, height)
