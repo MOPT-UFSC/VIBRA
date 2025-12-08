@@ -1,21 +1,15 @@
-from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
-from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
-from vtkmodules.vtkRenderingAnnotation import vtkLegendBoxActor
 from molde import MOLDE_DIR, Color
 from molde.colors import Color, color_names
-from vtkmodules.vtkCommonCore import VTK_FONT_FILE
-from vtkmodules.vtkFiltersSources import vtkSphereSource
+from vtkmodules.vtkCommonCore import VTK_FONT_FILE, vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
-from vtkmodules.vtkRenderingCore import vtkTextProperty
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
+from vtkmodules.vtkFiltersSources import vtkSphereSource
+from vtkmodules.vtkRenderingAnnotation import vtkLegendBoxActor
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkTextProperty
+
+from vibra import app
 from vibra.utils.vtk_utils import fill_array, transform_polydata
-from vibra import app
-
-
-
-from vibra import app
-from molde import Color
 
 
 class LegendActor(vtkLegendBoxActor):
@@ -23,7 +17,6 @@ class LegendActor(vtkLegendBoxActor):
         self.BorderOff()
         self.ScalarVisibilityOn()
         self.number_of_entries = 0
-
 
         font_file = MOLDE_DIR / "fonts/IBMPlexMono-Regular.ttf"
         text_property: vtkTextProperty = self.GetEntryTextProperty()
@@ -33,8 +26,8 @@ class LegendActor(vtkLegendBoxActor):
     def add_item(self, text: str, color: Color):
         n_spaces = 35 - len(text)
         if n_spaces > 0:
-            text += n_spaces*" "
-            
+            text += n_spaces * " "
+
         position = len(self)
         self.SetNumberOfEntries(position + 1)
 
@@ -46,7 +39,7 @@ class LegendActor(vtkLegendBoxActor):
         else:
             text_color = [0, 0, 0]
 
-        self.SetEntryColor(position, text_color)  
+        self.SetEntryColor(position, text_color)
         self.SetEntrySymbol(position, sphere)
         self.number_of_entries += 1
         self.set_legend_position()
@@ -93,11 +86,11 @@ class LegendActor(vtkLegendBoxActor):
         data.GetPointData().SetScalars(colors)
 
         return data
-    
-    def set_legend_position(self):        
-        x_pos = 0.7  
-        y_pos = 0.1  
-        width = 0.25 
+
+    def set_legend_position(self):
+        x_pos = 0.8
+        y_pos = 0.1
+        width = 0.25
         height = 0.1 * self.number_of_entries
         self.LockBorderOff()
         self.GetPositionCoordinate().SetValue(x_pos, y_pos)
