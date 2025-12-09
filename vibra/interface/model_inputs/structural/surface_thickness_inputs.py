@@ -60,11 +60,11 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.treeWidget_surface_thickness.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.attribution_type_callback()
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
 
@@ -285,7 +285,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
                 return
 
             for _surface_id in surfaces_to_hide:
-                app().main_window.hidden_surfaces.add(_surface_id)
+                app().main_window.selection.hidden_surfaces.add(_surface_id)
     
             app().main_window.update_hidden_plots()
 

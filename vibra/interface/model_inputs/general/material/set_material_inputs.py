@@ -102,7 +102,7 @@ class MaterialInputs(SetMaterial_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
         self.update_selection_combo_box_texts()
@@ -171,8 +171,8 @@ class MaterialInputs(SetMaterial_UI):
             self.verify_if_selected_volumes_belongs_to_table_model_materials()
             return
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
 
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         index = self.comboBox_attribution_type.currentIndex()
@@ -198,7 +198,7 @@ class MaterialInputs(SetMaterial_UI):
         if self.table_model_materials_cell_clicked:
             return
 
-        selected_volumes = app().main_window.selected_geometry_volumes
+        selected_volumes = app().main_window.selection.geometry_volumes
 
         if not selected_volumes:
             return

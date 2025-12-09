@@ -62,7 +62,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_surface_id).connect(self.lineEdit_input_clicked)
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
@@ -115,7 +115,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
 

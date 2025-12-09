@@ -39,7 +39,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.left_released.connect(self.selection_callback)
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
-        app().main_window.selection_changed.connect(self.update_selection)
+        app().main_window.selection.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # The fast area selection just works if it is on
@@ -252,9 +252,9 @@ class MeshRenderWidget(CommonRenderWidget):
         else:
             self.nodes_actor.set_color(Color(0, 0, 0, 0))
 
-        nodes = app().main_window.selected_mesh_nodes
-        faces = app().main_window.selected_mesh_faces
-        solids = app().main_window.selected_mesh_solids
+        nodes = app().main_window.selection.mesh_nodes
+        faces = app().main_window.selection.mesh_faces
+        solids = app().main_window.selection.mesh_solids
 
         selection_faces_color = app().config.user_preferences.selection_faces_color
         selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color

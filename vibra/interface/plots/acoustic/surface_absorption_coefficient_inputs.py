@@ -61,7 +61,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
@@ -77,8 +77,8 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def geometry_selection_callback(self):
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
 
         if volumes:
             if len(volumes) == 1:

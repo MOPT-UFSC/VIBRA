@@ -81,7 +81,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.treeWidget_transfer_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.geometry_selection_callback()
@@ -108,7 +108,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if current_tab != StandardTabType.CONSTANT_DATA:
             return
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if surfaces:
             surface_ids = list(surfaces)
             surface_ids.sort()
@@ -143,7 +143,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -884,7 +884,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return
 
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
         return super().closeEvent(a0)
 

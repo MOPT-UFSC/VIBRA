@@ -150,7 +150,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.mesh_quality_metrics_callback()
 
@@ -199,8 +199,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.maximum_element_size_changed_callback()
 
     def geometry_selection_callback(self):
-        faces = app().main_window.selected_geometry_surfaces
-        volumes = app().main_window.selected_geometry_volumes
+        faces = app().main_window.selection.geometry_surfaces
+        volumes = app().main_window.selection.geometry_volumes
 
         if volumes:
             selection = volumes
@@ -249,7 +249,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if self.lineEdit_selected_ids.text() == "":
             return
 
-        if app().main_window.selected_geometry_volumes:
+        if app().main_window.selection.geometry_volumes:
             selected_type = "volumes"
         else:
             selected_type = "surfaces"

@@ -63,7 +63,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
@@ -86,9 +86,9 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def geometry_selection_callback(self):
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
-        nodes = app().main_window.selected_mesh_nodes
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
+        nodes = app().main_window.selection.mesh_nodes
 
         if volumes:
             if len(volumes) == 1:

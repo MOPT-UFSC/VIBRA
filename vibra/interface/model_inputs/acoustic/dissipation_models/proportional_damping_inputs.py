@@ -18,7 +18,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        app().main_window.volume_selection_mode = True
+        app().main_window.selection.volume_selection_mode = True
 
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -55,7 +55,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.treeWidget_proportional_damping.itemClicked.connect(self.on_click_item)
         self.treeWidget_proportional_damping.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
@@ -74,7 +74,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             self.verify_if_selected_volumes_are_in_tree_widget_proportional_damping()
             return
 
-        volumes = app().main_window.selected_geometry_volumes
+        volumes = app().main_window.selection.geometry_volumes
 
         if volumes:
             volume_ids = [int(vol_id) for vol_id in volumes]
@@ -111,7 +111,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_volumes = app().main_window.selected_geometry_volumes
+        selected_volumes = app().main_window.selection.geometry_volumes
 
         if not selected_volumes:
             return
@@ -392,6 +392,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
-        app().main_window.volume_selection_mode = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.volume_selection_mode = False
         return super().closeEvent(a0)

@@ -112,7 +112,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.edit_tableWidget.cellChanged.connect(self.edit_table_widget_item)
         self.edit_tableWidget.cellDoubleClicked.connect(self.edit_fluid_or_transfer_impedance)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.geometry_selection_callback()
@@ -128,7 +128,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if current_tab != PPMMainTabType.SETUP:
             return
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if surfaces:
             surface_ids = list(surfaces)
             surface_ids.sort()
@@ -204,7 +204,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -1239,6 +1239,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             return
 
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
         return super().closeEvent(a0)

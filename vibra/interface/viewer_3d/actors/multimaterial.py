@@ -32,7 +32,7 @@ from vibra.utils.vtk_utils import fill_array, read_texture
 
 def get_first_visible_volume(volumes):
     for volume in volumes:
-        if volume not in app().main_window.hidden_volumes:
+        if volume not in app().main_window.selection.hidden_volumes:
             return volume
 
 
@@ -117,7 +117,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         if color_mode == ColorMode.EMPTY:
             self.clear_composition()
             self.default_actor.VisibilityOn()
-            hidden_surfaces = app().main_window.hidden_surfaces
+            hidden_surfaces = app().main_window.selection.hidden_surfaces
             visible_surfaces = set(surfaces) - hidden_surfaces
             self.configure_composition("default", visible_surfaces)
             return
@@ -130,7 +130,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
-            if surface in app().main_window.hidden_surfaces:
+            if surface in app().main_window.selection.hidden_surfaces:
                 continue
             else:
                 composition_to_surfaces["default"].append(surface)
@@ -227,7 +227,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def _create_surfaces(self):
         combined_surfaces = vtkAppendPolyData()
         for surface, elements in self.mesh.elements_from_surface.items():
-            if surface in app().main_window.hidden_surfaces:
+            if surface in app().main_window.selection.hidden_surfaces:
                 continue
 
             coords, connect = self._reduce_connectivity(

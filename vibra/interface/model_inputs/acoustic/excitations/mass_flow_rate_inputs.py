@@ -83,7 +83,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
         self.treeWidget_mass_flow_rate.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_flow_rate.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.update_controls_for_constant_value()
         self.update_controls_for_table_of_values()
@@ -134,7 +134,7 @@ class MassFlowRateInputs(MassFlowRateInputs_UI):
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])

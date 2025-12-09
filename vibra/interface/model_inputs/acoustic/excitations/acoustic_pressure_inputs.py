@@ -70,7 +70,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
     
     def _config_widgets(self):
         #
@@ -85,7 +85,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
             return
         
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -112,7 +112,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -582,5 +582,5 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

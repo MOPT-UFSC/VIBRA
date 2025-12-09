@@ -150,17 +150,17 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        faces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         if faces:
 

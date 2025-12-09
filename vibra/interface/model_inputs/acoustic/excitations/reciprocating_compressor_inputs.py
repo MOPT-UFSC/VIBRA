@@ -123,7 +123,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.export_data_checkbox_callback()
@@ -166,7 +166,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation()
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if selected_surfaces:
 
@@ -195,7 +195,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -1265,5 +1265,5 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
