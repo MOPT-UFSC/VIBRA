@@ -86,10 +86,11 @@ class LegendActor(vtkLegendBoxActor):
         return data
 
     def set_legend_position(self):
-        x_pos = 0.8
-        y_pos = 0.1
+        # TODO: make this work accordingly for more than 2 lines
+        x_pos = 0.825
+        y_pos = 0.9
         width = 0.25
         height = 0.1 * len(self)
         self.LockBorderOff()
-        self.GetPositionCoordinate().SetValue(x_pos, y_pos)
+        self.GetPositionCoordinate().SetValue(x_pos, y_pos - height)
         self.GetPosition2Coordinate().SetValue(width, height)
