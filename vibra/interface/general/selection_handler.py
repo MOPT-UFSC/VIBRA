@@ -1,10 +1,11 @@
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QObject
 from vibra import app
 
-class SelectionHandler:
+class SelectionHandler(QObject):
     selection_changed = Signal()
     
     def __init__(self):
+        super().__init__()
         self.mesh_nodes = set()
         self.mesh_faces = set()
         self.mesh_solids = set()
@@ -114,5 +115,6 @@ class SelectionHandler:
         elif self.mesh_solids:
             for element in self.mesh_solids:
                 volumes_to_hide.add(mesh.get_volume_from_element(element))
+        return volumes_to_hide
 
 
