@@ -1013,8 +1013,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         selected_surfaces = map(str, selected_surfaces)
         selection_text = ", ".join(selected_surfaces)
 
-        print(selection_text)
-
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
     

@@ -5,6 +5,7 @@
         <file>delete.png</file>
         <file>moon_icon.png</file>
         <file>get_fuid_light_blue.png</file>
+        <file>zoom_icon.png</file>
         <file>logo_vibra_comp.png</file>
         <file>model.png</file>
         <file>help.png</file>
@@ -15,6 +16,7 @@
         <file>png.png</file>
         <file>results.png</file>
         <file>azul cinza.png</file>
+        <file>grab_icon.png</file>
         <file>image-plus.png</file>
         <file>sync_disabled.png</file>
         <file>arrow_circle_down_blue.png</file>
@@ -25,6 +27,7 @@
         <file>plus-thick.png</file>
         <file>go_next.png</file>
         <file>home.png</file>
+        <file>rotation_icon.png</file>
         <file>reset_icon.png</file>
         <file>play.png</file>
         <file>create_video_icon.png</file>
@@ -41,6 +44,7 @@
         <file>geometry_icon.png</file>
         <file>resume_icon.png</file>
         <file>save.png</file>
+        <file>selection_icon.png</file>
         <file>sync_enabled.png</file>
         <file>warnings/transparent_warning.png</file>
         <file>warnings/error_red.png</file>
@@ -50,6 +54,9 @@
         <file>warnings/error_yellow.png</file>
         <file>warnings/warning_2.png</file>
         <file>warnings/error_icon1.png</file>
+        <file>cursors/zoom_cursor.png</file>
+        <file>cursors/rotation_cursor.png</file>
+        <file>cursors/pan_cursor.png</file>
         <file>visibility/show_symbols.png</file>
         <file>visibility/section_plane_view.png</file>
         <file>visibility/nodes.png</file>
