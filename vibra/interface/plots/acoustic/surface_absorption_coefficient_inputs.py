@@ -68,7 +68,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
     def volume_selector_callback(self):
         if self.comboBox_volumes.currentText() != "":
             volume_id = int(self.comboBox_volumes.currentText())
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+            app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
@@ -115,7 +115,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.comboBox_volumes.clear()
         if external_surfaces_map and internal_surfaces_map:
             self.lineEdit_selection_id.setText("")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().processEvents()
 
             title = "Invalid selection"

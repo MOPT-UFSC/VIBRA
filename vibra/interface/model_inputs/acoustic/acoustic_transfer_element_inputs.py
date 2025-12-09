@@ -286,7 +286,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             else:
                 return
         
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
         def callback():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
@@ -344,7 +344,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
         app().file.write_model_properties_in_file()
-        # app().main_window.set_geometry_selection(surfaces=[surface_id])
+        # app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):
 

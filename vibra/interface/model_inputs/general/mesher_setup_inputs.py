@@ -228,9 +228,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if selected_ids:
             if selection_type == "volumes":
-                app().main_window.set_geometry_selection(volumes=selected_ids)
+                app().main_window.selection.set_geometry_selection(volumes=selected_ids)
             else:
-                app().main_window.set_geometry_selection(surfaces=selected_ids)
+                app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
 
     def get_selected_ids(self):
         selected_ids = list()
@@ -300,7 +300,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                     self.mesh_refinement_data.pop((selection_type, ref_size))
                     self.update_refining_table_data()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
         except Exception:
             return

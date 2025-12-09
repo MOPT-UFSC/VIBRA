@@ -131,7 +131,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         if not self.selected_items:
             return
 
-        app().main_window.set_geometry_selection(**self.selected_items)
+        app().main_window.selection.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(selection_text)
@@ -319,7 +319,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -340,7 +340,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.properties._reset_property("fluid_id")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
         self.clear_line_edit_seletction_id()

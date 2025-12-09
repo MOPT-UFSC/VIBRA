@@ -239,7 +239,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if not volume_ids:
             return
 
-        app().main_window.set_geometry_selection(volumes=volume_ids)
+        app().main_window.selection.set_geometry_selection(volumes=volume_ids)
 
         self.set_selection_text(volume_ids)
         self.pushButton_remove.setEnabled(True)

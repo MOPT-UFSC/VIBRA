@@ -885,7 +885,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
         self.tabWidget_main.setTabVisible(2, False)
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -915,13 +915,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             elif selection == "Line":
-                app().main_window.set_geometry_selection(lines = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
 
             elif selection == "Point":
-                app().main_window.set_geometry_selection(points = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
                 app().main_window.set_mesh_selection(nodes=[int(selected_id)])
@@ -996,7 +996,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.remove_property_from("nodal_loads", selected_id, selection)
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().main_window.set_mesh_selection()
 
     def reset_callback(self):
@@ -1038,7 +1038,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.properties._reset_property("nodal_loads")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().main_window.set_mesh_selection()
 
     def actions_to_finalize(self):

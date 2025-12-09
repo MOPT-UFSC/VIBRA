@@ -326,7 +326,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not (shift_pressed or app().main_window.volume_selection_mode):
             picked_volumes.clear()
 
-        app().main_window.set_geometry_selection(
+        app().main_window.selection.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
             surfaces=picked_surfaces,

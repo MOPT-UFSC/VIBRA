@@ -441,7 +441,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
         self.lineEdit_real_value.setFocus()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -471,7 +471,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             text = f"{selection} - {selected_id}"
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             else:
                 return
@@ -529,7 +529,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().main_window.set_mesh_selection()
 
     def reset_callback(self):
@@ -554,7 +554,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().main_window.set_mesh_selection()
 
     def actions_to_finalize(self):

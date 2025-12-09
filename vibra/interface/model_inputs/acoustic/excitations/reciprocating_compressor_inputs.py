@@ -878,7 +878,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.load_compressor_excitation_info()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
 
     def process_table_file_removal(self, table_names: list):
@@ -981,7 +981,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if not surface_ids:
             return
         
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
         self.set_selection_text(surface_ids)
         self.lineEdit_connection_type.setText(connection_type)
         self.pushButton_remove.setDisabled(False)

@@ -570,7 +570,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         if not surface_ids:
             return
         
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setDisabled(False)
         self.set_selection_text(surface_ids)

@@ -411,7 +411,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not surface_ids:
             return
 
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         for surface_id in surface_ids:
             decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
@@ -751,7 +751,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             app().main_window.update_symbols()
 
             logging.info("Processing the post-assignment actions... [95/100]")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
             logging.info("Processing the post-assignment actions... [100/100]")
             app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)

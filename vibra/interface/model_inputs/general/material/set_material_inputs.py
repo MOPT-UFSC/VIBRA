@@ -119,7 +119,7 @@ class MaterialInputs(SetMaterial_UI):
         
         self.table_model_materials_cell_clicked = True
     
-        app().main_window.set_geometry_selection(**self.selected_items)
+        app().main_window.selection.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(selection_text)
@@ -380,7 +380,7 @@ class MaterialInputs(SetMaterial_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -401,7 +401,7 @@ class MaterialInputs(SetMaterial_UI):
             self.properties._reset_property("material_id")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
         self.clear_line_edit_seletction_id()

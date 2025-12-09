@@ -346,7 +346,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 new_surface_id = decoupling_data.get("new_surface_id")
                 self.decoupling_map[surface_id] = new_surface_id
 
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setEnabled(True)
         self.set_selection_text(surface_ids)
@@ -984,7 +984,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().main_window.update_info_text()
 
             logging.info("Processing the post-assignment actions... [95/100]")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
             logging.info("Processing the post-assignment actions... [100/100]")
             app().main_window.action_results_workspace.setEnabled(False)

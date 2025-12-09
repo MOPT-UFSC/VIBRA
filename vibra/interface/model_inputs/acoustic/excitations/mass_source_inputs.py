@@ -971,7 +971,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         nodes = selected_items.pop("nodes") if "nodes" in selected_items else set()
 
         app().main_window.set_mesh_selection(nodes=nodes)
-        app().main_window.set_geometry_selection(**selected_items)
+        app().main_window.selection.set_geometry_selection(**selected_items)
 
         self.tree_item_clicked = False
 

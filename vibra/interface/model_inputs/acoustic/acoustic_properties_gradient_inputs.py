@@ -147,17 +147,17 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         return filter.clicked
 
     def lineEdit_selection_id_clicked(self):
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         self.current_line_edit = self.lineEdit_selection_id
         self.highlight_line_edit()
 
     def lineEdit_start_coords_clicked(self):
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         self.current_line_edit = self.lineEdit_start_coords
         self.highlight_line_edit()
 
     def lineEdit_end_coords_clicked(self):
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         self.current_line_edit = self.lineEdit_end_coords
         self.highlight_line_edit()
 
@@ -256,7 +256,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         key = f"{item.text(0)} - {item.text(1)}"
         if item.text(0) == "Volume":
             volume_id = int(item.text(1))
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+            app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
         self.lineEdit_selection_id.setText(key)
         self.pushButton_remove.setEnabled(True)

@@ -87,7 +87,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             self.pushButton_remove.setEnabled(True)
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
