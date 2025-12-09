@@ -281,7 +281,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         app().file.write_model_properties_in_file()
         self.load_info()
         self.actions_to_finalize()
@@ -325,7 +325,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         pm_tab = current_tab <= TabType.JCAL
 
         if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.frame_plot_setup.setVisible(pm_tab)

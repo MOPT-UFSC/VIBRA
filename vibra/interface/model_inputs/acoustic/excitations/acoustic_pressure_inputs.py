@@ -173,7 +173,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         tab_list = current_tab == StandardTabType.LIST
     
         if self.last_tab == StandardTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
 
             self.clear_line_edit_selection_id()
             self.treeWidget_acoustic_pressure.clearSelection()
@@ -446,7 +446,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):

@@ -420,7 +420,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if self.bad_elements_showed:
             app().main_window.distinguish_mesh_solids([])
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.hide()
 
         def generate_function():

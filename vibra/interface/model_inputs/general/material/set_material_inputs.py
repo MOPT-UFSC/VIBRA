@@ -410,7 +410,7 @@ class MaterialInputs(SetMaterial_UI):
 
         self.load_model_info()
         app().main_window.update_info_text()
-        app().main_window.clear_selection()  # this also updates
+        app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().file.write_model_properties_in_file()
 
@@ -477,7 +477,7 @@ class MaterialInputs(SetMaterial_UI):
         self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()

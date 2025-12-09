@@ -251,7 +251,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.treeWidget_proportional_damping.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
         self.load_info()
 
@@ -283,7 +283,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
                 self.actions_to_finalize()
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
 
         list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
 

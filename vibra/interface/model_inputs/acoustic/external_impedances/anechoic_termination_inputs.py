@@ -79,7 +79,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
 
         self.clear_line_edit_selection_id()
         self.treeWidget_anechoic_termination.clearSelection()
@@ -276,7 +276,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):

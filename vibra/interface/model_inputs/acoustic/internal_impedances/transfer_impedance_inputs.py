@@ -388,7 +388,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         tab_list = current_tab == StandardTabType.LIST
 
         if self.last_tab == StandardTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
@@ -673,7 +673,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
         self.restore_mesh_data_modified_by_decoupling()
 

@@ -157,7 +157,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.pushButton_remove.setDisabled(True)
         self.clear_line_edit_selection_id()
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.load_info()
@@ -201,7 +201,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         list_or_edit_tab = [TabType.LIST, TabType.EDIT]
 
         if self.last_tab in list_or_edit_tab or current_tab in list_or_edit_tab:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab

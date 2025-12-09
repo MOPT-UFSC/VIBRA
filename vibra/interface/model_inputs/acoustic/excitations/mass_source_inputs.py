@@ -335,7 +335,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.comboBox_inherit_fluid_from.setDisabled(True)
             self.comboBox_inherit_fluid_from.addItem("Invalid selection")
 
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
 
             if print_message:
                 self.hide()
@@ -493,7 +493,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         tab_list = current_tab == MSTabType.LIST
 
         if self.last_tab == MSTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.lineEdit_selection_id.clear()
 
         if tab_list:
@@ -888,7 +888,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
