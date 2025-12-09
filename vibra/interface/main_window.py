@@ -1125,11 +1125,7 @@ class MainWindow(MainWindow_UI):
     def action_zoom_to_fit_callback(self):
         widget = self.render_widgets_stack.currentWidget()
         if isinstance(widget, CommonRenderWidget):
-            # the symbols are bugging the zoom, need to deactivate first
-            symbols_state = self.visualization_filter.symbols
-            self.action_hide_show_symbols_callback(False)
             widget.renderer.ResetCamera()
-            self.action_hide_show_symbols_callback(symbols_state)
             widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
