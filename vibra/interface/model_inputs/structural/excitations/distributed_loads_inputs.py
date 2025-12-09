@@ -752,7 +752,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.actions_to_finalize()
 
             app().main_window.selection.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -781,7 +781,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.actions_to_finalize()
 
             app().main_window.selection.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()

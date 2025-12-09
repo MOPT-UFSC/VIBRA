@@ -486,7 +486,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.lineEdit_node_coord_y.setText(f"{nearest_coords[1] : .6f}")
         self.lineEdit_node_coord_z.setText(f"{nearest_coords[2] : .6f}")
 
-        app().main_window.set_mesh_selection(nodes=[nearest_node])
+        app().main_window.selection.set_mesh_selection(nodes=[nearest_node])
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -970,7 +970,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         nodes = selected_items.pop("nodes") if "nodes" in selected_items else set()
 
-        app().main_window.set_mesh_selection(nodes=nodes)
+        app().main_window.selection.set_mesh_selection(nodes=nodes)
         app().main_window.selection.set_geometry_selection(**selected_items)
 
         self.tree_item_clicked = False

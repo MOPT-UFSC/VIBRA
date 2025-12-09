@@ -1024,7 +1024,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
-                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+                app().main_window.selection.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
                 app().main_window.action_mesh_workspace_callback()
@@ -1100,7 +1100,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.actions_to_finalize()
 
             app().main_window.selection.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -1142,7 +1142,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.actions_to_finalize()
 
             app().main_window.selection.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()

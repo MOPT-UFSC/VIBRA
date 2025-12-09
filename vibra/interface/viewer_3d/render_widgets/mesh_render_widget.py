@@ -224,7 +224,7 @@ class MeshRenderWidget(CommonRenderWidget):
         ctrl_pressed = modifiers & Qt.ControlModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        app().main_window.set_mesh_selection(
+        app().main_window.selection.set_mesh_selection(
             nodes=picked_nodes,
             faces=picked_faces,
             solids=picked_solids,
