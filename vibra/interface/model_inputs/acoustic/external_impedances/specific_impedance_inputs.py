@@ -130,7 +130,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.lineEdit_selection_id.setToolTip("")
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_specific_impedance()
             return
         

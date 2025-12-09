@@ -162,7 +162,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.lineEdit_molar_mass.setEnabled(True)
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == RCTabTypes.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation()
             return
 
