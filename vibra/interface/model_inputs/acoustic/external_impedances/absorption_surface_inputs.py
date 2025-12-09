@@ -8,7 +8,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.ui_generated.model.setup.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
-
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 import numpy as np
 
 error_title = "Error"
@@ -74,9 +74,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == 2
+        tab_list = current_tab == StandardTabType.LIST
 
-        if self.last_tab == 2 or tab_list:
+        if self.last_tab == StandardTabType.LIST or tab_list:
             app().main_window.clear_selection()
             self.clear_line_edit_selection_id()
 
@@ -130,7 +130,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.lineEdit_selection_id.setToolTip("")
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_absorption_surface()
             return
 
@@ -150,10 +150,10 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             return
 
         if "table_paths" in data.keys():
-            self.tabWidget_main.setCurrentIndex(1)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             self.lineEdit_table_path.setText(data.get("table_paths")[0])
         else:
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
     
     def verify_if_selected_surfaces_are_in_tree_widget_absorption_surface(self):
@@ -224,9 +224,10 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_data_assignment()
-        elif tab_index == 1:
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.tabular_data_assignment()
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
@@ -565,11 +566,11 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         for key in self.properties.surface_properties.keys():
             property, *args = key
             if property == "absorption_surface":
-                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

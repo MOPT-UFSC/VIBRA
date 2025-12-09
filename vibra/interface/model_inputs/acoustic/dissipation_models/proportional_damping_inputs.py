@@ -6,6 +6,7 @@ from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, SetupTabType
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -61,15 +62,15 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def attribution_type_callback(self):
 
         index = self.comboBox_attribution_type.currentIndex()
-        if index == 0:
+        if index == AttributionBodiesType.ALL_BODIES:
             self.lineEdit_selection_id.setText("All bodies")
-        elif index == 1:
+        elif index == AttributionBodiesType.SELECTED_BODIES:
             self.clear_line_edit_selection_id()
 
         self.lineEdit_selection_id.setEnabled(bool(index))
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             self.verify_if_selected_volumes_are_in_tree_widget_proportional_damping()
             return
 
@@ -78,8 +79,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         if volumes:
             volume_ids = [int(vol_id) for vol_id in volumes]
 
-            if self.comboBox_attribution_type.currentIndex() == 0:
-                self.comboBox_attribution_type.setCurrentIndex(1)
+            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
+                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
 
             text = ", ".join([str(i) for i in volume_ids])
             self.lineEdit_selection_id.setText(text)
@@ -196,11 +197,11 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         attribute_type = self.comboBox_attribution_type.currentIndex()
             
         volume_ids = list()
-        if attribute_type == 0:
+        if attribute_type == AttributionBodiesType.ALL_BODIES:
             if "volumes" in self.mesh.geometry_information.keys():
                 volume_ids = self.mesh.geometry_information["volumes"]
 
-        elif attribute_type == 1:
+        elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
             input_ids = self.lineEdit_selection_id.text()
             volume_ids, error_data = self.mesh.check_selected_ids(
                                                                     input_ids, 
@@ -284,7 +285,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def tab_event_callback(self):
         app().main_window.clear_selection()
 
-        list_tab = self.tabWidget_main.currentIndex() == 1
+        list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
 
         self.pushButton_confirm.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
@@ -362,11 +363,11 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
     def update_tabs_visibility(self):
         for (property, _) in self.properties.volume_properties.keys():
             if property == "proportional_damping":
-                self.tabWidget_main.setTabVisible(1, True)
+                self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
                 return
 
-        self.tabWidget_main.setTabVisible(1, False)
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
+        self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
 
     def actions_to_finalize(self):
         app().main_window.update_info_text()

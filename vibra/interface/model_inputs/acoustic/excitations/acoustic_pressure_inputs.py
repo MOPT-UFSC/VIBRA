@@ -8,6 +8,7 @@ from vibra.interface.model_inputs.data_filter.change_frequency_data_handler impo
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 
 import os
 import numpy as np
@@ -80,7 +81,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
             return
         
@@ -100,10 +101,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if isinstance(data, dict):
 
             if "table_paths" in data.keys():
-                self.tabWidget_main.setCurrentIndex(1)
+                self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
                 self.lineEdit_table_path.setText(data["table_paths"][0])
             else:
-                self.tabWidget_main.setCurrentIndex(0)
+                self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
     
@@ -169,9 +170,9 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == 2
+        tab_list = current_tab == StandardTabType.LIST
     
-        if self.last_tab == 2 or tab_list:
+        if self.last_tab == StandardTabType.LIST or tab_list:
             app().main_window.clear_selection()
 
             self.clear_line_edit_selection_id()
@@ -185,9 +186,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def attribute_callback(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.check_constant_values()
-        elif tab_index == 1:
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.check_table_values()
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
@@ -515,7 +517,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.tabWidget_main.setTabVisible(2, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(0)    
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)    
         self.tabWidget_main.setTabVisible(2, False)
 
     def on_click_item(self, item):

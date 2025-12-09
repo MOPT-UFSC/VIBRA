@@ -8,6 +8,7 @@ from vibra import app
 from vibra.interface.ui_generated.model.setup.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
@@ -84,7 +85,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.treeWidget_anechoic_termination.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             self.lineEdit_selection_id.setDisabled(True)
             self.pushButton_attribute.setDisabled(True)
         else:
@@ -92,7 +93,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.pushButton_attribute.setEnabled(True)
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
             return
 
@@ -332,11 +333,11 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             property, *args = key
             if property == "specific_impedance":
                 if "anechoic_termination" in data.keys():
-                    self.tabWidget_main.setTabVisible(1, True)
+                    self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
                     return
 
-        self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
+        self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
 
     def on_click_item(self, item):
         self.tree_item_clicked = True
@@ -393,7 +394,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_main.currentIndex() == 0:
+            if self.tabWidget_main.currentIndex() == SetupTabType.SETUP:
                 self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()

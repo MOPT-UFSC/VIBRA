@@ -13,6 +13,7 @@ from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JC
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
@@ -27,12 +28,17 @@ window_title_1 = "Error"
 window_title_2 = "Warning"
 
 
-class PMModels(IntEnum):
+class TabType(IntEnum):
     DELANY_BAZLEY = 0
     DELANY_BAZLEY_MIKI = 1
     JCA = 2
     JCAL = 3
+    EDIT = 4
+    LIST = 5
 
+class PMEditModelsTab(IntEnum):
+    DB_DBM = 0
+    JCA_JCAL = 1
 
 class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -127,10 +133,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
 
-        if current_tab == 5:
+        if current_tab == TabType.LIST:
             self.verify_if_selected_volumes_are_in_tree_widget_porous_material_model()
 
-        pm_tabs = current_tab <= 3
+        pm_tabs = current_tab <= TabType.JCAL
 
         if not pm_tabs:
             return
@@ -139,8 +145,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if volumes:
 
-            if self.comboBox_attribution_type.currentIndex() == 0:
-                self.comboBox_attribution_type.setCurrentIndex(1)
+            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
+                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
                 # return
 
             text = ", ".join([str(i) for i in volumes])
@@ -206,7 +212,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if pm_model == "Delany-Bazley":
 
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(TabType.DELANY_BAZLEY)
             self.doubleSpinBox_C1_DB.setValue(pm_data["C1"])
             self.doubleSpinBox_C2_DB.setValue(pm_data["C2"])
             self.doubleSpinBox_C3_DB.setValue(pm_data["C3"])
@@ -219,7 +225,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         elif pm_model == "Delany-Bazley-Miki":
 
-            self.tabWidget_main.setCurrentIndex(1)
+            self.tabWidget_main.setCurrentIndex(TabType.DELANY_BAZLEY_MIKI)
             self.doubleSpinBox_C1_DBM.setValue(pm_data["C1"])
             self.doubleSpinBox_C2_DBM.setValue(pm_data["C2"])
             self.doubleSpinBox_C3_DBM.setValue(pm_data["C3"])
@@ -232,7 +238,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         elif pm_model in ["Jhonson-Champoux-Allard", ""]:
 
-            self.tabWidget_main.setCurrentIndex(2)
+            self.tabWidget_main.setCurrentIndex(TabType.JCA)
             self.doubleSpinBox_porosity_JCA.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCA.setValue(pm_data["tortuosity"])
             self.lineEdit_thermal_characteristic_length_JCA.setText(str(pm_data["thermal_characteristic_length"]))
@@ -241,7 +247,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         elif pm_model == "Jhonson-Champoux-Allard-Lafarge":
 
-            self.tabWidget_main.setCurrentIndex(3)
+            self.tabWidget_main.setCurrentIndex(TabType.JCAL)
             self.doubleSpinBox_porosity_JCAL.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCAL.setValue(pm_data["tortuosity"])
             self.lineEdit_thermal_characteristic_length_JCAL.setText(str(pm_data["thermal_characteristic_length"]))
@@ -258,7 +264,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.plot_type_callback()
 
     def plot_type_callback(self):
-        if self.comboBox_plot_type.currentIndex() < 2:
+        if self.comboBox_plot_type.currentIndex() < PlotTypesTab.SURFACE_IMPEDANCE:
             self.doubleSpinBox_porous_material_depth.setDisabled(True)
         else:
             self.doubleSpinBox_porous_material_depth.setDisabled(False)
@@ -281,7 +287,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.actions_to_finalize()
 
         if len(self.map_model_id_to_model) > 0:
-            self.tabWidget_main.setCurrentIndex(5)
+            self.tabWidget_main.setCurrentIndex(TabType.LIST)
 
     def reset_callback(self):
 
@@ -315,8 +321,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def tab_event_porous_material_model(self):
         current_tab = self.tabWidget_main.currentIndex()
-        edit_or_list_tabs = [4, 5]
-        pm_tab = current_tab <= 3
+        edit_or_list_tabs = [TabType.EDIT, TabType.LIST]
+        pm_tab = current_tab <= TabType.JCAL
 
         if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
             app().main_window.clear_selection()
@@ -330,7 +336,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.last_tab = current_tab
 
         if pm_tab:
-            if self.comboBox_attribution_type.currentIndex() == 0:
+            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
                 return
 
             self.lineEdit_selection_id.setDisabled(False)
@@ -421,10 +427,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                                                   
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
-        if index == 0:
+        if index == AttributionBodiesType.ALL_BODIES:
             self.lineEdit_selection_id.setText("All bodies")
             self.lineEdit_selection_id.setEnabled(False)
-        elif index == 1:
+        elif index == AttributionBodiesType.SELECTED_BODIES:
             self.clear_line_edit_selection_id()
             self.lineEdit_selection_id.setEnabled(True)
         # self.comboBox_attribution_type.setCurrentIndex(index)
@@ -522,16 +528,16 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 jca_counter += 1
 
         if there_is_jca_model:
-            self.tabWidget_models.setTabVisible(1, True)
+            self.tabWidget_models.setTabVisible(PMEditModelsTab.JCA_JCAL, True)
         
         if there_is_delany_model:
-            self.tabWidget_models.setTabVisible(0, True)
-            self.tabWidget_models.setCurrentIndex(0)
+            self.tabWidget_models.setTabVisible(PMEditModelsTab.DB_DBM, True)
+            self.tabWidget_models.setCurrentIndex(PMEditModelsTab.DB_DBM)
 
         if there_is_jca_model or there_is_delany_model:
-            self.tabWidget_main.setTabVisible(4, True)
-            self.tabWidget_main.setTabVisible(5, True)
-            self.tabWidget_main.setCurrentIndex(4)
+            self.tabWidget_main.setTabVisible(TabType.EDIT, True)
+            self.tabWidget_main.setTabVisible(TabType.LIST, True)
+            self.tabWidget_main.setCurrentIndex(TabType.EDIT)
         
         self.update_tableWidget_DBM_items()
         self.update_tableWidget_JCAL_items()
@@ -567,11 +573,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.tableWidget_JCAL.setRowCount(7)
         self.tableWidget_JCAL.setColumnCount(jca_count)
 
-        self.tabWidget_models.setTabVisible(0, False)
-        self.tabWidget_models.setTabVisible(1, False)
+        self.tabWidget_models.setTabVisible(PMEditModelsTab.DB_DBM, False)
+        self.tabWidget_models.setTabVisible(PMEditModelsTab.JCA_JCAL, False)
 
-        self.tabWidget_main.setTabVisible(4, False)
-        self.tabWidget_main.setTabVisible(5, False)
+        self.tabWidget_main.setTabVisible(TabType.EDIT, False)
+        self.tabWidget_main.setTabVisible(TabType.LIST, False)
     
     def update_tableWidget_DBM_items(self):
         for i in range(self.tableWidget_DBM.rowCount()):
@@ -668,26 +674,26 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def attribute_callback(self):
 
         index = self.tabWidget_main.currentIndex()
-        if index == PMModels.DELANY_BAZLEY:
+        if index == TabType.DELANY_BAZLEY:
             model_data = self.get_Delany_Bazley_model_data()
-        elif index == PMModels.DELANY_BAZLEY_MIKI:
+        elif index == TabType.DELANY_BAZLEY_MIKI:
             model_data = self.get_Delany_Bazley_Miki_model_data()
-        elif index == PMModels.JCA:
+        elif index == TabType.JCA:
             model_data = self.get_Jhonson_Champoux_Allard_model_data()
-        elif index == PMModels.JCAL:
+        elif index == TabType.JCAL:
             model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
         else:
             return
 
         attribute_type = self.comboBox_attribution_type.currentIndex()
-        if attribute_type in [0, 1]:
+        if attribute_type in [AttributionBodiesType.ALL_BODIES, AttributionBodiesType.SELECTED_BODIES]:
             
             volume_ids = list()
-            if attribute_type == 0:
+            if attribute_type == AttributionBodiesType.ALL_BODIES:
                 if "volumes" in self.mesh.geometry_information.keys():
                     volume_ids = self.mesh.geometry_information["volumes"]
 
-            elif attribute_type == 1:
+            elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
 
                 input_ids = self.lineEdit_selection_id.text()
                 volume_ids, error_data = self.mesh.check_selected_ids(
@@ -799,19 +805,19 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         tab_index = self.tabWidget_main.currentIndex()
 
-        if tab_index == PMModels.DELANY_BAZLEY:
+        if tab_index == TabType.DELANY_BAZLEY:
             pm_data = self.get_Delany_Bazley_model_data()
             rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
+        elif tab_index == TabType.DELANY_BAZLEY_MIKI:
             pm_data = self.get_Delany_Bazley_Miki_model_data()
             rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == PMModels.JCA:
+        elif tab_index == TabType.JCA:
             pm_data = self.get_Jhonson_Champoux_Allard_model_data()
             rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == PMModels.JCAL:
+        elif tab_index == TabType.JCAL:
             pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
             rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data.get_data())
 
@@ -824,23 +830,26 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_porous_material_model(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == PMModels.DELANY_BAZLEY:
+        if tab_index == TabType.DELANY_BAZLEY:
             return "Delany-Bazley"
-        elif tab_index == PMModels.DELANY_BAZLEY_MIKI:
+        elif tab_index == TabType.DELANY_BAZLEY_MIKI:
             return "Delany-Bazley-Miki"
-        elif tab_index == PMModels.JCA:
+        elif tab_index == TabType.JCA:
             return "Jhonson-Champoux-Allard"
-        elif tab_index == PMModels.JCAL:
+        elif tab_index == TabType.JCAL:
             return "Jhonson-Champoux-Allard-Lafarge"
 
     def plot_data_callback(self):
         plot_key = self.comboBox_plot_type.currentIndex()
-        if plot_key == 0:
+        if plot_key == PlotTypesTab.FLUID_DENSITY:
             self.plot_effective_fluid_density()
-        elif plot_key == 1:
+
+        elif plot_key == PlotTypesTab.SPEED_OF_SOUND:
             self.plot_effective_speed_of_sound()
-        elif plot_key == 2:
+
+        elif plot_key == PlotTypesTab.SURFACE_IMPEDANCE:
             self.plot_surface_impedance()
+
         else:
             self.plot_absorption_coefficient()
 

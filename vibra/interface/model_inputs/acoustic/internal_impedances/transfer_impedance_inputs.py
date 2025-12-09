@@ -10,6 +10,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 
 from copy import deepcopy
 
@@ -100,11 +101,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
 
-        if current_tab == 2:
+        if current_tab == StandardTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance()
             return
         
-        if current_tab != 0:
+        if current_tab != StandardTabType.CONSTANT_DATA:
             return
 
         surfaces = app().main_window.selected_geometry_surfaces
@@ -124,17 +125,17 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def load_property_data(self, pp_data: dict):
 
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             return
         
         if not isinstance(pp_data, dict):
             return
         
         if "table_paths" in pp_data.keys():
-            self.tabWidget_main.setCurrentIndex(1)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             self.lineEdit_table_path.setText(pp_data["table_paths"][0])
         else:
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             self.lineEdit_real_value.setText(str(pp_data["real_values"][0]))
             self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
         
@@ -216,7 +217,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def attribute_callback(self):
 
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 2:
+        if tab_index == StandardTabType.LIST:
             return
 
         surface_ids = self.check_selected_surfaces()
@@ -225,10 +226,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.remove_conflicting_excitations(surface_ids)
 
-        if tab_index == 0:
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.process_assignment_for_constant_values(surface_ids)
 
-        elif tab_index == 1:
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.process_assignment_for_table_values(surface_ids)
 
         self.lineEdit_selection_id.setText("")
@@ -384,9 +385,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == 2
+        tab_list = current_tab == StandardTabType.LIST
 
-        if self.last_tab == 2 or tab_list:
+        if self.last_tab == StandardTabType.LIST or tab_list:
             app().main_window.clear_selection()
             self.clear_line_edit_selection_id()
 
@@ -502,11 +503,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         for key, _ in self.properties.surface_properties.items():
             property, _ = key
             if property == "transfer_impedance":
-                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
 
     def load_user_defined_transfer_impedance(self):
         self.imported_values = self.load_table(self.lineEdit_user_defined_transfer_impedance_path)

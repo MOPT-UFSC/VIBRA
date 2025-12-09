@@ -13,15 +13,14 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
 from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
+from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
 
 import warnings
 import numpy as np
 from enum import IntEnum
 from collections import defaultdict
 
-
 error_title = "Error"
-
 
 class TabType(IntEnum):
     RECTANGULAR = 0
@@ -29,17 +28,14 @@ class TabType(IntEnum):
     EDIT = 2
     LIST = 3
 
-
-class AttributionType(IntEnum):
-    ALL_BODIES = 0
-    SELECTED_BODIES = 1
-
-
 class SectionType(IntEnum):
     RECTANGULAR = 0
     QUADRANGULAR = 1
     NARROW_SLIT = 2
 
+class FormulationModelTab(IntEnum):
+    STINSON_MODEL = 0
+    LRF_MODEL = 1
 
 class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -117,7 +113,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.plot_type_callback()
 
     def plot_type_callback(self):
-        if self.comboBox_plot_type.currentIndex() < 2:
+        if self.comboBox_plot_type.currentIndex() < PlotTypesTab.SURFACE_IMPEDANCE:
             self.doubleSpinBox_evaluated_depth.setDisabled(True)
         else:
             self.doubleSpinBox_evaluated_depth.setDisabled(False)
@@ -125,7 +121,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def update_rectangular_duct_area(self):
         try:
             height = float(self.lineEdit_height_rectangular.text())
-            if self.comboBox_section_type.currentIndex() == 1:
+            if self.comboBox_section_type.currentIndex() == SectionType.QUADRANGULAR:
                 self.lineEdit_width_rectangular.setText(f"{round(height, 6)}")
             width = float(self.lineEdit_width_rectangular.text())
             area = width * height
@@ -211,7 +207,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.last_tab = current_tab
 
         if current_tab == TabType.EDIT:
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
             self.comboBox_attribution_type.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
             self.frame_fluid_info.setDisabled(True)
@@ -230,7 +226,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.frame_plot_buttons.setDisabled(False)
 
             self.comboBox_attribution_type.setDisabled(False)
-            if self.comboBox_attribution_type.currentIndex() == 0:
+            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
                 return
 
             self.lineEdit_selection_id.setDisabled(False)
@@ -279,9 +275,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         section_index = self.comboBox_section_type.currentIndex()
 
-        if section_index in [1, 2]:
+        if section_index in [SectionType.QUADRANGULAR, SectionType.NARROW_SLIT]:
             self.lineEdit_width_rectangular.setDisabled(True)
-            if section_index == 2:
+            if section_index == SectionType.NARROW_SLIT:
                 self.spinBox_number_of_terms.setDisabled(True)
                 self.lineEdit_width_rectangular.setText("2*a >> 2*b")
             else:
@@ -299,10 +295,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def attribution_type_callback(self):
 
         attribution_type = self.comboBox_attribution_type.currentIndex()
-        if attribution_type == AttributionType.ALL_BODIES:
+        if attribution_type == AttributionBodiesType.ALL_BODIES:
             self.lineEdit_selection_id.setText("All bodies")
 
-        elif attribution_type == AttributionType.SELECTED_BODIES:
+        elif attribution_type == AttributionBodiesType.SELECTED_BODIES:
             volumes = app().main_window.selected_geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
@@ -411,11 +407,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.tableWidget_circular.setRowCount(4)
         self.tableWidget_circular.setColumnCount(circular_duct_counter)
 
-        self.tabWidget_main.setTabVisible(2, False)
-        self.tabWidget_main.setTabVisible(3, False)
+        self.tabWidget_main.setTabVisible(TabType.EDIT, False)
+        self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
-        self.tabWidget_models.setTabVisible(0, False)
-        self.tabWidget_models.setTabVisible(1, False)
+        self.tabWidget_models.setTabVisible(TabType.RECTANGULAR, False)
+        self.tabWidget_models.setTabVisible(TabType.CIRCULAR, False)
     
     def update_tableWidget_rectangular_items(self):
         for i in range(self.tableWidget_rectangular.rowCount()):
@@ -496,15 +492,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 is_there_circular_model = True
             
             if is_there_rectangular_model or is_there_circular_model:
-                self.tabWidget_main.setTabVisible(2, True)
-                self.tabWidget_main.setTabVisible(3, True)
-                self.tabWidget_main.setCurrentIndex(2)
+                self.tabWidget_main.setTabVisible(TabType.EDIT, True)
+                self.tabWidget_main.setTabVisible(TabType.LIST, True)
+                self.tabWidget_main.setCurrentIndex(TabType.EDIT)
             
             if is_there_rectangular_model:
-                self.tabWidget_models.setTabVisible(0, True)
+                self.tabWidget_models.setTabVisible(TabType.RECTANGULAR, True)
             
             if is_there_circular_model:
-                self.tabWidget_models.setTabVisible(1, True)
+                self.tabWidget_models.setTabVisible(TabType.CIRCULAR, True)
 
     def load_info(self):
         self.map_existing_viscous_thermal_loss_models()
@@ -523,11 +519,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         for key, _ in self.properties.volume_properties.items():
             property, _ = key
             if property == "viscous_thermal_model":
-                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(TabType.EDIT, True)
                 return
 
-        self.tabWidget_main.setTabVisible(2, False)
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(TabType.EDIT, False)
+        self.tabWidget_main.setCurrentIndex(TabType.RECTANGULAR)
 
     def geometry_selection_callback(self):
         if self.tabWidget_main.currentIndex() == TabType.LIST:
@@ -539,8 +535,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if volumes:
             text = ", ".join([str(i) for i in volumes])
             self.lineEdit_selection_id.setText(text)
-            if self.comboBox_attribution_type.currentIndex() != AttributionType.SELECTED_BODIES:
-                self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
+            if self.comboBox_attribution_type.currentIndex() != AttributionBodiesType.SELECTED_BODIES:
+                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
     
     def verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model(self):
         if self.tree_item_clicked:
@@ -632,7 +628,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             lineEdit.setFocus()
             return dict()
         
-        if self.comboBox_formulation.currentIndex() == 0:
+        if self.comboBox_formulation.currentIndex() == FormulationModelTab.STINSON_MODEL:
             formulation = "Stinson model"
         else:
             formulation = "LRF model"
@@ -653,9 +649,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         assignment_type = self.comboBox_attribution_type.currentIndex()
 
-        if assignment_type in [AttributionType.ALL_BODIES, AttributionType.SELECTED_BODIES]:
+        if assignment_type in [AttributionBodiesType.ALL_BODIES, AttributionBodiesType.SELECTED_BODIES]:
             volume_ids = list()
-            if assignment_type == AttributionType.ALL_BODIES:
+            if assignment_type == AttributionBodiesType.ALL_BODIES:
                 self.models = list()
 
                 if "volumes" in self.mesh.geometry_information.keys():
@@ -782,15 +778,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             tv_data = self.get_circular_duct_inputs()
 
         if tv_data:
-            if tab_index == 0:
-                if self.comboBox_section_type.currentIndex() in [0, 1]:
+            if tab_index == TabType.RECTANGULAR:
+                if self.comboBox_section_type.currentIndex() in [AttributionBodiesType.ALL_BODIES, AttributionBodiesType.SELECTED_BODIES]:
                     rho_eff, C_eff = model.get_rectangular_section_effective_properties(omega, fluid, tv_data)
 
                 else:
                     rho_eff, C_eff = model.get_narrow_slit_section_effective_properties(omega, fluid, tv_data)
 
-            elif tab_index == 1:
-                if self.comboBox_formulation.currentIndex() == 0:
+            elif tab_index == TabType.CIRCULAR:
+                if self.comboBox_formulation.currentIndex() == FormulationModelTab.STINSON_MODEL:
                     rho_eff, C_eff = model.get_circular_section_effective_properties_for_Stinson_model(omega, fluid, tv_data)
                 else:
                     rho_eff, C_eff = model.get_circular_section_effective_properties_for_LRF_model(omega, fluid, tv_data)
@@ -804,25 +800,25 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def get_viscous_thermal_loss_model(self):
         tab_index = self.tabWidget_main.currentIndex()
         
-        if tab_index == 0:
+        if tab_index == TabType.RECTANGULAR:
             section_index = self.comboBox_section_type.currentIndex()
-            if section_index == 0:
+            if section_index == SectionType.RECTANGULAR:
                 return "Rectangular duct"
-            elif section_index == 1:
+            elif section_index == SectionType.QUADRANGULAR:
                 return "Quadrangular duct"
             else:
                 return "Narrow slit duct"
 
-        elif tab_index == 1:
+        elif tab_index == TabType.CIRCULAR:
             return "Circular duct"
 
     def plot_data_callback(self):
         plot_key = self.comboBox_plot_type.currentIndex()
-        if plot_key == 0:
+        if plot_key == PlotTypesTab.FLUID_DENSITY:
             self.plot_effective_fluid_density()
-        elif plot_key == 1:
+        elif plot_key == PlotTypesTab.SPEED_OF_SOUND:
             self.plot_effective_speed_of_sound()
-        elif plot_key == 2:
+        elif plot_key == PlotTypesTab.SURFACE_IMPEDANCE:
             self.plot_surface_impedance()
         else:
             self.plot_absorption_coefficient()
