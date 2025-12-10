@@ -1618,9 +1618,9 @@ class Mesh:
         """
         This method returns a list containing the nodes from collapsed elements.
         """
-        nodes_from_collapsed_1d_elements = self.lines_connectivity[np.array(list(self.collapsed_1d_elements)), 4:].flatten()
-        nodes_from_collapsed_2d_elements = self.faces_connectivity[np.array(list(self.collapsed_2d_elements)), 4:].flatten()
-        nodes_from_collapsed_3d_elements = self.solids_connectivity[np.array(list(self.collapsed_3d_elements)), 4:].flatten()
+        nodes_from_collapsed_1d_elements = self.lines_connectivity[np.array(list(self.collapsed_1d_elements), dtype=int), 4:].flatten()
+        nodes_from_collapsed_2d_elements = self.faces_connectivity[np.array(list(self.collapsed_2d_elements), dtype=int), 4:].flatten()
+        nodes_from_collapsed_3d_elements = self.solids_connectivity[np.array(list(self.collapsed_3d_elements), dtype = int), 4:].flatten()
 
         nodes_from_collapsed_elements = np.concatenate([
             nodes_from_collapsed_1d_elements, 
