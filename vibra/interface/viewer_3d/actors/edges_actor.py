@@ -73,7 +73,7 @@ class EdgesActor(vtkActor):
             app().project.model.mesh.get_list_of_nodes_from_collapsed_elements()
         )
 
-        edges_error_color = color_names.GRAY_2
+        edges_error_color = color_names.GRAY_3
 
         if len(disconnected_nodes) > 0 or len(nodes_collapsed_elements) > 0:
             if self.data is not None:
