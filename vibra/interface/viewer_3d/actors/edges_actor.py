@@ -3,6 +3,8 @@ from vtkmodules.vtkFiltersCore import vtkExtractEdges
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
+from molde.colors import Color, color_names
+
 from vibra import app
 
 
@@ -63,3 +65,37 @@ class EdgesActor(vtkActor):
         self.GetProperty().SetColor(r, g, b)
         self.GetProperty().SetRepresentationToWireframe()
         self.GetProperty().SetLineWidth(edges_thickness)
+        self.paint_edges_when_mesh_has_error()
+
+    def paint_edges_when_mesh_has_error(self):
+        disconnected_nodes = app().project.model.mesh.get_list_of_disconnected_nodes()
+        nodes_collapsed_elements = (
+            app().project.model.mesh.get_list_of_nodes_from_collapsed_elements()
+        )
+
+        edges_error_color = color_names.GRAY_2
+
+        if len(disconnected_nodes) > 0 or len(nodes_collapsed_elements) > 0:
+            if self.data is not None:
+                num_edges = self.data.GetNumberOfCells()
+                all_edges = tuple(range(num_edges))
+                self.paint_edges(edges_error_color, all_edges)
+
+    def paint_edges(self, color: Color, edges: tuple[int]):
+        self.paint_cells(color, edges)
+
+    def paint_cells(self, color: Color, cells: tuple[int]):
+        if self.data is None:
+            print("data is none")
+            return
+
+        color = color.to_rgba()
+
+        cell_colors = self.data.GetCellData().GetScalars()
+        for i in cells:
+            cell_colors.SetTuple(i, color)
+
+        self.data.Modified()
+        self.GetMapper().SetScalarModeToUseCellData()
+        self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
+        self.GetMapper().ScalarVisibilityOn()
