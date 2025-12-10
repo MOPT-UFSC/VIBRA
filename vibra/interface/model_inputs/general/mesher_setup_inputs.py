@@ -468,6 +468,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             app().file.remove_mesh_quality_data_from_project_file()
 
+        # write the mesh error data in the error data json file
+        app().file.write_mesh_error_data_in_file()
+
         self.cache_refinement_data()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()

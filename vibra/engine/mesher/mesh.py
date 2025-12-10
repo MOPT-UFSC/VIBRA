@@ -1624,7 +1624,7 @@ class Mesh:
     
     def get_list_of_nodes_from_collapsed_elements(self):
         """
-        This method returns the related to the collapsed elements.
+        This method returns a list containing the nodes from collapsed elements.
         """
         nodes_from_collapsed_1d_elements = self.lines_connectivity[np.array(list(self.collapsed_1d_elements)), 4:].flatten()
         nodes_from_collapsed_2d_elements = self.faces_connectivity[np.array(list(self.collapsed_2d_elements)), 4:].flatten()
@@ -1640,6 +1640,23 @@ class Mesh:
 
         return nodes_from_collapsed_elements
 
+    def get_collapsed_elements_data(self) -> dict:
+        """
+        This method returns the collapsed elements data in form of a dictionary.
+        """
+        collapsed_elements_data = dict()
+        collapsed_1d_elements = list(self.collapsed_1d_elements)
+        collapsed_2d_elements = list(self.collapsed_2d_elements)
+        collapsed_3d_elements = list(self.collapsed_3d_elements)
+
+        if collapsed_1d_elements or collapsed_2d_elements or collapsed_3d_elements:
+            collapsed_elements_data = {
+                "collpased_1d_elements" : collapsed_1d_elements,
+                "collpased_2d_elements" : collapsed_2d_elements,
+                "collpased_3d_elements" : collapsed_3d_elements,
+            }
+
+        return collapsed_elements_data
 
     def get_face_elements_connected_to_nodes(
         self, node_ids: list[int] | np.ndarray, surface_id: int | None = None

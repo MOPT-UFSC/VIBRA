@@ -39,6 +39,7 @@ class ProjectFile:
         self.model_properties_filepath = self.path / "model_properties.json"
         self.mesh_data_filepath = self.path / "mesh_data.hdf5"
         self.mesh_quality_data_filepath = self.path / "mesh_quality_data.json"
+        self.errors_data_filepath = self.path / "errors_data.json"
         self.imported_table_data_filepath = self.path / "imported_tables_data.hdf5"
         self.results_data_filepath = self.path / "results_data.hdf5"
         self.thumbnail_filepath = self.path / "thumbnail.png"
@@ -335,7 +336,6 @@ class ProjectFile:
             return dict()
 
         return mesh_data
-
 
     def write_analysis_setup_in_file(self, analysis_setup: dict):
         project_setup = read_json(self.project_setup_filepath)
@@ -720,6 +720,39 @@ class ProjectFile:
     def extract_project(self, path: Path):
         with zipfile.ZipFile(path, 'r') as zipf:
             zipf.extractall(path=self.path)
+
+    def read_errors_data_from_file(self):
+        errors_data = read_json(self.errors_data_filepath)
+        if errors_data is None:
+            return dict()
+
+        return errors_data
+
+    def read_mesh_error_data_from_file(self):
+        errors_data = self.read_errors_data_from_file()
+        return errors_data.get("mesh_error")  
+
+    def write_mesh_error_data_in_file(self):
+
+        mesh_error = dict()
+        mesh = app().project.model.mesh
+        errors_data = self.read_errors_data_from_file()
+
+        disconnected_nodes_data = mesh.disconnected_nodes_data
+        if disconnected_nodes_data:
+            mesh_error["disconnected_nodes_data"] = disconnected_nodes_data
+
+        collapsed_elements_data = mesh.get_collapsed_elements_data()
+        if collapsed_elements_data:
+            mesh_error["collapsed_elements_data"] = collapsed_elements_data
+
+        if not mesh_error:
+            return
+
+        errors_data["mesh_error"] = mesh_error
+
+        write_json(self.errors_data_filepath, errors_data)
+        app().main_window.project_data_modified = True
 
     def backward_compatibility_for_fluids_data_file(self):
         path = deepcopy(str(self.fluid_library_filepath))
