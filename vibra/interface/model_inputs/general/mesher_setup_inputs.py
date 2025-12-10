@@ -446,7 +446,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
+        collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
         run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
@@ -468,7 +468,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             app().file.remove_mesh_quality_data_from_project_file()
 
-        # write the mesh error data in the error data json file
+        # remove and write the mesh error data in the error data json file
+        app().file.remove_mesh_error_data_from_project_file()
         app().file.write_mesh_error_data_in_file()
 
         self.cache_refinement_data()
@@ -501,8 +502,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             PrintMessageInput([error_title, title, message])
 
-        collapsed_elements = self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements
-        if collapsed_elements:
+        if self.mesh.collapsed_elements_data:
 
             message = ""
             title = "The generated mesh contains collapsed elements"

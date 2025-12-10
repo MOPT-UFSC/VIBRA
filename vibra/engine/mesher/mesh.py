@@ -85,6 +85,7 @@ class Mesh:
         self.mesh_quality_data = dict()
 
         self.disconnected_nodes_data = dict()
+        self.collapsed_elements_data = dict()
         self.collapsed_3d_elements = set()
         self.collapsed_2d_elements = set()
         self.collapsed_1d_elements = set()
@@ -132,8 +133,6 @@ class Mesh:
         self.cache_points_from_line = dict()
 
         self.error_data = dict()
-        self.disconnected_nodes_exists = False
-        self.collapsed_elements_exists = False
 
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
@@ -903,6 +902,7 @@ class Mesh:
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
         self.disconnected_nodes_data.clear()
+        self.collapsed_elements_data.clear()
         self.collapsed_1d_elements.clear()
         self.collapsed_2d_elements.clear()
         self.collapsed_3d_elements.clear()
@@ -1105,18 +1105,10 @@ class Mesh:
 
         logging.info("Post-processing mesh... [80/100]")
         self.disconnected_nodes_data = self.process_disconnected_nodes_criterion()
-        if self.disconnected_nodes_data:
-            self.disconnected_nodes_exists = True
-        else:
-            self.disconnected_nodes_exists = False
 
         logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
-        if self.collapsed_1d_elements or self.collapsed_2d_elements or self.collapsed_3d_elements:
-            self.collapsed_elements_exists = True
-        else:
-            self.collapsed_elements_exists = False
-
+        self.collapsed_elements_data = self.get_collapsed_elements_data()
 
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)

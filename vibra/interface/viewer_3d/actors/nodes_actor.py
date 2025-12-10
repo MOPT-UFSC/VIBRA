@@ -84,13 +84,15 @@ class NodesActor(vtkActor):
         else:
             self.set_color(Color(0, 0, 0, 0))
 
-        if self.mesh.disconnected_nodes_exists:
-            visualization.disconected_nodes = True
-            self.paint_nodes(disconected_nodes_color, self.mesh.get_list_of_disconnected_nodes())
+        disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        nodes_collapsed_elements = self.mesh.get_list_of_nodes_from_collapsed_elements()
 
-        if self.mesh.collapsed_elements_exists:
+        if disconnected_nodes:
+            visualization.disconected_nodes = True
+            self.paint_nodes(disconected_nodes_color, disconnected_nodes)
+
+        if nodes_collapsed_elements.size:
             visualization.collapsed_element_nodes = True
-            nodes_collapsed_elements = self.mesh.get_list_of_nodes_from_collapsed_elements()
             self.paint_nodes(collapsed_element_nodes_color, nodes_collapsed_elements)
 
     def set_color(self, color: Color):

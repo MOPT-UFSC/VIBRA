@@ -186,25 +186,14 @@ class MeshRenderWidget(CommonRenderWidget):
         # We hide them painting the cells as transparent.
         self.nodes_actor.SetVisibility(True)
 
+        mesh = app().project.model.mesh
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+
         visualization = app().main_window.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(
-            visualization.faces
-            and not (
-                app().project.model.mesh.collapsed_elements_exists
-                or app().project.model.mesh.disconnected_nodes_exists
-            )
-        )
-        self.solids_actor.SetVisibility(
-            visualization.solids
-            and not (
-                app().project.model.mesh.collapsed_elements_exists
-                or app().project.model.mesh.disconnected_nodes_exists
-            )
-        )
-        self.ghost_actor.SetVisibility(
-            visualization.ghost and app().main_window.has_hidden_part()
-        )
+        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
+        self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
+        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if app().main_window.distinguished_solids:
             self.switch_to_solids_actor()
@@ -295,11 +284,12 @@ class MeshRenderWidget(CommonRenderWidget):
         self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4), faces)
         self.solids_actor.paint_solids(selection_faces_color, solids)
         self.edges_actor.configure_appearance()
-        if (
-            app().project.model.mesh.collapsed_elements_exists
-            or app().project.model.mesh.disconnected_nodes_exists
-        ):
+
+        mesh = app().project.model.mesh
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        if mesh_error:
             self.add_problematic_mesh_legend()
+
         self.update()
 
     def clear_selection_spheres(self):
@@ -457,13 +447,10 @@ class MeshRenderWidget(CommonRenderWidget):
     def add_problematic_mesh_legend(self):
         legend_actor = LegendActor()
 
-        disconnected_nodes = app().project.model.mesh.disconnected_nodes_exists
-        collapsed_elements = app().project.model.mesh.collapsed_elements_exists
-
-        if disconnected_nodes:
+        if app().project.model.mesh.disconnected_nodes_data:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
 
-        if collapsed_elements:
+        if app().project.model.mesh.collapsed_elements_data:
             legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
 
         self.add_actors(legend_actor)
