@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -176,10 +177,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             real_values = [np.real(acoustic_pressure)]
             imag_values = [np.imag(acoustic_pressure)]
 
-            data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    }
+            data = AcousticPressure(real_values, imag_values)
 
             for surface_id in surface_ids:
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
@@ -314,11 +312,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
                 table_path = self.lineEdit_table_path.text()
 
-                data = {
-                        "table_names" : [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [complex_values],
-                        }
+                data = AcousticPressureTable([table_name], [table_path], [complex_values])
 
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
@@ -415,10 +409,12 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
+                if isinstance(data, AcousticPressureTable):
+                    return
+ 
                 if "table_names" in data.keys():
                     return
 
@@ -457,12 +453,13 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "acoustic_pressure":
-
-                if "table_names" in data.keys():
+                if isinstance(data, AcousticPressureTable):
                     str_value = "Table of values"
+
                 else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
+                    data: AcousticPressure
+                    real_values = np.array(data.real)
+                    imag_values = np.array(data.imaginary)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
 

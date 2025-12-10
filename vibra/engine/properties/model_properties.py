@@ -1,5 +1,6 @@
 from typing import Callable, Optional
 
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
@@ -96,7 +97,7 @@ class ModelProperties:
     def _set_property(
                       self, 
                       property: str, 
-                      data: dict | Fluid | Material, 
+                      data: dict | Fluid | Material | AcousticPressure | AcousticPressureTable, 
                       node: int | None = None, 
                       element: int | None = None, 
                       point: int | None = None, 
@@ -110,8 +111,27 @@ class ModelProperties:
         if any of these exists. Otherwise sets the property as global.
 
         """
+        if isinstance(data, AcousticPressure):
+            tables_values = list()
+            group_label = self.get_data_group_label(property)
 
-        if isinstance(data, dict):
+            for i, a in enumerate(data.real):
+                if a is None:
+                    tables_values.append(None)
+
+                else:
+                    b = data.imaginary[i]  
+                    if b is None:
+                        tables_values.append(a)
+                    else:
+                        tables_values.append(a + 1j*b)
+
+            data.values = tables_values
+
+        elif isinstance(data, AcousticPressureTable):
+            ... # don't need to do anything.
+
+        elif isinstance(data, dict):
 
             tables_values = list()
             group_label = self.get_data_group_label(property)

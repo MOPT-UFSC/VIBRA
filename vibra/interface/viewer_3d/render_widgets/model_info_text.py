@@ -1,6 +1,7 @@
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.utils import are_there_values_different_from_zero
@@ -368,7 +369,8 @@ def acoustic_boundary_conditions_info_text():
         return text
 
     if acoustic_pressure is not None:
-        values = acoustic_pressure["values"][0]
+        acoustic_pressure: AcousticPressure | AcousticPressureTable
+        values = acoustic_pressure.values
         text += acoustic_format("Acoustic pressure", values, "P", "Pa")
 
     if surface_velocity is not None:
