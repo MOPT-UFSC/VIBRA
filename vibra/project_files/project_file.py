@@ -700,6 +700,17 @@ class ProjectFile:
     def remove_mesh_data_from_project_file(self):
         self.mesh_data_filepath.unlink(missing_ok=True)
 
+    def remove_mesh_error_data_from_project_file(self):
+        errors_data = self.read_errors_data_from_file()
+        if "mesh_error" in errors_data.keys():
+            errors_data.pop("mesh_error")
+            write_json(self.errors_data_filepath, errors_data)
+
+        if not errors_data:
+            self.errors_data_filepath.unlink(missing_ok=True)
+
+        app().main_window.project_data_modified = True
+
     def remove_mesh_quality_data_from_project_file(self):
         self.mesh_quality_data_filepath.unlink(missing_ok=True)
 
@@ -733,18 +744,15 @@ class ProjectFile:
         return errors_data.get("mesh_error")  
 
     def write_mesh_error_data_in_file(self):
-
         mesh_error = dict()
         mesh = app().project.model.mesh
         errors_data = self.read_errors_data_from_file()
 
-        disconnected_nodes_data = mesh.disconnected_nodes_data
-        if disconnected_nodes_data:
-            mesh_error["disconnected_nodes_data"] = disconnected_nodes_data
+        if mesh.disconnected_nodes_data:
+            mesh_error["disconnected_nodes_data"] = mesh.disconnected_nodes_data
 
-        collapsed_elements_data = mesh.get_collapsed_elements_data()
-        if collapsed_elements_data:
-            mesh_error["collapsed_elements_data"] = collapsed_elements_data
+        if mesh.collapsed_elements_data:
+            mesh_error["collapsed_elements_data"] = mesh.collapsed_elements_data
 
         if not mesh_error:
             return
