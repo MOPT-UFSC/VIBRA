@@ -86,7 +86,6 @@ class EdgesActor(vtkActor):
 
     def paint_cells(self, color: Color, cells: tuple[int]):
         if self.data is None:
-            print("data is none")
             return
 
         color = color.to_rgba()
