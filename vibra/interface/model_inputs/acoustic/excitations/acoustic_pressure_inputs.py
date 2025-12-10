@@ -412,7 +412,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if isinstance(data, AcousticPressureTable):
+                if isinstance(data, AcousticPressureTable | AcousticPressure):
                     return
  
                 if "table_names" in data.keys():
