@@ -40,6 +40,42 @@ def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data
 
     return time, x_t
 
+
+def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool=False):
+    """
+    If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
+    """
+
+    rows, N_f = Xf_data.shape
+
+    # reinsert the DC component
+    if not dc_included:
+        N_f += 1
+
+    # create the auxilar vector Xf
+    Xf = np.zeros((rows, N_f), dtype=complex)
+
+    # adjust the one-sided spectrum scale
+    Xf[:, 1:] = Xf_data / 2
+
+    # process the sampling frequency and time increment
+    f_max = np.max(frequencies)
+    f_s = 2 * f_max
+    dt = 1 / f_s
+
+    # process the ifft from signal Xf
+    x_t = np.fft.irfft(Xf, axis=0)# * (2*(N-1))
+    N_t = x_t[0, :].size
+
+    # corrects the signal amplitude
+    x_t *= N_t
+
+    # create the time vector
+    time_vector = np.arange(N_t, dtype=float) * dt
+
+    return time_vector, x_t
+
+
 def extend_signal(x_data: np.ndarray, N_rep: int):
     return np.tile(x_data[:-1], N_rep)
 
