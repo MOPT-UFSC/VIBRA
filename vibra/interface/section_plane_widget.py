@@ -48,6 +48,8 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.pushButton_reset.clicked.connect(self.reset_button_callback)
         self.pushButton_apply.clicked.connect(self.apply_button_callback)
         self.pushButton_cancel.clicked.connect(self.close)
+        self.check_mesh_field_results.setChecked(False)
+        self.check_mesh_field_results.clicked.connect(self.check_mesh_field_results_callback)
         #
         for slider in self._sliders():
             slider.valueChanged.connect(self.value_change_callback)
@@ -123,6 +125,9 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
     def apply_button_callback(self):
         self.keep_section_plane = True
         self.close()
+
+    def check_mesh_field_results_callback(self):
+        self.value_changed.emit()
 
     def closeEvent(self, event):
         if not self.keep_section_plane:

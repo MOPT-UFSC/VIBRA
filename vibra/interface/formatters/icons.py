@@ -58,6 +58,10 @@ def change_icon_color(icon: QIcon, color: QColor):
         return
 
     pixmap: QPixmap = icon.pixmap(size)
+    paint_pixmap(pixmap, color)
+    icon.addPixmap(pixmap)
+
+def paint_pixmap(pixmap: QPixmap, color: QColor):
     painter = QPainter(pixmap)
     if not painter.isActive():
         return
@@ -65,7 +69,6 @@ def change_icon_color(icon: QIcon, color: QColor):
     painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
     painter.fillRect(pixmap.rect(), color)
     painter.end()
-    icon.addPixmap(pixmap)
 
 def change_icon_color_for_widgets(widgets: list[QWidget], color: QColor):
     for widget in widgets:

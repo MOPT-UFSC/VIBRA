@@ -58,7 +58,6 @@ class SolidsActor(vtkActor):
     def create_geometry(self):
         data = vtkUnstructuredGrid()
         points = vtkPoints()
-        mapper = vtkDataSetMapper()
         point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
         solid_indexes = vtkIntArray()
@@ -132,9 +131,11 @@ class SolidsActor(vtkActor):
         self.clipper.ExtractInsideOff()
         self.clipper.Update()
 
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputConnection(self.clipper.GetOutputPort())
-        self.SetMapper(mapper)
+        self.clipper_mapper = vtkDataSetMapper()
+        self.clipper_mapper.InterpolateScalarsBeforeMappingOn()
+        self.clipper_mapper.SetInputConnection(self.clipper.GetOutputPort())
+
+        self.SetMapper(self.clipper_mapper)
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
