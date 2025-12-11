@@ -141,7 +141,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
-        self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
+        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
         #
@@ -922,7 +922,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         plot_ui.setWindowIcon(app().main_window.vibra_icon)
         plot_ui.exec_()
 
-    def show_bad_elements(self):
+    def plot_bad_elements(self):
 
         if not self.is_mesh_quality_computed():
             return
