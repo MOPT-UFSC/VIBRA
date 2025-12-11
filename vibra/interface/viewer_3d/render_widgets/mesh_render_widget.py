@@ -195,17 +195,13 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
+        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if app().main_window.distinguished_solids:
-            print("distinguehed solids existy")
-            self.solids_actor.SetVisibility(True)
             self.switch_to_solids_actor()
-
-        if isinstance(self.solids_actor, SolidsActor):
-            print("solids acotr é isntance")
-            self.solids_actor.SetVisibility(True)
             self.solids_actor.distinguish_solids(app().main_window.distinguished_solids)
+            self.solids_actor.SetVisibility(True)
 
         self.update_selection()
         self.update()
