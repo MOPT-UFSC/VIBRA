@@ -528,7 +528,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
             else:
                 extensions = ["csv", "dat", "txt", "xlsx", "xls"]
-                caption = "Choose a table to import the surface velocity"
+                caption = "Choose a table to import the compressor excitation waveform data"
                 imported_data = DataImporter.import_single_file("imported_table_folder", extensions, caption)
 
                 if not imported_data:

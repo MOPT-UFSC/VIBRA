@@ -156,9 +156,10 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 imported_file = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
-                imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt"], "Choose a table to import the compressor excitation spectrum")
-                                
+                extensions = ["csv", "dat", "txt", "xlsx", "xls"]
+                caption = "Choose a table to import the compressor excitation spectrum data"
+                imported_data = DataImporter.import_single_file("imported_table_folder", extensions, caption)
+
                 if not imported_data:
                     return
 
