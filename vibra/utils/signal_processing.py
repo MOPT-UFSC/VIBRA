@@ -64,7 +64,7 @@ def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarr
     dt = 1 / f_s
 
     # process the ifft from signal Xf
-    x_t = np.fft.irfft(Xf, axis=0)# * (2*(N-1))
+    x_t = np.fft.irfft(Xf, axis=1)# * (2*(N-1))
     N_t = x_t[0, :].size
 
     # corrects the signal amplitude

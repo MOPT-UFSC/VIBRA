@@ -6,13 +6,16 @@ from vibra.engine import AnalysisID
 
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
 
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
 
+import logging
 import numpy as np
 from time import time
+
 
 class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -157,6 +160,25 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
         return response
 
+    def compute_multiple_ifft(self):
+
+        logging.info("Computing multiple iffts... [10/100]")
+        solution = self.solution[:, :]
+
+        t0 = time()
+        logging.info("Computing multiple iffts... [25/100]")
+        _time_vector, acoustic_pressure_waveform_vectors = process_multiple_iffts_from_one_sided_spectrum_signals(                
+            self.frequencies, 
+            solution,
+            dc_included = False,
+            )
+
+        print(acoustic_pressure_waveform_vectors.shape)
+
+        dt = time() - t0
+        print(f"Elapsed time to process ifft: {dt : .6f} s")
+        ##
+
     def join_model_data(self):
 
         current_text = self.comboBox_selector_filter.currentText()
@@ -165,21 +187,8 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         self.model_results = dict()
         self.title = "Acoustic pressure waveform"
 
-        # ## TODO: only for tests
-        # solution = self.solution[:, :]
-
-        # t0 = time()
-        # _time_vector, _acoustic_pressures = process_multiple_iffts_from_one_sided_spectrum_signals(                
-        #     self.frequencies, 
-        #     solution,
-        #     dc_included = False,
-        #     )
-
-        # print(_acoustic_pressures.shape)
-
-        # dt = time() - t0
-        # print(f"Elapsed time to process ifft: {dt : .6f} s")
-        # ##
+        ## TODO: only for tests
+        LoadingWindow(self.compute_multiple_ifft).run()
 
         for i, selected_id in enumerate(self.selected_ids):
 
