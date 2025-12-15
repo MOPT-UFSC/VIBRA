@@ -127,9 +127,7 @@ class AnalysisRequirementsChecker:
         for property in properties:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
-                    if isinstance(data, AcousticPressure) and np.sum(data.values):
-                        return False
-                    elif isinstance(data, AcousticPressureTable) and np.sum(data.values):
+                    if isinstance(data, AcousticPressure | AcousticPressureTable) and np.sum(data.values):
                         return False
                     elif np.sum(data["values"]):
                         return False
