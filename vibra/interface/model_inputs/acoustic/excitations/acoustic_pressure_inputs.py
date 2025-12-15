@@ -97,15 +97,14 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         data = self.model.properties._get_property("acoustic_pressure", surface=surface_id)
 
-        if isinstance(data, dict):
+        if isinstance(data, AcousticPressure):
+            self.tabWidget_main.setCurrentIndex(0)
+            self.lineEdit_real_value.setText(str(data.real[0]))
+            self.lineEdit_imag_value.setText(str(data.imaginary[0]))
 
-            if "table_paths" in data.keys():
-                self.tabWidget_main.setCurrentIndex(1)
-                self.lineEdit_table_path.setText(data["table_paths"][0])
-            else:
-                self.tabWidget_main.setCurrentIndex(0)
-                self.lineEdit_real_value.setText(str(data["real_values"][0]))
-                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
+        elif isinstance(data, AcousticPressureTable):
+            self.tabWidget_main.setCurrentIndex(1)
+            self.lineEdit_table_path.setText(data.paths[0])
 
     def tab_event_callback(self):
         tab_list = self.tabWidget_main.currentIndex() == 2
@@ -158,7 +157,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
+                                                               input_ids,
                                                                selection = "surfaces"
                                                                )
 
@@ -413,9 +412,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
                 if isinstance(data, AcousticPressureTable | AcousticPressure):
-                    return
+                    if hasattr(data, "names"):
+                        return
  
-                if "table_names" in data.keys():
+                elif "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_setup, dict):

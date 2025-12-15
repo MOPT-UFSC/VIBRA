@@ -90,7 +90,9 @@ class AcousticAssembler:
             property, surface_id = key
             if property == "acoustic_pressure":
 
-                if "values" in data.keys():
+                if hasattr(data, "values"):
+                    complex_values = data.values
+                elif "values" in data.keys():
                     complex_values = data["values"]
                 else:
                     real_values = np.array(data["real_values"])

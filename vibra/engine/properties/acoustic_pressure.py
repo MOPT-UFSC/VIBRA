@@ -8,9 +8,13 @@ from pathlib import Path
 class AcousticPressure:
     real: list[float]
     imaginary: list[float]
-    
     # postpones the creation of this attribute
-    values: list = field(default_factory=list) 
+    values: list = field(default_factory=list)
+
+    # def __add__(self, other):
+    #     ...
+
+    # __radd__ = __add__
 
     def to_dict(self) -> dict[str, list[float] | list[complex]]:
         return dict(
@@ -36,10 +40,10 @@ class AcousticPressure:
 @dataclass
 class AcousticPressureTable:
     names: list[str]
-    paths: list[str | Path]
+    paths: list[str]
     values: list[np.ndarray]
 
-    def to_dict(self) -> dict[str, list[str] | list[str | Path] | list[np.ndarray]]:
+    def to_dict(self) -> dict[str, list[str] | list[str] | list[np.ndarray]]:
         return dict(
             name=self.names,
             path=self.paths,
@@ -52,7 +56,7 @@ class AcousticPressureTable:
         Creates an AcousticPressureTable from a dict
 
         :param data_dict: A dictionary containing "table_names", "table_paths" and "values" keys.
-        :type data_dict: dict[str, list[str] | list[str | Path] | list[np.ndarray]]
+        :type data_dict: dict[str, list[str] | list[str] | list[np.ndarray]]
         """
 
         names = data_dict["table_names"]
@@ -60,4 +64,3 @@ class AcousticPressureTable:
         values = data_dict["values"]
 
         return AcousticPressureTable(names=names, paths=paths, values=values)
-

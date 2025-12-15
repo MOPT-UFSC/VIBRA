@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.interface.ui_generated.model.setup.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -257,7 +258,11 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if "table_names" in data.keys():
+                if isinstance(data, AcousticPressure | AcousticPressureTable):
+                    if hasattr(data, "names"):
+                        return
+
+                elif "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_setup, dict):

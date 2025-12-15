@@ -369,9 +369,9 @@ def acoustic_boundary_conditions_info_text():
         return text
 
     if acoustic_pressure is not None:
-        acoustic_pressure: AcousticPressure | AcousticPressureTable
-        values = acoustic_pressure.values
-        text += acoustic_format("Acoustic pressure", values, "P", "Pa")
+        if hasattr(acoustic_pressure, "values"):
+            values = acoustic_pressure.values
+            text += acoustic_format("Acoustic pressure", values, "P", "Pa")
 
     if surface_velocity is not None:
         values = surface_velocity["values"][0]

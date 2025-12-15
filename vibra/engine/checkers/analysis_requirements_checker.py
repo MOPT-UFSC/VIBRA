@@ -4,6 +4,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 
 import numpy as np
 
@@ -126,7 +127,11 @@ class AnalysisRequirementsChecker:
         for property in properties:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
-                    if np.sum(data["values"]):
+                    if isinstance(data, AcousticPressure) and np.sum(data.values):
+                        return False
+                    elif isinstance(data, AcousticPressureTable) and np.sum(data.values):
+                        return False
+                    elif np.sum(data["values"]):
                         return False
 
         title = "Invalid model excitation"    
