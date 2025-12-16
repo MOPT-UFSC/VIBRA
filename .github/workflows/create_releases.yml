@@ -83,15 +83,12 @@ jobs:
         with:
           python-version: '3.11'
           architecture: 'x64'
-      - name: Install Poetry
+      - name: Install UV
         run: |
-          pip install poetry
-      - name: Install requirements
-        run: |
-          poetry install 
+          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
       - name: Run Pyinstaller
         run: |
-          poetry run pyinstaller vibra.spec
+          uv run pyinstaller vibra.spec
       - name: Compile .iss to .exe Installer
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
         with:
@@ -117,15 +114,12 @@ jobs:
         with:
           python-version: '3.11'
           architecture: 'x64'
-      - name: Install Poetry
+      - name: Install UV
         run: |
-          pip install poetry
-      - name: Install requirements
-        run: |
-          poetry install 
+          curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Run Pyinstaller
         run: |
-          poetry run pyinstaller vibra.spec
+          uv run pyinstaller vibra.spec
       - name: Rename file
         run: |
           mv dist/Vibra dist/vibra-linux-x64
