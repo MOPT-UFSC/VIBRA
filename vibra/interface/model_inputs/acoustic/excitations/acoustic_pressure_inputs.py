@@ -91,7 +91,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
-
         if self.tabWidget_main.currentIndex() == 2:
             return
 
@@ -286,24 +285,20 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() != "":
-
             if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
+                self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+
+                if not isinstance(self.imported_values, np.ndarray):
+                    return
 
             for surface_id in surface_ids:
+                if self.imported_values.shape[1] >= 3:
+                    table_name = f"precribed_pressure_at_surface_{surface_id}"
 
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] >= 3:
-
-                        table_name = f"precribed_pressure_at_surface_{surface_id}"
-                        if self.save_table_values(table_name, self.imported_values):
-                            self.lineEdit_table_path.setFocus()
-                            self.imported_values = None
-                            return
-
-                else:
-                    return
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return
 
                 if self.imported_values is None:
                     return
@@ -456,12 +451,14 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 if isinstance(data, AcousticPressureTable):
                     str_value = "Table of values"
 
-                else:
-                    data: AcousticPressure
+                elif isinstance(data, AcousticPressure):
                     real_values = np.array(data.real)
                     imag_values = np.array(data.imaginary)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
+
+                else:
+                    str_value = ""
 
                 new = QTreeWidgetItem([str(surface_id), str_value])
                 new.setTextAlignment(0, Qt.AlignCenter)
