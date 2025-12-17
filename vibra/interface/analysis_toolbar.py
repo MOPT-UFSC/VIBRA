@@ -330,6 +330,11 @@ class AnalysisToolbar(QToolBar):
 
     def configure_analysis(self):
 
+        # disable run_analysis button if there are disconnected nodes or collapsed elements
+        mesh = app().project.model.mesh
+        disconnected_nodes = bool(mesh.disconnected_nodes_data)
+        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
 
@@ -345,12 +350,10 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes_data)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-
-        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
+        setup_complete = app().project.is_analysis_setup_complete()
+        run_analysis_enabled = setup_complete and not (collapsed_elements or disconnected_nodes)
+        self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
+        print(setup_complete, collapsed_elements, disconnected_nodes)
 
     def harmonic_structural(self):
 

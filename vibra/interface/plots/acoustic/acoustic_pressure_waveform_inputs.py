@@ -188,7 +188,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         self.title = "Acoustic pressure waveform"
 
         ## TODO: only for tests
-        LoadingWindow(self.compute_multiple_ifft).run()
+        # LoadingWindow(self.compute_multiple_ifft).run()
 
         for i, selected_id in enumerate(self.selected_ids):
 

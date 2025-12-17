@@ -363,8 +363,6 @@ class AcousticAssembler:
             density = self.properties.get_fluid_density(fluid, proportional_damping)
             speed_of_sound = self.properties.get_speed_of_sound(fluid, proportional_damping)
 
-        print(density, speed_of_sound)
-
         return density, speed_of_sound
 
 
