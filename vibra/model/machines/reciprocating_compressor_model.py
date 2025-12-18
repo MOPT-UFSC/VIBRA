@@ -361,7 +361,7 @@ class ReciprocatingCompressorModel:
         output[N-index:] = data[:index]
         return output
 
-    def process_head_end_volumes_and_pressures(self, tdc=None, capacity=None, export_data=True):
+    def process_head_end_volumes_and_pressures(self, tdc: float|None = None, capacity: float|None = None, export_data: bool = True):
 
         V0, A, h0 = self.get_clearance_data("HE")
 
