@@ -140,7 +140,7 @@ class MainWindow(MainWindow_UI):
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
-        self.disable_advanced_acoustic_plots_buttons(True)
+        self.action_export_element_transfer_data.setDisabled(True)
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
@@ -604,7 +604,7 @@ class MainWindow(MainWindow_UI):
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
-        self.disable_advanced_acoustic_plots_buttons(True)
+        self.action_export_element_transfer_data.setDisabled(True)
 
     def action_import_mesh_callback(self):
         caption = "Select a mesh file"
@@ -734,6 +734,8 @@ class MainWindow(MainWindow_UI):
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
         self.import_geometry_or_mesh_dialog()
+
+        self.render_tools_toolbar.setVisible(True)
 
     def save_project_dialog(self):
         if app().project.save_path is None:
@@ -1223,11 +1225,6 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(i)
             if hasattr(widget, "update_hidden_plot"):
                 widget.update_hidden_plot()
-
-    def disable_advanced_acoustic_plots_buttons(self, disabled: bool):
-        self.action_plot_specific_acoustic_impedance.setDisabled(disabled)
-        self.action_plot_particle_velocity.setDisabled(disabled)
-        self.action_export_element_transfer_data.setDisabled(disabled)
 
     def eventFilter(self, obj, event: QEvent):
         modifiers = app().keyboardModifiers()

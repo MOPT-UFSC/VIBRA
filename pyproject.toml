@@ -22,7 +22,8 @@ dependencies = [
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
     "pyside6 (==6.9.2)",
-    "molde (>=0.1.18)",
+    "sounddevice (>=0.5.3,<0.6.0)",
+    "molde (>=0.1.18,<0.2.0)",
 ]
 
 

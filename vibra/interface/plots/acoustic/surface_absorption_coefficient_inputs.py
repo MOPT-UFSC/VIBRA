@@ -77,6 +77,9 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def geometry_selection_callback(self):
 
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
         volumes = app().main_window.selected_geometry_volumes
         surfaces = app().main_window.selected_geometry_surfaces
 

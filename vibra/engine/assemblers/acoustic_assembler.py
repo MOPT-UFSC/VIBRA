@@ -208,7 +208,7 @@ class AcousticAssembler:
         return F_eq[self.unprescribed_indexes]
 
 
-    def get_surface_data_for_element_integration_by_property(self, property_label: str) -> dict:
+    def get_impedance_data_for_element_integration(self, property_label: str) -> dict:
         """ 
         This method processes the surface property data for element face
         integration.
@@ -235,23 +235,9 @@ class AcousticAssembler:
             if prop != property_label:
                 continue
 
-            rho_eff_pm, C_eff_pm = self.model.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.model.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.model.properties._get_property("fluid", surface=surface_id)
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
             data: dict
+            density, speed_of_sound = self.get_fluid_properties_from_surface(surface_id)
+
             if "anechoic_termination" in data.keys():
                 _complex_values = density * speed_of_sound
 
@@ -262,8 +248,7 @@ class AcousticAssembler:
                 _complex_values = Z_s
 
             else:
-                if "values" in data.keys():
-                    _complex_values = data.get("values")[0]
+                _complex_values = data.get("values")[0]
 
             complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
 
@@ -276,11 +261,109 @@ class AcousticAssembler:
 
         if aux_connect:
             integration_data = {
-                                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
-                                }
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
 
         return integration_data
+
+
+    def get_excitation_data_for_element_integration(self, property_label: str) -> dict:
+        """ 
+        This method processes the excitation property data for element face
+        integration.
+
+        Parameters
+        ----------
+        property_label: str
+            The property label on which the surface data will be processed.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        aux_data = dict()
+        aux_connect = dict()
+        integration_data = dict()
+
+        for key, data in self.properties.surface_properties.items():
+
+            prop, surface_id = key
+            if prop != property_label:
+                continue
+
+            data: dict
+            _complex_values = data.get("values")[0]
+
+            if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
+                excitation_type = data.get("excitation_type")
+
+                if excitation_type in ["mass flow rate", "volumetric flow rate"]:
+                    # compute the nozzle area
+                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
+                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)                    
+
+                    if excitation_type == "mass flow rate":
+                        # get the fluid density
+                        density, _ = self.get_fluid_properties_from_surface(surface_id)
+
+                        # convert the mass flow rate to surface velocity (oscilatting flow)
+                        _complex_values /= (density * area)
+
+                    else:
+                        # convert the volumetric flow rate to surface velocity (oscilatting flow)
+                        _complex_values /= area
+
+            complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
+
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+
+            for i, el in enumerate(surf_elements):
+                aux_connect[el] = surf_connect[i]
+                aux_data[el] = complex_values
+
+        if aux_connect:
+            integration_data = {
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
+
+        return integration_data
+
+
+    def get_fluid_properties_from_surface(self, surface_id: int):
+        """
+        """
+        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+        if len(volumes_from_surface) != 1:
+            return None, None
+        
+        volume_id = volumes_from_surface[0]
+        pm_properties = self.model.porous_material_properties.get(volume_id)
+        vt_properties = self.model.viscous_thermal_model_properties.get(volume_id)
+
+        if isinstance(pm_properties, dict):
+            density = pm_properties.get("rho_eff")
+            speed_of_sound = pm_properties.get("C_eff")
+
+        elif isinstance(vt_properties, dict):
+            density = vt_properties.get("rho_eff")
+            speed_of_sound = vt_properties.get("C_eff")
+
+        else:
+            fluid = self.model.properties._get_property("fluid", volume=volume_id)
+            if not isinstance(fluid, Fluid):
+                return None, None
+
+            proportional_damping = self.model.properties._get_property("proportional_damping", volume=volume_id)
+            density = self.properties.get_fluid_density(fluid, proportional_damping)
+            speed_of_sound = self.properties.get_speed_of_sound(fluid, proportional_damping)
+
+        return density, speed_of_sound
 
 
     def get_plane_wave_surface_data_for_element_integration(self) -> dict:
@@ -1169,7 +1252,7 @@ class AcousticAssembler:
         dof = self.element_2d.DOF_PER_ELEMENT
         self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
-        self.integration_data_Zsi = self.get_surface_data_for_element_integration_by_property("specific_impedance")
+        self.integration_data_Zsi = self.get_impedance_data_for_element_integration("specific_impedance")
         if not self.integration_data_Zsi:
             return
 
@@ -1246,7 +1329,7 @@ class AcousticAssembler:
         dof = self.element_2d.DOF_PER_ELEMENT
         self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
-        self.integration_data_Zas = self.get_surface_data_for_element_integration_by_property("absorption_surface")
+        self.integration_data_Zas = self.get_impedance_data_for_element_integration("absorption_surface")
         if not self.integration_data_Zas:
             return
         
@@ -1514,32 +1597,7 @@ class AcousticAssembler:
         acoustic_excitation = defaultdict(float)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
-            if property == "mass_flow_rate":
-
-                _complex_values = data["values"][0]
-                if isinstance(_complex_values, complex):
-                    complex_values = _complex_values * aux_ones
-                elif isinstance(_complex_values, np.ndarray):
-                    if _complex_values.shape[0] == 1:
-                        complex_values = _complex_values * aux_ones
-                    elif len(_complex_values.shape) == 1:
-                        complex_values = _complex_values.reshape(1,-1)
-                    else:
-                        complex_values = _complex_values
-
-                if data["nodal_attribution"]:
-                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                    if nodes is None:
-                        continue
-
-                    N = len(nodes)
-                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                        if data["averaged"]:
-                            acoustic_excitation[index] += complex_values / N
-                        else:
-                            acoustic_excitation[index] += complex_values
-
-            elif property in ["surface_velocity", "reciprocating_compressor_excitation"]:
+            if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
@@ -1592,24 +1650,17 @@ class AcousticAssembler:
         total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
-        integration_data_mf = self.get_surface_data_for_element_integration_by_property("mass_flow_rate")
-        if integration_data_mf:
+        prop_labels = [
+            "surface_velocity",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            ]
 
-            connectivities_mf = integration_data_mf.get("connectivities")
-            surface_data_mf = integration_data_mf.get("surface_data")
+        for prop_label in prop_labels:
+            integration_data_sv = self.get_excitation_data_for_element_integration(prop_label)
 
-            self.element_2d.reorder_connect(connectivities_mf)
-            for i, complex_values in enumerate(surface_data_mf):
-                indices = self.element_2d.connectivities[i, :]
-                int2d_N = self.element_2d.load_vector(i)
-
-                output[indices, :] += int2d_N @ complex_values.reshape(1, -1)
-       
-        for excitation_label in ["surface_velocity", "reciprocating_compressor_excitation"]:
-
-            integration_data_sv = self.get_surface_data_for_element_integration_by_property(excitation_label)
             if integration_data_sv:
-
                 connectivities_sv = integration_data_sv.get("connectivities")
                 surface_data_sv = integration_data_sv.get("surface_data")
 
@@ -1620,7 +1671,6 @@ class AcousticAssembler:
                     output[indices, :] += int2d_N @ complex_values.reshape(1, -1)
 
         if self.integration_data_pw:
-
             k_wave = self.integration_data_pw.get("k_wave")
             e_normals = self.integration_data_pw.get("e_normals")
             pressures = self.integration_data_pw.get("pressures")

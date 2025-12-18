@@ -398,7 +398,7 @@ class LoadProject:
             f_step = analysis_setup.get("f_step")
 
             if ([f_min, f_max, f_step]).count(None) == 0:
-                analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
+                analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step, dtype=float)
 
         app().project.set_analysis_setup(analysis_setup)
         app().project.create_solver()
@@ -431,7 +431,7 @@ class LoadProject:
 
             elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
                 project.acoustic_harmonic_solver.solution = data.get("solution")
-                app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                app().main_window.action_export_element_transfer_data.setDisabled(False)
 
             elif key == "harmonic_structural" and project.structural_harmonic_solver is not None and project.structural_harmonic_solver.project_file is None:
                 project.structural_harmonic_solver.displacement_dof = data.get("displacement_dof")
@@ -465,7 +465,7 @@ class LoadProject:
                 structural_harmonic_solver.solution = None
                 project.can_resume_solution = True
 
-        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+        app().main_window.action_export_element_transfer_data.setDisabled(False)
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

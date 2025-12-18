@@ -1,17 +1,21 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.engine import AnalysisID
+
 from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
 
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
+
+import logging
 import numpy as np
+from time import time
 
-window_title1 = "Error"
-window_title2 = "Warning"
 
 class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -57,6 +61,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
+
+        if not app().main_window.action_results_workspace.isChecked():
+            return
 
         surfaces = app().main_window.selected_geometry_surfaces
         lines = app().main_window.selected_geometry_lines
@@ -153,6 +160,25 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
         return response
 
+    def compute_multiple_ifft(self):
+
+        logging.info("Computing multiple iffts... [10/100]")
+        solution = self.solution[:, :]
+
+        t0 = time()
+        logging.info("Computing multiple iffts... [25/100]")
+        _time_vector, acoustic_pressure_waveform_vectors = process_multiple_iffts_from_one_sided_spectrum_signals(                
+            self.frequencies, 
+            solution,
+            dc_included = False,
+            )
+
+        print(acoustic_pressure_waveform_vectors.shape)
+
+        dt = time() - t0
+        print(f"Elapsed time to process ifft: {dt : .6f} s")
+        ##
+
     def join_model_data(self):
 
         current_text = self.comboBox_selector_filter.currentText()
@@ -161,51 +187,33 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
         self.model_results = dict()
         self.title = "Acoustic pressure waveform"
 
+        ## TODO: only for tests
+        # LoadingWindow(self.compute_multiple_ifft).run()
+
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             Xf = self.get_response(selected_id)
-            time, y_data = self.process_ifft_from_signal(Xf)
+            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
+                self.frequencies, 
+                Xf,
+                dc_included = False,
+                )
 
             self.model_results[key] = { 
-                                        "x_data" : time,
-                                        "y_data" : y_data,
-                                        "x_label" : "Time [s]",
-                                        "y_label" : "Acoustic pressure",
-                                        "title" : self.title,
-                                        "data_type" : "acoustic pressure",
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
-
-    def process_ifft_from_signal(self, Xf: np.ndarray):
-        """
-        If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
-        """
-
-        # reinsert the DC component
-        N = len(Xf) + 1
-        Xf_ = np.zeros(N, dtype=complex)
-        
-        # adjust the one-sided spectrum scale
-        Xf_[1:] = Xf / 2
-
-        # process the sampling frequency and time increment
-        f_max = np.max(self.frequencies)
-        f_s = 2 * f_max
-        dt = 1 / f_s
-
-        # process the ifft from signal Xf
-        x_t = np.fft.irfft(Xf_) * (2*(N-1))
-
-        # create the time vector
-        time = np.arange(len(x_t), dtype=float) * dt
-
-        return time, x_t
+                "x_data" : time_vector,
+                "y_data" : acoustic_pressure,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : self.title,
+                "data_type" : "acoustic pressure",
+                "legend" : legend_label,
+                "unit" : self.unit_label,
+                "color" : self.get_color(i),
+                "linestyle" : "-"  
+            }
 
     def get_color(self, index):
 

@@ -13,8 +13,7 @@ import logging
 import numpy as np
 from pathlib import Path
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
@@ -220,7 +219,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "
             message += "surface ID to proceed with the transfer function data exportation."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             app().main_window.set_input_widget(self)
             return None
 

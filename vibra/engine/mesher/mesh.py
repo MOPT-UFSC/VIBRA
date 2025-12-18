@@ -121,7 +121,7 @@ class Mesh:
 
         self.nodal_area = defaultdict(list)
 
-        self.nodes_collapsed_elements = None
+        self.nodes_collapsed_elements = list()
 
         self.cache_nodal_coordinates = None
         self.cache_lines_connectivity = None
@@ -1222,7 +1222,12 @@ class Mesh:
         surfaces_from_node = [int(surf_id) for surf_id in np.unique(self.faces_connectivity[:, 1][mask])]
         return surfaces_from_node
 
-    def get_volumes_from_selected_nodes(self, selected_nodes: list | np.ndarray):
+    def get_volumes_from_selected_nodes(self, selected_nodes: list | np.ndarray, return_volumes: bool=False):
+
+        if return_volumes:
+            mask = np.sum(np.isin(self.solids_connectivity[:, 4:], selected_nodes), axis=1) >= 1
+            volume_ids = [int(vol_id) for vol_id in np.unique(self.solids_connectivity[:, 1][mask])]
+            return volume_ids
 
         volumes_from_nodes = defaultdict(list)
         for node_id in selected_nodes:
