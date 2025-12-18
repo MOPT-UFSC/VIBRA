@@ -141,7 +141,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
-        self.pushButton_show_bad_elements.clicked.connect(self.show_bad_elements)
+        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
         #
@@ -446,7 +446,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
+        collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
         run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
@@ -468,6 +468,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             app().file.remove_mesh_quality_data_from_project_file()
 
+        # remove and write the mesh error data in the error data json file
+        app().file.remove_mesh_error_data_from_project_file()
+        app().file.write_mesh_error_data_in_file()
+
         self.cache_refinement_data()
         app().main_window.update_mesh_information()
         app().main_window.update_geometry_information()
@@ -475,9 +479,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         LoadingWindow(self.actions_to_finalize).run()
         self.complete = True
 
-        disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
-        if disconnected_nodes:
-            app().main_window.set_mesh_selection(nodes=disconnected_nodes)
+        # disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        # if disconnected_nodes:
+        #     app().main_window.set_mesh_selection(nodes=disconnected_nodes)
 
     def check_post_process_mesh_criteria(self):
 
@@ -498,8 +502,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             PrintMessageInput([error_title, title, message])
 
-        collapsed_elements = self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements
-        if collapsed_elements:
+        if self.mesh.collapsed_elements_data:
 
             message = ""
             title = "The generated mesh contains collapsed elements"
@@ -919,7 +922,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         plot_ui.setWindowIcon(app().main_window.vibra_icon)
         plot_ui.exec_()
 
-    def show_bad_elements(self):
+    def plot_bad_elements(self):
 
         if not self.is_mesh_quality_computed():
             return

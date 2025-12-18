@@ -257,8 +257,7 @@ class AnalysisToolbar(QToolBar):
         if mesh.disconnected_nodes_data:
             return
 
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-        if collapsed:
+        if mesh.collapsed_elements_data:
             return
 
         self.update_analysis_combo_boxes()
@@ -351,9 +350,11 @@ class AnalysisToolbar(QToolBar):
                 self.modal_acoustic()
 
         setup_complete = app().project.is_analysis_setup_complete()
+
+        # disables the run analysis button whenever the analysis setup is incomplete, or there are
+        # any mesh-related problems
         run_analysis_enabled = setup_complete and not (collapsed_elements or disconnected_nodes)
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
-        print(setup_complete, collapsed_elements, disconnected_nodes)
 
     def harmonic_structural(self):
 

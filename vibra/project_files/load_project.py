@@ -39,6 +39,9 @@ class LoadProject:
         logging.info("Loading project... [45/100]")
         self.load_mesh_data()
 
+        logging.info("Loading project... [52/100]")
+        self.load_mesh_error_data()
+
         logging.info("Loading project... [55/100]")
         self.load_project_libraries()
 
@@ -301,6 +304,25 @@ class LoadProject:
         geometry_path = self.file.read_geometry_from_file()
         if not self.model.check_path_for_geometry_file(geometry_path):
             self.model.mesh.update_element_type()
+
+    def load_mesh_error_data(self):
+        errors_data = self.file.read_errors_data_from_file()
+        mesh_error = errors_data.get("mesh_error")
+        if not isinstance(mesh_error, dict):
+            return
+
+        mesh = app().project.model.mesh
+        if "collapsed_elements_data" in mesh_error.keys():
+            collapsed_elements_data = mesh_error.get("collapsed_elements_data")
+            mesh.collapsed_elements_data = collapsed_elements_data
+
+            if isinstance(collapsed_elements_data, dict):
+                mesh.collapsed_1d_elements = collapsed_elements_data.get("collpased_1d_elements", set())
+                mesh.collapsed_2d_elements = collapsed_elements_data.get("collpased_2d_elements", set())
+                mesh.collapsed_3d_elements = collapsed_elements_data.get("collpased_3d_elements", set())
+
+        if "disconnected_nodes_data" in mesh_error.keys():
+            mesh.disconnected_nodes_data = mesh_error.get("disconnected_nodes_data", dict())
 
     # def update_render(self):
 

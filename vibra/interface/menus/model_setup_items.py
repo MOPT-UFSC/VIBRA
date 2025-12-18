@@ -209,9 +209,10 @@ class ModelSetupItems(CommonMenuItems):
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
             disconnected_nodes = bool(mesh.disconnected_nodes_data)
-            collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+            collapsed_elements = bool(mesh.collapsed_elements_data)
             if collapsed_elements or disconnected_nodes:
                 return False
+
             return model.mesh_setup is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
@@ -336,9 +337,19 @@ class ModelSetupItems(CommonMenuItems):
         if item_child.property_name == "mesh_setup":
             mesh = app().project.model.mesh
             if mesh is not None:
-                collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-                item_child.set_error(bool(collapsed))
-                if collapsed:
+                collapsed_elements = bool(mesh.collapsed_elements_data)
+                item_child.set_error(collapsed_elements)
+                if collapsed_elements:
+                    return True
+        return False
+
+    def _are_there_disconnected_nodes(self, item_child):
+        if item_child.property_name == "mesh_setup":
+            mesh = app().project.model.mesh
+            if mesh is not None:
+                disconnected_nodes = bool(mesh.disconnected_nodes_data)
+                item_child.set_error(disconnected_nodes)
+                if disconnected_nodes:
                     return True
         return False
 
@@ -371,6 +382,9 @@ class ModelSetupItems(CommonMenuItems):
                     continue
 
                 if self._are_there_collapsed_elements(item_child):
+                    continue
+                    
+                if self._are_there_disconnected_nodes(item_child):
                     continue
 
                 if self._contains_property(item_child.property_name):

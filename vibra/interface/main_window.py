@@ -39,7 +39,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import ColorMode, VisualizationFilter
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
 
 import gmsh
 
@@ -55,6 +55,8 @@ class MainWindow(MainWindow_UI):
         
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
+        self.visualization_filter.disconected_nodes = False
+        self.visualization_filter.collapsed_element_nodes = False
 
         # TODO: move this to a separate class
         self.selected_mesh_nodes = set()
@@ -434,9 +436,9 @@ class MainWindow(MainWindow_UI):
 
     def action_show_empty_callback(self, condition: bool):
         if condition:
-            self.visualization_filter.color_mode = ColorMode.EMPTY
+            self.visualization_filter.color_mode = GeometryColorMode.EMPTY
         else:
-            self.visualization_filter.color_mode = ColorMode.COLORED        
+            self.visualization_filter.color_mode = GeometryColorMode.COLORED        
         self.visualization_changed.emit()
     
     def get_renderer_widgets(self) -> list[CommonRenderWidget]:
@@ -670,6 +672,8 @@ class MainWindow(MainWindow_UI):
                 len(self.hidden_surfaces) != 0,
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
+                bool(app().project.model.mesh.collapsed_elements_data),
+                bool(app().project.model.mesh.disconnected_nodes_data),
             ]
         )
 

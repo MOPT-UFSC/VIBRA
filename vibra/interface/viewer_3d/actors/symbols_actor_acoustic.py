@@ -13,6 +13,8 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         self.configure_appearance()
         self.build()
         self.set_zbuffer_offsets(1, -6600)
+        # as the symbols do not change size when zooming, this is needed for reset_camera to work properly
+        self.UseBoundsOff()
 
     def configure_appearance(self):
         self.GetProperty().SetAmbient(0.5)
