@@ -3,6 +3,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.engine.properties.acoustic_pressure import AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocityTable
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -843,7 +845,10 @@ class MassSourceInputs(MassSourceInputs_UI):
             for key, data in model_property.items():
                 property, _ = key
                 if property in properties:
-                    if "table_names" in data.keys():
+                    if isinstance(data, AcousticPressureTable | SurfaceVelocityTable):
+                        return
+ 
+                    elif "table_names" in data.keys():
                         return
 
         if isinstance(self.project.analysis_setup, dict):

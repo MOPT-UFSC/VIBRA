@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
@@ -97,7 +98,7 @@ class ModelProperties:
     def _set_property(
                       self, 
                       property: str, 
-                      data: dict | Fluid | Material | AcousticPressure | AcousticPressureTable, 
+                      data: dict | Fluid | Material | AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable,
                       node: int | None = None, 
                       element: int | None = None, 
                       point: int | None = None, 
@@ -111,28 +112,7 @@ class ModelProperties:
         if any of these exists. Otherwise sets the property as global.
 
         """
-        if isinstance(data, AcousticPressure):
-            tables_values = list()
-            group_label = self.get_data_group_label(property)
-
-            for i, a in enumerate(data.real):
-                if a is None:
-                    tables_values.append(None)
-
-                else:
-                    b = data.imaginary[i]  
-                    if b is None:
-                        tables_values.append(a)
-                    else:
-                        tables_values.append(a + 1j*b)
-
-            data.values = tables_values
-
-        elif isinstance(data, AcousticPressureTable):
-            ... # don't need to do anything.
-
-        elif isinstance(data, dict):
-
+        if isinstance(data, dict):
             tables_values = list()
             group_label = self.get_data_group_label(property)
 
@@ -252,6 +232,8 @@ class ModelProperties:
                 if isinstance(data, dict):
                     if "table_names" in data.keys():
                         return True
+                elif isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
+                    return True
         else:
             return False
 
@@ -403,6 +385,10 @@ class ModelProperties:
                 for table_name in data["table_names"]:
                     if table_name is not None:
                         table_names.append(table_name)
+        elif isinstance(data, AcousticPressureTable | SurfaceVelocityTable):
+            for table_name in data.names:
+                if table_name is not None:
+                    table_names.append(table_name)
 
         return table_names
 

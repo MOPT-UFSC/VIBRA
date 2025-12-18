@@ -4,6 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocityTable
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -406,9 +407,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if isinstance(data, AcousticPressureTable | AcousticPressure):
-                    if hasattr(data, "names"):
-                        return
+                if isinstance(data, AcousticPressureTable | SurfaceVelocityTable):
+                    return
  
                 elif "table_names" in data.keys():
                     return
@@ -461,8 +461,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                     str_value = ""
 
                 new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
+                new.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                 self.treeWidget_acoustic_pressure.addTopLevelItem(new)
 
         self.update_tabs_visibility()

@@ -4,6 +4,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.engine.properties.surface_velocity import SurfaceVelocity
 from vibra.utils.utils import are_there_values_different_from_zero
 
 from molde.utils import TreeInfo
@@ -347,8 +348,8 @@ def acoustic_boundary_conditions_info_text():
     
     properties = app().project.model.properties
 
-    acoustic_pressure = properties._get_property("acoustic_pressure", surface=selected_faces[0])
-    surface_velocity = properties._get_property("surface_velocity", surface=selected_faces[0])
+    acoustic_pressure: AcousticPressure | None = properties._get_property("acoustic_pressure", surface=selected_faces[0])
+    surface_velocity: SurfaceVelocity | None = properties._get_property("surface_velocity", surface=selected_faces[0])
     recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=selected_faces[0])
     incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
     mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
@@ -369,12 +370,11 @@ def acoustic_boundary_conditions_info_text():
         return text
 
     if acoustic_pressure is not None:
-        if hasattr(acoustic_pressure, "values"):
-            values = acoustic_pressure.values
-            text += acoustic_format("Acoustic pressure", values, "P", "Pa")
+        values = acoustic_pressure.values[0]
+        text += acoustic_format("Acoustic pressure", values, "P", "Pa")
 
     if surface_velocity is not None:
-        values = surface_velocity["values"][0]
+        values = surface_velocity.values[0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
     if isinstance(recip_compressor_excitation, dict):

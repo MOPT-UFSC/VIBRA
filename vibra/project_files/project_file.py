@@ -2,8 +2,10 @@ import zipfile
 import shutil
 
 from vibra import app
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
@@ -402,6 +404,8 @@ class ProjectFile:
                 """
                 output = dict()
                 for (property, tags), data in prop.items():
+                    if isinstance(data, AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable):
+                        data = data.to_dict()
 
                     if isinstance(tags, tuple):
                         key = f"{property}"
@@ -477,6 +481,11 @@ class ProjectFile:
                 if property == "perforated_plate_model":
                     fluid = Fluid(**val["fluid"])
                     val["fluid"] = fluid
+
+                elif property == "acoustic_pressure":
+                    val = AcousticPressure.from_dict(val)
+                elif property == "surface_velocity":
+                    val = SurfaceVelocity.from_dict(val)
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])

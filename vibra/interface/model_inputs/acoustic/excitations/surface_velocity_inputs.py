@@ -3,6 +3,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -106,39 +108,36 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
-
         if self.tabWidget_main.currentIndex() == 2:
             return
 
         data = self.properties._get_property("surface_velocity", surface=surface_id)
 
-        if isinstance(data, dict):
-
-            nodal_attribution = data.get("nodal_attribution", None)
-            averaged = data.get("averaged", None)
+        if isinstance(data, SurfaceVelocity | SurfaceVelocityTable):
+            nodal_attribution = data.nodal_attribution
+            averaged = data.averaged
 
             self.checkBox_averaged_constant_values.setEnabled(nodal_attribution)
             self.checkBox_averaged_table_values.setEnabled(nodal_attribution)
 
             if nodal_attribution:
-
                 self.radioButton_nodal_attribution_constant.setChecked(True)
                 self.radioButton_nodal_attribution_table.setChecked(True)
-                if "averaged" in data.keys():
-                    self.checkBox_averaged_constant_values.setChecked(averaged)
-                    self.checkBox_averaged_table_values.setChecked(averaged)
+                self.checkBox_averaged_constant_values.setChecked(averaged)
+                self.checkBox_averaged_table_values.setChecked(averaged)
 
             else:
                 self.radioButton_element_integration_constant.setChecked(True)
                 self.radioButton_element_integration_table.setChecked(True)
 
-            if "table_paths" in data.keys():
+            if isinstance(data, SurfaceVelocityTable):
                 self.tabWidget_main.setCurrentIndex(1)
-                self.lineEdit_table_path.setText(data["table_paths"][0])
+                self.lineEdit_table_path.setText(data.paths[0])
+
             else:
                 self.tabWidget_main.setCurrentIndex(0)
-                self.lineEdit_real_value.setText(str(data["real_values"][0]))
-                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
+                self.lineEdit_real_value.setText(str(data.real[0]))
+                self.lineEdit_imag_value.setText(str(data.imaginary[0]))
 
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
@@ -214,12 +213,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-            data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
-                    }
+            data = SurfaceVelocity(real_values, imag_values, nodal_attribution, key_avg)
 
             for surface_id in surface_ids:
                 self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -362,13 +356,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 key_avg = self.checkBox_averaged_constant_values.isChecked()
                 nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
 
-                data = {
-                        "table_names" : [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [complex_values],                   
-                        "averaged" : key_avg,
-                        "nodal_attribution" : nodal_attribution,
-                        }
+                data = SurfaceVelocityTable([table_name], [table_path], [complex_values], key_avg, nodal_attribution)
 
                 self.properties._set_property("surface_velocity", data, surface=surface_id)
 
@@ -468,7 +456,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if "table_names" in data.keys():
+                if isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
+                    return
+
+                elif "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_setup, dict):
@@ -517,18 +508,21 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "surface_velocity":
-
-                if "table_names" in data.keys():
+                if isinstance(data, SurfaceVelocityTable):
                     str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
+
+                elif isinstance(data, SurfaceVelocity):
+                    real_values = np.array(data.real)
+                    imag_values = np.array(data.imaginary)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
 
+                else:
+                    str_value = ""
+
                 new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
+                new.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                 self.treeWidget_surface_velocity.addTopLevelItem(new)
 
         self.update_tabs_visibility()
