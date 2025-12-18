@@ -452,13 +452,13 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
                 if isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
                     return
-
+                elif isinstance(data, SurfaceVelocity | AcousticPressure):
+                    ...
                 elif "table_names" in data.keys():
                     return
 

@@ -4,7 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
-from vibra.engine.properties.surface_velocity import SurfaceVelocityTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -407,9 +407,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if isinstance(data, AcousticPressureTable | SurfaceVelocityTable):
+                if isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
                     return
- 
+                elif isinstance(data, SurfaceVelocity | AcousticPressure):
+                    ...
                 elif "table_names" in data.keys():
                     return
 
