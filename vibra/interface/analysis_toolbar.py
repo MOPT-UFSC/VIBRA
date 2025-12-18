@@ -254,11 +254,10 @@ class AnalysisToolbar(QToolBar):
 
         ## Do not solve models if there are disconnected nodes or collapsed elements!
         mesh = app().project.model.mesh   
-        if mesh.disconnected_nodes:
+        if mesh.disconnected_nodes_data:
             return
 
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-        if collapsed:
+        if mesh.collapsed_elements_data:
             return
 
         self.update_analysis_combo_boxes()
@@ -347,8 +346,8 @@ class AnalysisToolbar(QToolBar):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
         mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        disconnected_nodes = bool(mesh.disconnected_nodes_data)
+        collapsed_elements = bool(mesh.collapsed_elements_data)
 
         self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
