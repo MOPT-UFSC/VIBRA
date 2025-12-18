@@ -509,7 +509,7 @@ class ReciprocatingCompressorModel:
             fname_log = f"temporary_data\\log_info_head_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
-                os.mkdir("temporary_data")
+                Path("temporary_data").mkdir(exist_ok=True)
 
             header = "Index, Time [s], Angle [deg], Velocity [m/s], Volumes [m³], Pressures [Pa], Suction valve open [bool], Discharge valve open [bool]\n\n"
             header += f"V1 = {V1}\n"
