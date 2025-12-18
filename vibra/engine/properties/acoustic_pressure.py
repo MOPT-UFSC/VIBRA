@@ -59,13 +59,13 @@ class AcousticPressure:
 class AcousticPressureTable:
     names: list[str]
     paths: list[str]
-    values: list[np.ndarray]
+    values: list
 
-    def to_dict(self) -> dict[str, list[str] | list[str] | list[np.ndarray]]:
+    def to_dict(self) -> dict[str, list[str] | list[str] | list]:
         return dict(
             name=self.names,
             path=self.paths,
-            data=self.values,
+            values=self.values,
         )
 
     @classmethod
@@ -74,7 +74,7 @@ class AcousticPressureTable:
         Creates an AcousticPressureTable from a dict
 
         :param data_dict: A dictionary containing "table_names", "table_paths" and "values" keys.
-        :type data_dict: dict[str, list[str] | list[str] | list[np.ndarray]]
+        :type data_dict: dict[str, list[str] | list]
         """
 
         names = data_dict["table_names"]

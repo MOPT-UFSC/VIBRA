@@ -1,4 +1,3 @@
-import numpy as np
 from dataclasses import dataclass, field
 
 
@@ -64,7 +63,7 @@ class SurfaceVelocityTable:
     nodal_attribution: bool = False
     averaged: bool = False
 
-    def to_dict(self) -> dict[str, list[str] | list[str] | list]:
+    def to_dict(self) -> dict[str, list[str] | bool | list]:
         return dict(
             name=self.names,
             path=self.paths,

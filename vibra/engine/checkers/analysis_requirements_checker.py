@@ -1,5 +1,6 @@
 
 from vibra import app
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.engine.properties.fluid import Fluid
@@ -127,7 +128,7 @@ class AnalysisRequirementsChecker:
         for property in properties:
             for (prop_label, *_), data in property.items():
                 if prop_label in prop_labels:
-                    if isinstance(data, AcousticPressure | AcousticPressureTable) and np.sum(data.values):
+                    if isinstance(data, AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable) and np.sum(data.values):
                         return False
                     elif np.sum(data["values"]):
                         return False
