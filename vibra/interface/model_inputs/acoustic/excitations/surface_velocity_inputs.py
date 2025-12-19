@@ -3,16 +3,17 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
+from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
+
+import os
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
@@ -219,7 +220,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of surface velocity."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_real_value.setFocus()
                 return
         else:
@@ -230,7 +231,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of surface velocity."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_imag_value.setFocus()
                 return
         else:
@@ -284,7 +285,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one surface velocity\n"
             message += "before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
@@ -295,7 +296,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path).data
+                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
@@ -310,14 +311,14 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
             return imported_file
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None
 
@@ -332,7 +333,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.update_analysis_setup_in_file(_frequencies)
@@ -432,7 +433,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one surface velocity\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
     
     def process_table_file_removal(self, table_names: list):
@@ -447,13 +448,14 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-                  "acoustic_pressure", 
-                  "surface_velocity",
-                  "incident_plane_wave",
-                  "mass_flow_rate",
-                  "reciprocating_compressor_excitation",
-                  "reciprocating_pump_excitation",
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "mass_source",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:

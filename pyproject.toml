@@ -2,11 +2,9 @@
 name = "vibra"
 version = "0.4.0"
 description = ""
-authors = [
-    {name = "Your Name",email = "you@example.com"}
-]
-readme = "README.md"
+authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
+readme = "README.md"
 dependencies = [
     "numpy (>=2.2.6,<3.0.0)",
     "vtk (>=9.4.2,<9.5)",
@@ -22,29 +20,23 @@ dependencies = [
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
     "pyside6 (==6.9.2)",
-    "molde (>=0.1.18)",
+    "sounddevice (>=0.5.3,<0.6.0)",
+    "molde (>=0.1.18,<0.2.0)",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5,<9",
+    "pytest-datadir>=1.7.2,<2",
+    "invoke>=2.2.0,<3",
+]
 
-[tool.poetry]
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.11.10"
-pytest = "^8.3.5"
-pytest-datadir = "^1.7.2"
-pyinstaller = "^6.13.0"
-tuna = "^0.5.11"
-invoke = "^2.2.0"
-
-[tool.poetry.scripts]
-vibra = "vibra.launch:main"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "serial",
 ]
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"

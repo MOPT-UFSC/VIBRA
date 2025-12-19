@@ -95,7 +95,10 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             return
 
         frequency_selected = float(self.lineEdit_selected_frequency.text())
-        self.current_frequency = self.frequency_to_index.get(frequency_selected)
+        selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
+
+        if selector_mask.any():
+            self.current_frequency = self.indexes[selector_mask][0]
 
         if self.current_frequency is None:
             return
@@ -124,17 +127,18 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             self.frequencies = app().project.model.frequencies
         else:
             return
-
-        self.frequency_to_index = dict(
-            zip(self.frequencies, np.arange(len(self.frequencies), dtype=int))
-        )
+        
+        self.indexes = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):
-            new = QTreeWidgetItem([str(index + 1), str(frequency)])
-            new.setTextAlignment(0, Qt.AlignCenter)
-            new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_frequencies.addTopLevelItem(new)
+            round_freq = round(frequency, 12)
+            item = QTreeWidgetItem([str(index + 1), f"{round_freq}"])
+
+            for i in range(2):
+                item.setTextAlignment(i, Qt.AlignCenter)
+
+            self.treeWidget_frequencies.addTopLevelItem(item)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         first_item.setSelected(True)

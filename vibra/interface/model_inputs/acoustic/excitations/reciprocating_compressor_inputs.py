@@ -890,13 +890,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def remove_conflicting_excitations(self, surface_id: int):
 
         labels = [
-                  "acoustic_pressure", 
-                  "surface_velocity", 
-                  "incident_plane_wave",
-                  "mass_flow_rate", 
-                  "reciprocating_compressor_excitation", 
-                  "reciprocating_pump_excitation"
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "mass_source",
+            ]
 
         for label in labels:
             table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")

@@ -254,11 +254,10 @@ class AnalysisToolbar(QToolBar):
 
         ## Do not solve models if there are disconnected nodes or collapsed elements!
         mesh = app().project.model.mesh   
-        if mesh.disconnected_nodes:
+        if mesh.disconnected_nodes_data:
             return
 
-        collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-        if collapsed:
+        if mesh.collapsed_elements_data:
             return
 
         self.update_analysis_combo_boxes()
@@ -326,9 +325,14 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setDisabled(True)
         app().main_window.project_data_modified = True
         app().main_window.action_model_workspace_callback()
-        app().main_window.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.action_export_element_transfer_data.setDisabled(True)
 
     def configure_analysis(self):
+
+        # disable run_analysis button if there are disconnected nodes or collapsed elements
+        mesh = app().project.model.mesh
+        disconnected_nodes = bool(mesh.disconnected_nodes_data)
+        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 
         analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
         physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
@@ -345,12 +349,12 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        setup_complete = app().project.is_analysis_setup_complete()
 
-        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
+        # disables the run analysis button whenever the analysis setup is incomplete, or there are
+        # any mesh-related problems
+        run_analysis_enabled = setup_complete and not (collapsed_elements or disconnected_nodes)
+        self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
     def harmonic_structural(self):
 

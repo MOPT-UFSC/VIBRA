@@ -91,8 +91,8 @@ class Ui_Dialog(object):
         self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
         self.label_26 = QLabel(self.tab_setup)
         self.label_26.setObjectName(u"label_26")
-        self.label_26.setMinimumSize(QSize(60, 28))
-        self.label_26.setMaximumSize(QSize(60, 28))
+        self.label_26.setMinimumSize(QSize(40, 28))
+        self.label_26.setMaximumSize(QSize(40, 28))
         font2 = QFont()
         font2.setPointSize(10)
         font2.setItalic(False)
@@ -103,8 +103,8 @@ class Ui_Dialog(object):
 
         self.label_25 = QLabel(self.tab_setup)
         self.label_25.setObjectName(u"label_25")
-        self.label_25.setMinimumSize(QSize(60, 28))
-        self.label_25.setMaximumSize(QSize(60, 28))
+        self.label_25.setMinimumSize(QSize(40, 28))
+        self.label_25.setMaximumSize(QSize(40, 28))
         self.label_25.setFont(font2)
         self.label_25.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
@@ -112,8 +112,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_fstep = QLineEdit(self.tab_setup)
         self.lineEdit_fstep.setObjectName(u"lineEdit_fstep")
-        self.lineEdit_fstep.setMinimumSize(QSize(120, 28))
-        self.lineEdit_fstep.setMaximumSize(QSize(120, 28))
+        self.lineEdit_fstep.setMinimumSize(QSize(170, 28))
+        self.lineEdit_fstep.setMaximumSize(QSize(180, 28))
         self.lineEdit_fstep.setFont(font1)
         self.lineEdit_fstep.setStyleSheet(u"")
         self.lineEdit_fstep.setAlignment(Qt.AlignCenter)
@@ -122,8 +122,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_fmax = QLineEdit(self.tab_setup)
         self.lineEdit_fmax.setObjectName(u"lineEdit_fmax")
-        self.lineEdit_fmax.setMinimumSize(QSize(120, 28))
-        self.lineEdit_fmax.setMaximumSize(QSize(120, 28))
+        self.lineEdit_fmax.setMinimumSize(QSize(170, 28))
+        self.lineEdit_fmax.setMaximumSize(QSize(180, 28))
         self.lineEdit_fmax.setFont(font1)
         self.lineEdit_fmax.setStyleSheet(u"")
         self.lineEdit_fmax.setAlignment(Qt.AlignCenter)
@@ -132,8 +132,8 @@ class Ui_Dialog(object):
 
         self.label_24 = QLabel(self.tab_setup)
         self.label_24.setObjectName(u"label_24")
-        self.label_24.setMinimumSize(QSize(60, 28))
-        self.label_24.setMaximumSize(QSize(60, 28))
+        self.label_24.setMinimumSize(QSize(40, 28))
+        self.label_24.setMaximumSize(QSize(40, 28))
         self.label_24.setFont(font2)
         self.label_24.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
@@ -154,8 +154,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_fmin = QLineEdit(self.tab_setup)
         self.lineEdit_fmin.setObjectName(u"lineEdit_fmin")
-        self.lineEdit_fmin.setMinimumSize(QSize(120, 28))
-        self.lineEdit_fmin.setMaximumSize(QSize(120, 28))
+        self.lineEdit_fmin.setMinimumSize(QSize(170, 28))
+        self.lineEdit_fmin.setMaximumSize(QSize(180, 28))
         self.lineEdit_fmin.setFont(font1)
         self.lineEdit_fmin.setStyleSheet(u"")
         self.lineEdit_fmin.setAlignment(Qt.AlignCenter)

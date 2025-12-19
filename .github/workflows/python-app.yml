@@ -26,9 +26,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libglu1-mesa libegl1
-        python -m pip install --upgrade pip
-        pip install poetry
-        poetry install
+        curl -LsSf https://astral.sh/uv/install.sh | sh
     - name: Test with pytest
       run: |
-        poetry run pytest -m "not slow"
+        uv run pytest -m "not slow"
