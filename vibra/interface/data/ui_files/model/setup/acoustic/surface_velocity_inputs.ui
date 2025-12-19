@@ -234,6 +234,8 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
          </font>
         </property>
         <property name="currentIndex">
@@ -276,6 +278,8 @@
             <property name="font">
              <font>
               <pointsize>11</pointsize>
+              <weight>50</weight>
+              <bold>false</bold>
              </font>
             </property>
             <property name="frameShape">
@@ -533,6 +537,8 @@
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -610,6 +616,8 @@
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -637,6 +645,8 @@
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -723,6 +733,8 @@
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -1031,6 +1043,8 @@
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -1058,6 +1072,8 @@
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -1228,7 +1244,9 @@
              <font>
               <family>MS Shell Dlg 2</family>
               <pointsize>9</pointsize>
+              <weight>50</weight>
               <italic>false</italic>
+              <bold>false</bold>
              </font>
             </property>
             <property name="toolTip">
@@ -1251,7 +1269,7 @@
             </attribute>
             <column>
              <property name="text">
-              <string>Nodes</string>
+              <string>Surfaces</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
