@@ -1,6 +1,8 @@
 
 from vibra.engine import AnalysisID
 from vibra.engine.model import Model
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.engine.properties.fluid import Fluid
 
 from vibra.engine.mesher.element_type import (
@@ -232,6 +234,9 @@ class AcousticAssembler:
         integration_data = dict()
 
         for key, data in self.properties.surface_properties.items():
+            # TODO: Needs to revise those calculations to adapt to dataclasses
+            if isinstance(data, SurfaceVelocity | SurfaceVelocityTable | AcousticPressure | AcousticPressureTable):
+                data = data.to_dict()
 
             prop, surface_id = key
             if prop != property_label:
@@ -1516,6 +1521,10 @@ class AcousticAssembler:
         acoustic_excitation = defaultdict(float)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
+            # TODO: Needs to revise those calculations to adapt to dataclasses
+            if isinstance(data, SurfaceVelocity | SurfaceVelocityTable | AcousticPressure | AcousticPressureTable):
+                data = data.to_dict()
+
             if property == "mass_flow_rate":
 
                 _complex_values = data["values"][0]
