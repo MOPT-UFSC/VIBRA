@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'displacement_field_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -228,7 +228,7 @@ class Ui_Form(object):
         self.lineEdit_selected_frequency = QLineEdit(self.frame_frequency)
         self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
         self.lineEdit_selected_frequency.setEnabled(False)
-        self.lineEdit_selected_frequency.setMinimumSize(QSize(80, 28))
+        self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
         self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
         self.lineEdit_selected_frequency.setFont(font2)
         self.lineEdit_selected_frequency.setStyleSheet(u"")

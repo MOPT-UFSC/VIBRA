@@ -1,6 +1,6 @@
 import logging
 
-from molde import Color
+from molde.colors import Color, color_names
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
@@ -12,12 +12,13 @@ from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.hollow_solids_actor import HollowSolidsActor
+from ..actors.legend_actor import LegendActor
 from ..actors.nodes_actor import NodesActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
-from ..selection.mesh_selection import MeshSelection
 from ..render_tools.selection_tool import SelectionTool
+from ..selection.mesh_selection import MeshSelection
 from .model_info_text import (
     mesh_faces_info_text,
     mesh_solids_info_text,
@@ -37,7 +38,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
         app().main_window.theme_changed.connect(self.update_theme)
-        app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+        app().main_window.visualization_changed.connect(
+            self.visualization_changed_callback
+        )
         app().main_window.selection.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
@@ -52,6 +55,8 @@ class MeshRenderWidget(CommonRenderWidget):
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
+
+        self.bad_elements_plot = False
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -90,8 +95,12 @@ class MeshRenderWidget(CommonRenderWidget):
             self.text_actor.GetTextProperty().SetColor(font_color.to_rgb_f())
 
         if hasattr(self, "scale_bar_actor"):
-            self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
-            self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+            self.scale_bar_actor.GetLegendTitleProperty().SetColor(
+                font_color.to_rgb_f()
+            )
+            self.scale_bar_actor.GetLegendLabelProperty().SetColor(
+                font_color.to_rgb_f()
+            )
 
         self.update_selection()
 
@@ -143,7 +152,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
         visualization = app().main_window.visualization_filter
         self.ghost_actor = GhostActor(mesh)
-        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
+        self.ghost_actor.SetVisibility(
+            visualization.ghost and app().main_window.has_hidden_part()
+        )
 
         self.plane_actor = SectionPlaneActor(self.faces_actor.GetBounds())
         self.plane_actor.VisibilityOff()
@@ -177,17 +188,20 @@ class MeshRenderWidget(CommonRenderWidget):
         # We hide them painting the cells as transparent.
         self.nodes_actor.SetVisibility(True)
 
+        mesh = app().project.model.mesh
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        
         visualization = app().main_window.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
-        self.faces_actor.SetVisibility(visualization.faces)
-        self.solids_actor.SetVisibility(visualization.solids)
+        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
+        self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
+        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if app().main_window.distinguished_solids:
             self.switch_to_solids_actor()
-
-        if isinstance(self.solids_actor, SolidsActor):
             self.solids_actor.distinguish_solids(app().main_window.distinguished_solids)
+            self.solids_actor.SetVisibility(True)
 
         self.update_selection()
         self.update()
@@ -201,17 +215,21 @@ class MeshRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
-    
+
         if not isinstance(self.interactor_style, SelectionTool):
             return
-        
+
         if not self.interactor_style.is_selecting:
             return
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
-            xyz = self.plane_actor.calculate_xyz_position(section_plane_widget.get_position())
-            normal = self.plane_actor.calculate_normal_vector(section_plane_widget.get_rotation())
+            xyz = self.plane_actor.calculate_xyz_position(
+                section_plane_widget.get_position()
+            )
+            normal = self.plane_actor.calculate_normal_vector(
+                section_plane_widget.get_rotation()
+            )
             if section_plane_widget.get_inverted():
                 normal = -normal
             self.mesh_selection.set_section_plane(xyz, normal)
@@ -222,7 +240,9 @@ class MeshRenderWidget(CommonRenderWidget):
         mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
 
         if mouse_moved:
-            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(x0, y0, x, y)
+            picked_nodes, picked_faces, picked_solids = self.mesh_selection.area_pick(
+                x0, y0, x, y
+            )
         else:
             picked_nodes, picked_faces, picked_solids = self.mesh_selection.pick(x, y)
 
@@ -246,29 +266,32 @@ class MeshRenderWidget(CommonRenderWidget):
             return
 
         self.update_info_text()
-        visualization = app().main_window.visualization_filter
 
         # In this renderer the faces should be transparent
         # all the time, except when they are selected
         self.faces_actor.set_color(Color(0, 0, 0, 0))
         self.solids_actor.clear_colors()
-
-        if visualization.points:
-            self.nodes_actor.clear_colors()
-        else:
-            self.nodes_actor.set_color(Color(0, 0, 0, 0))
+        self.nodes_actor.clear_colors()
 
         nodes = app().main_window.selection.mesh_nodes
         faces = app().main_window.selection.mesh_faces
         solids = app().main_window.selection.mesh_solids
 
         selection_faces_color = app().config.user_preferences.selection_faces_color
-        selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
+        selection_nodes_points_color = (
+            app().config.user_preferences.selection_nodes_points_color
+        )
 
-        self.nodes_actor.paint_cells(selection_nodes_points_color, nodes)
+        self.nodes_actor.paint_nodes(selection_nodes_points_color, nodes)
         self.faces_actor.paint_cells(selection_faces_color.apply_factor(1.4), faces)
         self.solids_actor.paint_solids(selection_faces_color, solids)
         self.edges_actor.configure_appearance()
+
+        mesh = app().project.model.mesh
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        if mesh_error:
+            self.add_problematic_mesh_legend()
+
         self.update()
 
     def clear_selection_spheres(self):
@@ -400,7 +423,9 @@ class MeshRenderWidget(CommonRenderWidget):
 
     def _disable_section_plane(self):
         visualization = app().main_window.visualization_filter
-        self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
+        self.ghost_actor.SetVisibility(
+            visualization.ghost and app().main_window.has_hidden_part()
+        )
         self.plane_actor.VisibilityOff()
 
         self.nodes_actor.disable_cut()
@@ -420,7 +445,18 @@ class MeshRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-    
+
+    def add_problematic_mesh_legend(self):
+        legend_actor = LegendActor()
+
+        if app().project.model.mesh.disconnected_nodes_data:
+            legend_actor.add_item("Disconnected nodes", color_names.GREEN)
+
+        if app().project.model.mesh.collapsed_elements_data:
+            legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
+
+        self.add_actors(legend_actor)
+
     def set_default_render_tool(self):
         tool = SelectionTool()
         self.set_interactor_style(tool)

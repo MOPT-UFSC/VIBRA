@@ -162,7 +162,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.lineEdit_molar_mass.setEnabled(True)
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == RCTabTypes.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation()
             return
 
@@ -890,13 +890,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def remove_conflicting_excitations(self, surface_id: int):
 
         labels = [
-                  "acoustic_pressure", 
-                  "surface_velocity", 
-                  "incident_plane_wave",
-                  "mass_flow_rate", 
-                  "reciprocating_compressor_excitation", 
-                  "reciprocating_pump_excitation"
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "mass_source",
+            ]
 
         for label in labels:
             table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
@@ -1012,8 +1013,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         selected_surfaces = map(str, selected_surfaces)
         selection_text = ", ".join(selected_surfaces)
-
-        print(selection_text)
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)

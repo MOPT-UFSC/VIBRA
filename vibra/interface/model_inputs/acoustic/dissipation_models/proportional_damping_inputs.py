@@ -70,7 +70,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.lineEdit_selection_id.setEnabled(bool(index))
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             self.verify_if_selected_volumes_are_in_tree_widget_proportional_damping()
             return
 

@@ -20,7 +20,9 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
     def _build_dict_property_name_to_build_function(self):
         self.prop_name_to_build_func = {
-            "reciprocating_compressor_excitation": self._build_reciprocating_compressor,
+            "compressor_excitation_spectrum": self._build_compressor_excitation_symbol,
+            "compressor_excitation_waveform": self._build_compressor_excitation_symbol,
+            "reciprocating_compressor_excitation": self._build_compressor_excitation_symbol,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
@@ -39,7 +41,6 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
         surface_properties = app().project.model.properties.surface_properties
         for property_name, surface_id in surface_properties.keys():
             self._call_build_functions(property_name, surface_id=surface_id)
-            # self._call_build_functions("reciprocating_compressor_excitation", surface_id=8)
 
         super().build()
 
@@ -69,24 +70,39 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
 
         dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
         index = np.argmax(dist)
-        
-        return center_coords, avg_normal, dist[index]
 
-    def _build_reciprocating_compressor(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+        return center_coords, avg_normal, dist[index]
+    
+    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
 
-        color = None
-        if property["connection_type"] == "discharge":
-            shape = sources.create_compressor_discharge_source
-            # vermelho, seta entra é azul
+        property_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        if not isinstance(property_data, dict):
+            return
+
+        coords, normal, _ = self._get_center_coords_and_normals(surface_id)
+        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
+        if area is None:
+            scale = 1
+        else:
+            scale = np.sqrt(4*area/np.pi)
+
+        compressor_type_shape = None
+        compressor_type = property_data.get("compressor_type", "reciprocating")
+
+        if property_data["connection_type"] == "discharge":
             color = color_names.RED_3
-        elif property["connection_type"] == "suction":
-            shape = sources.create_compressor_suction_source
-            color = color_names.BLUE_3
+            if compressor_type == "screw":
+                compressor_type_shape = sources.create_discharge_screw_compressor_source
+            else:
+                compressor_type_shape = sources.create_discharge_reciprocating_compressor_source
 
-        coords, normal, max_dist = self._get_center_coords_and_normals(surface_id)
-        self.add_symbol(shape, coords, normal, color=color, scale=1.985 * max_dist)
+        else:
+            color = color_names.BLUE_3
+            if compressor_type == "screw":
+                compressor_type_shape = sources.create_suction_screw_compressor_source
+            else:
+                compressor_type_shape = sources.create_suction_reciprocating_compressor_source
+
+        self.add_symbol(compressor_type_shape, coords, normal, color=color, scale=scale)

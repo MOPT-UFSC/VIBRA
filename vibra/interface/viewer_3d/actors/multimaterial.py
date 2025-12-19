@@ -26,7 +26,7 @@ from vtkmodules.vtkRenderingCore import (
 
 from vibra import TEXTURE_DIR, app
 from vibra.engine.mesher.mesh import Mesh
-from vibra.utils.interface_utils import ColorMode
+from vibra.utils.interface_utils import GeometryColorMode
 from vibra.utils.vtk_utils import fill_array, read_texture
 
 
@@ -71,7 +71,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
 
-        if color_mode == ColorMode.EMPTY:
+        if color_mode == GeometryColorMode.EMPTY:
             self.reload_composition()
             return self.set_color(color_names.WHITE)
 
@@ -114,7 +114,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         color_mode = app().main_window.visualization_filter.color_mode
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
-        if color_mode == ColorMode.EMPTY:
+        if color_mode == GeometryColorMode.EMPTY:
             self.clear_composition()
             self.default_actor.VisibilityOn()
             hidden_surfaces = app().main_window.selection.hidden_surfaces

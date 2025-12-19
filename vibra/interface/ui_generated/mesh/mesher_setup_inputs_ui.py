@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mesher_setup_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.1
+## Created by: Qt User Interface Compiler version 6.9.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -687,6 +687,33 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.frame_buttons, 3, 0, 1, 1)
 
+        QWidget.setTabOrder(self.comboBox_element_type, self.comboBox_shape_function)
+        QWidget.setTabOrder(self.comboBox_shape_function, self.comboBox_mesh_quality_metrics)
+        QWidget.setTabOrder(self.comboBox_mesh_quality_metrics, self.comboBox_volumes_interface_behavior)
+        QWidget.setTabOrder(self.comboBox_volumes_interface_behavior, self.tabWidget_main)
+        QWidget.setTabOrder(self.tabWidget_main, self.tabWidget_global_settings)
+        QWidget.setTabOrder(self.tabWidget_global_settings, self.doubleSpinBox_maximum_element_size)
+        QWidget.setTabOrder(self.doubleSpinBox_maximum_element_size, self.doubleSpinBox_minimum_element_size)
+        QWidget.setTabOrder(self.doubleSpinBox_minimum_element_size, self.doubleSpinBox_size_factor)
+        QWidget.setTabOrder(self.doubleSpinBox_size_factor, self.lineEdit_geometry_tolerance)
+        QWidget.setTabOrder(self.lineEdit_geometry_tolerance, self.pushButton_generate_mesh)
+        QWidget.setTabOrder(self.pushButton_generate_mesh, self.pushButton_exit)
+        QWidget.setTabOrder(self.pushButton_exit, self.pushButton_syncrhonize)
+        QWidget.setTabOrder(self.pushButton_syncrhonize, self.comboBox_2d_algorithm)
+        QWidget.setTabOrder(self.comboBox_2d_algorithm, self.comboBox_3d_algorithm)
+        QWidget.setTabOrder(self.comboBox_3d_algorithm, self.comboBox_recombination_algorithm)
+        QWidget.setTabOrder(self.comboBox_recombination_algorithm, self.comboBox_subdivision_algorithm)
+        QWidget.setTabOrder(self.comboBox_subdivision_algorithm, self.comboBox_recombine_all)
+        QWidget.setTabOrder(self.comboBox_recombine_all, self.comboBox_second_order_incomplete)
+        QWidget.setTabOrder(self.comboBox_second_order_incomplete, self.lineEdit_selected_ids)
+        QWidget.setTabOrder(self.lineEdit_selected_ids, self.doubleSpinBox_refined_element_size)
+        QWidget.setTabOrder(self.doubleSpinBox_refined_element_size, self.pushButton_add)
+        QWidget.setTabOrder(self.pushButton_add, self.pushButton_delete)
+        QWidget.setTabOrder(self.pushButton_delete, self.pushButton_show_bad_elements)
+        QWidget.setTabOrder(self.pushButton_show_bad_elements, self.pushButton_plot_histogram)
+        QWidget.setTabOrder(self.pushButton_plot_histogram, self.tableWidget_mesh_quality)
+        QWidget.setTabOrder(self.tableWidget_mesh_quality, self.scrollArea)
+        QWidget.setTabOrder(self.scrollArea, self.tableWidget_refining_mesh_data)
 
         self.retranslateUi(Dialog)
 

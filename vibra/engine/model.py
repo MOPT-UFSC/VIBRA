@@ -260,6 +260,11 @@ class Model:
 
             try:
                 self.frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step)
+
+                # filters the frequencies vector to mitigate the already identified rounding errors
+                mask = self.frequencies <= self.f_max
+                self.frequencies = self.frequencies[mask]
+
             except:
                 self.frequencies = None
                 return

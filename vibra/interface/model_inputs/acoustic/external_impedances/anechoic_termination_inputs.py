@@ -93,7 +93,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.pushButton_attribute.setEnabled(True)
 
     def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
             return
 
@@ -249,9 +249,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-                  "specific_impedance"
-                  "incident_plane_wave"
-                  ]
+            "absorption_surface",
+            "specific_impedance",
+            "incident_plane_wave",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:

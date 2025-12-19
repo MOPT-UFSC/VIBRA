@@ -22,7 +22,7 @@ from vibra import app
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.utils.interface_utils import ColorMode
+from vibra.utils.interface_utils import GeometryColorMode
 
 
 class FacesActor(vtkActor):
@@ -143,7 +143,7 @@ class FacesActor(vtkActor):
         color_mode = app().main_window.visualization_filter.color_mode
         no_info_color = Color(20, 20, 20)
 
-        if color_mode == ColorMode.MATERIAL:
+        if color_mode == GeometryColorMode.MATERIAL:
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
 
@@ -154,7 +154,7 @@ class FacesActor(vtkActor):
                 color = Color(*material.color) if (material is not None) else no_info_color
                 self.paint_cells(color, face_elements)
 
-        elif color_mode == ColorMode.FLUID:
+        elif color_mode == GeometryColorMode.FLUID:
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
 
@@ -165,7 +165,7 @@ class FacesActor(vtkActor):
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color
                 self.paint_cells(color, face_elements)
 
-        elif color_mode == ColorMode.EMPTY:
+        elif color_mode == GeometryColorMode.EMPTY:
             color = app().config.user_preferences.faces_color
             self.set_color(color)
 

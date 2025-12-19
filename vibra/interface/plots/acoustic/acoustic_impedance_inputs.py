@@ -85,6 +85,9 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def geometry_selection_callback(self):
 
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
         volumes = app().main_window.selection.geometry_volumes
         surfaces = app().main_window.selection.geometry_surfaces
         nodes = app().main_window.selection.mesh_nodes

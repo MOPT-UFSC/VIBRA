@@ -134,9 +134,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 self.lineEdit_constant_structural_coefficient.setText(str(global_damping[2]))
 
     def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
-        self.lineEdit_fmin.setText(str(round(f_min, 6)))
-        self.lineEdit_fmax.setText(str(round(f_max, 6)))
-        self.lineEdit_fstep.setText(str(round(f_step, 6)))
+
+        self.lineEdit_fmin.setText("{}".format(round(f_min, 14)))
+        self.lineEdit_fmax.setText("{}".format(round(f_max, 14)))
+        self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
         key = app().project.model.properties.check_if_there_are_tables_at_the_model()
 
@@ -156,8 +157,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
         mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        disconnected_nodes = bool(mesh.disconnected_nodes_data)
+        collapsed_elements = bool(mesh.collapsed_elements_data)
 
         text = ""
         if collapsed_elements:
@@ -280,13 +281,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        if app().project.model.properties.check_if_there_are_tables_at_the_model():
-            self.frequencies = self.model.frequencies
-        else:
-            self.model.set_analysis_setup(analysis_setup)
+        # if app().project.model.properties.check_if_there_are_tables_at_the_model():
+        #     self.frequencies = self.model.frequencies
+        # else:
+        #     self.model.set_analysis_setup(analysis_setup)
 
         app().file.write_analysis_setup_in_file(analysis_setup)
-
         self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()
 
