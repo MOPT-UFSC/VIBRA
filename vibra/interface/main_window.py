@@ -836,6 +836,25 @@ class MainWindow(MainWindow_UI):
 
         if not check:
             return False
+        
+        
+        is_conda_environment = 'CONDA_PREFIX' in os.environ
+
+        if load_path.lower().endswith(('.step', '.stp')) and is_conda_environment:
+            obj = QMessageBox.question(
+                self,
+                "STEP file import",
+                "Would you like to select a subset of volumes to apply to the model?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if obj == QMessageBox.StandardButton.Yes:
+                from simple_cad.simple_cad_widget import SimpleCAD
+                simple_cad = SimpleCAD(self)
+                LoadingWindow(lambda: simple_cad.importStep(load_path)).run()
+                simple_cad.exec()
+                if simple_cad.geometry_file is not None:
+                    load_path = simple_cad.geometry_file
 
         self.clear_selection()
 
