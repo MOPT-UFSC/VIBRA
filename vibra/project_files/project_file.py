@@ -2,6 +2,7 @@ import zipfile
 import shutil
 
 from vibra import app
+from vibra.engine.properties.absorption_surface import AbsorptionSurface, AbsorptionSurfaceTable
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
@@ -404,7 +405,7 @@ class ProjectFile:
                 """
                 output = dict()
                 for (property, tags), data in prop.items():
-                    if isinstance(data, AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable):
+                    if isinstance(data, AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable | AbsorptionSurface | AbsorptionSurfaceTable):
                         data = data.to_dict()
 
                     if isinstance(tags, tuple):
@@ -486,6 +487,8 @@ class ProjectFile:
                     val = AcousticPressure.from_dict(val)
                 elif property == "surface_velocity":
                     val = SurfaceVelocity.from_dict(val)
+                elif property == "absorption_surface":
+                    val = AbsorptionSurface.from_dict(val)
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])

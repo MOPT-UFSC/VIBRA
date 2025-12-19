@@ -3,6 +3,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.engine.properties.absorption_surface import AbsorptionSurface, AbsorptionSurfaceTable
+from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -103,34 +106,32 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
-
         data = self.properties._get_property("absorption_surface", surface=surface_id)
-        if not isinstance(data, dict):
-            return
 
-        if "table_paths" in data.keys():
+        if isinstance(data, AbsorptionSurfaceTable):
             self.tabWidget_main.setCurrentIndex(1)
-            self.lineEdit_table_path.setText(data.get("table_paths")[0])
-        else:
+            self.lineEdit_table_path.setText(data.paths[0])
+        elif isinstance(data, AbsorptionSurface):
             self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
+            self.lineEdit_real_value.setText(f"{data.real[0]}")
 
     def load_model_info(self):
-
         self.treeWidget_absorption_surface.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "absorption_surface":
 
-                if "table_names" in data.keys():
+            if property == "absorption_surface":
+                if isinstance(data, AbsorptionSurfaceTable):
                     str_value = "Table of values"
-                else:
-                    absorption_coefficient = np.array(data["real_values"])
+                elif isinstance(data, AbsorptionSurface):
+                    absorption_coefficient = np.array(data.real)
                     str_value = str(absorption_coefficient)
+                else:
+                    str_value = ""
 
                 new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
+                new.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                 self.treeWidget_absorption_surface.addTopLevelItem(new)
 
         self.update_tabs_visibility()
@@ -209,10 +210,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         real_values = [absorption_coefficient]
         imag_values = [None]
 
-        data = {
-                "real_values" : real_values,
-                "imag_values" : imag_values,
-                }
+        data = AbsorptionSurface(real_values, imag_values)
 
         for surface_id in surface_ids:
             self.properties._set_property("absorption_surface", data, surface=surface_id)
@@ -342,11 +340,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 absorption_coefficient = list(self.imported_values[:, 1])
                 table_path = self.lineEdit_table_path.text()
 
-                data = {
-                        "table_names": [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [absorption_coefficient]
-                        }
+                data = AbsorptionSurfaceTable([table_name], [table_path], [absorption_coefficient])
 
                 self.properties._set_property("absorption_surface", data, surface=surface_id)
 
@@ -457,7 +451,11 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in properties:
-                if "table_names" in data.keys():
+                if isinstance(data, AcousticPressureTable | SurfaceVelocityTable | AbsorptionSurfaceTable):
+                    return
+                elif isinstance(data, AcousticPressure | SurfaceVelocity | AbsorptionSurface):
+                    ...
+                elif "table_names" in data.keys():
                     return
 
         if isinstance(self.project.analysis_setup, dict):

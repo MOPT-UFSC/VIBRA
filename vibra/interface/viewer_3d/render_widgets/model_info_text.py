@@ -1,10 +1,11 @@
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.absorption_surface import AbsorptionSurface
+from vibra.engine.properties.surface_velocity import SurfaceVelocity
+from vibra.engine.properties.acoustic_pressure import AcousticPressure
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.properties.surface_velocity import SurfaceVelocity
 from vibra.utils.utils import are_there_values_different_from_zero
 
 from molde.utils import TreeInfo
@@ -353,7 +354,7 @@ def acoustic_boundary_conditions_info_text():
     recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=selected_faces[0])
     incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
     mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
-    absorption_surface = properties._get_property("absorption_surface", surface=selected_faces[0])
+    absorption_surface: AbsorptionSurface | None = properties._get_property("absorption_surface", surface=selected_faces[0])
     specific_impedance = properties._get_property("specific_impedance", surface=selected_faces[0])
 
     boundary_conditions_list = [
@@ -388,7 +389,7 @@ def acoustic_boundary_conditions_info_text():
         text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
 
     if absorption_surface is not None:
-        values = absorption_surface["values"][0]
+        values = absorption_surface.values[0]
         text += acoustic_format("Absorption surface", values, "alpha", "--")
 
     if isinstance(specific_impedance, dict):

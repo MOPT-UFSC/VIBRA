@@ -35,7 +35,7 @@ class SurfaceVelocity:
             imag_values=self.imaginary,
             nodal_attribution=self.nodal_attribution,
             averaged=self.averaged,
-            values=list(map(complex, self.real, self.imaginary)),
+            values=self.values
         )
 
     @classmethod

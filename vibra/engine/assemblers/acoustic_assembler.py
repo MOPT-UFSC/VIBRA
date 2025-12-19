@@ -1,6 +1,7 @@
 
 from vibra.engine import AnalysisID
 from vibra.engine.model import Model
+from vibra.engine.properties.absorption_surface import AbsorptionSurface, AbsorptionSurfaceTable
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.engine.properties.fluid import Fluid
@@ -235,7 +236,7 @@ class AcousticAssembler:
 
         for key, data in self.properties.surface_properties.items():
             # TODO: Needs to revise those calculations to adapt to dataclasses
-            if isinstance(data, SurfaceVelocity | SurfaceVelocityTable | AcousticPressure | AcousticPressureTable):
+            if isinstance(data, SurfaceVelocity | SurfaceVelocityTable | AcousticPressure | AcousticPressureTable | AbsorptionSurface | AbsorptionSurfaceTable):
                 data = data.to_dict()
 
             prop, surface_id = key
@@ -1522,7 +1523,7 @@ class AcousticAssembler:
 
         for (property, surface_id), data in self.properties.surface_properties.items():
             # TODO: Needs to revise those calculations to adapt to dataclasses
-            if isinstance(data, SurfaceVelocity | SurfaceVelocityTable | AcousticPressure | AcousticPressureTable):
+            if isinstance(data, SurfaceVelocity | SurfaceVelocityTable | AcousticPressure | AcousticPressureTable | AbsorptionSurface | AbsorptionSurfaceTable):
                 data = data.to_dict()
 
             if property == "mass_flow_rate":
