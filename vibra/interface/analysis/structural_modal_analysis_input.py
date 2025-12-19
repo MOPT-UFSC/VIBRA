@@ -55,8 +55,8 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
         mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        disconnected_nodes = bool(mesh.disconnected_nodes_data)
+        collapsed_elements = bool(mesh.collapsed_elements_data)
 
         text = ""
         if collapsed_elements:

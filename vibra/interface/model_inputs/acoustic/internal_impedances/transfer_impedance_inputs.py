@@ -211,7 +211,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path).data
+                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the specific impedance")
@@ -485,7 +485,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if isinstance(surface_ids, int):
             surface_ids = [surface_ids]
 
-        labels = ["transfer_impedance", "interior_impedance"]
+        labels = [
+            "perforated_plate_model", 
+            "interior_impedance",
+            ]
 
         for surface_id in surface_ids:
             for label in labels:

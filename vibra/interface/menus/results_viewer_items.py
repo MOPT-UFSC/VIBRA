@@ -40,16 +40,17 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_waveform = self.add_item("Acoustic Pressure Waveform")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
         self.item_child_acoustic_pressure_frequency_response_function = self.add_item("Acoustic Presssure Frequency Response Function")
-        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable pulsation (Reciprocating Compressor)")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable Pulsation (Reciprocating Compressor)")
+        self.item_child_allowable_pulsations_for_screw_compressor = self.add_item("Allowable Pulsation (Screw Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
         self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
         self.item_child_absorption_coefficient = self.add_item("Absorption Coefficient")
 
         self.top_level_items = [
-                                self.item_top_results_viewer_acoustic,
-                                self.item_top_results_viewer_structural
-                                ]
+            self.item_top_results_viewer_acoustic,
+            self.item_top_results_viewer_structural
+            ]
 
     def _create_connections(self):
         """
@@ -101,6 +102,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_frequency_response.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response_function.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
+        self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
         self.item_child_acoustic_pressure_waveform.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
@@ -178,20 +180,35 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response_function.setDisabled(False)
             self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
+            self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(False)
             self.item_child_acoustic_pressure_waveform.setDisabled(False)
             self.item_child_TL_NR.setDisabled(False)
             self.item_child_particle_velocity.setDisabled(False)
             self.item_child_acoustic_impedance.setDisabled(False)
             self.item_child_absorption_coefficient.setDisabled(False)
 
-        self.update_allowable_pulsation_criteria_visibility(analysis_id)
+        self.update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(analysis_id)
+        self.update_allowable_pulsation_criteria_visibility_for_screw_compressor(analysis_id)
         self.update_tree_visibility_after_solution()
 
-    def update_allowable_pulsation_criteria_visibility(self, analysis_id: int):
-        compressor_exists = True
+    def update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(self, analysis_id: int):
+        compressor_exists = False
         if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            compressor_exists = not app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
-        self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(compressor_exists)
+            compressor_exists = app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
+
+        self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(not compressor_exists)
+
+    def update_allowable_pulsation_criteria_visibility_for_screw_compressor(self, analysis_id: int):
+        compressor_exists = False
+        if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            for (prop_label, *args), prop_data in app().project.model.properties.surface_properties.items():
+                if prop_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
+                    compressor_type = prop_data.get("compressor_type")
+                    if compressor_type == "screw":
+                        compressor_exists = True
+                        break
+
+        self.item_child_allowable_pulsations_for_screw_compressor.setHidden(not compressor_exists)
 
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 

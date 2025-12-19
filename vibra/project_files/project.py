@@ -214,7 +214,7 @@ class Project(QObject):
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
 
-        app().main_window.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.action_export_element_transfer_data.setDisabled(True)
 
     def solve_structural_modal_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
@@ -228,7 +228,7 @@ class Project(QObject):
         dt = time() - t0
         print(f"Elapsed time to solve structural modal analysis: {dt : .6f} [s]")
 
-        app().main_window.disable_advanced_acoustic_plots_buttons(True)
+        app().main_window.action_export_element_transfer_data.setDisabled(True)
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
@@ -243,12 +243,11 @@ class Project(QObject):
 
         t0 = time()
         if self.acoustic_harmonic_solver.solve_direct(is_resume=is_resume):
+            dt = time() - t0
+            print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
             return
 
-        dt = time() - t0
-        print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
-
-        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+        app().main_window.action_export_element_transfer_data.setDisabled(False)
 
     def solve_structural_harmonic_analysis(self):
         analisys_id = self.analysis_setup.get("analysis_id")
@@ -266,6 +265,7 @@ class Project(QObject):
             self.structural_harmonic_solver.solve_direct()
         else:
             self.structural_harmonic_solver.solve_mode_superposition(is_proportionally_damped=True)
+
         dt = time() - t0
         print(f"Elapsed time to solve harmonic analysis: {dt : .6f} [s]")
 
