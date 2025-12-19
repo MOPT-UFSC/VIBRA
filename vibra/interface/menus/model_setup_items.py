@@ -250,6 +250,10 @@ class ModelSetupItems(CommonMenuItems):
                         if isinstance(pp_data, dict):
                             continue
 
+                        ti_data = properties._get_property("transfer_impedance", surface=key[1])
+                        if isinstance(ti_data, dict):
+                            continue
+
                     return True
 
         return False
