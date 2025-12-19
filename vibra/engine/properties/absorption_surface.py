@@ -28,7 +28,7 @@ class AbsorptionSurface:
 
         return values
 
-    def to_dict(self) -> dict[str, list[float] | list[complex]]:
+    def to_dict(self) -> dict[str, list[float] | list[float | None]]:
         return dict(
             real_values=self.real,
             imag_values=self.imaginary,

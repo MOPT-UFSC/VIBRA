@@ -41,8 +41,8 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
@@ -56,7 +56,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         #
         for i, w in enumerate([120]):
             self.treeWidget_absorption_surface.setColumnWidth(i, w)
-            self.treeWidget_absorption_surface.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_absorption_surface.headerItem().setTextAlignment(i, Qt.AlignmentFlag.AlignCenter)
 
     def _create_connections(self):
         #
@@ -144,6 +144,12 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.tabular_data_assignment()
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
+        # TODO: I have had problems testing this with values greater than 1. Check later.
+        # Error:
+        # acoustic_assembler.py:269: RuntimeWarning: invalid value encountered in scalar power
+        # Z_s = Z_0 * ((1 + (1-alpha)**(1/2)) / (1 - (1-alpha)**(1/2)))
+        # acoustic_assembler.py:1274: RuntimeWarning: invalid value encountered in divide
+        # self.data_Zas[j] = int2d_NtN / Z_as[:, j].reshape(-1, 1, 1)
 
         self.stop = False
         message = ""
@@ -215,7 +221,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         for surface_id in surface_ids:
             self.properties._set_property("absorption_surface", data, surface=surface_id)
 
-        self.actions_to_finalize()            
+        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -230,7 +236,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the absorption surface")
-                
+ 
                 if not imported_data:
                     return
 
