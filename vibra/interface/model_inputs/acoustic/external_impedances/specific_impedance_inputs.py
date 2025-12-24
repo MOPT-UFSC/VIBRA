@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Property, Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.engine.properties.anechoic_termination import AnechoicTermination
+from vibra.engine.properties.specific_impedance import SpecifcImpedance, SpecifcImpedanceTable
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -38,8 +40,8 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
@@ -53,7 +55,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         #
         for i, w in enumerate([20, 80]):
             self.treeWidget_specific_impedance.setColumnWidth(i, w)
-            self.treeWidget_specific_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_specific_impedance.headerItem().setTextAlignment(i, Qt.AlignmentFlag.AlignCenter)
 
     def _create_connections(self):
         #
@@ -105,36 +107,35 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def load_property_data(self, surface_id: int):
 
         data = self.properties._get_property("specific_impedance", surface=surface_id)
-        if not isinstance(data, dict):
-            return
 
-        if "table_paths" in data.keys():
+        if isinstance(data, SpecifcImpedanceTable):
             self.tabWidget_main.setCurrentIndex(1)
-            self.lineEdit_table_path.setText(data.get("table_paths")[0])
-        else:
+            self.lineEdit_table_path.setText(data.table_paths[0])
+        elif isinstance(data, SpecifcImpedance):
             self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
+            self.lineEdit_real_value.setText(f"{data.real_values[0]}")
 
     def load_model_info(self):
         self.treeWidget_specific_impedance.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "specific_impedance":
-
-                if "anechoic_termination" in data.keys():
+                if isinstance(data, AnechoicTermination):
                     continue
 
-                if "table_names" in data.keys():
+                if isinstance(data, SpecifcImpedanceTable):
                     str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
+                elif isinstance(data, SpecifcImpedance):
+                    real_values = np.array(data.real_values)
+                    imag_values = np.array(data.imag_values)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
+                else:
+                    str_value = ""
 
                 new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
+                new.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
+                new.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                 self.treeWidget_specific_impedance.addTopLevelItem(new)
 
         self.update_tabs_visibility()
@@ -201,14 +202,10 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                                                         )
 
         if specific_impedance is not None:
-
             real_values = [np.real(specific_impedance)]
             imag_values = [np.imag(specific_impedance)]
 
-            data = {
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    }
+            data = SpecifcImpedance(real_values=real_values, imag_values=imag_values)
 
             for surface_id in surface_ids:
                 self.properties._set_property("specific_impedance", data, surface=surface_id)
@@ -301,7 +298,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def check_table_values(self):
-
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
                                                                input_ids, 
@@ -318,38 +314,30 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() != "":
-
             if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
-                
-            for surface_id in surface_ids:
-
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] >= 3:
-
-                        table_name = f"specific_impedance_at_surface_{surface_id}"
-                        if self.save_table_values(table_name, self.imported_values):
-                            self.lineEdit_table_path.setFocus()
-                            self.imported_values = None
-                            return
-
-                else:
-                    return
+                self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
 
                 if self.imported_values is None:
                     return
+ 
+            if not isinstance(self.imported_values, np.ndarray):
+                return
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
-                table_path = self.lineEdit_table_path.text()
+            for surface_id in surface_ids:
+                if self.imported_values.shape[1] >= 3:
+                    table_name = f"specific_impedance_at_surface_{surface_id}"
 
-                data = {
-                        "table_names" : [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [complex_values],
-                        }
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return
 
-                self.properties._set_property("specific_impedance", data, surface=surface_id)
+                    complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+                    table_path = self.lineEdit_table_path.text()
+
+                    data = SpecifcImpedanceTable(table_names=[table_name], table_paths=[table_path], values=[complex_values])
+
+                    self.properties._set_property("specific_impedance", data, surface=surface_id)
 
             self.actions_to_finalize()
 
@@ -382,7 +370,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 self.properties._remove_surface_property(label, surface_id)
                 self.process_table_file_removal(table_names)
 
-    def remove_table_files_from_surfaces(self, surface_id : list):
+    def remove_table_files_from_surfaces(self, surface_id : int):
         table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surfaces")
         self.process_table_file_removal(table_names)
 
@@ -393,7 +381,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.remove_table_files_from_surfaces(surface_id)
 
             data = self.properties._get_property("specific_impedance", surface=surface_id)
-            if "anechoic_termination" in data.keys():
+            if isinstance(data, AnechoicTermination):
                 return
 
             self.properties._remove_surface_property("specific_impedance", surface_id)
@@ -443,11 +431,13 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if "table_names" in data.keys():
+                if isinstance(data, dict):
+                    if "table_names" in data.keys():
+                        return
+                elif hasattr(data, "table_names"):
                     return
 
         if isinstance(self.project.analysis_setup, dict):
@@ -465,7 +455,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, *args = key
             if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
+                if isinstance(data, AnechoicTermination):
                     continue
                 self.tabWidget_main.setTabVisible(2, True)
                 return
@@ -474,11 +464,11 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             self.attribute_callback()
-        elif event.key() == Qt.Key_Delete:
+        elif event.key() == Qt.Key.Key_Delete:
             self.remove_callback()
-        elif event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key.Key_Escape:
             self.close()
         else:
             return

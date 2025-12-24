@@ -822,7 +822,6 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         model_properties = [
                             self.properties.surface_properties,
                             self.properties.point_properties,
@@ -845,11 +844,10 @@ class MassSourceInputs(MassSourceInputs_UI):
             for key, data in model_property.items():
                 property, _ = key
                 if property in properties:
-                    if isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
-                        return
-                    elif isinstance(data, SurfaceVelocity | AcousticPressure):
-                        ...
-                    elif "table_names" in data.keys():
+                    if isinstance(data, dict):
+                        if "table_names" in data.keys():
+                            return
+                    elif hasattr(data, "table_names"):
                         return
 
         if isinstance(self.project.analysis_setup, dict):
@@ -944,18 +942,18 @@ class MassSourceInputs(MassSourceInputs_UI):
 
                 new = QTreeWidgetItem([str(selection_id), selection_label, str_value])
                 for i in range(3):
-                    new.setTextAlignment(i, Qt.AlignCenter)
+                    new.setTextAlignment(i, Qt.AlignmentFlag.AlignCenter)
 
                 self.treeWidget_mass_source.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             self.attribute_callback()
-        elif event.key() == Qt.Key_Delete:
+        elif event.key() == Qt.Key.Key_Delete:
             self.remove_callback()
-        elif event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key.Key_Escape:
             self.close()
         else:
             return

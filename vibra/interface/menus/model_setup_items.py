@@ -4,6 +4,8 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QToolTip
 
 from vibra import app, DEVELOPER_MODE, ICON_DIR
+from vibra.engine.properties.anechoic_termination import AnechoicTermination
+from vibra.engine.properties.specific_impedance import SpecifcImpedance, SpecifcImpedanceTable
 from vibra.interface.menus.common_menu_items import CommonMenuItems
 
 from molde import Color
@@ -215,12 +217,12 @@ class ModelSetupItems(CommonMenuItems):
                     else:
                         return True
 
-        # As anechoic_termination is a subproperty of specific_impedance, 
+        # As anechoic_termination is a subproperty of specific_impedance,
         # we need to garantee there is a specific_impedance that is not anechoic_termination
         if property_name == "specific_impedance":
             for key, data in properties.surface_properties.items():
                 if key[0] == "specific_impedance":
-                    if "anechoic_termination" not in data.keys():
+                    if isinstance(data, SpecifcImpedance | SpecifcImpedanceTable):
                         return True
             return False
         
@@ -228,7 +230,7 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "anechoic_termination":
             for key, data in properties.surface_properties.items():
                 if key[0] == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
+                    if isinstance(data, AnechoicTermination):
                         return True
 
         # test other properties
@@ -400,31 +402,31 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_nodal_loads_callback(self):
        app().main_window.input_ui.set_nodal_loads()
-    
+
     def item_child_distributed_loads_callback(self):
         app().main_window.input_ui.set_distributed_loads()
-    
+
     def item_child_normal_pressure_load_callback(self):
         app().main_window.input_ui.set_normal_pressure_load()
-    
+
     def item_child_acoustic_pressure_callback(self):
         app().main_window.input_ui.set_acoustic_pressure()
-    
+
     def item_child_mass_flow_rate_callback(self):
         app().main_window.input_ui.set_mass_flow_rate()
 
     def item_child_mass_source_callback(self):
         app().main_window.input_ui.set_mass_source()
-    
+
     def item_child_surface_velocity_callback(self):
         app().main_window.input_ui.set_surface_velocity()
 
     def item_child_incident_plane_wave_callback(self):
         app().main_window.input_ui.set_incident_plane_wave()
-    
+
     def item_child_anechoic_termination_callback(self):
         app().main_window.input_ui.set_anechoic_termination()
-    
+
     def item_child_specific_impedance_callback(self):
         app().main_window.input_ui.set_specific_impedance()
 

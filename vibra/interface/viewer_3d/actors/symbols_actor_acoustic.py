@@ -3,6 +3,7 @@ from molde.colors import color_names
 from molde.actors import CommonSymbolsActorVariableSize
 
 from vibra import app
+from vibra.engine.properties.anechoic_termination import AnechoicTermination
 from vibra.interface.viewer_3d import sources
 
 
@@ -142,7 +143,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         coords, normal = self._get_center_coords_and_normals(surface_id)
         shape = (
             sources.create_anechoic_termination_source
-            if "anechoic_termination" in property.keys()
+            if isinstance(property, AnechoicTermination)
             else sources.create_impedance_source
         )
         self.add_symbol(shape, coords, normal, color=color_names.PURPLE_2)

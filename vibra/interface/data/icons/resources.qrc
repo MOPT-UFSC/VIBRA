@@ -13,7 +13,6 @@
         <file>get_fluid_blue.png</file>
         <file>get_fuid_light_blue.png</file>
         <file>go_next.png</file>
-        <file>grab_icon.png</file>
         <file>help.png</file>
         <file>home.png</file>
         <file>image-plus.png</file>
@@ -36,19 +35,17 @@
         <file>reset_icon.png</file>
         <file>results.png</file>
         <file>resume_icon.png</file>
-        <file>rotation_icon.png</file>
         <file>save.png</file>
         <file>save_as.png</file>
-        <file>selection_icon.png</file>
         <file>settings.png</file>
         <file>sun_icon.png</file>
         <file>sync_disabled.png</file>
         <file>sync_enabled.png</file>
         <file>user_preferences_icon.png</file>
+        <file>grab_icon.png</file>
+        <file>rotation_icon.png</file>
+        <file>selection_icon.png</file>
         <file>zoom_icon.png</file>
-        <file>cursors/pan_cursor.png</file>
-        <file>cursors/rotation_cursor.png</file>
-        <file>cursors/zoom_cursor.png</file>
         <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
         <file>model_setup_items/absorption_surface.png</file>
@@ -118,5 +115,8 @@
         <file>warnings/transparent_warning.png</file>
         <file>warnings/warning.png</file>
         <file>warnings/warning_2.png</file>
+        <file>cursors/pan_cursor.png</file>
+        <file>cursors/rotation_cursor.png</file>
+        <file>cursors/zoom_cursor.png</file>
     </qresource>
 </RCC>

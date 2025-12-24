@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.anechoic_termination import AnechoicTermination
 from vibra.interface.ui_generated.model.setup.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -173,10 +173,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                     PrintMessageInput([window_title, title, message])
                     return
 
-            data = {
-                    "anechoic_termination" : True,
-                    "volume_id" : volume_id,
-                    }
+            data = AnechoicTermination(volume_id)
 
             self.properties._set_property("specific_impedance", data, surface=surface_id)
 
@@ -219,7 +216,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.actions_to_finalize()
 
     def reset_callback(self):
-
         self.hide()
 
         title = "Anechoic termination resetting"
@@ -232,11 +228,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             return
 
         if read._continue:
-
             surface_ids = list()
             for (property, *args), data in self.properties.surface_properties.items():
                 if property == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
+                    if isinstance(data, AnechoicTermination):
                         surface_id = args[0]
                         surface_ids.append(surface_id)
 
@@ -254,15 +249,13 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if isinstance(data, AcousticPressure | AcousticPressureTable):
-                    if hasattr(data, "names"):
+                if isinstance(data, dict):
+                    if "table_names" in data.keys():
                         return
-
-                elif "table_names" in data.keys():
+                elif hasattr(data, "table_names"):
                     return
 
         if isinstance(self.project.analysis_setup, dict):
@@ -271,11 +264,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):
-
         for key, data in self.properties.surface_properties.items():
             property, *args = key
             if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
+                if isinstance(data, AnechoicTermination):
                     self.tabWidget_main.setTabVisible(1, True)
                     return
 
@@ -293,15 +285,18 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def load_model_info(self):
         self.treeWidget_anechoic_termination.clear()
+
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
+
             if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    volume_id = data["volume_id"]
+                if isinstance(data, AnechoicTermination):
+                    volume_id = data.volume_id
                     new = QTreeWidgetItem([str(surface_id), str(volume_id)])
-                    new.setTextAlignment(0, Qt.AlignCenter)
-                    new.setTextAlignment(1, Qt.AlignCenter)
+                    new.setTextAlignment(0, Qt.AlignmentFlag.AlignCenter)
+                    new.setTextAlignment(1, Qt.AlignmentFlag.AlignCenter)
                     self.treeWidget_anechoic_termination.addTopLevelItem(new)
+
         self.update_tabs_visibility()
 
     def keyPressEvent(self, event):

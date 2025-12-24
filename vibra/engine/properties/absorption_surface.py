@@ -1,26 +1,28 @@
 from dataclasses import dataclass, field
 
+from vibra.engine.properties.property import Property
+
 
 @dataclass
-class AbsorptionSurface:
-    real: list[float]
-    imaginary: list[float | None]
+class AbsorptionSurface(Property):
+    real_values: list[float]
+    imag_values: list[float | None] | list[None]
     # postpones the creation of this attribute
-    values: list = field(init=False)
+    values: list[None | float | complex] = field(init=False)
 
     def __post_init__(self):
         """build the values list"""
         self.values = self._build_values()
 
     # TODO: check if build_values is necessary
-    def _build_values(self) -> list:
+    def _build_values(self) -> list[None | float | complex]:
         values = list()
-        for i, a in enumerate(self.real):
+        for i, a in enumerate(self.real_values):
             if a is None:
                 values.append(None)
 
             else:
-                b = self.imaginary[i]
+                b = self.imag_values[i]
                 if b is None:
                     values.append(a)
                 else:
@@ -28,52 +30,50 @@ class AbsorptionSurface:
 
         return values
 
-    def to_dict(self) -> dict[str, list[float] | list[float | None]]:
+    def to_dict(self) -> dict[str, list[float] | list[float | None] | list[None] | list[None | float | complex]]:
         return dict(
-            real_values=self.real,
-            imag_values=self.imaginary,
+            real_values=self.real_values,
+            imag_values=self.imag_values,
             values=self.values
         )
 
     @classmethod
-    def from_dict(cls, data_dict) -> "AbsorptionSurface":
+    def from_dict(cls, data) -> "AbsorptionSurface":
         """
         Creates an AbsorptionSurface from a dict
 
-        :param data_dict: A dictionary containing "real_values" and "imag_values" keys.
-        :type data_dict: dict[str, list]
+        :param data: A dictionary containing "real_values" and "imag_values" keys.
+        :type data: dict[str, list[float]]
         """
+        real = data["real_values"]
+        imaginary = data["imag_values"]
 
-        real = data_dict["real_values"]
-        imaginary = data_dict["imag_values"]
-
-        return AbsorptionSurface(real=real, imaginary=imaginary)
+        return AbsorptionSurface(real_values=real, imag_values=imaginary)
 
 
 @dataclass
-class AbsorptionSurfaceTable:
-    names: list[str]
-    paths: list[str]
-    values: list
+class AbsorptionSurfaceTable(Property):
+    table_names: list[str]
+    table_paths: list[str]
+    values: list[None | float | complex]
 
-    def to_dict(self) -> dict[str, list[str] | list[str] | list]:
+    def to_dict(self) -> dict[str, list[str] | list[None | float | complex]]:
         return dict(
-            name=self.names,
-            path=self.paths,
+            table_names=self.table_names,
+            table_paths=self.table_paths,
             values=self.values
         )
 
     @classmethod
-    def from_dict(cls, data_dict) -> "AbsorptionSurfaceTable":
+    def from_dict(cls, data) -> "AbsorptionSurfaceTable":
         """
         Creates an AbsorptionSurfaceTable from a dict
 
-        :param data_dict: A dictionary containing "table_names", "table_paths" and "values" keys.
-        :type data_dict: dict[str, list[str] | list]
+        :param data: A dictionary containing "table_names", "table_paths" and "values" keys.
+        :type data: dict[str, list[str] | list[None | float | complex]]
         """
+        names = data["table_names"]
+        paths = data["table_paths"]
+        values = data["values"]
 
-        names = data_dict["table_names"]
-        paths = data_dict["table_paths"]
-        values = data_dict["values"]
-
-        return AbsorptionSurfaceTable(names=names, paths=paths, values=values)
+        return AbsorptionSurfaceTable(table_names=names, table_paths=paths, values=values)

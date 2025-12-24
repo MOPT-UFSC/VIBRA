@@ -1,14 +1,13 @@
 from typing import Callable, Optional
 
-from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
-from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
+from vibra.engine.properties.property import Property
+from vibra.engine.properties.acoustic_pressure import AcousticPressureTable
+from vibra.engine.properties.surface_velocity import SurfaceVelocityTable
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
 import json
 import numpy as np
-import os
-from dataclasses import dataclass
 
 
 DEFAULT_MATERIAL = Material(
@@ -96,15 +95,15 @@ class ModelProperties:
             return (1 + factor * 1j) * c_0
 
     def _set_property(
-                      self, 
-                      property: str, 
-                      data: dict | Fluid | Material | AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable,
-                      node: int | None = None, 
-                      element: int | None = None, 
-                      point: int | None = None, 
-                      line: int | None = None, 
-                      surface: int | tuple[int] | None = None, 
-                      volume: int | None = None, 
+                      self,
+                      property: str,
+                      data: dict | Fluid | Material | Property,
+                      node: int | None = None,
+                      element: int | None = None,
+                      point: int | None = None,
+                      line: int | None = None,
+                      surface: int | tuple[int] | None = None,
+                      volume: int | None = None,
                       group: int | None = None
                       ):
         """
@@ -380,13 +379,16 @@ class ModelProperties:
             return table_names
 
         data = _properties.get(test_key)
+        if data is None:
+            return table_names
+ 
         if isinstance(data, dict):
             if "table_names" in data.keys():
                 for table_name in data["table_names"]:
                     if table_name is not None:
                         table_names.append(table_name)
-        elif isinstance(data, AcousticPressureTable | SurfaceVelocityTable):
-            for table_name in data.names:
+        elif hasattr(data, "table_names"):
+            for table_name in data.table_names:
                 if table_name is not None:
                     table_names.append(table_name)
 

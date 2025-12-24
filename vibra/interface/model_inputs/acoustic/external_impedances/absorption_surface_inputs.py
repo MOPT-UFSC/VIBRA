@@ -110,10 +110,10 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         if isinstance(data, AbsorptionSurfaceTable):
             self.tabWidget_main.setCurrentIndex(1)
-            self.lineEdit_table_path.setText(data.paths[0])
+            self.lineEdit_table_path.setText(data.table_paths[0])
         elif isinstance(data, AbsorptionSurface):
             self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_real_value.setText(f"{data.real[0]}")
+            self.lineEdit_real_value.setText(f"{data.real_values[0]}")
 
     def load_model_info(self):
         self.treeWidget_absorption_surface.clear()
@@ -124,7 +124,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 if isinstance(data, AbsorptionSurfaceTable):
                     str_value = "Table of values"
                 elif isinstance(data, AbsorptionSurface):
-                    absorption_coefficient = np.array(data.real)
+                    absorption_coefficient = np.array(data.real_values)
                     str_value = str(absorption_coefficient)
                 else:
                     str_value = ""
@@ -443,7 +443,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         properties = [
                       "acoustic_pressure", 
                       "surface_velocity", 
@@ -457,13 +456,12 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in properties:
-                if isinstance(data, AcousticPressureTable | SurfaceVelocityTable | AbsorptionSurfaceTable):
+                if isinstance(data, dict):
+                    if "table_names" in data.keys():
+                        return
+                elif hasattr(data, "table_names"):
                     return
-                elif isinstance(data, AcousticPressure | SurfaceVelocity | AbsorptionSurface):
-                    ...
-                elif "table_names" in data.keys():
-                    return
-
+ 
         if isinstance(self.project.analysis_setup, dict):
             analysis_setup = self.project.analysis_setup
             self.project.set_analysis_setup(analysis_setup)

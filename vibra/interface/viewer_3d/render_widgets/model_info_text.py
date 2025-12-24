@@ -1,7 +1,9 @@
-
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.engine.properties.property import Property
 from vibra.engine.properties.absorption_surface import AbsorptionSurface
+from vibra.engine.properties.anechoic_termination import AnechoicTermination
+from vibra.engine.properties.specific_impedance import SpecifcImpedance, SpecifcImpedanceTable
 from vibra.engine.properties.surface_velocity import SurfaceVelocity
 from vibra.engine.properties.acoustic_pressure import AcousticPressure
 from vibra.engine.properties.fluid import Fluid
@@ -392,7 +394,7 @@ def acoustic_boundary_conditions_info_text():
         values = absorption_surface.values[0]
         text += acoustic_format("Absorption surface", values, "alpha", "--")
 
-    if isinstance(specific_impedance, dict):
+    if specific_impedance is not None:
         text += get_specific_and_anechoic_impedance_text(selected_faces[0], specific_impedance)
 
     return text
@@ -470,10 +472,11 @@ def get_reciprocating_compressor_text(rc_data: dict):
 
     return str(tree_rc)
 
-def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
+def get_specific_and_anechoic_impedance_text(surface: int, si_data: Property):
     text = ""
     properties = app().project.model.properties
-    if "anechoic_termination" in si_data.keys():
+
+    if isinstance(si_data, AnechoicTermination):
         fluid = properties._get_property("fluid", surface=surface)
         if isinstance(fluid, Fluid):
             density = fluid.fluid_density
@@ -487,8 +490,8 @@ def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
                 ("Impedance type", "anechoic (non-reflexive)"),
             )
 
-    else:
-        values = si_data["values"]
+    elif isinstance(si_data, SpecifcImpedance | SpecifcImpedanceTable):
+        values = si_data.values
         text = acoustic_format("Specific impedance", values[0], "Zs", "kg/m².s")
 
     return text

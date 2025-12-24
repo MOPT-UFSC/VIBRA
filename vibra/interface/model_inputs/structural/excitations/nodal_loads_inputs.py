@@ -1057,11 +1057,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["nodal_loads", "prescribed_dof"]:
-                if "table_names" in data.keys():
+                if isinstance(data, dict):
+                    if "table_names" in data.keys():
+                        return
+                elif hasattr(data, "table_names"):
                     return
 
         if isinstance(app().project.analysis_setup, dict):

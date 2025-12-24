@@ -2,11 +2,14 @@ import zipfile
 import shutil
 
 from vibra import app
-from vibra.engine.properties.absorption_surface import AbsorptionSurface, AbsorptionSurfaceTable
-from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.property import Property
+from vibra.engine.properties.absorption_surface import AbsorptionSurface
+from vibra.engine.properties.acoustic_pressure import AcousticPressure
+from vibra.engine.properties.anechoic_termination import AnechoicTermination
+from vibra.engine.properties.surface_velocity import SurfaceVelocity
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
+from vibra.engine.properties.specific_impedance import SpecifcImpedance
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
@@ -395,7 +398,6 @@ class ProjectFile:
         # return read_config(self.fluid_library_filepath)
 
     def write_model_properties_in_file(self):
-
         try:
             def normalize(prop: dict):
                 """
@@ -405,7 +407,7 @@ class ProjectFile:
                 """
                 output = dict()
                 for (property, tags), data in prop.items():
-                    if isinstance(data, AcousticPressure | AcousticPressureTable | SurfaceVelocity | SurfaceVelocityTable | AbsorptionSurface | AbsorptionSurfaceTable):
+                    if isinstance(data, Property):
                         data = data.to_dict()
 
                     if isinstance(tags, tuple):
@@ -489,6 +491,11 @@ class ProjectFile:
                     val = SurfaceVelocity.from_dict(val)
                 elif property == "absorption_surface":
                     val = AbsorptionSurface.from_dict(val)
+                elif property == "specific_impedance":
+                    if "anechoic_termination" in val.keys():
+                        val = AnechoicTermination.from_dict(val)
+                    else:
+                        val = SpecifcImpedance.from_dict(val)
 
                 if len(_ids) == 1:
                     ids = int(_ids[0])

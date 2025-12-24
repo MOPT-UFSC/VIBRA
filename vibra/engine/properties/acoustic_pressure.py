@@ -1,31 +1,27 @@
-import numpy as np
 from dataclasses import dataclass, field
+
+from vibra.engine.properties.property import Property
 
 
 @dataclass
-class AcousticPressure:
-    real: list[float]
-    imaginary: list[float]
-    # postpones the creation of this attribute
-    values: list = field(init=False)
+class AcousticPressure(Property):
+    real_values: list[float]
+    imag_values: list[float]
+    values: list[None | float | complex] = field(init=False)
 
     def __post_init__(self):
         """build the values list"""
         self.values = self._build_values()
 
-    # def __add__(self, other):
-    #     ...
+    def _build_values(self) -> list[None | float | complex]:
+        values: list[None | float | complex] = list()
 
-    # __radd__ = __add__
-
-    def _build_values(self) -> list:
-        values = list()
-        for i, a in enumerate(self.real):
+        for i, a in enumerate(self.real_values):
             if a is None:
                 values.append(None)
 
             else:
-                b = self.imaginary[i]
+                b = self.imag_values[i]
                 if b is None:
                     values.append(a)
                 else:
@@ -33,52 +29,50 @@ class AcousticPressure:
 
         return values
 
-    def to_dict(self) -> dict[str, list[float] | list[complex]]:
+    def to_dict(self) -> dict[str, list[float] | list[None | float | complex]]:
         return dict(
-            real_values=self.real,
-            imag_values=self.imaginary,
+            real_values=self.real_values,
+            imag_values=self.imag_values,
             values=self.values
         )
 
     @classmethod
-    def from_dict(cls, data_dict) -> "AcousticPressure":
+    def from_dict(cls, data: dict[str, list[float]]) -> "AcousticPressure":
         """
         Creates an AcousticPressure from a dict
 
-        :param data_dict: A dictionary containing "real_values" and "imag_values" keys.
-        :type data_dict: dict[str, list]
+        :param data_dict: A dictionary containing "real_values: list[float]" and "imag_values: [float]" keys.
+        :type data_dict: dict[str, list[float] | list[None | float | complex]]
         """
+        real = data["real_values"]
+        imaginary = data["imag_values"]
 
-        real = data_dict["real_values"]
-        imaginary = data_dict["imag_values"]
-
-        return AcousticPressure(real=real, imaginary=imaginary)
+        return AcousticPressure(real_values=real, imag_values=imaginary)
 
 
 @dataclass
-class AcousticPressureTable:
-    names: list[str]
-    paths: list[str]
-    values: list
+class AcousticPressureTable(Property):
+    table_names: list[str]
+    table_paths: list[str]
+    values: list[None | float | complex]
 
-    def to_dict(self) -> dict[str, list[str] | list[str] | list]:
+    def to_dict(self) -> dict[str, list[str] | list[None | float | complex]]:
         return dict(
-            name=self.names,
-            path=self.paths,
+            table_names=self.table_names,
+            table_paths=self.table_paths,
             values=self.values
         )
 
     @classmethod
-    def from_dict(cls, data_dict) -> "AcousticPressureTable":
+    def from_dict(cls, data: dict[str, list[str] | list[None | float | complex]]) -> "AcousticPressureTable":
         """
         Creates an AcousticPressureTable from a dict
 
-        :param data_dict: A dictionary containing "table_names", "table_paths" and "values" keys.
-        :type data_dict: dict[str, list[str] | list]
+        :param data_dict: A dictionary containing "table_names: list[str]", "table_paths: list[str]" and "values: list[None | float | complex]" keys.
+        :type data_dict: dict[str, list[str] | list[None | float | complex]]
         """
+        names = data["table_names"]
+        paths = data["table_paths"]
+        values = data["values"]
 
-        names = data_dict["table_names"]
-        paths = data_dict["table_paths"]
-        values = data_dict["values"]
-
-        return AcousticPressureTable(names=names, paths=paths, values=values)
+        return AcousticPressureTable(table_names=names, table_paths=paths, values=values)

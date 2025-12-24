@@ -99,12 +99,12 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         if isinstance(data, AcousticPressure):
             self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_real_value.setText(str(data.real[0]))
-            self.lineEdit_imag_value.setText(str(data.imaginary[0]))
+            self.lineEdit_real_value.setText(str(data.real_values[0]))
+            self.lineEdit_imag_value.setText(str(data.imag_values[0]))
 
         elif isinstance(data, AcousticPressureTable):
             self.tabWidget_main.setCurrentIndex(1)
-            self.lineEdit_table_path.setText(data.paths[0])
+            self.lineEdit_table_path.setText(data.table_paths[0])
 
     def tab_event_callback(self):
         tab_list = self.tabWidget_main.currentIndex() == 2
@@ -407,11 +407,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
-                    return
-                elif isinstance(data, SurfaceVelocity | AcousticPressure):
-                    ...
-                elif "table_names" in data.keys():
+                if isinstance(data, dict):
+                    if "table_names" in data.keys():
+                        return
+                elif hasattr(data, "table_names"):
                     return
 
         if isinstance(self.project.analysis_setup, dict):
@@ -453,8 +452,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                     str_value = "Table of values"
 
                 elif isinstance(data, AcousticPressure):
-                    real_values = np.array(data.real)
-                    imag_values = np.array(data.imaginary)
+                    real_values = np.array(data.real_values)
+                    imag_values = np.array(data.imag_values)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
 
@@ -469,11 +468,11 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             self.attribute_callback()
-        elif event.key() == Qt.Key_Delete:
+        elif event.key() == Qt.Key.Key_Delete:
             self.remove_callback()
-        elif event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key.Key_Escape:
             self.close()
         else:
             return

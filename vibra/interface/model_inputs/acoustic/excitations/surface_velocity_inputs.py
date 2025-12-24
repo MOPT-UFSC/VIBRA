@@ -3,7 +3,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
 from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -43,8 +42,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.exec()
 
     def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
@@ -93,7 +92,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         #
         for i, w in enumerate([120]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
-            self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignmentFlag.AlignCenter)
 
     def geometry_selection_callback(self):
 
@@ -132,12 +131,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
             if isinstance(data, SurfaceVelocityTable):
                 self.tabWidget_main.setCurrentIndex(1)
-                self.lineEdit_table_path.setText(data.paths[0])
+                self.lineEdit_table_path.setText(data.table_paths[0])
 
             else:
                 self.tabWidget_main.setCurrentIndex(0)
-                self.lineEdit_real_value.setText(str(data.real[0]))
-                self.lineEdit_imag_value.setText(str(data.imaginary[0]))
+                self.lineEdit_real_value.setText(str(data.real_values[0]))
+                self.lineEdit_imag_value.setText(str(data.imag_values[0]))
 
     def tab_event_callback(self):
         if self.tabWidget_main.currentIndex() == 2:
@@ -455,11 +454,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if isinstance(data, SurfaceVelocityTable | AcousticPressureTable):
-                    return
-                elif isinstance(data, SurfaceVelocity | AcousticPressure):
-                    ...
-                elif "table_names" in data.keys():
+                if isinstance(data, dict):
+                    if "table_names" in data.keys():
+                        return
+                elif hasattr(data, "table_names"):
                     return
 
         if isinstance(self.project.analysis_setup, dict):
@@ -512,8 +510,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                     str_value = "Table of values"
 
                 elif isinstance(data, SurfaceVelocity):
-                    real_values = np.array(data.real)
-                    imag_values = np.array(data.imaginary)
+                    real_values = np.array(data.real_values)
+                    imag_values = np.array(data.imag_values)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
 
@@ -528,11 +526,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key.Key_Enter or event.key() == Qt.Key.Key_Return:
             self.attribute_callback()
-        elif event.key() == Qt.Key_Delete:
+        elif event.key() == Qt.Key.Key_Delete:
             self.remove_callback()
-        elif event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key.Key_Escape:
             self.close()
         else:
             return
