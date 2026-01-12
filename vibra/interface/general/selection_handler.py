@@ -44,8 +44,9 @@ class SelectionHandler(QObject):
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
-            volume_surfaces = self.mesh.surfaces_from_volume.get(volume, [])
-            surfaces |= set(volume_surfaces)
+            if self.mesh is not None:
+                volume_surfaces = self.mesh.surfaces_from_volume.get(volume, [])
+                surfaces |= set(volume_surfaces)
 
         if join and remove:
             self.geometry_points ^= set(points)
