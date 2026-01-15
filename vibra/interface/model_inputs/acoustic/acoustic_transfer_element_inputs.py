@@ -437,7 +437,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def export_data_in_spreadsheet_format(self, export_path: str):
 
-        from pandas import ExcelWriter, DataFrame
+        from pandas import ExcelWriter
+        from polars import DataFrame
 
         with ExcelWriter(export_path) as writer:
 
@@ -464,8 +465,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                     header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
-                df = DataFrame(data_to_export, columns=header)
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                df = DataFrame(data_to_export, schema=header)
+                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def export_data_callback(self):
         if self.element_transfer_data:

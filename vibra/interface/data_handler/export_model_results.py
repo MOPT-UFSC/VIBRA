@@ -51,7 +51,9 @@ class ExportModelResults(QFileDialog):
     def export_data_in_spreadsheet_format(self, export_path: str, **kwargs):
 
         from openpyxl import load_workbook
-        from pandas import ExcelWriter, DataFrame, read_excel
+        from pandas import ExcelWriter
+
+        from polars import DataFrame, read_excel
 
         existing_data_frames = dict()
         existing_path = kwargs.get("existing_path", "")
@@ -66,15 +68,15 @@ class ExportModelResults(QFileDialog):
                     existing_data_frames[sheet_name] = read_excel(
                                                                     existing_path, 
                                                                     sheet_name = sheet_name, 
-                                                                    header = 0, 
-                                                                    usecols = [0,1,2,3]
+                                                                    columns = [0,1,2,3],
+                                                                    engine="openpyxl"
                                                                     )
 
         with ExcelWriter(export_path) as writer:
 
             for key, existing_df in existing_data_frames.items():
                 existing_df: DataFrame
-                existing_df.to_excel(writer, sheet_name=key, index=False)
+                existing_df.to_pandas().to_excel(writer, sheet_name=key, index=False)
 
             count = 0
             for key, data in self.data.items():
@@ -107,8 +109,8 @@ class ExportModelResults(QFileDialog):
                     header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
-                df = DataFrame(data_to_export, columns=header)
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                df = DataFrame(data_to_export, schema=header)
+                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def call_file_dialog_and_export_data(self, **kwargs):
 
@@ -132,7 +134,7 @@ class ExportModelResults(QFileDialog):
             kwargs = dict()
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-            file_path, file_extension = self.getSaveFileName(app().main_window, 
+            file_name, file_extension = self.getSaveFileName(app().main_window, 
                                                     caption, 
                                                     directory_path, 
                                                     filter = _filter,
@@ -140,14 +142,17 @@ class ExportModelResults(QFileDialog):
             
             if not file_extension:
                 return
+            
+            file_extension = file_extension.split(".")[1][:-1]
+            file_path = f"{file_name}.{file_extension}"
 
         else:
+            file_extension = existing_path.split(".")[1]
             file_path = existing_path
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
-        ext = file_path.split(".")[-1]      
-        if ext in ["xls", "xlsx"]:
+        if file_extension in ["xls", "xlsx"]:
             self.export_data_in_spreadsheet_format(file_path, existing_path=existing_path)
         else:
             self.export_data_in_text_format(file_path)
