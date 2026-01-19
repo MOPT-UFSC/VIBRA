@@ -2,14 +2,14 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal, QObject
 
 if TYPE_CHECKING:
-    from vibra.engine.mesher.mesh import Mesh
+    from vibra.project_files.project import Project
 
 class SelectionHandler(QObject):
     selection_changed = Signal()
     
-    def __init__(self, mesh: "Mesh | None" = None):
+    def __init__(self, project: "Project | None" = None):
         super().__init__()
-        self.mesh = mesh
+        self.project = project
         self.mesh_nodes = set()
         self.mesh_faces = set()
         self.mesh_solids = set()
@@ -44,8 +44,8 @@ class SelectionHandler(QObject):
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
-            if self.mesh is not None:
-                volume_surfaces = self.mesh.surfaces_from_volume.get(volume, [])
+            if self.project is not None:
+                volume_surfaces = self.project.model.mesh.surfaces_from_volume.get(volume, [])
                 surfaces |= set(volume_surfaces)
 
         if join and remove:
@@ -113,11 +113,11 @@ class SelectionHandler(QObject):
 
         elif self.geometry_surfaces:
             for surface in self.geometry_surfaces:
-                volumes_to_hide |= set(self.mesh.volumes_from_surface[surface])
+                volumes_to_hide |= set(self.project.model.mesh.volumes_from_surface[surface])
 
         elif self.mesh_solids:
             for element in self.mesh_solids:
-                volumes_to_hide.add(self.mesh.get_volume_from_element(element))
+                volumes_to_hide.add(self.project.model.mesh.get_volume_from_element(element))
         return volumes_to_hide
 
 

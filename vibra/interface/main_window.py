@@ -53,7 +53,7 @@ class MainWindow(MainWindow_UI):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.selection = SelectionHandler()
+        self.selection = SelectionHandler(app().project)
         self.selection.selection_changed.connect(self.selection_changed_callback)
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
@@ -837,7 +837,6 @@ class MainWindow(MainWindow_UI):
                 app().load_project.initialize()
                 app().load_project.load()
 
-                self.selection.mesh = app().project.model.mesh
 
                 self.update_toolbar_and_menu_items_after_load_project()
                 self.analysis_toolbar.check_analysis_setup_callback()
