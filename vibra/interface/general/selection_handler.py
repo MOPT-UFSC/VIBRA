@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 class SelectionHandler(QObject):
     selection_changed = Signal()
     
-    def __init__(self, project: "Project | None" = None):
+    def __init__(self, project: Project):
         super().__init__()
         self.project = project
         self.mesh_nodes = set()
@@ -44,9 +44,8 @@ class SelectionHandler(QObject):
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
-            if self.project is not None:
-                volume_surfaces = self.project.model.mesh.surfaces_from_volume.get(volume, [])
-                surfaces |= set(volume_surfaces)
+            volume_surfaces = self.project.model.mesh.surfaces_from_volume.get(volume, [])
+            surfaces |= set(volume_surfaces)
 
         if join and remove:
             self.geometry_points ^= set(points)
