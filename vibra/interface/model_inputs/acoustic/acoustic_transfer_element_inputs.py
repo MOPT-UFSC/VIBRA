@@ -56,7 +56,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.element_transfer_data = dict()
 
     def _configure_qt_variables(self):
-        self.current_lineEdit = self.lineEdit_output_selected_id
+        self.current_line_edit = self.lineEdit_output_selected_id
         self.tabWidget_main.setTabVisible(1, False)
 
     def _create_connections(self):
@@ -77,9 +77,9 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         selected_faces = app().main_window.selected_geometry_surfaces
 
         if len(selected_faces) == 1:
-            if isinstance(self.current_lineEdit, QLineEdit):
+            if isinstance(self.current_line_edit, QLineEdit):
                 _selected_faces = [str(i) for i in selected_faces]
-                self.current_lineEdit.setText(_selected_faces[0])
+                self.current_line_edit.setText(_selected_faces[0])
 
     def invert_selection_callback(self):
 
@@ -108,10 +108,19 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         return filter.clicked
 
     def lineEdit_1_clicked(self):
-        self.current_lineEdit = self.lineEdit_input_selected_id
+        self.current_line_edit = self.lineEdit_input_selected_id
+        self.highlight_line_edit()
 
     def lineEdit_2_clicked(self):
-        self.current_lineEdit = self.lineEdit_output_selected_id
+        self.current_line_edit = self.lineEdit_output_selected_id
+        self.highlight_line_edit()
+
+    def highlight_line_edit(self):
+        self.current_line_edit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+        if self.current_line_edit == self.lineEdit_input_selected_id:
+            self.lineEdit_output_selected_id.setStyleSheet("")
+        elif self.current_line_edit == self.lineEdit_output_selected_id:
+            self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
 
@@ -262,8 +271,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         app().file.write_analysis_setup_in_file(self.analysis_setup)
 
     def process_data_callback(self):
-        """
-        """
         self.hide()
         self.element_transfer_data.clear()
 
@@ -273,9 +280,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         if self.check_typed_ids():
             return
-        else:
-            self.process_areas()
 
+        self.process_areas()
         if self.configure_analysis():
             return   
 
@@ -288,13 +294,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         
         app().main_window.set_geometry_selection()
 
-        def callback():
+        def compute_model_solution():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
+
+                print(i, surface_id)
 
                 logging.info(f"Solving model [{5+50*i}/100]...")
                 sleep(1)
 
-                self.remove_model_excitations()
+                self.remove_model_excitations_and_impedances()
                 self.set_surface_velocity(surface_id)
                 self.project.solve_acoustic_harmonic_analysis()
                 self.join_model_data(surface_id)
@@ -308,18 +316,26 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             sleep(0.5)
             logging.info("Exporting the admittance matrix data... [100/100]")
 
-        LoadingWindow(callback).run()
+        LoadingWindow(compute_model_solution).run()
 
-        app().main_window.menu_widget.update_items()
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
         self.print_final_message()
 
-    def remove_model_excitations(self):
+    def remove_model_excitations_and_impedances(self):
 
         model_excitations = [
                              "acoustic_pressure", 
                              "surface_velocity", 
-                             "reciprocating_compressor_excitation", 
-                             "specific_impedance",
+                             "reciprocating_compressor_excitation",
+                             "compressor_excitation_spectrum",
+                             "compressor_excitation_waveform",
+                             "incident_plane_wave",
+                             "mass_source",
+                             ]
+
+        model_impedances = [
+                            "specific_impedance",
+                            "absorption_surface",
                              ]
 
         properties_to_remove = defaultdict(list)
@@ -327,18 +343,42 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             for key in self.properties.surface_properties.keys():
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
-                elif key[0] == property and key[1] in [self.input_selection_id, self.output_selection_id]:
+
+        for property in model_impedances:
+            for key in self.properties.surface_properties.keys():
+                if key[0] == property and key[1] in [self.input_selection_id, self.output_selection_id]:
                     properties_to_remove[key[0]].append(key[1])
 
-        for _prop, _surface_ids in properties_to_remove.items():
-            for _id in _surface_ids:             
-                self.properties._remove_surface_property(_prop, _id)
+        self.remove_table_data(properties_to_remove)
+
+    def remove_table_data(self, properties_to_remove: dict):
+        if not properties_to_remove:
+            return
+
+        table_names = list()
+        for property_label, surface_ids in properties_to_remove.items():
+            for table_name in self.properties.get_property_related_table_names(property_label, surface_ids, "surfaces"):
+                if table_name in table_names:
+                    continue
+
+                table_names.append(table_name)
+
+            for surface_id in surface_ids:
+                self.properties._remove_surface_property(property_label, surface_id)
+
+        for table_name in table_names:
+            self.properties.remove_imported_tables("acoustic", table_name)
+
+        if table_names:
+            app().file.write_imported_table_data_in_file()
 
     def set_surface_velocity(self, surface_id: int):
 
         data = {
-                "real_values": [1.0],
-                "imag_values": [0.0],
+                "real_values" : [1.0],
+                "imag_values" : [0.0],
+                "nodal_attribution" : False,
+                "averaged" : False,
                 }
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)

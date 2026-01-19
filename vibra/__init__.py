@@ -18,7 +18,7 @@ APP_ID = f"mopt.vibra.{VERSION}"
 VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
 
-DEVELOPER_MODE = False
+DEVELOPER_MODE = True
 
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
