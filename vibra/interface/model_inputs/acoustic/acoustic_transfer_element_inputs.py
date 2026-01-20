@@ -297,8 +297,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         def compute_model_solution():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
 
-                print(i, surface_id)
-
                 logging.info(f"Solving model [{5+50*i}/100]...")
                 sleep(1)
 
