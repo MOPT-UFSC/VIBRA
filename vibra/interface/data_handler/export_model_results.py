@@ -51,8 +51,7 @@ class ExportModelResults(QFileDialog):
     def export_data_in_spreadsheet_format(self, export_path: str, **kwargs):
 
         from openpyxl import load_workbook
-        from pandas import ExcelWriter
-
+        from xlsxwriter import Workbook
         from polars import DataFrame, read_excel
 
         existing_data_frames = dict()
@@ -72,11 +71,11 @@ class ExportModelResults(QFileDialog):
                                                                     engine="openpyxl"
                                                                     )
 
-        with ExcelWriter(export_path) as writer:
+        with Workbook(export_path) as workbook:
 
             for key, existing_df in existing_data_frames.items():
                 existing_df: DataFrame
-                existing_df.to_pandas().to_excel(writer, sheet_name=key, index=False)
+                existing_df.write_excel(workbook=workbook, worksheet=key)
 
             count = 0
             for key, data in self.data.items():
@@ -110,7 +109,7 @@ class ExportModelResults(QFileDialog):
                     data_to_export = np.array([x_data, y_data]).T
 
                 df = DataFrame(data_to_export, schema=header)
-                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
+                df.write_excel(workbook=workbook, worksheet=sheet_name)
 
     def call_file_dialog_and_export_data(self, **kwargs):
 
