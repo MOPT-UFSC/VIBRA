@@ -1,0 +1,267 @@
+import shutil
+import zipfile
+from dataclasses import asdict
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional
+
+import h5py
+import numpy as np
+from PIL import Image
+
+if TYPE_CHECKING:
+    # This is to avoid circular imports since
+    # this file is imported by Project
+    from vibra.engine.project import Project
+
+from vibra.engine.analysis_info import HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.libraries.fluid_library import FluidLibrary, default_fluid_library
+from vibra.engine.properties.libraries.material_library import MaterialLibrary, default_material_library
+from vibra.engine.properties.material import Material
+from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.project_files.file_helpers import read_json, write_image, write_json
+from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
+
+from .project_paths import ProjectPaths
+
+
+class ProjectWriter:
+    def __init__(self, working_directory: Path | str):
+        self.project_paths = ProjectPaths(working_directory)
+
+    def write_file(self, vibra_path: Path | str):
+        vibra_path = Path(vibra_path)
+        working_dir = self.project_paths.working_directory
+
+        with zipfile.ZipFile(vibra_path, "w", zipfile.ZIP_STORED) as file:
+            for path in working_dir.rglob("*"):
+                if not path.is_file():
+                    continue
+
+                arcname = path.relative_to(working_dir)
+                file.write(path, arcname)
+
+    def write_project(self, project: "Project"):
+        self.write_project_setup(project)
+        self.write_model(project.model)
+
+        if isinstance(project.solver, ModalSolver):
+            self.write_modal_solution(project.solver)
+
+        if project.thumbnail is not None:
+            self.write_thumbnail(project.thumbnail)
+
+    def write_model(self, model: Model):
+        self.write_model_properties(model.properties)
+
+        if model.geometry_path is not None:
+            self.write_geometry(model.geometry_path)
+
+        if model.mesh is not None:
+            self.write_mesh(model.mesh)
+
+    def write_project_setup(self, project: "Project"):
+        project_setup = {
+            "mesh_setup": {},
+            "analysis_setup": {},
+        }
+
+        if isinstance(project.model.geometry_path, Path):
+            project_setup["geometry_filename"] = project.model.geometry_path.name
+            project_setup["length_unit"] = project.model.length_unit
+            project_setup["geometry_qf"] = project.model.geometry_qf
+
+        # We could write both harmonic and modal analysis setup here,
+        # but I will keep it retrocompatible for now.
+        if project.current_analysis_id.is_harmonic():
+            project_setup["analysis_setup"].update(asdict(project.model.harmonic_analysis_setup))
+        elif project.current_analysis_id.is_modal():
+            project_setup["analysis_setup"].update(asdict(project.model.modal_analysis_setup))
+
+        project_setup["analysis_setup"]["analysis_id"] = int(project.current_analysis_id)
+
+        mesh_setup = project.model.mesh_setup_new
+        if mesh_setup is not None:
+            project_setup["mesh_setup"].update(
+                asdict(mesh_setup),
+            )
+            project_setup["mesh_setup"]["mesh_refinement_parameters"] = [
+                (i.entity_type, i.element_size, i.entity_ids) 
+                for i in mesh_setup.refinement_parameterss
+            ]  # fmt: skip
+
+        write_json(self.project_paths.project_setup_filepath, project_setup)
+
+    def write_analysis_setup(self, analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup | None):
+        if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+            analysis_setup_dict = asdict(analysis_setup)
+        else:
+            analysis_setup_dict = dict()
+
+        project_setup = read_json(self.project_paths.project_setup_filepath)
+        if not isinstance(project_setup, dict):
+            project_setup = dict()
+
+        project_setup["analysis_setup"] = analysis_setup_dict
+        write_json(self.project_paths.project_setup_filepath, project_setup)
+
+    def write_geometry(self, geometry_path: Path | str):
+        geometry_path = Path(geometry_path)
+        if not geometry_path.is_file():
+            raise FileExistsError("Geometry file path does not exist.")
+
+        shutil.rmtree(self.project_paths.geometry_folder, ignore_errors=True)
+        self.project_paths.geometry_folder.mkdir(exist_ok=True)
+        internal_path = self.project_paths.geometry_folder / geometry_path.name
+        shutil.copy(geometry_path, internal_path)
+
+    def write_mesh(self, mesh: Mesh, has_decoupling: bool = False):
+        with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
+            file["connectivity/lines_connectivity"] = mesh.lines_connectivity
+            file["connectivity/faces_connectivity"] = mesh.faces_connectivity
+            file["connectivity/solids_connectivity"] = mesh.solids_connectivity
+
+            file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
+            file["nodal_data/nodes_from_points"] = np.array(list(mesh.nodes_from_points.items()))
+
+            if has_decoupling:
+                file["connectivity/cache_lines_connectivity"] = mesh.cache_lines_connectivity
+                file["connectivity/cache_faces_connectivity"] = mesh.cache_faces_connectivity
+                file["connectivity/cache_solids_connectivity"] = mesh.cache_solids_connectivity
+
+            for i, normals in mesh.normals_surface.items():
+                file[f"normals/normals_surface/{i}"] = normals
+
+            for i, curvatures in mesh.curvatures_surface.items():
+                file[f"curvatures/curvatures_surface/{i}"] = curvatures
+
+        self.write_mesh_quality_data_in_file(mesh)
+
+    def write_mesh_quality_data_in_file(self, mesh: Mesh):
+        if not mesh.mesh_quality_data:
+            return
+
+        write_json(
+            self.project_paths.mesh_quality_data_filepath,
+            mesh.mesh_quality_data,
+        )
+
+    def write_model_properties(self, model_properties: ModelProperties):
+        self.write_fluid_library(model_properties.fluid_library)
+        self.write_material_library(model_properties.material_library)
+
+        data = dict(
+            volume_properties=self._normalize_property(model_properties.volume_properties),
+            surface_properties=self._normalize_property(model_properties.surface_properties),
+            line_properties=self._normalize_property(model_properties.line_properties),
+            point_properties=self._normalize_property(model_properties.point_properties),
+            element_properties=self._normalize_property(model_properties.element_properties),
+            nodal_properties=self._normalize_property(model_properties.nodal_properties),
+            group_properties=self._normalize_property(model_properties.group_properties),
+        )
+        write_json(self.project_paths.model_properties_filepath, data)
+
+    def write_material_library(self, material_library: MaterialLibrary):
+        material_library_dict = dict()
+
+        for material_id, material in material_library.items():
+            material_library_dict[material_id] = asdict(material)
+
+        write_json(self.project_paths.material_library_filepath, material_library_dict)
+
+    def write_fluid_library(self, fluid_library: FluidLibrary):
+        fluid_library_dict = dict()
+
+        for fluid_id, fluid in fluid_library.items():
+            fluid_library_dict[fluid_id] = asdict(fluid)
+
+        write_json(self.project_paths.fluid_library_filepath, fluid_library_dict)
+
+    def write_thumbnail(self, thumbnail: Image):
+        write_image(self.project_paths.thumbnail_filepath, thumbnail)
+
+    def write_harmonic_solution(self, solver: HarmonicSolver):
+        # In this case the solution was already saved
+        if isinstance(solver.solution, LazyHDF5MatrixLoader):
+            return
+
+        with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
+            file["frequencies"] = solver.frequencies
+            file["solution"] = solver.solution
+            file["solution_status"] = np.ones_like(solver.frequencies, dtype=bool)
+
+            if solver.displacement_dof is not None:
+                file["displacement_dof"] = solver.displacement_dof
+
+    def write_modal_solution(self, solver: ModalSolver):
+        # In this case the solution was already saved
+        if isinstance(solver.solution, LazyHDF5MatrixLoader):
+            return
+
+        with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
+            file["frequencies"] = solver.natural_frequencies
+            file["solution"] = solver.solution
+            file["solution_status"] = np.ones_like(solver.natural_frequencies, dtype=bool)
+
+            if solver.displacement_dof is not None:
+                file["displacement_dof"] = solver.displacement_dof
+
+    def get_solution_writer(self, num_rows, columns, dtype, is_resume):
+        return LazyHDF5MatrixWriter(
+            self.project_paths.harmonic_solution_filepath,
+            num_rows,
+            columns,
+            dtype,
+            is_resume,
+        )
+
+    def delete_results_data(self):
+        self.project_paths.results_data_filepath.unlink(missing_ok=True)
+        self.project_paths.harmonic_solution_filepath.unlink(missing_ok=True)
+
+    def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
+        """
+        Turn the key (property_name, (tag_1, tag_2, tag_3)) into a string
+        "property_name tag_1 tag_2 tag_3"
+        """
+
+        if isinstance(tags, tuple):
+            spaced_tags = " ".join(str(i) for i in tags)
+            return f"{property_name} {spaced_tags}"
+        elif isinstance(tags, int):
+            return f"{property_name} {tags}"
+        else:
+            return None
+
+    def _normalize_property(self, prop: dict):
+        """
+        Sadly json doesn't accepts tuple keys,
+        so we need to convert it to a string like:
+        "property id" = value
+        """
+        output = dict()
+        for (property, tags), data in prop.items():
+            key = self._property_key(property, tags)
+            if key is None:
+                continue
+
+            if isinstance(data, Fluid):
+                output[key] = {"fluid_id": data.identifier}
+
+            elif isinstance(data, Material):
+                output[key] = {"material_id": data.identifier}
+
+            elif isinstance(data, dict):
+                aux = dict()
+                for _key, _data in data.items():
+                    if _key in ["values"]:
+                        continue
+                    elif isinstance(_data, Fluid):
+                        aux[_key] = _data.get_data()
+                    else:
+                        aux[_key] = _data
+                output[key] = aux
+        return output
