@@ -159,9 +159,53 @@ class Ui_Dialog(object):
         self.gridLayout_16.setSpacing(6)
         self.gridLayout_16.setObjectName(u"gridLayout_16")
         self.gridLayout_16.setContentsMargins(2, 2, 2, 2)
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_16.addItem(self.horizontalSpacer_4, 6, 5, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_16.addItem(self.horizontalSpacer_3, 6, 1, 1, 1)
+
+        self.lineEdit_output_selected_id = QLineEdit(self.frame_11)
+        self.lineEdit_output_selected_id.setObjectName(u"lineEdit_output_selected_id")
+        self.lineEdit_output_selected_id.setMinimumSize(QSize(140, 30))
+        self.lineEdit_output_selected_id.setMaximumSize(QSize(140, 30))
+        self.lineEdit_output_selected_id.setFont(font1)
+        self.lineEdit_output_selected_id.setStyleSheet(u"")
+        self.lineEdit_output_selected_id.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_16.addWidget(self.lineEdit_output_selected_id, 2, 3, 1, 1)
+
+        self.label_2 = QLabel(self.frame_11)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(0, 32))
+        self.label_2.setMaximumSize(QSize(16777215, 32))
+        font4 = QFont()
+        font4.setPointSize(10)
+        font4.setBold(False)
+        self.label_2.setFont(font4)
+        self.label_2.setFrameShape(QFrame.StyledPanel)
+        self.label_2.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_16.addWidget(self.label_2, 6, 2, 1, 3)
+
+        self.label_11 = QLabel(self.frame_11)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMinimumSize(QSize(120, 30))
+        self.label_11.setMaximumSize(QSize(140, 30))
+        self.label_11.setFont(font3)
+        self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_16.addWidget(self.label_11, 2, 2, 1, 1)
+
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_16.addItem(self.verticalSpacer, 4, 2, 1, 3)
+        self.gridLayout_16.addItem(self.verticalSpacer, 5, 2, 1, 3)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_16.addItem(self.verticalSpacer_2, 8, 2, 1, 3)
 
         self.frame_3 = QFrame(self.frame_11)
         self.frame_3.setObjectName(u"frame_3")
@@ -254,28 +298,7 @@ class Ui_Dialog(object):
         self.gridLayout.addWidget(self.label_26, 2, 2, 1, 1)
 
 
-        self.gridLayout_16.addWidget(self.frame_3, 6, 2, 1, 3)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_4, 5, 5, 1, 1)
-
-        self.label_2 = QLabel(self.frame_11)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setMinimumSize(QSize(0, 32))
-        self.label_2.setMaximumSize(QSize(16777215, 32))
-        font4 = QFont()
-        font4.setPointSize(10)
-        font4.setBold(False)
-        self.label_2.setFont(font4)
-        self.label_2.setFrameShape(QFrame.StyledPanel)
-        self.label_2.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_16.addWidget(self.label_2, 5, 2, 1, 3)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_3, 5, 1, 1, 1)
+        self.gridLayout_16.addWidget(self.frame_3, 7, 2, 1, 3)
 
         self.label_16 = QLabel(self.frame_11)
         self.label_16.setObjectName(u"label_16")
@@ -284,28 +307,32 @@ class Ui_Dialog(object):
         self.label_16.setFont(font3)
         self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_16.addWidget(self.label_16, 2, 2, 1, 1)
+        self.gridLayout_16.addWidget(self.label_16, 1, 2, 1, 1)
 
-        self.lineEdit_output_selected_id = QLineEdit(self.frame_11)
-        self.lineEdit_output_selected_id.setObjectName(u"lineEdit_output_selected_id")
-        self.lineEdit_output_selected_id.setMinimumSize(QSize(140, 30))
-        self.lineEdit_output_selected_id.setMaximumSize(QSize(140, 30))
-        self.lineEdit_output_selected_id.setFont(font1)
-        self.lineEdit_output_selected_id.setStyleSheet(u"")
-        self.lineEdit_output_selected_id.setAlignment(Qt.AlignCenter)
+        self.lineEdit_input_selected_id = QLineEdit(self.frame_11)
+        self.lineEdit_input_selected_id.setObjectName(u"lineEdit_input_selected_id")
+        self.lineEdit_input_selected_id.setMinimumSize(QSize(140, 30))
+        self.lineEdit_input_selected_id.setMaximumSize(QSize(140, 30))
+        font5 = QFont()
+        font5.setPointSize(10)
+        font5.setBold(False)
+        font5.setItalic(False)
+        self.lineEdit_input_selected_id.setFont(font5)
+        self.lineEdit_input_selected_id.setStyleSheet(u"")
+        self.lineEdit_input_selected_id.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_16.addWidget(self.lineEdit_output_selected_id, 1, 3, 1, 1)
+        self.gridLayout_16.addWidget(self.lineEdit_input_selected_id, 1, 3, 1, 1)
 
         self.pushButton_invert_selection = QPushButton(self.frame_11)
         self.pushButton_invert_selection.setObjectName(u"pushButton_invert_selection")
         self.pushButton_invert_selection.setMinimumSize(QSize(40, 30))
         self.pushButton_invert_selection.setMaximumSize(QSize(40, 30))
-        font5 = QFont()
-        font5.setFamilies([u"MS Shell Dlg 2"])
-        font5.setPointSize(11)
-        font5.setBold(True)
-        font5.setItalic(False)
-        self.pushButton_invert_selection.setFont(font5)
+        font6 = QFont()
+        font6.setFamilies([u"MS Shell Dlg 2"])
+        font6.setPointSize(11)
+        font6.setBold(True)
+        font6.setItalic(False)
+        self.pushButton_invert_selection.setFont(font6)
         self.pushButton_invert_selection.setStyleSheet(u"")
         icon1 = QIcon()
         icon1.addFile(u":/icons/invert_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
@@ -316,40 +343,13 @@ class Ui_Dialog(object):
 
         self.gridLayout_16.addWidget(self.pushButton_invert_selection, 1, 4, 1, 1)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_5, 1, 0, 1, 1)
-
-        self.label_11 = QLabel(self.frame_11)
-        self.label_11.setObjectName(u"label_11")
-        self.label_11.setMinimumSize(QSize(120, 30))
-        self.label_11.setMaximumSize(QSize(140, 30))
-        self.label_11.setFont(font3)
-        self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_16.addWidget(self.label_11, 1, 2, 1, 1)
-
         self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_16.addItem(self.horizontalSpacer_6, 1, 6, 1, 1)
+        self.gridLayout_16.addItem(self.horizontalSpacer_6, 1, 5, 1, 1)
 
-        self.lineEdit_input_selected_id = QLineEdit(self.frame_11)
-        self.lineEdit_input_selected_id.setObjectName(u"lineEdit_input_selected_id")
-        self.lineEdit_input_selected_id.setMinimumSize(QSize(140, 30))
-        self.lineEdit_input_selected_id.setMaximumSize(QSize(140, 30))
-        font6 = QFont()
-        font6.setPointSize(10)
-        font6.setBold(False)
-        font6.setItalic(False)
-        self.lineEdit_input_selected_id.setFont(font6)
-        self.lineEdit_input_selected_id.setStyleSheet(u"")
-        self.lineEdit_input_selected_id.setAlignment(Qt.AlignCenter)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_16.addWidget(self.lineEdit_input_selected_id, 2, 3, 1, 1)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_16.addItem(self.verticalSpacer_2, 7, 2, 1, 3)
+        self.gridLayout_16.addItem(self.horizontalSpacer_5, 1, 1, 1, 1)
 
 
         self.gridLayout_6.addWidget(self.frame_11, 1, 0, 1, 1)
@@ -401,12 +401,10 @@ class Ui_Dialog(object):
 
         self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
 
-        QWidget.setTabOrder(self.lineEdit_output_selected_id, self.lineEdit_input_selected_id)
-        QWidget.setTabOrder(self.lineEdit_input_selected_id, self.lineEdit_fmin)
+        QWidget.setTabOrder(self.lineEdit_output_selected_id, self.lineEdit_fmin)
         QWidget.setTabOrder(self.lineEdit_fmin, self.lineEdit_fmax)
         QWidget.setTabOrder(self.lineEdit_fmax, self.lineEdit_fstep)
-        QWidget.setTabOrder(self.lineEdit_fstep, self.pushButton_invert_selection)
-        QWidget.setTabOrder(self.pushButton_invert_selection, self.lineEdit_spreadsheet_path)
+        QWidget.setTabOrder(self.lineEdit_fstep, self.lineEdit_spreadsheet_path)
         QWidget.setTabOrder(self.lineEdit_spreadsheet_path, self.tabWidget_main)
         QWidget.setTabOrder(self.tabWidget_main, self.pushButton_search)
         QWidget.setTabOrder(self.pushButton_search, self.pushButton_process_data)
@@ -433,6 +431,9 @@ class Ui_Dialog(object):
         self.pushButton_search.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Choose a spreadsheet file to append data</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_search.setText("")
+        self.lineEdit_output_selected_id.setText("")
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Harmonic analysis frequency setup", None))
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"Output surface ID:", None))
         self.label_22.setText(QCoreApplication.translate("Dialog", u"Freq. min:", None))
         self.lineEdit_fmin.setText(QCoreApplication.translate("Dialog", u"5", None))
         self.label_24.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
@@ -442,15 +443,12 @@ class Ui_Dialog(object):
         self.label_21.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
         self.lineEdit_fstep.setText(QCoreApplication.translate("Dialog", u"5", None))
         self.label_26.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Harmonic analysis frequency setup", None))
         self.label_16.setText(QCoreApplication.translate("Dialog", u"Input surface ID:", None))
-        self.lineEdit_output_selected_id.setText("")
+        self.lineEdit_input_selected_id.setText("")
 #if QT_CONFIG(tooltip)
         self.pushButton_invert_selection.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to invert the selected IDs</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_invert_selection.setText("")
-        self.label_11.setText(QCoreApplication.translate("Dialog", u"Output surface ID:", None))
-        self.lineEdit_input_selected_id.setText("")
         self.pushButton_process_data.setText(QCoreApplication.translate("Dialog", u"Process data", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
@@ -478,6 +476,9 @@ class AcousticTransferElementInputs_UI(QDialog, Ui_Dialog):
                                                         - pushButton_search: QPushButton
                                             - frame_11: QFrame
                                                 - (Layout): QGridLayout
+                                                        - lineEdit_output_selected_id: QLineEdit
+                                                        - label_2: QLabel
+                                                        - label_11: QLabel
                                                         - frame_3: QFrame
                                                             - (Layout): QGridLayout
                                                                     - label_22: QLabel
@@ -489,12 +490,9 @@ class AcousticTransferElementInputs_UI(QDialog, Ui_Dialog):
                                                                     - label_21: QLabel
                                                                     - lineEdit_fstep: QLineEdit
                                                                     - label_26: QLabel
-                                                        - label_2: QLabel
                                                         - label_16: QLabel
-                                                        - lineEdit_output_selected_id: QLineEdit
-                                                        - pushButton_invert_selection: QPushButton
-                                                        - label_11: QLabel
                                                         - lineEdit_input_selected_id: QLineEdit
+                                                        - pushButton_invert_selection: QPushButton
                                             - frame_4: QFrame
                                                 - (Layout): QGridLayout
                                                         - pushButton_process_data: QPushButton
