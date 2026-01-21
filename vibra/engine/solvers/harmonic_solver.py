@@ -21,6 +21,10 @@ class HarmonicSolver:
 
         self.reset_variables()
 
+    @property
+    def frequencies(self) -> np.ndarray:
+        return self.assembler.model.frequencies
+
     def reset_variables(self):
         self.solution = None
         self.displacement_dof = None

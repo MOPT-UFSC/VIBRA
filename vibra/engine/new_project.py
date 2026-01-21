@@ -304,6 +304,8 @@ class NewProject:
             solution = self.solver.solve_mode_superposition()
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
+        
+        self.project_writer.write_harmonic_solution(self.solver)
 
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")

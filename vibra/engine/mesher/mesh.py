@@ -328,10 +328,11 @@ class Mesh:
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
 
-    def load_mesh(self, path: Path | str,**kwargs):
+    def load_mesh(self, path: Path | str, **kwargs):
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
         threads = kwargs.get("threads", 0)
         gmsh_gui = kwargs.get("gmsh_gui", False)
+        self.geometry_imported = False
 
         # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
         # self.element_type: ElementType
@@ -343,7 +344,7 @@ class Mesh:
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
         logging.info("Loading mesh data... [25/100]")
-        gmsh.open(path)
+        gmsh.open(str(path))
 
         logging.info("Loading mesh data... [90/100]")
         gmsh.model.occ.synchronize()
@@ -370,6 +371,8 @@ class Mesh:
             f", {len(self.faces_connectivity)} dim 2"
             f"and {len(self.solids_connectivity)} dim 3 elements"
         )
+
+        return self
 
     def update_element_type(self):
         nodes_per_element = self.solids_connectivity[0, 4:].size
@@ -1450,7 +1453,7 @@ class Mesh:
             for el_index in self.solids_connectivity[mask, 0]:
                 self.surface_from_solid_element[el_index].append(surface_id)
 
-    def process_mesh_related_mappings(self, label: str):
+    def process_mesh_related_mappings(self, label: str = "Loading"):
 
         logging.info(f"{label} mesh... [70/100]")
         self.map_elements_from_volumes()
@@ -2215,7 +2218,7 @@ class Mesh:
         # gmsh.option.setNumber("General.NumThreads", threads)
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
-        gmsh.open(path)
+        gmsh.open(str(path))
 
         try:
             geometry_info = defaultdict(list)

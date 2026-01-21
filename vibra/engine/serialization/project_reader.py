@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 import zipfile
 from pathlib import Path
@@ -9,8 +11,8 @@ from PIL.Image import Image
 
 if TYPE_CHECKING:
     # This is to avoid circular imports since
-    # this file is imported by Project
-    from vibra.engine.project import Project
+    # this file is also imported by NewProject
+    from vibra.engine.new_project import NewProject
 
 from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -35,7 +37,7 @@ from .project_paths import ProjectPaths
 
 class ProjectReader:
     """
-    This class reads every component of a Project.
+    This class reads every component of a NewProject.
 
     A whole project can be loaded directly, or it can
     be loaded by part.
@@ -62,13 +64,13 @@ class ProjectReader:
         with zipfile.ZipFile(vibra_path, "r") as file:
             file.extractall(path=self.project_paths.working_directory)
 
-    def read_project(self, project: Optional["Project"] = None) -> "Project":
+    def read_project(self, project: Optional[NewProject] = None) -> NewProject:
         if project is None:
             # This is to avoid circular imports since
-            # this file is imported by Project
-            from vibra.engine.project import Project
+            # this file is imported by NewProject
+            from vibra.engine.new_project import NewProject
 
-            project = Project()
+            project = NewProject()
 
         project.reset_variables()
         project.current_analysis_id = self.read_current_analysis_id()
@@ -88,10 +90,8 @@ class ProjectReader:
         model.reset_variables()
 
         analysis_setup = self.read_analysis_setup()
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            model.set_harmonic_analysis_setup(analysis_setup)
-        elif isinstance(analysis_setup, ModalAnalysisSetup):
-            model.set_modal_analysis_setup(analysis_setup)
+        if model is not None:
+            model.new_set_analysis_setup(analysis_setup)
 
         model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
@@ -330,7 +330,6 @@ class ProjectReader:
         else:
             return None, None
 
-        solver.solution = self.get_solution_loader()
         return assembler, solver
 
     def get_solution_loader(self) -> Optional[LazyHDF5MatrixLoader]:

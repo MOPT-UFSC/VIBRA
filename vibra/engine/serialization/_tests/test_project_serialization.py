@@ -6,7 +6,7 @@ import numpy as np
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.mesher.mesh_setup import MeshSetup
-from vibra.engine.project import Project
+from vibra.engine.new_project import NewProject
 
 
 def test_project_geometry(fluid):
@@ -31,7 +31,7 @@ def test_project_geometry(fluid):
         f_step=200,
     )
 
-    project_a = Project()
+    project_a = NewProject()
     project_a.import_geometry(geometry_path)
     project_a.configure_mesh(mesh_setup)
     project_a.generate_mesh()
@@ -40,12 +40,12 @@ def test_project_geometry(fluid):
     project_a.model.properties._set_property("fluid", fluid, volume=2)
     project_a.model.properties._set_property("fluid", fluid, surface=1)
     project_a.model.properties._set_property("surface_velocity", data_Vn, surface=1)
-    project_a.model.set_harmonic_analysis_setup(analysis_setup)
+    project_a.model.new_set_analysis_setup(analysis_setup)
 
     project_a.solve_acoustic_harmonic_analysis()
     project_a.save_project(project_path)
 
-    project_b = Project()
+    project_b = NewProject()
     project_b.load_project(project_path)
 
     project_path.unlink()
@@ -60,16 +60,16 @@ def test_project_mesh(fluid):
         sigma_factor=0.01,
     )
 
-    project_a = Project()
+    project_a = NewProject()
     project_a.import_mesh("cavidades_60mm_large.nas")
     project_a.model.properties._set_property("fluid", fluid, volume=1)
     project_a.model.properties._set_property("fluid", fluid, volume=2)
-    project_a.model.set_modal_analysis_setup(analysis_setup)
+    project_a.model.new_set_analysis_setup(analysis_setup)
     project_a.current_analysis_id = AnalysisID.ACOUSTIC_MODAL
     project_a.run_analysis()
     project_a.save_project(project_path)
 
-    project_b = Project()
+    project_b = NewProject()
     project_b.load_project(project_path)
 
     project_path.unlink()

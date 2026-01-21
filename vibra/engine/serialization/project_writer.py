@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import shutil
 import zipfile
 from dataclasses import asdict
@@ -10,8 +12,8 @@ from PIL import Image
 
 if TYPE_CHECKING:
     # This is to avoid circular imports since
-    # this file is imported by Project
-    from vibra.engine.project import Project
+    # this file is imported by NewProject
+    from vibra.engine.new_project import NewProject
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
@@ -44,7 +46,7 @@ class ProjectWriter:
                 arcname = path.relative_to(working_dir)
                 file.write(path, arcname)
 
-    def write_project(self, project: "Project"):
+    def write_project(self, project: NewProject):
         self.write_project_setup(project)
         self.write_model(project.model)
 
@@ -63,7 +65,7 @@ class ProjectWriter:
         if model.mesh is not None:
             self.write_mesh(model.mesh)
 
-    def write_project_setup(self, project: "Project"):
+    def write_project_setup(self, project: NewProject):
         project_setup = {
             "mesh_setup": {},
             "analysis_setup": {},
@@ -201,7 +203,7 @@ class ProjectWriter:
         if isinstance(solver.solution, LazyHDF5MatrixLoader):
             return
 
-        with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
+        with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
             file["frequencies"] = solver.natural_frequencies
             file["solution"] = solver.solution
             file["solution_status"] = np.ones_like(solver.natural_frequencies, dtype=bool)
