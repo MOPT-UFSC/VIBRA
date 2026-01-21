@@ -24,7 +24,7 @@ dependencies = [
     "polars>=1.37.1",
     "pyarrow>=22.0.0",
     "fastexcel>=0.18.0",
-    "xlsxwriter>=3.2.9",
+    "pandas>=2.3.3",
 ]
 
 [dependency-groups]
