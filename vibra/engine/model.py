@@ -1,4 +1,6 @@
 
+from vibra.engine import ModalAnalysisSetup
+from vibra.engine import HarmonicAnalysisSetup
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.engine import AnalysisID
 from vibra.engine.mesher.element_type import (
@@ -37,7 +39,9 @@ from vibra.engine.elements.elements_2d import (
 #1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
 
+from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
@@ -70,13 +74,20 @@ class Model:
         self.reset_variables()
 
     def reset_variables(self):
+        self.length_unit: LengthUnits = "millimeter"
+        self.mesh_setup_new: Optional[MeshSetup] = None
+        
+        self.harmonic_analysis_setup: Optional[HarmonicAnalysisSetup] = None
+        self.modal_analysis_setup: Optional[ModalAnalysisSetup] = None
 
+        # TODO: review these variables
         self.mesh = None
         self.mesh_setup = None
         self.stop_processing = False
         self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
+        self.geometry_qf = 1.0
 
         self.f_min = 5
         self.f_max = 600
@@ -245,6 +256,8 @@ class Model:
 
 
     def set_analysis_setup(self, analysis_setup: dict):
+        import warnings
+        warnings.warn("set_analysis_setup is deprecated use new_set_analysis_setup instead")
 
         self.frequencies = None
         self.analysis_setup = analysis_setup
@@ -269,6 +282,16 @@ class Model:
                 self.frequencies = None
                 return
 
+    def new_set_analysis_setup(self, analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup):
+        match analysis_setup:
+            case HarmonicAnalysisSetup():
+                self.harmonic_analysis_setup = analysis_setup
+            case ModalAnalysisSetup():
+                self.modal_analysis_setup = analysis_setup
+            case _:
+                raise ValueError("Invalid analysis setup")
+        
+        self.set_analysis_setup(analysis_setup.as_dict())
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
 

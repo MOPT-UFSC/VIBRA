@@ -1,4 +1,5 @@
 import logging
+import warnings
 import os
 import sys
 import traceback
@@ -20,6 +21,8 @@ from vtkmodules.vtkCommonDataModel import (
 )
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
+from vibra.errors import MeshingAlgorithmError
+from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.mesher.element_type import (
     DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
@@ -148,7 +151,91 @@ class Mesh:
     def set_element_type(self, element_type: ElementType):
         self.element_type = element_type
 
+    def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
+        if not gmsh.is_initialized():
+            gmsh.initialize("", False, interruptible=False)
+            gmsh.option.set_number("General.Terminal", 0)
+            gmsh.option.set_number("General.Verbosity", 0)
+            # gmsh.option.set_number("General.NumThreads", threads)
+            gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
+
+            logging.info("Loading geometry... [10/100]")
+            gmsh.open(str(path))
+
+        logging.info("Configuring mesh... [20/100]")
+        self._new_configure_mesh(mesh_setup)
+
+        if mesh_setup.merge_connected_volumes:
+            self._merge_nodes_from_adjacent_volumes()
+
+        logging.info("Processing geometry data... [25/100]")
+        self.process_geometry_information()
+
+        logging.info("Processing geometry data... [35/100]")
+        self.process_downwards_adjacencies_from_entities()
+        self.process_upwards_adjacencies_from_entities()
+
+        try:
+            dimension = mesh_setup.element_setup.dimensions
+            gmsh.model.mesh.generate(dimension)
+        except Exception as e:
+            gmsh.finalize()
+
+            exception = MeshingAlgorithmError(
+                "A problem occured while generating the mesh.",
+                "Reducing the size of the elements and/or changing the 3D meshing ",
+                "algorithm may help resolve the issue.\n",
+                "If neither of these options works, we suggest reviewing the CAD geometry ",
+                "to eliminate any potential underlying geometric issues.",
+            )
+            logging.error(str(exception))
+            raise exception from e
+
+        logging.info("Post-processing mesh... [60/100]")
+        self.post_process_mesh_data()
+
+        logging.info("Post-processing mesh... [95/100]")
+        if mesh_setup.compute_quality_metrics:
+            self.compute_mesh_quality_parameters()
+
+        gmsh.finalize()
+
+        logging.info(
+            f"Mesh generated with {len(self.nodal_coordinates)} nodes"
+            f", {len(self.lines_connectivity)} dim 1"
+            f", {len(self.faces_connectivity)} dim 2"
+            f"and {len(self.solids_connectivity)} dim 3 elements"
+        )
+
+        return self
+
+    def _new_configure_mesh(self, mesh_setup: MeshSetup):
+        if mesh_setup.refinement_parameters:
+            self.local_mesh_refine(
+                mesh_setup.maximum_element_size,
+                mesh_setup.mesh_refinement_parameters,
+            )
+        else:
+            gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
+            gmsh.option.setNumber("Mesh.MeshSizeMax", mesh_setup.maximum_element_size)
+
+        gmsh.option.setNumber("Mesh.RandomSeed", mesh_setup.random_seed)
+        gmsh.option.setNumber("Mesh.MeshSizeFactor", mesh_setup.size_factor)
+        gmsh.option.setNumber("Mesh.Algorithm", mesh_setup.element_setup.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", mesh_setup.element_setup.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", mesh_setup.element_setup.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", mesh_setup.element_setup.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", mesh_setup.element_setup.recombine_all)
+        gmsh.option.setNumber("Mesh.ElementOrder", mesh_setup.element_setup.element_order)
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", mesh_setup.element_setup.second_order_incomplete)
+
+        gmsh.model.mesh.clear()
+        gmsh.model.occ.synchronize()
+
     def load_cad(self, path: str | Path, **kwargs):
+        import warnings
+        warnings.warn("This method is deprecated, use new_load_cad", DeprecationWarning)
+
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
         mesh_connection = kwargs.get("mesh_connection", True)
         mesh_quality_metrics = kwargs.get("mesh_quality_metrics", False)
@@ -868,6 +955,9 @@ class Mesh:
 
 
     def _configure_mesh(self, **kwargs):
+        import warnings
+        warnings.warn("This method is deprecated, use _new_configure_mesh", DeprecationWarning)
+
         size_factor = kwargs.get("size_factor", 0.0)
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)

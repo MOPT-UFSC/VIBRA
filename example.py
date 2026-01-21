@@ -47,10 +47,11 @@ project.model.properties._set_property("fluid", fluid, volume=1)
 project.model.properties._set_property("fluid", fluid, surface=4)
 project.model.properties._set_property("surface_velocity", data_Vn, surface=4)
 
-project.model.set_harmonic_analysis_setup(analysis_setup)
+project.model.new_set_analysis_setup(analysis_setup)
 direct_solutions = project.run_analysis()
 
 analysis_setup.analysis_method = "mode_superposition"
+project.model.new_set_analysis_setup(analysis_setup)
 modal_solutions = project.run_analysis()
 
 assert np.allclose(direct_solutions[:], modal_solutions[:])

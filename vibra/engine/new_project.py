@@ -162,17 +162,17 @@ class NewProject:
         if self.mesh_setup is None:
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
-        mesh = Mesh().load_cad(
+        mesh = Mesh().new_load_cad(
             self.model.geometry_path,
             self.mesh_setup,
         )
 
-        if mesh.disconnected_nodes:
-            raise errors.MeshException(
-                "The generated mesh contains disconnected nodes.",
-                "Please check the mesh setup and try again.",
-                nodes=mesh.disconnected_nodes,
-            )
+        # if mesh.disconnected_nodes:
+        #     raise errors.MeshException(
+        #         "The generated mesh contains disconnected nodes.",
+        #         "Please check the mesh setup and try again.",
+        #         nodes=mesh.disconnected_nodes,
+        #     )
 
         if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:
             message = "The generated mesh contains collapsed elements."

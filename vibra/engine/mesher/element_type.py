@@ -1,9 +1,10 @@
-# TODO: delete file
+import warnings 
 
 from dataclasses import dataclass
 
 from vibra.engine.mesher import gmsh_constants
 
+warnings.warn("The file element_type is deprecated, use element_setup instead", DeprecationWarning)
 
 @dataclass
 class ElementType:

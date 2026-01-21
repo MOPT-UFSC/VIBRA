@@ -421,6 +421,23 @@ class ModelProperties:
                     entities_without_property.append(surface_id)
     
         return entities_without_property
+    
+    def iterate_properties(self):
+        property_dicts = {
+            "global": self.global_properties,
+            "group": self.group_properties,
+            "volume": self.volume_properties,
+            "surface": self.surface_properties,
+            "line": self.line_properties,
+            "point": self.point_properties,
+            "element": self.element_properties,
+            "node": self.nodal_properties,
+        }
+
+        for entity_name, property_dict in property_dicts.items():
+            for key, value in property_dict.items():
+                property_name, tags = key
+                yield entity_name, property_name, tags, value
 
 
 if __name__ == "__main__":
