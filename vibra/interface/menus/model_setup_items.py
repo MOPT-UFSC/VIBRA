@@ -162,6 +162,10 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_properties_gradient.setHidden(not DEVELOPER_MODE)
         self.item_child_acoustic_transfer_element_setup.setHidden(not DEVELOPER_MODE)
 
+        # TODO: remove when possible
+        self.item_child_incident_plane_wave.setHidden(True)
+        self.item_child_acoustic_properties_gradient.setHidden(True)
+
     def _find_qtree_widget_item_name(self, qtree_widet_item) -> str | None:
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
@@ -248,6 +252,10 @@ class ModelSetupItems(CommonMenuItems):
                     if property_name == "degrees_of_freedom_decoupling":
                         pp_data = properties._get_property("perforated_plate_model", surface=key[1])
                         if isinstance(pp_data, dict):
+                            continue
+
+                        ti_data = properties._get_property("transfer_impedance", surface=key[1])
+                        if isinstance(ti_data, dict):
                             continue
 
                     return True

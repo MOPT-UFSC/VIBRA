@@ -322,6 +322,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 pp_data =  self.properties._get_property("perforated_plate_model", surface=surface_id)
                 if isinstance(pp_data, dict):
                     continue
+
+                ti_data =  self.properties._get_property("transfer_impedance", surface=surface_id)
+                if isinstance(ti_data, dict):
+                    continue
  
                 volume_id = data.get("volume_to_decouple")
                 if volume_id is None:
