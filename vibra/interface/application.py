@@ -2,14 +2,13 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_DIR
+from vibra.engine.new_project import NewProject
 from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
-
 from vibra.project_files.load_project import LoadProject
 from vibra.project_files.project import Project
 from vibra.project_files.project_file import ProjectFile
-
 
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
@@ -28,6 +27,8 @@ class Application(QApplication):
         # global params
         self.config = Config()
 
+        self.new_project = NewProject(TEMP_PROJECT_DIR)
+
         self.file = ProjectFile(TEMP_PROJECT_DIR)
         self.project = Project(self.file)
         self.load_project = LoadProject()
@@ -35,18 +36,11 @@ class Application(QApplication):
         # gui
         self.main_window = MainWindow()
         self.main_window.configure_main_window()
-
-        self.update()
         self.filter_tab_scroll_by_wheel()
 
-    def update(self):
-        return
-        self.geometry_toolbox.update()
-        self.main_window.update()
-
     def filter_tab_scroll_by_wheel(self):
+        from PySide6.QtCore import QEvent, QObject
         from PySide6.QtWidgets import QTabBar
-        from PySide6.QtCore import QObject, QEvent
 
         class Filter(QObject):
             def eventFilter(self, obj, event):
