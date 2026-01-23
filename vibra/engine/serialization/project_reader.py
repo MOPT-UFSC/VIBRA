@@ -98,7 +98,7 @@ class ProjectReader:
         model.geometry_path = self.read_geometry_path()
 
         if self.project_paths.mesh_data_filepath.exists():
-            model.mesh = self.read_mesh(self.project_paths.mesh_data_filepath)
+            model.mesh = self.read_mesh()
 
         return model
 
@@ -167,14 +167,14 @@ class ProjectReader:
 
     def read_mesh(
         self,
-        mesh_path: Optional[str | Path] = None,
         mesh: Optional[Mesh] = None,
     ) -> Mesh:
-        if mesh_path is None:
-            mesh_path = self.project_paths.mesh_data_filepath
-        mesh_path = Path(mesh_path)
+        mesh_data_path = self.project_paths.mesh_data_filepath
+        if not mesh_data_path.exists():
+            raise FileNotFoundError("The mesh file is missing.")
 
-        if not mesh_path.exists():
+        geometry_data_path = self.project_paths.geometry_data_filepath
+        if not geometry_data_path.exists():
             raise FileNotFoundError("The mesh file is missing.")
 
         if mesh is None:
@@ -187,7 +187,7 @@ class ProjectReader:
             "cache_solids_connectivity",
         ]
 
-        with h5py.File(mesh_path, "r") as file:
+        with h5py.File(mesh_data_path, "r") as file:
             mesh.nodal_coordinates = np.array(file["nodal_data/nodal_coordinates"])
             mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
@@ -198,6 +198,30 @@ class ProjectReader:
                 mesh.cache_lines_connectivity = np.array(file["connectivity/cache_lines_connectivity"])
                 mesh.cache_faces_connectivity = np.array(file["connectivity/cache_faces_connectivity"])
                 mesh.cache_solids_connectivity = np.array(file["connectivity/cache_solids_connectivity"])
+
+        with h5py.File(geometry_data_path, "r") as file:
+            for key, value in file.get("entities", dict()).items():
+                mesh.geometry_information[key] = [int(val) for val in value]
+
+            if "properties" in file:
+                properties = file["properties"]
+                mesh.length_from_lines = {int(k): v for k, v in properties["length_from_lines"]}
+                mesh.area_from_surfaces = {int(k): v for k, v in properties["area_from_surfaces"]}
+                mesh.volume_from_bodies = {int(k): v for k, v in properties["volume_from_bodies"]}
+
+            for key, value in file.get("adjacencies", dict()).items():
+                key: str
+                tag = int(key.split("_")[-1])
+                value = [int(i) for i in value]
+
+                if key.startswith("points_from_line"):
+                    mesh.points_from_line[tag] = value
+
+                elif key.startswith("lines_from_surface"):
+                    mesh.lines_from_surface[tag] = value
+
+                elif key.startswith("surfaces_from_volume"):
+                    mesh.surfaces_from_volume[tag] = value
 
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
