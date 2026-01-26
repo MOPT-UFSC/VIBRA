@@ -40,7 +40,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def __init__(self, mesh: Mesh | None = None):
         self.mesh = mesh
         if self.mesh is None:
-            self.mesh = app().project.model.mesh
+            self.mesh = app().new_project.model.mesh
 
         self.extractors: dict[str, vtkExtractCells] = dict()
         self.create_geometry()
@@ -67,8 +67,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.clear_colors()
 
     def clear_colors(self):
-        mesh = app().project.model.mesh
-        properties = app().project.model.properties
+        mesh = app().new_project.model.mesh
+        properties = app().new_project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
 
         if color_mode == GeometryColorMode.EMPTY:
@@ -109,8 +109,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             self.paint_surfaces(color, surfaces)
 
     def reload_composition(self):
-        mesh = app().project.model.mesh
-        properties = app().project.model.properties
+        mesh = app().new_project.model.mesh
+        properties = app().new_project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
@@ -416,8 +416,8 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _surfaces_with_perforated_plate(self):
         # Find both surfaces of a perforated plate
-        mesh = app().project.model.mesh
-        properties = app().project.model.properties
+        mesh = app().new_project.model.mesh
+        properties = app().new_project.model.properties
 
         surfaces_with_perforated_plates = set()
         for surface, _ in mesh.volumes_from_surface.items():

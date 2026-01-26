@@ -38,14 +38,14 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
     def build(self):
         self.clear_symbols()
         
-        surface_properties = app().project.model.properties.surface_properties
+        surface_properties = app().new_project.model.properties.surface_properties
         for property_name, surface_id in surface_properties.keys():
             self._call_build_functions(property_name, surface_id=surface_id)
 
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         surface_nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
 
@@ -77,12 +77,12 @@ class SymbolsActorAcousticFixedSize(CommonSymbolsActorFixedSize):
         if surface_id == -1:
             return
 
-        property_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        property_data = app().new_project.model.properties._get_property(property_name, surface=surface_id)
         if not isinstance(property_data, dict):
             return
 
         coords, normal, _ = self._get_center_coords_and_normals(surface_id)
-        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
+        area = app().new_project.model.mesh.area_from_surfaces.get(surface_id)
         if area is None:
             scale = 1
         else:
