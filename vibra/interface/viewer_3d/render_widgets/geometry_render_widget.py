@@ -139,7 +139,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         if mesh is None:
             return
 
@@ -185,11 +185,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         logging.info("Updating the geometry render... [95/100]")
         self.update()
 
-        if app().project.thumbnail is None:
+        if app().new_project.thumbnail is None:
             self.save_thumbnail()
 
     def save_thumbnail(self):
-        thumbnail = app().project.thumbnail
+        thumbnail = app().new_project.thumbnail
 
         self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
 
@@ -200,7 +200,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.disable_scale_bar()
         thumbnail = self.get_thumbnail()
-        app().project.thumbnail = removes_image_background(thumbnail)
+        app().new_project.thumbnail = removes_image_background(thumbnail)
 
         if app().config.user_preferences.show_reference_scale_bar:
             self.enable_scale_bar()
@@ -218,7 +218,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         try:
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            _, physical_domain = app().new_project.get_analysis_type_and_physical_domain()
 
         self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
         self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
@@ -238,10 +238,10 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_hidden_plot(self):
         # We could just call the update_plot function,
         # but this is much simpler and faster
-        if app().project is None:
+        if app().new_project is None:
             return
 
-        model = app().project.model
+        model = app().new_project.model
         if model is None:
             return
 
@@ -452,7 +452,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             analysis_type = analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type, physical_domain = app().new_project.get_analysis_type_and_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()

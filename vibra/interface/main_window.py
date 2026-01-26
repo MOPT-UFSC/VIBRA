@@ -672,8 +672,8 @@ class MainWindow(MainWindow_UI):
                 len(self.hidden_surfaces) != 0,
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
-                bool(app().project.model.mesh.collapsed_elements_data),
-                bool(app().project.model.mesh.disconnected_nodes_data),
+                bool(app().new_project.model.mesh.collapsed_elements_data),
+                bool(app().new_project.model.mesh.disconnected_nodes_data),
             ]
         )
 
