@@ -16,7 +16,7 @@ from numbers import Number
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
 
-    mesh = app().project.model.mesh
+    mesh = app().new_project.model.mesh
 
     selected_points = app().main_window.selected_geometry_points
     node_ids = [mesh.nodes_from_points.get(point_id) for point_id in selected_points]
@@ -61,7 +61,7 @@ def lines_info_text():
     if len(line_ids) == 0:
         return ""
     
-    length_from_lines = app().project.model.mesh.length_from_lines
+    length_from_lines = app().new_project.model.mesh.length_from_lines
 
     text = ""
     length = 0
@@ -94,7 +94,7 @@ def faces_info_text():
     if len(surface_ids) == 0:
         return ""
 
-    area_from_surfaces = app().project.model.mesh.area_from_surfaces
+    area_from_surfaces = app().new_project.model.mesh.area_from_surfaces
 
     text = ""
     area = 0
@@ -105,7 +105,7 @@ def faces_info_text():
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
         tree.add_item("Area", f"{area : .6e}", "m²")
 
-        surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
+        surface_data = app().new_project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
             tree.add_item("Thickness", surface_data["surface_thickness"], "m")
             tree.add_item("Offset", surface_data["thickness_offset"])
@@ -156,18 +156,18 @@ def process_volumes_and_masses(volume_ids: list):
     material_mass = 0.
     volume_compound = 0.
 
-    volume_from_bodies = app().project.model.mesh.volume_from_bodies
+    volume_from_bodies = app().new_project.model.mesh.volume_from_bodies
 
     for volume_id in volume_ids:
         volume = volume_from_bodies.get(volume_id, 0)
         volume_compound += volume
 
-        fluid = app().project.model.properties._get_property("fluid", volume=volume_id)
+        fluid = app().new_project.model.properties._get_property("fluid", volume=volume_id)
         if isinstance(fluid, Fluid):
             fluid_density = fluid.fluid_density
             fluid_mass += volume * fluid_density
 
-        material = app().project.model.properties._get_property("material", volume=volume_id)
+        material = app().new_project.model.properties._get_property("material", volume=volume_id)
         if isinstance(material, Material):
             material_density = material.material_density
             material_mass += volume * material_density
@@ -183,10 +183,10 @@ def material_info_text():
         return text
 
     elif len(volumes) == 1:
-        material = app().project.model.properties._get_property("material", volume=volumes[0])
+        material = app().new_project.model.properties._get_property("material", volume=volumes[0])
 
     elif len(surfaces) == 1:
-        material = app().project.model.properties._get_property("material", surface=surfaces[0])
+        material = app().new_project.model.properties._get_property("material", surface=surfaces[0])
 
     if material is None:
         return text
@@ -212,10 +212,10 @@ def fluid_info_text():
         return text
 
     elif len(volumes) == 1:
-        fluid = app().project.model.properties._get_property("fluid", volume=volumes[0])
+        fluid = app().new_project.model.properties._get_property("fluid", volume=volumes[0])
 
     elif len(surfaces) == 1:
-        fluid = app().project.model.properties._get_property("fluid", surface=surfaces[0])
+        fluid = app().new_project.model.properties._get_property("fluid", surface=surfaces[0])
 
     if fluid is None:
         return text
@@ -242,7 +242,7 @@ def proportional_damping_info_text():
     if len(volumes) != 1:
         return text
 
-    pd_data = app().project.model.properties._get_property(
+    pd_data = app().new_project.model.properties._get_property(
         "proportional_damping", volume=volumes[0]
     )
     if not isinstance(pd_data, dict):
@@ -267,7 +267,7 @@ def porous_material_info_text():
     if len(volumes) != 1:
         return text
 
-    pm_model = app().project.model.properties._get_property(
+    pm_model = app().new_project.model.properties._get_property(
         "porous_material_model", volume=volumes[0]
     )
     if not isinstance(pm_model, dict):
@@ -286,7 +286,7 @@ def viscous_thermal_info_text():
     if len(volumes) != 1:
         return text
 
-    vt_model = app().project.model.properties._get_property(
+    vt_model = app().new_project.model.properties._get_property(
         "viscous_thermal_model", volume=volumes[0]
     )
     if not isinstance(vt_model, dict):
@@ -310,9 +310,9 @@ def perforated_plate_info_text():
     surfaces = [int(surf_id) for surf_id in surfaces]
 
     if len(surfaces) == 1:
-        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=surfaces[0])
+        pp_data = app().new_project.model.properties._get_property("perforated_plate_model", surface=surfaces[0])
     else:
-        pp_data = app().project.model.properties._get_property("perforated_plate_model", surface=tuple(surfaces))
+        pp_data = app().new_project.model.properties._get_property("perforated_plate_model", surface=tuple(surfaces))
 
     if not isinstance(pp_data, dict):
         return text
@@ -345,7 +345,7 @@ def acoustic_boundary_conditions_info_text():
         return text
     
     surface_id = selected_faces[0]
-    properties = app().project.model.properties
+    properties = app().new_project.model.properties
 
     acoustic_pressure = properties._get_property("acoustic_pressure", surface=surface_id)
     surface_velocity = properties._get_property("surface_velocity", surface=surface_id)
@@ -495,7 +495,7 @@ def get_reciprocating_compressor_text(rc_data: dict):
 
 def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
     text = ""
-    properties = app().project.model.properties
+    properties = app().new_project.model.properties
     if "anechoic_termination" in si_data.keys():
         fluid = properties._get_property("fluid", surface=surface)
         if isinstance(fluid, Fluid):
@@ -517,7 +517,7 @@ def get_specific_and_anechoic_impedance_text(surface: int, si_data: dict):
     return text
 
 def get_mass_source_text(**kwargs):
-    properties = app().project.model.properties
+    properties = app().new_project.model.properties
     mass_source = properties._get_property("mass_source", **kwargs)
     if mass_source is None:
         return ""
@@ -571,21 +571,21 @@ def structural_boundary_conditions_info_text():
     selected_lines = list(app().main_window.selected_geometry_lines)
 
     if len(selected_faces) == 1:
-        prescribed_dof = app().project.model.properties._get_property(
+        prescribed_dof = app().new_project.model.properties._get_property(
             "prescribed_dof", surface=selected_faces[0]
         )
-        nodal_loads = app().project.model.properties._get_property(
+        nodal_loads = app().new_project.model.properties._get_property(
             "nodal_loads", surface=selected_faces[0]
         )
-        distributed_loads_area = app().project.model.properties._get_property(
+        distributed_loads_area = app().new_project.model.properties._get_property(
             "distributed_loads", surface=selected_faces[0]
         )
-        normal_pressure_load = app().project.model.properties._get_property(
+        normal_pressure_load = app().new_project.model.properties._get_property(
             "normal_pressure_load", surface=selected_faces[0]
         )
 
     elif len(selected_lines) == 1:
-        distributed_loads_line = app().project.model.properties._get_property(
+        distributed_loads_line = app().new_project.model.properties._get_property(
             "distributed_loads", line=selected_lines[0]
         )
 
@@ -662,15 +662,15 @@ def nodes_info_text():
         return ""
 
     elif len(node_ids) == 1:
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+        coords = app().new_project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
 
         tree = TreeInfo(f"NODE {node_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
         text += str(tree)
 
     elif len(node_ids) == 2:
-        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        coord_A = app().new_project.model.mesh.nodal_coordinates[node_ids[0], 1:]
+        coord_B = app().new_project.model.mesh.nodal_coordinates[node_ids[1], 1:]
         dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
         distance = np.linalg.norm(coord_A - coord_B)
 
@@ -708,7 +708,7 @@ def mesh_solids_info_text():
 
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
-        connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
+        connect = app().new_project.model.mesh.solids_connectivity[element_id, 4:]
 
         tree = TreeInfo(f"SOLID ELEMENT {element_id}")
         tree.add_item("Connectivity", f"{connect}")
@@ -724,8 +724,8 @@ def mesh_material_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
-        material = app().project.model.properties._get_property("material", volume=current_solid)
+        current_solid = app().new_project.model.mesh.get_volume_from_element(elements[0])
+        material = app().new_project.model.properties._get_property("material", volume=current_solid)
         if not isinstance(material, Material):
             return text
 
@@ -751,8 +751,8 @@ def mesh_fluid_info_text():
         elements = list(app().main_window.selected_mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
-        fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
+        current_solid = app().new_project.model.mesh.get_volume_from_element(elements[0])
+        fluid = app().new_project.model.properties._get_property("fluid", volume=current_solid)
         if not isinstance(fluid, Fluid):
             return text
 
@@ -776,10 +776,10 @@ def mesh_structural_boundary_conditions_info_text():
     if len(selected_nodes) != 1:
         return text
 
-    prescribed_dof = app().project.model.properties._get_property(
+    prescribed_dof = app().new_project.model.properties._get_property(
         "prescribed_dof", node=selected_nodes[0]
     )
-    nodal_loads = app().project.model.properties._get_property(
+    nodal_loads = app().new_project.model.properties._get_property(
         "nodal_loads", node=selected_nodes[0]
     )
     boundary_conditions_list = [prescribed_dof, nodal_loads]
@@ -855,7 +855,7 @@ def problematic_nodes_info_text(self):
 
 def analysis_info_text(frequency_index: int):
 
-    project = app().project
+    project = app().new_project
     if not project.is_there_a_valid_solution():
         return ""
 
