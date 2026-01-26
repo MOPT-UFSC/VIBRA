@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal, QObject
 
-if TYPE_CHECKING:
-    from vibra.project_files.project import Project
+from vibra.project_files.project import Project
 
 class SelectionHandler(QObject):
     selection_changed = Signal()
