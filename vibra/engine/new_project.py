@@ -102,9 +102,9 @@ class NewProject:
         """
         self.save_path = Path(path)
         self.project_reader.read_file(path)
-        return self.sync_project()
+        return self.sync_with_working_dir()
 
-    def sync_project(self) -> NewProject:
+    def sync_with_working_dir(self) -> NewProject:
         """
         Reload project data from the working directory.
         """
