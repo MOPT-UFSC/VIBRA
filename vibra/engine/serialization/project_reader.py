@@ -205,9 +205,9 @@ class ProjectReader:
 
             if "properties" in file:
                 properties = file["properties"]
-                mesh.length_from_lines = {int(k): v for k, v in properties["length_from_lines"]}
-                mesh.area_from_surfaces = {int(k): v for k, v in properties["area_from_surfaces"]}
-                mesh.volume_from_bodies = {int(k): v for k, v in properties["volume_from_bodies"]}
+                mesh.length_from_lines = {int(k): v for k, v in properties.get("length_from_lines", default=dict())}
+                mesh.area_from_surfaces = {int(k): v for k, v in properties.get("area_from_surfaces", default=dict())}
+                mesh.volume_from_bodies = {int(k): v for k, v in properties.get("volume_from_bodies", default=dict())}
 
             for key, value in file.get("adjacencies", dict()).items():
                 key: str
