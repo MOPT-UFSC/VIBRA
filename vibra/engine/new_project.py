@@ -97,14 +97,26 @@ class NewProject:
         self,
         path: Path | str,
     ) -> NewProject:
+        """
+        Unpacks the vibra file into the working directory and reads data from it.
+        """
         self.save_path = Path(path)
         self.project_reader.read_file(path)
+        return self.sync_project()
+
+    def sync_project(self) -> NewProject:
+        """
+        Reload project data from the working directory.
+        """
         return self.project_reader.read_project(self)
 
     def save_project(
         self,
         path: Path | str,
     ):
+        """
+        Packs the data from the working directory into a .vibra file.
+        """
         self.save_path = Path(path)
         if self.project_writer.project_paths.is_empty():
             self.project_writer.write_project(self)
@@ -113,8 +125,9 @@ class NewProject:
     def import_mesh(self, path: Path | str):
         """
         Loads a complete mesh from a file.
+
         The supported mesh formats are:
-            - ???
+            - *.msh            
         """
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
