@@ -8,6 +8,19 @@ from vibra.engine.model import Model
 class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
+    
+    def check_analysis_id(self, analysis_id: AnalysisID):
+        match analysis_id:
+            case AnalysisID.STRUCTURAL_MODAL:
+                self.check_structural_modal_analysis()
+            case AnalysisID.STRUCTURAL_HARMONIC:
+                self.check_structural_harmonic_analysis()
+            case AnalysisID.ACOUSTIC_MODAL:
+                self.check_acoustic_modal_analysis()
+            case AnalysisID.ACOUSTIC_HARMONIC:
+                self.check_acoustic_harmonic_analysis()
+            case _:
+                raise NotImplementedError(f'Analysis type "{analysis_id.name}" is not implemented.')
 
     def check_acoustic_harmonic_analysis(self):
         if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):

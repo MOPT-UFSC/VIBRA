@@ -347,23 +347,10 @@ class NewProject:
         return False
 
     def is_analysis_setup_complete(self):
-        if isinstance(self.current_analysis_id, AnalysisID.NO_ANALYSIS):
-            return False
-
         checker = AnalysisChecker(self.model)
-
+        
         try:
-            match self.current_analysis_id:
-                case AnalysisID.STRUCTURAL_MODAL:
-                    return checker.check_structural_modal_analysis()
-                case AnalysisID.STRUCTURAL_HARMONIC:
-                    return checker.check_structural_harmonic_analysis()
-                case AnalysisID.ACOUSTIC_MODAL:
-                    return checker.check_acoustic_modal_analysis()
-                case AnalysisID.ACOUSTIC_HARMONIC:
-                    return checker.check_acoustic_harmonic_analysis()
-                case _:
-                    raise NotImplementedError()
+            checker.check_analysis_id(self.current_analysis_id)
         except Exception:
             return False
         else:
