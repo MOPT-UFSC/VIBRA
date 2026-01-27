@@ -11,6 +11,7 @@ class HarmonicAnalysisSetup:
     f_step: int | float
     analysis_method: Literal["direct", "mode_superposition"] = "direct"
     global_damping: None | tuple[float, ...] = None
+    modes_number: None | int = None
 
     @property
     def frequencies(self):
@@ -30,5 +31,8 @@ class HarmonicAnalysisSetup:
 
         if self.global_damping is not None:
             data["global_damping"] = self.global_damping
+        
+        if self.modes_number is not None:
+            data["modes_number"] = self.global_damping
 
         return data
