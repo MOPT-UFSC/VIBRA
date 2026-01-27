@@ -225,6 +225,7 @@ class NewProject:
         analysis_id: AnalysisID,
         analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup,
     ):
+        self.reset_solution()
         self.current_analysis_id = analysis_id
         self.model.new_set_analysis_setup(analysis_setup)
         self.update_project_setup()
