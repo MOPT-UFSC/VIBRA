@@ -11,9 +11,7 @@ class AnalysisChecker:
 
     def check_acoustic_harmonic_analysis(self):
         if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
-            raise errors.InvalidModelSetupError(
-                "A HarmonicAnalysisSetup is needed to proceed with the analysis solution."
-            )
+            raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
         self.check_contains_volumes()
         self.check_fluids_volumes()
@@ -21,9 +19,7 @@ class AnalysisChecker:
 
     def check_structural_harmonic_analysis(self):
         if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
-            raise errors.InvalidModelSetupError(
-                "A HarmonicAnalysisSetup is needed to proceed with the analysis solution."
-            )
+            raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
         if self.check_contains_volumes():
             self.check_materials_volumes()
@@ -37,9 +33,7 @@ class AnalysisChecker:
 
     def check_acoustic_modal_analysis(self):
         if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
-            raise errors.InvalidModelSetupError(
-                "A ModalAnalysisSetup is needed to proceed with the analysis solution."
-            )
+            raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
         self.check_contains_volumes()
         self.check_fluids_volumes()
@@ -47,9 +41,7 @@ class AnalysisChecker:
 
     def check_structural_modal_analysis(self):
         if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
-            raise errors.InvalidModelSetupError(
-                "A ModalAnalysisSetup is needed to proceed with the analysis solution."
-            )
+            raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
         if self.check_contains_volumes():
             self.check_materials_volumes()
@@ -57,6 +49,23 @@ class AnalysisChecker:
             self.check_materials_surfaces()
 
     # common checkers:
+    def check_mesh(self):
+        mesh = self.model.mesh
+        if mesh is None:
+            raise errors.InvalidMeshSetupError("There is no mesh available")
+
+        if mesh.disconnected_nodes_data:
+            text = "Collapsed elements have been detected during the mesh post-processing. \n"
+            text += "The model solution will stay deactivated until the collapsed-related \n"
+            text += "issues have been addressed."
+            raise errors.InvalidMeshSetupError(text)
+
+        if mesh.collapsed_elements_data:
+            text += "Disconnected nodes have been detected during the mesh post-processing. \n"
+            text += "The model solution will stay deactivated until the meshing-related issues \n"
+            text += "have been addressed."
+            raise errors.InvalidMeshSetupError(text)
+
     def check_materials_volumes(self):
         volumes_without_material = self._entities_without_property(
             "material",
