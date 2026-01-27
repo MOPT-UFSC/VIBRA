@@ -76,9 +76,7 @@ class Model:
     def reset_variables(self):
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup_new: Optional[MeshSetup] = None
-        
-        self.harmonic_analysis_setup: Optional[HarmonicAnalysisSetup] = None
-        self.modal_analysis_setup: Optional[ModalAnalysisSetup] = None
+        self.new_analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup] = None
 
         # TODO: review these variables
         self.mesh = None
@@ -283,14 +281,10 @@ class Model:
                 return
 
     def new_set_analysis_setup(self, analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup):
-        match analysis_setup:
-            case HarmonicAnalysisSetup():
-                self.harmonic_analysis_setup = analysis_setup
-            case ModalAnalysisSetup():
-                self.modal_analysis_setup = analysis_setup
-            case _:
-                raise ValueError("Invalid analysis setup")
-        
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+            raise ValueError("Invalid analysis setup")
+
+        self.new_analysis_setup = analysis_setup
         self.set_analysis_setup(analysis_setup.as_dict())
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):

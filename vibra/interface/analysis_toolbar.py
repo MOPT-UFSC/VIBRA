@@ -78,7 +78,7 @@ class AnalysisToolbar(QToolBar):
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
 
-        app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
+        # app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -183,7 +183,7 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.blockSignals(block_signals)
             self.combo_box_physical_domain.blockSignals(block_signals)
 
-        analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+        analysis_type, physical_domain = app().new_project.get_analysis_type_and_physical_domain()
 
         if analysis_type == "harmonic":
             self.combo_box_analysis_type.setCurrentIndex(0)
@@ -237,12 +237,12 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
         current_analysis_id = self.get_current_analysis_id()
-        valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
+        valid_setup = app().new_project.is_analysis_id_valid(current_analysis_id)
         self.set_pushbutton_run_analysis_enabled(valid_setup)
 
     def run_analysis(self, is_resume: bool = False):
 
-        if app().project.model.analysis_setup is None:
+        if app().new_project.model.analysis_setup is None:
             self.configure_analysis()
             return
 
@@ -253,7 +253,7 @@ class AnalysisToolbar(QToolBar):
         app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         ## Do not solve models if there are disconnected nodes or collapsed elements!
-        mesh = app().project.model.mesh   
+        mesh = app().new_project.model.mesh   
         if mesh.disconnected_nodes_data:
             return
 
@@ -261,16 +261,16 @@ class AnalysisToolbar(QToolBar):
             return
 
         self.update_analysis_combo_boxes()
-        if app().project.run_analysis(is_resume):
+        if app().new_project.run_analysis():
             return
 
-        if app().project.model.stop_processing:
-            app().project.model.toggle_processing_callback()
+        if app().new_project.model.stop_processing:
+            app().new_project.model.toggle_processing_callback()
             app().file.remove_results_data_from_project_file()
             return
 
-        if is_resume:
-            app().project.can_resume_solution = False
+        # if is_resume:
+        #     app().project.can_resume_solution = False
 
         LoadingWindow(self.post_processing_analysis).run()
 
@@ -316,7 +316,7 @@ class AnalysisToolbar(QToolBar):
         self.reset_solution(True)
 
     def reset_solution(self, force_delete_harmonic = False):
-        app().project.reset_solutions()
+        app().new_project.reset_solution()
         app().file.remove_results_data_from_project_file()
 
         if force_delete_harmonic:
@@ -330,7 +330,7 @@ class AnalysisToolbar(QToolBar):
     def configure_analysis(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 
@@ -349,11 +349,12 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        setup_complete = app().project.is_analysis_setup_complete()
+        setup_complete = app().new_project.is_analysis_setup_complete()
+        broken_mesh = collapsed_elements or disconnected_nodes
 
-        # disables the run analysis button whenever the analysis setup is incomplete, or there are
-        # any mesh-related problems
-        run_analysis_enabled = setup_complete and not (collapsed_elements or disconnected_nodes)
+        # disables the run analysis button whenever the analysis setup
+        # is incomplete, or there are any mesh-related problems
+        run_analysis_enabled = setup_complete and not broken_mesh
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
     def harmonic_structural(self):
@@ -409,14 +410,3 @@ class AnalysisToolbar(QToolBar):
         self.reset_solution()
         app().project.create_solver()
         app().file.write_analysis_setup_in_file(app().project.analysis_setup)
-
-    def update_analysis_setup(self, analysis_setup: dict):
-
-        keys_to_ignore = list(analysis_setup.keys())
-        if isinstance(app().project.analysis_setup, dict):
-            for key, value in app().project.analysis_setup.items():
-                if key in keys_to_ignore:
-                    continue
-                analysis_setup[key] = value
-
-        app().project.set_analysis_setup(analysis_setup)

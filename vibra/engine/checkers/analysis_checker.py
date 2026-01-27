@@ -10,7 +10,7 @@ class AnalysisChecker:
         self.model = model
 
     def check_acoustic_harmonic_analysis(self):
-        if self.model.harmonic_analysis_setup is None:
+        if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
             raise errors.InvalidModelSetupError(
                 "A HarmonicAnalysisSetup is needed to proceed with the analysis solution."
             )
@@ -20,7 +20,7 @@ class AnalysisChecker:
         self.check_acoustic_harmonic_excitations()
 
     def check_structural_harmonic_analysis(self):
-        if self.model.harmonic_analysis_setup is None:
+        if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
             raise errors.InvalidModelSetupError(
                 "A HarmonicAnalysisSetup is needed to proceed with the analysis solution."
             )
@@ -32,11 +32,11 @@ class AnalysisChecker:
 
         self.check_structural_harmonic_excitations()
 
-        if self.model.harmonic_analysis_setup.analysis_method == "mode_superposition":
+        if self.model.new_analysis_setup.analysis_method == "mode_superposition":
             self.check_mode_superposition_prescribed_dof_criterion()
 
     def check_acoustic_modal_analysis(self):
-        if self.model.modal_analysis_setup is None:
+        if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
             raise errors.InvalidModelSetupError(
                 "A ModalAnalysisSetup is needed to proceed with the analysis solution."
             )
@@ -46,7 +46,7 @@ class AnalysisChecker:
         self.check_frequency_varying_fluid_properties_for_modal_analysis()
 
     def check_structural_modal_analysis(self):
-        if self.model.modal_analysis_setup is None:
+        if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
             raise errors.InvalidModelSetupError(
                 "A ModalAnalysisSetup is needed to proceed with the analysis solution."
             )

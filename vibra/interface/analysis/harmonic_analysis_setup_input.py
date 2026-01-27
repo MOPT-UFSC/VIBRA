@@ -1,3 +1,4 @@
+from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QDialog, QLineEdit
 from PySide6.QtGui import Qt
 
@@ -10,30 +11,12 @@ error_title = "Error"
 
 
 class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args)
+    def __init__(self, analysis_id: AnalysisID):
+        super().__init__()
 
-        self.project = app().project
-        self.model = app().project.model
-        self.analysis_setup = app().project.analysis_setup
+        self.model = app().new_project.model
+        self.analysis_id = AnalysisID(analysis_id)
 
-        self.analysis_id = kwargs.get("analysis_id")
-        if self.analysis_id is None:
-            self.analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-
-        """
-        |--------------------------------------------------------------------|
-        |                    Analysis ID codification                        |
-        |--------------------------------------------------------------------|
-        |    0 - Structural - Harmonic analysis through direct method        |
-        |    1 - Structural - Harmonic analysis through mode superposition   |
-        |    2 - Structural - Modal analysis                                 |
-        |    3 - Acoustic - Harmonic analysis through direct method          |
-        |    4 - Acoustic - Modal analysis                                   |
-        |    5 - Coupled - Harmonic analysis through direct method           |
-        |    6 - Coupled - Harmonic analysis through mode superposition      |
-        |--------------------------------------------------------------------|
-        """
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
@@ -41,7 +24,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self._config_window()
         self._create_connections()
 
-        self.load_analysis_setup()
+        self.set_default_values()
         self.update_harmonic_analysis_title()
         self.check_mesh_related_issues()
 
@@ -92,19 +75,29 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         df = self.lineEdit_fstep.text()
         self.lineEdit_fmin.setText(df)
 
-    def load_analysis_setup(self):
+    def set_default_values(self):       
+        analysis_setup = app().new_project.model.new_analysis_setup
 
-        f_min = self.analysis_setup.get("f_min", 5)
-        f_max = self.analysis_setup.get("f_max", 600)
-        f_step = self.analysis_setup.get("f_step", 5)
-        global_damping = self.analysis_setup.get("global_damping", (0, 0, 0))
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            f_min = analysis_setup.f_min
+            f_max = analysis_setup.f_max
+            f_step = analysis_setup.f_step
+            global_damping = analysis_setup.global_damping
+            if global_damping is None:
+                global_damping = (0, 0, 0)
+
+        else:
+            f_min = 5
+            f_max = 600
+            f_step = 5
+            global_damping = (0, 0, 0)
 
         self.load_analysis_type()
         self.load_damping_inputs(self.analysis_id, global_damping)
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
     def load_analysis_type(self):
-
+        analysis_setup = app().new_project.model.new_analysis_setup
         self.comboBox_method.blockSignals(True)
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
@@ -112,7 +105,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.tabWidget_main.setTabVisible(1, False)
 
         elif self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            mode_sup = self.analysis_setup.get("analysis_method") == "mode_superposition"
+            mode_sup = analysis_setup.analysis_method == "mode_superposition"
             self.comboBox_method.setCurrentIndex(int(mode_sup))
 
         self.comboBox_method.blockSignals(False)
@@ -139,7 +132,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_fmax.setText("{}".format(round(f_max, 14)))
         self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
-        key = app().project.model.properties.check_if_there_are_tables_at_the_model()
+        key = app().new_project.model.properties.check_if_there_are_tables_at_the_model()
 
         self.lineEdit_fmin.setDisabled(key)
         self.lineEdit_fmax.setDisabled(key)
@@ -156,7 +149,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def check_mesh_related_issues(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_elements_data)
 
@@ -281,20 +274,41 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        # if app().project.model.properties.check_if_there_are_tables_at_the_model():
-        #     self.frequencies = self.model.frequencies
-        # else:
-        #     self.model.set_analysis_setup(analysis_setup)
+        new_analysis_setup = HarmonicAnalysisSetup(
+            analysis_setup["f_min"],
+            analysis_setup["f_max"],
+            analysis_setup["f_step"],
+            analysis_setup["analysis_method"],
+            analysis_setup.get("global_damping", None),
+            analysis_setup.get("modes_number", None),
+        )
 
-        app().file.write_analysis_setup_in_file(analysis_setup)
-        self.project.set_analysis_setup(analysis_setup)
-        self.project.create_solver()
+        app().new_project.configure_analysis(
+            analysis_id,
+            new_analysis_setup,
+        )
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         self.close()
 
         return False
+
+    def run_analysis(self):
+        if self.enter_setup_callback():
+            return
+        self.solve_analysis = True
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.run_analysis()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
         message = ""
@@ -330,19 +344,3 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return None
 
         return value
-
-    def run_analysis(self):
-        if self.enter_setup_callback():
-            return
-        self.solve_analysis = True
-        app().main_window.analysis_toolbar.enable_pushbutons.emit()
-
-    def closeEvent(self, a0):
-        self.keep_window_open = False
-        return super().closeEvent(a0)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.run_analysis()
-        elif event.key() == Qt.Key_Escape:
-            self.close()

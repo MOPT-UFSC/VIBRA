@@ -265,7 +265,7 @@ class NewProject:
 
         t0 = perf_counter()
 
-        analysis_method = self.model.harmonic_analysis_setup.analysis_method
+        analysis_method = self.model.new_analysis_setup.analysis_method
         if analysis_method == "direct":
             solution = self.solver.solve_direct()
         elif analysis_method == "mode_superposition":
@@ -318,7 +318,7 @@ class NewProject:
 
         t0 = perf_counter()
 
-        analysis_method = self.model.harmonic_analysis_setup.analysis_method
+        analysis_method = self.model.new_analysis_setup.analysis_method
         if analysis_method == "direct":
             solution = self.solver.solve_direct()
         elif analysis_method == "mode_superposition":
@@ -337,13 +337,36 @@ class NewProject:
         if analysis_id is None:
             analysis_id = self.current_analysis_id
 
-        if analysis_id.is_harmonic() and (self.model.harmonic_analysis_setup is not None):
+        if analysis_id.is_harmonic() and isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
             return True
 
-        if analysis_id.is_modal() and (self.model.modal_analysis_setup is not None):
+        if analysis_id.is_modal() and isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
             return True
 
         return False
+
+    def is_analysis_setup_complete(self):
+        if isinstance(self.current_analysis_id, AnalysisID.NO_ANALYSIS):
+            return False
+
+        checker = AnalysisChecker(self.model)
+
+        try:
+            match self.current_analysis_id:
+                case AnalysisID.STRUCTURAL_MODAL:
+                    return checker.check_structural_modal_analysis()
+                case AnalysisID.STRUCTURAL_HARMONIC:
+                    return checker.check_structural_harmonic_analysis()
+                case AnalysisID.ACOUSTIC_MODAL:
+                    return checker.check_acoustic_modal_analysis()
+                case AnalysisID.ACOUSTIC_HARMONIC:
+                    return checker.check_acoustic_harmonic_analysis()
+                case _:
+                    raise NotImplementedError()
+        except Exception:
+            return False
+        else:
+            return True
 
     def is_there_a_valid_solution(self) -> bool:
         if self.current_analysis_id.is_acoustic() and not isinstance(self.assembler, AcousticAssembler):

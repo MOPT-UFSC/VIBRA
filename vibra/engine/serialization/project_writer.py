@@ -76,13 +76,7 @@ class ProjectWriter:
             project_setup["length_unit"] = project.model.length_unit
             project_setup["geometry_qf"] = project.model.geometry_qf
 
-        # We could write both harmonic and modal analysis setup here,
-        # but I will keep it retrocompatible for now.
-        if project.current_analysis_id.is_harmonic():
-            project_setup["analysis_setup"].update(asdict(project.model.harmonic_analysis_setup))
-        elif project.current_analysis_id.is_modal():
-            project_setup["analysis_setup"].update(asdict(project.model.modal_analysis_setup))
-
+        project_setup["analysis_setup"].update(project.model.new_analysis_setup.as_dict())
         project_setup["analysis_setup"]["analysis_id"] = int(project.current_analysis_id)
 
         mesh_setup = project.model.mesh_setup_new
