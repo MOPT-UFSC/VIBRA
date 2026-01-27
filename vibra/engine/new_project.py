@@ -227,6 +227,7 @@ class NewProject:
     ):
         self.current_analysis_id = analysis_id
         self.model.new_set_analysis_setup(analysis_setup)
+        self.update_project_setup()
 
     def solve_structural_modal_analysis(self):
         self.current_analysis_id = AnalysisID.STRUCTURAL_MODAL
