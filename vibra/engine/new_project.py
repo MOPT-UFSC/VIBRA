@@ -12,7 +12,6 @@ from vibra import errors
 from vibra.engine import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
-from vibra.engine.geometry.geometry import Geometry
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
@@ -127,7 +126,7 @@ class NewProject:
         Loads a complete mesh from a file.
 
         The supported mesh formats are:
-            - *.msh            
+            - *.msh
         """
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
@@ -220,6 +219,14 @@ class NewProject:
         self.import_geometry(path)
         self.configure_mesh(mesh_setup)
         self.generate_mesh()
+
+    def configure_analysis(
+        self,
+        analysis_id: AnalysisID,
+        analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup,
+    ):
+        self.current_analysis_id = analysis_id
+        self.model.new_set_analysis_setup(analysis_setup)
 
     def solve_structural_modal_analysis(self):
         self.current_analysis_id = AnalysisID.STRUCTURAL_MODAL
@@ -317,7 +324,7 @@ class NewProject:
             solution = self.solver.solve_mode_superposition()
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
-        
+
         self.project_writer.write_harmonic_solution(self.solver)
 
         dt = perf_counter() - t0

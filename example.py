@@ -25,11 +25,18 @@ mesh_setup = MeshSetup(
 fluid_library = default_fluid_library()
 fluid = fluid_library.find_by_name("Air std")
 
-analysis_setup = HarmonicAnalysisSetup(
+analysis_setup_a = HarmonicAnalysisSetup(
     f_min=200,
     f_max=500,
     f_step=100,
     analysis_method="direct",
+)
+
+analysis_setup_b = HarmonicAnalysisSetup(
+    f_min=200,
+    f_max=500,
+    f_step=100,
+    analysis_method="mode_superposition",
 )
 
 data_Vn = {
@@ -41,17 +48,21 @@ data_Vn = {
 
 project = NewProject()
 project.generate_mesh_from_geometry(geometry_path, mesh_setup)
-project.current_analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+project.configure_analysis(
+    analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
+    analysis_setup=analysis_setup_a,
+)
 
 project.model.properties._set_property("fluid", fluid, volume=1)
 project.model.properties._set_property("fluid", fluid, surface=4)
 project.model.properties._set_property("surface_velocity", data_Vn, surface=4)
 
-project.model.new_set_analysis_setup(analysis_setup)
 direct_solutions = project.run_analysis()
 
-analysis_setup.analysis_method = "mode_superposition"
-project.model.new_set_analysis_setup(analysis_setup)
+project.configure_analysis(
+    analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
+    analysis_setup=analysis_setup_b,
+)
 modal_solutions = project.run_analysis()
 
 assert np.allclose(direct_solutions[:], modal_solutions[:])
