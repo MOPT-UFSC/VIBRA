@@ -2,6 +2,7 @@ import json
 from configparser import ConfigParser
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 
@@ -13,7 +14,7 @@ def read_json(path: Path) -> dict | None:
 
 def write_json(path: Path, data: dict):
     with open(path, "w") as json_file:
-        json.dump(data, json_file, indent=4)
+        json.dump(data, json_file, indent=4, cls=NumpyCompatibleEncoder)
 
 
 def read_config(path: Path) -> ConfigParser | None:
@@ -26,7 +27,7 @@ def read_config(path: Path) -> ConfigParser | None:
 
 
 def write_config(path: Path, config: ConfigParser):
-    with open(path, 'w') as config_file:
+    with open(path, "w") as config_file:
         config.write(config_file)
 
 
@@ -37,3 +38,14 @@ def read_image(path: Path) -> Image.Image | None:
 
 def write_image(path: Path, image: Image.Image):
     image.save(path)
+
+
+class NumpyCompatibleEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
