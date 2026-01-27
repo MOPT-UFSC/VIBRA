@@ -14,7 +14,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def __init__(self, analysis_id: AnalysisID):
         super().__init__()
 
-        self.model = app().new_project.model
         self.analysis_id = AnalysisID(analysis_id)
 
         app().main_window.close_dialogs()
@@ -274,18 +273,13 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        new_analysis_setup = HarmonicAnalysisSetup(
+        self.analysis_setup = HarmonicAnalysisSetup(
             analysis_setup["f_min"],
             analysis_setup["f_max"],
             analysis_setup["f_step"],
             analysis_setup["analysis_method"],
             analysis_setup.get("global_damping", None),
             analysis_setup.get("modes_number", None),
-        )
-
-        app().new_project.configure_analysis(
-            analysis_id,
-            new_analysis_setup,
         )
 
         self.setup_defined = True

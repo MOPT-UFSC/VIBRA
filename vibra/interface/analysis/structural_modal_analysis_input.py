@@ -1,4 +1,5 @@
 
+from vibra.engine import ModalAnalysisSetup
 from PySide6.QtGui import Qt
 
 from vibra import app
@@ -10,8 +11,10 @@ error_title = "Error"
 
 
 class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, analysis_id: AnalysisID):
+        super().__init__()
+
+        self.analysis_id = AnalysisID(analysis_id)
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
@@ -39,22 +42,22 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
 
     def _load_analysis_setup(self):
+        analysis_setup = app().new_project.model.new_analysis_setup
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if isinstance(analysis_setup, dict):
-            if analysis_setup.get("analysis_id") in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
-                modes_number = analysis_setup["modes_number"]
-                sigma = analysis_setup["sigma_factor"]
-                self.lineEdit_number_modes.setText(str(modes_number))
-                self.lineEdit_sigma_factor.setText(str(sigma))
+        if isinstance(analysis_setup, ModalAnalysisSetup) and self.analysis_id.is_modal():
+            modes_number = analysis_setup.modes_number
+            sigma = analysis_setup.sigma_factor
+        else:
+            modes_number = 40
+            sigma = 0.01
+
+        self.lineEdit_number_modes.setText(str(modes_number))
+        self.lineEdit_sigma_factor.setText(str(sigma))
 
     def check_mesh_related_issues(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_elements_data)
 
@@ -104,11 +107,10 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
         if self.check_analysis_inputs():
             return True
 
-        self.analysis_setup = {
-            "analysis_id": AnalysisID.STRUCTURAL_MODAL,
-            "modes_number": self.modes_number,
-            "sigma_factor": self.sigma_factor,
-        }
+        self.analysis_setup = ModalAnalysisSetup(
+            self.modes_number,
+            self.sigma_factor,
+        )
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()

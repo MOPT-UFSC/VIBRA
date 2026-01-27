@@ -358,55 +358,59 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
     def harmonic_structural(self):
-
-        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.STRUCTURAL_HARMONIC)
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC
+        harmonic = HarmonicAnalysisSetupInput(analysis_id)
 
         if harmonic.setup_defined:
-            self.final_actions()
+            app().new_project.configure_analysis(
+                analysis_id,
+                harmonic.analysis_setup,
+            )
 
         if harmonic.solve_analysis:
             self.run_analysis()
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
-
-        harmonic = HarmonicAnalysisSetupInput(analysis_id=AnalysisID.ACOUSTIC_HARMONIC)
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+        harmonic = HarmonicAnalysisSetupInput(analysis_id)
 
         if harmonic.setup_defined:
-            self.final_actions()
+            app().new_project.configure_analysis(
+                analysis_id,
+                harmonic.analysis_setup,
+            )
 
         if harmonic.solve_analysis:
             self.run_analysis()
     
     def modal_structural(self):
-        modal = StructuralModalAnalysisInput()
-
-        if modal.modes_number is None:
-            return
+        analysis_id = AnalysisID.STRUCTURAL_MODAL
+        modal = StructuralModalAnalysisInput(analysis_id)
 
         if modal.setup_defined:
-            app().project.set_analysis_setup(modal.analysis_setup)
+            app().new_project.configure_analysis(
+                analysis_id,
+                modal.analysis_setup,
+            )
             self.pushButton_run_analysis.setEnabled(True)
-            self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
 
     def modal_acoustic(self):
-        modal = AcousticModalAnalysisInput()
+        analysis_id = AnalysisID.ACOUSTIC_MODAL
+        modal = AcousticModalAnalysisInput(analysis_id)
 
         if modal.modes_number is None:
             return
 
         if modal.setup_defined:
-            app().project.set_analysis_setup(modal.analysis_setup)
+            app().new_project.configure_analysis(
+                analysis_id,
+                modal.analysis_setup,
+            )
             self.pushButton_run_analysis.setEnabled(True)
-            self.final_actions()
 
         if modal.proceed_solution:
             self.run_analysis()
-
-    def final_actions(self):
-        self.reset_solution()
-        app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_setup)
