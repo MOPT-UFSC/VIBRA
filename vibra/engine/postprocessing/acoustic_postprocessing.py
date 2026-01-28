@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 from functools import cache
 
@@ -8,7 +9,7 @@ from typing import Literal, TYPE_CHECKING
 from vibra.engine.solvers import ModalSolver, HarmonicSolver
 
 if TYPE_CHECKING:
-    from vibra.project_files.project import Project
+    from vibra.engine.new_project import NewProject
 
 AcousticPlotTypes = Literal[
     "absolute_animation",
@@ -20,7 +21,12 @@ AcousticPlotTypes = Literal[
 
 
 class AcousticPostprocessing:
-    def __init__(self, project: 'Project'=None, acoustic_modal_solver: ModalSolver=None, acoustic_harmonic_solver: HarmonicSolver=None):
+    def __init__(
+        self,
+        project: "NewProject" = None,
+        acoustic_modal_solver: ModalSolver = None,
+        acoustic_harmonic_solver: HarmonicSolver = None,
+    ):
         if all(v is None for v in [project, acoustic_modal_solver, acoustic_harmonic_solver]):  
             raise ValueError("At least one of 'project', 'acoustic_modal_solver', or 'acoustic_harmonic_solver' must be provided.")
         self.project = project
@@ -28,15 +34,15 @@ class AcousticPostprocessing:
         self.acoustic_harmonic_solver = acoustic_harmonic_solver
 
     @property
-    def harmonic_solver(self):
-        if self.project is not None:
-            return self.project.acoustic_harmonic_solver
+    def harmonic_solver(self) -> Optional[HarmonicSolver]:
+        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver):
+            return self.project.solver
         return self.acoustic_harmonic_solver
 
     @property
-    def modal_solver(self):
-        if self.project is not None:
-            return self.project.acoustic_modal_solver
+    def modal_solver(self) -> Optional[ModalSolver]:
+        if (self.project is not None) and isinstance(self.project.solver, ModalSolver):
+            return self.project.solver
         return self.acoustic_modal_solver
 
     @cache

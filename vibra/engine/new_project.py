@@ -288,7 +288,7 @@ class NewProject:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = AcousticPostprocessing(self.model)
+        self.postprocessing = AcousticPostprocessing(self)
 
         self.assembler.process_assemble()
 
@@ -309,7 +309,7 @@ class NewProject:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, project=self)
-        self.postprocessing = AcousticPostprocessing(self.model)
+        self.postprocessing = AcousticPostprocessing(self)
 
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties()
