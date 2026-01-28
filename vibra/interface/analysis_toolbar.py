@@ -268,6 +268,8 @@ class AnalysisToolbar(QToolBar):
             interrupt_function,
         ).run()
 
+        app().project.run_analysis
+
         app().main_window.configure_results_render_widget()
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
@@ -288,18 +290,18 @@ class AnalysisToolbar(QToolBar):
         logging.info("Post-processing results... [65/100]")
         app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-        if not app().file.geometry_data_filepath.exists():
-            app().file.write_geometry_data_in_file()
+        # if not app().file.geometry_data_filepath.exists():
+        #     app().file.write_geometry_data_in_file()
 
-        logging.info("Post-processing results... [85/100]")
-        if not app().file.mesh_data_filepath.exists():
-            app().file.write_mesh_data_in_file()
+        # logging.info("Post-processing results... [85/100]")
+        # if not app().file.mesh_data_filepath.exists():
+        #     app().file.write_mesh_data_in_file()
 
-        logging.info("Post-processing results... [90/100]")
-        app().file.write_model_properties_in_file()
+        # logging.info("Post-processing results... [90/100]")
+        # app().file.write_model_properties_in_file()
 
-        logging.info("Post-processing results... [95/100]")
-        app().file.write_results_data_in_file()
+        # logging.info("Post-processing results... [95/100]")
+        # app().file.write_results_data_in_file()
 
     def project_solution_data_reset_callback(self):
 
