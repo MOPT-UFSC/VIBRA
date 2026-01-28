@@ -16,8 +16,6 @@ class ResultsViewerItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
-        self.project = app().project
-
         self.setObjectName("results_viewer_items")
         self._create_items()
         self._create_connections()
@@ -136,25 +134,18 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        if len(app().project.analysis_setup) == 0:
-            return
+        analysis_id = app().new_project.current_analysis_id
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if not isinstance(analysis_setup, dict):
-            return
-
-        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
+        if analysis_id.is_structural():
             self.update_structural_analysis_visibility_items()
-        
-        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
+
+        elif analysis_id.is_acoustic():
             self.update_acoustic_analysis_visibility_items()
-        
-        elif analysis_id == AnalysisID.COUPLED_HARMONIC:    
+
+        elif analysis_id.is_coupled():    
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             self.item_child_structural_frequency_response.setDisabled(False)
             self.item_child_displacement_field.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
@@ -168,8 +159,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_mode_shapes.setDisabled(False)
         
         elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-
-            if analysis_id != AnalysisID.ACOUSTIC_HARMONIC:
+            if analysis_id == AnalysisID.COUPLED_HARMONIC:
                 self.item_child_displacement_field.setDisabled(False)
                 self.item_child_structural_frequency_response.setDisabled(False)
                 # self.item_child_stress_field.setDisabled(False)
@@ -194,14 +184,14 @@ class ResultsViewerItems(CommonMenuItems):
     def update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(self, analysis_id: int):
         compressor_exists = False
         if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            compressor_exists = app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
+            compressor_exists = app().new_project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
 
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(not compressor_exists)
 
     def update_allowable_pulsation_criteria_visibility_for_screw_compressor(self, analysis_id: int):
         compressor_exists = False
         if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            for (prop_label, *args), prop_data in app().project.model.properties.surface_properties.items():
+            for (prop_label, *args), prop_data in app().new_project.model.properties.surface_properties.items():
                 if prop_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                     compressor_type = prop_data.get("compressor_type")
                     if compressor_type == "screw":
@@ -214,7 +204,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = app().new_project.current_analysis_id
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)
