@@ -261,8 +261,15 @@ class AnalysisToolbar(QToolBar):
             return
 
         self.update_analysis_combo_boxes()
-        if app().new_project.run_analysis():
-            return
+        interrupt_function = app().project.model.toggle_processing_callback
+
+        LoadingWindow(
+            app().new_project.run_analysis,
+            interrupt_function,
+        ).run()
+
+        app().main_window.configure_results_render_widget()
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
         if app().new_project.model.stop_processing:
             app().new_project.model.toggle_processing_callback()
