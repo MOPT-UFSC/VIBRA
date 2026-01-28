@@ -341,19 +341,14 @@ class AnalysisToolbar(QToolBar):
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 
-        analysis_type : AnalysisType = self.combo_box_analysis_type.currentText()
-        physical_domain : PhysicalDomain = self.combo_box_physical_domain.currentText()
-
-        if analysis_type == "Harmonic":
-            if physical_domain == "Structural":
+        match self.get_current_analysis_id():
+            case AnalysisID.STRUCTURAL_HARMONIC:
                 self.harmonic_structural()
-            elif physical_domain == "Acoustic":
+            case AnalysisID.ACOUSTIC_HARMONIC:
                 self.harmonic_acoustic()
-
-        elif analysis_type == "Modal":
-            if physical_domain == "Structural":
+            case AnalysisID.STRUCTURAL_MODAL:
                 self.modal_structural()
-            elif physical_domain == "Acoustic":
+            case AnalysisID.ACOUSTIC_MODAL:
                 self.modal_acoustic()
 
         setup_complete = app().new_project.is_analysis_setup_complete()
@@ -364,6 +359,8 @@ class AnalysisToolbar(QToolBar):
         run_analysis_enabled = setup_complete and not broken_mesh
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
+    # TODO: these functions are almost equal.
+    # Maybe they can be unified into a single one.
     def harmonic_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
