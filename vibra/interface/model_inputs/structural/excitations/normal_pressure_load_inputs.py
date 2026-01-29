@@ -25,9 +25,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self._config_window()
         self._initialize()
@@ -306,7 +306,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if app().new_project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
             self.hide()
             lineEdit = self.lineEdit_table_path

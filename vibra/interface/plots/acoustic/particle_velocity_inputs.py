@@ -22,8 +22,8 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         app().main_window.show_geometry_render_widget()
 
         self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
 
         self.acoustic_post = self.project.acoustic_postprocessing
 
@@ -39,7 +39,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
-        self.frequencies = app().project.model.frequencies
+        self.frequencies = app().new_project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _config_window(self):

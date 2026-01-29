@@ -32,8 +32,8 @@ class FluidWidget(FluidWidget_UI):
         self.state_properties = kwargs.get("state_properties", dict())
 
         self.project = app().project
-        self.model = app().project.model
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.properties = app().new_project.model.properties
 
         self._initialize()
         self._configure_qt_variables()

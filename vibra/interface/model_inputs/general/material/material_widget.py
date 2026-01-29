@@ -35,8 +35,8 @@ class MaterialWidget(MaterialWidget_UI):
 
         app().main_window.action_model_workspace_callback()
 
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self.dialog = kwargs.get("dialog", None)
 

@@ -23,9 +23,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self._initialize()
         self._config_window()
@@ -371,11 +371,11 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
-        if not app().project.model.generated_mesh:
+        if not app().new_project.model.generated_mesh:
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
-            if not app().project.model.generated_mesh:
+            if not app().new_project.model.generated_mesh:
                 return True
             else:
                 return False

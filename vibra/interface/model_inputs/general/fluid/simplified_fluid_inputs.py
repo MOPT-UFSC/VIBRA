@@ -30,8 +30,8 @@ class SimplifiedFluidInputs(SimplifiedFluidInputs_UI):
             app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
-        self.model = app().project.model
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.properties = app().new_project.model.properties
 
         self._config_window()
         self._initialize()

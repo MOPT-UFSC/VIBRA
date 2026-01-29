@@ -35,9 +35,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self._config_window()
         self._initialize()
@@ -357,7 +357,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def get_aquisition_parameters(self, parameters: dict):
 
-        frequencies = app().project.model.frequencies
+        frequencies = app().new_project.model.frequencies
         rotational_speed = parameters["rotational_speed"]
 
         f_min = frequencies[0]
@@ -486,7 +486,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.spinBox_capacity.setValue(100)
 
     def generate_mesh(self):
-        if not app().project.model.generated_mesh:
+        if not app().new_project.model.generated_mesh:
             mesher = MesherSetupInputs(close_after_generate=True)
             if not mesher.complete:
                 return True
@@ -710,7 +710,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def save_table_values(self, table_name: str, frequencies: np.ndarray, complex_values: np.ndarray):
 
-        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
+        if app().new_project.model.change_analysis_frequency_setup(list(frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "

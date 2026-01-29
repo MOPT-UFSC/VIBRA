@@ -18,8 +18,8 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
         app().main_window.show_geometry_render_widget()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
 
         self._config_window()
         self._initialize()
@@ -120,7 +120,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
             self.analysis_method = f"{analysis_method} method"
 
-        self.frequencies = app().project.model.frequencies
+        self.frequencies = app().new_project.model.frequencies
         self.solution = app().project.structural_harmonic_solver.solution
 
     def check_inputs(self):

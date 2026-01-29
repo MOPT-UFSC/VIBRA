@@ -23,7 +23,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.mesh = app().project.model.mesh
+        self.mesh = app().new_project.model.mesh
 
         self._reset_variables()
         self._create_connections()
@@ -42,7 +42,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
             if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
                 self.analysis_method = "Direct method"
 
-        self.frequencies = app().project.model.frequencies
+        self.frequencies = app().new_project.model.frequencies
         self.solution = app().project.acoustic_harmonic_solver.solution
 
     def _reset_variables(self):

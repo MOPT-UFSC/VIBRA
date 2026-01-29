@@ -98,7 +98,7 @@ class ExportMeshData(ExportMesh_UI):
             return
 
     def generate_mesh(self):
-        if not app().project.model.generated_mesh:
+        if not app().new_project.model.generated_mesh:
             self.mesher = MesherSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None

@@ -20,8 +20,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.volume_selection_mode = True
 
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self._config_window()
         self._initialize()

@@ -123,8 +123,8 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         return plot_types[index]
 
     def load_frequencies(self):
-        if isinstance(app().project.model.frequencies, np.ndarray):
-            self.frequencies = app().project.model.frequencies
+        if isinstance(app().new_project.model.frequencies, np.ndarray):
+            self.frequencies = app().new_project.model.frequencies
         else:
             return
         

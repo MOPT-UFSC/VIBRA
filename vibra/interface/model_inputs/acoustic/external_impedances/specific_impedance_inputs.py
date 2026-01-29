@@ -22,9 +22,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
         
         self._config_window()
         self._initialize()
@@ -355,7 +355,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         _frequencies = imported_values[:, 0]
 
-        if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
+        if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "

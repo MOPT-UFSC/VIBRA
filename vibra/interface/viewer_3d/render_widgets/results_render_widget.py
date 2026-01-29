@@ -93,7 +93,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
     def update_plot(self, reset_camera=False):
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         if mesh is None:
             return
 
@@ -383,7 +383,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self.analysis_actor, AnalysisActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         if mesh is None:
             return
 
@@ -403,7 +403,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self.analysis_actor, HollowAnalysisActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         if mesh is None:
             return
 

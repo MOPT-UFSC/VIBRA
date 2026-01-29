@@ -128,8 +128,8 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)
-        if isinstance(app().project.model.frequencies, np.ndarray):
-            self.frequencies = list(app().project.model.frequencies)
+        if isinstance(app().new_project.model.frequencies, np.ndarray):
+            self.frequencies = list(app().new_project.model.frequencies)
         else:
             return
 

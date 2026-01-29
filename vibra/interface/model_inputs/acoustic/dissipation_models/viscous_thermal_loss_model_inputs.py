@@ -46,9 +46,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         app().main_window.volume_selection_mode = True
 
         self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self._initialize()
         self._config_window()
@@ -585,7 +585,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         return map_id_to_model_index
 
     def generate_mesh(self):
-        if not app().project.model.generated_mesh:
+        if not app().new_project.model.generated_mesh:
             self.mesher = MesherSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None

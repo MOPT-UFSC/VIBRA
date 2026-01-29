@@ -307,7 +307,7 @@ class MainWindow(MainWindow_UI):
 
         surfaces = set(surfaces) - set(self.hidden_surfaces)
         volumes = set(volumes) - set(self.hidden_volumes)
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:
@@ -618,7 +618,7 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
 
     def action_hide_selection_callback(self):
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
 
         if not mesh.are_there_volumes_in_geometry():
             PrintMessageInput(
@@ -649,7 +649,7 @@ class MainWindow(MainWindow_UI):
         self.hide_volumes(app().main_window.hidden_volumes)
 
     def hide_volumes(self, volumes: set[int]):
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
 
         volumes = set(volumes)
         selected_volume_surfaces = set()
@@ -875,8 +875,8 @@ class MainWindow(MainWindow_UI):
 
         app().file.write_geometry_in_file(
             Path(load_path),
-            app().project.model.length_unit,
-            app().project.model.geometry_qf,
+            app().new_project.model.length_unit,
+            app().new_project.model.geometry_qf,
         )
 
         def remove_callback():
@@ -945,7 +945,7 @@ class MainWindow(MainWindow_UI):
 
     def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
 
-        is_geometry_file = app().project.model.check_path_for_geometry_file(path)
+        is_geometry_file = app().new_project.model.check_path_for_geometry_file(path)
 
         if app().file.read_mesh_data_from_file():
             app().project.load_project_without_process_mesh(path, is_geometry_file)
@@ -976,7 +976,7 @@ class MainWindow(MainWindow_UI):
             self.analysis_toolbar.set_pushbutton_resume_analysis_enabled(app().project.can_resume_solution)
 
             app().project.reset_solutions()
-            app().project.model.properties._reset_variables()
+            app().new_project.model.properties._reset_variables()
 
             if update_render:
                 LoadingWindow(self.update_plots).run()

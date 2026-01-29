@@ -67,7 +67,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
         app().main_window.set_input_widget(self)
-        self.mesh = app().project.model.mesh
+        self.mesh = app().new_project.model.mesh
 
         self._config_window()
         self._initialize()
@@ -306,13 +306,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
     def _load_initial_element_size(self):
-        element_size = app().project.model.initial_element_size
+        element_size = app().new_project.model.initial_element_size
         if element_size is not None:
             self.doubleSpinBox_maximum_element_size.setValue(element_size)
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
 
     def _load_current_mesh_setup(self):
-        mesh_setup = app().project.model.mesh_setup
+        mesh_setup = app().new_project.model.mesh_setup
 
         if mesh_setup is None:
             self._load_initial_element_size()
@@ -451,7 +451,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
         run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
 
-        if app().project.model.analysis_setup is None:
+        if app().new_project.model.analysis_setup is None:
             run_analysis_button.setDisabled(True)
 
         self.check_post_process_mesh_criteria()
@@ -519,14 +519,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             PrintMessageInput([error_title, title, message])
 
     def process_degress_of_freedom_if_necessary(self):
-        if not app().project.model.properties.is_the_surface_property_present_in_the_model(
+        if not app().new_project.model.properties.is_the_surface_property_present_in_the_model(
             "degrees_of_freedom_decoupling"
         ):
             return
 
         def process_decoupling():
-            app().project.model.mesh.cache_mesh_information()
-            app().project.model.process_degrees_of_freedom_decoupling()
+            app().new_project.model.mesh.cache_mesh_information()
+            app().new_project.model.process_degrees_of_freedom_decoupling()
 
         LoadingWindow(process_decoupling).run()
 

@@ -39,9 +39,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
+        self.properties = app().new_project.model.properties
 
         self._config_window()
         self._initialize()
@@ -462,7 +462,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
             self.frequencies = imported_file[:, 0]
         
-            if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+            if app().new_project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
                 self.lineEdit_reset(lineEdit)
 
@@ -484,7 +484,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             #                         "f_max" : f_max,
             #                         "f_step" : f_step }
 
-            #     app().project.model.set_analysis_setup(frequency_setup)
+            #     app().new_project.model.set_analysis_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -553,7 +553,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
 
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if app().new_project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
             self.hide()
             lineEdit = self.table_lineEdits[load_label]
