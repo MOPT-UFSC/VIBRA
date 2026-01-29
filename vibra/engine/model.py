@@ -79,7 +79,7 @@ class Model:
         self.new_analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup] = None
 
         # TODO: review these variables
-        self.mesh = None
+        self.mesh: Optional[Mesh] = None
         self.mesh_setup = None
         self.stop_processing = False
         self.generated_mesh = False

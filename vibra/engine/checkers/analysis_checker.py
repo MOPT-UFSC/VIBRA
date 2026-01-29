@@ -8,7 +8,7 @@ from vibra.engine.model import Model
 class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
-    
+
     def check_analysis_id(self, analysis_id: AnalysisID):
         match analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
@@ -34,7 +34,9 @@ class AnalysisChecker:
         if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
             raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
-        if self.check_contains_volumes():
+        self.check_mesh()
+
+        if self.model.mesh.are_there_volumes_in_geometry():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -48,6 +50,8 @@ class AnalysisChecker:
         if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
             raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
+        self.check_mesh()
+
         self.check_contains_volumes()
         self.check_fluids_volumes()
         self.check_frequency_varying_fluid_properties_for_modal_analysis()
@@ -56,7 +60,9 @@ class AnalysisChecker:
         if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
             raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
-        if self.check_contains_volumes():
+        self.check_mesh()
+
+        if self.model.mesh.are_there_volumes_in_geometry():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -85,11 +91,12 @@ class AnalysisChecker:
             "volumes",
         )
 
-        raise errors.InvalidModelSetupError(
-            f"You should assign one material for volumes {volumes_without_material} "
-            "to proceed with the analysis solution.",
-            volumes=volumes_without_material,
-        )  # fmt: skip
+        if volumes_without_material:
+            raise errors.InvalidModelSetupError(
+                f"You should assign one material for volumes {volumes_without_material} "
+                "to proceed with the analysis solution.",
+                volumes=volumes_without_material,
+            )  # fmt: skip
 
     def check_materials_surfaces(self):
         surfaces_without_material = self._entities_without_property(
@@ -97,11 +104,12 @@ class AnalysisChecker:
             "surfaces",
         )
 
-        raise errors.InvalidModelSetupError(
-            f"You should assign one material for surfaces {surfaces_without_material} "
-            "to proceed with the analysis solution.",
-            surfaces=surfaces_without_material,
-        )  # fmt: skip
+        if surfaces_without_material:
+            raise errors.InvalidModelSetupError(
+                f"You should assign one material for surfaces {surfaces_without_material} "
+                "to proceed with the analysis solution.",
+                surfaces=surfaces_without_material,
+            )  # fmt: skip
 
     def check_fluids_volumes(self):
         volumes_without_fluid = self._entities_without_property(
@@ -197,7 +205,8 @@ class AnalysisChecker:
         )  # fmt: skip
 
     def check_mode_superposition_prescribed_dof_criterion(self):
-        self._any_property_attributed("prescribed_dof", allows_zero=True)
+        if self._any_property_attributed("prescribed_dof", allows_zero=True):
+            return
 
         raise errors.InvalidModelExcitationError(
             "Harmonic analysis using the modal superposition method cannot be solved if "
