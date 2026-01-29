@@ -33,7 +33,7 @@ def write_config(path: Path, config: ConfigParser):
 
 def read_image(path: Path) -> Image.Image | None:
     if path.exists():
-        return Image.open(path)
+        return Image.open(path).copy()
 
 
 def write_image(path: Path, image: Image.Image):
