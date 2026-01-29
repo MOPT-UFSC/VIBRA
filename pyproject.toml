@@ -11,7 +11,6 @@ dependencies = [
     "gmsh (>=4.13.1,<5.0.0)",
     "ctrefprop (>=0.10.5,<0.11.0)",
     "scipy (>=1.15.3,<2.0.0)",
-    "pandas (>=2.2.3,<3.0.0)",
     "openpyxl (>=3.1.5,<4.0.0)",
     "mkl (>=2025.1.0,<2026.0.0)",
     "intel-openmp (>=2025.1.1,<2026.0.0)",
@@ -22,6 +21,10 @@ dependencies = [
     "pyside6 (==6.9.2)",
     "sounddevice (>=0.5.3,<0.6.0)",
     "molde (>=0.1.18,<0.2.0)",
+    "polars>=1.37.1",
+    "pyarrow>=22.0.0",
+    "fastexcel>=0.18.0",
+    "pandas>=2.3.3",
 ]
 
 [dependency-groups]

@@ -158,9 +158,17 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         if not check:
             return True
+        
+        file_extension = self.get_file_extension_from_string(check)
+
+        if file_extension not in path:
+            path += f".{file_extension}"
 
         self.lineEdit_spreadsheet_path.setText(path)
         app().config.write_last_folder_path_in_file("exported_data_folder", path)
+    
+    def get_file_extension_from_string(self, string: str) -> str:
+        return string.split(".")[1][:-1]
 
     def check_typed_ids(self):
 
@@ -475,7 +483,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def export_data_in_spreadsheet_format(self, export_path: str):
 
-        from pandas import ExcelWriter, DataFrame
+        from pandas import ExcelWriter
+        from polars import DataFrame
 
         with ExcelWriter(export_path) as writer:
 
@@ -496,14 +505,14 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 if isinstance(y_data[0], complex):
                     header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
- 
+
                 else:
                     data_type = data["data_type"]
                     header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
-                df = DataFrame(data_to_export, columns=header)
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                df = DataFrame(data_to_export, schema=header)
+                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def export_data_callback(self):
         if self.element_transfer_data:
