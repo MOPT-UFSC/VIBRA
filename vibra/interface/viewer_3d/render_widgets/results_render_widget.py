@@ -504,7 +504,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_info_text(self):
 
-        if not app().project.is_there_a_valid_solution():
+        if not app().new_project.is_there_a_valid_solution():
             return
 
         text = ""

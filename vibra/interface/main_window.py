@@ -520,7 +520,7 @@ class MainWindow(MainWindow_UI):
         
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().project.is_there_a_valid_solution():
+        if app().new_project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
         else:
             self.action_results_workspace.setEnabled(False)
@@ -545,7 +545,7 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().project.is_there_a_valid_solution():
+        if app().new_project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
         else:
             self.action_results_workspace.setEnabled(False)
@@ -560,7 +560,7 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
-        if not app().project.is_there_a_valid_solution():
+        if not app().new_project.is_there_a_valid_solution():
             return
         
         self.action_results_workspace.setEnabled(True)
