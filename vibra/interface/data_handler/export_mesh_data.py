@@ -18,9 +18,8 @@ class ExportMeshData(ExportMesh_UI):
 
         app().main_window.set_input_widget(self)
         
-        self.project = app().project
-        self.model = self.project.model
-        self.mesh = self.project.model.mesh
+        self.model = app().new_project.model
+        self.mesh = app().new_project.model.mesh
         self.properties = self.model.properties
 
         if self.mesh is None:

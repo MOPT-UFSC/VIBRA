@@ -268,8 +268,6 @@ class AnalysisToolbar(QToolBar):
             interrupt_function,
         ).run()
 
-        app().project.run_analysis
-
         app().main_window.configure_results_render_widget()
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 

@@ -24,8 +24,6 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
 
@@ -37,13 +35,11 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if app().new_project.current_analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().new_project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
     def _reset_variables(self):
 
@@ -194,11 +190,11 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
     def get_response(self, index, selected_id):
 
         if index == 0:
-            rows = self.project.model.mesh.get_nodes_from_surface(selected_id)
+            rows = app().new_project.model.mesh.get_nodes_from_surface(selected_id)
         elif index == 1:
-            rows = self.project.model.mesh.get_nodes_from_line(selected_id)
+            rows = app().new_project.model.mesh.get_nodes_from_line(selected_id)
         elif index == 2:
-            rows = self.project.model.mesh.nodes_from_points.get(selected_id)
+            rows = app().new_project.model.mesh.nodes_from_points.get(selected_id)
         else:
             rows = selected_id
 

@@ -20,11 +20,6 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
-
         self._initialize()
         self._configure_qt_variables()
         self._create_connections()
@@ -110,16 +105,12 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
             self.lineEdit_input_selected_id.setFocus()
 
     def _load_analysis_setup_and_solution(self):
-
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if app().new_project.current_analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().new_project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
     def geometry_selection_callback(self):
 
@@ -202,11 +193,11 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         selection = self.selection_types[index]
  
         selected_input_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(   
-                                                                           selected_input_id, 
-                                                                           selection = selection, 
-                                                                           single_id = True
-                                                                           )
+        self.input_selection_id, error_data = app().new_project.model.mesh.check_selected_ids(
+            selected_input_id,
+            selection=selection,
+            single_id=True,
+        )
 
         if error_data is not None:
             self.lineEdit_input_selected_id.setFocus()
@@ -214,11 +205,11 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
             return True
 
         selected_output_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
-                                                                            selected_output_id, 
-                                                                            selection = selection, 
-                                                                            single_id = True
-                                                                            )
+        self.output_selection_id, error_data = app().new_project.model.mesh.check_selected_ids(
+            selected_output_id,
+            selection=selection,
+            single_id=True,
+        )
 
         if error_data is not None:
             self.lineEdit_output_selected_id.setFocus()
@@ -230,14 +221,14 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
-            rows_num = self.project.model.mesh.get_nodes_from_surface(self.output_selection_id)
-            rows_den = self.project.model.mesh.get_nodes_from_surface(self.input_selection_id)
+            rows_num = app().new_project.model.mesh.get_nodes_from_surface(self.output_selection_id)
+            rows_den = app().new_project.model.mesh.get_nodes_from_surface(self.input_selection_id)
         elif index == 1:
-            rows_num = self.project.model.mesh.get_nodes_from_line(self.output_selection_id)
-            rows_den = self.project.model.mesh.get_nodes_from_line(self.input_selection_id)
+            rows_num = app().new_project.model.mesh.get_nodes_from_line(self.output_selection_id)
+            rows_den = app().new_project.model.mesh.get_nodes_from_line(self.input_selection_id)
         elif index == 2:
-            rows_num = self.project.model.mesh.nodes_from_points.get(self.output_selection_id)
-            rows_den = self.project.model.mesh.nodes_from_points.get(self.input_selection_id)
+            rows_num = app().new_project.model.mesh.nodes_from_points.get(self.output_selection_id)
+            rows_den = app().new_project.model.mesh.nodes_from_points.get(self.input_selection_id)
         else:
             rows_num = self.output_selection_id
             rows_den = self.input_selection_id

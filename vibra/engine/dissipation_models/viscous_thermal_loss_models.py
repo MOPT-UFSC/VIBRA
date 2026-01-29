@@ -45,8 +45,6 @@ class ViscousThermalLossModels:
 
         for model_id, volume_ids in self.map_model_id_to_volumes.items():
             for volume_id in volume_ids:
-
-                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volume[volume_id]
                 data = self.map_model_id_to_models[model_id]
                 fluid: Fluid = self.properties._get_property("fluid", volume = volume_id)
                 section_type = data.section_type
