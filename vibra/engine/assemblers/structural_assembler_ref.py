@@ -435,7 +435,7 @@ class StructuralAssembler:
 
             if aux_nodes:
                 from vibra import app
-                app().main_window.set_mesh_selection(nodes=aux_nodes)
+                app().main_window.selection.set_mesh_selection(nodes=aux_nodes)
 
     def assemble_global_matrices(self):
 

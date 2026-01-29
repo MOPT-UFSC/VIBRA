@@ -109,13 +109,13 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.treeWidget_distributed_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_distributed_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
+        faces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
 
         if faces:
 
@@ -654,7 +654,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
         self.lineEdit_real_Fx.setFocus()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -683,10 +683,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             elif selection == "Line":
-                app().main_window.set_geometry_selection(lines = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
 
             # app().main_window.action_model_workspace_callback()
             self.lineEdit_selection_id.setText(item.text(0))
@@ -751,8 +751,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -780,8 +780,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.properties._reset_property("distributed_loads")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()

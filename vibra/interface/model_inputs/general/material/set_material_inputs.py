@@ -102,7 +102,7 @@ class MaterialInputs(SetMaterial_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
         self.update_selection_combo_box_texts()
@@ -119,7 +119,7 @@ class MaterialInputs(SetMaterial_UI):
         
         self.table_model_materials_cell_clicked = True
     
-        app().main_window.set_geometry_selection(**self.selected_items)
+        app().main_window.selection.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(selection_text)
@@ -171,8 +171,8 @@ class MaterialInputs(SetMaterial_UI):
             self.verify_if_selected_volumes_belongs_to_table_model_materials()
             return
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
 
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         index = self.comboBox_attribution_type.currentIndex()
@@ -198,7 +198,7 @@ class MaterialInputs(SetMaterial_UI):
         if self.table_model_materials_cell_clicked:
             return
 
-        selected_volumes = app().main_window.selected_geometry_volumes
+        selected_volumes = app().main_window.selection.geometry_volumes
 
         if not selected_volumes:
             return
@@ -380,7 +380,7 @@ class MaterialInputs(SetMaterial_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -401,7 +401,7 @@ class MaterialInputs(SetMaterial_UI):
             self.properties._reset_property("material_id")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
         self.clear_line_edit_seletction_id()
@@ -410,7 +410,7 @@ class MaterialInputs(SetMaterial_UI):
 
         self.load_model_info()
         app().main_window.update_info_text()
-        app().main_window.clear_selection()  # this also updates
+        app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().file.write_model_properties_in_file()
 
@@ -477,7 +477,7 @@ class MaterialInputs(SetMaterial_UI):
         self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()

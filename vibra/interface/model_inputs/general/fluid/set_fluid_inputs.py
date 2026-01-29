@@ -40,7 +40,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        app().main_window.volume_selection_mode = True
+        app().main_window.selection.volume_selection_mode = True
 
         self.project = app().project
         self.model = app().project.model
@@ -114,7 +114,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
         self.geometry_selection_callback()
@@ -131,7 +131,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         if not self.selected_items:
             return
 
-        app().main_window.set_geometry_selection(**self.selected_items)
+        app().main_window.selection.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
         self.lineEdit_selection_id.setText(selection_text)
@@ -152,7 +152,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
             return
 
-        volumes = app().main_window.selected_geometry_volumes
+        volumes = app().main_window.selection.geometry_volumes
         if volumes:
             self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
 
@@ -164,7 +164,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         if self.table_model_fluids_cell_clicked:
             return
 
-        selected_volumes = app().main_window.selected_geometry_volumes
+        selected_volumes = app().main_window.selection.geometry_volumes
 
         if not selected_volumes:
             return
@@ -319,7 +319,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -340,7 +340,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.properties._reset_property("fluid_id")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
         self.clear_line_edit_seletction_id()
@@ -349,7 +349,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         self.load_model_info()
         app().main_window.update_info_text()
-        app().main_window.clear_selection()  # this also updates
+        app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().file.write_model_properties_in_file()
 
@@ -419,7 +419,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
 
         self.clear_line_edit_seletction_id()
 
@@ -494,5 +494,5 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.volume_selection_mode = False
+        app().main_window.selection.volume_selection_mode = False
         return super().closeEvent(a0)
