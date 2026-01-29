@@ -1,3 +1,4 @@
+from vibra.engine.solvers import ModalSolver
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QTreeWidgetItem
@@ -52,7 +53,8 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
         #
-        if app().project.acoustic_modal_solver.complex_natural_frequencies.size:
+        solver = app().new_project.solver
+        if isinstance(solver, ModalSolver) and solver.complex_natural_frequencies.size:
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -128,17 +130,17 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         return plot_types[index]
 
     def load_natural_frequencies(self):
-        if app().project.acoustic_modal_solver is None:
+        solver = app().new_project.solver
+
+        if not isinstance(solver, ModalSolver):
             return
 
         self._configure_qt_variables()
 
-        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
-            self.natural_frequencies = list(
-                app().project.acoustic_modal_solver.complex_natural_frequencies
-            )
+        if len(solver.complex_natural_frequencies):
+            self.natural_frequencies = list(solver.complex_natural_frequencies)
         else:
-            self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
+            self.natural_frequencies = list(solver.natural_frequencies)
 
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
