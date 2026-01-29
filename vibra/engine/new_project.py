@@ -213,10 +213,10 @@ class NewProject:
 
     def generate_mesh_from_geometry(
         self,
-        path: Path | str,
+        geometry_path: Path | str,
         mesh_setup: MeshSetup,
     ):
-        self.import_geometry(path)
+        self.import_geometry(geometry_path)
         self.configure_mesh(mesh_setup)
         self.generate_mesh()
 
