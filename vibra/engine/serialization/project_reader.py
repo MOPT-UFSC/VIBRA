@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-import typing
-import zipfile
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional
-
-import h5py
-import numpy as np
-from PIL.Image import Image
 
 if TYPE_CHECKING:
     # This is to avoid circular imports since
     # this file is also imported by NewProject
     from vibra.engine.new_project import NewProject
+
+import typing
+import zipfile
+from pathlib import Path
+
+import h5py
+import numpy as np
+from PIL.Image import Image
 
 from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -188,6 +189,9 @@ class ProjectReader:
         ]
 
         with h5py.File(mesh_data_path, "r") as file:
+            mesh.nodes_from_points = {int(key) : int(value) for key, value in file["nodal_data/nodes_from_points"]}
+            mesh.points_from_nodes = {value : key for key, value in mesh.nodes_from_points.items()}
+
             mesh.nodal_coordinates = np.array(file["nodal_data/nodal_coordinates"])
             mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
@@ -198,6 +202,7 @@ class ProjectReader:
                 mesh.cache_lines_connectivity = np.array(file["connectivity/cache_lines_connectivity"])
                 mesh.cache_faces_connectivity = np.array(file["connectivity/cache_faces_connectivity"])
                 mesh.cache_solids_connectivity = np.array(file["connectivity/cache_solids_connectivity"])
+
 
         with h5py.File(geometry_data_path, "r") as file:
             for key, value in file.get("entities", dict()).items():
