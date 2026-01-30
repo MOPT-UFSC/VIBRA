@@ -239,7 +239,7 @@ class NewProject:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = StructuralPostprocessing(self.model)
+        self.postprocessing = StructuralPostprocessing(self)
 
         self.assembler.process_assemble()
 
@@ -260,7 +260,7 @@ class NewProject:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, project=self)
-        self.postprocessing = StructuralPostprocessing(self.model)
+        self.postprocessing = StructuralPostprocessing(self)
 
         self.assembler.process_assemble()
 

@@ -1,20 +1,26 @@
+from __future__ import annotations
+
 from functools import cache
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
-from typing import Literal, TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from vibra.project_files.project import Project
-    
-from vibra.engine.solvers import ModalSolver, HarmonicSolver
+    from vibra.engine.new_project import NewProject
+
+from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
 
 class StructuralPostprocessing:
-    def __init__(self, project: 'Project'=None, structural_modal_solver: ModalSolver=None, structural_harmonic_solver: HarmonicSolver=None):
-        if all(v is None for v in [project, structural_modal_solver, structural_harmonic_solver]):  
+    def __init__(
+        self,
+        project: NewProject = None,
+        structural_modal_solver: ModalSolver = None,
+        structural_harmonic_solver: HarmonicSolver = None,
+    ):
+        if all(v is None for v in [project, structural_modal_solver, structural_harmonic_solver]):
             raise ValueError("At least one of 'project', 'structural_modal_solver', or 'structural_harmonic_solver' must be provided.")
         self.project = project
         self.structural_harmonic_solver = structural_harmonic_solver
@@ -22,28 +28,28 @@ class StructuralPostprocessing:
 
     @property
     def harmonic_solver(self):
-        if self.project is not None:
-            return self.project.structural_harmonic_solver
+        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver):
+            return self.project.solver
         return self.structural_harmonic_solver
 
     @property
     def modal_solver(self):
-        if self.project is not None:
-            return self.project.structural_modal_solver
+        if (self.project is not None) and isinstance(self.project.solver, ModalSolver):
+            return self.project.solver
         return self.structural_modal_solver
 
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str, is_modal: bool = False):
-        """ This method returns the minimum and maximum displacement values
-            of selected frequency for animation purposes.
+        """This method returns the minimum and maximum displacement values
+        of selected frequency for animation purposes.
 
-            Parameters:
-            -----------
-            column: int value relative to frequency column index.
+        Parameters:
+        -----------
+        column: int value relative to frequency column index.
 
-            Returns:
-            -----------
-            u_min, u_max: float values for minimum and maximum displacements,
+        Returns:
+        -----------
+        u_min, u_max: float values for minimum and maximum displacements,
 
         """
 
@@ -60,7 +66,6 @@ class StructuralPostprocessing:
         thetas = np.arange(0, 360, 2) * (np.pi / 180)
 
         for theta in thetas:
-
             results = (amplitudes * np.cos(phases + theta)).reshape(-1, 3)
 
             if disp_type == "u_x":
@@ -83,10 +88,9 @@ class StructuralPostprocessing:
         # print("get_max_min_values_of_displacements", r_min, r_max)
 
         if disp_type == "u_sum":
-            return 0., r_max
+            return 0.0, r_max
 
         else:
-
             if np.abs(r_min) != np.abs(r_max):
                 max_abs = np.max(np.abs([r_min, r_max]))
                 r_min = -max_abs
@@ -94,13 +98,7 @@ class StructuralPostprocessing:
 
         return r_min, r_max
 
-    def compute_structural_displacement_field(
-        self,
-        index: int,
-        phase_rad: float,
-        displacement_type: DisplacementTypes,
-        is_modal: bool = False
-    ):
+    def compute_structural_displacement_field(self, index: int, phase_rad: float, displacement_type: DisplacementTypes, is_modal: bool = False):
         if is_modal:
             solver = self.modal_solver
         else:
