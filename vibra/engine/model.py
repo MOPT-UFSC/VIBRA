@@ -62,12 +62,6 @@ error_title = "Error"
 warning_title = "Warning"
 
 
-class ModelStatus:
-    materials_setted: bool
-    width_setted: bool
-    solution_executed: bool
-
-
 class Model:
     def __init__(self, disable_resume_callback:  Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
