@@ -104,8 +104,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.tabWidget_main.setTabVisible(1, False)
 
         elif self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            mode_sup = analysis_setup.analysis_method == "mode_superposition"
-            self.comboBox_method.setCurrentIndex(int(mode_sup))
+            if isinstance(analysis_setup, HarmonicAnalysisSetup):
+                mode_sup = analysis_setup.analysis_method == "mode_superposition"
+                self.comboBox_method.setCurrentIndex(int(mode_sup))
 
         self.comboBox_method.blockSignals(False)
         self.analysis_method_callback()

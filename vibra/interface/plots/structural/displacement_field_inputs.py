@@ -30,7 +30,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         app().main_window.render_tools_toolbar.hide_selection_tool()
 
     def _initialize(self):
-        self.frequency_index = None
+        self.current_frequency = None
 
     def _configure_qt_variables(self):
         #
@@ -110,14 +110,14 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         if selector_mask.any():
             self.current_frequency = self.indexes[selector_mask][0]
 
-        if self.frequency_index is None:
+        if self.current_frequency is None:
             return
 
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def current_frequency_index(self):
-        if self.frequency_index is not None:
-            return self.frequency_index
+        if self.current_frequency is not None:
+            return self.current_frequency
         return 0
 
     def get_colormap(self) -> str:
@@ -129,7 +129,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)
         if isinstance(app().new_project.model.frequencies, np.ndarray):
-            self.frequencies = list(app().new_project.model.frequencies)
+            self.frequencies = app().new_project.model.frequencies
         else:
             return
 
