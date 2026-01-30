@@ -108,7 +108,13 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-    def compute_acoustic_pressure_field(self, index: int, phase_rad: float, plot_type: AcousticPlotTypes, is_modal: bool = False):
+    def compute_acoustic_pressure_field(
+        self,
+        index: int,
+        phase_rad: float,
+        plot_type: AcousticPlotTypes,
+        is_modal: bool = False,
+    ):
         if is_modal:
             solver = self.modal_solver
         else:
