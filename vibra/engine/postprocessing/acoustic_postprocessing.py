@@ -1,12 +1,12 @@
-from typing import Optional
+from __future__ import annotations
+
 import logging
 from functools import cache
+from typing import TYPE_CHECKING, Literal, Optional
 
 import numpy as np
 
-from typing import Literal, TYPE_CHECKING
-
-from vibra.engine.solvers import ModalSolver, HarmonicSolver
+from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 if TYPE_CHECKING:
     from vibra.engine.new_project import NewProject
@@ -23,11 +23,11 @@ AcousticPlotTypes = Literal[
 class AcousticPostprocessing:
     def __init__(
         self,
-        project: "NewProject" = None,
+        project: NewProject = None,
         acoustic_modal_solver: ModalSolver = None,
         acoustic_harmonic_solver: HarmonicSolver = None,
     ):
-        if all(v is None for v in [project, acoustic_modal_solver, acoustic_harmonic_solver]):  
+        if all(v is None for v in [project, acoustic_modal_solver, acoustic_harmonic_solver]):
             raise ValueError("At least one of 'project', 'acoustic_modal_solver', or 'acoustic_harmonic_solver' must be provided.")
         self.project = project
         self.acoustic_modal_solver = acoustic_modal_solver
@@ -108,14 +108,7 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-    def compute_acoustic_pressure_field(
-        self,
-        index: int,
-        phase_rad: float,
-        plot_type: AcousticPlotTypes,
-        is_modal: bool = False
-    ):
-
+    def compute_acoustic_pressure_field(self, index: int, phase_rad: float, plot_type: AcousticPlotTypes, is_modal: bool = False):
         if is_modal:
             solver = self.modal_solver
         else:
@@ -161,8 +154,8 @@ class AcousticPostprocessing:
 
         particle_velocities_data = self.get_particle_velocity_from_surface(
             surface_id,
-            volume_id = volume_id,
-            )
+            volume_id=volume_id,
+        )
 
         particle_velocities_Vj = particle_velocities_data.get(component_label)
         if not isinstance(particle_velocities_Vj, dict):
@@ -176,12 +169,11 @@ class AcousticPostprocessing:
             return np.average(array_particle_velocities_Vj, axis=0)
 
     def compute_acoustic_impedance(
-            self, 
-            node_id: int | None = None, 
-            surface_id: int | None = None,
-            volume_id: int | None = None,
-        ):
-
+        self,
+        node_id: int | None = None,
+        surface_id: int | None = None,
+        volume_id: int | None = None,
+    ):
         frequencies = self.harmonic_solver.assembler.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
@@ -200,8 +192,8 @@ class AcousticPostprocessing:
 
         particle_velocities_data = self.get_particle_velocity_from_surface(
             surface_id,
-            volume_id = volume_id,
-            )
+            volume_id=volume_id,
+        )
 
         particle_velocities_Vj = particle_velocities_data.get("Vn")
 
@@ -218,13 +210,12 @@ class AcousticPostprocessing:
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             surface_impedance = pressures / array_particle_velocities_Vj
             return np.average(surface_impedance, axis=0)
-        
+
     def compute_surface_absorption_coefficient(
-        self, 
+        self,
         surface_id: int | None = None,
         volume_id: int | None = None,
     ):
-
         frequencies = self.harmonic_solver.assembler.model.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
@@ -232,9 +223,9 @@ class AcousticPostprocessing:
         Z0 = rho * speed_of_sound
 
         Zs = self.compute_acoustic_impedance(
-            surface_id = surface_id, 
-            volume_id = volume_id,
-            )
+            surface_id=surface_id,
+            volume_id=volume_id,
+        )
 
         if not Zs.any():
             return aux_zeros
@@ -243,15 +234,15 @@ class AcousticPostprocessing:
         R = (Zs - Z0) / (Zs + Z0)
 
         # alpha is the sound absorption coefficient
-        alpha = 1 - (np.abs(R))**2
+        alpha = 1 - (np.abs(R)) ** 2
 
         return alpha
 
     def get_particle_velocity_from_surface(
-            self, 
-            surface_id: int,
-            volume_id: int | None = None,
-            ):
+        self,
+        surface_id: int,
+        volume_id: int | None = None,
+    ):
         """
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -284,38 +275,38 @@ class AcousticPostprocessing:
         if element_3d is None:
             self.harmonic_solver.assembler.define_acoustic_elements()
             element_3d = self.harmonic_solver.assembler.element_3d
-        
+
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
         data_normals = self.harmonic_solver.assembler.model.mesh.get_surface_nodal_normals(
-            surface_id, 
+            surface_id,
             volume_id,
-            )
+        )
 
         map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
-            surface_id=surface_id, return_nodes=True)
-        
+            surface_id=surface_id, return_nodes=True
+        )
+
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.harmonic_solver.solution[filtered_nodes, :]
 
         pv_data = dict()
         for node_id, solid_element_ids in map_elements_to_nodes.items():
-
-            Vk = 0.
+            Vk = 0.0
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
                 indexes = np.array([node_to_index.get(node) for node in connect])
                 enodal_pressures = solution[indexes, :]
                 Vk += element_3d.process_particle_velocity(
-                    element_id, 
-                    node_id, 
-                    rho, 
+                    element_id,
+                    node_id,
+                    rho,
                     frequencies,
                     nodal_pressures=enodal_pressures,
                     solution=None,
-                    )
+                )
 
             pv_data[node_id] = Vk / len(solid_element_ids)
 
@@ -326,7 +317,6 @@ class AcousticPostprocessing:
         particle_velocities = dict()
 
         for i, _node_id in enumerate(np.sort(list(pv_data.keys()))):
-
             nodal_velocities = pv_data.get(_node_id)
             if nodal_velocities is None:
                 continue
@@ -359,11 +349,11 @@ class AcousticPostprocessing:
         return particle_velocities
 
     def compute_transmission_loss(
-            self, 
-            input_surface_id: int, 
-            output_surface_id: int, 
-            surface_integration: bool = True,
-            ):
+        self,
+        input_surface_id: int,
+        output_surface_id: int,
+        surface_integration: bool = True,
+    ):
         """
         This method compute the acoustic transmission loss between two selected surfaces.
 
@@ -401,7 +391,6 @@ class AcousticPostprocessing:
         logging.info("Processing the transmission loss... [40/100]")
 
         if not surface_integration:
-
             A_in = model.mesh.surface_area_from_element_integration.get(input_surface_id)
             A_out = model.mesh.surface_area_from_element_integration.get(output_surface_id)
 
@@ -505,11 +494,7 @@ class AcousticPostprocessing:
         return frequencies, transmission_loss
 
     def integrate_surface_sound_power(
-            self,
-            surface_id: int,
-            pressures: np.ndarray,
-            particle_velocities: np.ndarray,
-            dB_scale: bool = True
+        self, surface_id: int, pressures: np.ndarray, particle_velocities: np.ndarray, dB_scale: bool = True
     ) -> np.ndarray:
         """
         This method integrates the sound power intensity over the selected surface.
@@ -550,7 +535,7 @@ class AcousticPostprocessing:
             assembler.define_acoustic_elements()
             element_2d = assembler.element_2d
 
-        sound_power = 0.
+        sound_power = 0.0
         for i, e_connect in enumerate(surface_connectivities):
             node_indexes = [map_nodes.get(node) for node in e_connect]
             L_sv = pressures[node_indexes, :].T.reshape(-1, 1, element_2d.DOF_PER_ELEMENT)
@@ -564,11 +549,7 @@ class AcousticPostprocessing:
 
         return sound_power
 
-    def compute_noise_reduction(
-            self, 
-            input_surface_id: int, 
-            output_surface_id: int
-            ):
+    def compute_noise_reduction(self, input_surface_id: int, output_surface_id: int):
         """
         This method compute the acoustic noise reduction between two selected surfaces.
 
@@ -615,10 +596,10 @@ class AcousticPostprocessing:
 
 
 def plot_graph(matrix):
-    """
-    """
+    """ """
     import matplotlib.pyplot as plt
+
     plt.ion()
     plt.cla()
-    plt.spy(matrix, color=(0.25,0.25,0.25))
+    plt.spy(matrix, color=(0.25, 0.25, 0.25))
     plt.show()
