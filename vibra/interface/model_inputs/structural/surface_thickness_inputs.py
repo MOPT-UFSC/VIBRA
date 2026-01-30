@@ -20,7 +20,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties

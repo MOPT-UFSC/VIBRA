@@ -31,7 +31,6 @@ class FluidWidget(FluidWidget_UI):
         self.dialog = kwargs.get("dialog", None)
         self.state_properties = kwargs.get("state_properties", dict())
 
-        self.project = app().project
         self.model = app().new_project.model
         self.properties = app().new_project.model.properties
 

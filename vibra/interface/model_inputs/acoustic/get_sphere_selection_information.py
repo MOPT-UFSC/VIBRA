@@ -20,7 +20,6 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
 
         app().main_window.set_input_widget(self)
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties

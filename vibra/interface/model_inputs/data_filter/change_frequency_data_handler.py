@@ -21,11 +21,6 @@ class ChangeFrequencyDataRangeInput(ChangeFrequencyDataRangeInput_UI):
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
 
-        # self.project = app().project
-        # self.model = app().new_project.model
-        # self.mesh = app().new_project.model.mesh
-        # self.properties = app().new_project.model.properties
-
         self.imported_values = imported_values
 
         self._config_window()

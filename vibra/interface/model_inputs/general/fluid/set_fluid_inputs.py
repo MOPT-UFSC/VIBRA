@@ -42,7 +42,6 @@ class SetFluidInputs(SetFluidInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.volume_selection_mode = True
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
