@@ -790,18 +790,21 @@ class ReciprocatingCompressorModel:
         f_ce = np.sum(self.mass_flow_crank_end())/N
         return f_he + f_ce
 
-    def process_sum_of_volumetric_flow_rate(self, key: str, capacity=None, smooth_data=False):
+    def process_sum_of_volumetric_flow_rate(self, flow_type: str, capacity=None, smooth_data=False):
         try:
 
             if self.acting_head == 'both_ends':
-                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
-                flow_rate += self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate_ce = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_he = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_cyl = (flow_rate_ce.get(flow_type, 0.) + flow_rate_he.get(flow_type, 0.)) / self.valves_per_head
 
             elif self.acting_head == 'head_end':
-                flow_rate = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate_he = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_cyl = flow_rate_he.get(flow_type, 0.) / self.valves_per_head
 
             elif self.acting_head == 'crank_end':
-                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate_ce = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_cyl = flow_rate_ce.get(flow_type, 0.) / self.valves_per_head
 
         except Exception as error:
             print(str(error))
@@ -809,16 +812,16 @@ class ReciprocatingCompressorModel:
 
         if smooth_data:
     
-            N = len(flow_rate)
+            N = len(flow_rate_cyl)
             fs = N * (self.rpm / 60)
 
-            flow_rate_ext = np.append(flow_rate[:-1], flow_rate)
-            flow_rate_ext = np.append(flow_rate_ext, flow_rate[1:])
+            flow_rate_ext = np.append(flow_rate_cyl[:-1], flow_rate_cyl)
+            flow_rate_ext = np.append(flow_rate_ext, flow_rate_cyl[1:])
 
             b, a = butter(1, fs/15, btype='low', fs=fs,  output='ba')
-            flow_rate = filtfilt(b, a, flow_rate_ext)[N-1 : 2*N-1]
+            flow_rate_cyl = filtfilt(b, a, flow_rate_ext)[N-1 : 2*N-1]
 
-        return flow_rate
+        return flow_rate_cyl
 
     def get_in_mass_flow(self, capacity=None):
         in_flow = self.process_sum_of_volumetric_flow_rate('in_flow', capacity=capacity)
@@ -967,16 +970,32 @@ class ReciprocatingCompressorModel:
         return frequencies, X_f
 
 
-    def process_FFT_of_volumetric_flow_rate(self, revolutions, key):
+    def process_FFT_of_volumetric_flow_rate(self, revolutions: int, flow_type: str, zero_frequency: bool=False):
 
-        flow_rate = self.process_sum_of_volumetric_flow_rate(key)
+        flow_rate = self.process_sum_of_volumetric_flow_rate(flow_type)
 
         if flow_rate is None:
             return None, None
         
         freq, flow_rate = self.process_FFT_from_extended_signal(flow_rate, revolutions)
-        freq = freq[freq <= self.max_frequency]
-        flow_rate = flow_rate[:len(freq)]
+
+        # high-pass frequency mask
+        if zero_frequency:
+            mask_hpf = freq >= 0
+        else:
+            mask_hpf = freq > 0   
+
+        # low-pass frequency mask
+        mask_lpf = freq <= self.max_frequency
+
+        # band-pass frequency mask
+        mask_bpf = mask_hpf * mask_lpf
+        
+        # filter the frequencies vector
+        freq = freq[mask_bpf]
+
+        # filter the flow rate spectrum vector
+        flow_rate = flow_rate[mask_bpf]
 
         return freq, flow_rate
 
