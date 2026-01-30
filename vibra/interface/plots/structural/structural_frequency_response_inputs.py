@@ -1,3 +1,4 @@
+from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtCore import Qt
 
 from vibra.engine import AnalysisID
@@ -109,15 +110,11 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.comboBox_dof_selector.addItems(active_dof_labels)
 
     def _load_analysis_setup_and_solution(self):
+        analysis_setup = app().new_project.model.new_analysis_setup
 
         self.analysis_method = ""
-        analysis_setup = app().project.analysis_setup
-
-        if "analysis_id" in analysis_setup.keys():
-            analysis_method = analysis_setup.get("analysis_method", "direct")
-            if isinstance(analysis_method, str):
-                analysis_method = analysis_method.capitalize().replace("_", " ")
-
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            analysis_method = analysis_setup.analysis_method.capitalize().replace("_", " ")
             self.analysis_method = f"{analysis_method} method"
 
         self.frequencies = app().new_project.model.frequencies

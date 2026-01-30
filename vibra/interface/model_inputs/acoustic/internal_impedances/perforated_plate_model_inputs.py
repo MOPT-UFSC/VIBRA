@@ -1095,7 +1095,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_setup = app().project.analysis_setup
+        analysis_setup = app().new_project.model.analysis_setup
         if isinstance(analysis_setup, dict):
             frequencies = analysis_setup.get("frequencies")
 
