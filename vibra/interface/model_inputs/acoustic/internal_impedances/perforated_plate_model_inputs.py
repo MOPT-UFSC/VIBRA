@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.utils.bidict import bidict
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -17,6 +17,8 @@ from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
+
+from vibra.utils.bidict import bidict
 
 from pathlib import Path
 from collections import defaultdict
@@ -591,12 +593,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def load_table(self, lineEdit : QLineEdit = None, direct_load: bool=False) -> np.ndarray:
 
         title = "Error reached while loading 'user-defined transfer impedance' table"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
@@ -605,16 +607,20 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 if not imported_data:
                     return
                 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
+
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -627,6 +633,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
+        # define the frequencies vector
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
@@ -641,7 +648,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+
+        # imaginary values vector
         imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
@@ -809,7 +819,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.imported_values = None
             return
 
-        complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+        # complex values computed from tabular data
+        complex_values = get_spectral_data_from_array(self.imported_values)
+
+        # table path from imported tabular data
         table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
 
         model.set_table_data([table_name], [table_path], [complex_values])

@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
@@ -628,12 +629,12 @@ class MassSourceInputs(MassSourceInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'mass source' table"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
@@ -642,16 +643,20 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if not imported_data:
                     return
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum data must "
                 message += "have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
+
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -661,6 +666,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
+        # define the frequencies vector
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
@@ -675,7 +681,10 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         self.update_analysis_setup_in_file(_frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+
+        # imaginary values vector
         imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
@@ -718,8 +727,10 @@ class MassSourceInputs(MassSourceInputs_UI):
         if self.lineEdit_table_path.text() != "":
 
             if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
+                self.imported_values = self.load_table( 
+                    self.lineEdit_table_path, 
+                    direct_load = True,
+                    )
 
             for selection_id in selection_ids:
 
@@ -738,7 +749,10 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if self.imported_values is None:
                     return
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+                # complex values computed from tabular data
+                complex_values = get_spectral_data_from_array(self.imported_values)
+
+                # table path from imported tabular data
                 table_path = self.lineEdit_table_path.text()
 
                 if selection_type in ["points", "nodes", "lines", "surfaces"]:
