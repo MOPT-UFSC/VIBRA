@@ -76,6 +76,10 @@ class NewProject:
         self.project_reader = ProjectReader(self._working_directory)
         self.project_writer = ProjectWriter(self._working_directory)
 
+    def set_thumbnail(self, thumbnail: Image):
+        self.thumbnail = thumbnail
+        self.project_writer.write_thumbnail(thumbnail)
+
     def clear_working_directory(self):
         self.project_writer.project_paths.clear_data()
 
@@ -112,11 +116,13 @@ class NewProject:
     def save_project(
         self,
         path: Path | str,
+        name: str = "Project",
     ):
         """
         Packs the data from the working directory into a .vibra file.
         """
         self.save_path = Path(path)
+        self.name = name
         if self.project_writer.project_paths.is_empty():
             self.project_writer.write_project(self)
         self.project_writer.write_file(path)
