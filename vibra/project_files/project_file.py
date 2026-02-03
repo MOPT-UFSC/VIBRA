@@ -417,7 +417,7 @@ class ProjectFile:
                     aux = dict()
                     if isinstance(data, dict):
                         for _key, _data in data.items():
-                            if _key in ["values"]:
+                            if _key in ["values", "tables_frequencies"]:
                                 continue
                             elif isinstance(_data, Fluid):
                                 aux[_key] = _data.get_data()

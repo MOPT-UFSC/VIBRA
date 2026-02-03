@@ -230,27 +230,33 @@ class StructuralAssembler:
 
         try:
 
-            loads_list = list()
+            values_list = list()
             aux_ones = np.ones(number_frequencies, dtype=complex)
             aux_zeros = np.zeros(number_frequencies, dtype=complex)
 
             for value in structural_loads:
 
                 if value is None:
-                    loads_list.append(aux_zeros)
+                    values_list.append(aux_zeros)
 
                 elif isinstance(value, complex):
-                    loads_list.append(aux_ones * value)
+                    values_list.append(aux_ones * value)
 
                 elif isinstance(value, np.ndarray):
-                    loads_list.append(value[0:number_frequencies])
+                    values_list.append(value[:number_frequencies])
 
         except Exception as _error_log:
             print(str(_error_log))
             # TODO: check matrix dimensions for compatibility
             return aux_ones
+        
+        array_of_values = np.array(values_list, dtype=complex)
 
-        return np.array(loads_list, dtype=complex)
+        # filter values based on frequency mask
+        if array_of_values.shape[1] - self.frequencies.size:
+            return array_of_values[self.freq_mask, :]
+        else:
+            return array_of_values
 
 
     def process_distributed_loads(self):
@@ -454,6 +460,26 @@ class StructuralAssembler:
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
 
+    def process_frequencies_mask(self):
+        """
+        This method process the frequencies mask to filter the required 
+        analysis frequency setup.
+        """
+        self.freq_mask = np.ones_like(self.frequencies, dtype=bool)
+        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
+        if not self.table_frequencies:
+            return
+
+        if len(self.table_frequencies) != 1:
+            return
+
+        f_min = self.frequencies[0]
+        f_max = self.frequencies[-1]
+
+        table_frequencies = np.array(self.table_frequencies[0])
+        self.freq_mask = (table_frequencies >= f_min) * (table_frequencies <= f_max)
+
+
     def assemble_global_mass_matrix(self):
         """
         This method assembles the global mass matrix.
@@ -469,6 +495,7 @@ class StructuralAssembler:
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
         self.update_number_of_frequencies()
+        self.process_frequencies_mask()
         self.model.process_surface_thickness()
 
         logging.info("Gathering data to assemble global matrices... [20/100]")

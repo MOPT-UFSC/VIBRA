@@ -6,6 +6,8 @@ from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.structural.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
 
+import numpy as np
+
 error_title = "Error"
 
 
@@ -21,19 +23,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if self.analysis_id is None:
             self.analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
-        """
-        |--------------------------------------------------------------------|
-        |                    Analysis ID codification                        |
-        |--------------------------------------------------------------------|
-        |    0 - Structural - Harmonic analysis through direct method        |
-        |    1 - Structural - Harmonic analysis through mode superposition   |
-        |    2 - Structural - Modal analysis                                 |
-        |    3 - Acoustic - Harmonic analysis through direct method          |
-        |    4 - Acoustic - Modal analysis                                   |
-        |    5 - Coupled - Harmonic analysis through direct method           |
-        |    6 - Coupled - Harmonic analysis through mode superposition      |
-        |--------------------------------------------------------------------|
-        """
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
 
@@ -139,11 +128,45 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_fmax.setText("{}".format(round(f_max, 14)))
         self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
-        key = app().project.model.properties.check_if_there_are_tables_at_the_model()
+        table_exists = app().project.model.properties.check_if_there_are_tables_at_the_model()
+        self.lineEdit_fstep.setDisabled(table_exists)
 
-        self.lineEdit_fmin.setDisabled(key)
-        self.lineEdit_fmax.setDisabled(key)
-        self.lineEdit_fstep.setDisabled(key)
+    def check_tabular_frequencies_compatibility(self, f_min: float, f_max: float):
+        tables_frequencies = self.model.properties.process_all_tables_frequencies_vectors()
+        if not tables_frequencies:
+            return False
+        
+        if len(tables_frequencies) != 1:
+            return True
+    
+        table_frequencies = tables_frequencies[0]
+        f_min_tab = table_frequencies[0]
+        f_max_tab = table_frequencies[-1]
+
+        if f_min < f_min_tab:
+            if not np.isclose(f_min, f_min_tab, 1e-8):
+                self.hide()
+                title = "Invalid minimum frequency"
+                message = "The value entered for the minimum frequency is out of the allowable range."
+                PrintMessageInput([error_title, title, message])
+                self.lineEdit_fmin.setFocus()
+                self.lineEdit_fmin.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+                return True
+            
+        if f_max > f_max_tab:
+            if not np.isclose(f_max, f_max_tab, 1e-8):
+                self.hide()
+                title = "Invalid maximum frequency"
+                message = "The value entered for the maximum frequency is out of the allowable range."
+                PrintMessageInput([error_title, title, message])
+                self.lineEdit_fmax.setFocus()
+                self.lineEdit_fmax.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+                return True
+            
+        self.lineEdit_fmin.setStyleSheet("")
+        self.lineEdit_fmax.setStyleSheet("")
+
+        return False
 
     def update_harmonic_analysis_title(self):
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
@@ -239,6 +262,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 message = "The maximum frequency (fmax) must be greater than the sum of "
                 message += "minimum frequency (fmin) and frequency resolution (df)."
                 PrintMessageInput([error_title, title, message])
+                return True
+            
+            if self.check_tabular_frequencies_compatibility(f_min, f_max):
                 return True
 
             analysis_setup["f_min"] = f_min
