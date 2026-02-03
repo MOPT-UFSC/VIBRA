@@ -738,7 +738,7 @@ class MainWindow(MainWindow_UI):
         self.render_tools_toolbar.setVisible(True)
 
     def save_project_dialog(self):
-        if app().project.save_path is None:
+        if app().new_project.save_path is None:
             return self.save_project_as_dialog()
         else:
             self.save_project_as(app().project.save_path)
@@ -746,60 +746,55 @@ class MainWindow(MainWindow_UI):
 
     def save_project_as_dialog(self):
         obj = SaveProjectDataSelector()
-        if obj.complete:
-            last_path = app().config.get_last_folder_for("project_folder")
-            if last_path is None:
-                path = os.path.expanduser("~")
-            else:
-                path = last_path
+        if not obj.complete:
+            return False
 
-            kwargs = dict()
-            if platform.system() == "Linux":
-                kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+        save_dir = app().config.get_last_folder_for(
+            "project_folder",
+            default=Path().home(),
+        )
 
-            file_path, check = QFileDialog.getSaveFileName(
-                self,
-                "Save As",
-                str(path),
-                filter="Vibra File (*.vibra)", 
-                **kwargs,
-            )
+        kwargs = dict()
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
-            if not check:
-                return
+        file_path, check = QFileDialog.getSaveFileName(
+            self,
+            "Save As",
+            str(save_dir),
+            filter="Vibra File (*.vibra)", 
+            **kwargs,
+        )
 
-            if obj.ignore_results_data:
-                app().file.delete_harmonic_solution()
-                app().file.remove_results_data_from_project_file()
+        if not check:
+            return False
 
-            if obj.ignore_mesh_data:
-                app().file.remove_mesh_data_from_project_file()
+        if obj.ignore_results_data:
+            # TODO: check if app().new_project.reset_solution() makes more sense
+            app().new_project.project_writer.delete_results_data()
 
-            if not file_path.endswith(".vibra"):
-                file_path += ".vibra"
-            
-            self.save_project_as(file_path)
+        if obj.ignore_mesh_data:
+            app().new_project.project_writer.delete_mesh_data()
 
-        return obj.complete
+        if not file_path.endswith(".vibra"):
+            file_path += ".vibra"
+
+        self.save_project_as(file_path)
+
+        return True
 
     def save_project_as(self, path: str):
-
         def save_data(path):
-
             path = Path(path)
-            app().project.name = path.stem
-            app().project.save_path = path
-            logging.info("Saving project data... [10/100]")
-
-            app().file.write_thumbnail()
             app().config.add_recent_file(path)
+            app().config.write_last_folder_path_in_file("project_folder", path)
             logging.info("Saving project data... [30/100]")
 
-            app().config.write_last_folder_path_in_file("project_folder", path)
-            self.update_recents_menu()
+            app().new_project.save_project(path, name=path.stem)
             logging.info("Saving project data... [75/100]")
 
-            app().file.archive_project(path)
+            # Update interface
+            self.update_recents_menu()
             self.update_window_title(path)
             self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
@@ -812,11 +807,10 @@ class MainWindow(MainWindow_UI):
         print(message)
 
     def open_project_dialog(self):
-        last_path = app().config.get_last_folder_for("project_folder")
-        if last_path is None:
-            path = os.path.expanduser("~")
-        else:
-            path = last_path
+        path = app().config.get_last_folder_for(
+            "project_folder",
+            default=Path().home(),
+        )
 
         project_path, check = QFileDialog.getOpenFileName(
             self,

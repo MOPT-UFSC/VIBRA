@@ -91,7 +91,7 @@ class ProjectReader:
         model.reset_variables()
 
         analysis_setup = self.read_analysis_setup()
-        if model is not None:
+        if analysis_setup is not None:
             model.new_set_analysis_setup(analysis_setup)
 
         model.mesh_setup = self.read_mesh_setup()
