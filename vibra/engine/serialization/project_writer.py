@@ -218,6 +218,9 @@ class ProjectWriter:
         self.project_paths.results_data_filepath.unlink(missing_ok=True)
         self.project_paths.harmonic_solution_filepath.unlink(missing_ok=True)
 
+    def delete_mesh_data(self):
+        self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
+
     def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
         """
         Turn the key (property_name, (tag_1, tag_2, tag_3)) into a string
