@@ -311,8 +311,6 @@ class Model:
             return
 
         self.frequencies_mask = np.isin(self.table_frequencies[0], self.frequencies)
-        print(self.frequencies_mask.size)
-        print(self.frequencies_mask)
 
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
