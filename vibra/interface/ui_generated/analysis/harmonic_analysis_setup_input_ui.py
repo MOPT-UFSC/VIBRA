@@ -216,9 +216,10 @@ class Ui_Dialog(object):
         self.pushButton_reset_frequency_settings.setObjectName(u"pushButton_reset_frequency_settings")
         self.pushButton_reset_frequency_settings.setMinimumSize(QSize(42, 28))
         icon = QIcon()
-        icon.addFile(u":/icons/reset_settings_black.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/icons/reset_settings.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_reset_frequency_settings.setIcon(icon)
         self.pushButton_reset_frequency_settings.setIconSize(QSize(22, 22))
+        self.pushButton_reset_frequency_settings.setAutoDefault(False)
 
         self.gridLayout_5.addWidget(self.pushButton_reset_frequency_settings, 0, 4, 1, 1)
 
