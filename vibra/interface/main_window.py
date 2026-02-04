@@ -637,10 +637,11 @@ class MainWindow(MainWindow_UI):
         self.render_tools_toolbar.setVisible(True)
 
     def save_project_dialog(self):
-        if app().new_project.save_path is None:
+        save_path = app().new_project.save_path
+        if save_path is None:
             return self.save_project_as_dialog()
         else:
-            self.save_project_as(app().project.save_path)
+            self.save_project_as(save_path)
             return True
 
     def save_project_as_dialog(self):
@@ -812,6 +813,7 @@ class MainWindow(MainWindow_UI):
 
         if project_recovery:
             LoadingWindow(project.sync_with_working_dir).run()
+            project.name = "Recover project"
         else:
             LoadingWindow(project.load_project).run(project_path)
             config.add_recent_file(project_path)

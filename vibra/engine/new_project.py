@@ -103,9 +103,10 @@ class NewProject:
         """
         Unpacks the vibra file into the working directory and reads data from it.
         """
-        self.save_path = Path(path)
         self.project_reader.read_file(path)
-        return self.sync_with_working_dir()
+        self.project_reader.read_project(self)
+        self.save_path = Path(path)
+        return self
 
     def sync_with_working_dir(self) -> NewProject:
         """
