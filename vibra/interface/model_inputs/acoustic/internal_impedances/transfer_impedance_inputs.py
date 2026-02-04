@@ -80,7 +80,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.treeWidget_transfer_impedance.itemClicked.connect(self.on_click_item)
         self.treeWidget_transfer_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.geometry_selection_callback()
@@ -107,7 +107,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if current_tab != StandardTabType.CONSTANT_DATA:
             return
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if surfaces:
             surface_ids = list(surfaces)
             surface_ids.sort()
@@ -142,7 +142,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -387,7 +387,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         tab_list = current_tab == StandardTabType.LIST
 
         if self.last_tab == StandardTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
@@ -410,7 +410,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not surface_ids:
             return
 
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         for surface_id in surface_ids:
             decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
@@ -675,7 +675,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
         self.restore_mesh_data_modified_by_decoupling()
 
@@ -753,7 +753,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             app().main_window.update_symbols()
 
             logging.info("Processing the post-assignment actions... [95/100]")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
             logging.info("Processing the post-assignment actions... [100/100]")
             app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
@@ -886,7 +886,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return
 
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
         return super().closeEvent(a0)
 

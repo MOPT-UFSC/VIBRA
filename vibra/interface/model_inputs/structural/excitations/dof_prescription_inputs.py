@@ -175,7 +175,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.treeWidget_prescribed_dof.itemClicked.connect(self.on_click_item)
         self.treeWidget_prescribed_dof.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
@@ -290,10 +290,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def geometry_selection_callback(self):
 
-        surfaces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         if surfaces:
 
@@ -986,7 +986,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
         self.tabWidget_main.setTabVisible(2, False)
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -1015,16 +1015,16 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             elif selection == "Line":
-                app().main_window.set_geometry_selection(lines = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
 
             elif selection == "Point":
-                app().main_window.set_geometry_selection(points = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
-                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+                app().main_window.selection.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
                 app().main_window.action_mesh_workspace_callback()
@@ -1099,8 +1099,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.remove_property_from("prescribed_dof", selected_id, selection)
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -1141,8 +1141,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.properties._reset_property("prescribed_dof")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()

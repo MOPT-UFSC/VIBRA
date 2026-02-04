@@ -41,7 +41,7 @@ class MeshRenderWidget(CommonRenderWidget):
         app().main_window.visualization_changed.connect(
             self.visualization_changed_callback
         )
-        app().main_window.selection_changed.connect(self.update_selection)
+        app().main_window.selection.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
 
         # The fast area selection just works if it is on
@@ -250,7 +250,7 @@ class MeshRenderWidget(CommonRenderWidget):
         ctrl_pressed = modifiers & Qt.ControlModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        app().main_window.set_mesh_selection(
+        app().main_window.selection.set_mesh_selection(
             nodes=picked_nodes,
             faces=picked_faces,
             solids=picked_solids,
@@ -273,9 +273,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.clear_colors()
         self.nodes_actor.clear_colors()
 
-        nodes = app().main_window.selected_mesh_nodes
-        faces = app().main_window.selected_mesh_faces
-        solids = app().main_window.selected_mesh_solids
+        nodes = app().main_window.selection.mesh_nodes
+        faces = app().main_window.selection.mesh_faces
+        solids = app().main_window.selection.mesh_solids
 
         selection_faces_color = app().config.user_preferences.selection_faces_color
         selection_nodes_points_color = (

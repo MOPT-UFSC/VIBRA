@@ -70,7 +70,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
     
     def _config_widgets(self):
         #
@@ -85,7 +85,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
             return
         
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -112,7 +112,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -173,7 +173,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         tab_list = current_tab == StandardTabType.LIST
     
         if self.last_tab == StandardTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
 
             self.clear_line_edit_selection_id()
             self.treeWidget_acoustic_pressure.clearSelection()
@@ -446,7 +446,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -525,7 +525,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         surface_ids = self.get_selected_surfaces_from_tree_widget_acoustic_pressure()
         
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setDisabled(False)
         self.set_selection_text(surface_ids)
@@ -582,5 +582,5 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

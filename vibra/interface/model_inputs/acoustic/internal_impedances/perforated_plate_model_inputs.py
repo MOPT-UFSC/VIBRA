@@ -111,7 +111,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.edit_tableWidget.cellChanged.connect(self.edit_table_widget_item)
         self.edit_tableWidget.cellDoubleClicked.connect(self.edit_fluid_or_transfer_impedance)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.geometry_selection_callback()
@@ -127,7 +127,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if current_tab != PPMMainTabType.SETUP:
             return
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if surfaces:
             surface_ids = list(surfaces)
             surface_ids.sort()
@@ -203,7 +203,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -315,7 +315,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         tab_list = current_tab == PPMMainTabType.LIST
 
         if self.last_tab == PPMMainTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
@@ -345,7 +345,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 new_surface_id = decoupling_data.get("new_surface_id")
                 self.decoupling_map[surface_id] = new_surface_id
 
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setEnabled(True)
         self.set_selection_text(surface_ids)
@@ -911,7 +911,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.hide()
         self.actions_to_finalize()
         self.restore_mesh_data_modified_by_decoupling()
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
 
 
     def reset_callback(self):
@@ -986,7 +986,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().main_window.update_info_text()
 
             logging.info("Processing the post-assignment actions... [95/100]")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
             logging.info("Processing the post-assignment actions... [100/100]")
             app().main_window.action_results_workspace.setEnabled(False)
@@ -1241,6 +1241,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             return
 
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
         return super().closeEvent(a0)

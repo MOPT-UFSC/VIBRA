@@ -66,7 +66,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
         #
@@ -79,7 +79,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
 
         self.clear_line_edit_selection_id()
         self.treeWidget_anechoic_termination.clearSelection()
@@ -97,7 +97,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
             return
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -141,7 +141,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -277,7 +277,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -348,7 +348,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if not surface_ids:
             return
     
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setDisabled(False)
         self.set_selection_text(surface_ids)
@@ -412,7 +412,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
     
 # fmt: on

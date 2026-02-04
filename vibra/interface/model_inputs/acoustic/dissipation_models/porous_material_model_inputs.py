@@ -46,7 +46,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        app().main_window.volume_selection_mode = True
+        app().main_window.selection.volume_selection_mode = True
 
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
@@ -85,7 +85,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.material_model_data = dict()
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
-        app().main_window.volume_selection_mode = True
+        app().main_window.selection.volume_selection_mode = True
 
     def _create_connections(self):
         #
@@ -109,7 +109,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
@@ -141,7 +141,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if not pm_tabs:
             return
 
-        volumes = app().main_window.selected_geometry_volumes
+        volumes = app().main_window.selection.geometry_volumes
 
         if volumes:
 
@@ -164,7 +164,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_volumes = app().main_window.selected_geometry_volumes
+        selected_volumes = app().main_window.selection.geometry_volumes
 
         if not selected_volumes:
             return
@@ -281,7 +281,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         app().file.write_model_properties_in_file()
         self.load_info()
         self.actions_to_finalize()
@@ -325,7 +325,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         pm_tab = current_tab <= TabType.JCAL
 
         if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.frame_plot_setup.setVisible(pm_tab)
@@ -357,7 +357,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         self.update_tabs = False
 
-        app().main_window.set_geometry_selection(volumes=volume_ids)
+        app().main_window.selection.set_geometry_selection(volumes=volume_ids)
         self.pushButton_remove.setDisabled(False)
         self.set_selection_text(volume_ids)
         self.update_tabs = True
@@ -987,6 +987,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if isinstance(self.auxiliar_dialog, QDialog):
             self.auxiliar_dialog.close()
 
-        app().main_window.volume_selection_mode = False
+        app().main_window.selection.volume_selection_mode = False
 
         return super().closeEvent(a0)

@@ -102,15 +102,15 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.treeWidget_mass_source.itemClicked.connect(self.on_click_item)
         self.treeWidget_mass_source.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         tab_list = self.tabWidget_main.currentIndex() == MSTabType.LIST
 
@@ -198,12 +198,11 @@ class MassSourceInputs(MassSourceInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_volumes = {(volume_id, "volume") for volume_id in app().main_window.selected_geometry_volumes}
-        selected_surfaces = {(surface_id, "surface") for surface_id in app().main_window.selected_geometry_surfaces}
-        selected_points = {(point_id, "point") for point_id  in app().main_window.selected_geometry_points}
-        selected_nodes = {(node_id, "node")  for node_id in app().main_window.selected_mesh_nodes}
-        selected_lines = {(line_id, "line") for line_id in app().main_window.selected_geometry_lines}
-
+        selected_volumes = {(volume_id, "volume") for volume_id in app().main_window.selection.geometry_volumes}
+        selected_surfaces = {(surface_id, "surface") for surface_id in app().main_window.selection.geometry_surfaces}
+        selected_points = {(point_id, "point") for point_id  in app().main_window.selection.geometry_points}
+        selected_nodes = {(node_id, "node")  for node_id in app().main_window.selection.mesh_nodes}
+        selected_lines = {(line_id, "line") for line_id in app().main_window.selection.geometry_lines}
         selected_items = [selected_volumes, selected_surfaces, selected_points, selected_nodes, selected_lines]
 
         if not any(selected_items):
@@ -335,7 +334,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.comboBox_inherit_fluid_from.setDisabled(True)
             self.comboBox_inherit_fluid_from.addItem("Invalid selection")
 
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
 
             if print_message:
                 self.hide()
@@ -486,14 +485,14 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.lineEdit_node_coord_y.setText(f"{nearest_coords[1] : .6f}")
         self.lineEdit_node_coord_z.setText(f"{nearest_coords[2] : .6f}")
 
-        app().main_window.set_mesh_selection(nodes=[nearest_node])
+        app().main_window.selection.set_mesh_selection(nodes=[nearest_node])
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
         tab_list = current_tab == MSTabType.LIST
 
         if self.last_tab == MSTabType.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.lineEdit_selection_id.clear()
 
         if tab_list:
@@ -893,7 +892,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.update_info_text()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -975,8 +974,8 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         nodes = selected_items.pop("nodes") if "nodes" in selected_items else set()
 
-        app().main_window.set_mesh_selection(nodes=nodes)
-        app().main_window.set_geometry_selection(**selected_items)
+        app().main_window.selection.set_mesh_selection(nodes=nodes)
+        app().main_window.selection.set_geometry_selection(**selected_items)
 
         self.tree_item_clicked = False
 
@@ -1069,5 +1068,5 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

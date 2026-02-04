@@ -123,7 +123,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.export_data_checkbox_callback()
@@ -166,7 +166,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation()
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if selected_surfaces:
 
@@ -195,7 +195,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if not selected_surfaces:
             return
@@ -245,7 +245,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_selection_id.setDisabled(tab_list)
 
         if self.last_tab == RCTabTypes.LIST or tab_list:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         if tab_list:
@@ -878,7 +878,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.load_compressor_excitation_info()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
 
     def process_table_file_removal(self, table_names: list):
@@ -922,7 +922,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_connection_type.clear()
         self.pushButton_remove.setDisabled(True)
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         self.actions_to_finalize()
 
     def reset_callback(self):
@@ -982,7 +982,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if not surface_ids:
             return
         
-        app().main_window.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
         self.set_selection_text(surface_ids)
         self.lineEdit_connection_type.setText(connection_type)
         self.pushButton_remove.setDisabled(False)
@@ -1264,5 +1264,5 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

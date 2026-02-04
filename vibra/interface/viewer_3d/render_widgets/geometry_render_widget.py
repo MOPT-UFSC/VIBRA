@@ -45,7 +45,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
-        app().main_window.selection_changed.connect(self.update_selection)
+        app().main_window.selection.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
@@ -331,10 +331,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if not (shift_pressed or app().main_window.volume_selection_mode):
+        if not (shift_pressed or app().main_window.selection.volume_selection_mode):
             picked_volumes.clear()
 
-        app().main_window.set_geometry_selection(
+        app().main_window.selection.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
             surfaces=picked_surfaces,
@@ -353,9 +353,9 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
 
-        points = app().main_window.selected_geometry_points
-        lines = app().main_window.selected_geometry_lines
-        surfaces = app().main_window.selected_geometry_surfaces
+        points = app().main_window.selection.geometry_points
+        lines = app().main_window.selection.geometry_lines
+        surfaces = app().main_window.selection.geometry_surfaces
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)

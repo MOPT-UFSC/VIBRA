@@ -71,7 +71,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
@@ -80,7 +80,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def geometry_selection_callback(self):
 
-        selected_faces = app().main_window.selected_geometry_surfaces
+        selected_faces = app().main_window.selection.geometry_surfaces
 
         if selected_faces:
 

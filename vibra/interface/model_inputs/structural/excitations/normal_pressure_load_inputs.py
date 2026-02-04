@@ -79,12 +79,12 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.treeWidget_normal_pressure_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_normal_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
 
@@ -441,7 +441,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
         self.lineEdit_real_value.setFocus()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -471,7 +471,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             text = f"{selection} - {selected_id}"
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             else:
                 return
@@ -529,8 +529,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -554,8 +554,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()

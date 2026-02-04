@@ -85,4 +85,4 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
         self.highlight_mesh_elements(list_elements)
 
     def highlight_mesh_elements(self, solid_elements: list[int]):
-        app().main_window.set_mesh_selection(solids = solid_elements)
+        app().main_window.selection.set_mesh_selection(solids = solid_elements)
