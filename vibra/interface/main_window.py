@@ -53,7 +53,7 @@ class MainWindow(MainWindow_UI):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        self.selection = SelectionHandler(app().project)
+        self.selection = SelectionHandler(app().new_project)
         self.selection.selection_changed.connect(self.selection_changed_callback)
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
