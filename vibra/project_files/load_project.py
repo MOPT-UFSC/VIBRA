@@ -397,8 +397,14 @@ class LoadProject:
             f_max = analysis_setup.get("f_max")
             f_step = analysis_setup.get("f_step")
 
-            if ([f_min, f_max, f_step]).count(None) == 0:
-                analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step, dtype=float)
+            if analysis_setup.get("frequency_spacing") == "user_defined":
+                ud_frequencies = analysis_setup.get("user_defined_frequencies")
+                if ud_frequencies is not None:
+                    analysis_setup["frequencies"] = np.array(ud_frequencies, dtype=float)
+
+            else:
+                if ([f_min, f_max, f_step]).count(None) == 0:
+                    analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step, dtype=float)
 
         app().project.set_analysis_setup(analysis_setup)
         app().project.create_solver()
