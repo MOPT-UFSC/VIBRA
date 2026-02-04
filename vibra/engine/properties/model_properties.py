@@ -2,11 +2,10 @@ from typing import Callable, Optional
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.utils.signal import VibraSignal
 
 import json
 import numpy as np
-import os
-from dataclasses import dataclass
 
 
 DEFAULT_MATERIAL = Material(
@@ -57,7 +56,7 @@ class ModelProperties:
 
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
-
+        self.modified = VibraSignal()
         self._reset_variables()
 
     def _reset_variables(self):
@@ -94,17 +93,17 @@ class ModelProperties:
         return (1 + factor * 1j) * c_0
 
     def _set_property(
-                      self, 
-                      property: str, 
-                      data: dict | Fluid | Material, 
-                      node: int | None = None, 
-                      element: int | None = None, 
-                      point: int | None = None, 
-                      line: int | None = None, 
-                      surface: int | tuple[int] | None = None, 
-                      volume: int | None = None, 
-                      group: int | None = None
-                      ):
+        self,
+        property: str,
+        data: dict | Fluid | Material,
+        node: int | None = None,
+        element: int | None = None,
+        point: int | None = None,
+        line: int | None = None,
+        surface: int | tuple[int] | None = None,
+        volume: int | None = None,
+        group: int | None = None,
+    ):
         """
         This method sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
@@ -180,6 +179,8 @@ class ModelProperties:
         else:
             self.global_properties[property, "global"] = data
         
+        self.modified.emit()
+
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 

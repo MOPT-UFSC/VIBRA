@@ -50,8 +50,8 @@ class NewProject:
         self.project_writer.delete_results_data()
 
     def create_connections(self):
-        return
         self.model.properties.modified.connect(self.write_model_properties_to_file)
+        return
         self.model.analysis_setup_modified.connect(self.update_project_setup)
 
     @property
@@ -106,6 +106,7 @@ class NewProject:
         self.project_reader.read_file(path)
         self.project_reader.read_project(self)
         self.save_path = Path(path)
+        self.create_connections()
         return self
 
     def sync_with_working_dir(self) -> NewProject:
