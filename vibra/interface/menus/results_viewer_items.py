@@ -103,11 +103,16 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_frequency_response_function.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
         self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
-        self.item_child_acoustic_pressure_waveform.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
+
+        # only allow waveform plots for equal spaced frequencies
+        user_defined_freq = self.project.model.analysis_setup.get("frequency_spacing") == "user_defined"
+
+        self.item_child_acoustic_pressure_waveform.setHidden(user_defined_freq)
+        self.item_child_acoustic_pressure_waveform.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
