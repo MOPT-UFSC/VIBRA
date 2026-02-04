@@ -137,6 +137,45 @@ class Mesh:
 
         self.error_data = dict()
 
+    def all_node_ids(self) -> set[int]:
+        if self.nodal_coordinates is None:
+            return set()
+
+        if self.nodal_coordinates.size == 0:
+            return set()
+
+        return set(self.nodal_coordinates[:, 0].flatten().astype(int))
+
+    def all_face_element_ids(self) -> set[int]:
+        if self.faces_connectivity is None:
+            return
+
+        if self.faces_connectivity.size == 0:
+            return set()
+
+        return set(self.faces_connectivity[:, 0].flatten().astype(int))
+
+    def all_solid_element_ids(self) -> set[int]:
+        if self.solids_connectivity is None:
+            return set()
+
+        if self.solids_connectivity.size == 0:
+            return set()
+
+        return set(self.solids_connectivity[:, 0].flatten().astype(int))
+
+    def all_point_ids(self) -> set[int]:
+        return set(self.geometry_information.get("points", set()))
+
+    def all_line_ids(self) -> set[int]:
+        return set(self.geometry_information.get("lines", set()))
+
+    def all_surface_ids(self) -> set[int]:
+        return set(self.geometry_information.get("surfaces", set()))
+
+    def all_solid_ids(self) -> set[int]:
+        return set(self.geometry_information.get("volumes", set()))
+
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
