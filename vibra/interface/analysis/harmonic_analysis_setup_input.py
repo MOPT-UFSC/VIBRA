@@ -5,6 +5,7 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.structural.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
+from vibra.interface.analysis.user_defined_frequencies_selector_input import UserDefinedFrequenciesSelectorInput
 
 import numpy as np
 
@@ -51,10 +52,22 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
     def _create_connections(self):
         #
+        self.comboBox_frequency_spacing.currentIndexChanged.connect(self.frequency_spacing_callback)
         self.comboBox_method.currentIndexChanged.connect(self.analysis_method_callback)
         #
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
+        self.pushButton_user_defined_frequencies.clicked.connect(self.user_defined_frequencies_interface_callback)
+        #
+        self.frequency_spacing_callback()
+
+    def user_defined_frequencies_interface_callback(self):
+        self.hide()
+        UserDefinedFrequenciesSelectorInput()
+
+    def frequency_spacing_callback(self):
+        user_defined = self.comboBox_frequency_spacing.currentText() == "User-defined"
+        self.pushButton_user_defined_frequencies.setVisible(user_defined)
 
     def analysis_method_callback(self):
 
@@ -129,7 +142,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
         table_exists = app().project.model.properties.check_if_there_are_tables_at_the_model()
+
         self.lineEdit_fstep.setDisabled(table_exists)
+        self.tabWidget_main.setTabVisible(2, table_exists)
 
     def check_tabular_frequencies_compatibility(self, f_min: float, f_max: float):
         tables_frequencies = self.model.properties.process_all_tables_frequencies_vectors()
@@ -267,9 +282,14 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             if self.check_tabular_frequencies_compatibility(f_min, f_max):
                 return True
 
-            analysis_setup["f_min"] = f_min
-            analysis_setup["f_max"] = f_max
-            analysis_setup["f_step"] = f_step
+            analysis_setup.update(
+                {
+                "frequency_spacing" : "equal_spaced",
+                "f_min" : f_min,
+                "f_max" : f_max,
+                "f_step" : f_step,
+                }
+            )
 
         alpha = beta = eta = 0.0
 
