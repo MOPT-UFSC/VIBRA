@@ -254,7 +254,7 @@ class StructuralAssembler:
 
         # filter values based on frequency mask
         if array_of_values.shape[1] - self.frequencies.size:
-            return array_of_values[self.freq_mask, :]
+            return array_of_values[self.model.frequencies_mask, :]
         else:
             return array_of_values
 
@@ -460,26 +460,6 @@ class StructuralAssembler:
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def process_frequencies_mask(self):
-        """
-        This method process the frequencies mask to filter the required 
-        analysis frequency setup.
-        """
-        self.freq_mask = np.ones_like(self.frequencies, dtype=bool)
-        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
-        if not self.table_frequencies:
-            return
-
-        if len(self.table_frequencies) != 1:
-            return
-
-        f_min = self.frequencies[0]
-        f_max = self.frequencies[-1]
-
-        table_frequencies = np.array(self.table_frequencies[0])
-        self.freq_mask = (table_frequencies >= f_min) * (table_frequencies <= f_max)
-
-
     def assemble_global_mass_matrix(self):
         """
         This method assembles the global mass matrix.
@@ -495,7 +475,6 @@ class StructuralAssembler:
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
         self.update_number_of_frequencies()
-        self.process_frequencies_mask()
         self.model.process_surface_thickness()
 
         logging.info("Gathering data to assemble global matrices... [20/100]")

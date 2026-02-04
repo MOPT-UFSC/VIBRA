@@ -265,9 +265,54 @@ class Model:
                 mask = self.frequencies <= self.f_max
                 self.frequencies = self.frequencies[mask]
 
-            except:
+            except Exception as error_log:
                 self.frequencies = None
+                print(str(error_log))
                 return
+            
+        if analysis_setup.get("frequency_spacing") == "user_defined":
+            self.process_user_defined_frequencies_mask()
+
+        else:
+            self.process_frequencies_mask_by_boundaries()
+
+
+    def process_frequencies_mask_by_boundaries(self):
+        """
+        This method process the frequencies mask to filter the required 
+        analysis frequency setup.
+        """
+        self.frequencies_mask = np.ones_like(self.frequencies, dtype=bool)
+        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
+        if not self.table_frequencies:
+            return
+
+        if len(self.table_frequencies) != 1:
+            return
+
+        f_min = self.frequencies[0]
+        f_max = self.frequencies[-1]
+
+        table_frequencies = np.array(self.table_frequencies[0])
+        self.frequencies_mask = (table_frequencies >= f_min) * (table_frequencies <= f_max)
+
+
+    def process_user_defined_frequencies_mask(self):
+        """
+        This method process the frequencies mask to filter the required 
+        analysis frequency setup.
+        """
+        self.frequencies_mask = np.ones_like(self.frequencies, dtype=bool)
+        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
+        if not self.table_frequencies:
+            return
+
+        if len(self.table_frequencies) != 1:
+            return
+
+        self.frequencies_mask = np.isin(self.table_frequencies[0], self.frequencies)
+        print(self.frequencies_mask.size)
+        print(self.frequencies_mask)
 
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
@@ -723,7 +768,8 @@ class Model:
                 V_in = real_values + 1j * imag_values
 
             elif "values" in sv_data.keys():
-                V_in = sv_data["values"]
+                V_in = sv_data["values"][0]
+                V_in = V_in[self.frequencies_mask]
 
             P_downstream = V_in * Zo_in / 2
             V_downstream = P_downstream / Zo_in

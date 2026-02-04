@@ -105,7 +105,7 @@ class AcousticAssembler:
 
             for _ in nodes:
                 for _complex_values in complex_values:
-                    global_prescribed.append(_complex_values[self.freq_mask])
+                    global_prescribed.append(_complex_values[self.model.frequencies_mask])
 
         # TODO: implement same structure for lines
         # TODO: refactor this method
@@ -598,7 +598,7 @@ class AcousticAssembler:
         if filter_frequencies:
             # filter values based on frequency mask
             if output_vector.shape[1] - self.frequencies.size:
-                output_vector = output_vector[:, self.freq_mask]
+                output_vector = output_vector[:, self.model.frequencies_mask]
 
         if flatten:
             return output_vector.flatten()
@@ -1746,32 +1746,11 @@ class AcousticAssembler:
         return output
 
 
-    def process_frequencies_mask(self):
-        """
-        This method process the frequencies mask to filter the required 
-        analysis frequency setup.
-        """
-        self.freq_mask = np.ones_like(self.frequencies, dtype=bool)
-        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
-        if not self.table_frequencies:
-            return
-
-        if len(self.table_frequencies) != 1:
-            return
-
-        f_min = self.frequencies[0]
-        f_max = self.frequencies[-1]
-
-        table_frequencies = np.array(self.table_frequencies[0])
-        self.freq_mask = (table_frequencies >= f_min) * (table_frequencies <= f_max)
-
-
     def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
 
         logging.info("Processing data to assemble global matrices... [10/100]")
         self.define_acoustic_elements()
         self.update_number_of_frequencies()
-        self.process_frequencies_mask()
 
         logging.info("Processing data to assemble global matrices... [20/100]")
         t0 = time()
