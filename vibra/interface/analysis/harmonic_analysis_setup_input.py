@@ -4,8 +4,9 @@ from PySide6.QtGui import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.structural.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
-from vibra.interface.analysis.user_defined_frequencies_selector_input import UserDefinedFrequenciesSelectorInput
+from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
+from vibra.interface.analysis.user_defined_frequencies_by_manual_input import UserDefinedFrequenciesByManualInput
+from vibra.interface.analysis.user_defined_frequencies_from_tabular_data_input import UserDefinedFrequenciesFromTabularDataInput
 
 import numpy as np
 
@@ -39,10 +40,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.exec()
 
     def _initialize(self):
-        self.frequencies = list()
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
+        self.user_defined_frequencies = list()
+        self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -57,17 +59,25 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         #
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
-        self.pushButton_user_defined_frequencies.clicked.connect(self.user_defined_frequencies_interface_callback)
+        self.pushButton_solution_steps_setup.clicked.connect(self.solution_steps_setup_callback)
+        self.pushButton_reset_frequency_settings.clicked.connect(self.reset_frequency_setup_based_on_tabular_data)
         #
         self.frequency_spacing_callback()
 
-    def user_defined_frequencies_interface_callback(self):
+    def solution_steps_setup_callback(self):
         self.hide()
-        UserDefinedFrequenciesSelectorInput()
+        if self.table_exists:
+            user_defined_interface = UserDefinedFrequenciesFromTabularDataInput()
+        else:
+            user_defined_interface = UserDefinedFrequenciesByManualInput()
+
+        if user_defined_interface.setup_defined:
+            self.user_defined_frequencies = user_defined_interface.user_defined_frequencies
 
     def frequency_spacing_callback(self):
         user_defined = self.comboBox_frequency_spacing.currentText() == "User-defined"
-        self.pushButton_user_defined_frequencies.setVisible(user_defined)
+        self.frame_equally_spaced.setVisible(not user_defined)
+        self.frame_user_defined_controls.setVisible(user_defined)
 
     def analysis_method_callback(self):
 
@@ -90,6 +100,26 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         else:
             self.lineEdit_modes_to_expand.setText(f"")
 
+    def reset_frequency_setup_based_on_tabular_data(self):
+        if not self.model.properties.check_if_there_are_tables_at_the_model():
+            return
+
+        table_frequencies = self.model.properties.process_all_tables_frequencies_vectors()
+        if len(table_frequencies) == 1:
+            frequencies = table_frequencies[0]
+            f_min = frequencies[0]
+            f_max = frequencies[-1]
+            f_step = frequencies[1] - frequencies[0]
+            self.load_frequency_setup_inputs(f_min, f_max, f_step)
+
+    def check_reset_settings_button_visibility(self):
+        self.pushButton_reset_frequency_settings.setVisible(self.table_exists)
+        if not self.table_exists:
+            return
+
+        misaligned_fsetup = int(np.sum(self.model.frequencies_mask)) != self.model.frequencies_mask.size
+        self.pushButton_reset_frequency_settings.setEnabled(misaligned_fsetup)
+
     def _update_fmin(self):
         df = self.lineEdit_fstep.text()
         self.lineEdit_fmin.setText(df)
@@ -99,11 +129,14 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         f_min = self.analysis_setup.get("f_min", 5)
         f_max = self.analysis_setup.get("f_max", 600)
         f_step = self.analysis_setup.get("f_step", 5)
-        global_damping = self.analysis_setup.get("global_damping", (0, 0, 0))
+        global_damping = self.analysis_setup.get("global_damping", (0., 0., 0.))
 
         self.load_analysis_type()
         self.load_damping_inputs(self.analysis_id, global_damping)
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
+
+        if self.analysis_setup.get("frequency_spacing") == "user-defined":
+            self.comboBox_frequency_spacing.setCurrentText("User-defined")
 
     def load_analysis_type(self):
 
@@ -141,10 +174,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_fmax.setText("{}".format(round(f_max, 14)))
         self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
-        table_exists = app().project.model.properties.check_if_there_are_tables_at_the_model()
+        self.lineEdit_fstep.setDisabled(self.table_exists)
+        self.tabWidget_main.setTabVisible(2, self.table_exists)
 
-        self.lineEdit_fstep.setDisabled(table_exists)
-        self.tabWidget_main.setTabVisible(2, table_exists)
+        self.check_reset_settings_button_visibility()
 
     def check_tabular_frequencies_compatibility(self, f_min: float, f_max: float):
         tables_frequencies = self.model.properties.process_all_tables_frequencies_vectors()
@@ -186,8 +219,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def update_harmonic_analysis_title(self):
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.label_title.setText("Acoustic harmonic analysis setup")
+
         elif self.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             self.label_title.setText("Structural harmonic analysis setup")
+
         elif self.analysis_id == AnalysisID.COUPLED_HARMONIC:
             self.label_title.setText("Coupled harmonic analysis setup")
 
@@ -213,16 +248,26 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def enter_setup_callback(self):
-        # analysis_setup = app().file.read_analysis_setup_from_file()
-        # if analysis_setup is None:
-        #     analysis_setup = dict()
 
         analysis_id = app().main_window.analysis_toolbar.get_current_analysis_id()
         analysis_method = "direct" if self.comboBox_method.currentIndex() == 0 else "mode_superposition"
+        frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
 
-        analysis_setup = dict()
-        analysis_setup["analysis_id"] = analysis_id
-        analysis_setup["analysis_method"] = analysis_method
+        if frequency_spacing == "user-defined":
+            if not self.user_defined_frequencies:
+                self.hide()
+                title = "No solution steps found"
+                message = "Enter the solution steps before confirming the analysis "
+                message += "setup or trying to solve the harmonic analysis."
+                PrintMessageInput([error_title, title, message])
+                self.solution_steps_setup_callback()
+                return
+
+        analysis_setup = {
+            "analysis_id" : analysis_id,
+            "analysis_method" : analysis_method,
+            "frequency_spacing" : frequency_spacing,
+        }
 
         if analysis_method == "mode_superposition":
             modes_number = self.check_inputs(
@@ -237,59 +282,65 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["modes_number"] = modes_number
 
-        f_min = f_max = f_step = 0.
-
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+            if frequency_spacing == "user-defined":
+                analysis_setup.update(
+                    {
+                    "frequencies" : np.array(self.user_defined_frequencies, dtype=float),
+                    "user_defined_frequencies" : self.user_defined_frequencies,
+                    }
+                    )
 
-            zero_allowed = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText() == "Structural"
+            user_defined_manually = not self.table_exists and self.user_defined_frequencies
+            if not user_defined_manually:
+                zero_allowed = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText() == "Structural"
 
-            f_min = self.check_inputs(
-                self.lineEdit_fmin, 
-                "minimum frequency (Freq. min)", 
-                zero_included = zero_allowed, 
-                )
+                f_min = self.check_inputs(
+                    self.lineEdit_fmin, 
+                    "minimum frequency (Freq. min)", 
+                    zero_included = zero_allowed, 
+                    )
 
-            if f_min is None:
-                self.lineEdit_fmin.setFocus()
-                return True
+                if f_min is None:
+                    self.lineEdit_fmin.setFocus()
+                    return True
 
-            f_max = self.check_inputs(
-                self.lineEdit_fmax, 
-                "maximum frequency (Freq. max)"
-                )
+                f_max = self.check_inputs(
+                    self.lineEdit_fmax, 
+                    "maximum frequency (Freq. max)"
+                    )
 
-            if f_max is None:
-                self.lineEdit_fmax.setFocus()
-                return True
+                if f_max is None:
+                    self.lineEdit_fmax.setFocus()
+                    return True
 
-            f_step = self.check_inputs(
-                self.lineEdit_fstep, 
-                "frequency resolution (Freq. step)"
-                )
+                f_step = self.check_inputs(
+                    self.lineEdit_fstep, 
+                    "frequency resolution (Freq. step)"
+                    )
 
-            if f_step is None:
-                self.lineEdit_fstep.setFocus()
-                return True
+                if f_step is None:
+                    self.lineEdit_fstep.setFocus()
+                    return True
 
-            if f_max < f_min + f_step:
-                self.hide()
-                title = "Invalid frequency setup"
-                message = "The maximum frequency (fmax) must be greater than the sum of "
-                message += "minimum frequency (fmin) and frequency resolution (df)."
-                PrintMessageInput([error_title, title, message])
-                return True
+                if f_max < f_min + f_step:
+                    self.hide()
+                    title = "Invalid frequency setup"
+                    message = "The maximum frequency (fmax) must be greater than the sum of "
+                    message += "minimum frequency (fmin) and frequency resolution (df)."
+                    PrintMessageInput([error_title, title, message])
+                    return True
+                
+                if self.check_tabular_frequencies_compatibility(f_min, f_max):
+                    return True
             
-            if self.check_tabular_frequencies_compatibility(f_min, f_max):
-                return True
-
-            analysis_setup.update(
-                {
-                "frequency_spacing" : "equal_spaced",
-                "f_min" : f_min,
-                "f_max" : f_max,
-                "f_step" : f_step,
-                }
-            )
+                analysis_setup.update(
+                    {
+                    "f_min" : f_min,
+                    "f_max" : f_max,
+                    "f_step" : f_step,
+                    }
+                )
 
         alpha = beta = eta = 0.0
 
@@ -327,11 +378,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        # if app().project.model.properties.check_if_there_are_tables_at_the_model():
-        #     self.frequencies = self.model.frequencies
-        # else:
-        #     self.model.set_analysis_setup(analysis_setup)
-
         app().file.write_analysis_setup_in_file(analysis_setup)
         self.project.set_analysis_setup(analysis_setup)
         self.project.create_solver()
@@ -360,7 +406,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                         message += "The zero value is not allowed."
 
             except Exception as _err:
-                message = f"The typed value at the {label} input field is invalid.\n\n"
+                message = f"The value entered in the {label} input field is invalid.\n\n"
                 message += str(_err)
 
         else:
@@ -380,6 +426,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def run_analysis(self):
         if self.enter_setup_callback():
             return
+
         self.solve_analysis = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
 

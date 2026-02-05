@@ -1,8 +1,9 @@
 from PySide6.QtWidgets import QCheckBox, QDialog, QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QTableWidgetItem, QWidget
-from PySide6.QtGui import Qt
+from PySide6.QtGui import Qt, QIcon
 
-from vibra import app
+from vibra import app, ICON_DIR
 from vibra.engine import AnalysisID
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_frequencies_by_manual_input_ui import UserDefinedFrequenciesByManualInput_UI
 
@@ -15,10 +16,6 @@ error_title = "Error"
 class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
-
-        self.analysis_id = kwargs.get("analysis_id")
-        if self.analysis_id is None:
-            self.analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         # app().main_window.close_dialogs()
         # app().main_window.set_input_widget(self)
@@ -37,6 +34,8 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
         self.keep_window_open = True
         self.user_defined_frequencies = list()
 
+        self.remove_icon = QIcon(str(ICON_DIR / "delete.png"))
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -51,8 +50,21 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
         self.pushButton_reset.clicked.connect(self.reset_callback)
 
     def reset_callback(self):
-        self.user_defined_frequencies.clear()
-        self.update_solution_steps_table()
+
+        self.hide()
+
+        title = "Solution steps reset"
+        message = "Would you like to remove all solution steps that have already been added?"
+
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if read._cancel:
+            return
+
+        if read._continue:
+            self.user_defined_frequencies.clear()
+            self.update_solution_steps_table()
 
     def load_analysis_setup(self):
 
@@ -60,10 +72,9 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
             return
 
-        # self.analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         self.user_defined_frequencies = app().project.model.analysis_setup.get("user_defined_frequencies", list())
         self.update_solution_steps_table()
-        
+
     def update_solution_steps_table(self):
 
         self.tableWidget_frequencies.clearContents()
@@ -76,8 +87,10 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
         for index, freq in enumerate(self.user_defined_frequencies):
 
             # Creates the QPushButton to control the solution step removal
-            remove_button = QPushButton("Remove")
+            remove_button = QPushButton()
+            remove_button.setIcon(self.remove_icon)
             remove_button.setCheckable(True)
+            remove_button.setFixedSize(24,24)
             remove_button.clicked.connect(self.remove_solution_step_callback)
             self.index_to_push_buttons[index] = remove_button
 
@@ -96,13 +109,17 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
                 self.tableWidget_frequencies.item(index, j).setTextAlignment(Qt.AlignCenter)
 
     def check_inputs(self, line_edit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
+
         message = ""
-        if line_edit.text() != "":
+        str_value = line_edit.text()
+        str_value = str_value.replace(",", ".")
+
+        if str_value != "":
             try:
                 if int_value:
-                    value = int(line_edit.text())
+                    value = int(str_value)
                 else:
-                    value = float(line_edit.text())
+                    value = float(str_value)
 
                 if zero_included:
                     if value < 0:
@@ -113,7 +130,7 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
                         message += "The zero value is not allowed."
 
             except Exception as _err:
-                message = f"The typed value at the {label} input field is invalid.\n\n"
+                message = f"The value entered in the {label} input field is invalid.\n\n"
                 message += str(_err)
 
         else:
@@ -140,12 +157,14 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
         if solution_step in self.user_defined_frequencies:
             return
 
-        self.lineEdit_solution_step.setText("")
         self.user_defined_frequencies.append(solution_step)
         self.user_defined_frequencies.sort()
         self.update_solution_steps_table()
+        self.lineEdit_solution_step.setText("")
+        self.lineEdit_solution_step.setFocus()
 
     def remove_solution_step_callback(self):
+
         for index, push_button in self.index_to_push_buttons.items():
             if push_button.isChecked():
                 break
@@ -160,7 +179,7 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
 
     def confirm_callback(self):
 
-        if not self.is_there_an_active_solution_step():
+        if not self.user_defined_frequencies:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "
@@ -168,38 +187,8 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
             PrintMessageInput([error_title, title, message])
             return
 
-        frequencies_list = list()
-        for index, check_box in self.index_to_check_box.items():
-            check_box: QCheckBox
-            if not check_box.isChecked():
-                continue
-
-            frequencies_list.append(self.table_frequencies[index])
-
-        frequencies = np.array(frequencies_list, dtype=float)
-        analysis_setup = deepcopy(app().project.analysis_setup)
-
-        analysis_setup.update(
-            {
-            "frequency_spacing" : "user_defined",
-            "frequencies" : frequencies,
-            "user_defined_frequencies" : list(frequencies),
-            }
-            )
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
-
         self.setup_defined = True
         self.close()
-
-    def is_there_an_active_solution_step(self):
-        for check_box in self.index_to_check_box.values():
-            check_box: QCheckBox
-            if check_box.isChecked():
-                return True
-        
-        return False
 
     def closeEvent(self, a0):
         self.keep_window_open = False
@@ -207,6 +196,6 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.confirm_callback()
+            self.add_solution_step_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()

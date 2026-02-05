@@ -32,10 +32,10 @@ class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabul
             self.exec()
 
     def _initialize(self):
-        self.frequencies = list()
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
+        self.user_defined_frequencies = list()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -119,8 +119,15 @@ class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabul
             self.index_to_check_box[index].setChecked(is_freq_active)
 
     def confirm_callback(self):
+            
+        for index, check_box in self.index_to_check_box.items():
+            check_box: QCheckBox
+            if not check_box.isChecked():
+                continue
 
-        if not self.is_there_an_active_solution_step():
+            self.user_defined_frequencies.append(self.table_frequencies[index])
+
+        if not self.user_defined_frequencies:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "
@@ -128,38 +135,8 @@ class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabul
             PrintMessageInput([error_title, title, message])
             return
 
-        frequencies_list = list()
-        for index, check_box in self.index_to_check_box.items():
-            check_box: QCheckBox
-            if not check_box.isChecked():
-                continue
-
-            frequencies_list.append(self.table_frequencies[index])
-
-        frequencies = np.array(frequencies_list, dtype=float)
-        analysis_setup = deepcopy(app().project.analysis_setup)
-
-        analysis_setup.update(
-            {
-            "frequency_spacing" : "user_defined",
-            "frequencies" : frequencies,
-            "user_defined_frequencies" : list(frequencies),
-            }
-            )
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
-
         self.setup_defined = True
         self.close()
-
-    def is_there_an_active_solution_step(self):
-        for check_box in self.index_to_check_box.values():
-            check_box: QCheckBox
-            if check_box.isChecked():
-                return True
-        
-        return False
 
     def closeEvent(self, a0):
         self.keep_window_open = False

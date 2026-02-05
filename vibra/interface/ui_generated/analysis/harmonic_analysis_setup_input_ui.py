@@ -181,15 +181,15 @@ class Ui_Dialog(object):
         self.gridLayout_10 = QGridLayout(self.frame_user_defined_controls)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_user_defined_controls = QPushButton(self.frame_user_defined_controls)
-        self.pushButton_user_defined_controls.setObjectName(u"pushButton_user_defined_controls")
-        self.pushButton_user_defined_controls.setMinimumSize(QSize(0, 30))
-        self.pushButton_user_defined_controls.setMaximumSize(QSize(180, 30))
-        self.pushButton_user_defined_controls.setFont(font1)
-        self.pushButton_user_defined_controls.setStyleSheet(u"")
-        self.pushButton_user_defined_controls.setAutoDefault(False)
+        self.pushButton_solution_steps_setup = QPushButton(self.frame_user_defined_controls)
+        self.pushButton_solution_steps_setup.setObjectName(u"pushButton_solution_steps_setup")
+        self.pushButton_solution_steps_setup.setMinimumSize(QSize(0, 30))
+        self.pushButton_solution_steps_setup.setMaximumSize(QSize(180, 30))
+        self.pushButton_solution_steps_setup.setFont(font1)
+        self.pushButton_solution_steps_setup.setStyleSheet(u"")
+        self.pushButton_solution_steps_setup.setAutoDefault(False)
 
-        self.gridLayout_10.addWidget(self.pushButton_user_defined_controls, 0, 0, 1, 1)
+        self.gridLayout_10.addWidget(self.pushButton_solution_steps_setup, 0, 0, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_user_defined_controls, 1, 0, 1, 2)
@@ -543,7 +543,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(tooltip)
         self.comboBox_frequency_spacing.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Define the frequency spacing type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_user_defined_controls.setText(QCoreApplication.translate("Dialog", u"User-defined controls", None))
+        self.pushButton_solution_steps_setup.setText(QCoreApplication.translate("Dialog", u"Solution steps setup", None))
         self.label_22.setText(QCoreApplication.translate("Dialog", u"Freq. min:", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_reset_frequency_settings.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Reset the frequency settings</p></body></html>", None))
@@ -594,7 +594,7 @@ class HarmonicAnalysisSetupInput_UI(QDialog, Ui_Dialog):
                                     - (Layout): QGridLayout
                                             - frame_user_defined_controls: QFrame
                                                 - (Layout): QGridLayout
-                                                        - pushButton_user_defined_controls: QPushButton
+                                                        - pushButton_solution_steps_setup: QPushButton
                                             - frame_equally_spaced: QFrame
                                                 - (Layout): QGridLayout
                                                         - lineEdit_fstep: QLineEdit

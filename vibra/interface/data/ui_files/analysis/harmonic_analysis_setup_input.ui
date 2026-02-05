@@ -490,7 +490,7 @@
               <number>4</number>
              </property>
              <item row="0" column="0">
-              <widget class="QPushButton" name="pushButton_user_defined_controls">
+              <widget class="QPushButton" name="pushButton_solution_steps_setup">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -516,7 +516,7 @@
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>User-defined controls</string>
+                <string>Solution steps setup</string>
                </property>
                <property name="autoDefault">
                 <bool>false</bool>
