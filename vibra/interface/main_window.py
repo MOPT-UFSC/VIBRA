@@ -1,22 +1,23 @@
 import logging
 import os
+import platform
 import sys
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
-import platform
 
+import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
-
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 
-from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
+from vibra import LIGHT_ICON_COLOR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
+from vibra.engine.assemblers import AcousticAssembler
+from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
-from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -28,6 +29,7 @@ from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.geometry_setup import GeometrySetup
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
+from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
@@ -41,8 +43,6 @@ from vibra.interface.viewer_3d.render_widgets import (
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
-
-import gmsh
 
 
 class MainWindow(MainWindow_UI):
@@ -222,7 +222,7 @@ class MainWindow(MainWindow_UI):
         app().config.user_preferences.interface_theme = theme
         stylesheets.set_theme(theme)
 
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
@@ -503,13 +503,13 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
         
         self.selection.clear_selection()
-        self.action_unhide_all_callback()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
-        app().project.reset_variables()
-        app().project.reset_solutions()
-        
+        app().new_project.reset_variables()
+        app().new_project.clear_working_directory()
+        self.action_unhide_all_callback()
+
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
@@ -1081,8 +1081,12 @@ class MainWindow(MainWindow_UI):
                 window.showNormal()
 
     def action_export_element_transfer_data_callback(self):
-        if app().project.acoustic_harmonic_solver.solution is None:
+        if not isinstance(app().new_project.solver, HarmonicSolver):
             return
+
+        if not isinstance(app().new_project.assembler, AcousticAssembler):
+            return 
+
         ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
