@@ -1,3 +1,4 @@
+import re
 from operator import eq
 from typing import (
     Any,
@@ -81,6 +82,36 @@ class PropertyLibrary(Generic[T]):
 
     def contains(self, obj: T) -> bool:
         return obj in self._data.values()
+
+    def get_dupplicated_name(self, name: str) -> str:
+        ENDS_WITH_COPY_PATTERN = re.compile(r"\(copy \d+\)")
+        DIGITS_PATTERN = re.compile(r"\d+")
+
+        def decouple_copy(text: str) -> tuple[str, str]:
+            match = ENDS_WITH_COPY_PATTERN.search(text)
+            if match is None:
+                return text, ""
+
+            suffix = match.group().strip()
+            preffix = text[: -len(suffix)].strip()
+            return preffix, suffix
+
+        def get_copy_number(copy_text: str) -> int:
+            match = DIGITS_PATTERN.search(copy_text)
+            if match is None:
+                return -1
+            return int(match.group())
+
+        preffix, suffix = decouple_copy(name)
+        max_copy = get_copy_number(suffix)
+
+        for item in self.values():
+            item_preffix, item_suffix = decouple_copy(item.name)
+            if item_preffix == preffix:
+                copy_number = get_copy_number(item_suffix)
+                max_copy = max(max_copy, copy_number)
+
+        return f"{preffix} (copy {max_copy + 1})"
 
     def _find_by_attribute(
         self,
