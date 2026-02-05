@@ -104,7 +104,7 @@ class ProjectWriter:
         project_setup["analysis_setup"] = analysis_setup_dict
         write_json(self.project_paths.project_setup_filepath, project_setup)
 
-    def write_geometry(self, geometry_path: Path | str):
+    def write_geometry(self, geometry_path: Path | str) -> Path:
         geometry_path = Path(geometry_path)
         if not geometry_path.is_file():
             raise FileExistsError("Geometry file path does not exist.")
@@ -113,6 +113,7 @@ class ProjectWriter:
         self.project_paths.geometry_folder.mkdir(exist_ok=True)
         internal_path = self.project_paths.geometry_folder / geometry_path.name
         shutil.copy(geometry_path, internal_path)
+        return internal_path
 
     def write_mesh(self, mesh: Mesh, has_decoupling: bool = False):
         with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:

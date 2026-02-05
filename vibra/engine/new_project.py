@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from time import perf_counter
 from typing import Optional
 
@@ -52,6 +51,10 @@ class NewProject:
         self.postprocessing = None
         self.project_writer.delete_results_data()
         self.needs_saving = True
+
+    def reset_project(self):
+        self.clear_working_directory()
+        self.reset_variables()
 
     def create_connections(self):
         return
@@ -153,9 +156,8 @@ class NewProject:
             - *.iges
         """
         path = Path(path)
-        self.model.geometry_path = path
         # self.model.geometry = Geometry(path)
-        self.project_writer.write_geometry(path)
+        self.model.geometry_path = self.project_writer.write_geometry(path)
         self.needs_saving = True
 
     def update_model_properties_file(self):
@@ -225,6 +227,7 @@ class NewProject:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
         self.model.process_visual_geometry_mesh(self.model.geometry_path)
+        self.project_writer.write_mesh(self.model.mesh)
 
     def generate_mesh_from_geometry(
         self,

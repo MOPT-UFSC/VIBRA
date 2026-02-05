@@ -55,3 +55,6 @@ def screen_to_world_coords(xyz, renderer):
     coordinate.SetValue(xyz)
     world_coords = coordinate.GetComputedWorldValue(renderer)
     return np.array(world_coords)
+
+def qt_extensions(extensions: list[str]) -> str:
+    return " ".join(f"*.{ext}" for ext in extensions)

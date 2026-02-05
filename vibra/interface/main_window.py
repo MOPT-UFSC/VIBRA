@@ -42,7 +42,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, qt_extensions
 
 
 class MainWindow(MainWindow_UI):
@@ -516,15 +516,10 @@ class MainWindow(MainWindow_UI):
         self.action_export_element_transfer_data.setDisabled(True)
 
     def action_import_mesh_callback(self):
-        caption = "Select a mesh file"
-        ext_filter = "Geometry Files (*.bdf *.BDF *.nas *.NAS);;All Files (*)"
-        self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
+        self.import_mesh_dialog()
 
     def action_import_geometry_callback(self):
-        caption = "Select a geometry file"
-        extensions = " ".join(f"*.{ext}" for ext in SUPPORTED_GEOMETRY_EXTENSIONS)
-        ext_filter = f"Geometry Files ({extensions});;All Files (*)"
-        self.import_geometry_or_mesh_dialog(caption=caption, ext_filter=ext_filter)
+        self.import_geometry_dialog()
 
     def action_hide_selection_callback(self):
         mesh = app().new_project.model.mesh
@@ -631,10 +626,101 @@ class MainWindow(MainWindow_UI):
             self.try_to_open_argv_path()
 
     def new_project_dialog(self):
-        self.reset_temporary_vibra_folder()
-        self.import_geometry_or_mesh_dialog()
+        self.close_dialogs()
 
-        self.render_tools_toolbar.setVisible(True)
+        path = app().config.get_last_folder_for(
+            "geometry_mesh_folder",
+            default=Path().home(),
+        )
+
+        ext_filter = (
+            "All Accepted Files ({geo} {mesh})"
+            ";;Geometry Files ({geo})"
+            ";;Mesh Files ({mesh})"
+            ";;All Files (*)"
+        ).format(
+            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
+            mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
+        )  # fmt: skip
+
+        load_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Select a geometry or mesh file to start your project.",
+            str(path),
+            filter=ext_filter,
+        )
+
+        if not check:
+            return
+
+        app().config.write_last_folder_path_in_file(
+            "geometry_mesh_folder",
+            load_path,
+        )
+
+        ext = Path(load_path).suffix.strip(".")
+        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
+            app().new_project.reset_project()
+            self.import_geometry(load_path)
+
+        elif ext in SUPPORTED_MESH_EXTENSIONS:
+            app().new_project.reset_project()
+            self.import_mesh(load_path)
+
+        else:
+            raise ValueError(f"File extension {ext} not supported")
+    
+    def import_geometry_dialog(self):
+        path = app().config.get_last_folder_for(
+            "geometry_mesh_folder",
+            default=Path().home(),
+        )
+
+        ext_filter = (
+            ";;Geometry Files ({geo})"
+            ";;All Files (*)"
+        ).format(
+            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
+        )  # fmt: skip
+
+        load_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Select a geometry file to import.",
+            str(path),
+            filter=ext_filter,
+        )
+
+        if not check:
+            return
+
+        app().new_project.reset_project()
+        self.import_geometry(load_path)
+
+    def import_mesh_dialog(self):
+        path = app().config.get_last_folder_for(
+            "geometry_mesh_folder",
+            default=Path().home(),
+        )
+
+        ext_filter = (
+            ";;Geometry Files ({geo})"
+            ";;All Files (*)"
+        ).format(
+            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
+        )  # fmt: skip
+
+        load_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Select a mesh file to import.",
+            str(path),
+            filter=ext_filter,
+        )
+
+        if not check:
+            return
+
+        app().new_project.reset_project()
+        self.import_mesh(load_path)
 
     def save_project_dialog(self):
         save_path = app().new_project.save_path
@@ -724,80 +810,49 @@ class MainWindow(MainWindow_UI):
 
         self.open_project(project_path)
 
-    def import_geometry_or_mesh_dialog(self, caption: str | None = None, ext_filter: str | None = None):
-        self.close_dialogs()
-
-        last_path = app().config.get_last_folder_for("geometry_mesh_folder")
-        if last_path is None:
-            path = os.path.expanduser("~")
-        else:
-            path = last_path
-
-        if caption is None:
-            caption = "Select a geometry or mesh file"
-
-        if ext_filter is None:
-            geometry_extensions = " ".join(f"*.{ext}" for ext in SUPPORTED_GEOMETRY_EXTENSIONS)
-            mesh_extensions = " ".join(f"*.{ext}" for ext in SUPPORTED_MESH_EXTENSIONS)
-            ext_filter = (
-                f"All Accepted Files ({geometry_extensions} {mesh_extensions})"
-                f";;Geometry Files ({geometry_extensions})"
-                f";;Mesh Files ({mesh_extensions})"
-                ";;All Files (*)"
-            )
-
-        load_path, check = QFileDialog.getOpenFileName(
-            self,
-            caption,
-            path,
-            filter=ext_filter,
-        )
-
-        if not check:
-            return False
-
-        self.selection.clear_selection()
-
-        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
-        app().project.reset_variables()
-        app().project.reset_solutions()
-
-        # call geometry setup
-        read = GeometrySetup()
-        if not read.complete:
-            return False
-
-        app().file.write_geometry_in_file(
-            Path(load_path),
-            app().new_project.model.length_unit,
-            app().new_project.model.geometry_qf,
-        )
-
-        def remove_callback():
-            logging.info("Removing the model properties from project file... [10/100]")
-            app().file.remove_model_properties_from_project_file()
-
-            logging.info("Removing the mesh data from project file... [40/100]")
-            app().file.remove_mesh_data_from_project_file()
-
-            logging.info("Removing the results data from project file... [75/100]")
-            app().file.remove_results_data_from_project_file()
-
-        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
-        LoadingWindow(remove_callback).run()
-
-        _geometry_path = app().file.read_geometry_from_file()
-        self.import_geometry_or_mesh(_geometry_path)
-
-        self.model_setup_widget.model_setup_items.update_items_appearance()
-        
-        return True
-
     def update_window_title(self, project_path: str | Path):
         if isinstance(project_path, str):
             project_path = Path(project_path)
         project_name = project_path.stem
         self.setWindowTitle(f"{project_name}")
+
+    def import_geometry(self, path: Path | str):
+        app().config.write_last_folder_path_in_file(
+            "geometry_mesh_folder",
+            path,
+        )
+
+        path = Path(path)
+        LoadingWindow(app().new_project.import_geometry).run(path)
+        LoadingWindow(app().new_project.generate_visual_mesh).run()
+
+        # Interface update
+        LoadingWindow(self.geometry_widget.update_plot).run()
+        self.update_geometry_information()
+        self.update_toolbar_and_menu_items_after_load_project()
+        self.renderer_toolbar.setDisabled(False)
+        self.analysis_toolbar.setDisabled(False)
+        self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+        self.action_model_workspace_callback()
+
+    def import_mesh(self, path: Path | str):
+        app().config.write_last_folder_path_in_file(
+            "geometry_mesh_folder",
+            path,
+        )
+
+        path = Path(path)
+        LoadingWindow(app().new_project.import_mesh).run(path)
+
+        # Interface update
+        LoadingWindow(self.geometry_widget.update_plot).run()
+        LoadingWindow(self.mesh_widget.update_plot).run()
+        self.update_geometry_information()
+        self.update_toolbar_and_menu_items_after_load_project()
+        self.renderer_toolbar.setDisabled(False)
+        self.analysis_toolbar.setDisabled(False)
+        self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+        self.action_mesh_workspace_callback()
 
     def open_project(self, project_path: str | Path | None = None):
         """
@@ -838,61 +893,6 @@ class MainWindow(MainWindow_UI):
         self.geometry_widget.update_plot()
         self.mesh_widget.update_plot()
 
-    def import_geometry_or_mesh(self, path: str, update_render: bool = True, ignore_workspaces: bool = False):
-
-        is_geometry_file = app().new_project.model.check_path_for_geometry_file(path)
-
-        if app().file.read_mesh_data_from_file():
-            app().project.load_project_without_process_mesh(path, is_geometry_file)
-
-        else:
-
-            if is_geometry_file:
-                if LoadingWindow(app().project.import_geometry).run(path) == -1:
-                    return
-
-            else:
-                if LoadingWindow(app().project.import_mesh).run(path) == -1:
-                    return
-
-                self.update_mesh_information()
-                app().file.write_mesh_data_in_file()
-                self.project_data_modified = False
-
-            app().file.write_geometry_data_in_file()
-
-            self.update_geometry_information()
-            self.update_toolbar_and_menu_items_after_load_project()
-
-        try:
-            self.renderer_toolbar.setDisabled(False)
-            self.analysis_toolbar.setDisabled(False)
-            self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
-            self.analysis_toolbar.set_pushbutton_resume_analysis_enabled(app().project.can_resume_solution)
-
-            app().project.reset_solutions()
-            app().new_project.model.properties._reset_variables()
-
-            if update_render:
-                LoadingWindow(self.update_plots).run()
-
-            if ignore_workspaces:
-                return
-
-            if is_geometry_file:
-                self.action_model_workspace_callback()
-            else:
-                self.action_mesh_workspace_callback()
-
-        except Exception as error_log:
-            from traceback import print_exception
-            print_exception(error_log)
-
-            window_title = "Error"
-            title = "Error while processing 'import_geometry_or_mesh' method"
-            message = str(error_log)
-            PrintMessageInput([window_title, title, message])
-    
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
 
