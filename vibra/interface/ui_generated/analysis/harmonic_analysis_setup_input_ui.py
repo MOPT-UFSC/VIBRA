@@ -174,45 +174,61 @@ class Ui_Dialog(object):
         self.gridLayout_5.setHorizontalSpacing(8)
         self.gridLayout_5.setVerticalSpacing(6)
         self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
+        self.frame_user_defined_controls = QFrame(self.tab_setup)
+        self.frame_user_defined_controls.setObjectName(u"frame_user_defined_controls")
+        self.frame_user_defined_controls.setFrameShape(QFrame.NoFrame)
+        self.frame_user_defined_controls.setFrameShadow(QFrame.Raised)
+        self.gridLayout_10 = QGridLayout(self.frame_user_defined_controls)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_user_defined_controls = QPushButton(self.frame_user_defined_controls)
+        self.pushButton_user_defined_controls.setObjectName(u"pushButton_user_defined_controls")
+        self.pushButton_user_defined_controls.setMinimumSize(QSize(0, 30))
+        self.pushButton_user_defined_controls.setMaximumSize(QSize(180, 30))
+        self.pushButton_user_defined_controls.setFont(font1)
+        self.pushButton_user_defined_controls.setStyleSheet(u"")
+        self.pushButton_user_defined_controls.setAutoDefault(False)
+
+        self.gridLayout_10.addWidget(self.pushButton_user_defined_controls, 0, 0, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_user_defined_controls, 1, 0, 1, 2)
+
+        self.frame_equally_spaced = QFrame(self.tab_setup)
+        self.frame_equally_spaced.setObjectName(u"frame_equally_spaced")
+        self.frame_equally_spaced.setFrameShape(QFrame.NoFrame)
+        self.frame_equally_spaced.setFrameShadow(QFrame.Raised)
+        self.gridLayout_8 = QGridLayout(self.frame_equally_spaced)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_5.addItem(self.horizontalSpacer_3, 0, 5, 1, 1)
+        self.gridLayout_8.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
 
-        self.label_24 = QLabel(self.tab_setup)
-        self.label_24.setObjectName(u"label_24")
-        self.label_24.setMinimumSize(QSize(0, 28))
-        self.label_24.setMaximumSize(QSize(32, 28))
+        self.lineEdit_fstep = QLineEdit(self.frame_equally_spaced)
+        self.lineEdit_fstep.setObjectName(u"lineEdit_fstep")
+        self.lineEdit_fstep.setMinimumSize(QSize(170, 28))
+        self.lineEdit_fstep.setMaximumSize(QSize(180, 28))
+        self.lineEdit_fstep.setFont(font1)
+        self.lineEdit_fstep.setStyleSheet(u"")
+        self.lineEdit_fstep.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_8.addWidget(self.lineEdit_fstep, 2, 2, 1, 1)
+
+        self.label_22 = QLabel(self.frame_equally_spaced)
+        self.label_22.setObjectName(u"label_22")
+        self.label_22.setMinimumSize(QSize(80, 28))
+        self.label_22.setMaximumSize(QSize(100, 28))
         font3 = QFont()
         font3.setPointSize(10)
         font3.setItalic(False)
-        self.label_24.setFont(font3)
-        self.label_24.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        font3.setKerning(False)
+        self.label_22.setFont(font3)
+        self.label_22.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_5.addWidget(self.label_24, 0, 3, 1, 1)
+        self.gridLayout_8.addWidget(self.label_22, 0, 1, 1, 1)
 
-        self.label_21 = QLabel(self.tab_setup)
-        self.label_21.setObjectName(u"label_21")
-        self.label_21.setMinimumSize(QSize(80, 28))
-        self.label_21.setMaximumSize(QSize(100, 28))
-        font4 = QFont()
-        font4.setPointSize(10)
-        font4.setItalic(False)
-        font4.setKerning(False)
-        self.label_21.setFont(font4)
-        self.label_21.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_21, 2, 1, 1, 1)
-
-        self.label_23 = QLabel(self.tab_setup)
-        self.label_23.setObjectName(u"label_23")
-        self.label_23.setMinimumSize(QSize(80, 28))
-        self.label_23.setMaximumSize(QSize(100, 28))
-        self.label_23.setFont(font4)
-        self.label_23.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_23, 1, 1, 1, 1)
-
-        self.pushButton_reset_frequency_settings = QPushButton(self.tab_setup)
+        self.pushButton_reset_frequency_settings = QPushButton(self.frame_equally_spaced)
         self.pushButton_reset_frequency_settings.setObjectName(u"pushButton_reset_frequency_settings")
         self.pushButton_reset_frequency_settings.setMinimumSize(QSize(42, 28))
         icon = QIcon()
@@ -221,48 +237,21 @@ class Ui_Dialog(object):
         self.pushButton_reset_frequency_settings.setIconSize(QSize(22, 22))
         self.pushButton_reset_frequency_settings.setAutoDefault(False)
 
-        self.gridLayout_5.addWidget(self.pushButton_reset_frequency_settings, 0, 4, 1, 1)
+        self.gridLayout_8.addWidget(self.pushButton_reset_frequency_settings, 0, 4, 1, 1)
 
-        self.lineEdit_fstep = QLineEdit(self.tab_setup)
-        self.lineEdit_fstep.setObjectName(u"lineEdit_fstep")
-        self.lineEdit_fstep.setMinimumSize(QSize(170, 28))
-        self.lineEdit_fstep.setMaximumSize(QSize(180, 28))
-        self.lineEdit_fstep.setFont(font1)
-        self.lineEdit_fstep.setStyleSheet(u"")
-        self.lineEdit_fstep.setAlignment(Qt.AlignCenter)
+        self.label_24 = QLabel(self.frame_equally_spaced)
+        self.label_24.setObjectName(u"label_24")
+        self.label_24.setMinimumSize(QSize(0, 28))
+        self.label_24.setMaximumSize(QSize(32, 28))
+        font4 = QFont()
+        font4.setPointSize(10)
+        font4.setItalic(False)
+        self.label_24.setFont(font4)
+        self.label_24.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
-        self.gridLayout_5.addWidget(self.lineEdit_fstep, 2, 2, 1, 1)
+        self.gridLayout_8.addWidget(self.label_24, 0, 3, 1, 1)
 
-        self.pushButton_user_defined_frequencies = QPushButton(self.tab_setup)
-        self.pushButton_user_defined_frequencies.setObjectName(u"pushButton_user_defined_frequencies")
-        self.pushButton_user_defined_frequencies.setMinimumSize(QSize(0, 30))
-        self.pushButton_user_defined_frequencies.setMaximumSize(QSize(180, 30))
-        self.pushButton_user_defined_frequencies.setFont(font1)
-        self.pushButton_user_defined_frequencies.setStyleSheet(u"")
-        self.pushButton_user_defined_frequencies.setAutoDefault(False)
-
-        self.gridLayout_5.addWidget(self.pushButton_user_defined_frequencies, 3, 2, 1, 1)
-
-        self.lineEdit_fmax = QLineEdit(self.tab_setup)
-        self.lineEdit_fmax.setObjectName(u"lineEdit_fmax")
-        self.lineEdit_fmax.setMinimumSize(QSize(170, 28))
-        self.lineEdit_fmax.setMaximumSize(QSize(180, 28))
-        self.lineEdit_fmax.setFont(font1)
-        self.lineEdit_fmax.setStyleSheet(u"")
-        self.lineEdit_fmax.setAlignment(Qt.AlignCenter)
-
-        self.gridLayout_5.addWidget(self.lineEdit_fmax, 1, 2, 1, 1)
-
-        self.label_22 = QLabel(self.tab_setup)
-        self.label_22.setObjectName(u"label_22")
-        self.label_22.setMinimumSize(QSize(80, 28))
-        self.label_22.setMaximumSize(QSize(100, 28))
-        self.label_22.setFont(font4)
-        self.label_22.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_22, 0, 1, 1, 1)
-
-        self.lineEdit_fmin = QLineEdit(self.tab_setup)
+        self.lineEdit_fmin = QLineEdit(self.frame_equally_spaced)
         self.lineEdit_fmin.setObjectName(u"lineEdit_fmin")
         self.lineEdit_fmin.setMinimumSize(QSize(170, 28))
         self.lineEdit_fmin.setMaximumSize(QSize(180, 28))
@@ -270,29 +259,60 @@ class Ui_Dialog(object):
         self.lineEdit_fmin.setStyleSheet(u"")
         self.lineEdit_fmin.setAlignment(Qt.AlignCenter)
 
-        self.gridLayout_5.addWidget(self.lineEdit_fmin, 0, 2, 1, 1)
+        self.gridLayout_8.addWidget(self.lineEdit_fmin, 0, 2, 1, 1)
 
-        self.label_26 = QLabel(self.tab_setup)
-        self.label_26.setObjectName(u"label_26")
-        self.label_26.setMinimumSize(QSize(0, 28))
-        self.label_26.setMaximumSize(QSize(32, 28))
-        self.label_26.setFont(font3)
-        self.label_26.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.label_23 = QLabel(self.frame_equally_spaced)
+        self.label_23.setObjectName(u"label_23")
+        self.label_23.setMinimumSize(QSize(80, 28))
+        self.label_23.setMaximumSize(QSize(100, 28))
+        self.label_23.setFont(font3)
+        self.label_23.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_5.addWidget(self.label_26, 2, 3, 1, 1)
+        self.gridLayout_8.addWidget(self.label_23, 1, 1, 1, 1)
 
-        self.label_25 = QLabel(self.tab_setup)
+        self.label_25 = QLabel(self.frame_equally_spaced)
         self.label_25.setObjectName(u"label_25")
         self.label_25.setMinimumSize(QSize(0, 28))
         self.label_25.setMaximumSize(QSize(32, 28))
-        self.label_25.setFont(font3)
+        self.label_25.setFont(font4)
         self.label_25.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
-        self.gridLayout_5.addWidget(self.label_25, 1, 3, 1, 1)
+        self.gridLayout_8.addWidget(self.label_25, 1, 3, 1, 1)
+
+        self.label_26 = QLabel(self.frame_equally_spaced)
+        self.label_26.setObjectName(u"label_26")
+        self.label_26.setMinimumSize(QSize(0, 28))
+        self.label_26.setMaximumSize(QSize(32, 28))
+        self.label_26.setFont(font4)
+        self.label_26.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_8.addWidget(self.label_26, 2, 3, 1, 1)
+
+        self.lineEdit_fmax = QLineEdit(self.frame_equally_spaced)
+        self.lineEdit_fmax.setObjectName(u"lineEdit_fmax")
+        self.lineEdit_fmax.setMinimumSize(QSize(170, 28))
+        self.lineEdit_fmax.setMaximumSize(QSize(180, 28))
+        self.lineEdit_fmax.setFont(font1)
+        self.lineEdit_fmax.setStyleSheet(u"")
+        self.lineEdit_fmax.setAlignment(Qt.AlignCenter)
+
+        self.gridLayout_8.addWidget(self.lineEdit_fmax, 1, 2, 1, 1)
+
+        self.label_21 = QLabel(self.frame_equally_spaced)
+        self.label_21.setObjectName(u"label_21")
+        self.label_21.setMinimumSize(QSize(80, 28))
+        self.label_21.setMaximumSize(QSize(100, 28))
+        self.label_21.setFont(font3)
+        self.label_21.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_8.addWidget(self.label_21, 2, 1, 1, 1)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_5.addItem(self.horizontalSpacer_4, 0, 0, 1, 1)
+        self.gridLayout_8.addItem(self.horizontalSpacer_4, 0, 5, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_equally_spaced, 0, 0, 1, 2)
 
         self.tabWidget_main.addTab(self.tab_setup, "")
         self.tab_damping = QWidget()
@@ -491,10 +511,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.frame_buttons, 2, 0, 1, 1)
 
-        QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_fmin)
-        QWidget.setTabOrder(self.lineEdit_fmin, self.lineEdit_fmax)
-        QWidget.setTabOrder(self.lineEdit_fmax, self.lineEdit_fstep)
-        QWidget.setTabOrder(self.lineEdit_fstep, self.pushButton_enter_setup)
+        QWidget.setTabOrder(self.tabWidget_main, self.pushButton_enter_setup)
         QWidget.setTabOrder(self.pushButton_enter_setup, self.pushButton_run_analysis)
 
         self.retranslateUi(Dialog)
@@ -520,23 +537,23 @@ class Ui_Dialog(object):
         self.label_modes_to_expand.setText(QCoreApplication.translate("Dialog", u"Modes to expand:", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Method:", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Frequency spacing:", None))
-        self.comboBox_frequency_spacing.setItemText(0, QCoreApplication.translate("Dialog", u"Equal spaced", None))
+        self.comboBox_frequency_spacing.setItemText(0, QCoreApplication.translate("Dialog", u"Equally spaced", None))
         self.comboBox_frequency_spacing.setItemText(1, QCoreApplication.translate("Dialog", u"User-defined", None))
 
 #if QT_CONFIG(tooltip)
         self.comboBox_frequency_spacing.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Define the frequency spacing type</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.label_24.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.label_21.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
-        self.label_23.setText(QCoreApplication.translate("Dialog", u"Freq. max:", None))
+        self.pushButton_user_defined_controls.setText(QCoreApplication.translate("Dialog", u"User-defined controls", None))
+        self.label_22.setText(QCoreApplication.translate("Dialog", u"Freq. min:", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_reset_frequency_settings.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Reset the frequency settings</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset_frequency_settings.setText("")
-        self.pushButton_user_defined_frequencies.setText(QCoreApplication.translate("Dialog", u"User-defined frequencies", None))
-        self.label_22.setText(QCoreApplication.translate("Dialog", u"Freq. min:", None))
-        self.label_26.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        self.label_24.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        self.label_23.setText(QCoreApplication.translate("Dialog", u"Freq. max:", None))
         self.label_25.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        self.label_26.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        self.label_21.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Frequency setup", None))
         self.label_16.setText(QCoreApplication.translate("Dialog", u"[--]", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Constant structural damping coefficient", None))
@@ -575,17 +592,21 @@ class HarmonicAnalysisSetupInput_UI(QDialog, Ui_Dialog):
                             - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget
                                     - (Layout): QGridLayout
-                                            - label_24: QLabel
-                                            - label_21: QLabel
-                                            - label_23: QLabel
-                                            - pushButton_reset_frequency_settings: QPushButton
-                                            - lineEdit_fstep: QLineEdit
-                                            - pushButton_user_defined_frequencies: QPushButton
-                                            - lineEdit_fmax: QLineEdit
-                                            - label_22: QLabel
-                                            - lineEdit_fmin: QLineEdit
-                                            - label_26: QLabel
-                                            - label_25: QLabel
+                                            - frame_user_defined_controls: QFrame
+                                                - (Layout): QGridLayout
+                                                        - pushButton_user_defined_controls: QPushButton
+                                            - frame_equally_spaced: QFrame
+                                                - (Layout): QGridLayout
+                                                        - lineEdit_fstep: QLineEdit
+                                                        - label_22: QLabel
+                                                        - pushButton_reset_frequency_settings: QPushButton
+                                                        - label_24: QLabel
+                                                        - lineEdit_fmin: QLineEdit
+                                                        - label_23: QLabel
+                                                        - label_25: QLabel
+                                                        - label_26: QLabel
+                                                        - lineEdit_fmax: QLineEdit
+                                                        - label_21: QLabel
                                 - tab_damping: QWidget
                                     - (Layout): QGridLayout
                                             - frame_dampings: QFrame

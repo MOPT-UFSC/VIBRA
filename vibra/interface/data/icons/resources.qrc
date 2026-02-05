@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="icons">
+        <file>add_narrow.png</file>
         <file>arrow_circle_down_blue.png</file>
         <file>azul cinza.png</file>
         <file>broom.png</file>
@@ -32,6 +33,7 @@
         <file>plus-thick.png</file>
         <file>png.png</file>
         <file>recent.png</file>
+        <file>remove.png</file>
         <file>reset-image (2).png</file>
         <file>reset_icon.png</file>
         <file>reset_settings.png</file>
