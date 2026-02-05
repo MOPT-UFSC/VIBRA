@@ -270,7 +270,7 @@ class Model:
                 print(str(error_log))
                 return
             
-        if analysis_setup.get("frequency_spacing") == "user_defined":
+        if analysis_setup.get("frequency_spacing") == "user-defined":
             self.process_user_defined_frequencies_mask()
 
         else:
@@ -311,6 +311,50 @@ class Model:
             return
 
         self.frequencies_mask = np.isin(self.table_frequencies[0], self.frequencies)
+
+
+    def is_there_a_valid_analysis_setup(self, **kwargs):
+
+        current_analysis_id = kwargs.get("current_analysis_id", None)
+        if not isinstance(self.analysis_setup, dict):
+            return False
+
+        analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return False
+
+        if isinstance(current_analysis_id, int):
+            if analysis_id != current_analysis_id:
+                return False
+
+        if analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC, 
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.COUPLED_HARMONIC
+            ]:
+
+            frequency_spacing = self.analysis_setup.get("frequency_spacing")
+            ud_frequencies = self.analysis_setup.get("user_defined_frequencies")
+
+            if isinstance(ud_frequencies, list):
+                return True
+
+            for key in ["f_min", "f_max", "f_step"]:
+                if not isinstance(self.analysis_setup.get(key), int | float):    
+                    return False
+
+            return True
+
+        elif analysis_id in [
+            AnalysisID.ACOUSTIC_MODAL, 
+            AnalysisID.STRUCTURAL_MODAL
+            ]:
+
+            for key in ["modes_number", "sigma_factor"]:
+                if not isinstance(self.analysis_setup.get(key), int | float):  
+                    return False
+
+            return True
 
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):

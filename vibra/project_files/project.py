@@ -127,41 +127,6 @@ class Project(QObject):
         self.analysis_setup = analysis_setup
         self.model.set_analysis_setup(analysis_setup)
 
-    def is_analysis_setup_complete(self):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if isinstance(analysis_setup, dict):
-            analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-
-            if analysis_id in [
-                AnalysisID.STRUCTURAL_MODAL,
-                AnalysisID.ACOUSTIC_MODAL,
-            ]:
-                if "modes_number" in analysis_setup.keys():
-                    if not isinstance(analysis_setup["modes_number"], int):
-                        return False
-                else:
-                    return False
-
-                if "sigma_factor" in analysis_setup.keys():
-                    if not isinstance(analysis_setup["sigma_factor"], int | float):
-                        return False
-                else:
-                    return False
-
-                return True
-
-            elif analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
-                for f_type in ["f_min", "f_max", "f_step"]:    
-                    if f_type in analysis_setup.keys():
-                        if not isinstance(analysis_setup[f_type], int | float):
-                            return False
-                    else:
-                        return False
-                return True
-
-        return False
-
     def create_solver(self):
         """ """
 
@@ -401,43 +366,6 @@ class Project(QObject):
             physical_domain = "structural"
 
         return analysis_type, physical_domain
-
-    def is_there_a_valid_analysis_setup(self, **kwargs):
-
-        current_analysis_id = kwargs.get("current_analysis_id", None)
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            return False
-
-        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        if analysis_id == AnalysisID.NO_ANALYSIS:
-            return False
-
-        if isinstance(current_analysis_id, int):
-            if analysis_id != current_analysis_id:
-                return False
-
-        if analysis_id in [
-            AnalysisID.ACOUSTIC_HARMONIC, 
-            AnalysisID.STRUCTURAL_HARMONIC, 
-            AnalysisID.COUPLED_HARMONIC
-            ]:
-
-            for key in ["f_min", "f_max", "f_step"]:
-                if key not in analysis_setup.keys():
-                    return False
-            return True
-
-        elif analysis_id in [
-            AnalysisID.ACOUSTIC_MODAL, 
-            AnalysisID.STRUCTURAL_MODAL
-            ]:
-
-            for key in ["modes_number", "sigma_factor"]:
-                if key not in analysis_setup.keys():
-                    return False
-            return True
 
     def long_function(self):
         for i in range(20):
