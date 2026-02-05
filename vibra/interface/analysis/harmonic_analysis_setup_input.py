@@ -45,6 +45,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.keep_window_open = True
         self.user_defined_frequencies = list()
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
+        self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -76,8 +77,30 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
     def frequency_spacing_callback(self):
         user_defined = self.comboBox_frequency_spacing.currentText() == "User-defined"
-        self.frame_equally_spaced.setVisible(not user_defined)
-        self.frame_user_defined_controls.setVisible(user_defined)
+        self.frame_equally_distributed.setVisible(not user_defined)
+        self.frame_solution_steps_setup.setVisible(user_defined)
+
+    def update_solution_steps_controls_visibility(self):
+
+        self.label_fstep_unit_combo_box.setVisible(self.table_exists)
+        self.label_fstep_combo_box.setVisible(self.table_exists)
+        self.comboBox_fstep.setVisible(self.table_exists)
+
+        self.label_fstep_unit_line_edit.setVisible(not self.table_exists)
+        self.label_fstep_line_edit.setVisible(not self.table_exists)
+        self.lineEdit_fstep.setVisible(not self.table_exists)
+
+        if self.tabular_frequency_setup is None:
+            return
+
+        _, f_max, f_step, _ = self.tabular_frequency_setup
+
+        for i in range(5):
+            _f_step = f_step*(i + 1)
+            if _f_step >= f_max:
+                continue
+
+            self.comboBox_fstep.addItem(f"{round(_f_step, 14)}")
 
     def analysis_method_callback(self):
 
@@ -103,26 +126,24 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def reset_frequency_setup_based_on_tabular_data(self):
         if not self.model.properties.check_if_there_are_tables_at_the_model():
             return
+        
+        if self.tabular_frequency_setup is None:
+            return
 
-        table_frequencies = self.model.properties.process_all_tables_frequencies_vectors()
-        if len(table_frequencies) == 1:
-            frequencies = table_frequencies[0]
-            f_min = frequencies[0]
-            f_max = frequencies[-1]
-            f_step = frequencies[1] - frequencies[0]
-            self.load_frequency_setup_inputs(f_min, f_max, f_step)
+        f_min, f_max, f_step, _ = self.tabular_frequency_setup
 
-    def check_reset_settings_button_visibility(self):
+        if (f_min, f_max, f_step).count(None):
+            return
+    
+        self.load_frequency_setup_inputs(f_min, f_max, f_step)
+
+    def update_reset_settings_button_visibility(self):
         self.pushButton_reset_frequency_settings.setVisible(self.table_exists)
         if not self.table_exists:
             return
 
-        misaligned_fsetup = int(np.sum(self.model.frequencies_mask)) != self.model.frequencies_mask.size
+        misaligned_fsetup = self.model.has_spectral_content_been_modified()
         self.pushButton_reset_frequency_settings.setEnabled(misaligned_fsetup)
-
-    def _update_fmin(self):
-        df = self.lineEdit_fstep.text()
-        self.lineEdit_fmin.setText(df)
 
     def load_analysis_setup(self):
 
@@ -133,6 +154,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         self.load_analysis_type()
         self.load_damping_inputs(self.analysis_id, global_damping)
+        self.update_solution_steps_controls_visibility()
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
         if self.analysis_setup.get("frequency_spacing") == "user-defined":
@@ -173,24 +195,22 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_fmin.setText("{}".format(round(f_min, 14)))
         self.lineEdit_fmax.setText("{}".format(round(f_max, 14)))
         self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
+        self.comboBox_fstep.setCurrentText(f"{round(f_step, 14)}")
 
         self.lineEdit_fstep.setDisabled(self.table_exists)
         self.tabWidget_main.setTabVisible(2, self.table_exists)
 
-        self.check_reset_settings_button_visibility()
+        self.update_reset_settings_button_visibility()
 
     def check_tabular_frequencies_compatibility(self, f_min: float, f_max: float):
-        tables_frequencies = self.model.properties.process_all_tables_frequencies_vectors()
-        if not tables_frequencies:
+        if not self.table_exists:
             return False
         
-        if len(tables_frequencies) != 1:
-            return True
+        if self.tabular_frequency_setup is None:
+            return False
+        
+        f_min_tab, f_max_tab, *_ = self.tabular_frequency_setup
     
-        table_frequencies = tables_frequencies[0]
-        f_min_tab = table_frequencies[0]
-        f_max_tab = table_frequencies[-1]
-
         if f_min < f_min_tab:
             if not np.isclose(f_min, f_min_tab, 1e-8):
                 self.hide()
@@ -314,22 +334,29 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                     self.lineEdit_fmax.setFocus()
                     return True
 
-                f_step = self.check_inputs(
-                    self.lineEdit_fstep, 
-                    "frequency resolution (Freq. step)"
-                    )
+                if self.lineEdit_fstep.isVisible():
+                    f_step = self.check_inputs(
+                        self.lineEdit_fstep, 
+                        "frequency resolution (Freq. step)"
+                        )
 
-                if f_step is None:
-                    self.lineEdit_fstep.setFocus()
-                    return True
+                    if f_step is None:
+                        self.lineEdit_fstep.setFocus()
+                        return True
+
+                else:
+                    f_step = float(self.comboBox_fstep.currentText())
+
+                (f_min_tab, f_max_tab, _, _) = self.tabular_frequency_setup
 
                 if f_max < f_min + f_step:
-                    self.hide()
-                    title = "Invalid frequency setup"
-                    message = "The maximum frequency (fmax) must be greater than the sum of "
-                    message += "minimum frequency (fmin) and frequency resolution (df)."
-                    PrintMessageInput([error_title, title, message])
-                    return True
+                    if not f_max_tab >= f_max:    
+                        self.hide()
+                        title = "Invalid frequency setup"
+                        message = "The maximum frequency (fmax) must be greater than the sum of "
+                        message += "minimum frequency (fmin) and frequency resolution (df)."
+                        PrintMessageInput([error_title, title, message])
+                        return True
                 
                 if self.check_tabular_frequencies_compatibility(f_min, f_max):
                     return True

@@ -406,7 +406,7 @@
            </property>
            <item>
             <property name="text">
-             <string>Equally spaced</string>
+             <string>Equally distributed</string>
             </property>
            </item>
            <item>
@@ -430,7 +430,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>188</height>
+          <height>220</height>
          </size>
         </property>
         <property name="font">
@@ -469,7 +469,7 @@
            <number>6</number>
           </property>
           <item row="1" column="0" colspan="2">
-           <widget class="QFrame" name="frame_user_defined_controls">
+           <widget class="QFrame" name="frame_solution_steps_setup">
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -527,7 +527,7 @@
            </widget>
           </item>
           <item row="0" column="0" colspan="2">
-           <widget class="QFrame" name="frame_equally_spaced">
+           <widget class="QFrame" name="frame_equally_distributed">
             <property name="frameShape">
              <enum>QFrame::NoFrame</enum>
             </property>
@@ -547,50 +547,6 @@
              <property name="bottomMargin">
               <number>4</number>
              </property>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="2" column="2">
-              <widget class="QLineEdit" name="lineEdit_fstep">
-               <property name="minimumSize">
-                <size>
-                 <width>170</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>180</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <weight>50</weight>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="1">
               <widget class="QLabel" name="label_22">
                <property name="minimumSize">
@@ -620,32 +576,34 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="4">
-              <widget class="QPushButton" name="pushButton_reset_frequency_settings">
+             <item row="2" column="2">
+              <widget class="QLineEdit" name="lineEdit_fstep">
                <property name="minimumSize">
                 <size>
-                 <width>42</width>
+                 <width>170</width>
                  <height>28</height>
                 </size>
                </property>
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reset the frequency settings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset resource="../../icons/resources.qrc">
-                 <normaloff>:/icons/reset_settings.png</normaloff>:/icons/reset_settings.png</iconset>
-               </property>
-               <property name="iconSize">
+               <property name="maximumSize">
                 <size>
-                 <width>22</width>
-                 <height>22</height>
+                 <width>180</width>
+                 <height>28</height>
                 </size>
                </property>
-               <property name="autoDefault">
-                <bool>false</bool>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -708,37 +666,37 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_23">
+             <item row="0" column="4">
+              <widget class="QPushButton" name="pushButton_reset_frequency_settings">
                <property name="minimumSize">
                 <size>
-                 <width>80</width>
+                 <width>42</width>
                  <height>28</height>
                 </size>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <kerning>false</kerning>
-                </font>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reset the frequency settings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>Freq. max:</string>
+                <string/>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               <property name="icon">
+                <iconset resource="../../icons/resources.qrc">
+                 <normaloff>:/icons/reset_settings.png</normaloff>:/icons/reset_settings.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>22</width>
+                 <height>22</height>
+                </size>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
                </property>
               </widget>
              </item>
-             <item row="1" column="3">
-              <widget class="QLabel" name="label_25">
+             <item row="2" column="3">
+              <widget class="QLabel" name="label_fstep_unit_line_edit">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -765,8 +723,8 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="3">
-              <widget class="QLabel" name="label_26">
+             <item row="1" column="3">
+              <widget class="QLabel" name="label_25">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
@@ -824,8 +782,37 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="label_23">
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <italic>false</italic>
+                 <kerning>false</kerning>
+                </font>
+               </property>
+               <property name="text">
+                <string>Freq. max:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
              <item row="2" column="1">
-              <widget class="QLabel" name="label_21">
+              <widget class="QLabel" name="label_fstep_line_edit">
                <property name="minimumSize">
                 <size>
                  <width>80</width>
@@ -853,6 +840,19 @@
                </property>
               </widget>
              </item>
+             <item row="0" column="0">
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
              <item row="0" column="5">
               <spacer name="horizontalSpacer_4">
                <property name="orientation">
@@ -865,6 +865,79 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_fstep_combo_box">
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>100</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <italic>false</italic>
+                 <kerning>false</kerning>
+                </font>
+               </property>
+               <property name="text">
+                <string>Freq. step:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="label_fstep_unit_combo_box">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>32</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <italic>false</italic>
+                </font>
+               </property>
+               <property name="text">
+                <string>[Hz]</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QComboBox" name="comboBox_fstep">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>28</height>
+                </size>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
