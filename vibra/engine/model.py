@@ -292,9 +292,13 @@ class Model:
 
         f_min = self.frequencies[0]
         f_max = self.frequencies[-1]
-
         table_frequencies = np.array(self.table_frequencies[0])
-        self.frequencies_mask = (table_frequencies >= f_min) * (table_frequencies <= f_max)
+
+        min_mask = table_frequencies >= f_min
+        max_mask = table_frequencies <= f_max
+        step_mask = np.isin(table_frequencies, self.frequencies)
+
+        self.frequencies_mask =  min_mask * max_mask * step_mask
 
 
     def process_user_defined_frequencies_mask(self):
@@ -311,6 +315,10 @@ class Model:
             return
 
         self.frequencies_mask = np.isin(self.table_frequencies[0], self.frequencies)
+
+
+    def has_spectral_content_been_modified(self):
+        return self.frequencies_mask.size != int(np.sum(self.frequencies_mask))
 
 
     def is_there_a_valid_analysis_setup(self, **kwargs):
@@ -369,23 +377,27 @@ class Model:
         condition_2 = not self.properties.check_if_there_are_tables_at_the_model()
 
         if condition_1 or condition_2:
-
-            # f_min = frequencies[0]
-            # f_max = frequencies[-1]
-            # f_step = frequencies[1] - frequencies[0]
-
-            # frequency_setup = { "f_min" : float(f_min),
-            #                     "f_max" : float(f_max),
-            #                     "f_step" : float(f_step) }
-
-            # self.set_analysis_setup(frequency_setup)
-
             self.list_frequencies = frequencies
-
             return False
 
         if self.list_frequencies != frequencies:
             return True
+
+
+    def get_tabular_frequency_setup(self):
+        """
+        This method returns the frequency setup of the model's tabular data.
+        """
+        tables_frequencies = self.properties.process_all_tables_frequencies_vectors()
+        if len(tables_frequencies) != 1:
+            return None
+        
+        frequencies = tables_frequencies[0]
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0]
+
+        return (f_min, f_max, f_step, frequencies)
 
 
     def get_structural_elements(self):

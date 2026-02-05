@@ -392,7 +392,7 @@ class ModelProperties:
 
         return table_names
     
-    def process_all_tables_frequencies_vectors(self):
+    def process_all_tables_frequencies_vectors(self) -> list:
         """
         This method process the frequencies vectors from all imported tables.
         """

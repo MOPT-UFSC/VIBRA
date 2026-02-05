@@ -26,3 +26,15 @@ def get_spectral_data_from_array(data: np.ndarray, return_frequencies: bool=Fals
         return frequencies, complex_values
 
     return complex_values
+
+
+def is_frequencies_vector_equally_distributed(frequencies: list | np.ndarray):
+
+    f_max = frequencies[-1]
+    f_step = frequencies[1] - frequencies[0]
+
+    shifted_freqs = [value for value in frequencies[1:]]
+    shifted_freqs.append(f_max + f_step)
+    freq_increments = np.unique(np.array(shifted_freqs) - np.array(frequencies))
+
+    return freq_increments.size == 1
