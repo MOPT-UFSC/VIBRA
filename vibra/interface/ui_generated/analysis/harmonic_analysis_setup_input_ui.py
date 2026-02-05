@@ -16,21 +16,22 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
-    QGridLayout, QLabel, QLineEdit, QPushButton,
-    QSizePolicy, QSpacerItem, QTabWidget, QWidget)
+    QGridLayout, QHeaderView, QLabel, QLineEdit,
+    QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
+    QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.NonModal)
-        Dialog.resize(420, 464)
+        Dialog.resize(420, 626)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
-        Dialog.setMinimumSize(QSize(360, 0))
+        Dialog.setMinimumSize(QSize(360, 500))
         Dialog.setMaximumSize(QSize(420, 16777215))
         Dialog.setContextMenuPolicy(Qt.DefaultContextMenu)
         self.gridLayout_2 = QGridLayout(Dialog)
@@ -39,8 +40,8 @@ class Ui_Dialog(object):
         self.gridLayout_2.setContentsMargins(4, 4, 4, 4)
         self.frame_title = QFrame(Dialog)
         self.frame_title.setObjectName(u"frame_title")
-        self.frame_title.setMinimumSize(QSize(0, 60))
-        self.frame_title.setMaximumSize(QSize(430, 60))
+        self.frame_title.setMinimumSize(QSize(0, 48))
+        self.frame_title.setMaximumSize(QSize(430, 48))
         self.frame_title.setFrameShape(QFrame.Box)
         self.frame_title.setFrameShadow(QFrame.Raised)
         self.frame_title.setLineWidth(1)
@@ -165,7 +166,7 @@ class Ui_Dialog(object):
         self.tabWidget_main = QTabWidget(self.frame_main)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
         self.tabWidget_main.setMinimumSize(QSize(0, 200))
-        self.tabWidget_main.setMaximumSize(QSize(16777215, 220))
+        self.tabWidget_main.setMaximumSize(QSize(16777215, 400))
         self.tabWidget_main.setFont(font1)
         self.tab_setup = QWidget()
         self.tab_setup.setObjectName(u"tab_setup")
@@ -192,7 +193,7 @@ class Ui_Dialog(object):
         self.gridLayout_10.addWidget(self.pushButton_solution_steps_setup, 0, 0, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_solution_steps_setup, 1, 0, 1, 2)
+        self.gridLayout_5.addWidget(self.frame_solution_steps_setup, 2, 0, 1, 2)
 
         self.frame_equally_distributed = QFrame(self.tab_setup)
         self.frame_equally_distributed.setObjectName(u"frame_equally_distributed")
@@ -338,6 +339,30 @@ class Ui_Dialog(object):
 
 
         self.gridLayout_5.addWidget(self.frame_equally_distributed, 0, 0, 1, 2)
+
+        self.frame = QFrame(self.tab_setup)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.NoFrame)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.gridLayout_11 = QGridLayout(self.frame)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setContentsMargins(4, 4, 4, 4)
+        self.tableWidget_solution_steps = QTableWidget(self.frame)
+        if (self.tableWidget_solution_steps.columnCount() < 3):
+            self.tableWidget_solution_steps.setColumnCount(3)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.tableWidget_solution_steps.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.tableWidget_solution_steps.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.tableWidget_solution_steps.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        self.tableWidget_solution_steps.setObjectName(u"tableWidget_solution_steps")
+        self.tableWidget_solution_steps.verticalHeader().setVisible(False)
+
+        self.gridLayout_11.addWidget(self.tableWidget_solution_steps, 0, 0, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame, 1, 0, 1, 2)
 
         self.tabWidget_main.addTab(self.tab_setup, "")
         self.tab_damping = QWidget()
@@ -581,6 +606,12 @@ class Ui_Dialog(object):
         self.label_fstep_line_edit.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
         self.label_fstep_combo_box.setText(QCoreApplication.translate("Dialog", u"Freq. step:", None))
         self.label_fstep_unit_combo_box.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        ___qtablewidgetitem = self.tableWidget_solution_steps.horizontalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Solution step", None));
+        ___qtablewidgetitem1 = self.tableWidget_solution_steps.horizontalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Frequency [Hz]", None));
+        ___qtablewidgetitem2 = self.tableWidget_solution_steps.horizontalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Frequency spacing", None));
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Frequency setup", None))
         self.label_16.setText(QCoreApplication.translate("Dialog", u"[--]", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Constant structural damping coefficient", None))
@@ -637,6 +668,9 @@ class HarmonicAnalysisSetupInput_UI(QDialog, Ui_Dialog):
                                                         - label_fstep_combo_box: QLabel
                                                         - label_fstep_unit_combo_box: QLabel
                                                         - comboBox_fstep: QComboBox
+                                            - frame: QFrame
+                                                - (Layout): QGridLayout
+                                                        - tableWidget_solution_steps: QTableWidget
                                 - tab_damping: QWidget
                                     - (Layout): QGridLayout
                                             - frame_dampings: QFrame

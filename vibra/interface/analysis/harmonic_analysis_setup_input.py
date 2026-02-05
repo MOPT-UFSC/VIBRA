@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QLineEdit
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTableWidgetItem
 from PySide6.QtGui import Qt
 
 from vibra import app
@@ -33,7 +33,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self._create_connections()
 
         self.load_analysis_setup()
-        self.update_harmonic_analysis_title()
+        self.load_solution_steps()
         self.check_mesh_related_issues()
 
         while self.keep_window_open:
@@ -64,6 +64,28 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_reset_frequency_settings.clicked.connect(self.reset_frequency_setup_based_on_tabular_data)
         #
         self.frequency_spacing_callback()
+
+    def load_solution_steps(self):
+        self.tableWidget_solution_steps.clearContents()
+        self.tableWidget_solution_steps.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget_solution_steps.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget_solution_steps.setSelectionMode(QAbstractItemView.NoSelection)
+
+        frequencies = self.model.frequencies
+        if frequencies is None:
+            return
+                
+        if isinstance(frequencies, np.ndarray):
+            self.tableWidget_solution_steps.setRowCount(frequencies.size)
+            frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
+
+            for index, freq in enumerate(frequencies):
+                self.tableWidget_solution_steps.setItem(index, 0, QTableWidgetItem(str(index+1)))
+                self.tableWidget_solution_steps.setItem(index, 1, QTableWidgetItem(str(freq)))
+                self.tableWidget_solution_steps.setItem(index, 2, QTableWidgetItem(frequency_spacing))
+
+                for j in range(3):
+                    self.tableWidget_solution_steps.item(index, j).setTextAlignment(Qt.AlignCenter)
 
     def solution_steps_setup_callback(self):
         self.hide()
@@ -136,6 +158,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
     
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
+        # self.load_solution_steps()
 
     def update_reset_settings_button_visibility(self):
         self.pushButton_reset_frequency_settings.setVisible(self.table_exists)
@@ -174,6 +197,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         self.comboBox_method.blockSignals(False)
         self.analysis_method_callback()
+        self.update_harmonic_analysis_title()
 
     def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
         if sum(global_damping) and analysis_id in [
@@ -347,10 +371,16 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 else:
                     f_step = float(self.comboBox_fstep.currentText())
 
-                (f_min_tab, f_max_tab, _, _) = self.tabular_frequency_setup
+                condition_1 = f_max < f_min + f_step
 
-                if f_max < f_min + f_step:
-                    if not f_max_tab >= f_max:    
+                if self.tabular_frequency_setup is None:
+                    condition_2 = True
+                else:
+                    (_, f_max_tab, _, _) = self.tabular_frequency_setup
+                    condition_2 = not f_max_tab >= f_max
+
+                if condition_1:
+                    if condition_2:
                         self.hide()
                         title = "Invalid frequency setup"
                         message = "The maximum frequency (fmax) must be greater than the sum of "
