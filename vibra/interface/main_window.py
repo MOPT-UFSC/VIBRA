@@ -1006,9 +1006,9 @@ class MainWindow(MainWindow_UI):
     def close_app(self):
         self.minimize_dialogs()
 
-        condition_1 = app().project.save_path is None
-        condition_2 = any(TEMP_PROJECT_DIR.iterdir()) # TEMP_PROJECT_DIR is not empty
-        condition_3 = self.project_data_modified
+        condition_1 = app().new_project.save_path is None
+        condition_2 = not app().new_project.project_paths.is_empty()
+        condition_3 = app().new_project.needs_saving
         condition = (condition_1 and condition_2) or condition_3
 
         if condition:

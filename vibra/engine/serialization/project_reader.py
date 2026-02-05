@@ -44,8 +44,8 @@ class ProjectReader:
     be loaded by part.
     """
 
-    def __init__(self, working_directory: Path | str):
-        self.project_paths = ProjectPaths(working_directory)
+    def __init__(self, project_paths: ProjectPaths):
+        self.project_paths = project_paths
 
     def read_file(self, vibra_path: Path | str):
         """

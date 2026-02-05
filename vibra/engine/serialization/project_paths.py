@@ -1,10 +1,20 @@
+from tempfile import TemporaryDirectory
+from typing import Optional
 import shutil
 from pathlib import Path
 
 
 class ProjectPaths:
-    def __init__(self, working_directory: Path | str):
+    def __init__(self, working_directory: Optional[Path | str] = None):
+        self._tmp_dir = TemporaryDirectory(prefix="project_")
+        self.set_working_directory(working_directory)
+
+    def set_working_directory(self, working_directory):
+        if working_directory is None:
+            working_directory = self._tmp_dir.name
+
         self.working_directory = Path(working_directory)
+
         if not self.working_directory.exists():
             self.working_directory.mkdir(parents=True)
 

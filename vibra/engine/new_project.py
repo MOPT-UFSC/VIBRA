@@ -16,6 +16,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
+from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
@@ -25,9 +26,7 @@ class NewProject:
     def __init__(self, working_directory: Optional[Path | str] = None):
         self.reset_variables()
         self.create_connections()
-
-        self._tmp_dir = TemporaryDirectory(prefix="vibra_project_")
-        self.working_directory = working_directory
+        self.project_paths.set_working_directory(working_directory)
 
     def reset_variables(self):
         self.name: str = "Project"
@@ -37,6 +36,10 @@ class NewProject:
 
         self.model = Model()
         self.current_analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
+
+        self.project_paths = ProjectPaths()
+        self.project_reader = ProjectReader(self.project_paths)
+        self.project_writer = ProjectWriter(self.project_paths)
 
         self.mesh_setup: Optional[MeshSetup] = None
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
@@ -48,6 +51,7 @@ class NewProject:
         self.solver = None
         self.postprocessing = None
         self.project_writer.delete_results_data()
+        self.needs_saving = True
 
     def create_connections(self):
         return
@@ -64,24 +68,21 @@ class NewProject:
 
     @property
     def working_directory(self) -> Path:
-        return self._working_directory
+        return self.project_paths.working_directory
 
     @working_directory.setter
     def working_directory(self, path: Optional[Path | str]):
-        if path is None:
-            self._working_directory = Path(self._tmp_dir.name)
-        else:
-            self._working_directory = Path(path)
-
-        self.project_reader = ProjectReader(self._working_directory)
-        self.project_writer = ProjectWriter(self._working_directory)
+        if hasattr(self, "project_paths"):
+            self.project_paths.set_working_directory(self.working_directory)
 
     def set_thumbnail(self, thumbnail: Image):
         self.thumbnail = thumbnail
         self.project_writer.write_thumbnail(thumbnail)
+        self.needs_saving = True
 
     def clear_working_directory(self):
-        self.project_writer.project_paths.clear_data()
+        self.project_paths.clear_data()
+        self.needs_saving = True
 
     def run_analysis(self):
         match self.current_analysis_id:
@@ -125,9 +126,10 @@ class NewProject:
         """
         self.save_path = Path(path)
         self.name = name
-        if self.project_writer.project_paths.is_empty():
+        if self.project_paths.is_empty():
             self.project_writer.write_project(self)
         self.project_writer.write_file(path)
+        self.needs_saving = False
 
     def import_mesh(self, path: Path | str):
         """
@@ -139,6 +141,7 @@ class NewProject:
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
         self.project_writer.write_mesh(mesh)
+        self.needs_saving = True
 
     def import_geometry(self, path: Path | str):
         """
@@ -153,12 +156,15 @@ class NewProject:
         self.model.geometry_path = path
         # self.model.geometry = Geometry(path)
         self.project_writer.write_geometry(path)
+        self.needs_saving = True
 
     def update_model_properties_file(self):
         self.project_writer.write_model_properties(self.model.properties)
+        self.needs_saving = True
 
     def update_project_setup_file(self):
         self.project_writer.write_project_setup(self)
+        self.needs_saving = True
 
     def configure_mesh(self, mesh_setup: MeshSetup):
         """
@@ -211,6 +217,7 @@ class NewProject:
         self.reset_solution()
         self.model.mesh = mesh
         self.project_writer.write_mesh(mesh)
+        self.needs_saving = True
         return mesh
 
     def generate_visual_mesh(self):
@@ -254,6 +261,7 @@ class NewProject:
         t0 = perf_counter()
         _, solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
+        self.needs_saving = True
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
@@ -303,6 +311,7 @@ class NewProject:
         t0 = perf_counter()
         _, solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
+        self.needs_saving = True
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
@@ -336,6 +345,7 @@ class NewProject:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
         self.project_writer.write_harmonic_solution(self.solver)
+        self.needs_saving = True
 
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")

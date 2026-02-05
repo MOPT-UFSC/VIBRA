@@ -31,8 +31,8 @@ from .project_paths import ProjectPaths
 
 
 class ProjectWriter:
-    def __init__(self, working_directory: Path | str):
-        self.project_paths = ProjectPaths(working_directory)
+    def __init__(self, project_paths: ProjectPaths):
+        self.project_paths = project_paths
 
     def write_file(self, vibra_path: Path | str):
         vibra_path = Path(vibra_path)
