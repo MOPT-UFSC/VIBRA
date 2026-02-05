@@ -108,10 +108,10 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
 
-        # only allow waveform plots for equal spaced frequencies
-        user_defined_freq = self.project.model.analysis_setup.get("frequency_spacing") == "user-defined"
+        # only allow waveform plots for equally distributed solution steps
+        modified_spectral_content = self.project.model.has_spectral_content_been_modified()
 
-        self.item_child_acoustic_pressure_waveform.setHidden(user_defined_freq)
+        self.item_child_acoustic_pressure_waveform.setHidden(modified_spectral_content)
         self.item_child_acoustic_pressure_waveform.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
