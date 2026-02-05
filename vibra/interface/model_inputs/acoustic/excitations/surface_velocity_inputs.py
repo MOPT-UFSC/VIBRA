@@ -1,17 +1,16 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.engine import HarmonicAnalysisSetup
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
-
-import os
-import numpy as np
 
 error_title = "Error"
 
@@ -23,7 +22,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
@@ -246,10 +244,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
+            input_ids,
+            selection="surfaces",
+            single_id=False,
+        )
 
         if error_data is not None:
             self.hide()
@@ -258,11 +256,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             return
 
         self.remove_conflicting_excitations(surface_ids)
-
-        surface_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
+        surface_velocity = self.check_complex_entries(
+            self.lineEdit_real_value,
+            self.lineEdit_imag_value,
+        )
 
         if surface_velocity is not None:
-
             real_values = [np.real(surface_velocity)]
             imag_values = [np.imag(surface_velocity)]
 
@@ -270,11 +269,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             key_avg = self.checkBox_averaged_constant_values.isChecked()
 
             data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    "nodal_attribution": nodal_attribution,
-                    "averaged": key_avg,
-                    }
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "nodal_attribution": nodal_attribution,
+                "averaged": key_avg,
+            }
 
             for surface_id in surface_ids:
                 self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -348,21 +347,20 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         return False
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
+        analysis_id = app().new_project.current_analysis_id
+        analysis_setup = app().new_project.model.analysis_setup
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
+            analysis_setup = HarmonicAnalysisSetup(0, 0, 0)
 
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
+        analysis_setup.f_min = frequencies[0]
+        analysis_setup.f_max = frequencies[-1]
+        analysis_setup.f_step = frequencies[1] - frequencies[0]
 
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
+        app().new_project.configure_analysis(
+            analysis_id,
+            analysis_setup,
+        )
 
     def load_surface_velocity_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -375,10 +373,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
+            input_ids,
+            selection="surfaces",
+            single_id=False,
+        )
 
         if error_data is not None:
             self.hide()
@@ -497,11 +495,9 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             return
 
         if read._continue:
-
             surface_ids = list()
             for (property, *args) in self.properties.surface_properties.keys():
                 if property == "surface_velocity":
-
                     surface_id = args[0]
                     surface_ids.append(surface_id)
 
@@ -513,8 +509,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().new_project.update_model_properties_file()
+        # app().file.write_imported_table_data_in_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
@@ -526,17 +522,17 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_setup, dict):
-            analysis_setup = self.project.analysis_setup
-            self.project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # It should be unnecessary, but I will keep it commented for now
+        # if isinstance(self.project.analysis_setup, dict):
+        #     analysis_setup = self.project.analysis_setup
+        #     self.project.set_analysis_setup(analysis_setup)
+        #     app().file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

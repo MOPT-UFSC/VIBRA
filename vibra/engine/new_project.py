@@ -50,9 +50,9 @@ class NewProject:
         self.project_writer.delete_results_data()
 
     def create_connections(self):
-        self.model.properties.modified.connect(self.write_model_properties_to_file)
         return
-        self.model.analysis_setup_modified.connect(self.update_project_setup)
+        self.model.properties.modified.connect(self.update_model_properties_file)
+        self.model.analysis_setup_modified.connect(self.update_project_setup_file)
 
     @property
     def mesh(self) -> Optional[Mesh]:
@@ -154,10 +154,10 @@ class NewProject:
         # self.model.geometry = Geometry(path)
         self.project_writer.write_geometry(path)
 
-    def write_model_properties_to_file(self):
+    def update_model_properties_file(self):
         self.project_writer.write_model_properties(self.model.properties)
 
-    def update_project_setup(self):
+    def update_project_setup_file(self):
         self.project_writer.write_project_setup(self)
 
     def configure_mesh(self, mesh_setup: MeshSetup):
@@ -166,7 +166,7 @@ class NewProject:
         This method might be called before or after loading a geometry.
         """
         self.mesh_setup = mesh_setup
-        self.update_project_setup()
+        self.update_project_setup_file()
 
     def generate_mesh(self) -> Mesh:
         """
@@ -236,11 +236,11 @@ class NewProject:
         self.reset_solution()
         self.current_analysis_id = analysis_id
         self.model.new_set_analysis_setup(analysis_setup)
-        self.update_project_setup()
+        self.update_project_setup_file()
 
     def solve_structural_modal_analysis(self):
         self.current_analysis_id = AnalysisID.STRUCTURAL_MODAL
-        self.update_project_setup()
+        self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
         checker.check_structural_modal_analysis()
@@ -261,7 +261,7 @@ class NewProject:
 
     def solve_structural_harmonic_analysis(self):
         self.current_analysis_id = AnalysisID.STRUCTURAL_HARMONIC
-        self.update_project_setup()
+        self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
         checker.check_structural_harmonic_analysis()
@@ -289,7 +289,7 @@ class NewProject:
 
     def solve_acoustic_modal_analysis(self):
         self.current_analysis_id = AnalysisID.ACOUSTIC_MODAL
-        self.update_project_setup()
+        self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
         checker.check_acoustic_modal_analysis()
@@ -310,7 +310,7 @@ class NewProject:
 
     def solve_acoustic_harmonic_analysis(self):
         self.current_analysis_id = AnalysisID.ACOUSTIC_HARMONIC
-        self.update_project_setup()
+        self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
         checker.check_acoustic_harmonic_analysis()
@@ -354,11 +354,9 @@ class NewProject:
 
         return False
 
-    def is_analysis_setup_complete(self):
-        checker = AnalysisChecker(self.model)
-        
+    def is_analysis_setup_complete(self):        
         try:
-            checker.check_analysis_id(self.current_analysis_id)
+            AnalysisChecker(self.model).check_analysis_id(self.current_analysis_id)
         except Exception:
             return False
         else:
