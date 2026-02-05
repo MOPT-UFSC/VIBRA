@@ -237,8 +237,8 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
         current_analysis_id = self.get_current_analysis_id()
-        valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
-        self.set_pushbutton_run_analysis_enabled(valid_setup)
+        setup_is_valid = app().project.model.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
+        self.set_pushbutton_run_analysis_enabled(setup_is_valid)
 
     def run_analysis(self, is_resume: bool = False):
 
@@ -349,11 +349,11 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        setup_complete = app().project.is_analysis_setup_complete()
+        setup_is_valid = app().project.model.is_there_a_valid_analysis_setup()
 
         # disables the run analysis button whenever the analysis setup is incomplete, or there are
         # any mesh-related problems
-        run_analysis_enabled = setup_complete and not (collapsed_elements or disconnected_nodes)
+        run_analysis_enabled = setup_is_valid and not (collapsed_elements or disconnected_nodes)
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
     def harmonic_structural(self):

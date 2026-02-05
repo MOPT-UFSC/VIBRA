@@ -397,7 +397,7 @@ class LoadProject:
             f_max = analysis_setup.get("f_max")
             f_step = analysis_setup.get("f_step")
 
-            if analysis_setup.get("frequency_spacing") == "user_defined":
+            if analysis_setup.get("frequency_spacing") == "user-defined":
                 ud_frequencies = analysis_setup.get("user_defined_frequencies")
                 if ud_frequencies is not None:
                     analysis_setup["frequencies"] = np.array(ud_frequencies, dtype=float)

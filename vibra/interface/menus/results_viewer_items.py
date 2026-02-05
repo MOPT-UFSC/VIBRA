@@ -109,7 +109,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_absorption_coefficient.setDisabled(key)
 
         # only allow waveform plots for equal spaced frequencies
-        user_defined_freq = self.project.model.analysis_setup.get("frequency_spacing") == "user_defined"
+        user_defined_freq = self.project.model.analysis_setup.get("frequency_spacing") == "user-defined"
 
         self.item_child_acoustic_pressure_waveform.setHidden(user_defined_freq)
         self.item_child_acoustic_pressure_waveform.setDisabled(key)
