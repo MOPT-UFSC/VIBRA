@@ -8,7 +8,7 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.new_project import NewProject
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.libraries.fluid_library import default_fluid_library
+from vibra.engine.properties import FluidLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.solvers import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
@@ -22,7 +22,7 @@ mesh_setup = MeshSetup(
     shape_function="linear",
 )
 
-fluid_library = default_fluid_library()
+fluid_library = FluidLibrary.default()
 fluid = fluid_library.find_by_name("Air std")
 
 analysis_setup_a = HarmonicAnalysisSetup(

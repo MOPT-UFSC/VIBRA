@@ -113,6 +113,10 @@ class PropertyLibrary(Generic[T]):
 
         return f"{preffix} (copy {max_copy + 1})"
 
+    @classmethod
+    def default(cls):
+        raise NotImplementedError(f'Class "{cls.__name__}" does not implement the "default" method.')
+
     def _find_by_attribute(
         self,
         attribute_name: str,

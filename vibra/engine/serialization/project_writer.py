@@ -76,8 +76,10 @@ class ProjectWriter:
             project_setup["length_unit"] = project.model.length_unit
             project_setup["geometry_qf"] = project.model.geometry_qf
 
-        project_setup["analysis_setup"].update(project.model.new_analysis_setup.as_dict())
         project_setup["analysis_setup"]["analysis_id"] = int(project.current_analysis_id)
+
+        if isinstance(project.model.new_analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
+            project_setup["analysis_setup"].update(project.model.new_analysis_setup.as_dict())
 
         mesh_setup = project.model.mesh_setup_new
         if mesh_setup is not None:
