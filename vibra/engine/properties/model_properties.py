@@ -1,12 +1,12 @@
+import json
 from typing import Callable, Optional
 
+import numpy as np
+
+from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.utils.signal import VibraSignal
-
-import json
-import numpy as np
-
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -60,6 +60,8 @@ class ModelProperties:
         self._reset_variables()
 
     def _reset_variables(self):
+        self.material_library = MaterialLibrary.default()
+        self.fluid_library = FluidLibrary.default()
 
         self.acoustic_imported_tables = dict()
         self.structural_imported_tables = dict()
@@ -154,6 +156,12 @@ class ModelProperties:
                         tables_values.append(values)
 
             data["values"] = tables_values
+
+        elif isinstance(data, Material) and (data not in self.material_library):
+            self.material_library.add(data)
+
+        elif isinstance(data, Fluid) and (data not in self.fluid_library):
+            self.fluid_library.add(data)
 
         if node is not None:
             self.nodal_properties[property, node] = data

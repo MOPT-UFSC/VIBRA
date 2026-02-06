@@ -1,3 +1,4 @@
+from numpy import isin
 import re
 from operator import eq
 from typing import (
@@ -158,6 +159,12 @@ class PropertyLibrary(Generic[T]):
 
     def __getitem__(self, key: int) -> T:
         return self._data[key]
+
+    def __contains__(self, key: int | HasIdentifier) -> bool:
+        if isinstance(key, HasIdentifier):
+            return self.contains(key)
+        elif isinstance(key, int):
+            return self.contains_id
 
     def __str__(self) -> str:
         class_name = self.__class__.__name__
