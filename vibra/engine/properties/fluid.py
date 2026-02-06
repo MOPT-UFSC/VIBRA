@@ -1,4 +1,5 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+
 
 @dataclass
 class Fluid:
@@ -20,22 +21,22 @@ class Fluid:
     @property
     def impedance(self):
         return self.fluid_density * self.speed_of_sound
-    
+
     @property
     def prandtl_number(self):
         if self.thermal_conductivity != 0:
-            return (self.specific_heat_Cp*self.dynamic_viscosity)/self.thermal_conductivity
+            return (self.specific_heat_Cp * self.dynamic_viscosity) / self.thermal_conductivity
         else:
             print("Define the fluid thermal conductivity to proceed with the Prandtl number calculation.")
             return None
-        
+
     @property
     def pressure_state(self):
-        return self.fluid_density*(self.speed_of_sound**2)/self.isentropic_exponent
+        return self.fluid_density * (self.speed_of_sound**2) / self.isentropic_exponent
 
     def get_data(self) -> dict:
         return asdict(self)
-    
+
     def get_lrf_properties(self):
         c_0 = self.speed_of_sound
         rho_0 = self.fluid_density
@@ -44,3 +45,6 @@ class Fluid:
         Pr = self.prandtl_number
         P_0 = self.pressure_state
         return c_0, rho_0, mu, gamma, Pr, P_0
+
+    def copy(self):
+        return Fluid(**asdict(self))

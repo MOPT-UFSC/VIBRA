@@ -17,6 +17,9 @@ class Material:
     def shear_modulus(self):
         return self.elasticity_modulus / (2 * (1 + self.poisson_ratio))
 
+    def copy(self):
+        return Material(**asdict(self))
+
 
 def load_material_list(path):
     path = Path(path)
