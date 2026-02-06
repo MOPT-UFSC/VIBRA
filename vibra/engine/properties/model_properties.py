@@ -277,6 +277,34 @@ class ModelProperties:
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
+    def remove_material(self, material: Material):
+        self.material_library.pop(material)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == material:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("material", tags)
+                case "surface":
+                    self._remove_surface_property("material", tags)
+
+    def remove_fluid(self, fluid: Fluid):
+        self.fluid_library.pop(fluid)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == fluid:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("fluid", tags)
+                case "surface":
+                    self._remove_surface_property("fluid", tags)
+
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
         key = (property, nodal_id)
