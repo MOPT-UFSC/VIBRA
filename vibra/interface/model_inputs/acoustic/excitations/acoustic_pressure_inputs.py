@@ -5,7 +5,6 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -54,7 +53,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
         self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
         self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 
@@ -73,9 +71,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.selection_changed.connect(self.geometry_selection_callback)
     
     def _config_widgets(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
         for i, w in enumerate([120]):
             self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
             self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -496,13 +491,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 

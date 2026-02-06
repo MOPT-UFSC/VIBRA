@@ -61,9 +61,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.decoupling_map = bidict()
 
     def _configure_qt_variables(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
         for i in range(2):
             self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
