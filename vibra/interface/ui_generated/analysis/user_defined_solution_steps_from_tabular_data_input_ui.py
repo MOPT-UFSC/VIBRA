@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'user_defined_frequencies_from_tabular_data_input.ui'
+## Form generated from reading UI file 'user_defined_solution_steps_from_tabular_data_input.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -280,7 +280,7 @@ class Ui_Dialog(object):
 
 
 
-class UserDefinedFrequenciesFromTabularDataInput_UI(QDialog, Ui_Dialog):
+class UserDefinedSolutionStepsFromTabularDataInput_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
     - Dialog: QDialog
