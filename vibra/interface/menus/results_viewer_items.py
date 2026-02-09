@@ -108,10 +108,11 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
 
-        # only allow waveform plots for equally distributed solution steps
-        modified_spectral_content = self.project.model.has_spectral_content_been_modified()
+        # only allow waveform plots for equally distributed solution steps with a compressor as the main excitation source
+        cond_A = self.project.model.has_spectral_content_been_modified()
+        cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
 
-        self.item_child_acoustic_pressure_waveform.setHidden(modified_spectral_content)
+        self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
         self.item_child_acoustic_pressure_waveform.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
