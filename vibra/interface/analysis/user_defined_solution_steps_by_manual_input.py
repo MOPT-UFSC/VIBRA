@@ -63,7 +63,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         if read._continue:
             self.user_defined_solution_steps.clear()
-            self.update_solution_steps_table()
+            self.reset_table()
+            # self.update_solution_steps_table()
 
     def load_analysis_setup(self):
 
@@ -79,21 +80,22 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
     def reset_table(self):
         self.tableWidget_frequencies.clearContents()
         self.tableWidget_frequencies.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget_frequencies.setRowCount(0)
 
     def update_solution_steps_table(self):
 
         self.reset_table()
 
-        solution_steps = self.user_defined_solution_steps
         if not self.user_defined_solution_steps:
             if app().project.model.frequencies is None:
                 return
-            
-            solution_steps = app().project.model.frequencies
 
-        self.tableWidget_frequencies.setRowCount(len(solution_steps))
+            frequencies = deepcopy(app().project.model.frequencies)
+            self.user_defined_solution_steps = list(frequencies)
 
-        for index, freq in enumerate(solution_steps):
+        self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
+
+        for index, freq in enumerate(self.user_defined_solution_steps):
 
             # Creates the QPushButton to control the solution step removal
             remove_button = QPushButton()
@@ -175,12 +177,13 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
     def remove_solution_step_callback(self):
 
         for index, push_button in self.index_to_push_buttons.items():
+            push_button: QPushButton
             if push_button.isChecked():
                 break
-       
+
         if not isinstance(index, int):
             return
-    
+
         solution_step_to_remove = float(self.tableWidget_frequencies.item(index, 1).text())
         if solution_step_to_remove in self.user_defined_solution_steps:
             self.user_defined_solution_steps.remove(solution_step_to_remove)

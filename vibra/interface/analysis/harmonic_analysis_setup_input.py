@@ -483,6 +483,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
     def check_analysis_setup_update(self):
 
+        if self.ud_interface is None:
+            return
+        
+        if not self.ud_interface.setup_defined:
+            return
+
+        if self.setup_defined:
+            return
+
         self.hide()
 
         title = "Analysis setup not updated"
@@ -490,7 +499,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         message += "the analysis setup has not been updated. Would you "
         message += "like to update the analysis setup before exit?"
 
-        buttons_config = {"left_button_label" : "Exit", "right_button_label" : "Enter setup"}
+        buttons_config = {"left_button_label" : "No", "right_button_label" : "Yes"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
@@ -501,11 +510,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
 
     def closeEvent(self, a0):
-        if self.ud_interface is not None:
-            if self.ud_interface.user_defined_solution_steps:
-                self.check_analysis_setup_update()
 
+        self.check_analysis_setup_update()
         self.keep_window_open = False
+
         return super().closeEvent(a0)
 
     def keyPressEvent(self, event):

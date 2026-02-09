@@ -232,15 +232,15 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.lineEdit_fstep, 2, 2, 1, 1)
 
-        self.pushButton_user_defined_frequencies = QPushButton(self.tab_setup)
-        self.pushButton_user_defined_frequencies.setObjectName(u"pushButton_user_defined_frequencies")
-        self.pushButton_user_defined_frequencies.setMinimumSize(QSize(0, 30))
-        self.pushButton_user_defined_frequencies.setMaximumSize(QSize(180, 30))
-        self.pushButton_user_defined_frequencies.setFont(font1)
-        self.pushButton_user_defined_frequencies.setStyleSheet(u"")
-        self.pushButton_user_defined_frequencies.setAutoDefault(False)
+        self.pushButton_user_defined_solution_steps = QPushButton(self.tab_setup)
+        self.pushButton_user_defined_solution_steps.setObjectName(u"pushButton_user_defined_solution_steps")
+        self.pushButton_user_defined_solution_steps.setMinimumSize(QSize(0, 30))
+        self.pushButton_user_defined_solution_steps.setMaximumSize(QSize(180, 30))
+        self.pushButton_user_defined_solution_steps.setFont(font1)
+        self.pushButton_user_defined_solution_steps.setStyleSheet(u"")
+        self.pushButton_user_defined_solution_steps.setAutoDefault(False)
 
-        self.gridLayout_5.addWidget(self.pushButton_user_defined_frequencies, 3, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.pushButton_user_defined_solution_steps, 3, 2, 1, 1)
 
         self.lineEdit_fmax = QLineEdit(self.tab_setup)
         self.lineEdit_fmax.setObjectName(u"lineEdit_fmax")
@@ -532,7 +532,7 @@ class Ui_Dialog(object):
         self.pushButton_reset_frequency_settings.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Reset the frequency settings</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset_frequency_settings.setText("")
-        self.pushButton_user_defined_frequencies.setText(QCoreApplication.translate("Dialog", u"User-defined frequencies", None))
+        self.pushButton_user_defined_solution_steps.setText(QCoreApplication.translate("Dialog", u"User-defined frequencies", None))
         self.label_22.setText(QCoreApplication.translate("Dialog", u"Freq. min:", None))
         self.label_26.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.label_25.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
@@ -579,7 +579,7 @@ class HarmonicAnalysisSetupInput_UI(QDialog, Ui_Dialog):
                                             - label_23: QLabel
                                             - pushButton_reset_frequency_settings: QPushButton
                                             - lineEdit_fstep: QLineEdit
-                                            - pushButton_user_defined_frequencies: QPushButton
+                                            - pushButton_user_defined_solution_steps: QPushButton
                                             - lineEdit_fmax: QLineEdit
                                             - label_22: QLabel
                                             - lineEdit_fmin: QLineEdit

@@ -94,6 +94,7 @@ class Ui_Dialog(object):
         icon.addFile(u":/icons/preview_data.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_show_solution_steps_table.setIcon(icon)
         self.pushButton_show_solution_steps_table.setIconSize(QSize(20, 20))
+        self.pushButton_show_solution_steps_table.setAutoDefault(False)
 
         self.gridLayout_7.addWidget(self.pushButton_show_solution_steps_table, 1, 3, 1, 1)
 

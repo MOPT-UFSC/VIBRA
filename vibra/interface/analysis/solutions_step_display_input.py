@@ -33,7 +33,7 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
-        self.user_defined_frequencies = list()
+        self.user_defined_solution_steps = list()
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
         self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
 
