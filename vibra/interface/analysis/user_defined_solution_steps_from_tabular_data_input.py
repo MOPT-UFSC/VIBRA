@@ -1,24 +1,18 @@
-from PySide6.QtWidgets import QCheckBox, QDialog, QHBoxLayout, QHeaderView, QLineEdit, QTableWidgetItem, QWidget
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QHeaderView, QTableWidgetItem, QWidget
 from PySide6.QtGui import Qt
 
 from vibra import app
-from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.user_defined_frequencies_from_tabular_data_input_ui import UserDefinedFrequenciesFromTabularDataInput_UI
+from vibra.interface.ui_generated.analysis.user_defined_solution_steps_from_tabular_data_input_ui import UserDefinedSolutionStepsFromTabularDataInput_UI
 
 import numpy as np
-from copy import deepcopy
 
 error_title = "Error"
 
 
-class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabularDataInput_UI):
+class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromTabularDataInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
-
-        self.analysis_id = kwargs.get("analysis_id")
-        if self.analysis_id is None:
-            self.analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         # app().main_window.close_dialogs()
         # app().main_window.set_input_widget(self)
@@ -35,7 +29,8 @@ class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabul
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
-        self.user_defined_frequencies = list()
+        self.user_defined_solution_steps = list()
+        self.index_to_check_box = dict()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -61,8 +56,7 @@ class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabul
 
     def load_analysis_setup(self):
 
-        self.index_to_check_box = dict()
-        self.analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        self.index_to_check_box.clear()
 
         table_frequencies = app().project.model.properties.process_all_tables_frequencies_vectors()
         self.tableWidget_frequencies.clearContents()
@@ -125,9 +119,9 @@ class UserDefinedFrequenciesFromTabularDataInput(UserDefinedFrequenciesFromTabul
             if not check_box.isChecked():
                 continue
 
-            self.user_defined_frequencies.append(self.table_frequencies[index])
+            self.user_defined_solution_steps.append(self.table_frequencies[index])
 
-        if not self.user_defined_frequencies:
+        if not self.user_defined_solution_steps:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "

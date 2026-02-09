@@ -227,12 +227,12 @@ class Ui_Dialog(object):
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Remove", None));
         self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.label_title_3.setText(QCoreApplication.translate("Dialog", u"List of solution steps", None))
+        self.label_title_3.setText(QCoreApplication.translate("Dialog", u"Solution steps configurator", None))
     # retranslateUi
 
 
 
-class UserDefinedFrequenciesByManualInput_UI(QDialog, Ui_Dialog):
+class UserDefinedSolutionStepsByManualInput_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
     - Dialog: QDialog

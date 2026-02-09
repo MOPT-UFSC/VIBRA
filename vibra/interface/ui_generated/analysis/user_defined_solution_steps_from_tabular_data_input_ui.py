@@ -280,7 +280,7 @@ class Ui_Dialog(object):
 
 
 
-class UserDefinedFrequenciesFromTabularDataInput_UI(QDialog, Ui_Dialog):
+class UserDefinedSolutionStepsFromTabularDataInput_UI(QDialog, Ui_Dialog):
     """
     Component Hierarchy:
     - Dialog: QDialog

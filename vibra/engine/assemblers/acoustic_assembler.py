@@ -105,7 +105,7 @@ class AcousticAssembler:
 
             for _ in nodes:
                 for _complex_values in complex_values:
-                    global_prescribed.append(_complex_values[self.model.frequencies_mask])
+                    global_prescribed.append(_complex_values[self.model.solution_steps_mask])
 
         # TODO: implement same structure for lines
         # TODO: refactor this method
@@ -598,7 +598,7 @@ class AcousticAssembler:
         if filter_frequencies:
             # filter values based on frequency mask
             if output_vector.shape[1] - self.frequencies.size:
-                output_vector = output_vector[:, self.model.frequencies_mask]
+                output_vector = output_vector[:, self.model.solution_steps_mask]
 
         if flatten:
             return output_vector.flatten()

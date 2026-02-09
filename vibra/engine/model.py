@@ -87,7 +87,7 @@ class Model:
         self.decouple_info = dict()
         self.nodes_mapping = dict()
 
-        self.analysis_setup = None
+        self.analysis_setup = dict()
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
 
@@ -271,18 +271,18 @@ class Model:
                 return
             
         if analysis_setup.get("frequency_spacing") == "user-defined":
-            self.process_user_defined_frequencies_mask()
+            self.process_user_defined_solution_steps_mask()
 
         else:
-            self.process_frequencies_mask_by_boundaries()
+            self.process_solution_steps_mask_by_boundaries()
 
 
-    def process_frequencies_mask_by_boundaries(self):
+    def process_solution_steps_mask_by_boundaries(self):
         """
-        This method process the frequencies mask to filter the required 
+        This method process the solution steps mask to filter the required 
         analysis frequency setup.
         """
-        self.frequencies_mask = np.ones_like(self.frequencies, dtype=bool)
+        self.solution_steps_mask = np.ones_like(self.frequencies, dtype=bool)
         self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
         if not self.table_frequencies:
             return
@@ -298,15 +298,15 @@ class Model:
         max_mask = table_frequencies <= f_max
         step_mask = np.isin(table_frequencies, self.frequencies)
 
-        self.frequencies_mask =  min_mask * max_mask * step_mask
+        self.solution_steps_mask =  min_mask * max_mask * step_mask
 
 
-    def process_user_defined_frequencies_mask(self):
+    def process_user_defined_solution_steps_mask(self):
         """
-        This method process the frequencies mask to filter the required 
+        This method process the solution steps mask to filter the required 
         analysis frequency setup.
         """
-        self.frequencies_mask = np.ones_like(self.frequencies, dtype=bool)
+        self.solution_steps_mask = np.ones_like(self.frequencies, dtype=bool)
         self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
         if not self.table_frequencies:
             return
@@ -314,11 +314,13 @@ class Model:
         if len(self.table_frequencies) != 1:
             return
 
-        self.frequencies_mask = np.isin(self.table_frequencies[0], self.frequencies)
+        self.solution_steps_mask = np.isin(self.table_frequencies[0], self.frequencies)
 
 
     def has_spectral_content_been_modified(self):
-        return self.frequencies_mask.size != int(np.sum(self.frequencies_mask))
+        cond_A = "user_defined_solution_steps" in self.analysis_setup.keys()
+        cond_B = self.solution_steps_mask.size != int(np.sum(self.solution_steps_mask))
+        return cond_A or cond_B
 
 
     def is_there_a_valid_analysis_setup(self, **kwargs):
@@ -341,8 +343,8 @@ class Model:
             AnalysisID.COUPLED_HARMONIC
             ]:
 
-            frequency_spacing = self.analysis_setup.get("frequency_spacing")
-            ud_frequencies = self.analysis_setup.get("user_defined_frequencies")
+            # frequency_spacing = self.analysis_setup.get("frequency_spacing")
+            ud_frequencies = self.analysis_setup.get("user_defined_solution_steps")
 
             if isinstance(ud_frequencies, list):
                 return True
@@ -823,7 +825,7 @@ class Model:
 
             elif "values" in sv_data.keys():
                 V_in = sv_data["values"][0]
-                V_in = V_in[self.frequencies_mask]
+                V_in = V_in[self.solution_steps_mask]
 
             P_downstream = V_in * Zo_in / 2
             V_downstream = P_downstream / Zo_in

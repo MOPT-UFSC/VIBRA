@@ -242,7 +242,7 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis(self, is_resume: bool = False):
 
-        if app().project.model.analysis_setup is None:
+        if not app().project.model.analysis_setup:
             self.configure_analysis()
             return
 

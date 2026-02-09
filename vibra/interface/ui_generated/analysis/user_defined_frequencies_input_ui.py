@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'user_defined_frequencies_input.ui'
+## Form generated from reading UI file 'user_defined_solution_steps_input.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##

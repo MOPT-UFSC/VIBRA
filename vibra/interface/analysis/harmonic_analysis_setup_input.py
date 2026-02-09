@@ -1,12 +1,14 @@
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTableWidgetItem
+from PySide6.QtWidgets import QLineEdit
 from PySide6.QtGui import Qt
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
-from vibra.interface.analysis.user_defined_frequencies_by_manual_input import UserDefinedFrequenciesByManualInput
-from vibra.interface.analysis.user_defined_frequencies_from_tabular_data_input import UserDefinedFrequenciesFromTabularDataInput
+from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
+from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
+from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 
 import numpy as np
 
@@ -17,13 +19,14 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
-        self.project = app().project
         self.model = app().project.model
         self.analysis_setup = app().project.analysis_setup
 
         self.analysis_id = kwargs.get("analysis_id")
         if self.analysis_id is None:
             self.analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+
+        self.ud_interface = None
 
         app().main_window.close_dialogs()
         app().main_window.set_input_widget(self)
@@ -33,8 +36,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self._create_connections()
 
         self.load_analysis_setup()
-        self.load_solution_steps()
         self.check_mesh_related_issues()
+        self.update_display_table_visibility()
 
         while self.keep_window_open:
             self.exec()
@@ -43,7 +46,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
-        self.user_defined_frequencies = list()
+        self.user_defined_solution_steps = list()
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
         self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
 
@@ -59,43 +62,31 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.comboBox_method.currentIndexChanged.connect(self.analysis_method_callback)
         #
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
-        self.pushButton_run_analysis.clicked.connect(self.run_analysis)
-        self.pushButton_solution_steps_setup.clicked.connect(self.solution_steps_setup_callback)
+        self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_reset_frequency_settings.clicked.connect(self.reset_frequency_setup_based_on_tabular_data)
+        self.pushButton_run_analysis.clicked.connect(self.run_analysis)
+        self.pushButton_solution_steps_configurator.clicked.connect(self.solution_steps_setup_callback)
+        self.pushButton_show_solution_steps_table.clicked.connect(self.display_solution_steps_callback)
         #
         self.frequency_spacing_callback()
 
-    def load_solution_steps(self):
-        self.tableWidget_solution_steps.clearContents()
-        self.tableWidget_solution_steps.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.tableWidget_solution_steps.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tableWidget_solution_steps.setSelectionMode(QAbstractItemView.NoSelection)
-
-        frequencies = self.model.frequencies
-        if frequencies is None:
-            return
-                
-        if isinstance(frequencies, np.ndarray):
-            self.tableWidget_solution_steps.setRowCount(frequencies.size)
-            frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
-
-            for index, freq in enumerate(frequencies):
-                self.tableWidget_solution_steps.setItem(index, 0, QTableWidgetItem(str(index+1)))
-                self.tableWidget_solution_steps.setItem(index, 1, QTableWidgetItem(str(freq)))
-                self.tableWidget_solution_steps.setItem(index, 2, QTableWidgetItem(frequency_spacing))
-
-                for j in range(3):
-                    self.tableWidget_solution_steps.item(index, j).setTextAlignment(Qt.AlignCenter)
+    def update_display_table_visibility(self):
+        frequencies_defined = isinstance(self.model.frequencies, list | np.ndarray)
+        self.pushButton_show_solution_steps_table.setEnabled(frequencies_defined)
 
     def solution_steps_setup_callback(self):
         self.hide()
-        if self.table_exists:
-            user_defined_interface = UserDefinedFrequenciesFromTabularDataInput()
-        else:
-            user_defined_interface = UserDefinedFrequenciesByManualInput()
 
-        if user_defined_interface.setup_defined:
-            self.user_defined_frequencies = user_defined_interface.user_defined_frequencies
+        if self.table_exists:
+            self.ud_interface = UserDefinedSolutionStepsFromTabularDataInput()
+
+        else:
+            self.ud_interface = UserDefinedSolutionStepsByManualInput()
+
+        if self.ud_interface.setup_defined:
+            self.user_defined_solution_steps = self.ud_interface.user_defined_solution_steps
+
+        self.update_display_table_visibility()
 
     def frequency_spacing_callback(self):
         user_defined = self.comboBox_frequency_spacing.currentText() == "User-defined"
@@ -145,6 +136,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         else:
             self.lineEdit_modes_to_expand.setText(f"")
 
+    def display_solution_steps_callback(self):
+        self.hide()
+        SolutionStepsDisplayInput()
+
     def reset_frequency_setup_based_on_tabular_data(self):
         if not self.model.properties.check_if_there_are_tables_at_the_model():
             return
@@ -158,7 +153,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
     
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
-        # self.load_solution_steps()
 
     def update_reset_settings_button_visibility(self):
         self.pushButton_reset_frequency_settings.setVisible(self.table_exists)
@@ -222,7 +216,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.comboBox_fstep.setCurrentText(f"{round(f_step, 14)}")
 
         self.lineEdit_fstep.setDisabled(self.table_exists)
-        self.tabWidget_main.setTabVisible(2, self.table_exists)
 
         self.update_reset_settings_button_visibility()
 
@@ -298,7 +291,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
 
         if frequency_spacing == "user-defined":
-            if not self.user_defined_frequencies:
+            if not self.user_defined_solution_steps:
                 self.hide()
                 title = "No solution steps found"
                 message = "Enter the solution steps before confirming the analysis "
@@ -330,12 +323,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             if frequency_spacing == "user-defined":
                 analysis_setup.update(
                     {
-                    "frequencies" : np.array(self.user_defined_frequencies, dtype=float),
-                    "user_defined_frequencies" : self.user_defined_frequencies,
+                    "frequencies" : np.array(self.user_defined_solution_steps, dtype=float),
+                    "user_defined_solution_steps" : self.user_defined_solution_steps,
                     }
                     )
 
-            user_defined_manually = not self.table_exists and self.user_defined_frequencies
+            user_defined_manually = not self.table_exists and self.user_defined_solution_steps
             if not user_defined_manually:
                 zero_allowed = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText() == "Structural"
 
@@ -436,8 +429,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
         app().file.write_analysis_setup_in_file(analysis_setup)
-        self.project.set_analysis_setup(analysis_setup)
-        self.project.create_solver()
+        app().project.set_analysis_setup(analysis_setup)
+        app().project.create_solver()
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
@@ -487,8 +480,39 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.solve_analysis = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
 
+    def check_analysis_setup_update(self):
+
+        if self.ud_interface is None:
+            return
+        
+        if not self.ud_interface.setup_defined:
+            return
+
+        if self.setup_defined:
+            return
+
+        self.hide()
+
+        title = "Analysis setup not updated"
+        message = "A set of solution steps has been configured, however, "
+        message += "the analysis setup has not been updated. Would you "
+        message += "like to update the analysis setup before exit?"
+
+        buttons_config = {"left_button_label" : "No", "right_button_label" : "Yes"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if read._cancel:
+            return
+
+        if read._continue:
+            self.enter_setup_callback()
+            return
+
     def closeEvent(self, a0):
+
+        self.check_analysis_setup_update()
         self.keep_window_open = False
+
         return super().closeEvent(a0)
 
     def keyPressEvent(self, event):

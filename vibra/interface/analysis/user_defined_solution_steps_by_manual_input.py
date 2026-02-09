@@ -1,19 +1,17 @@
-from PySide6.QtWidgets import QCheckBox, QDialog, QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QTableWidgetItem, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QTableWidgetItem, QWidget
 from PySide6.QtGui import Qt, QIcon
 
 from vibra import app, ICON_DIR
-from vibra.engine import AnalysisID
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.user_defined_frequencies_by_manual_input_ui import UserDefinedFrequenciesByManualInput_UI
+from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import UserDefinedSolutionStepsByManualInput_UI
 
-import numpy as np
 from copy import deepcopy
 
 error_title = "Error"
 
 
-class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI):
+class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
@@ -32,7 +30,8 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
-        self.user_defined_frequencies = list()
+        self.user_defined_solution_steps = list()
+        self.index_to_push_buttons = dict()
 
         self.remove_icon = QIcon(str(ICON_DIR / "delete.png"))
 
@@ -63,28 +62,40 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
             return
 
         if read._continue:
-            self.user_defined_frequencies.clear()
-            self.update_solution_steps_table()
+            self.user_defined_solution_steps.clear()
+            self.reset_table()
+            # self.update_solution_steps_table()
 
     def load_analysis_setup(self):
 
-        self.index_to_push_buttons = dict()
+        self.index_to_push_buttons.clear()
+
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
             return
 
-        self.user_defined_frequencies = app().project.model.analysis_setup.get("user_defined_frequencies", list())
+        user_defined_solution_steps = app().project.model.analysis_setup.get("user_defined_solution_steps", list())
+        self.user_defined_solution_steps = deepcopy(user_defined_solution_steps)
         self.update_solution_steps_table()
+
+    def reset_table(self):
+        self.tableWidget_frequencies.clearContents()
+        self.tableWidget_frequencies.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.tableWidget_frequencies.setRowCount(0)
 
     def update_solution_steps_table(self):
 
-        self.tableWidget_frequencies.clearContents()
-        self.tableWidget_frequencies.setRowCount(len(self.user_defined_frequencies))
-        self.tableWidget_frequencies.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.reset_table()
 
-        if not self.user_defined_frequencies:
-            return
+        if not self.user_defined_solution_steps:
+            if app().project.model.frequencies is None:
+                return
 
-        for index, freq in enumerate(self.user_defined_frequencies):
+            frequencies = deepcopy(app().project.model.frequencies)
+            self.user_defined_solution_steps = list(frequencies)
+
+        self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
+
+        for index, freq in enumerate(self.user_defined_solution_steps):
 
             # Creates the QPushButton to control the solution step removal
             remove_button = QPushButton()
@@ -154,11 +165,11 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
             self.lineEdit_solution_step.setFocus()
             return True
         
-        if solution_step in self.user_defined_frequencies:
+        if solution_step in self.user_defined_solution_steps:
             return
 
-        self.user_defined_frequencies.append(solution_step)
-        self.user_defined_frequencies.sort()
+        self.user_defined_solution_steps.append(solution_step)
+        self.user_defined_solution_steps.sort()
         self.update_solution_steps_table()
         self.lineEdit_solution_step.setText("")
         self.lineEdit_solution_step.setFocus()
@@ -166,20 +177,21 @@ class UserDefinedFrequenciesByManualInput(UserDefinedFrequenciesByManualInput_UI
     def remove_solution_step_callback(self):
 
         for index, push_button in self.index_to_push_buttons.items():
+            push_button: QPushButton
             if push_button.isChecked():
                 break
-       
+
         if not isinstance(index, int):
             return
-    
+
         solution_step_to_remove = float(self.tableWidget_frequencies.item(index, 1).text())
-        if solution_step_to_remove in self.user_defined_frequencies:
-            self.user_defined_frequencies.remove(solution_step_to_remove)
+        if solution_step_to_remove in self.user_defined_solution_steps:
+            self.user_defined_solution_steps.remove(solution_step_to_remove)
             self.update_solution_steps_table()
 
     def confirm_callback(self):
 
-        if not self.user_defined_frequencies:
+        if not self.user_defined_solution_steps:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "
