@@ -1,8 +1,8 @@
-from typing import Optional
 from copy import deepcopy
 from enum import IntEnum
 from itertools import count
 from random import randint
+from typing import Optional
 
 from molde import Color
 from molde.colors import color_names
@@ -12,18 +12,13 @@ from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
 
 from vibra import app
 from vibra.engine.properties.material import Material
+from vibra.errors import InvalidMaterialError
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
-from vibra.libraries.default_libraries import default_material_library
 from vibra.utils.interface_utils import block_signals
-
-error_title = "Error"
-warning_title = "Warning"
-
-COLOR_ROW = 6
 
 
 class RowsEnum(IntEnum):
@@ -130,7 +125,43 @@ class MaterialWidget(MaterialWidget_UI):
             self._pick_color(row, col)
 
     def item_changed_callback(self, item: QTableWidgetItem):
-        pass
+        material_library = app().new_project.model.properties.material_library
+
+        with block_signals(self.tableWidget_material_data):
+            match item.row():
+                case RowsEnum.NAME:
+                    name = item.text()
+                    if name.strip() == "":
+                        raise InvalidMaterialError("Every material needs a name")
+
+                    material = material_library.find_by_name(name)
+                    name_already_exists = material is not None
+                    if name_already_exists:
+                        item.setText("")
+                        raise InvalidMaterialError(f'A material named "{name}" alredy exists')
+
+                case RowsEnum.COLOR | RowsEnum.IDENTIFIER:
+                    pass  # ignore
+
+                case _:
+                    try:
+                        str_value = item.text().replace(",", ".")
+                        float(str_value)
+                    except Exception as e:
+                        property_name = self.tableWidget_material_data.verticalHeaderItem(item.row()).text()
+                        msg = f'Invalid value for property "{property_name}". It must be a positive real number.'
+                        item.setText("")
+                        raise InvalidMaterialError(msg) from e
+
+            if self._column_has_empty_items(item.column()):
+                return
+
+            try:
+                self._update_library_with_column(item.column())
+            except Exception as e:
+                msg = f"Column {item.column()} contains unnexpected errors."
+                item.setText("")
+                raise InvalidMaterialError(msg) from e
 
     def scroll_to_start(self):
         scroll_bar = self.tableWidget_material_data.horizontalScrollBar()
@@ -149,6 +180,54 @@ class MaterialWidget(MaterialWidget_UI):
 
         properties = app().new_project.model.properties
         return properties.material_library.get_from_ordered_index(selected_column)
+
+    def _update_library_with_column(self, col: int):
+        material_library = app().new_project.model.properties.material_library
+        material = material_library.get_from_ordered_index(col)
+        if material is None:
+            # Create a temporary material to be updated
+            material = Material("", 0, 0, 0, 0, 0)
+            material_library.add(material)
+
+        def to_num(val: str) -> int | float:
+            val = val.strip()
+            return int(val) if val.isdigit() else float(val)
+
+        for row in RowsEnum:
+            item = self.tableWidget_material_data.item(row, col)
+            if item is None:
+                continue
+
+            text = item.text()
+            match row:
+                case RowsEnum.NAME:
+                    material.name = text
+                case RowsEnum.IDENTIFIER:
+                    item.setText(str(material.identifier))
+                case RowsEnum.COLOR:
+                    material.color = Color(item.background().color()).to_rgb()
+                case RowsEnum.MATERIAL_DENSITY:
+                    material.material_density = to_num(text)
+                case RowsEnum.ELASTICITY_MODULUS:
+                    material.elasticity_modulus = to_num(text)
+                case RowsEnum.POISSON_RATIO:
+                    material.poisson_ratio = to_num(text)
+                case RowsEnum.THERMAL_EXPANSION_COEFFICIENT:
+                    material.thermal_expansion_coefficient = to_num(text)
+
+    def _column_has_empty_items(self, col: int):
+        for row in RowsEnum:
+            if row == RowsEnum.COLOR:
+                continue
+
+            item = self.tableWidget_material_data.item(row, col)
+            if item is None:
+                return True
+
+            if item.text().strip() == "":
+                return True
+
+        return False
 
     def _pick_color(self, row: int, col: int):
         read = PickColorInput()
