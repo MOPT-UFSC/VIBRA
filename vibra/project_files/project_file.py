@@ -355,16 +355,15 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_analysis_setup_from_file(self):
-        analysis_setup = None
-        project_setup = read_json(self.project_setup_filepath)
 
-        if project_setup is None:
-            return
+        project_setup = read_json(self.project_setup_filepath)
+        if not isinstance(project_setup, dict):
+            return dict()
 
         if "analysis_setup" in project_setup.keys():
-            analysis_setup = project_setup["analysis_setup"]
+            return project_setup.get("analysis_setup")
 
-        return analysis_setup
+        return dict()
 
     def write_model_setup_in_file(self, project_setup : dict):
         write_json(self.project_setup_filepath, project_setup)

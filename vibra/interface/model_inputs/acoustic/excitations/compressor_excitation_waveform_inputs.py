@@ -582,8 +582,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
 
         f_min = frequencies[0]
         f_max = frequencies[-1]

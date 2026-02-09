@@ -288,15 +288,15 @@ class Project(QObject):
     def is_there_a_valid_solution(self):
 
         analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
+        if not analysis_setup:
             return
 
         solvers = [
-                    self.structural_harmonic_solver, 
-                    self.structural_modal_solver, 
-                    self.acoustic_modal_solver, 
-                    self.acoustic_harmonic_solver
-                    ]
+            self.structural_harmonic_solver, 
+            self.structural_modal_solver, 
+            self.acoustic_modal_solver, 
+            self.acoustic_harmonic_solver
+            ]
 
         if not any(solvers):
             return False
