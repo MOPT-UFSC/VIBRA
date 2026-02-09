@@ -254,7 +254,7 @@ class StructuralAssembler:
 
         # filter values based on frequency mask
         if array_of_values.shape[1] - self.frequencies.size:
-            return array_of_values[self.model.frequencies_mask, :]
+            return array_of_values[self.model.solution_steps_mask, :]
         else:
             return array_of_values
 
