@@ -216,7 +216,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.comboBox_fstep.setCurrentText(f"{round(f_step, 14)}")
 
         self.lineEdit_fstep.setDisabled(self.table_exists)
-        self.tabWidget_main.setTabVisible(2, self.table_exists)
 
         self.update_reset_settings_button_visibility()
 

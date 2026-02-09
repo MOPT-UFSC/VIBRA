@@ -404,8 +404,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                     self.lineEdit_table_path, 
                     direct_load = True 
                     )
-                
-
 
             for surface_id in surface_ids:
 

@@ -318,7 +318,9 @@ class Model:
 
 
     def has_spectral_content_been_modified(self):
-        return "user_defined_solution_steps" in self.analysis_setup.keys()
+        cond_A = "user_defined_solution_steps" in self.analysis_setup.keys()
+        cond_B = self.solution_steps_mask.size != int(np.sum(self.solution_steps_mask))
+        return cond_A or cond_B
 
 
     def is_there_a_valid_analysis_setup(self, **kwargs):

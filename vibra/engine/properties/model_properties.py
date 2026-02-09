@@ -129,9 +129,6 @@ class ModelProperties:
                         else:
                             values_list.append(a + 1j*b)
 
-            elif "values" in data.keys():
-                values_list = data["values"]
-
             elif "table_names" in data.keys():
                 if group_label == "acoustic":
                     imported_tables = self.acoustic_imported_tables
@@ -139,7 +136,6 @@ class ModelProperties:
                     imported_tables = self.structural_imported_tables
 
                 frequencies_list = list()
-
                 for i, table_name in enumerate(data["table_names"]):
                     if table_name is None:
                         values_list.append(None)
@@ -148,7 +144,7 @@ class ModelProperties:
                     if table_name in imported_tables.keys():
                         data_array = imported_tables[table_name]
 
-                        table_frequencies = list(data_array[:, 0])
+                        table_frequencies = [float(freq) for freq in data_array[:, 0]]
                         frequencies_list.append(table_frequencies)
 
                         if data_array.shape[1] >= 3:
@@ -159,6 +155,9 @@ class ModelProperties:
                         values_list.append(values)
 
                 data["tables_frequencies"] = frequencies_list
+
+            elif "values" in data.keys():
+                values_list = data["values"]
 
             data["values"] =  values_list
 
