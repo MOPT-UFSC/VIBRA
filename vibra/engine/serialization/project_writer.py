@@ -50,7 +50,7 @@ class ProjectWriter:
         self.write_project_setup(project)
         self.write_model(project.model)
 
-        if isinstance(project.solver, ModalSolver):
+        if isinstance(project.solver, ModalSolver) and (project.solver.solution is not None):
             self.write_modal_solution(project.solver)
 
         if project.thumbnail is not None:
