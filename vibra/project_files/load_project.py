@@ -389,24 +389,7 @@ class LoadProject:
                         self.properties._set_property(property, prop_data)
 
     def load_analysis_setup(self):
-
         analysis_setup = self.file.read_analysis_setup_from_file()
-
-        if isinstance(analysis_setup, dict):
-            if analysis_setup.get("frequency_spacing") == "user-defined":
-                ud_frequencies = analysis_setup.get("user_defined_solution_steps")
-                if ud_frequencies is not None:
-                    analysis_setup["frequencies"] = np.array(ud_frequencies, dtype=float)
-
-            else:
-
-                f_min = analysis_setup.get("f_min")
-                f_max = analysis_setup.get("f_max")
-                f_step = analysis_setup.get("f_step")
-
-                if (f_min, f_max, f_step).count(None):
-                    return
-
         app().project.set_analysis_setup(analysis_setup)
         app().project.create_solver()
 

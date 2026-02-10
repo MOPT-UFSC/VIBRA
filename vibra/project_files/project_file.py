@@ -340,14 +340,17 @@ class ProjectFile:
     def write_analysis_setup_in_file(self, analysis_setup: dict):
         project_setup = read_json(self.project_setup_filepath)
         if project_setup is None:
-            return   
-
+            return
+        
         aux = dict()
         for key, data in analysis_setup.items():
-            if key == "frequencies":
-                continue
-            # if isinstance(data, np.ndarray):
-            #     data = list(data)
+
+            if isinstance(data, np.ndarray):
+                if data.size == 0:
+                    continue
+
+                data = list(data)
+
             aux[key] = data
 
         project_setup["analysis_setup"] = aux         
