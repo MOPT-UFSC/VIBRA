@@ -255,7 +255,7 @@ class Model:
         frequencies = analysis_setup.get("frequencies")
 
         if isinstance(frequencies, list):
-            frequencies = np.round(np.array(frequencies, dtype=float), 14)
+            self.frequencies = np.round(np.array(frequencies, dtype=float), 14)
 
         elif isinstance(frequencies, np.ndarray):
             self.frequencies = frequencies
