@@ -121,6 +121,8 @@ class MaterialWidget(MaterialWidget_UI):
         with block_signals(self.tableWidget_material_data):
             self.tableWidget_material_data.removeColumn(selected_column)
 
+        app().main_window.selection.clear_selection()
+
     def reset_library_callback(self):
         """
         Resets the library to default and removes all material assignments.
@@ -134,6 +136,7 @@ class MaterialWidget(MaterialWidget_UI):
             properties.remove_material(material)
         properties.material_library = MaterialLibrary.default()
         self.reload_table_of_materials()
+        app().main_window.selection.clear_selection()
 
     def cell_clicked_callback(self, row, col):
         if row == RowsEnum.COLOR:
