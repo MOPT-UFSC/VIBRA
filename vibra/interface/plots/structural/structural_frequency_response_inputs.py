@@ -111,7 +111,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
     def _load_analysis_setup_and_solution(self):
 
         self.analysis_method = ""
-        analysis_setup = app().project.analysis_setup
+        analysis_setup = app().project.model.analysis_setup
 
         if "analysis_id" in analysis_setup.keys():
             analysis_method = analysis_setup.get("analysis_method", "direct")

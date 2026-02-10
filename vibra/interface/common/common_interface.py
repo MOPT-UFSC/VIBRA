@@ -19,5 +19,5 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
         }
         )
 
-    app().project.set_analysis_setup(analysis_setup)
+    app().project.model.set_analysis_setup(analysis_setup)
     app().file.write_analysis_setup_in_file(analysis_setup)

@@ -384,7 +384,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            app().project.set_analysis_setup(modal.analysis_setup)
+            app().project.model.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
@@ -398,7 +398,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            app().project.set_analysis_setup(modal.analysis_setup)
+            app().project.model.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
@@ -408,15 +408,15 @@ class AnalysisToolbar(QToolBar):
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_setup)
+        app().file.write_analysis_setup_in_file(app().project.model.analysis_setup)
 
     def update_analysis_setup(self, analysis_setup: dict):
 
         keys_to_ignore = list(analysis_setup.keys())
-        if isinstance(app().project.analysis_setup, dict):
-            for key, value in app().project.analysis_setup.items():
-                if key in keys_to_ignore:
-                    continue
-                analysis_setup[key] = value
+        for key, value in app().project.model.analysis_setup.items():
+            if key in keys_to_ignore:
+                continue
 
-        app().project.set_analysis_setup(analysis_setup)
+            analysis_setup[key] = value
+
+        app().project.model.set_analysis_setup(analysis_setup)

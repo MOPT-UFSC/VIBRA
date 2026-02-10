@@ -45,7 +45,6 @@ class Project(QObject):
         self.thumbnail = None
         self.save_path = None
 
-        self.analysis_setup = dict()
         self.analysis_id = AnalysisID.NO_ANALYSIS
 
         def disable_resume_callback():
@@ -82,7 +81,7 @@ class Project(QObject):
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 
-        if len(self.analysis_setup) == 0:
+        if not self.model.analysis_setup:
             return
 
         self.create_solver()
@@ -123,14 +122,10 @@ class Project(QObject):
             return
         self.model.process_mesh()
 
-    def set_analysis_setup(self, analysis_setup: dict):
-        self.analysis_setup = analysis_setup
-        self.model.set_analysis_setup(analysis_setup)
-
     def create_solver(self):
         """ """
 
-        data = self.analysis_setup
+        data = self.model.analysis_setup
         if "analysis_id" in data.keys():
 
             # structural harmonic analysis (both methods)
@@ -215,8 +210,8 @@ class Project(QObject):
         app().main_window.action_export_element_transfer_data.setDisabled(False)
 
     def solve_structural_harmonic_analysis(self):
-        analisys_id = self.analysis_setup.get("analysis_id")
-        analysis_method = self.analysis_setup.get("analysis_method")
+        analisys_id = self.model.analysis_setup.get("analysis_id")
+        analysis_method = self.model.analysis_setup.get("analysis_method")
         if analisys_id != AnalysisID.STRUCTURAL_HARMONIC:
             return
 
@@ -241,11 +236,11 @@ class Project(QObject):
             if not obj.complete:
                 return True
 
-        if len(self.analysis_setup) == 0:
+        if len(self.model.analysis_setup) == 0:
             return True
 
         analysis = ProcessAnalysis()
-        analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = self.model.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
         interrupt_function = app().project.model.toggle_processing_callback

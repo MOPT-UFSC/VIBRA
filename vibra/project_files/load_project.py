@@ -390,7 +390,7 @@ class LoadProject:
 
     def load_analysis_setup(self):
         analysis_setup = self.file.read_analysis_setup_from_file()
-        app().project.set_analysis_setup(analysis_setup)
+        app().project.model.set_analysis_setup(analysis_setup)
         app().project.create_solver()
 
     def load_thumbnail(self):

@@ -15,10 +15,6 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
 
         self.project = app().project
         self.model = app().project.model
-        self.analysis_setup = app().project.analysis_setup
-
-        # app().main_window.close_dialogs()
-        # app().main_window.set_input_widget(self)
 
         self._initialize()
         self._config_window()

@@ -41,10 +41,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution

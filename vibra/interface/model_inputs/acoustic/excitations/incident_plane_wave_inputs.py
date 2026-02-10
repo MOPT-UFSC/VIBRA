@@ -664,9 +664,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_setup, dict):
-            analysis_setup = self.project.analysis_setup
-            self.project.set_analysis_setup(analysis_setup)
+        analysis_setup = app().project.model.analysis_setup
+        if analysis_setup:
+            app().project.model.set_analysis_setup(analysis_setup)
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):
