@@ -9,6 +9,7 @@ from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual
 import numpy as np
 
 error_title = "Error"
+warning_title = "Warning"
 
 
 class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInput_UI):
@@ -207,7 +208,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "
             message += "with the model solution."
-            PrintMessageInput([error_title, title, message])
+            PrintMessageInput([warning_title, title, message])
             return
 
         self.setup_defined = True

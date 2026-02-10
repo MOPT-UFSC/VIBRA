@@ -6,8 +6,6 @@ from vibra.interface.ui_generated.analysis.solution_steps_display_input_ui impor
 
 import numpy as np
 
-error_title = "Error"
-
 
 class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
     def __init__(self, *args, **kwargs):

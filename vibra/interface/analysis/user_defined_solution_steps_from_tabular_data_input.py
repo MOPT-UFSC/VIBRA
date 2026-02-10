@@ -7,7 +7,7 @@ from vibra.interface.ui_generated.analysis.user_defined_solution_steps_from_tabu
 
 import numpy as np
 
-error_title = "Error"
+error_title = "Warning"
 
 
 class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromTabularDataInput_UI):
@@ -108,12 +108,7 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         if app().project.model.frequencies is None:
             return
 
-        # all_checked = False
-        # user_defined_solution_steps = app().project.model.analysis_setup.get("user_defined_solution_steps", list())
-        # if not user_defined_solution_steps:
-        #     all_checked = True
-
-        solution_steps_mask = app().project.model.get_solution_steps_mask(self.table_frequencies[0])
+        solution_steps_mask = app().project.model.solution_steps_mask
 
         for index, _bool in enumerate(solution_steps_mask):
             step_check_box = self.index_to_check_box[index]
