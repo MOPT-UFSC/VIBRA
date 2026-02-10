@@ -11,6 +11,7 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
 
 from vibra import app
+from vibra.engine.properties import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.errors import InvalidMaterialError
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
@@ -120,6 +121,20 @@ class MaterialWidget(MaterialWidget_UI):
         with block_signals(self.tableWidget_material_data):
             self.tableWidget_material_data.removeColumn(selected_column)
 
+    def reset_library_callback(self):
+        """
+        Resets the library to default and removes all material assignments.
+        """
+        if not self._get_reset_library_confirmation():
+            return
+
+        properties = app().new_project.model.properties
+        materials_to_remove = list(properties.material_library.values())
+        for material in materials_to_remove:
+            properties.remove_material(material)
+        properties.material_library = MaterialLibrary.default()
+        self.reload_table_of_materials()
+
     def cell_clicked_callback(self, row, col):
         if row == RowsEnum.COLOR:
             self._pick_color(row, col)
@@ -180,6 +195,28 @@ class MaterialWidget(MaterialWidget_UI):
 
         properties = app().new_project.model.properties
         return properties.material_library.get_from_ordered_index(selected_column)
+
+    def _get_reset_library_confirmation(self):
+        title = "Material library reset"
+        message = "Would you like to reset the material library to default values?"
+        buttons_config = {
+            "left_button_label": "No",
+            "right_button_label": "Yes",
+            "left_button_size": 80,
+            "right_button_size": 80,
+        }
+
+        read = GetUserConfirmationInput(
+            title,
+            message,
+            buttons_config=buttons_config,
+        )
+
+        if read._cancel:
+            return False
+
+        if read._continue:
+            return True
 
     def _update_library_with_column(self, col: int):
         material_library = app().new_project.model.properties.material_library
@@ -330,9 +367,6 @@ class MaterialWidget(MaterialWidget_UI):
     #     #
     #     self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
     #     self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
-
-    # def _config_widgets(self):
-    #     self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
 
     # def _update_size_policy(self):
     #     if len(self.materials_from_library) > 6:
@@ -700,26 +734,6 @@ class MaterialWidget(MaterialWidget_UI):
 
     #     self.reset_materials_from_bodies_and_surfaces([material.identifier])
     #     self.load_data_from_materials_library()
-
-    # def get_confirmation_to_proceed(self):
-
-    #     title = "Material library reset"
-    #     message = "Would you like to reset the material library to default values?"
-
-    #     buttons_config = {
-    #                       "left_button_label" : "No",
-    #                       "right_button_label" : "Yes",
-    #                       "left_button_size" : 80,
-    #                       "right_button_size" : 80
-    #                       }
-
-    #     read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-    #     if read._cancel:
-    #         return False
-
-    #     if read._continue:
-    #         return True
 
     # def reset_library_callback(self):
     #     if self.get_confirmation_to_proceed():
