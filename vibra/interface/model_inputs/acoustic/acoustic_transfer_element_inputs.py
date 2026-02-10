@@ -66,7 +66,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
@@ -74,7 +74,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def geometry_selection_callback(self):
 
-        selected_faces = app().main_window.selected_geometry_surfaces
+        selected_faces = app().main_window.selection.geometry_surfaces
 
         if len(selected_faces) == 1:
             if isinstance(self.current_line_edit, QLineEdit):
@@ -300,7 +300,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             else:
                 return
         
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
         def compute_model_solution():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
@@ -390,7 +390,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
         app().file.write_model_properties_in_file()
-        # app().main_window.set_geometry_selection(surfaces=[surface_id])
+        # app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):
 

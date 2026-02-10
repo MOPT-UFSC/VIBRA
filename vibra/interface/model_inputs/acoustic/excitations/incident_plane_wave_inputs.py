@@ -61,7 +61,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.treeWidget_incident_plane_wave.itemClicked.connect(self.on_click_item)
         self.treeWidget_incident_plane_wave.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.wave_direction_callback()
         self.geometry_selection_callback()
@@ -87,7 +87,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             self.pushButton_remove.setEnabled(True)
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
@@ -117,7 +117,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def geometry_selection_callback(self):
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
 
         if surfaces:
             text = ", ".join([str(i) for i in surfaces])
@@ -693,5 +693,5 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

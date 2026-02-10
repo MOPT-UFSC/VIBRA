@@ -66,10 +66,10 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.treeWidget_compressor_excitation_spectrum.itemClicked.connect(self.on_click_item)
         self.treeWidget_compressor_excitation_spectrum.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if not surfaces:
             return
 
@@ -111,7 +111,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.lineEdit_selection_id.setDisabled(False)
         self.pushButton_attribute.setEnabled(True)
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if not surfaces:
             return
 

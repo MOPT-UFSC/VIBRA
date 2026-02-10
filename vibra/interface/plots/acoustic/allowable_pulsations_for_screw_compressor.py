@@ -65,7 +65,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
@@ -74,10 +74,10 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         if not app().main_window.action_results_workspace.isChecked():
             return
 
-        surfaces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if surfaces and index == 0:

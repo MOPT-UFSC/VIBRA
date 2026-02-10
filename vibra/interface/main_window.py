@@ -20,6 +20,7 @@ from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
@@ -48,35 +49,23 @@ class MainWindow(MainWindow_UI):
     theme_changed = Signal(str)
     visualization_changed = Signal()
     render_widget_changed = Signal()
-    selection_changed = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        self.selection = SelectionHandler(app().project)
+        self.selection.selection_changed.connect(self.selection_changed_callback)
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
         self.visualization_filter.disconected_nodes = False
         self.visualization_filter.collapsed_element_nodes = False
 
-        # TODO: move this to a separate class
-        self.selected_mesh_nodes = set()
-        self.selected_mesh_faces = set()
-        self.selected_mesh_solids = set()
-        self.selected_geometry_points = set()
-        self.selected_geometry_lines = set()
-        self.selected_geometry_surfaces = set()
-        self.selected_geometry_volumes = set()
-        self.volume_selection_mode = False
-
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
-        self.hidden_surfaces = set()
-        self.hidden_volumes = set()
         self.distinguished_solids = set()
 
         self.show_menu_items = True
         self.last_render_index = None
-
         self._initialize()
     
     def _initialize(self):
@@ -288,90 +277,6 @@ class MainWindow(MainWindow_UI):
         self.update_scale_bar(show)
         self.update_renderer_font_size()
 
-    def clear_selection(self):
-        self.set_geometry_selection()
-        self.set_mesh_selection()
-
-    def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
-        if points is None:
-            points = set()
-
-        if lines is None:
-            lines = set()
-
-        if surfaces is None:
-            surfaces = set()
-
-        if volumes is None:
-            volumes = set()
-
-        surfaces = set(surfaces) - set(self.hidden_surfaces)
-        volumes = set(volumes) - set(self.hidden_volumes)
-        mesh = app().project.model.mesh
-
-        # Select the surfaces associated to the selected volumes
-        for volume in volumes:
-            volume_surfaces = mesh.surfaces_from_volume.get(volume, [])
-            surfaces |= set(volume_surfaces)
-
-        if join and remove:
-            self.selected_geometry_points ^= set(points)
-            self.selected_geometry_lines ^= set(lines)
-            self.selected_geometry_surfaces ^= set(surfaces)
-            self.selected_geometry_volumes ^= set(volumes)
-        elif join:
-            self.selected_geometry_points |= set(points)
-            self.selected_geometry_lines |= set(lines)
-            self.selected_geometry_surfaces |= set(surfaces)
-            self.selected_geometry_volumes |= set(volumes)
-        elif remove:
-            self.selected_geometry_points -= set(points)
-            self.selected_geometry_lines -= set(lines)
-            self.selected_geometry_surfaces -= set(surfaces)
-            self.selected_geometry_volumes -= set(volumes)
-        else:
-            self.selected_geometry_points = set(points)
-            self.selected_geometry_lines = set(lines)
-            self.selected_geometry_surfaces = set(surfaces)
-            self.selected_geometry_volumes = set(volumes)
-
-        self.selection_changed.emit()
-
-    def set_mesh_selection(self, *, nodes=None, faces=None, solids=None, join=False, remove=False):
-        if nodes is None:
-            nodes = set()
-
-        if faces is None:
-            faces = set()
-
-        if solids is None:
-            solids = set()
-
-        if join and remove:
-            self.selected_mesh_nodes ^= set(nodes)
-            self.selected_mesh_faces ^= set(faces)
-            self.selected_mesh_solids ^= set(solids)
-        elif join:
-            self.selected_mesh_nodes |= set(nodes)
-            self.selected_mesh_faces |= set(faces)
-            self.selected_mesh_solids |= set(solids)
-        elif remove:
-            self.selected_mesh_nodes -= set(nodes)
-            self.selected_mesh_faces -= set(faces)
-            self.selected_mesh_solids -= set(solids)
-        else:
-            self.selected_mesh_nodes = set(nodes)
-            self.selected_mesh_faces = set(faces)
-            self.selected_mesh_solids = set(solids)
-
-            # Clear the other type of selection
-            self.selected_geometry_points.clear()
-            self.selected_geometry_lines.clear()
-            self.selected_geometry_surfaces.clear()
-            self.selected_geometry_volumes.clear()
-
-        self.selection_changed.emit()
-
     def create_recents_menu(self):
         color = LIGHT_ICON_COLOR.to_qt()
         self.recent_icon = load_icon(":/icons/recent.png", color)
@@ -404,8 +309,12 @@ class MainWindow(MainWindow_UI):
 
         self.last_render_index = new_index
 
-    def selection_changed_callback(self, points, lines, faces, volumes):
-        self.status_bar.set_selection(points, lines, faces, volumes)
+    def selection_changed_callback(self):
+        points = self.selection.geometry_points
+        lines = self.selection.geometry_lines
+        surfaces = self.selection.geometry_surfaces
+        volumes = self.selection.geometry_volumes
+        self.status_bar.set_selection(points, lines, surfaces, volumes)
 
     def action_section_plane_callback(self, condition: bool):
         if condition:
@@ -593,7 +502,7 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.reset_items_appearance()
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
         
-        self.clear_selection()
+        self.selection.clear_selection()
         self.action_unhide_all_callback()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
@@ -629,24 +538,14 @@ class MainWindow(MainWindow_UI):
                 ]
             )
 
-        volumes_to_hide = set()
-        if self.selected_geometry_volumes:
-            volumes_to_hide |= self.selected_geometry_volumes
-
-        elif self.selected_geometry_surfaces:
-            for surface in self.selected_geometry_surfaces:
-                volumes_to_hide |= set(mesh.volumes_from_surface[surface])
-
-        elif self.selected_mesh_solids:
-            for element in self.selected_mesh_solids:
-                volumes_to_hide.add(mesh.get_volume_from_element(element))
+        volumes_to_hide = self.selection.calculate_volumes_to_hide()
 
         self.hide_volumes(volumes_to_hide)
-        self.clear_selection()
+        self.selection.clear_selection()
 
     def recompute_hidden_volumes(self):
-        self.hidden_surfaces.clear()
-        self.hide_volumes(app().main_window.hidden_volumes)
+        self.selection.hidden_surfaces.clear()
+        self.hide_volumes(app().main_window.selection.hidden_volumes)
 
     def hide_volumes(self, volumes: set[int]):
         mesh = app().project.model.mesh
@@ -658,18 +557,18 @@ class MainWindow(MainWindow_UI):
         for volume, surfaces in mesh.surfaces_from_volume.items():
             if volume in volumes:
                 selected_volume_surfaces |= set(surfaces)
-            elif volume not in self.hidden_volumes:
+            elif volume not in self.selection.hidden_volumes:
                 visible_volume_surfaces |= set(surfaces)
         surfaces_to_keep_visible = set.intersection(selected_volume_surfaces, visible_volume_surfaces)
 
-        self.hidden_volumes |= volumes
-        self.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
+        self.selection.hidden_volumes |= volumes
+        self.selection.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
         self.update_hidden_plots()
 
     def has_hidden_part(self) -> bool:
         return any(
             [
-                len(self.hidden_surfaces) != 0,
+                len(self.selection.hidden_surfaces) != 0,
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
                 bool(app().project.model.mesh.collapsed_elements_data),
@@ -690,8 +589,8 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.emit()
 
     def action_unhide_all_callback(self):
-        self.hidden_surfaces.clear()
-        self.hidden_volumes.clear()
+        self.selection.hidden_surfaces.clear()
+        self.selection.hidden_volumes.clear()
         self.update_hidden_plots()
 
     def action_save_callback(self):
@@ -862,7 +761,7 @@ class MainWindow(MainWindow_UI):
         if not check:
             return False
 
-        self.clear_selection()
+        self.selection.clear_selection()
 
         app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
         app().project.reset_variables()
@@ -937,6 +836,7 @@ class MainWindow(MainWindow_UI):
 
                 app().load_project.initialize()
                 app().load_project.load()
+
 
                 self.update_toolbar_and_menu_items_after_load_project()
                 self.analysis_toolbar.check_analysis_setup_callback()

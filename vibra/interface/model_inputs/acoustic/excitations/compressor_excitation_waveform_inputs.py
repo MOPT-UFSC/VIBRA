@@ -103,7 +103,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.data_source_callback()
         self.geometry_selection_callback()
@@ -135,7 +135,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.comboBox_excitation_type.setCurrentText("surface velocity -> m/s")
 
     def geometry_selection_callback(self):
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if not surfaces:
             return
 
@@ -500,7 +500,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_selection_id.setDisabled(False)
         self.pushButton_attribute.setEnabled(True)
 
-        surfaces = app().main_window.selected_geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         if not surfaces:
             return
 
@@ -791,7 +791,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.pushButton_remove.setDisabled(False)
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
@@ -998,5 +998,5 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

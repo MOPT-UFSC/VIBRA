@@ -43,7 +43,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        app().main_window.volume_selection_mode = True
+        app().main_window.selection.volume_selection_mode = True
 
         self.project = app().project
         self.model = app().project.model
@@ -97,7 +97,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.attribution_type_callback()
@@ -157,7 +157,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.pushButton_remove.setDisabled(True)
         self.clear_line_edit_selection_id()
 
-        app().main_window.clear_selection()
+        app().main_window.selection.clear_selection()
         app().file.write_model_properties_in_file()
         self.actions_to_finalize()
         self.load_info()
@@ -201,7 +201,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         list_or_edit_tab = [TabType.LIST, TabType.EDIT]
 
         if self.last_tab in list_or_edit_tab or current_tab in list_or_edit_tab:
-            app().main_window.clear_selection()
+            app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
         self.last_tab = current_tab
@@ -239,7 +239,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if not volume_ids:
             return
 
-        app().main_window.set_geometry_selection(volumes=volume_ids)
+        app().main_window.selection.set_geometry_selection(volumes=volume_ids)
 
         self.set_selection_text(volume_ids)
         self.pushButton_remove.setEnabled(True)
@@ -299,7 +299,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_selection_id.setText("All bodies")
 
         elif attribution_type == AttributionBodiesType.SELECTED_BODIES:
-            volumes = app().main_window.selected_geometry_volumes
+            volumes = app().main_window.selection.geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
 
@@ -530,7 +530,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model()
             return
 
-        volumes = app().main_window.selected_geometry_volumes
+        volumes = app().main_window.selection.geometry_volumes
 
         if volumes:
             text = ", ".join([str(i) for i in volumes])
@@ -542,7 +542,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if self.tree_item_clicked:
             return
 
-        selected_volumes = app().main_window.selected_geometry_volumes
+        selected_volumes = app().main_window.selection.geometry_volumes
 
         if not selected_volumes:
             return
@@ -953,6 +953,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.volume_selection_mode = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.volume_selection_mode = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
