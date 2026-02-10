@@ -9,10 +9,8 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
 
-import os
 import numpy as np
 
 error_title = "Error"
@@ -55,8 +53,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
-
         self.radioButton_element_integration_constant.setChecked(True)
         self.radioButton_element_integration_table.setChecked(True)
 
@@ -67,7 +63,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_change_frequency_setup.clicked.connect(self.change_frequency_setup)
         self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -90,9 +85,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         #
         self.radioButton_element_integration_constant.setChecked(True)
         self.radioButton_element_integration_table.setChecked(True)
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
+
         for i, w in enumerate([120]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
             self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -359,10 +352,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def load_surface_velocity_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
-        if isinstance(self.imported_values, np.ndarray):
-            self.pushButton_change_frequency_setup.setDisabled(False)
-        else:
-            self.pushButton_change_frequency_setup.setDisabled(True)
 
     def check_table_values(self):
 
@@ -515,13 +504,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         app().file.write_imported_table_data_in_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 

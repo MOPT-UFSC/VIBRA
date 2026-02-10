@@ -288,6 +288,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
                 if self.y_data is not None:
                     self.mask_x = self.x_data <= 0
                     self.mask_y = self.y_data <= 0
+
+                    has_single_point = len(self.x_data) == 1
+
                     if self.aux_bool:
                         _plot = self.call_lin_lin_plot()
                     elif True in (self.mask_x + self.mask_y):
@@ -301,6 +304,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
                     else:
                         _plot = self.call_lin_lin_plot()
 
+                    if has_single_point:
+                        _plot.set_marker('o')
+                        _plot.set_markersize(8)
+                
                     self.legends.append(self.legend)
                     self.plots.append(_plot)
 

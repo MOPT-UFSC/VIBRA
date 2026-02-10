@@ -7,7 +7,6 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
@@ -82,9 +81,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.lineEdit_node_coord_x.setDisabled(True)
         self.lineEdit_node_coord_y.setDisabled(True)
         self.lineEdit_node_coord_z.setDisabled(True)
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
+
         for i, w in enumerate([100, 120]):
             self.treeWidget_mass_source.setColumnWidth(i, w)
             self.treeWidget_mass_source.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -893,13 +890,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().file.write_imported_table_data_in_file()
         app().main_window.clear_selection()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 
