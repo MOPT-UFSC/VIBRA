@@ -3,12 +3,12 @@ from PySide6.QtGui import Qt
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
+from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
+from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
-from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
-from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
-from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 
 import numpy as np
 
@@ -46,6 +46,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
+        self.keep_window_open_after_enter_setup = False
         self.user_defined_solution_steps = list()
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
         self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
@@ -137,6 +138,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.lineEdit_modes_to_expand.setText(f"")
 
     def display_solution_steps_callback(self):
+        
+        self.keep_window_open_after_enter_setup = True
+        # check analysis setup update before loading the solution steps
+        self.check_analysis_setup_update()
+        self.keep_window_open_after_enter_setup = False
+
         self.hide()
         SolutionStepsDisplayInput()
 
@@ -321,11 +328,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if frequency_spacing == "user-defined":
+                ud_frequencies = np.array(self.user_defined_solution_steps, dtype=float)
                 analysis_setup.update(
-                    {
-                    "frequencies" : np.array(self.user_defined_solution_steps, dtype=float),
-                    "user_defined_solution_steps" : self.user_defined_solution_steps,
-                    }
+                    {"frequencies" : np.round(ud_frequencies, 14)}
                     )
 
             user_defined_manually = not self.table_exists and self.user_defined_solution_steps
@@ -428,13 +433,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        app().file.write_analysis_setup_in_file(analysis_setup)
         app().project.set_analysis_setup(analysis_setup)
+        app().file.write_analysis_setup_in_file(self.model.analysis_setup)
         app().project.create_solver()
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
-        self.close()
+
+        if not self.keep_window_open_after_enter_setup:
+            self.close()
 
         return False
 
