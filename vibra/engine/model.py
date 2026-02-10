@@ -249,78 +249,84 @@ class Model:
         self.frequencies = None
         self.analysis_setup = analysis_setup
 
-        self.f_min = analysis_setup.get("f_min", None)
-        self.f_max = analysis_setup.get("f_max", None)
-        self.f_step = analysis_setup.get("f_step", None)
+        self.f_min = analysis_setup.get("f_min")
+        self.f_max = analysis_setup.get("f_max")
+        self.f_step = analysis_setup.get("f_step")
+        frequencies = analysis_setup.get("frequencies")
 
-        if "frequencies" in analysis_setup.keys():
-            self.frequencies = analysis_setup.get("frequencies")
+        if isinstance(frequencies, list):
+            frequencies = np.round(np.array(frequencies, dtype=float), 14)
+
+        elif isinstance(frequencies, np.ndarray):
+            self.frequencies = frequencies
 
         elif (self.f_min, self.f_max, self.f_step).count(None) == 0:
 
             try:
-                self.frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step)
+                frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step, dtype=float)
+                frequencies = np.round(frequencies, 14)
 
                 # filters the frequencies vector to mitigate the already identified rounding errors
-                mask = self.frequencies <= self.f_max
-                self.frequencies = self.frequencies[mask]
+                mask = frequencies <= self.f_max
+                _frequencies = frequencies[mask]
 
             except Exception as error_log:
                 self.frequencies = None
                 print(str(error_log))
                 return
-            
-        if analysis_setup.get("frequency_spacing") == "user-defined":
-            self.process_user_defined_solution_steps_mask()
 
-        else:
-            self.process_solution_steps_mask_by_boundaries()
+            self.frequencies = _frequencies
+            self.analysis_setup["frequencies"] = _frequencies
 
+        solution_steps_mask = self.get_solution_steps_mask()
+        self.solution_steps_mask = solution_steps_mask
 
-    def process_solution_steps_mask_by_boundaries(self):
-        """
-        This method process the solution steps mask to filter the required 
-        analysis frequency setup.
-        """
-        self.solution_steps_mask = np.ones_like(self.frequencies, dtype=bool)
-        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
-        if not self.table_frequencies:
-            return
-
-        if len(self.table_frequencies) != 1:
-            return
-
-        f_min = self.frequencies[0]
-        f_max = self.frequencies[-1]
-        table_frequencies = np.array(self.table_frequencies[0])
-
-        min_mask = table_frequencies >= f_min
-        max_mask = table_frequencies <= f_max
-        step_mask = np.isin(table_frequencies, self.frequencies)
-
-        self.solution_steps_mask =  min_mask * max_mask * step_mask
+        self.analysis_setup["solution_steps_mask"] = solution_steps_mask
 
 
-    def process_user_defined_solution_steps_mask(self):
-        """
-        This method process the solution steps mask to filter the required 
-        analysis frequency setup.
-        """
-        self.solution_steps_mask = np.ones_like(self.frequencies, dtype=bool)
-        self.table_frequencies = self.properties.process_all_tables_frequencies_vectors()
-        if not self.table_frequencies:
-            return
+    def get_solution_steps_mask(self, tol: float = 1e-10):
 
-        if len(self.table_frequencies) != 1:
-            return
+        if self.frequencies is None:
+            return list()
 
-        self.solution_steps_mask = np.isin(self.table_frequencies[0], self.frequencies)
+        all_true = [True for _ in range(self.frequencies.size)]
+        table_frequencies = self.properties.process_all_tables_frequencies_vectors()
+
+        if not table_frequencies:
+            return all_true
+
+        if len(table_frequencies) != 1:
+            return all_true
+
+        mask = list()
+        _table_frequencies = np.array(table_frequencies[0], dtype=float)
+
+        for freq in _table_frequencies:
+            diff_abs = np.min(np.abs(self.frequencies - freq)) < tol
+            mask.append(bool(diff_abs))
+
+        return mask
 
 
     def has_spectral_content_been_modified(self):
-        cond_A = "user_defined_solution_steps" in self.analysis_setup.keys()
-        cond_B = self.solution_steps_mask.size != int(np.sum(self.solution_steps_mask))
+        cond_A = self.analysis_setup.get("frequency_spacing", "") == "user-defined"
+        cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
+
+    
+    def is_there_a_compressor_excitation_in_model(self):
+
+        compressor_properties = [
+            "compressor_excitation_spectrum", 
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            ]
+
+        for prop_label in compressor_properties:
+            if self.properties.is_the_surface_property_present_in_the_model(prop_label):
+                return True
+
+        return False
 
 
     def is_there_a_valid_analysis_setup(self, **kwargs):
@@ -343,11 +349,12 @@ class Model:
             AnalysisID.COUPLED_HARMONIC
             ]:
 
-            # frequency_spacing = self.analysis_setup.get("frequency_spacing")
-            ud_frequencies = self.analysis_setup.get("user_defined_solution_steps")
+            frequencies = self.analysis_setup.get("frequencies")
+            solution_steps_mask = self.analysis_setup.get("solution_steps_mask")
 
-            if isinstance(ud_frequencies, list):
-                return True
+            if isinstance(frequencies, np.ndarray | list):
+                if isinstance(solution_steps_mask, np.ndarray | list):
+                    return True
 
             for key in ["f_min", "f_max", "f_step"]:
                 if not isinstance(self.analysis_setup.get(key), int | float):    
