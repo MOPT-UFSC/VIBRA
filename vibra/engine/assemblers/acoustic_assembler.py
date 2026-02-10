@@ -596,7 +596,7 @@ class AcousticAssembler:
                 output_vector = value
 
         if filter_frequencies:
-            # filter values based on frequency mask
+            # filter values based on the solution steps mask
             if output_vector.shape[1] - self.frequencies.size:
                 output_vector = output_vector[:, self.model.solution_steps_mask]
 

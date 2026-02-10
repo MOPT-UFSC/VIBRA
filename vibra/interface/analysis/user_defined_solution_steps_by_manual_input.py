@@ -6,7 +6,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import UserDefinedSolutionStepsByManualInput_UI
 
-from copy import deepcopy
+import numpy as np
 
 error_title = "Error"
 
@@ -67,14 +67,18 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             # self.update_solution_steps_table()
 
     def load_analysis_setup(self):
-
+        
         self.index_to_push_buttons.clear()
 
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
             return
 
-        user_defined_solution_steps = app().project.model.analysis_setup.get("user_defined_solution_steps", list())
-        self.user_defined_solution_steps = deepcopy(user_defined_solution_steps)
+        frequencies = app().project.model.analysis_setup.get("frequencies")
+        if isinstance(frequencies, np.ndarray):
+            self.user_defined_solution_steps = list(frequencies)
+        elif isinstance(frequencies, list):
+            self.user_defined_solution_steps = frequencies
+
         self.update_solution_steps_table()
 
     def reset_table(self):
@@ -89,9 +93,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         if not self.user_defined_solution_steps:
             if app().project.model.frequencies is None:
                 return
-
-            frequencies = deepcopy(app().project.model.frequencies)
-            self.user_defined_solution_steps = list(frequencies)
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
 
@@ -170,9 +171,19 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self.user_defined_solution_steps.append(solution_step)
         self.user_defined_solution_steps.sort()
+
         self.update_solution_steps_table()
         self.lineEdit_solution_step.setText("")
         self.lineEdit_solution_step.setFocus()
+
+    def remove_solution_step_by_key_event(self):
+        selected_items = self.tableWidget_frequencies.selectedItems()
+        for item in selected_items:
+            solution_step_to_remove = float(self.tableWidget_frequencies.item(item.row(), 1).text())
+            if solution_step_to_remove in self.user_defined_solution_steps:
+                self.user_defined_solution_steps.remove(solution_step_to_remove)
+
+        self.update_solution_steps_table()
 
     def remove_solution_step_callback(self):
 
@@ -183,7 +194,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         if not isinstance(index, int):
             return
-
+        
         solution_step_to_remove = float(self.tableWidget_frequencies.item(index, 1).text())
         if solution_step_to_remove in self.user_defined_solution_steps:
             self.user_defined_solution_steps.remove(solution_step_to_remove)
@@ -209,5 +220,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.add_solution_step_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.remove_solution_step_by_key_event()
         elif event.key() == Qt.Key_Escape:
             self.close()

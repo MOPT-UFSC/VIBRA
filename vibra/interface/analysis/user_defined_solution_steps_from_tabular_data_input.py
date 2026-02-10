@@ -29,8 +29,8 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         self.setup_defined = False
         self.solve_analysis = False
         self.keep_window_open = True
-        self.user_defined_solution_steps = list()
         self.index_to_check_box = dict()
+        self.user_defined_solution_steps = list()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -108,13 +108,22 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         if app().project.model.frequencies is None:
             return
 
-        for index, tab_freq in enumerate(self.table_frequencies):
-            is_freq_active = tab_freq in app().project.model.frequencies
-            self.index_to_check_box[index].setChecked(is_freq_active)
+        # all_checked = False
+        # user_defined_solution_steps = app().project.model.analysis_setup.get("user_defined_solution_steps", list())
+        # if not user_defined_solution_steps:
+        #     all_checked = True
+
+        solution_steps_mask = app().project.model.get_solution_steps_mask(self.table_frequencies[0])
+
+        for index, _bool in enumerate(solution_steps_mask):
+            step_check_box = self.index_to_check_box[index]
+            step_check_box: QCheckBox
+            step_check_box.setChecked(_bool)
 
     def confirm_callback(self):
             
         for index, check_box in self.index_to_check_box.items():
+
             check_box: QCheckBox
             if not check_box.isChecked():
                 continue
