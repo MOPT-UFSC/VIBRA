@@ -1,8 +1,10 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum, auto
+from functools import partial, wraps
 
 import numpy as np
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget
 from vtkmodules.vtkRenderingCore import vtkCoordinate
 
@@ -58,6 +60,19 @@ def disable_updates(widget: QWidget):
         yield widget
     finally:
         widget.setUpdatesEnabled(True)
+
+
+def qt_run_delayed(function):
+    """
+    Apparently sometimes qt needs a delay to correctly update its internal state.
+    This decorator delays a function so they can propperly function.
+    """
+
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        QTimer.singleShot(0, partial(function, *args, **kwargs))
+
+    return wrapper
 
 
 def world_to_screen_coords(xyz, renderer):

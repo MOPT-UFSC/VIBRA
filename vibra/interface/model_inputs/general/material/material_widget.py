@@ -1,25 +1,20 @@
-from copy import deepcopy
 from enum import IntEnum
-from itertools import count
 from random import randint
 from typing import Optional
 
 from molde import Color
 from molde.colors import color_names
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
 
 from vibra import app
 from vibra.engine.properties import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.errors import InvalidMaterialError
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
-from vibra.utils.interface_utils import block_signals
+from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
 
 class RowsEnum(IntEnum):
@@ -45,7 +40,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         # self._initialize()
         self._create_connections()
-        # self._config_widgets()
+        self._config_widgets()
         # self._paint_icons()
         # self.load_data_from_materials_library()
 
@@ -58,6 +53,11 @@ class MaterialWidget(MaterialWidget_UI):
 
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
+
+    def _config_widgets(self):
+        self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_material_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectColumns)
+        self.tableWidget_material_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
     def reload_table_of_materials(self):
         properties = app().new_project.model.properties
@@ -152,7 +152,7 @@ class MaterialWidget(MaterialWidget_UI):
                     material = material_library.find_by_name(name)
                     name_already_exists = material is not None
                     if name_already_exists:
-                        item.setText("")
+                        item.setText("New material")
                         raise InvalidMaterialError(f'A material named "{name}" alredy exists')
 
                 case RowsEnum.COLOR | RowsEnum.IDENTIFIER:
@@ -177,6 +177,29 @@ class MaterialWidget(MaterialWidget_UI):
                 msg = f"Column {item.column()} contains unnexpected errors."
                 item.setText("")
                 raise InvalidMaterialError(msg) from e
+
+            self.go_to_next_cell(item)
+
+    def go_to_previous_cell(self, item: QTableWidgetItem):
+        self.edit_cell(item.row() - 1, item.column())
+
+    def go_to_next_cell(self, item: QTableWidgetItem):
+        self.edit_cell(item.row() + 1, item.column())
+
+    @qt_run_delayed
+    def edit_cell(self, row: int, col: int):
+        if not (0 <= row < len(RowsEnum)):
+            return
+
+        item = self.tableWidget_material_data.item(row, col)
+        if item is None:
+            return
+
+        if row == RowsEnum.COLOR:
+            self._pick_color(row, col)
+        else:
+            self.tableWidget_material_data.setCurrentItem(item)
+            self.tableWidget_material_data.editItem(item)
 
     def scroll_to_start(self):
         scroll_bar = self.tableWidget_material_data.horizontalScrollBar()
@@ -267,7 +290,14 @@ class MaterialWidget(MaterialWidget_UI):
         return False
 
     def _pick_color(self, row: int, col: int):
-        read = PickColorInput()
+        item = self.tableWidget_material_data.item(row, col)
+
+        if item is None:
+            read = PickColorInput()
+        else:
+            color = Color(item.background().color())
+            read = PickColorInput(initial_color=color)
+
         if not read.complete:
             return True
 
