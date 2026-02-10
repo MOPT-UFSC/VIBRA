@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -342,7 +343,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        update_analysis_setup_in_file(_frequencies)
 
         # real values vector
         real_values = imported_values[:, 1]
@@ -355,21 +356,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
 
     def load_surface_velocity_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)

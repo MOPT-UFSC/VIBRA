@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -528,21 +529,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
-
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
         if self.frequencies[0] == 0:
@@ -573,8 +559,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         imag_values = np.imag(values)
         data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
 
+        update_analysis_setup_in_file(self.frequencies)
         self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
 
         return table_name, data
 
