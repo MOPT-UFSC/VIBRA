@@ -20,7 +20,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         super().__init__(*args)
 
         self.model = app().project.model
-        self.analysis_setup = app().project.analysis_setup
+        self.analysis_setup = app().project.model.analysis_setup
 
         self.analysis_id = kwargs.get("analysis_id")
         if self.analysis_id is None:
@@ -35,6 +35,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self._config_window()
         self._create_connections()
 
+        self.load_table_data()
         self.load_analysis_setup()
         self.check_mesh_related_issues()
         self.update_display_table_visibility()
@@ -48,8 +49,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.keep_window_open = True
         self.keep_window_open_after_enter_setup = False
         self.user_defined_solution_steps = list()
-        self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
-        self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -168,6 +167,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         misaligned_fsetup = self.model.has_spectral_content_been_modified()
         self.pushButton_reset_frequency_settings.setEnabled(misaligned_fsetup)
+
+    def load_table_data(self):
+        self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
+        self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
 
     def load_analysis_setup(self):
 
@@ -297,15 +300,18 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         analysis_method = "direct" if self.comboBox_method.currentIndex() == 0 else "mode_superposition"
         frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
 
+        existing_frequencies = self.model.analysis_setup.get("frequencies", list())
+
         if frequency_spacing == "user-defined":
             if not self.user_defined_solution_steps:
-                self.hide()
-                title = "No solution steps found"
-                message = "Enter the solution steps before confirming the analysis "
-                message += "setup or trying to solve the harmonic analysis."
-                PrintMessageInput([error_title, title, message])
-                self.solution_steps_setup_callback()
-                return
+                if not existing_frequencies:
+                    self.hide()
+                    title = "No solution steps found"
+                    message = "Enter the solution steps before confirming the analysis "
+                    message += "setup or trying to solve the harmonic analysis."
+                    PrintMessageInput([error_title, title, message])
+                    self.solution_steps_setup_callback()
+                    return
 
         analysis_setup = {
             "analysis_id" : analysis_id,
@@ -327,11 +333,13 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             analysis_setup["modes_number"] = modes_number
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+
             if frequency_spacing == "user-defined":
-                ud_frequencies = np.array(self.user_defined_solution_steps, dtype=float)
-                analysis_setup.update(
-                    {"frequencies" : np.round(ud_frequencies, 14)}
-                    )
+                if not self.user_defined_solution_steps:
+                    if self.model.analysis_setup.get("frequency_spacing") == "user-defined":
+                        self.user_defined_solution_steps = existing_frequencies
+
+                analysis_setup.update({"frequencies" : self.user_defined_solution_steps})
 
             user_defined_manually = not self.table_exists and self.user_defined_solution_steps
             if not user_defined_manually:
@@ -433,7 +441,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        app().project.set_analysis_setup(analysis_setup)
+        app().project.model.set_analysis_setup(analysis_setup)
         app().file.write_analysis_setup_in_file(self.model.analysis_setup)
         app().project.create_solver()
 

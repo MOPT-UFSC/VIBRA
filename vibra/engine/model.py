@@ -83,11 +83,12 @@ class Model:
         self.f_step = 5
         self.frequencies = None
         self.list_frequencies = list()
+        self.solution_steps_mask = list()
 
+        self.analysis_setup = dict()
         self.decouple_info = dict()
         self.nodes_mapping = dict()
 
-        self.analysis_setup = dict()
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
 
@@ -276,7 +277,7 @@ class Model:
                 return
 
             self.frequencies = _frequencies
-            self.analysis_setup["frequencies"] = _frequencies
+            self.analysis_setup["frequencies"] = list(_frequencies)
 
         solution_steps_mask = self.get_solution_steps_mask()
         self.solution_steps_mask = solution_steps_mask
