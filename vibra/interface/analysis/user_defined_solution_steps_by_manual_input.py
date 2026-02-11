@@ -66,9 +66,9 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             self.pushButton_add, 
             self.pushButton_reset
             ]
-
-        for push_button in self.index_to_push_buttons.values():
-            widgets.append(push_button)
+        
+        # for push_button in self.index_to_push_buttons.values():
+        #     widgets.append(push_button)
 
         change_icon_color_for_widgets(widgets, icon_color)
 
@@ -88,7 +88,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         if read._continue:
             self.user_defined_solution_steps.clear()
             self.reset_table()
-            # self.update_solution_steps_table()
 
     def load_analysis_setup(self):
         
@@ -144,7 +143,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             for j in range(2):
                 self.tableWidget_frequencies.item(index, j).setTextAlignment(Qt.AlignCenter)
 
-        # self._paint_icons()
+        self._paint_icons()
 
     def check_inputs(self, line_edit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
 

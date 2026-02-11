@@ -33,6 +33,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         self._initialize()
         self._config_window()
+        self._config_widgets()
         self._create_connections()
 
         self.load_table_data()
@@ -55,6 +56,18 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Analysis setup")
+
+    def _config_widgets(self):
+
+        # get the QLineEdit font
+        font = self.lineEdit_fmax.font()
+
+        # use same QLineEdit's font in the frequency step QCosmboBox
+        self.comboBox_fstep.setFont(font)
+        self.comboBox_fstep.setEditable(True)
+        self.comboBox_fstep.lineEdit().setFont(font)
+        self.comboBox_fstep.lineEdit().setReadOnly(True)
+        self.comboBox_fstep.lineEdit().setAlignment(Qt.AlignCenter)
 
     def _create_connections(self):
         #
