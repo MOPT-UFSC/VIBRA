@@ -167,7 +167,7 @@ def load_external_mesh_and_solve():
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
 
     # Initialize the solver
     # modal_solver = ModalSolver(assembler)

@@ -470,7 +470,10 @@ class StructuralAssembler:
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices(self, reorder: bool=True, **kwargs):
+        """
+        This method assembles the global matrices of the structural model.
+        """
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
@@ -499,10 +502,22 @@ class StructuralAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
+    
+    def assemble_model_excitations(self):
+        """
+        This method assembles the excitations of the structural model.
+        """
         A = self.process_structural_nodal_loads()
         B = self.process_distributed_loads()
-
         self.structural_loads = A + B
+
+
+    def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):
+        """
+        This method assembles the global matrices and excitations of the structural model.
+        """
+        self.assemble_global_matrices(reorder = reorder)
+        self.assemble_model_excitations()
 
 
     def reinsert_the_prescribed_dof(self, solution, modal_analysis=False):

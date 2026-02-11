@@ -82,7 +82,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
 def _solve_harmonic_problem(datadir, model: "Model", path: str):
 
     assembler = AcousticAssembler(model)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
     project_file = ProjectFile(str(datadir))
     harmonic_solver = HarmonicSolver(assembler, project_file)
 

@@ -597,8 +597,9 @@ class AcousticAssembler:
 
         if filter_frequencies:
             # filter values based on the solution steps mask
-            if output_vector.shape[1] - self.frequencies.size:
-                output_vector = output_vector[:, self.model.solution_steps_mask]
+            if output_vector.shape[1] - self.number_frequencies:
+                if self.model.solution_steps_mask:
+                    output_vector = output_vector[:, self.model.solution_steps_mask]
 
         if flatten:
             return output_vector.flatten()
@@ -832,7 +833,7 @@ class AcousticAssembler:
                     node_id = self.model.mesh.nodes_from_points.get(point_id)
 
                 # normalize data type to array
-                complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+                complex_values_array = self.get_value_in_array_form(complex_values)
 
                 self.mass_source_vector_points[node_id, :] += complex_values_array / density
 
@@ -866,7 +867,7 @@ class AcousticAssembler:
             aux_ones = np.ones((nodes.size, 1), dtype=float)
 
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+            complex_values_array = self.get_value_in_array_form(complex_values)
 
             self.mass_source_vector_lines[nodes, :] += aux_ones @ complex_values_array
 
@@ -900,7 +901,7 @@ class AcousticAssembler:
             aux_ones = np.ones((nodes.size, 1), dtype=float)
 
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+            complex_values_array = self.get_value_in_array_form(complex_values)
 
             self.mass_source_vector_surfaces[nodes, :] += aux_ones @ complex_values_array
 
@@ -934,7 +935,7 @@ class AcousticAssembler:
             aux_ones = np.ones((nodes.size, 1), dtype=float)
 
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+            complex_values_array = self.get_value_in_array_form(complex_values)
 
             self.mass_source_vector_volumes[nodes, :] += aux_ones @ complex_values_array
 
@@ -1746,7 +1747,10 @@ class AcousticAssembler:
         return output
 
 
-    def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=True):
+        """
+        This method assembles the global matrices of the acoustic model.
+        """
 
         logging.info("Processing data to assemble global matrices... [10/100]")
         self.define_acoustic_elements()
@@ -1795,6 +1799,12 @@ class AcousticAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
 
+
+    def assemble_model_excitations(self):
+        """
+        This method assembles the excitations of the acoustic model.
+        """
+
         logging.info("Processing element related loads... [75/100]")
         B = self.get_acoustic_excitations_by_element_integration()
 
@@ -1809,6 +1819,15 @@ class AcousticAssembler:
 
         logging.info("Finishing the model building... [98/100]")
         self.mass_flow_vectors = A + B
+
+
+    def assemble_global_matrices_and_excitations(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+        """
+        This method assembles the global matrices and excitations of the acoustic model.
+        """
+
+        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices)        
+        self.assemble_model_excitations()
 
 
     def reinsert_the_prescribed_dof(self, solution: np.ndarray, modal_analysis=False):

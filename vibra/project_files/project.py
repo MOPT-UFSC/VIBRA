@@ -164,7 +164,7 @@ class Project(QObject):
     def solve_acoustic_modal_analysis(self):
         self.acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
         self.model.reset_dissipation_model_properties()
-        self.acoustic_assembler.process_assemble()
+        self.acoustic_assembler.assemble_global_matrices()
 
         if self.model.stop_processing:
             return
@@ -178,7 +178,7 @@ class Project(QObject):
 
     def solve_structural_modal_analysis(self):
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
-        self.structural_assembler.process_assemble()
+        self.structural_assembler.assemble_global_matrices()
 
         if self.model.stop_processing:
             return
@@ -196,7 +196,7 @@ class Project(QObject):
         self.model.process_porous_material_properties()
         self.model.process_viscous_thermal_model_properties()
         self.model.process_perforated_plate_impedance()
-        self.acoustic_assembler.process_assemble()
+        self.acoustic_assembler.assemble_global_matrices_and_excitations()
 
         if self.model.stop_processing:
             return
@@ -216,7 +216,7 @@ class Project(QObject):
             return
 
         self.structural_postprocessing.get_max_min_values_of_displacements.cache_clear()
-        self.structural_assembler.process_assemble()
+        self.structural_assembler.assemble_global_matrices_and_excitations()
         if self.model.stop_processing:
             return
 
