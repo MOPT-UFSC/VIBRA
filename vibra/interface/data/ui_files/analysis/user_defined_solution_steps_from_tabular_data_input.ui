@@ -381,13 +381,13 @@
           <widget class="QPushButton" name="pushButton_select_unselect_all">
            <property name="minimumSize">
             <size>
-             <width>90</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
+             <width>110</width>
              <height>30</height>
             </size>
            </property>

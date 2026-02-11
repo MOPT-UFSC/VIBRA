@@ -22,9 +22,10 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self._initialize()
         self._config_window()
+        self._paint_icons()
 
         self._create_connections()
-        self.load_analysis_setup()
+        self._load_analysis_setup()
 
         while self.keep_window_open:
             self.exec()
@@ -87,7 +88,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             self.user_defined_solution_steps.clear()
             self.reset_table()
 
-    def load_analysis_setup(self):
+    def _load_analysis_setup(self):
         
         self.index_to_push_buttons.clear()
 
@@ -115,7 +116,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             if app().project.model.frequencies is None:
                 return
 
-        self._paint_icons()
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
 
         for index, freq in enumerate(self.user_defined_solution_steps):

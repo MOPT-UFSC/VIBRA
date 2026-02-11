@@ -162,8 +162,8 @@ class Ui_Dialog(object):
 
         self.pushButton_select_unselect_all = QPushButton(self.frame_2)
         self.pushButton_select_unselect_all.setObjectName(u"pushButton_select_unselect_all")
-        self.pushButton_select_unselect_all.setMinimumSize(QSize(90, 30))
-        self.pushButton_select_unselect_all.setMaximumSize(QSize(100, 30))
+        self.pushButton_select_unselect_all.setMinimumSize(QSize(110, 30))
+        self.pushButton_select_unselect_all.setMaximumSize(QSize(110, 30))
         self.pushButton_select_unselect_all.setFont(font)
         self.pushButton_select_unselect_all.setStyleSheet(u"")
         self.pushButton_select_unselect_all.setAutoDefault(False)
