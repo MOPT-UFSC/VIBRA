@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="icons">
         <file>add_narrow.png</file>
+        <file>add_notes.png</file>
+        <file>add_row_below.png</file>
         <file>arrow_circle_down_blue.png</file>
         <file>azul cinza.png</file>
         <file>broom.png</file>

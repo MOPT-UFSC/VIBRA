@@ -68,9 +68,9 @@ class Ui_Dialog(object):
         self.pushButton_add.setFont(font)
         self.pushButton_add.setStyleSheet(u"")
         icon = QIcon()
-        icon.addFile(u":/icons/plus-thick.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/icons/add_notes.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_add.setIcon(icon)
-        self.pushButton_add.setIconSize(QSize(18, 18))
+        self.pushButton_add.setIconSize(QSize(20, 20))
         self.pushButton_add.setAutoDefault(False)
 
         self.gridLayout_9.addWidget(self.pushButton_add, 1, 5, 1, 1)
@@ -113,7 +113,7 @@ class Ui_Dialog(object):
         icon1 = QIcon()
         icon1.addFile(u":/icons/reset_settings.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_reset.setIcon(icon1)
-        self.pushButton_reset.setIconSize(QSize(18, 18))
+        self.pushButton_reset.setIconSize(QSize(20, 20))
         self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_9.addWidget(self.pushButton_reset, 1, 6, 1, 1)

@@ -137,12 +137,12 @@
            </property>
            <property name="icon">
             <iconset resource="../../icons/resources.qrc">
-             <normaloff>:/icons/plus-thick.png</normaloff>:/icons/plus-thick.png</iconset>
+             <normaloff>:/icons/add_notes.png</normaloff>:/icons/add_notes.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>18</width>
-             <height>18</height>
+             <width>20</width>
+             <height>20</height>
             </size>
            </property>
            <property name="autoDefault">
@@ -258,8 +258,8 @@
            </property>
            <property name="iconSize">
             <size>
-             <width>18</width>
-             <height>18</height>
+             <width>20</width>
+             <height>20</height>
             </size>
            </property>
            <property name="autoDefault">
