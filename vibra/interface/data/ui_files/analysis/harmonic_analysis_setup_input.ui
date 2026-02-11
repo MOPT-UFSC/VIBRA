@@ -1492,7 +1492,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>112</width>
           <height>30</height>
          </size>
         </property>
@@ -1511,6 +1511,16 @@
         <property name="text">
          <string>Exit</string>
         </property>
+        <property name="icon">
+         <iconset resource="../../icons/resources.qrc">
+          <normaloff>:/icons/exit_to_app_icon.png</normaloff>:/icons/exit_to_app_icon.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>18</width>
+          <height>18</height>
+         </size>
+        </property>
         <property name="autoDefault">
          <bool>false</bool>
         </property>
@@ -1520,13 +1530,13 @@
        <widget class="QPushButton" name="pushButton_enter_setup">
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>112</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>112</width>
           <height>30</height>
          </size>
         </property>
@@ -1545,6 +1555,16 @@
         <property name="text">
          <string>Enter setup</string>
         </property>
+        <property name="icon">
+         <iconset resource="../../icons/resources.qrc">
+          <normaloff>:/icons/settings_b_roll.png</normaloff>:/icons/settings_b_roll.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>18</width>
+          <height>18</height>
+         </size>
+        </property>
         <property name="autoDefault">
          <bool>false</bool>
         </property>
@@ -1554,13 +1574,13 @@
        <widget class="QPushButton" name="pushButton_run_analysis">
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>112</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>112</width>
           <height>30</height>
          </size>
         </property>
@@ -1578,6 +1598,16 @@
         </property>
         <property name="text">
          <string>Run analysis</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../../icons/resources.qrc">
+          <normaloff>:/icons/start_solution.png</normaloff>:/icons/start_solution.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>18</width>
+          <height>18</height>
+         </size>
         </property>
         <property name="autoDefault">
          <bool>false</bool>

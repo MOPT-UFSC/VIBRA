@@ -97,7 +97,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         else:
             icon_color = LIGHT_ICON_COLOR.to_qt()
 
-        widgets = [self.pushButton_show_solution_steps_table, self.pushButton_solution_steps_configurator]
+        widgets = [
+            self.pushButton_enter_setup,
+            self.pushButton_exit,
+            self.pushButton_run_analysis,
+            self.pushButton_reset_frequency_settings,
+            self.pushButton_show_solution_steps_table, 
+            self.pushButton_solution_steps_configurator
+            ]
+
         change_icon_color_for_widgets(widgets, icon_color)
 
     def update_display_table_visibility(self):
