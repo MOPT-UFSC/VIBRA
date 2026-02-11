@@ -3,6 +3,7 @@ from PySide6.QtGui import Qt
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
@@ -35,6 +36,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self._config_window()
         self._config_widgets()
         self._create_connections()
+
+        self._paint_icons()
 
         self.load_table_data()
         self.load_analysis_setup()
@@ -82,6 +85,20 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_show_solution_steps_table.clicked.connect(self.display_solution_steps_callback)
         #
         self.frequency_spacing_callback()
+
+        app().main_window.theme_changed.connect(self._paint_icons)
+    
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        widgets = [self.pushButton_show_solution_steps_table, self.pushButton_solution_steps_configurator]
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def update_display_table_visibility(self):
         frequencies_defined = isinstance(self.model.frequencies, list | np.ndarray)
