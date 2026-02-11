@@ -115,6 +115,16 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
             step_check_box: QCheckBox
             step_check_box.setChecked(_bool)
 
+    def deactivate_solution_step_by_key_event(self):
+        selected_items = self.tableWidget_frequencies.selectedItems()
+        for item in selected_items:
+            str_index = self.tableWidget_frequencies.item(item.row(), 0).text()
+            if str_index == "":
+                continue
+
+            index = int(str_index)
+            self.index_to_check_box[index].setChecked(False)
+
     def confirm_callback(self):
             
         for index, check_box in self.index_to_check_box.items():
@@ -143,5 +153,7 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.confirm_callback()
+        elif event.key() == Qt.Key_Delete:
+            self.deactivate_solution_step_by_key_event()
         elif event.key() == Qt.Key_Escape:
             self.close()
