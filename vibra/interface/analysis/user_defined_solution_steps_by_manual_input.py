@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QLineEdit, QPushButton, 
 from PySide6.QtGui import Qt, QIcon
 
 from vibra import app, ICON_DIR
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import UserDefinedSolutionStepsByManualInput_UI
@@ -21,6 +22,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self._initialize()
         self._config_window()
+
         self._create_connections()
         self.load_analysis_setup()
 
@@ -43,11 +45,32 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.setWindowTitle("Analysis setup")
 
     def _create_connections(self):
-        #
         self.pushButton_add.clicked.connect(self.add_solution_step_callback)
         self.pushButton_confirm.clicked.connect(self.confirm_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_reset.clicked.connect(self.reset_callback)
+        #
+        app().main_window.theme_changed.connect(self._paint_icons)
+
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        widgets = [
+            self.pushButton_add, 
+            self.pushButton_reset
+            ]
+
+        for push_button in self.index_to_push_buttons.values():
+            widgets.append(push_button)
+
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def reset_callback(self):
 
@@ -120,6 +143,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
             for j in range(2):
                 self.tableWidget_frequencies.item(index, j).setTextAlignment(Qt.AlignCenter)
+
+        # self._paint_icons()
 
     def check_inputs(self, line_edit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
 
