@@ -6,7 +6,7 @@ from molde import Color
 from molde.colors import color_names
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QHeaderView, QTableWidgetItem, QWidget
 
 from vibra import app
 from vibra.engine.properties import MaterialLibrary
@@ -47,6 +47,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
+        self.tableWidget_material_data.itemDelegate().closeEditor.connect(self.cell_editor_closed_callback)
 
     def _config_widgets(self):
         self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -175,13 +176,29 @@ class MaterialWidget(MaterialWidget_UI):
                 item.setText("")
                 raise InvalidMaterialError(msg) from e
 
-            self.go_to_next_cell(item)
+    def cell_editor_closed_callback(self, _widget: QWidget, _hint: QAbstractItemDelegate.EndEditHint):
+        n_columns = self.tableWidget_material_data.columnCount()
+        row = self.tableWidget_material_data.currentRow()
+        col = self.tableWidget_material_data.currentColumn()
 
-    def go_to_previous_cell(self, item: QTableWidgetItem):
-        self.edit_cell(item.row() - 1, item.column())
+        # The tabs are updated by default in a left-right, up-down order.
+        # This code counteracts this default behavior, so we can customize it next.
+        # If a better way to cancel the default behavior is found please replace it.
+        match _hint:
+            case QAbstractItemDelegate.EndEditHint.EditNextItem:
+                col = (col - 1) % n_columns
+                row = (row - 1) if (col == (n_columns - 1)) else row
+            case QAbstractItemDelegate.EndEditHint.EditPreviousItem:
+                col = (col + 1) % n_columns
+                row = (row + 1) if (col == 0) else row
 
-    def go_to_next_cell(self, item: QTableWidgetItem):
-        self.edit_cell(item.row() + 1, item.column())
+        # Go to next or previous cell according to the keyboard input
+        with block_signals(self.tableWidget_material_data.itemDelegate()):
+            match _hint:
+                case QAbstractItemDelegate.EndEditHint.EditNextItem | QAbstractItemDelegate.EndEditHint.SubmitModelCache:
+                    self.edit_cell(row + 1, col)
+                case QAbstractItemDelegate.EndEditHint.EditPreviousItem:
+                    self.edit_cell(row - 1, col)
 
     @qt_run_delayed
     def edit_cell(self, row: int, col: int):
