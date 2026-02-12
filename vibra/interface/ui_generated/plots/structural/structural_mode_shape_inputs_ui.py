@@ -340,6 +340,9 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot structural mode shape", None))
         self.label_title.setText(QCoreApplication.translate("Form", u"Plot the structural mode shape", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_export_results.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Export the modal analysis results</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_export_results.setText(QCoreApplication.translate("Form", u"Export results", None))
         self.label_4.setText(QCoreApplication.translate("Form", u"Natural frequency:", None))
         self.label_7.setText(QCoreApplication.translate("Form", u"[Hz]", None))
