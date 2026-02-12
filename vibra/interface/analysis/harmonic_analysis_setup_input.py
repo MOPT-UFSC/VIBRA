@@ -84,10 +84,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_solution_steps_configurator.clicked.connect(self.solution_steps_setup_callback)
         self.pushButton_show_solution_steps_table.clicked.connect(self.display_solution_steps_callback)
         #
+        app().main_window.theme_changed.connect(self._paint_icons)
+        #
         self.frequency_spacing_callback()
 
-        app().main_window.theme_changed.connect(self._paint_icons)
-    
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
@@ -113,8 +113,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_show_solution_steps_table.setEnabled(frequencies_defined)
 
     def solution_steps_setup_callback(self):
-        self.hide()
 
+        self.hide()
         if self.table_exists:
             self.ud_interface = UserDefinedSolutionStepsFromTabularDataInput()
 
