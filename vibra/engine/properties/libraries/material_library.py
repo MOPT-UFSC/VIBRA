@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from typing import override
+
 from vibra.engine.properties.material import Material
 
 from .property_library import PropertyLibrary
 
 
 class MaterialLibrary(PropertyLibrary[Material]):
+    @override
     @classmethod
     def default(cls) -> MaterialLibrary:
         return default_material_library()

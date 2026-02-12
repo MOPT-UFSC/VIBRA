@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from typing import override
+
 from vibra.engine.properties.fluid import Fluid
 
 from .property_library import PropertyLibrary
 
 
 class FluidLibrary(PropertyLibrary[Fluid]):
+    @override
     @classmethod
     def default(cls) -> FluidLibrary:
         return default_fluid_library()

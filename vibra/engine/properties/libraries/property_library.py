@@ -10,6 +10,7 @@ from typing import (
     Protocol,
     Sequence,
     TypeVar,
+    Self,
     runtime_checkable,
 )
 
@@ -116,7 +117,7 @@ class PropertyLibrary(Generic[T]):
         return f"{preffix} (copy {max_copy + 1})"
 
     @classmethod
-    def default(cls) -> PropertyLibrary:
+    def default(cls) -> Self:
         raise NotImplementedError(f'Class "{cls.__name__}" does not implement the "default" method.')
 
     def _find_by_attribute(
