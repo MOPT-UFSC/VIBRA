@@ -89,6 +89,8 @@ class MaterialWidget(MaterialWidget_UI):
                 name_item.setText("New material")
                 self.tableWidget_material_data.setCurrentItem(name_item)
                 self.tableWidget_material_data.editItem(name_item)
+        
+            self._update_size_policy()
 
     def duplicate_selected_material(self):
         material = self.get_selected_material()
@@ -115,6 +117,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         with block_signals(self.tableWidget_material_data):
             self.tableWidget_material_data.removeColumn(selected_column)
+            self._update_size_policy()
 
         app().main_window.selection.clear_selection()
 

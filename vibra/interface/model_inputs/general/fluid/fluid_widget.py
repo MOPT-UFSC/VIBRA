@@ -117,6 +117,8 @@ class FluidWidget(FluidWidget_UI):
                 self.tableWidget_fluid_data.setCurrentItem(name_item)
                 self.tableWidget_fluid_data.editItem(name_item)
 
+            self._update_size_policy()
+
     def duplicate_selected_fluid(self):
         fluid = self.get_selected_fluid()
         if fluid is None:
@@ -143,6 +145,7 @@ class FluidWidget(FluidWidget_UI):
         with block_signals(self.tableWidget_fluid_data):
             self.tableWidget_fluid_data.removeColumn(selected_column)
 
+        self._update_size_policy()
         app().main_window.selection.clear_selection()
 
     def reset_library_callback(self):
