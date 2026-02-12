@@ -57,7 +57,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.lineEdit_natural_frequency.setProperty("status", "information")
         #
         if app().project.acoustic_modal_solver.complex_natural_frequencies.size:
-            widths = [60, 170]
+            widths = [60, 160]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
         else:
