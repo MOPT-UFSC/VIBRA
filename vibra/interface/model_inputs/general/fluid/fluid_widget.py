@@ -10,6 +10,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QDialog, QHeaderView, QTableWidgetItem
 
 from vibra import app
+from vibra.engine.properties import FluidLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.errors import InvalidFluidError
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
@@ -144,6 +145,21 @@ class FluidWidget(FluidWidget_UI):
 
         app().main_window.selection.clear_selection()
 
+    def reset_library_callback(self):
+        """
+        Resets the library to default and removes all fluid assignments.
+        """
+        if not self._get_reset_library_confirmation():
+            return
+
+        properties = app().new_project.model.properties
+        fluids_to_remove = list(properties.fluid_library.values())
+        for fluid in fluids_to_remove:
+            properties.remove_fluid(fluid)
+        properties.fluid_library = FluidLibrary.default()
+        self.reload_table_of_fluids()
+        app().main_window.selection.clear_selection()
+
     def cell_clicked_callback(self, row, col):
         if row == RowsEnum.COLOR:
             self._pick_color(row, col)
@@ -218,6 +234,28 @@ class FluidWidget(FluidWidget_UI):
 
         properties = app().new_project.model.properties
         return properties.fluid_library.get_from_ordered_index(selected_column)
+
+    def _get_reset_library_confirmation(self):
+        title = "Fluids library reset"
+        message = "Would you like to reset the fluid library to default?"
+        buttons_config = {
+            "left_button_label": "No",
+            "right_button_label": "Yes",
+            "left_button_size": 80,
+            "right_button_size": 80,
+        }
+
+        read = GetUserConfirmationInput(
+            title,
+            message,
+            buttons_config=buttons_config,
+        )
+
+        if read._cancel:
+            return False
+
+        if read._continue:
+            return True
 
     def _update_library_with_column(self, col: int):
         fluid_library = app().new_project.model.properties.fluid_library
