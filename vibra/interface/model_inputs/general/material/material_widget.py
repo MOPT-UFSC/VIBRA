@@ -43,13 +43,13 @@ class MaterialWidget(MaterialWidget_UI):
     def _create_connections(self):
         self.pushButton_add_column.clicked.connect(self.add_buffer_column)
         self.pushButton_duplicate.clicked.connect(self.duplicate_selected_material)
-        self.pushButton_remove_column.clicked.connect(self.remove_selected_column)
+        self.pushButton_remove_column.clicked.connect(self.remove_selected_material)
 
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
 
     def _config_widgets(self):
-        self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget_material_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectColumns)
         self.tableWidget_material_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
@@ -102,7 +102,7 @@ class MaterialWidget(MaterialWidget_UI):
         self.reload_table_of_materials()
         self.scroll_to_end()
 
-    def remove_selected_column(self):
+    def remove_selected_material(self):
         selected_column = self._get_selected_column()
         if selected_column < 0:
             return
@@ -219,7 +219,7 @@ class MaterialWidget(MaterialWidget_UI):
     def keyPressEvent(self, event: QKeyEvent):
         match event.key():
             case Qt.Key.Key_Delete:
-                self.remove_selected_column()
+                self.remove_selected_material()
             case _:
                 event.ignore()  # propagates the event to the parent classes
 
