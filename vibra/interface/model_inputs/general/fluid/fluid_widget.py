@@ -1,27 +1,39 @@
-from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
-from PySide6.QtCore import Qt, QSize
+from copy import deepcopy
+from enum import IntEnum
+from itertools import count
 
 from molde import Color
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
+from vibra.engine.properties.fluid import Fluid
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.model_inputs.general.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
-
-from vibra.engine.properties.fluid import Fluid
+from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.libraries.default_libraries import default_fluid_library
-
-from copy import deepcopy
-from itertools import count
 
 error_title = "Error"
 warning_title = "Warning"
 
 COLOR_ROW = 11
+
+class RowsEnum(IntEnum):
+    NAME = 0
+    IDENTIFIER = 1
+    TEMPERATURE = 2
+    PRESSURE = 3
+    FLUID_DENSITY = 4
+    SPEED_OF_SOUND = 5
+    ISENTROPIC_EXPONENT = 6
+    THERMAL_CONDUCTIVITY = 7
+    SPECIFIC_HEAT_CP = 8
+    DYNAMIC_VISCOSITY = 9
+    MOLAR_MASS = 10
+    COLOR = 11
 
 
 class FluidWidget(FluidWidget_UI):
@@ -99,7 +111,7 @@ class FluidWidget(FluidWidget_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -712,9 +724,9 @@ class FluidWidget(FluidWidget_UI):
             self.dialog.hide()
 
         self.refprop = SetFluidCompositionInputs(
-                                                fluid_to_edit = selected_fluid,
-                                                state_properties = self.state_properties,
-                                                )
+            fluid_to_edit=selected_fluid,
+            state_properties=self.state_properties,
+        )
 
         if not self.refprop.complete:
             self.refprop = None
