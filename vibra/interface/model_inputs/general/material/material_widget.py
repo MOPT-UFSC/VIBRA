@@ -336,21 +336,17 @@ class MaterialWidget(MaterialWidget_UI):
     def _set_column_values(
         self,
         column: int,
-        material: Material | list,
-        buffered: bool = False,
+        material: Material,
     ):
-        if isinstance(material, Material):
-            attributes = [
-                material.name,
-                material.identifier,
-                material.material_density,
-                f"{material.elasticity_modulus:.4e}",
-                material.poisson_ratio,
-                material.thermal_expansion_coefficient,
-                Color(*material.color),
-            ]
-        else:
-            attributes = material
+        attributes = [
+            material.name,
+            material.identifier,
+            material.material_density,
+            f"{material.elasticity_modulus:.4e}",
+            material.poisson_ratio,
+            material.thermal_expansion_coefficient,
+            Color(*material.color),
+        ]
 
         for i, value in enumerate(attributes):
             item = QTableWidgetItem()
@@ -364,8 +360,6 @@ class MaterialWidget(MaterialWidget_UI):
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             else:
                 item.setText(str(value))
-                if buffered:
-                    item.setBackground(color_names.GRAY_5.to_qt())
 
     def _update_size_policy(self):
         properties = app().new_project.model.properties
