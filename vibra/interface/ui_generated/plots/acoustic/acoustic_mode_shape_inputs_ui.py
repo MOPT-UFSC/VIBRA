@@ -165,14 +165,18 @@ class Ui_Form(object):
         self.gridLayout_6.setSpacing(0)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_plot = QPushButton(self.frame_button)
-        self.pushButton_plot.setObjectName(u"pushButton_plot")
-        self.pushButton_plot.setMinimumSize(QSize(160, 30))
-        self.pushButton_plot.setMaximumSize(QSize(180, 30))
-        self.pushButton_plot.setFont(font1)
-        self.pushButton_plot.setStyleSheet(u"")
+        self.pushButton_export_results = QPushButton(self.frame_button)
+        self.pushButton_export_results.setObjectName(u"pushButton_export_results")
+        self.pushButton_export_results.setMinimumSize(QSize(140, 30))
+        self.pushButton_export_results.setMaximumSize(QSize(140, 30))
+        self.pushButton_export_results.setFont(font1)
+        self.pushButton_export_results.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/file_export_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_export_results.setIcon(icon)
+        self.pushButton_export_results.setIconSize(QSize(18, 18))
 
-        self.gridLayout_6.addWidget(self.pushButton_plot, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.pushButton_export_results, 1, 0, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_button, 6, 0, 1, 1)
@@ -314,11 +318,10 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.lineEdit_natural_frequency, self.treeWidget_frequencies)
         QWidget.setTabOrder(self.treeWidget_frequencies, self.comboBox_colormaps)
         QWidget.setTabOrder(self.comboBox_colormaps, self.slider_transparency)
-        QWidget.setTabOrder(self.slider_transparency, self.pushButton_plot)
 
         self.retranslateUi(Form)
 
-        self.pushButton_plot.setDefault(True)
+        self.pushButton_export_results.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -332,7 +335,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.label_4.setText(QCoreApplication.translate("Form", u"Natural frequency:", None))
         self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
-        self.pushButton_plot.setText(QCoreApplication.translate("Form", u"Plot the mode shape", None))
+        self.pushButton_export_results.setText(QCoreApplication.translate("Form", u"Export results", None))
         self.comboBox_colormaps.setItemText(0, QCoreApplication.translate("Form", u" Jet scale", None))
         self.comboBox_colormaps.setItemText(1, QCoreApplication.translate("Form", u" Viridis scale", None))
         self.comboBox_colormaps.setItemText(2, QCoreApplication.translate("Form", u" Inferno scale", None))
@@ -378,7 +381,7 @@ class AcousticModeShapeInputs_UI(QWidget, Ui_Form):
                                         - label_5: QLabel
                             - frame_button: QFrame
                                 - (Layout): QGridLayout
-                                        - pushButton_plot: QPushButton
+                                        - pushButton_export_results: QPushButton
                             - frame: QFrame
                                 - (Layout): QGridLayout
                                         - comboBox_colormaps: QComboBox

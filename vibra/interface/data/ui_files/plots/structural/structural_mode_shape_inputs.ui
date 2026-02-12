@@ -190,16 +190,16 @@
           <number>0</number>
          </property>
          <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton_plot">
+          <widget class="QPushButton" name="pushButton_export_results">
            <property name="minimumSize">
             <size>
-             <width>160</width>
+             <width>140</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>180</width>
+             <width>140</width>
              <height>30</height>
             </size>
            </property>
@@ -212,14 +212,27 @@
              <bold>false</bold>
             </font>
            </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Export the modal analysis results&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="styleSheet">
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>Plot the mode shape</string>
+            <string>Export results</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../../../icons/resources.qrc">
+             <normaloff>:/icons/file_export_icon.png</normaloff>:/icons/file_export_icon.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>18</width>
+             <height>18</height>
+            </size>
            </property>
            <property name="default">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -904,8 +917,9 @@
   <tabstop>treeWidget_frequencies</tabstop>
   <tabstop>comboBox_colormaps</tabstop>
   <tabstop>slider_transparency</tabstop>
-  <tabstop>pushButton_plot</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
