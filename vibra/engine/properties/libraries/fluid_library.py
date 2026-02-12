@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from vibra.engine.properties.fluid import Fluid
 
 from .property_library import PropertyLibrary
@@ -5,7 +7,7 @@ from .property_library import PropertyLibrary
 
 class FluidLibrary(PropertyLibrary[Fluid]):
     @classmethod
-    def default(cls):
+    def default(cls) -> FluidLibrary:
         return default_fluid_library()
 
 

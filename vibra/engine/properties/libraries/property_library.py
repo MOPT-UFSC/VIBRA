@@ -1,4 +1,5 @@
-from numpy import isin
+from __future__ import annotations
+
 import re
 from operator import eq
 from typing import (
@@ -115,7 +116,7 @@ class PropertyLibrary(Generic[T]):
         return f"{preffix} (copy {max_copy + 1})"
 
     @classmethod
-    def default(cls):
+    def default(cls) -> PropertyLibrary:
         raise NotImplementedError(f'Class "{cls.__name__}" does not implement the "default" method.')
 
     def _find_by_attribute(

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from vibra.engine.properties.material import Material
 
 from .property_library import PropertyLibrary
@@ -5,8 +7,9 @@ from .property_library import PropertyLibrary
 
 class MaterialLibrary(PropertyLibrary[Material]):
     @classmethod
-    def default(cls):
+    def default(cls) -> MaterialLibrary:
         return default_material_library()
+
 
 def default_material_library() -> MaterialLibrary:
     materials = [
