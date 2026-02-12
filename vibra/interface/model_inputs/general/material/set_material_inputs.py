@@ -1,26 +1,20 @@
-from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidget, QTableWidgetItem
-from PySide6.QtGui import QCloseEvent
-from PySide6.QtCore import Qt
-
-from vibra import app
-from vibra.interface.ui_generated.model.setup.material.set_material_ui import SetMaterial_UI
-from vibra.engine.properties.material import Material
-from vibra.interface.model_inputs.general.material.material_widget import MaterialWidget
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-
 from collections import defaultdict
 from enum import IntEnum
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidget, QTableWidgetItem
+
+from vibra import app
+from vibra.engine.properties.material import Material
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.material.material_widget import MaterialWidget
+from vibra.interface.ui_generated.model.setup.material.set_material_ui import SetMaterial_UI
 
 window_title_1 = "Error"
 window_title_2 = "Warning"
 
-def getColorRGB(color):
-    color = color.replace(" ", "")
-    if ("[" or "(") in color:
-        color = color[1:-1]
-    tokens = color.split(',')
-    return list(map(int, tokens))
 
 class TabType(IntEnum):
     SETUP = 0
@@ -67,7 +61,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def _configure_qt_variables(self):
         self.grid_layout = QGridLayout()
-        self.grid_layout.setContentsMargins(0,0,0,0)
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
 
         self.scrollArea_table_of_materials.setLayout(self.grid_layout)
         self._add_material_widget()
@@ -77,7 +71,7 @@ class MaterialInputs(SetMaterial_UI):
         self.pushButton_exit = self.material_widget.pushButton_exit
 
         self.tableWidget_material_data = self.material_widget.tableWidget_material_data
-        self.tableWidget_model_materials : QTableWidget
+        self.tableWidget_model_materials: QTableWidget
 
     def _add_material_widget(self):
         self.material_widget = MaterialWidget(dialog=self)
@@ -98,7 +92,7 @@ class MaterialInputs(SetMaterial_UI):
         self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
         #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
-        self.tableWidget_model_materials.cellClicked.connect(self.cell_clicked_callback)       
+        self.tableWidget_model_materials.cellClicked.connect(self.cell_clicked_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
@@ -111,14 +105,14 @@ class MaterialInputs(SetMaterial_UI):
         self.selected_column = current_col
         self.update_material_selection()
 
-    def cell_clicked_callback(self, row, col):  
+    def cell_clicked_callback(self, row, col):
         selection_text = self.set_selected_items_and_get_selection_text()
 
         if not self.selected_items:
             return
-        
+
         self.table_model_materials_cell_clicked = True
-    
+
         app().main_window.selection.set_geometry_selection(**self.selected_items)
 
         self.pushButton_remove.setEnabled(True)
@@ -128,7 +122,7 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.action_model_workspace_callback()
 
         self.table_model_materials_cell_clicked = False
-        
+
     def set_selected_items_and_get_selection_text(self) -> str:
         selected_cells = self.tableWidget_model_materials.selectedItems()
 
@@ -149,7 +143,7 @@ class MaterialInputs(SetMaterial_UI):
             selected_type = selected_type.lower() + "s"
 
             selected_items[selected_type].append(int(selected_id))
-        
+
         for selected_type, ids in selected_items.items():
             ids.sort()
 
@@ -193,7 +187,7 @@ class MaterialInputs(SetMaterial_UI):
         if len(selected_ids):
             text = ", ".join([str(i) for i in selected_ids])
             self.lineEdit_selection_id.setText(text)
-    
+
     def verify_if_selected_volumes_belongs_to_table_model_materials(self):
         if self.table_model_materials_cell_clicked:
             return
@@ -238,9 +232,9 @@ class MaterialInputs(SetMaterial_UI):
             _, id = selected_item.text().split("-")
 
             map_id_to_row[int(id)] = row
-        
+
         return map_id_to_row
-    
+
     def set_selection_text(self, selected_volumes: list | set):
         selected_volumes = list(selected_volumes)
         selected_volumes.sort()
@@ -251,7 +245,7 @@ class MaterialInputs(SetMaterial_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_seletction_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -312,7 +306,6 @@ class MaterialInputs(SetMaterial_UI):
         current_text = self.comboBox_attribution_type.currentText()
 
         if "surfaces" in current_text:
-
             if "All" in current_text:
                 surface_ids = list()
                 if "surfaces" in self.mesh.geometry_information.keys():
@@ -320,11 +313,7 @@ class MaterialInputs(SetMaterial_UI):
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids, 
-                                                                    selection = "surfaces", 
-                                                                    single_id = False
-                                                                    )
+                surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
                 if error_data is not None:
                     self.hide()
@@ -336,7 +325,6 @@ class MaterialInputs(SetMaterial_UI):
                 self.properties._set_property("material", selected_material, surface=surface_id)
 
         if "volumes" in current_text:
-
             if "All" in current_text:
                 volume_ids = list()
                 if "volumes" in self.mesh.geometry_information.keys():
@@ -344,11 +332,7 @@ class MaterialInputs(SetMaterial_UI):
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                volume_ids, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids, 
-                                                                    selection = "volumes", 
-                                                                    single_id = False
-                                                                    )
+                volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
 
                 if error_data is not None:
                     self.hide()
@@ -375,7 +359,7 @@ class MaterialInputs(SetMaterial_UI):
                 elif selection_type == "volumes":
                     self.properties._remove_volume_property("material", id)
                     self.properties._remove_volume_property("material_id", id)
-        
+
         self.clear_line_edit_seletction_id()
         self.pushButton_remove.setDisabled(True)
 
@@ -389,14 +373,13 @@ class MaterialInputs(SetMaterial_UI):
         title = "Materials resetting"
         message = "Would you like to remove the all assigned materials from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:
             return
 
         if obj._continue:
-
             self.properties._reset_property("material")
             self.properties._reset_property("material_id")
             self.actions_to_finalize()
@@ -412,14 +395,11 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
 
     def load_model_info(self):
 
-        properties = {
-                      "Surface" : self.properties.surface_properties,
-                      "Volume" : self.properties.volume_properties
-                      }
+        properties = {"Surface": self.properties.surface_properties, "Volume": self.properties.volume_properties}
 
         self.materials_from_model = dict()
 
@@ -427,8 +407,7 @@ class MaterialInputs(SetMaterial_UI):
             for key, data in _property.items():
                 property, surface_id = key
                 if property == "material":
-
-                    data : Material
+                    data: Material
                     selection_id = f"{selection}-{surface_id}"
                     self.materials_from_model[(data.identifier, selection_id)] = data
 
@@ -446,7 +425,6 @@ class MaterialInputs(SetMaterial_UI):
             material: Material
             _, selection_id = key
             if isinstance(material, Material):
-                
                 self.tableWidget_model_materials.setItem(i, 0, QTableWidgetItem(selection_id))
                 self.tableWidget_model_materials.setItem(i, 1, QTableWidgetItem(str(material.name)))
                 self.tableWidget_model_materials.setItem(i, 2, QTableWidgetItem(str(material.identifier)))
@@ -478,7 +456,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def tab_event_callback(self):
         app().main_window.selection.clear_selection()
-        
+
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
 
@@ -496,7 +474,7 @@ class MaterialInputs(SetMaterial_UI):
         self.label_3.setVisible(not is_tab_list)
         self.comboBox_attribution_type.setVisible(not is_tab_list)
         self.lineEdit_selected_material_name.setVisible(not is_tab_list)
-            
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
@@ -506,13 +484,13 @@ class MaterialInputs(SetMaterial_UI):
 
         elif event.key() == Qt.Key_Escape:
             self.close()
-        
+
         elif event.key() == Qt.Key_Control:
             self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.MultiSelection)
-        
+
         elif event.key() == Qt.Key_Shift:
             self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.ContiguousSelection)
-        
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
             self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.SingleSelection)
