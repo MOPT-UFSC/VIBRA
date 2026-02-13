@@ -1,3 +1,8 @@
+from molde.colors import Color
+from molde.colors import color_names
+from vibra.engine.mesher.element_setup import ElementSetup
+from vibra.engine.mesher.mesh_setup import MeshRefinementSetup
+from vibra.engine.mesher.mesh_setup import MeshSetup
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QIcon
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
@@ -55,6 +60,18 @@ class GMSHAlgorithms_3D(IntEnum):
     FRONTAL_3D = 1
     HXT_3D = 2
 
+class QualityTableRows(IntEnum):
+    GAMMA = 0
+    VOLUME = 1
+    MIN_SJ = 2
+    ASPECT_RATIO = 3
+
+
+class QualityTableColumns(IntEnum):
+    WORST_VALUE = 0
+    AVERAGE = 1
+    STANDARD_DEVIATION = 2
+    BAD_ELEMENTS = 3
 
 error_title = "Error"
 warning_title = "Warning"
@@ -130,29 +147,29 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_shape_function.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
-        self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
-        self.comboBox_mesh_quality_metrics.currentIndexChanged.connect(self.mesh_quality_metrics_callback)
-        #
-        self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-        self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
-        #
-        self.pushButton_add.clicked.connect(self.add_button_callback)
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_delete.clicked.connect(self.remove_callback)
+        # self.comboBox_shape_function.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
+        # self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
+        # self.comboBox_mesh_quality_metrics.currentIndexChanged.connect(self.mesh_quality_metrics_callback)
+        # #
+        # self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
+        # self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
+        # #
+        # self.pushButton_add.clicked.connect(self.add_button_callback)
+        # self.pushButton_exit.clicked.connect(self.close)
+        # self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
-        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
-        self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
-        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
-        #
-        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
-        self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
-        self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
-        #
+        # self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
+        # self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
+        # self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        # #
+        # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        # #
+        # self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
+        # self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
+        # #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
-        self.mesh_quality_metrics_callback()
+        # #
+        # self.mesh_quality_metrics_callback()
 
     def mesh_quality_metrics_callback(self):
 
@@ -414,74 +431,250 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             NotImplementedError()
 
     def generate_mesh_callback(self):
-        if self.check_mesh_inputs():
-            return
+        def generate():
+            mesh_setup = self._get_mesh_setup()
+            app().new_project.configure_mesh(mesh_setup)
+            app().new_project.generate_mesh()
 
-        if self.bad_elements_showed:
-            app().main_window.distinguish_mesh_solids([])
-
-        app().main_window.selection.clear_selection()
-        self.hide()
-
-        def generate_function():
-            logging.info("Processing mesh... [20/100]")
-            app().project.reset_solutions()
-
-            logging.info("Processing mesh... [30/100]")
-            app().project.set_mesh_setup(self.mesh_setup)
-
-            mesh_setup = deepcopy(self.mesh_setup)
-            mesh_setup.pop("ElementType")
-            app().file.write_mesh_setup_in_file(mesh_setup)
-
-            logging.info("Processing mesh... [40/100]")
-            app().project.generate_mesh()
-
-        LoadingWindow(generate_function).run()
-
-        if self.mesh.error_data:
-            title = self.mesh.error_data.get("title")
-            message = self.mesh.error_data.get("message")
-            PrintMessageInput([error_title, title, message])
-            return
-
-        disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(self.mesh.collapsed_elements_data)
-
-        run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
-        run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
-
-        if app().new_project.model.analysis_setup is None:
-            run_analysis_button.setDisabled(True)
-
-        self.check_post_process_mesh_criteria()
-        self.process_degress_of_freedom_if_necessary()
-
-        app().file.write_mesh_data_in_file()
-        app().file.write_geometry_data_in_file()
-
-        self.mesh_quality_data = None
-        if self.comboBox_mesh_quality_metrics.currentText() == "Enabled":
-            app().file.write_mesh_quality_data_in_file()
-            self.config_control_quality_table()
-            self.tabWidget_main.setTabVisible(2, True)
-        else:
-            app().file.remove_mesh_quality_data_from_project_file()
-
-        # remove and write the mesh error data in the error data json file
-        app().file.remove_mesh_error_data_from_project_file()
-        app().file.write_mesh_error_data_in_file()
-
-        self.cache_refinement_data()
-        app().main_window.update_mesh_information()
-        app().main_window.update_geometry_information()
-
+        LoadingWindow(generate).run()
         LoadingWindow(self.actions_to_finalize).run()
-        self.complete = True
+        self.update_control_quality_table()
 
-        # disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
-        # if disconnected_nodes:
-        #     app().main_window.selection.set_mesh_selection(nodes=disconnected_nodes)
+        return
+
+
+        # if self.check_mesh_inputs():
+        #     return
+
+        # if self.bad_elements_showed:
+        #     app().main_window.distinguish_mesh_solids([])
+
+        # app().main_window.selection.clear_selection()
+        # self.hide()
+
+        # def generate_function():
+        #     logging.info("Processing mesh... [20/100]")
+        #     app().project.reset_solutions()
+
+        #     logging.info("Processing mesh... [30/100]")
+        #     app().project.set_mesh_setup(self.mesh_setup)
+
+        #     mesh_setup = deepcopy(self.mesh_setup)
+        #     mesh_setup.pop("ElementType")
+        #     app().file.write_mesh_setup_in_file(mesh_setup)
+
+        #     logging.info("Processing mesh... [40/100]")
+        #     app().project.generate_mesh()
+
+        # LoadingWindow(generate_function).run()
+
+        # if self.mesh.error_data:
+        #     title = self.mesh.error_data.get("title")
+        #     message = self.mesh.error_data.get("message")
+        #     PrintMessageInput([error_title, title, message])
+        #     return
+
+        # disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
+        # collapsed_elements = bool(self.mesh.collapsed_elements_data)
+
+        # run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
+        # run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
+
+        # if app().new_project.model.analysis_setup is None:
+        #     run_analysis_button.setDisabled(True)
+
+        # self.check_post_process_mesh_criteria()
+        # self.process_degress_of_freedom_if_necessary()
+
+        # app().file.write_mesh_data_in_file()
+        # app().file.write_geometry_data_in_file()
+
+        # self.mesh_quality_data = None
+        # if self.comboBox_mesh_quality_metrics.currentText() == "Enabled":
+        #     app().file.write_mesh_quality_data_in_file()
+        #     self.config_control_quality_table()
+        #     self.tabWidget_main.setTabVisible(2, True)
+        # else:
+        #     app().file.remove_mesh_quality_data_from_project_file()
+
+        # # remove and write the mesh error data in the error data json file
+        # app().file.remove_mesh_error_data_from_project_file()
+        # app().file.write_mesh_error_data_in_file()
+
+        # self.cache_refinement_data()
+        # app().main_window.update_mesh_information()
+        # app().main_window.update_geometry_information()
+
+        # LoadingWindow(self.actions_to_finalize).run()
+        # self.complete = True
+
+        # # disconnected_nodes = self.mesh.get_list_of_disconnected_nodes()
+        # # if disconnected_nodes:
+        # #     app().main_window.selection.set_mesh_selection(nodes=disconnected_nodes)
+
+    def show_quality_table(self, show=True):
+        self.tabWidget_main.setTabVisible(2, show)
+
+    def update_control_quality_table(self):
+        mesh = app().new_project.model.mesh
+
+        if mesh.mesh_quality_data:
+            self.show_quality_table(True)
+        else:
+            self.show_quality_table(False)
+            return
+
+        has_bad_elements = False
+        for row in QualityTableRows:
+            smaller_is_better = False
+            match row:
+                case QualityTableRows.GAMMA:
+                    gmsh_label = "gamma"
+                case QualityTableRows.VOLUME:
+                    gmsh_label = "volume"
+                case QualityTableRows.MIN_SJ:
+                    gmsh_label = "minSJ"
+                case QualityTableRows.ASPECT_RATIO:
+                    gmsh_label = "aspectRatio"
+                    smaller_is_better = True
+                case _:
+                    raise ValueError("Invalid row index")
+
+            mesh_statistics = mesh.mesh_quality_data.get("statistics")
+            if mesh_statistics is None:
+                continue
+
+            statistics = mesh_statistics.get(gmsh_label)
+            if not statistics:
+                continue
+
+            bad_elements = mesh.mesh_quality_data.get("bad_elements", dict())
+            has_bad_elements |= bool(bad_elements)
+            worst, mean, std = statistics
+            low, high = mesh.quality_bins[gmsh_label]
+
+            for col in QualityTableColumns:
+                item = QTableWidgetItem()
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+                match col:
+                    case QualityTableColumns.WORST_VALUE:
+                        color = self._color_fn(worst, low, high, smaller_is_better)
+                        item.setForeground(color.to_qt())
+                        item.setText(f"{worst:.3f}")
+
+                    case QualityTableColumns.AVERAGE:
+                        color = self._color_fn(mean, low, high, smaller_is_better)
+                        item.setForeground(color.to_qt())
+                        item.setText(f"{mean:.3f}")
+
+                    case QualityTableColumns.STANDARD_DEVIATION:
+                        item.setText(f"{std:.3f}")
+
+                    case QualityTableColumns.BAD_ELEMENTS:
+                        n_bad_elements = len(bad_elements.get(gmsh_label, list()))
+                        item.setText(str(n_bad_elements))
+
+                    case _:
+                        raise ValueError("Invalid column index")
+
+                self.tableWidget_mesh_quality.setItem(row, col, item)
+
+        if has_bad_elements:
+            self.tabWidget_main.tabBar().setTabTextColor(2, color_names.YELLOW.to_qt())
+
+    def _color_fn(
+        self,
+        value: float,
+        min_value: float,
+        max_value: float,
+        smaller_is_better: bool = False,
+    ) -> Color:
+        if smaller_is_better:
+            if value < min_value:
+                return color_names.GREEN
+            elif min_value < value < max_value:
+                return color_names.YELLOW
+            else:
+                return color_names.RED
+        else:
+            if value < min_value:
+                return color_names.RED
+            elif min_value < value < max_value:
+                return color_names.YELLOW
+            else:
+                return color_names.GREEN
+
+    def _get_mesh_setup(self) -> MeshSetup:
+        element_type = self.comboBox_element_type.currentText().lower()  # not great
+        assert element_type in ("tetrahedral", "hexahedral")
+
+        shape_function = self.comboBox_shape_function.currentText().lower()  # not great
+        assert shape_function in ("linear", "quadratic")
+
+        try:
+            geometry_tolerance = float(self.lineEdit_geometry_tolerance.text())
+        except Exception as e:
+            raise ValueError("Geometry tolerance must be a real positive number") from e
+
+        if geometry_tolerance <= 0:
+            raise ValueError("Geometry tolerance must be a real positive number")
+
+        merge_connected_volumes = self.comboBox_volumes_interface_behavior.currentText() == "Merge nodes"
+        compute_quality_metrics = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
+
+        return MeshSetup(
+            minimum_element_size=self.doubleSpinBox_minimum_element_size.value(),
+            maximum_element_size=self.doubleSpinBox_maximum_element_size.value(),
+            geometry_tolerance=geometry_tolerance,
+            size_factor=self.doubleSpinBox_size_factor.value(),
+            element_type=element_type,
+            shape_function=shape_function,
+            merge_connected_volumes=merge_connected_volumes,
+            compute_quality_metrics=compute_quality_metrics,
+            custom_element_setup=self._get_custom_element_setup(),
+            refinement_parameters=self._get_refinement_parameters(),
+        )
+
+    def _get_custom_element_setup(self) -> ElementSetup:
+        element_type = self.comboBox_element_type.currentText().lower()  # not great
+        assert element_type in ("tetrahedral", "hexahedral")
+
+        shape_function = self.comboBox_shape_function.currentText().lower()  # not great
+        assert shape_function in ("linear", "quadratic")
+
+        custom_element_setup = None
+        match element_type, shape_function:
+            case "tetrahedral", "linear":
+                custom_element_setup = TETRAHEDRON_4.copy()
+            case "tetrahedral", "quadratic":
+                custom_element_setup = TETRAHEDRON_10.copy()
+            case "hexahedral", "linear":
+                custom_element_setup = HEXAHEDRON_8.copy()
+            case "hexahedral", "quadratic":
+                custom_element_setup = HEXAHEDRON_20.copy()
+
+        assert custom_element_setup is not None
+        match self.comboBox_3d_algorithm.currentIndex():
+            case GMSHAlgorithms_3D.DELAUNAY_3D:
+                custom_element_setup.algorithm_3d = gmsh_constants.DELAUNAY_3D
+            case GMSHAlgorithms_3D.FRONTAL_3D:
+                custom_element_setup.algorithm_3d = gmsh_constants.FRONTAL_3D
+            case GMSHAlgorithms_3D.HXT_3D:
+                custom_element_setup.algorithm_3d = gmsh_constants.HXT_3D
+
+        return custom_element_setup
+
+    def _get_refinement_parameters(self) -> list[MeshRefinementSetup]:
+        refinement_setup = list()
+        for (selection_type, element_size), selected_ids in self.mesh_refinement_data.items():
+            setup = MeshRefinementSetup(
+                entity_type=selection_type,
+                entity_ids=selected_ids,
+                element_size=element_size,
+            )
+            refinement_setup.append(setup)
+        return refinement_setup
 
     def check_post_process_mesh_criteria(self):
 
@@ -579,7 +772,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         elif alg3d_index == GMSHAlgorithms_3D.HXT_3D:
             solid_element.algorithm_3d = gmsh_constants.HXT_3D
         else:
-            return
+            return False
 
         merge_nodes = self.comboBox_volumes_interface_behavior.currentText() == "Merge nodes"
         mesh_quality_metrics = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
