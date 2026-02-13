@@ -255,7 +255,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             displacement_type = analysis_widget.get_plot_type()
 
             postprocessing = app().new_project.postprocessing
-            assert isinstance(postprocessing, StructuralPostprocessing)
+            if not isinstance(postprocessing, StructuralPostprocessing):
+                return
 
             data = postprocessing.compute_structural_displacement_field(
                 self.mode_index,
@@ -277,7 +278,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             displacement_type = analysis_widget.get_plot_type()
 
             postprocessing = app().new_project.postprocessing
-            assert isinstance(postprocessing, StructuralPostprocessing)
+            if not isinstance(postprocessing, StructuralPostprocessing):
+                return
 
             data = postprocessing.compute_structural_displacement_field(
                 self.frequency_index,
@@ -298,7 +300,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             plot_type = analysis_widget.get_plot_type()
 
             postprocessing = app().new_project.postprocessing
-            assert isinstance(postprocessing, AcousticPostprocessing)
+            if not isinstance(postprocessing, AcousticPostprocessing):
+                return
 
             data = postprocessing.compute_acoustic_pressure_field(
                 self.mode_index,
@@ -320,7 +323,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             plot_type = analysis_widget.get_plot_type()
 
             postprocessing = app().new_project.postprocessing
-            assert isinstance(postprocessing, AcousticPostprocessing)
+            if not isinstance(postprocessing, AcousticPostprocessing):
+                return
 
             data = postprocessing.compute_acoustic_pressure_field(
                 self.frequency_index,
