@@ -2,7 +2,7 @@ from vibra import PROJECT_DIR
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import HEXAHEDRON_20
+from vibra.engine.mesher.element_setup import HEXAHEDRON_20
 from vibra.engine.model import Model
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 

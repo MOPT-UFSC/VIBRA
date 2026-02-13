@@ -3,7 +3,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
-from vibra.engine.mesher.element_type import (
+from vibra.engine.mesher.element_setup import (
 TETRAHEDRON_4,
 TETRAHEDRON_10,
 HEXAHEDRON_8,

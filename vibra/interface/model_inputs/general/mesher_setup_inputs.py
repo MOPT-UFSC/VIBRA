@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, 
 
 from vibra import app, ICON_DIR
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_type import (
-    ElementType,
+from vibra.engine.mesher.element_setup import (
+    ElementSetup,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
     HEXAHEDRON_8,
@@ -392,7 +392,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             message = str(error_log)
             PrintMessageInput([error_title, title, message])
 
-    def update_element_type(self, ElementType: ElementType):
+    def update_element_type(self, ElementType: ElementSetup):
 
         if ElementType == TETRAHEDRON_4:
             self.comboBox_element_type.setCurrentText("Tetrahedral")
@@ -598,7 +598,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             "mesh_quality_metrics"  : mesh_quality_metrics,
         }
 
-    def get_element_type(self) -> ElementType:
+    def get_element_type(self) -> ElementSetup:
         element_type = self.comboBox_element_type.currentText().lower()
         shape_function = self.comboBox_shape_function.currentText().lower()
 

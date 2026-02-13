@@ -3,7 +3,7 @@ from vibra.engine import ModalAnalysisSetup
 from vibra.engine import HarmonicAnalysisSetup
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.engine import AnalysisID
-from vibra.engine.mesher.element_type import (
+from vibra.engine.mesher.element_setup import (
 TETRAHEDRON_4,
 TETRAHEDRON_10,
 HEXAHEDRON_8,

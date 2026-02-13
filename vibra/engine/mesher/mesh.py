@@ -23,13 +23,13 @@ from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.errors import MeshingAlgorithmError
 from vibra.engine.mesher.mesh_setup import MeshSetup
-from vibra.engine.mesher.element_type import (
+from vibra.engine.mesher.element_setup import (
     DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
     TETRAHEDRON_4,
     TETRAHEDRON_10,
-    ElementType,
+    ElementSetup,
 )
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
@@ -187,7 +187,7 @@ class Mesh:
         else:
             return 1
 
-    def set_element_type(self, element_type: ElementType):
+    def set_element_type(self, element_type: ElementSetup):
         self.element_type = element_type
 
     def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
@@ -1005,7 +1005,7 @@ class Mesh:
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)
         mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
         element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        element_type: ElementType
+        element_type: ElementSetup
 
         if mesh_refinement_parameters:
             self.local_mesh_refine(maximum_element_size, mesh_refinement_parameters)
