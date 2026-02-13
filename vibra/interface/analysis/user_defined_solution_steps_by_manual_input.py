@@ -142,13 +142,12 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             for j in range(2):
                 self.tableWidget_frequencies.item(index, j).setTextAlignment(Qt.AlignCenter)
         
-    def check_inputs(self, line_edit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
+    def check_inputs(self, str_value: str, label: str, zero_included: bool = False, int_value: bool = False):
 
         message = ""
-        str_value = line_edit.text()
-        str_value = str_value.replace(",", ".")
 
         if str_value != "":
+
             try:
                 if int_value:
                     value = int(str_value)
@@ -183,16 +182,26 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
     
     def add_solution_step_callback(self):
 
-        solution_step = self.check_inputs(self.lineEdit_solution_step, "solution step")
-        if solution_step is None:
-            self.lineEdit_solution_step.setFocus()
-            return True
-        
-        if solution_step in self.user_defined_solution_steps:
-            return
+        if self.lineEdit_solution_step.text() != "":
+            str_values = self.lineEdit_solution_step.text().replace(",", ".")
+            str_values = str_values.strip().split(";")
 
-        self.user_defined_solution_steps.append(solution_step)
-        self.user_defined_solution_steps.sort()
+            for str_value in str_values:
+                solution_step = self.check_inputs(str_value, "solution step")
+                if solution_step is None:
+                    self.lineEdit_solution_step.setFocus()
+                    return True
+                
+                if solution_step in self.user_defined_solution_steps:
+                    self.hide()
+                    title = "Invalid solution step"
+                    message = "The entered solution step has already been "
+                    message += "added to the solution steps list."
+                    PrintMessageInput([warning_title, title, message])
+                    continue
+
+                self.user_defined_solution_steps.append(solution_step)
+                self.user_defined_solution_steps.sort()
 
         self.update_solution_steps_table()
         self.lineEdit_solution_step.setText("")
