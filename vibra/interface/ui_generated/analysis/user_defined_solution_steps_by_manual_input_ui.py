@@ -41,21 +41,62 @@ class Ui_Dialog(object):
         self.frame_4.setFrameShape(QFrame.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Raised)
         self.gridLayout_9 = QGridLayout(self.frame_4)
+        self.gridLayout_9.setSpacing(4)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.lineEdit_solution_step = QLineEdit(self.frame_4)
-        self.lineEdit_solution_step.setObjectName(u"lineEdit_solution_step")
-        self.lineEdit_solution_step.setMinimumSize(QSize(140, 28))
-        self.lineEdit_solution_step.setMaximumSize(QSize(180, 28))
+        self.gridLayout_9.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_reset = QPushButton(self.frame_4)
+        self.pushButton_reset.setObjectName(u"pushButton_reset")
+        self.pushButton_reset.setMinimumSize(QSize(36, 28))
+        self.pushButton_reset.setMaximumSize(QSize(36, 28))
         font = QFont()
         font.setFamilies([u"MS Shell Dlg 2"])
         font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
+        self.pushButton_reset.setFont(font)
+        self.pushButton_reset.setStyleSheet(u"")
+        icon = QIcon()
+        icon.addFile(u":/icons/reset_settings.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_reset.setIcon(icon)
+        self.pushButton_reset.setIconSize(QSize(20, 20))
+        self.pushButton_reset.setAutoDefault(False)
+
+        self.gridLayout_9.addWidget(self.pushButton_reset, 1, 7, 1, 1)
+
+        self.label_28 = QLabel(self.frame_4)
+        self.label_28.setObjectName(u"label_28")
+        self.label_28.setMinimumSize(QSize(96, 28))
+        self.label_28.setMaximumSize(QSize(96, 28))
+        font1 = QFont()
+        font1.setPointSize(10)
+        font1.setItalic(False)
+        font1.setKerning(False)
+        self.label_28.setFont(font1)
+        self.label_28.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_9.addWidget(self.label_28, 1, 1, 1, 1)
+
+        self.lineEdit_solution_step = QLineEdit(self.frame_4)
+        self.lineEdit_solution_step.setObjectName(u"lineEdit_solution_step")
+        self.lineEdit_solution_step.setMinimumSize(QSize(180, 28))
+        self.lineEdit_solution_step.setMaximumSize(QSize(180, 28))
         self.lineEdit_solution_step.setFont(font)
         self.lineEdit_solution_step.setStyleSheet(u"")
         self.lineEdit_solution_step.setAlignment(Qt.AlignCenter)
 
         self.gridLayout_9.addWidget(self.lineEdit_solution_step, 1, 2, 1, 1)
+
+        self.label_29 = QLabel(self.frame_4)
+        self.label_29.setObjectName(u"label_29")
+        self.label_29.setMinimumSize(QSize(0, 28))
+        self.label_29.setMaximumSize(QSize(32, 28))
+        font2 = QFont()
+        font2.setPointSize(10)
+        font2.setItalic(False)
+        self.label_29.setFont(font2)
+        self.label_29.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+
+        self.gridLayout_9.addWidget(self.label_29, 1, 4, 1, 1)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -67,56 +108,17 @@ class Ui_Dialog(object):
         self.pushButton_add.setMaximumSize(QSize(36, 28))
         self.pushButton_add.setFont(font)
         self.pushButton_add.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/add_notes.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_add.setIcon(icon)
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/add_notes.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_add.setIcon(icon1)
         self.pushButton_add.setIconSize(QSize(20, 20))
         self.pushButton_add.setAutoDefault(False)
 
-        self.gridLayout_9.addWidget(self.pushButton_add, 1, 5, 1, 1)
+        self.gridLayout_9.addWidget(self.pushButton_add, 1, 6, 1, 1)
 
-        self.label_29 = QLabel(self.frame_4)
-        self.label_29.setObjectName(u"label_29")
-        self.label_29.setMinimumSize(QSize(0, 28))
-        self.label_29.setMaximumSize(QSize(32, 28))
-        font1 = QFont()
-        font1.setPointSize(10)
-        font1.setItalic(False)
-        self.label_29.setFont(font1)
-        self.label_29.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_9.addWidget(self.label_29, 1, 4, 1, 1)
-
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_9.addItem(self.horizontalSpacer_5, 1, 7, 1, 1)
-
-        self.label_28 = QLabel(self.frame_4)
-        self.label_28.setObjectName(u"label_28")
-        self.label_28.setMinimumSize(QSize(120, 28))
-        self.label_28.setMaximumSize(QSize(120, 28))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setItalic(False)
-        font2.setKerning(False)
-        self.label_28.setFont(font2)
-        self.label_28.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_9.addWidget(self.label_28, 1, 1, 1, 1)
-
-        self.pushButton_reset = QPushButton(self.frame_4)
-        self.pushButton_reset.setObjectName(u"pushButton_reset")
-        self.pushButton_reset.setMinimumSize(QSize(36, 28))
-        self.pushButton_reset.setMaximumSize(QSize(36, 28))
-        self.pushButton_reset.setFont(font)
-        self.pushButton_reset.setStyleSheet(u"")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/reset_settings.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_reset.setIcon(icon1)
-        self.pushButton_reset.setIconSize(QSize(20, 20))
-        self.pushButton_reset.setAutoDefault(False)
-
-        self.gridLayout_9.addWidget(self.pushButton_reset, 1, 6, 1, 1)
+        self.gridLayout_9.addItem(self.horizontalSpacer, 1, 5, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -210,15 +212,15 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_add.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Add the solution step</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_add.setText("")
-        self.label_29.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
-        self.label_28.setText(QCoreApplication.translate("Dialog", u"Solution step:", None))
-#if QT_CONFIG(tooltip)
         self.pushButton_reset.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Remove all solution steps</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_reset.setText("")
+        self.label_28.setText(QCoreApplication.translate("Dialog", u"Solution step:", None))
+        self.label_29.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_add.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Add the solution step</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_add.setText("")
         ___qtablewidgetitem = self.tableWidget_frequencies.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Index", None));
         ___qtablewidgetitem1 = self.tableWidget_frequencies.horizontalHeaderItem(1)
@@ -241,11 +243,11 @@ class UserDefinedSolutionStepsByManualInput_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
-                                        - lineEdit_solution_step: QLineEdit
-                                        - pushButton_add: QPushButton
-                                        - label_29: QLabel
-                                        - label_28: QLabel
                                         - pushButton_reset: QPushButton
+                                        - label_28: QLabel
+                                        - lineEdit_solution_step: QLineEdit
+                                        - label_29: QLabel
+                                        - pushButton_add: QPushButton
                             - tableWidget_frequencies: QTableWidget
                 - frame_buttons: QFrame
                     - (Layout): QGridLayout
