@@ -107,6 +107,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
+        self.fluid_widget.modified.connect(self.load_model_info)
         #
         self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_fluids.cellClicked.connect(self.cell_clicked_callback)

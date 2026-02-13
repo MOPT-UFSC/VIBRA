@@ -6,7 +6,7 @@ from typing import Optional
 from molde import Color
 from molde.colors import color_names
 from numpy.random import randint
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QDialog, QHeaderView, QTableWidgetItem
 
 from vibra import app
@@ -44,13 +44,15 @@ class RowsEnum(IntEnum):
 
 
 class FluidWidget(FluidWidget_UI):
+    modified = Signal()
+
     def __init__(self, *argas, **kwargs):
         super().__init__()
 
         app().main_window.action_model_workspace_callback()
 
-        # self.dialog = kwargs.get("dialog", None)
-        # self.state_properties = kwargs.get("state_properties", dict())
+        self.dialog = kwargs.get("dialog", None)
+        self.state_properties = kwargs.get("state_properties", dict())
 
         # self.model = app().new_project.model
         # self.properties = app().new_project.model.properties
@@ -118,6 +120,7 @@ class FluidWidget(FluidWidget_UI):
                 self.tableWidget_fluid_data.editItem(name_item)
 
             self._update_size_policy()
+        self.modified.emit()
 
     def duplicate_selected_fluid(self):
         fluid = self.get_selected_fluid()
@@ -131,6 +134,7 @@ class FluidWidget(FluidWidget_UI):
 
         self.reload_table_of_fluids()
         self.scroll_to_end()
+        self.modified.emit()
 
     def remove_selected_fluid(self):
         selected_column = self._get_selected_column()
@@ -147,6 +151,7 @@ class FluidWidget(FluidWidget_UI):
 
         self._update_size_policy()
         app().main_window.selection.clear_selection()
+        self.modified.emit()
 
     def reset_library_callback(self):
         """
@@ -162,6 +167,7 @@ class FluidWidget(FluidWidget_UI):
         properties.fluid_library = FluidLibrary.default()
         self.reload_table_of_fluids()
         app().main_window.selection.clear_selection()
+        self.modified.emit()
 
     def cell_clicked_callback(self, row, col):
         if row == RowsEnum.COLOR:
@@ -180,6 +186,8 @@ class FluidWidget(FluidWidget_UI):
                 msg = f"Column {item.column()} contains unnexpected errors."
                 item.setText("")
                 raise InvalidFluidError(msg) from e
+            
+        self.modified.emit()
 
     def cell_editor_closed_callback(self, _widget, _hint: QAbstractItemDelegate.EndEditHint):
         n_columns = self.tableWidget_fluid_data.columnCount()
@@ -237,6 +245,11 @@ class FluidWidget(FluidWidget_UI):
 
         properties = app().new_project.model.properties
         return properties.fluid_library.get_from_ordered_index(selected_column)
+
+    def _hide_parent_dialog(self):
+        window = self.nativeParentWidget()
+        if isinstance(window, QDialog):
+            window.hide()
 
     def _get_reset_library_confirmation(self):
         title = "Fluids library reset"
