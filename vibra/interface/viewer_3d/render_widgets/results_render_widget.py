@@ -90,6 +90,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         mesh = app().new_project.model.mesh
         if mesh is None:
             return
+        
+        if app().new_project.solver is None:
+            return
 
         logging.info("Updating the results render... [10/100]")
         self.remove_all_actors()
