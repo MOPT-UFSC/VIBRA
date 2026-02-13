@@ -12,8 +12,14 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
 
 import numpy as np
+from enum import StrEnum
 
 error_title = "Error"
+
+
+class FrequencySpacingTypes(StrEnum):
+    USER_DEFINED = "user-defined"
+    EQUALLY_DISTRIBUTED = "equally distributed"
 
 
 class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
@@ -222,7 +228,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.update_solution_steps_controls_visibility()
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
-        if self.analysis_setup.get("frequency_spacing") == "user-defined":
+        if self.analysis_setup.get("frequency_spacing") == FrequencySpacingTypes.USER_DEFINED:
             self.comboBox_frequency_spacing.setCurrentText("User-defined")
 
     def load_analysis_type(self):
@@ -340,7 +346,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         existing_frequencies = self.model.analysis_setup.get("frequencies", list())
 
-        if frequency_spacing == "user-defined":
+        if frequency_spacing == FrequencySpacingTypes.USER_DEFINED:
             if not self.user_defined_solution_steps:
                 if not existing_frequencies:
                     self.hide()
@@ -372,9 +378,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
 
-            if frequency_spacing == "user-defined":
+            if frequency_spacing == FrequencySpacingTypes.USER_DEFINED:
                 if not self.user_defined_solution_steps:
-                    if self.model.analysis_setup.get("frequency_spacing") == "user-defined":
+                    if self.model.analysis_setup.get("frequency_spacing") == FrequencySpacingTypes.USER_DEFINED:
                         self.user_defined_solution_steps = existing_frequencies
 
                 analysis_setup.update({"frequencies" : self.user_defined_solution_steps})
