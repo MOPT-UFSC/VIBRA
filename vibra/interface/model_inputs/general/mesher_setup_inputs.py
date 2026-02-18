@@ -84,9 +84,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self._initialize()
         self._create_connections()
         self._config_widgets()
+        self._load_current_mesh_setup()
         self.update_combo_boxes_according_to_geometry_info()
         self.update_advanced_gmsh_controls()
-        self._load_current_mesh_setup()
 
         while self.keep_window_open:
             self.exec()
@@ -153,13 +153,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         # self.pushButton_delete.clicked.connect(self.remove_callback)
         # self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         # self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
         # self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
         # self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
+        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
+        self.pushButton_exit.clicked.connect(self.close)
         # #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         # #
@@ -331,54 +331,27 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         except Exception:
             return
 
+    def _load_current_mesh_setup(self):
+        mesh_setup = app().new_project.mesh_setup
+
+        if mesh_setup is None:
+            self._load_initial_element_size()
+            return
+        
+        self.update_element_type(mesh_setup.element_setup)
+        self.doubleSpinBox_maximum_element_size.setValue(mesh_setup.maximum_element_size)
+        self.doubleSpinBox_minimum_element_size.setValue(mesh_setup.minimum_element_size)
+        self.doubleSpinBox_size_factor.setValue(mesh_setup.size_factor)
+        self.lineEdit_geometry_tolerance.setText(str(mesh_setup.geometry_tolerance))
+        self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
+        # TODO: update mesh_refinement table
+        self.update_control_quality_table()
+
     def _load_initial_element_size(self):
         element_size = app().new_project.model.initial_element_size
         if element_size is not None:
             self.doubleSpinBox_maximum_element_size.setValue(element_size)
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
-
-    def _load_current_mesh_setup(self):
-        mesh_setup = app().new_project.model.mesh_setup
-
-        if mesh_setup is None:
-            self._load_initial_element_size()
-            return
-
-        if isinstance(mesh_setup, dict):
-            try:
-
-                geometry_tolerance = mesh_setup["geometry_tolerance"]
-                minimum_element_size = mesh_setup["minimum_element_size"]
-                maximum_element_size = mesh_setup["maximum_element_size"]
-                size_factor = mesh_setup["size_factor"]
-                mesh_refinement_parameters = mesh_setup["mesh_refinement_parameters"]
-                mesh_connection = mesh_setup.get("mesh_connection", True)
-
-                gmsh_algorithm_3d = mesh_setup.get("algorithm_3d")
-                if gmsh_algorithm_3d is not None:
-                    self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[gmsh_algorithm_3d])
-
-                self.update_element_type(mesh_setup["ElementType"])
-
-                self.doubleSpinBox_maximum_element_size.setValue(maximum_element_size)
-                self.doubleSpinBox_minimum_element_size.setValue(minimum_element_size)
-                self.doubleSpinBox_size_factor.setValue(size_factor)
-                self.lineEdit_geometry_tolerance.setText(str(geometry_tolerance))
-
-                self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_connection))
-                
-                for selection_type, e_size, selected_ids in mesh_refinement_parameters:
-                    self.mesh_refinement_data[(selection_type, e_size)].extend(selected_ids)
-
-                self.cache_refinement_data()
-                self.update_refining_table_data()
-                self.config_control_quality_table()
-
-            except Exception as error_log:
-                self.hide()
-                title = "Error while loading mesh setup"
-                message = str(error_log)
-                PrintMessageInput([error_title, title, message])
 
     def cache_refinement_data(self):
         self.cache_mesh_refinement_data = deepcopy(self.mesh_refinement_data)
@@ -419,6 +392,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             PrintMessageInput([error_title, title, message])
 
     def update_element_type(self, ElementType: ElementSetup):
+        # TODO: consider custom algorithms
 
         if ElementType == TETRAHEDRON_4:
             self.comboBox_element_type.setCurrentText("Tetrahedral")
