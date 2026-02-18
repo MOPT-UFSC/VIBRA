@@ -904,6 +904,9 @@ class Model:
 
 
     def process_degrees_of_freedom_decoupling(self):
+        if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            return
+
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
 

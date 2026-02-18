@@ -216,8 +216,10 @@ class NewProject:
                 solids=mesh.collapsed_3d_elements,
             )
 
-        self.reset_solution()
         self.model.mesh = mesh
+        self.model.process_degrees_of_freedom_decoupling()
+
+        self.reset_solution()
         self.project_writer.write_mesh(mesh)
         self.needs_saving = True
         return mesh
@@ -367,7 +369,7 @@ class NewProject:
 
         return False
 
-    def is_analysis_setup_complete(self):        
+    def is_analysis_setup_complete(self):
         try:
             AnalysisChecker(self.model).check_analysis_id(self.current_analysis_id)
         except Exception:
