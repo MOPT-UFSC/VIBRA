@@ -431,6 +431,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             self.show_quality_table(False)
             return
+        
+        mesh_statistics = mesh.mesh_quality_data.get("statistics")
+        if mesh_statistics is None:
+            self.show_quality_table(False)
+            return
 
         has_bad_elements = False
         for row in QualityTableRows:
@@ -448,18 +453,15 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 case _:
                     raise ValueError("Invalid row index")
 
-            mesh_statistics = mesh.mesh_quality_data.get("statistics")
-            if mesh_statistics is None:
-                continue
-
             statistics = mesh_statistics.get(gmsh_label)
             if not statistics:
-                continue
+                self.show_quality_table(False)
+                return
 
             bad_elements = mesh.mesh_quality_data.get("bad_elements", dict())
             has_bad_elements |= bool(bad_elements)
             worst, mean, std = statistics
-            low, high = mesh.quality_bins[gmsh_label]
+            high, low = mesh.quality_bins[gmsh_label]
 
             for col in QualityTableColumns:
                 item = QTableWidgetItem()
