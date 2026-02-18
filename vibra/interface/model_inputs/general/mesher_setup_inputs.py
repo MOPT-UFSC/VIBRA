@@ -5,13 +5,12 @@ from enum import IntEnum
 
 import matplotlib.colors as mcolors
 import numpy as np
-from gmsh import isInitialized as is_gmsh_initialized
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor, QIcon, QKeyEvent
-from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QVBoxLayout
+from PySide6.QtGui import QIcon, QKeyEvent
+from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
 
 from vibra import ICON_DIR, app
 from vibra.engine.mesher import gmsh_constants
@@ -24,7 +23,6 @@ from vibra.engine.mesher.element_setup import (
 )
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
@@ -560,17 +558,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_subdivision_algorithm.setCurrentIndex(element_type.subdivision_algorithm)
         self.comboBox_recombine_all.setCurrentIndex(int(element_type.recombine_all))
         self.comboBox_second_order_incomplete.setCurrentIndex(int(element_type.second_order_incomplete))
-
-    def is_mesh_quality_computed(self):
-        if self.mesh_quality_data is None:
-            self.mesh_quality_data = app().file.read_mesh_quality_data_from_file()
-            if self.mesh_quality_data is None:
-                return False
-
-        if isinstance(self.mesh_quality_data, dict):
-            return bool(sum([len(qdata) for qdata in self.mesh_quality_data.values()]))
-
-        return False
 
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
