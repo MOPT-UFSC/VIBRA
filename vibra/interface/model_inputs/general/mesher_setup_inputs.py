@@ -162,7 +162,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _load_current_mesh_setup(self):
         self.update_mesh_refinement_table()
-        self.update_control_quality_table()
+        self.update_mesh_quality_table()
 
         mesh_setup = app().new_project.mesh_setup
         if mesh_setup is None:
@@ -418,12 +418,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         LoadingWindow(self.actions_to_finalize).run()
 
         self.update_mesh_refinement_table()
-        self.update_control_quality_table()
+        self.update_mesh_quality_table()
 
     def show_quality_table(self, show=True):
         self.tabWidget_main.setTabVisible(2, show)
 
-    def update_control_quality_table(self):
+    def update_mesh_quality_table(self):
         mesh = app().new_project.model.mesh
 
         if mesh.mesh_quality_data:
