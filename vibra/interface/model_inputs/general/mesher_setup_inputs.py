@@ -84,7 +84,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.close_after_generate = kwargs.get("close_after_generate", False)
 
         app().main_window.set_input_widget(self)
-        self.mesh = app().new_project.model.mesh
 
         self._config_window()
         self._initialize()
@@ -536,8 +535,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
-        if not volume_exists:
+        mesh = app().new_project.model.mesh
+        if mesh is None:
+            return
+
+        if not mesh.are_there_volumes_in_geometry():
             self.comboBox_element_type.removeItem(1)
             self.comboBox_shape_function.removeItem(1)
 
@@ -597,8 +599,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_min = self.mesh.quality_bins[gmsh_label][1]
-        bin_max = self.mesh.quality_bins[gmsh_label][0]
+        bin_min = mesh.quality_bins[gmsh_label][1]
+        bin_max = mesh.quality_bins[gmsh_label][0]
         bin_med = (bin_min + bin_max) / 2
 
         if gmsh_label == "aspectRatio":
