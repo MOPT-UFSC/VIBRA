@@ -28,6 +28,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
+from vibra.utils.interface_utils import block_signals
 
 gmsh_algorithms_2d = [
     gmsh_constants.MESH_ADAPT_2D,
@@ -144,16 +145,16 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         # self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
         # self.comboBox_mesh_quality_metrics.currentIndexChanged.connect(self.mesh_quality_metrics_callback)
         # #
-        # self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-        # self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
+        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
+        self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
         # #
         # self.pushButton_add.clicked.connect(self.add_button_callback)
-        # self.pushButton_exit.clicked.connect(self.close)
         # self.pushButton_delete.clicked.connect(self.remove_callback)
-        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         # self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         # self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
-        # self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
@@ -187,13 +188,27 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def maximum_element_size_changed_callback(self):
         if self.synchronize_sizes:
-            value = self.doubleSpinBox_maximum_element_size.value()
-            self.doubleSpinBox_minimum_element_size.setValue(value)
+            min_value = self.doubleSpinBox_maximum_element_size.value()
+        else:
+            min_value = min(
+                self.doubleSpinBox_minimum_element_size.value(),
+                self.doubleSpinBox_maximum_element_size.value(),
+            )
+
+        with block_signals(self.doubleSpinBox_minimum_element_size):
+            self.doubleSpinBox_minimum_element_size.setValue(min_value)
 
     def minimum_element_size_changed_callback(self):
         if self.synchronize_sizes:
-            value = self.doubleSpinBox_minimum_element_size.value()
-            self.doubleSpinBox_maximum_element_size.setValue(value)
+            max_value = self.doubleSpinBox_minimum_element_size.value()
+        else:
+            max_value = max(
+                self.doubleSpinBox_minimum_element_size.value(),
+                self.doubleSpinBox_maximum_element_size.value(),
+            )
+
+        with block_signals(self.doubleSpinBox_maximum_element_size):
+            self.doubleSpinBox_maximum_element_size.setValue(max_value)
 
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
@@ -204,6 +219,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             icon = QIcon(str(ICON_DIR / "sync_enabled.png"))
             tool_tip = "Synchronize the minimum and maximum sizes"
 
+        self.doubleSpinBox_minimum_element_size.setDisabled(self.synchronize_sizes)
         self.pushButton_syncrhonize.setIcon(icon)
         self.pushButton_syncrhonize.setToolTip(tool_tip)
         self.maximum_element_size_changed_callback()
