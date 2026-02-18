@@ -382,7 +382,7 @@ class ModelSetupItems(CommonMenuItems):
                     continue
 
                 item_child.set_warning(False)
-                item_child.set_tool_tip()
+                item_child.set_tool_tip(item_child.property_name)
                 
                 if item_child.isDisabled():
                     continue
@@ -425,7 +425,7 @@ class ModelSetupItems(CommonMenuItems):
 
                 elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
                     item_child.set_warning(True)
-                    item_child.set_tool_tip(requirement=True)
+                    item_child.set_tool_tip(item_child.property_name, requirement=True)
 
                 else:
                     item_child.set_icon(visible=False)
