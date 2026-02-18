@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal, Optional
 
+from vibra import errors
 from vibra.engine.mesher.element_setup import (
     HEXAHEDRON_8,
     HEXAHEDRON_20,
@@ -28,6 +29,11 @@ class MeshSetup:
     refinement_parameters: list[MeshRefinementSetup] = field(default_factory=list)
     custom_element_setup: Optional[ElementSetup] = None
     random_seed: int = 1234
+
+    def __post_init__(self):
+        if self.maximum_element_size < self.minimum_element_size:
+            msg = "The minimum element size should not surpass the maximum element size."
+            raise errors.InvalidMeshSetupError(msg)
 
     @property
     def element_setup(self) -> ElementSetup:
