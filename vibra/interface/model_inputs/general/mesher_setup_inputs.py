@@ -105,12 +105,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
-        self._cache_refinement_parameters = list()
 
         self.mesh_quality_data = None
         self.mesh_setup = dict()
         self.mesh_refinement_data = defaultdict(list)
         self.cache_mesh_refinement_data = defaultdict(list)
+
+        self.tmp_refinement_parameters: list[MeshRefinementSetup] = list()
 
         self.gmsh_labels = {
             0: "gamma",
@@ -140,8 +141,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
-        # self.tableWidget_refining_mesh_data.itemClicked.connect(self.item_clicked_callback)
-        # self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked)
+        self.tableWidget_refining_mesh_data.itemClicked.connect(self.mesh_refinement_item_clicked_callback)
+        self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
         self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
         self.pushButton_exit.clicked.connect(self.close)
 
@@ -162,21 +163,24 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_selected_ids.setDisabled(True)
 
     def _load_current_mesh_setup(self):
-        self.update_mesh_refinement_table()
-        self.update_mesh_quality_table()
-
         mesh_setup = app().new_project.mesh_setup
+
         if mesh_setup is None:
             self._load_initial_element_size()
             return
 
+        self.tmp_refinement_parameters = deepcopy(mesh_setup.refinement_parameters)
         self.update_element_type(mesh_setup.element_setup)
+
         self.doubleSpinBox_maximum_element_size.setValue(mesh_setup.maximum_element_size)
         self.doubleSpinBox_minimum_element_size.setValue(mesh_setup.minimum_element_size)
         self.doubleSpinBox_size_factor.setValue(mesh_setup.size_factor)
         self.lineEdit_geometry_tolerance.setText(str(mesh_setup.geometry_tolerance))
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
+
+        self.update_mesh_refinement_table()
+        self.update_mesh_quality_table()
 
     def _load_initial_element_size(self):
         element_size = app().new_project.model.initial_element_size
@@ -244,7 +248,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == 2
         self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
 
-    def item_clicked_callback(self, item):
+    def mesh_refinement_item_clicked_callback(self, item):
         row = item.row()
         selection_type = self.tableWidget_refining_mesh_data.item(row, 1).text()
         str_selected_ids = self.tableWidget_refining_mesh_data.item(row, 2).text()
@@ -264,10 +268,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         try:
             str_selected_ids = self.lineEdit_selected_ids.text()
             selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
-        except Exception:
-            pass
-
-        return selected_ids
+        finally:
+            return selected_ids
 
     def add_button_callback(self):
         if self.lineEdit_selected_ids.text() == "":
@@ -279,113 +281,24 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             selected_type = "surfaces"
 
         selected_ids = self.get_selected_ids()
-        ref_size = self.doubleSpinBox_refined_element_size.value()
-
-        if selected_ids:
-            for selected_id in selected_ids:
-                if selected_id not in self.mesh_refinement_data[(selected_type, ref_size)]:
-                    self.mesh_refinement_data[(selected_type, ref_size)].append(selected_id)
-
-            for key, _selected_ids in self.mesh_refinement_data.copy().items():
-                if key[0] == selected_type and key[1] != ref_size:
-                    for selected_id in selected_ids:
-                        if selected_id in _selected_ids:
-                            _selected_ids.remove(selected_id)
-                            if _selected_ids:
-                                self.mesh_refinement_data[key] = _selected_ids
-                            else:
-                                self.mesh_refinement_data.pop(key)
-
-            self.update_refining_table_data()
-
+        refined_size = self.doubleSpinBox_refined_element_size.value()
         self.lineEdit_selected_ids.setText("")
+
+        if not selected_ids:
+            return
+
+        setup = MeshRefinementSetup(
+            selected_type,
+            selected_ids,
+            refined_size,
+        )
+        self.tmp_refinement_parameters.append(setup)
+        self.update_mesh_refinement_table()
 
     def remove_callback(self):
         current_row = self.tableWidget_refining_mesh_data.currentRow()
-        if current_row == -1:
-            return
-
-        try:
-            if isinstance(current_row, int):
-                ref_size = float(self.tableWidget_refining_mesh_data.item(current_row, 0).text())
-                selection_type = self.tableWidget_refining_mesh_data.item(current_row, 1).text()
-                self.tableWidget_refining_mesh_data.removeRow(current_row)
-
-                if (selection_type, ref_size) in self.mesh_refinement_data.keys():
-                    self.mesh_refinement_data.pop((selection_type, ref_size))
-                    self.update_refining_table_data()
-
-            app().main_window.selection.set_geometry_selection()
-
-        except Exception:
-            return
-
-    def cache_refinement_data(self):
-        self.cache_mesh_refinement_data = deepcopy(self.mesh_refinement_data)
-
-    def update_mesh_refinement_table(self):
-        mesh_setup = app().new_project.mesh_setup
-        if mesh_setup is None:
-            return
-
-        refinement_parameters = mesh_setup.refinement_parameters
-        number_of_rows = len(refinement_parameters)
-        self._cache_refinement_parameters = deepcopy(refinement_parameters)
-        self.tableWidget_refining_mesh_data.setRowCount(number_of_rows)
-
-        for row, setup in enumerate(refinement_parameters):
-            ids = ", ".join(str(i) for i in setup.entity_ids)
-
-            size_item = QTableWidgetItem(str(setup.element_size))
-            type_item = QTableWidgetItem(str(setup.entity_type))
-            ids_item = QTableWidgetItem(ids)
-
-            self.tableWidget_refining_mesh_data.setItem(
-                row,
-                RefinementTableColumns.ELEMENT_SIZE,
-                size_item,
-            )
-            self.tableWidget_refining_mesh_data.setItem(
-                row,
-                RefinementTableColumns.SELECTION_TYPE,
-                type_item,
-            )
-            self.tableWidget_refining_mesh_data.setItem(
-                row,
-                RefinementTableColumns.SELECTION_IDS,
-                ids_item,
-            )
-
-            size_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            type_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            ids_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-
-    def update_refining_table_data(self):
-        self.tableWidget_refining_mesh_data.clearContents()
-
-        try:
-            row = 0
-            for (
-                _selection_type,
-                _e_size,
-            ), _selected_ids in self.mesh_refinement_data.items():
-                str_selected_ids = ", ".join([str(i) for i in _selected_ids])
-
-                self.tableWidget_refining_mesh_data.setRowCount(row + 1)
-                self.tableWidget_refining_mesh_data.setItem(row, 0, QTableWidgetItem(str(_e_size)))
-                self.tableWidget_refining_mesh_data.setItem(row, 1, QTableWidgetItem(_selection_type))
-                self.tableWidget_refining_mesh_data.setItem(row, 2, QTableWidgetItem(str_selected_ids))
-
-                for j in range(3):
-                    self.tableWidget_refining_mesh_data.item(row, j).setTextAlignment(Qt.AlignCenter)
-
-                row += 1
-
-        except Exception as error_log:
-            self.hide()
-            title = "Error while table data"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
+        self.tmp_refinement_parameters.pop(current_row)
+        self.update_mesh_refinement_table()
 
     def update_element_type(self, ElementType: ElementSetup):
         # TODO: consider custom algorithms
@@ -421,21 +334,42 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_mesh_refinement_table()
         self.update_mesh_quality_table()
 
-    def show_quality_table(self, show=True):
-        self.tabWidget_main.setTabVisible(2, show)
+    def update_mesh_refinement_table(self):
+        refinement_parameters = self.tmp_refinement_parameters
+        number_of_rows = len(refinement_parameters)
+        self.tableWidget_refining_mesh_data.setRowCount(number_of_rows)
+
+        for row, setup in enumerate(refinement_parameters):
+            ids = ", ".join(str(i) for i in setup.entity_ids)
+
+            self.tableWidget_refining_mesh_data.setItem(
+                row,
+                RefinementTableColumns.ELEMENT_SIZE,
+                self._item(setup.element_size),
+            )
+            self.tableWidget_refining_mesh_data.setItem(
+                row,
+                RefinementTableColumns.SELECTION_TYPE,
+                self._item(setup.entity_type),
+            )
+            self.tableWidget_refining_mesh_data.setItem(
+                row,
+                RefinementTableColumns.SELECTION_IDS,
+                self._item(ids),
+            )
 
     def update_mesh_quality_table(self):
         mesh = app().new_project.model.mesh
 
         if mesh.mesh_quality_data:
-            self.show_quality_table(True)
+            self._show_quality_table(True)
         else:
-            self.show_quality_table(False)
+            self._show_quality_table(False)
             return
 
         mesh_statistics = mesh.mesh_quality_data.get("statistics")
         if mesh_statistics is None:
-            self.show_quality_table(False)
+            self._show_quality_table(False)
             return
 
         has_bad_elements = False
@@ -445,35 +379,31 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             statistics = mesh_statistics.get(gmsh_label)
             if not statistics:
-                self.show_quality_table(False)
+                self._show_quality_table(False)
                 return
 
             bad_elements = mesh.mesh_quality_data.get("bad_elements", dict())
-            has_bad_elements |= bool(bad_elements)
+            has_bad_elements = has_bad_elements or bool(bad_elements)
+
             worst, mean, std = statistics
             high, low = mesh.quality_bins[gmsh_label]
 
             for col in QualityTableColumns:
-                item = QTableWidgetItem()
-                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-
                 match col:
                     case QualityTableColumns.WORST_VALUE:
                         color = self._color_fn(worst, low, high, smaller_is_better)
-                        item.setForeground(color.to_qt())
-                        item.setText(f"{worst:.3f}")
+                        item = self._item(f"{worst:.3f}", color)
 
                     case QualityTableColumns.AVERAGE:
                         color = self._color_fn(mean, low, high, smaller_is_better)
-                        item.setForeground(color.to_qt())
-                        item.setText(f"{mean:.3f}")
+                        item = self._item(f"{mean:.3f}", color)
 
                     case QualityTableColumns.STANDARD_DEVIATION:
-                        item.setText(f"{std:.3f}")
+                        item = self._item(f"{std:.3f}")
 
                     case QualityTableColumns.BAD_ELEMENTS:
                         n_bad_elements = len(bad_elements.get(gmsh_label, list()))
-                        item.setText(str(n_bad_elements))
+                        item = self._item(n_bad_elements)
 
                     case _:
                         raise ValueError("Invalid column index")
@@ -482,6 +412,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if has_bad_elements:
             self.tabWidget_main.tabBar().setTabTextColor(2, color_names.YELLOW.to_qt())
+
+    def _show_quality_table(self, show=True):
+        self.tabWidget_main.setTabVisible(2, show)
+
+    def _item(self, value: str, color: Color | None = None):
+        item = QTableWidgetItem()
+        item.setText(str(value))
+        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        if color is not None:
+            item.setForeground(color.to_qt())
+        return item
 
     def _color_fn(
         self,
@@ -566,15 +508,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         return custom_element_setup
 
     def _get_refinement_parameters(self) -> list[MeshRefinementSetup]:
-        refinement_setup = list()
-        for (selection_type, element_size), selected_ids in self.mesh_refinement_data.items():
-            setup = MeshRefinementSetup(
-                entity_type=selection_type,
-                entity_ids=selected_ids,
-                element_size=element_size,
-            )
-            refinement_setup.append(setup)
-        return refinement_setup
+        return deepcopy(self.tmp_refinement_parameters)
 
     def actions_to_finalize(self):
         if self.close_after_generate:
@@ -638,16 +572,26 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         return False
 
-    def mesh_quality_item_clicked(self, item):
-        if not self.is_mesh_quality_computed():
-            self.pushButton_show_bad_elements.setEnabled(False)
+    def mesh_quality_item_clicked_callback(self, item):
+        self.pushButton_show_bad_elements.setEnabled(False)
+
+        mesh = app().new_project.model.mesh
+        if mesh is None:
             return
 
-        bad_elements_data = self.mesh_quality_data.get("bad_elements")
-        gmsh_label = self.gmsh_labels.get(item.row())
-        bad_elements = bad_elements_data[gmsh_label]
+        if not mesh.mesh_quality_data:
+            return
 
-        self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
+        bad_elements_data = mesh.mesh_quality_data.get("bad_elements")
+        if not bad_elements_data:
+            return
+
+        gmsh_label = self.gmsh_labels.get(item.row())
+        if not gmsh_label:
+            return
+
+        bad_elements = bad_elements_data.get(gmsh_label)
+        self.pushButton_show_bad_elements.setEnabled(bad_elements.size > 0)
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
@@ -742,18 +686,24 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         plot_ui.exec_()
 
     def plot_bad_elements(self):
-        if not self.is_mesh_quality_computed():
+        mesh = app().new_project.model.mesh
+        if mesh is None:
+            return
+
+        if not mesh.mesh_quality_data:
             return
 
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
         gmsh_label = self.gmsh_labels.get(current_index)
+        if gmsh_label is None:
+            return
 
-        bad_elements_data = self.mesh_quality_data.get("bad_elements", dict())
+        bad_elements_data = mesh.mesh_quality_data.get("bad_elements", dict())
         if not bad_elements_data:
             return
 
         mesh_bad_elements = bad_elements_data[gmsh_label]
-        if not mesh_bad_elements:
+        if mesh_bad_elements is None:
             return
 
         app().main_window.distinguish_mesh_solids(mesh_bad_elements)
@@ -764,7 +714,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if mesh_setup is None:
             return
 
-        if mesh_setup.refinement_parameters == self._cache_refinement_parameters:
+        if mesh_setup.refinement_parameters == self.tmp_refinement_parameters:
             return
 
         self.hide()
