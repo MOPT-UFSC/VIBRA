@@ -1,3 +1,4 @@
+from vibra.engine.mesher.mesh_setup import MeshRefinementSetup
 import logging
 import warnings
 import os
@@ -250,9 +251,9 @@ class Mesh:
 
     def _new_configure_mesh(self, mesh_setup: MeshSetup):
         if mesh_setup.refinement_parameters:
-            self.local_mesh_refine(
+            self.new_local_mesh_refine(
                 mesh_setup.maximum_element_size,
-                mesh_setup.mesh_refinement_parameters,
+                mesh_setup.refinement_parameters,
             )
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
@@ -970,6 +971,39 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
+    def new_local_mesh_refine(self, global_size: float, refinement_setups: list[MeshRefinementSetup]):
+        gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
+        gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
+        gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
+
+        fields_list = [1]
+        for setup in refinement_setups:
+            match setup.entity_type:
+                case "surfaces":
+                    option = "SurfacesList"
+                case "volumes":
+                    option = "VolumesList"
+                case _:
+                    continue
+            
+            threshold_type = gmsh.model.mesh.field.add("Constant")
+            gmsh.model.mesh.field.setNumbers(
+                threshold_type, 
+                option, 
+                setup.entity_ids,
+            )
+            gmsh.model.mesh.field.setNumber(
+                threshold_type,
+                "VIn",
+                setup.element_size,
+            )
+            fields_list.append(threshold_type)
+
+        minimum_field = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
+        gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
     def local_mesh_refine(self, global_size: float | int, mesh_refinement_parameters: list):
         fields_list = [1]
         gmsh.model.mesh.field.add("Constant")
@@ -994,7 +1028,6 @@ class Mesh:
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
-
 
     def _configure_mesh(self, **kwargs):
         import warnings
