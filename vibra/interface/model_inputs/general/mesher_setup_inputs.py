@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QIcon
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QVBoxLayout
 
 from vibra import ICON_DIR, app
 from vibra.engine.mesher import gmsh_constants
@@ -129,15 +129,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_generate_mesh.setAutoDefault(False)
         #
         self.lineEdit_selected_ids.setDisabled(True)
-        #
-        widths = [160, 160]
-        for i, width in enumerate(widths):
-            self.tableWidget_refining_mesh_data.setColumnWidth(i, width)
-            self.tableWidget_refining_mesh_data.horizontalHeaderItem(i).setTextAlignment(Qt.AlignCenter)
-        #
-        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior(1))
-        self.tableWidget_refining_mesh_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(0))
-        self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
 
     def _create_connections(self):
         #

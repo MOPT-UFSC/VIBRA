@@ -15,11 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QDoubleSpinBox,
-    QFrame, QGridLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QScrollArea, QSizePolicy,
-    QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
-    QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDialog,
+    QDoubleSpinBox, QFrame, QGridLayout, QHeaderView,
+    QLabel, QLineEdit, QPushButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QTabWidget, QTableWidget,
+    QTableWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -472,7 +472,9 @@ class Ui_Dialog(object):
         self.tableWidget_refining_mesh_data.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         self.tableWidget_refining_mesh_data.setObjectName(u"tableWidget_refining_mesh_data")
         self.tableWidget_refining_mesh_data.setMaximumSize(QSize(16777215, 16777215))
+        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget_refining_mesh_data.setShowGrid(False)
+        self.tableWidget_refining_mesh_data.horizontalHeader().setDefaultSectionSize(160)
         self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_refining_mesh_data.verticalHeader().setVisible(False)
         self.tableWidget_refining_mesh_data.verticalHeader().setStretchLastSection(False)
@@ -727,7 +729,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
-        self.tabWidget_main.setCurrentIndex(2)
+        self.tabWidget_main.setCurrentIndex(1)
         self.tabWidget_global_settings.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
         self.pushButton_exit.setDefault(False)
