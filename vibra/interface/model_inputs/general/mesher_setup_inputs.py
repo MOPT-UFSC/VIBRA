@@ -102,12 +102,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
-
-        self.mesh_quality_data = None
-        self.mesh_setup = dict()
-        self.mesh_refinement_data = defaultdict(list)
-        self.cache_mesh_refinement_data = defaultdict(list)
-
         self.tmp_refinement_parameters: list[MeshRefinementSetup] = list()
 
         self.gmsh_labels = {
