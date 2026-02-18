@@ -105,13 +105,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
+        self._cache_refinement_parameters = list()
 
         self.mesh_quality_data = None
         self.mesh_setup = dict()
         self.mesh_refinement_data = defaultdict(list)
         self.cache_mesh_refinement_data = defaultdict(list)
 
-        self.mesh_quality_parameters = {
+        self.gmsh_labels = {
             0: "gamma",
             1: "volume",
             2: "minSJ",
@@ -431,7 +432,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         else:
             self.show_quality_table(False)
             return
-        
+
         mesh_statistics = mesh.mesh_quality_data.get("statistics")
         if mesh_statistics is None:
             self.show_quality_table(False)
@@ -439,19 +440,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         has_bad_elements = False
         for row in QualityTableRows:
-            smaller_is_better = False
-            match row:
-                case QualityTableRows.GAMMA:
-                    gmsh_label = "gamma"
-                case QualityTableRows.VOLUME:
-                    gmsh_label = "volume"
-                case QualityTableRows.MIN_SJ:
-                    gmsh_label = "minSJ"
-                case QualityTableRows.ASPECT_RATIO:
-                    gmsh_label = "aspectRatio"
-                    smaller_is_better = True
-                case _:
-                    raise ValueError("Invalid row index")
+            gmsh_label = self.gmsh_labels.get(row)
+            smaller_is_better = row is QualityTableRows.ASPECT_RATIO
 
             statistics = mesh_statistics.get(gmsh_label)
             if not statistics:
@@ -654,32 +644,43 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         bad_elements_data = self.mesh_quality_data.get("bad_elements")
-        selected_parameter = self.mesh_quality_parameters.get(item.row())
-        bad_elements = bad_elements_data[selected_parameter]
+        gmsh_label = self.gmsh_labels.get(item.row())
+        bad_elements = bad_elements_data[gmsh_label]
 
         self.pushButton_show_bad_elements.setEnabled(bool(bad_elements))
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
-        if not self.is_mesh_quality_computed():
+        mesh = app().new_project.model.mesh
+        if mesh is None:
+            return
+
+        if not mesh.mesh_quality_data:
             return
 
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
-        selected_parameter = self.mesh_quality_parameters.get(current_index)
+        gmsh_label = self.gmsh_labels.get(current_index)
 
-        histograms_data = self.mesh_quality_data.get("histograms_data")
-        hist, bin_edges, percentile_5, percentile_95 = histograms_data[selected_parameter]
+        histograms_data = mesh.mesh_quality_data.get("histograms_data")
+        hist, bin_edges, percentile_5, percentile_95 = histograms_data[gmsh_label]
 
         bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_min = self.mesh.quality_bins[selected_parameter][1]
-        bin_max = self.mesh.quality_bins[selected_parameter][0]
+        bin_min = self.mesh.quality_bins[gmsh_label][1]
+        bin_max = self.mesh.quality_bins[gmsh_label][0]
         bin_med = (bin_min + bin_max) / 2
 
-        if selected_parameter == "aspectRatio":
-            cmap = mcolors.LinearSegmentedColormap.from_list("qualidade", [(0, "green"), (bin_med / bin_max, "gold"), (1, "red")])
+        if gmsh_label == "aspectRatio":
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "qualidade",
+                [(0, "green"), (bin_med / bin_max, "gold"), (1, "red")],
+            )
         else:
-            cmap = mcolors.LinearSegmentedColormap.from_list("qualidade", [(0, "red"), (bin_med, "gold"), (1, "green")])
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "qualidade",
+                [(0, "red"), (bin_med, "gold"), (1, "green")],
+            )
+
         norm = mcolors.Normalize(vmin=min(bin_centers), vmax=max(bin_centers))
         colors = cmap(norm(bin_centers))
 
@@ -722,7 +723,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             "aspectRatio": "Aspect Ratio",
         }
 
-        ax.set_title(f"{title[selected_parameter]} histogram")
+        ax.set_title(f"{title[gmsh_label]} histogram")
         ax.set_xlabel("Parameter value")
         ax.set_ylabel("Number of elements")
         ax.grid(True, linestyle=":", alpha=0.5)
@@ -745,13 +746,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
-        selected_parameter = self.mesh_quality_parameters.get(current_index)
+        gmsh_label = self.gmsh_labels.get(current_index)
 
         bad_elements_data = self.mesh_quality_data.get("bad_elements", dict())
         if not bad_elements_data:
             return
 
-        mesh_bad_elements = bad_elements_data[selected_parameter]
+        mesh_bad_elements = bad_elements_data[gmsh_label]
         if not mesh_bad_elements:
             return
 
