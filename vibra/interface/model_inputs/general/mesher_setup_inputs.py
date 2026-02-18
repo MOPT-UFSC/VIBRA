@@ -1,40 +1,33 @@
-from molde.colors import Color
-from molde.colors import color_names
-from vibra.engine.mesher.element_setup import ElementSetup
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup
-from vibra.engine.mesher.mesh_setup import MeshSetup
+import logging
+from collections import defaultdict
+from copy import deepcopy
+from enum import IntEnum
+
+import matplotlib.colors as mcolors
+import numpy as np
+from gmsh import isInitialized as is_gmsh_initialized
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QIcon
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
 from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_setup import (
-    ElementSetup,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementSetup,
 )
-
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
-
-import logging
-import matplotlib.colors as mcolors
-import numpy as np
-
-from collections import defaultdict
-from copy import deepcopy
-from enum import IntEnum
-from gmsh import isInitialized as is_gmsh_initialized
-
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-
 
 gmsh_algorithms_2d = [
     gmsh_constants.MESH_ADAPT_2D,
