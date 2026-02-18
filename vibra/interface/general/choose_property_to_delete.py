@@ -130,7 +130,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         # filters the property list, removing fields
         def filter_properties_to_not_show(prop: dict[str, str]) -> bool:
-            return prop.get("name") not in ["fluid", "material"]
+            return prop.get("name") not in ["fluid", "material", "degrees_of_freedom_decoupling", "perforated_plate_model", "transfer_impedance"]
 
         def filter_physical_domain_properties(prop: dict[str, str]) -> bool:
             current_physical_domain = (
