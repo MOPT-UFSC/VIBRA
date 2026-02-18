@@ -565,6 +565,7 @@ class Ui_Dialog(object):
         self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
         self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
         self.lineEdit_selected_ids.setFont(font)
+        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 2, 1, 1)
 
