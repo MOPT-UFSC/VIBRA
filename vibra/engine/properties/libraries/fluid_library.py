@@ -15,6 +15,8 @@ class FluidLibrary(PropertyLibrary[Fluid]):
 
 
 def default_fluid_library() -> FluidLibrary:
+    # Reference: RefProp v10.0
+
     fluids = [
         Fluid(
             name="Air std",
