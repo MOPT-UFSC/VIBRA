@@ -41,7 +41,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
             self.analysis_method = "Direct method"
 
         self.frequencies = app().new_project.model.frequencies
-        self.solution = app().project.acoustic_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
     def _reset_variables(self):
         self.exporter = None

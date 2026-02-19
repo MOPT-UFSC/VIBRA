@@ -118,7 +118,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             self.analysis_method = f"{analysis_method} method"
 
         self.frequencies = app().new_project.model.frequencies
-        self.solution = app().project.structural_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
     def check_inputs(self):
 
