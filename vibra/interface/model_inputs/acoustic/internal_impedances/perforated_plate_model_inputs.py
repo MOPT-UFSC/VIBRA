@@ -965,7 +965,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solutions()
+            app().new_project.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
             app().file.remove_mesh_data_from_project_file()
