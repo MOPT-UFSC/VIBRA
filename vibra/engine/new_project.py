@@ -40,6 +40,8 @@ class NewProject:
         self.project_reader = ProjectReader(self.project_paths)
         self.project_writer = ProjectWriter(self.project_paths)
 
+        # TODO: We don't actually need the assemblers and solvers to be public.
+        # The only public information must be the Solution, for which a few classes shoud be created.
         self.mesh_setup: Optional[MeshSetup] = None
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
         self.solver: Optional[HarmonicSolver | ModalSolver] = None
@@ -243,7 +245,7 @@ class NewProject:
     def configure_analysis(
         self,
         analysis_id: AnalysisID,
-        analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup,
+        analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup],
     ):
         self.reset_solution()
         self.current_analysis_id = analysis_id

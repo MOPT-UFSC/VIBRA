@@ -274,12 +274,16 @@ class Model:
                 self.frequencies = None
                 return
 
-    def new_set_analysis_setup(self, analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup):
-        if not isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+    def new_set_analysis_setup(self, analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup]):
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 
         self.new_analysis_setup = analysis_setup
-        self.set_analysis_setup(analysis_setup.as_dict())
+
+        if analysis_setup is None:
+            self.set_analysis_setup({})
+        else:
+            self.set_analysis_setup(analysis_setup.as_dict())
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
 
