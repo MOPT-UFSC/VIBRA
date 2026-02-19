@@ -1,6 +1,4 @@
-from copy import deepcopy
 from enum import IntEnum
-from itertools import count
 from typing import Optional
 
 from molde import Color
@@ -13,13 +11,9 @@ from vibra import app
 from vibra.engine.properties import FluidLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.errors import InvalidFluidError
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
 from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
-from vibra.libraries.default_libraries import default_fluid_library
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
 error_title = "Error"
@@ -186,7 +180,7 @@ class FluidWidget(FluidWidget_UI):
                 msg = f"Column {item.column()} contains unnexpected errors."
                 item.setText("")
                 raise InvalidFluidError(msg) from e
-            
+
         self.modified.emit()
 
     def cell_editor_closed_callback(self, _widget, _hint: QAbstractItemDelegate.EndEditHint):
