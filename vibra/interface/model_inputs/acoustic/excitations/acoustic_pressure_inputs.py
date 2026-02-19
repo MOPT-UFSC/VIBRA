@@ -1,3 +1,5 @@
+from vibra.engine import AnalysisID
+from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
@@ -24,7 +26,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
@@ -324,21 +325,24 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         return False
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
         f_min = frequencies[0]
         f_max = frequencies[-1]
         f_step = frequencies[1] - frequencies[0] 
 
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
+        analysis_setup = app().new_project.model.new_analysis_setup
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            new_analysis_setup = analysis_setup.replace(
+                f_min=f_min,
+                f_max=f_max,
+                f_step=f_step,
+            )
+        else:
+            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
 
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
+        app().new_project.configure_analysis(
+            AnalysisID.ACOUSTIC_HARMONIC,
+            new_analysis_setup,
+        )
 
     def load_acoustic_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -406,7 +410,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -480,8 +484,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().new_project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):
@@ -492,17 +495,17 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_setup, dict):
-            analysis_setup = self.project.analysis_setup
-            self.project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # I am not sure what it is suposed to do.
+        app().new_project.configure_analysis(
+            app().new_project.current_analysis_id,
+            app().new_project.model.new_analysis_setup,
+        )
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")
