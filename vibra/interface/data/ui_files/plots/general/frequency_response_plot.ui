@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>740</height>
+    <height>791</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -47,10 +47,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::Box</enum>
+      <enum>QFrame::Shape::Box</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_20">
       <property name="leftMargin">
@@ -71,10 +71,10 @@
       <item row="0" column="0">
        <widget class="QFrame" name="frame_left">
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_2">
          <property name="leftMargin">
@@ -113,10 +113,10 @@
          </size>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_9">
          <property name="leftMargin">
@@ -134,6 +134,78 @@
          <property name="verticalSpacing">
           <number>4</number>
          </property>
+         <item row="2" column="0">
+          <widget class="QFrame" name="frame_11">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>44</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>48</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Shape::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Shadow::Raised</enum>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_8">
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="pushButton_export_data">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>120</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>120</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Ubuntu Sans</family>
+                <pointsize>10</pointsize>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>  Export data  </string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
          <item row="3" column="0">
           <widget class="QFrame" name="frame_22">
            <property name="minimumSize">
@@ -149,10 +221,10 @@
             </size>
            </property>
            <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
+            <enum>QFrame::Shape::NoFrame</enum>
            </property>
            <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
+            <enum>QFrame::Shadow::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout_24">
             <property name="leftMargin">
@@ -189,9 +261,8 @@
               </property>
               <property name="font">
                <font>
-                <family>MS Shell Dlg 2</family>
+                <family>Ubuntu Sans</family>
                 <pointsize>10</pointsize>
-                <weight>50</weight>
                 <italic>false</italic>
                 <bold>false</bold>
                </font>
@@ -210,10 +281,10 @@
          <item row="1" column="0">
           <widget class="QFrame" name="frame_5">
            <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
+            <enum>QFrame::Shape::NoFrame</enum>
            </property>
            <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
+            <enum>QFrame::Shadow::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout_3">
             <property name="leftMargin">
@@ -237,10 +308,10 @@
                </size>
               </property>
               <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
+               <enum>QFrame::Shape::NoFrame</enum>
               </property>
               <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
+               <enum>QFrame::Shadow::Raised</enum>
               </property>
               <layout class="QGridLayout" name="gridLayout_18">
                <property name="leftMargin">
@@ -273,10 +344,10 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::Box</enum>
+                  <enum>QFrame::Shape::Box</enum>
                  </property>
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Shadow::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_11">
                   <property name="leftMargin">
@@ -321,28 +392,27 @@
                      <font>
                       <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>50</weight>
                       <italic>false</italic>
                       <bold>false</bold>
                      </font>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Sunken</enum>
+                     <enum>QFrame::Shadow::Sunken</enum>
                     </property>
                     <property name="text">
                      <string>Plot type</string>
                     </property>
                     <property name="textFormat">
-                     <enum>Qt::AutoText</enum>
+                     <enum>Qt::TextFormat::AutoText</enum>
                     </property>
                     <property name="scaledContents">
                      <bool>false</bool>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                     <property name="wordWrap">
                      <bool>false</bool>
@@ -370,10 +440,10 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::Box</enum>
+                  <enum>QFrame::Shape::Box</enum>
                  </property>
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Shadow::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_12">
                   <property name="leftMargin">
@@ -402,15 +472,14 @@
                     <property name="font">
                      <font>
                       <pointsize>10</pointsize>
-                      <weight>50</weight>
                       <bold>false</bold>
                      </font>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_10">
                      <property name="leftMargin">
@@ -455,7 +524,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -502,6 +570,7 @@
                        <property name="font">
                         <font>
                          <pointsize>10</pointsize>
+                         <bold>false</bold>
                         </font>
                        </property>
                        <property name="text">
@@ -512,20 +581,20 @@
                      <item row="0" column="3">
                       <widget class="QFrame" name="frame_19">
                        <property name="frameShape">
-                        <enum>QFrame::NoFrame</enum>
+                        <enum>QFrame::Shape::NoFrame</enum>
                        </property>
                        <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                        <enum>QFrame::Shadow::Raised</enum>
                        </property>
                       </widget>
                      </item>
                      <item row="0" column="0">
                       <widget class="QFrame" name="frame_21">
                        <property name="frameShape">
-                        <enum>QFrame::NoFrame</enum>
+                        <enum>QFrame::Shape::NoFrame</enum>
                        </property>
                        <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                        <enum>QFrame::Shadow::Raised</enum>
                        </property>
                       </widget>
                      </item>
@@ -541,10 +610,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_19">
                      <property name="leftMargin">
@@ -580,7 +649,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -605,10 +673,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_22">
                      <property name="leftMargin">
@@ -644,7 +712,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -675,10 +742,10 @@
                </size>
               </property>
               <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
+               <enum>QFrame::Shape::NoFrame</enum>
               </property>
               <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
+               <enum>QFrame::Shadow::Raised</enum>
               </property>
               <layout class="QGridLayout" name="gridLayout_6">
                <property name="leftMargin">
@@ -711,10 +778,10 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::Box</enum>
+                  <enum>QFrame::Shape::Box</enum>
                  </property>
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Shadow::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_5">
                   <property name="leftMargin">
@@ -759,28 +826,27 @@
                      <font>
                       <family>MS Shell Dlg 2</family>
                       <pointsize>11</pointsize>
-                      <weight>50</weight>
                       <italic>false</italic>
                       <bold>false</bold>
                      </font>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Sunken</enum>
+                     <enum>QFrame::Shadow::Sunken</enum>
                     </property>
                     <property name="text">
                      <string>Y-axis data</string>
                     </property>
                     <property name="textFormat">
-                     <enum>Qt::AutoText</enum>
+                     <enum>Qt::TextFormat::AutoText</enum>
                     </property>
                     <property name="scaledContents">
                      <bool>false</bool>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                     <property name="wordWrap">
                      <bool>false</bool>
@@ -817,10 +883,10 @@
                   <string>Y-axis data type</string>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::Box</enum>
+                  <enum>QFrame::Shape::Box</enum>
                  </property>
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Shadow::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_4">
                   <property name="leftMargin">
@@ -847,10 +913,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_26">
                      <property name="leftMargin">
@@ -886,7 +952,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -911,10 +976,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_27">
                      <property name="leftMargin">
@@ -950,7 +1015,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -975,10 +1039,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_28">
                      <property name="leftMargin">
@@ -1014,7 +1078,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -1048,10 +1111,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_25">
                      <property name="leftMargin">
@@ -1087,7 +1150,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -1123,15 +1185,14 @@
                     <property name="font">
                      <font>
                       <pointsize>10</pointsize>
-                      <weight>50</weight>
                       <bold>false</bold>
                      </font>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_29">
                      <property name="leftMargin">
@@ -1155,10 +1216,10 @@
                      <item row="0" column="2">
                       <widget class="QFrame" name="frame_28">
                        <property name="frameShape">
-                        <enum>QFrame::NoFrame</enum>
+                        <enum>QFrame::Shape::NoFrame</enum>
                        </property>
                        <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                        <enum>QFrame::Shadow::Raised</enum>
                        </property>
                       </widget>
                      </item>
@@ -1179,6 +1240,7 @@
                        <property name="font">
                         <font>
                          <pointsize>10</pointsize>
+                         <bold>false</bold>
                         </font>
                        </property>
                        <property name="text">
@@ -1210,7 +1272,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -1255,14 +1316,14 @@
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
-                <height>220</height>
+                <height>250</height>
                </size>
               </property>
               <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
+               <enum>QFrame::Shape::NoFrame</enum>
               </property>
               <property name="frameShadow">
-               <enum>QFrame::Raised</enum>
+               <enum>QFrame::Shadow::Raised</enum>
               </property>
               <layout class="QGridLayout" name="gridLayout_21">
                <property name="leftMargin">
@@ -1301,10 +1362,10 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::Box</enum>
+                  <enum>QFrame::Shape::Box</enum>
                  </property>
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Shadow::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_32">
                   <property name="leftMargin">
@@ -1339,7 +1400,6 @@
                     <property name="font">
                      <font>
                       <pointsize>11</pointsize>
-                      <weight>50</weight>
                       <bold>false</bold>
                      </font>
                     </property>
@@ -1347,7 +1407,7 @@
                      <string>Cursor controls</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignCenter</set>
+                     <set>Qt::AlignmentFlag::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -1365,7 +1425,7 @@
                  <property name="maximumSize">
                   <size>
                    <width>220</width>
-                   <height>180</height>
+                   <height>250</height>
                   </size>
                  </property>
                  <property name="sizeIncrement">
@@ -1375,10 +1435,10 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::Box</enum>
+                  <enum>QFrame::Shape::Box</enum>
                  </property>
                  <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
+                  <enum>QFrame::Shadow::Raised</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_31">
                   <property name="leftMargin">
@@ -1396,208 +1456,7 @@
                   <property name="spacing">
                    <number>4</number>
                   </property>
-                  <item row="3" column="0">
-                   <widget class="QFrame" name="frame_15">
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>28</height>
-                     </size>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
-                    <layout class="QGridLayout" name="gridLayout_15">
-                     <property name="leftMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="spacing">
-                      <number>2</number>
-                     </property>
-                     <item row="0" column="0">
-                      <widget class="QRadioButton" name="radioButton_harmonic_cursor">
-                       <property name="minimumSize">
-                        <size>
-                         <width>75</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>200</width>
-                         <height>28</height>
-                        </size>
-                       </property>
-                       <property name="font">
-                        <font>
-                         <family>MS Shell Dlg 2</family>
-                         <pointsize>10</pointsize>
-                         <weight>50</weight>
-                         <italic>false</italic>
-                         <bold>false</bold>
-                        </font>
-                       </property>
-                       <property name="text">
-                        <string>Enable harmonic cursor</string>
-                       </property>
-                       <property name="checked">
-                        <bool>false</bool>
-                       </property>
-                       <attribute name="buttonGroup">
-                        <string notr="true">buttonGroup_cursor</string>
-                       </attribute>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
                   <item row="1" column="0">
-                   <widget class="QFrame" name="frame_17">
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>28</height>
-                     </size>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
-                    <layout class="QGridLayout" name="gridLayout_17">
-                     <property name="leftMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="spacing">
-                      <number>2</number>
-                     </property>
-                     <item row="0" column="0">
-                      <widget class="QRadioButton" name="radioButton_disable_cursors">
-                       <property name="minimumSize">
-                        <size>
-                         <width>75</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>200</width>
-                         <height>26</height>
-                        </size>
-                       </property>
-                       <property name="font">
-                        <font>
-                         <family>MS Shell Dlg 2</family>
-                         <pointsize>10</pointsize>
-                         <weight>50</weight>
-                         <italic>false</italic>
-                         <bold>false</bold>
-                        </font>
-                       </property>
-                       <property name="text">
-                        <string>Disable cursors</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                       <attribute name="buttonGroup">
-                        <string notr="true">buttonGroup_cursor</string>
-                       </attribute>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="QFrame" name="frame_16">
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>28</height>
-                     </size>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
-                    <layout class="QGridLayout" name="gridLayout_16">
-                     <property name="leftMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="spacing">
-                      <number>2</number>
-                     </property>
-                     <item row="0" column="0">
-                      <widget class="QRadioButton" name="radioButton_cross_cursor">
-                       <property name="minimumSize">
-                        <size>
-                         <width>75</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                       <property name="maximumSize">
-                        <size>
-                         <width>200</width>
-                         <height>28</height>
-                        </size>
-                       </property>
-                       <property name="font">
-                        <font>
-                         <family>MS Shell Dlg 2</family>
-                         <pointsize>10</pointsize>
-                         <weight>50</weight>
-                         <italic>false</italic>
-                         <bold>false</bold>
-                        </font>
-                       </property>
-                       <property name="text">
-                        <string>Enable cross cursor</string>
-                       </property>
-                       <property name="checked">
-                        <bool>false</bool>
-                       </property>
-                       <attribute name="buttonGroup">
-                        <string notr="true">buttonGroup_cursor</string>
-                       </attribute>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
                    <widget class="QFrame" name="frame_legends">
                     <property name="maximumSize">
                      <size>
@@ -1606,10 +1465,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_14">
                      <property name="leftMargin">
@@ -1645,7 +1504,6 @@
                         <font>
                          <family>MS Shell Dlg 2</family>
                          <pointsize>10</pointsize>
-                         <weight>50</weight>
                          <italic>false</italic>
                          <bold>false</bold>
                         </font>
@@ -1662,6 +1520,39 @@
                    </widget>
                   </item>
                   <item row="4" column="0">
+                   <widget class="QRadioButton" name="radioButton_harmonic_cursor">
+                    <property name="minimumSize">
+                     <size>
+                      <width>75</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>28</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>MS Shell Dlg 2</family>
+                      <pointsize>10</pointsize>
+                      <italic>false</italic>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Enable harmonic cursor</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">buttonGroup_cursor</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
                    <widget class="QFrame" name="frame_vertical_lines">
                     <property name="maximumSize">
                      <size>
@@ -1670,10 +1561,10 @@
                      </size>
                     </property>
                     <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
+                     <enum>QFrame::Shape::NoFrame</enum>
                     </property>
                     <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
+                     <enum>QFrame::Shadow::Raised</enum>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_13">
                      <property name="leftMargin">
@@ -1711,7 +1602,7 @@
                         </font>
                        </property>
                        <property name="alignment">
-                        <set>Qt::AlignCenter</set>
+                        <set>Qt::AlignmentFlag::AlignCenter</set>
                        </property>
                        <property name="minimum">
                         <number>2</number>
@@ -1753,100 +1644,127 @@
                         <string>Vertical lines: </string>
                        </property>
                        <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                        </property>
                       </widget>
                      </item>
                      <item row="0" column="2">
                       <widget class="QFrame" name="frame_6">
                        <property name="frameShape">
-                        <enum>QFrame::NoFrame</enum>
+                        <enum>QFrame::Shape::NoFrame</enum>
                        </property>
                        <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                        <enum>QFrame::Shadow::Raised</enum>
                        </property>
                       </widget>
                      </item>
                     </layout>
                    </widget>
                   </item>
+                  <item row="3" column="0">
+                   <widget class="QRadioButton" name="radioButton_cross_cursor">
+                    <property name="minimumSize">
+                     <size>
+                      <width>75</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>28</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>MS Shell Dlg 2</family>
+                      <pointsize>10</pointsize>
+                      <italic>false</italic>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Enable cross cursor</string>
+                    </property>
+                    <property name="checked">
+                     <bool>false</bool>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">buttonGroup_cursor</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QRadioButton" name="radioButton_disable_cursors">
+                    <property name="minimumSize">
+                     <size>
+                      <width>75</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>200</width>
+                      <height>26</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>MS Shell Dlg 2</family>
+                      <pointsize>10</pointsize>
+                      <italic>false</italic>
+                      <bold>false</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Disable cursors</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
+                    </property>
+                    <attribute name="buttonGroup">
+                     <string notr="true">buttonGroup_cursor</string>
+                    </attribute>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <layout class="QGridLayout" name="gridLayout_15">
+                    <property name="sizeConstraint">
+                     <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+                    </property>
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <item row="0" column="0">
+                     <widget class="QPushButton" name="pushButton_plot_harmonic_lines">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>170</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Plot harmonic lines</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
                  </layout>
                 </widget>
                </item>
               </layout>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QFrame" name="frame_11">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>44</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>48</height>
-            </size>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_8">
-            <property name="leftMargin">
-             <number>2</number>
-            </property>
-            <property name="topMargin">
-             <number>2</number>
-            </property>
-            <property name="rightMargin">
-             <number>2</number>
-            </property>
-            <property name="bottomMargin">
-             <number>2</number>
-            </property>
-            <property name="spacing">
-             <number>2</number>
-            </property>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pushButton_export_data">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>120</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>120</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <family>MS Shell Dlg 2</family>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>  Export data  </string>
-              </property>
              </widget>
             </item>
            </layout>
@@ -1873,10 +1791,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::Box</enum>
+      <enum>QFrame::Shape::Box</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_7">
       <property name="leftMargin">
@@ -1899,7 +1817,6 @@
         <property name="font">
          <font>
           <pointsize>12</pointsize>
-          <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>
@@ -1907,7 +1824,7 @@
          <string>Frequency response plotter</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -1916,10 +1833,12 @@
    </item>
   </layout>
  </widget>
- <resources><include location="../../../icons/resources.qrc" /></resources>
+ <resources>
+  <include location="../../../icons/resources.qrc"/>
+ </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_cursor"/>
   <buttongroup name="buttonGroup_y_data"/>
+  <buttongroup name="buttonGroup_cursor"/>
  </buttongroups>
 </ui>

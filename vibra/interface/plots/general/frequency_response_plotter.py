@@ -1,15 +1,17 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QToolButton
-from PySide6.QtGui import QCloseEvent
+import numpy as np
+from .harmonic_lines_plot_setup import HarmonicLinesPlotSetup
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QDialog, QToolButton, QVBoxLayout
 
 from vibra import app
-from vibra.interface.ui_generated.plots.general.frequency_response_plot_ui import FrequencyResponsePlot_UI
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
-
-import numpy as np
+from vibra.interface.ui_generated.plots.general.frequency_response_plot_ui import (
+    FrequencyResponsePlot_UI,
+)
 
 
 class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
@@ -73,6 +75,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
+        self.pushButton_plot_harmonic_lines.clicked.connect(self.open_plot_harmonic_lines_window_callback)
         #
         app().main_window.theme_changed.connect(self.paint_toolbar_icons)
         self._initial_config()
@@ -142,6 +145,38 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.hide()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)
+
+    def open_plot_harmonic_lines_window_callback(self):
+        self.hide()
+        harmonic_lines_setup = HarmonicLinesPlotSetup()
+        harmonic_lines_setup.settings_confirmed.connect(self.plot_harmonic_lines)
+        harmonic_lines_setup.exec()
+
+
+    def plot_harmonic_lines(self, fundamental, n_harmonics, legend):
+        if self.x_data is None:
+            return
+
+        old_lines = []
+        for line in self.ax.lines:
+            if hasattr(line, "is_harmonic_line") and line.is_harmonic_line:
+                old_lines.append(line)
+
+        for line in old_lines:
+            line.remove()
+
+        freqs = [(i + 1) * fundamental for i in range(n_harmonics)]
+
+        for f in freqs:
+            if f <= self.x_data[-1]:
+                line = self.ax.axvline(x=f, color="k", linewidth=1)
+                line.is_harmonic_line = True
+
+        if legend:
+            labels = [f"Harmonic {i+1}" for i in range(n_harmonics) if freqs[i] <= self.x_data[-1]]
+            self.ax.legend(labels)
+
+        self.mpl_canvas_frequency_plot.draw()
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data
