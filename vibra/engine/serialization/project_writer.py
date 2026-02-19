@@ -151,6 +151,10 @@ class ProjectWriter:
     def write_model_properties(self, model_properties: ModelProperties):
         self.write_fluid_library(model_properties.fluid_library)
         self.write_material_library(model_properties.material_library)
+        self.update_tables_in_file(
+            model_properties.acoustic_imported_tables,
+            model_properties.structural_imported_tables,
+        )
 
         data = dict(
             volume_properties=self._normalize_property(model_properties.volume_properties),
@@ -178,6 +182,21 @@ class ProjectWriter:
             fluid_library_dict[fluid_id] = asdict(fluid)
 
         write_json(self.project_paths.fluid_library_filepath, fluid_library_dict)
+
+    def update_tables_in_file(
+        self,
+        acoustic_tables: dict[str, np.ndarray],
+        structural_tables: dict[str, np.ndarray],
+    ):
+        if not any([acoustic_tables, structural_tables]):
+            return
+
+        with h5py.File(self.project_paths.imported_table_data_filepath, "w") as file:
+            for name, array in acoustic_tables.items():
+                file[f"acoustic/{name}"] = array
+
+            for name, array in structural_tables.items():
+                file[f"structural/{name}"] = array
 
     def write_thumbnail(self, thumbnail: Image):
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
