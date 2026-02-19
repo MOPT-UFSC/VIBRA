@@ -877,7 +877,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def actions_to_finalize(self):
         self.load_compressor_excitation_info()
         app().new_project.update_model_properties_file()
-        app().file.write_imported_table_data_in_file()
         app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
 
@@ -885,7 +884,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_id: int):
 

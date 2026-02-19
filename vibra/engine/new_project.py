@@ -162,6 +162,7 @@ class NewProject:
         self.model.geometry_path = self.project_writer.write_geometry(path)
         self.needs_saving = True
 
+    # Replace these calls with some type of event handler
     def update_model_properties_file(self):
         self.project_writer.write_model_properties(self.model.properties)
         self.needs_saving = True

@@ -696,7 +696,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -764,7 +764,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().new_project.update_model_properties_file()
-        app().file.write_imported_table_data_in_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 

@@ -226,7 +226,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.load_model_info()
         app().main_window.update_info_text()
         app().new_project.update_model_properties_file()
-        app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
         app().main_window.update_symbols()
 

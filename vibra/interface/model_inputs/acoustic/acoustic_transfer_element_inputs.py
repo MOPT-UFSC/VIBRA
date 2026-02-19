@@ -376,7 +376,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.properties.remove_imported_tables("acoustic", table_name)
 
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
     def set_surface_velocity(self, surface_id: int):
 

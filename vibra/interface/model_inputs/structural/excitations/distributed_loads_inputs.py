@@ -702,7 +702,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        app().file.write_imported_table_data_in_file()
+        app().new_project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -788,7 +788,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().new_project.update_model_properties_file()
-        app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
     def change_frequency_setup(self):

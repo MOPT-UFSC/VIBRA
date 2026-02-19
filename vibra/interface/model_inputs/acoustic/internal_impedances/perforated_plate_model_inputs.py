@@ -536,7 +536,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         app().new_project.update_model_properties_file()
         if row == 12:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
         self.load_model_info()
 
@@ -827,7 +827,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
@@ -977,7 +977,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().new_project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [70/100]")
             app().main_window.recompute_hidden_volumes()

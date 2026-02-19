@@ -781,7 +781,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().new_project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
@@ -891,7 +891,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.comboBox_inherit_fluid_from.clear()
         app().main_window.update_info_text()
         app().new_project.update_model_properties_file()
-        app().file.write_imported_table_data_in_file()
         app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
 
