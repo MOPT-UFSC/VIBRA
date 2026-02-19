@@ -1054,7 +1054,7 @@ class FluidWidget(FluidWidget_UI):
     #     for surf_id in surfaces_to_remove_fluid:
     #         self.model.properties._remove_surface_property("fluid", surface_id=surf_id)
 
-    #     app().file.write_model_properties_in_file()
+    #     app().new_project.update_model_properties_file()
 
     #     if isinstance(self.dialog, QDialog):
     #         self.dialog.load_model_info()

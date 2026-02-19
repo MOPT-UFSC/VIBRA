@@ -1045,7 +1045,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 

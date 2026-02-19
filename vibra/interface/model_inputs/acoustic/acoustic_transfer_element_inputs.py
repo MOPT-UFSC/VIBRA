@@ -389,7 +389,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         # app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):

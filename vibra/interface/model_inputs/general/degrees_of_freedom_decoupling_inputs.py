@@ -240,7 +240,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             app().file.remove_results_data_from_project_file()
 
             logging.info("Processing the post-assignment actions... [50/100]")
-            app().file.write_model_properties_in_file()
+            app().new_project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().file.write_imported_table_data_in_file()
@@ -276,7 +276,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().file.write_model_properties_in_file()
+            app().new_project.update_model_properties_file()
 
             logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()

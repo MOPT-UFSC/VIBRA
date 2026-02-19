@@ -296,7 +296,7 @@ class AnalysisToolbar(QToolBar):
         #     app().file.write_mesh_data_in_file()
 
         # logging.info("Post-processing results... [90/100]")
-        # app().file.write_model_properties_in_file()
+        # app().new_project.update_model_properties_file()
 
         # logging.info("Post-processing results... [95/100]")
         # app().file.write_results_data_in_file()

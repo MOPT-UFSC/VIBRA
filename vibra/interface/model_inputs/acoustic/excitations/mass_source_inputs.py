@@ -890,7 +890,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.check_model_frequency_controls()
         self.comboBox_inherit_fluid_from.clear()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.selection.clear_selection()
         app().main_window.update_symbols()

@@ -378,7 +378,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()

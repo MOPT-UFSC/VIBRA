@@ -157,7 +157,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.clear_line_edit_selection_id()
 
         app().main_window.selection.clear_selection()
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         self.actions_to_finalize()
         self.load_info()
 
@@ -191,7 +191,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     self.properties._remove_volume_property("viscous_thermal_model", volume_id)
 
                 self.models = list()
-                app().file.write_model_properties_in_file()
+                app().new_project.update_model_properties_file()
                 self.load_info()
         self.actions_to_finalize()
 
@@ -348,7 +348,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for volume in volumes:
                     self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
             
-            app().file.write_model_properties_in_file()
+            app().new_project.update_model_properties_file()
     
     def map_existing_viscous_thermal_loss_models(self):
         self.map_model_id_to_models: defaultdict[int, RectangularDuctData|CircularDuctData] = defaultdict()
@@ -681,7 +681,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         self.actions_to_finalize()
         self.load_info()
     

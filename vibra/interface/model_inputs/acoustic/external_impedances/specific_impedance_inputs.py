@@ -536,7 +536,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 

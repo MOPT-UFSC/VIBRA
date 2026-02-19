@@ -534,7 +534,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_user_defined_transfer_impedance_path.clear()
             app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
 
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         if row == 12:
             app().file.write_imported_table_data_in_file()
 
@@ -572,7 +572,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         for surface_id in surfaces_ids:
             self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
 
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
         self.load_model_info()
     
     def update_tabs_visibility(self):
@@ -974,7 +974,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().file.remove_results_data_from_project_file()
 
             logging.info("Processing the post-assignment actions... [50/100]")
-            app().file.write_model_properties_in_file()
+            app().new_project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().file.write_imported_table_data_in_file()
@@ -1008,7 +1008,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().file.write_model_properties_in_file()
+            app().new_project.update_model_properties_file()
 
             logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()
