@@ -805,10 +805,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(app().project.analysis_setup, dict):
-            analysis_setup = app().project.analysis_setup
-            app().project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().new_project.configure_analysis(
+            app().new_project.current_analysis_id,
+            app().new_project.model.new_analysis_setup,
+        )
 
     def reset_input_fields(self, reset_all=False):
 
