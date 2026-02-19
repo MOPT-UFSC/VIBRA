@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 import numpy as np
@@ -21,6 +21,9 @@ class HarmonicAnalysisSetup:
             self.f_step,
         )
 
+    def replace(self, **changes):
+        return replace(self, **changes)
+
     def as_dict(self):
         data = {
             "f_min": self.f_min,
@@ -31,7 +34,7 @@ class HarmonicAnalysisSetup:
 
         if self.global_damping is not None:
             data["global_damping"] = self.global_damping
-        
+
         if self.modes_number is not None:
             data["modes_number"] = self.global_damping
 
