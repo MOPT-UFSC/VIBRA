@@ -403,11 +403,13 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             if property in properties:
                 if "table_names" in data.keys():
                     return
+        
+        # No idea of what it does
+        app().new_project.configure_analysis(
+            app().new_project.current_analysis_id,
+            app().new_project.model.new_analysis_setup,
+        )
 
-        if isinstance(self.project.analysis_setup, dict):
-            analysis_setup = self.project.analysis_setup
-            self.project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):
 
