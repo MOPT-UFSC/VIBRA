@@ -2,6 +2,7 @@ import json
 from configparser import ConfigParser
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Generator
 
 import numpy as np
 from PIL import Image
@@ -45,7 +46,10 @@ def write_image(path: Path, image: Image.Image):
 
 
 @contextmanager
-def update_json(path: Path, default_type: list | dict | None = None):
+def update_json(
+    path: Path,
+    default_type: list | dict | None = None,
+) -> Generator[list | dict | None, None, None]:
     """
     Utility function to read and write a file using "with" syntax.
     If the function fails to read the data a configurable default type
