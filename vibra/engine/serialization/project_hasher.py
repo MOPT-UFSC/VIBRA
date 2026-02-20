@@ -1,4 +1,5 @@
-from pathlib import Path
+from enum import StrEnum, auto
+
 import numpy as np
 import xxhash
 
@@ -6,7 +7,14 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.solvers import HarmonicSolver
 
 
-class ProjectHasher:    
+class HashEnum(StrEnum):
+    MESH = auto()
+    HARMONIC_SOLUTION = auto()
+    MODAL_SOLUTION = auto()
+    TABLES = auto()
+
+
+class ProjectHasher:
     @staticmethod
     def hash_mesh(mesh: Mesh) -> str:
         hasher = xxhash.xxh128()

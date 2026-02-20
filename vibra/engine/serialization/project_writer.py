@@ -27,7 +27,7 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.file_helpers import read_json, update_json, write_image, write_json
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
 
-from .project_hasher import ProjectHasher
+from .project_hasher import ProjectHasher, HashEnum
 from .project_paths import ProjectPaths
 
 
@@ -116,7 +116,7 @@ class ProjectWriter:
 
     def write_mesh(self, mesh: Mesh):
         current_hash = ProjectHasher.hash_mesh(mesh)
-        previous_hash = self._read_hash("mesh")
+        previous_hash = self._read_hash(HashEnum.MESH)
         required_paths = [
             self.project_paths.mesh_data_filepath,
             self.project_paths.mesh_quality_data_filepath,
@@ -147,7 +147,7 @@ class ProjectWriter:
                 file[f"curvatures/curvatures_surface/{i}"] = curvatures
 
         self.write_mesh_quality_data_in_file(mesh)
-        previous_hash = self._write_hash("mesh", current_hash)
+        previous_hash = self._write_hash(HashEnum.MESH, current_hash)
 
     def write_mesh_quality_data_in_file(self, mesh: Mesh):
         if not mesh.mesh_quality_data:
@@ -202,7 +202,7 @@ class ProjectWriter:
             return
 
         current_hash = ProjectHasher.hash_tables(acoustic_tables, structural_tables)
-        previous_hash = self._read_hash("tables")
+        previous_hash = self._read_hash(HashEnum.TABLES)
 
         if self.project_paths.imported_table_data_filepath.exists():
             if current_hash == previous_hash:
@@ -215,7 +215,7 @@ class ProjectWriter:
             for name, array in structural_tables.items():
                 file[f"structural/{name}"] = array
 
-        self._write_hash("tables", current_hash)
+        self._write_hash(HashEnum.TABLES, current_hash)
 
     def write_thumbnail(self, thumbnail: Image):
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
@@ -225,6 +225,13 @@ class ProjectWriter:
         if isinstance(solver.solution, LazyHDF5MatrixLoader):
             return
 
+        current_hash = ProjectHasher.hash_harmonic_solution(solver)
+        previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
+
+        if self.project_paths.imported_table_data_filepath.exists():
+            if current_hash == previous_hash:
+                return
+
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
             file["frequencies"] = solver.frequencies
             file["solution"] = solver.solution
@@ -233,10 +240,19 @@ class ProjectWriter:
             if solver.displacement_dof is not None:
                 file["displacement_dof"] = solver.displacement_dof
 
+        self._write_hash(HashEnum.HARMONIC_SOLUTION, current_hash)
+
     def write_modal_solution(self, solver: ModalSolver):
         # In this case the solution was already saved
         if isinstance(solver.solution, LazyHDF5MatrixLoader):
             return
+
+        current_hash = ProjectHasher.hash_modal_solution(solver)
+        previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
+
+        if self.project_paths.imported_table_data_filepath.exists():
+            if current_hash == previous_hash:
+                return
 
         with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
             file["frequencies"] = solver.natural_frequencies
@@ -245,6 +261,8 @@ class ProjectWriter:
 
             if solver.displacement_dof is not None:
                 file["displacement_dof"] = solver.displacement_dof
+
+        self._write_hash(HashEnum.MODAL_SOLUTION, current_hash)
 
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
         return LazyHDF5MatrixWriter(
@@ -262,13 +280,13 @@ class ProjectWriter:
     def delete_mesh_data(self):
         self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
 
-    def _read_hash(self, name: str) -> str | None:
+    def _read_hash(self, name: HashEnum) -> str | None:
         data = read_json(self.project_paths.hashes_filepath)
         if data is None:
             return
         return data.get(name)
 
-    def _write_hash(self, name: str, hash: str):
+    def _write_hash(self, name: HashEnum, hash: str):
         with update_json(self.project_paths.hashes_filepath) as file:
             file[name] = hash
 
