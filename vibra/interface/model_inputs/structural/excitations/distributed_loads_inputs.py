@@ -1,4 +1,6 @@
 
+from vibra.engine import AnalysisID
+from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -399,21 +401,24 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.lineEdit_reset(self.lineEdit_path_table_Fz)
 
     def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
         f_min = frequencies[0]
         f_max = frequencies[-1]
         f_step = frequencies[1] - frequencies[0] 
 
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
+        analysis_setup = app().new_project.model.new_analysis_setup
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            new_analysis_setup = analysis_setup.replace(
+                f_min=f_min,
+                f_max=f_max,
+                f_step=f_step,
+            )
+        else:
+            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
 
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
+        app().new_project.configure_analysis(
+            AnalysisID.ACOUSTIC_HARMONIC,
+            new_analysis_setup,
+        )
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
