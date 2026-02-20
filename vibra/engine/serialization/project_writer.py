@@ -151,7 +151,7 @@ class ProjectWriter:
     def write_model_properties(self, model_properties: ModelProperties):
         self.write_fluid_library(model_properties.fluid_library)
         self.write_material_library(model_properties.material_library)
-        self.update_tables_in_file(
+        self.write_tables_in_file(
             model_properties.acoustic_imported_tables,
             model_properties.structural_imported_tables,
         )
@@ -183,7 +183,7 @@ class ProjectWriter:
 
         write_json(self.project_paths.fluid_library_filepath, fluid_library_dict)
 
-    def update_tables_in_file(
+    def write_tables_in_file(
         self,
         acoustic_tables: dict[str, np.ndarray],
         structural_tables: dict[str, np.ndarray],
