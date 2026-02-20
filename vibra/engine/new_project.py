@@ -23,9 +23,10 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 class NewProject:
     def __init__(self, working_directory: Optional[Path | str] = None):
+        self.project_paths = ProjectPaths(working_directory)
+
         self.reset_variables()
         self.create_connections()
-        self.project_paths.set_working_directory(working_directory)
 
     def reset_variables(self):
         self.name: str = "Project"
@@ -36,7 +37,6 @@ class NewProject:
         self.model = Model()
         self.current_analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
 
-        self.project_paths = ProjectPaths()
         self.project_reader = ProjectReader(self.project_paths)
         self.project_writer = ProjectWriter(self.project_paths)
 
