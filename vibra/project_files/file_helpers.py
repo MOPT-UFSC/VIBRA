@@ -4,7 +4,6 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
-from cffi.pkgconfig import call
 from PIL import Image
 
 
