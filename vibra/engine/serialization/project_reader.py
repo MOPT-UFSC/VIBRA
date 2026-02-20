@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
@@ -7,6 +8,7 @@ if TYPE_CHECKING:
     # this file is also imported by NewProject
     from vibra.engine.new_project import NewProject
 
+import logging
 import typing
 import zipfile
 from pathlib import Path
@@ -55,11 +57,12 @@ class ProjectReader:
         If no working directory is defined, a temporary directory
         will be created and used.
         """
-
         vibra_path = Path(vibra_path)
 
         if not vibra_path.is_file():
             raise FileExistsError("Vibra file path does not exist.")
+
+        logging.info("Reading file into working directory.")
 
         self.project_paths.clear_data()
         with zipfile.ZipFile(vibra_path, "r") as file:
@@ -72,6 +75,8 @@ class ProjectReader:
             from vibra.engine.new_project import NewProject
 
             project = NewProject()
+
+        logging.info("Reading project.")
 
         project.reset_variables()
         project.current_analysis_id = self.read_current_analysis_id()
@@ -87,6 +92,8 @@ class ProjectReader:
     def read_model(self, model: Optional[Model] = None) -> Model:
         if model is None:
             model = Model()
+
+        logging.info("Reading model.")
 
         model.reset_variables()
 
@@ -104,6 +111,8 @@ class ProjectReader:
         return model
 
     def read_current_analysis_id(self) -> AnalysisID:
+        logging.info("Reading AnalysisID")
+
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
             return AnalysisID.NO_ANALYSIS
@@ -116,6 +125,8 @@ class ProjectReader:
         return AnalysisID(analysis_id)
 
     def read_analysis_setup(self) -> Optional[HarmonicAnalysisSetup | ModalAnalysisSetup]:
+        logging.info("Reading AnalysisSetup")
+
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
             return None
@@ -145,6 +156,8 @@ class ProjectReader:
             return None
 
     def read_mesh_setup(self) -> MeshSetup:
+        logging.info("Reading MeshSetup.")
+
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
             project_setup = dict()
@@ -156,6 +169,8 @@ class ProjectReader:
         return mesh_setup
 
     def read_geometry_path(self) -> Optional[Path]:
+        logging.info("Reading geometry path.")
+
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
             return None
@@ -188,6 +203,7 @@ class ProjectReader:
             "cache_solids_connectivity",
         ]
 
+        logging.info("Reading Mesh")
         with h5py.File(mesh_data_path, "r") as file:
             mesh.nodes_from_points = {int(key): int(value) for key, value in file["nodal_data/nodes_from_points"]}
             mesh.points_from_nodes = {value: key for key, value in mesh.nodes_from_points.items()}
@@ -203,6 +219,7 @@ class ProjectReader:
                 mesh.cache_faces_connectivity = np.array(file["connectivity/cache_faces_connectivity"])
                 mesh.cache_solids_connectivity = np.array(file["connectivity/cache_solids_connectivity"])
 
+        logging.info("Reading Geometry related Mesh informations")
         with h5py.File(geometry_data_path, "r") as file:
             for key, value in file.get("entities", dict()).items():
                 mesh.geometry_information[key] = [int(val) for val in value]
@@ -237,8 +254,11 @@ class ProjectReader:
             model_properties = ModelProperties()
         model_properties._reset_variables()
 
+        logging.info("Reading ModelProperties")
+
         fluid_library = self.read_fluid_library()
         material_library = self.read_material_library()
+        # TODO: read imported tables
 
         model_properties.fluid_library = fluid_library
         model_properties.material_library = material_library
@@ -273,10 +293,11 @@ class ProjectReader:
                 position_kwargs = self._property_kwargs(key, ids)
                 model_properties._set_property(property, prop_data, **position_kwargs)
 
-        # TODO: read imported tables
         return model_properties
 
     def read_material_library(self) -> MaterialLibrary:
+        logging.info("Reading MaterialLibrary")
+
         material_library_data = read_json(self.project_paths.material_library_filepath)
         if material_library_data is None:
             return default_material_library()
@@ -299,6 +320,8 @@ class ProjectReader:
         return material_library
 
     def read_fluid_library(self) -> FluidLibrary:
+        logging.info("Reading FluidLibrary")
+
         fluid_library_data = read_json(self.project_paths.fluid_library_filepath)
         if fluid_library_data is None:
             return default_fluid_library()
@@ -331,6 +354,8 @@ class ProjectReader:
         if not self.project_paths.thumbnail_filepath.exists():
             return None
 
+        logging.info("Reading Thumbnail")
+
         return read_image(self.project_paths.thumbnail_filepath)
 
     def read_solution(
@@ -338,6 +363,10 @@ class ProjectReader:
         analysis_id: AnalysisID,
         model: Model,
     ) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
+
+        # TODO: create Solution classes, so we don't need to create pointless Assemblers and Solvers here
+        logging.info("Reading Solution.")
+
         if analysis_id.is_acoustic():
             assembler = AcousticAssembler(model)
         elif analysis_id.is_structural():
