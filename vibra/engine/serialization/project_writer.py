@@ -19,14 +19,15 @@ from vibra.engine.analysis_info import HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.libraries.fluid_library import FluidLibrary, default_fluid_library
-from vibra.engine.properties.libraries.material_library import MaterialLibrary, default_material_library
+from vibra.engine.properties.libraries.fluid_library import FluidLibrary
+from vibra.engine.properties.libraries.material_library import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.project_files.file_helpers import read_json, write_image, write_json
+from vibra.project_files.file_helpers import read_json, update_json, write_image, write_json
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
 
+from .project_hasher import ProjectHasher
 from .project_paths import ProjectPaths
 
 
@@ -99,12 +100,8 @@ class ProjectWriter:
         else:
             analysis_setup_dict = dict()
 
-        project_setup = read_json(self.project_paths.project_setup_filepath)
-        if not isinstance(project_setup, dict):
-            project_setup = dict()
-
-        project_setup["analysis_setup"] = analysis_setup_dict
-        write_json(self.project_paths.project_setup_filepath, project_setup)
+        with update_json(self.project_paths.project_setup_filepath) as project_setup:
+            project_setup["analysis_setup"] = analysis_setup_dict
 
     def write_geometry(self, geometry_path: Path | str) -> Path:
         geometry_path = Path(geometry_path)
@@ -117,7 +114,19 @@ class ProjectWriter:
         shutil.copy(geometry_path, internal_path)
         return internal_path
 
-    def write_mesh(self, mesh: Mesh):        
+    def write_mesh(self, mesh: Mesh):
+        current_hash = ProjectHasher.hash_mesh(mesh)
+        previous_hash = self._read_hash("mesh")
+        required_paths = [
+            self.project_paths.mesh_data_filepath,
+            self.project_paths.mesh_quality_data_filepath,
+            self.project_paths.hashes_filepath,
+        ]
+        required_paths_exist = all([i.exists() for i in required_paths])
+
+        if (previous_hash == current_hash) and required_paths_exist:
+            return
+
         with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
             file["connectivity/lines_connectivity"] = mesh.lines_connectivity
             file["connectivity/faces_connectivity"] = mesh.faces_connectivity
@@ -138,6 +147,7 @@ class ProjectWriter:
                 file[f"curvatures/curvatures_surface/{i}"] = curvatures
 
         self.write_mesh_quality_data_in_file(mesh)
+        previous_hash = self._write_hash("mesh", current_hash)
 
     def write_mesh_quality_data_in_file(self, mesh: Mesh):
         if not mesh.mesh_quality_data:
@@ -242,6 +252,16 @@ class ProjectWriter:
 
     def delete_mesh_data(self):
         self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
+
+    def _read_hash(self, name: str) -> str | None:
+        data = read_json(self.project_paths.hashes_filepath)
+        if data is None:
+            return
+        return data.get(name)
+
+    def _write_hash(self, name: str, hash: str):
+        with update_json(self.project_paths.hashes_filepath) as file:
+            file[name] = hash
 
     def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
         """
