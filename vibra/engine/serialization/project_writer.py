@@ -27,7 +27,7 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.file_helpers import read_json, update_json, write_image, write_json
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
 
-from .project_hasher import ProjectHasher, HashEnum
+from .project_hasher import HashEnum, ProjectHasher
 from .project_paths import ProjectPaths
 
 
@@ -146,8 +146,38 @@ class ProjectWriter:
             for i, curvatures in mesh.curvatures_surface.items():
                 file[f"curvatures/curvatures_surface/{i}"] = curvatures
 
+        with h5py.File(self.project_paths.geometry_data_filepath, "w") as file:
+            for key, val in mesh.geometry_information.items():
+                file[f"entities/{key}"] = val
+
+            file["properties/length_from_lines"] = self._dict_to_array(mesh.length_from_lines)
+            file["properties/area_from_surfaces"] = self._dict_to_array(mesh.area_from_surfaces)
+            file["properties/volume_from_bodies"] = self._dict_to_array(mesh.volume_from_bodies)
+
+            for line, points in mesh.points_from_line.items():
+                file[f"adjacencies/points_from_line_{line}"] = points
+
+            for surface, lines in mesh.lines_from_surface.items():
+                file[f"adjacencies/lines_from_surface_{surface}"] = lines
+
+            for volume, surfaces in mesh.surfaces_from_volume.items():
+                file[f"adjacencies/surfaces_from_volume_{volume}"] = surfaces
+
+            if mesh.has_decoupling():
+                for line, points in mesh.points_from_line.items():
+                    file[f"adjacencies/cache_points_from_line_{line}"] = points
+
+                for surface, lines in mesh.lines_from_surface.items():
+                    file[f"adjacencies/cache_lines_from_surface_{surface}"] = lines
+
+                for volume, surfaces in mesh.surfaces_from_volume.items():
+                    file[f"adjacencies/cache_surfaces_from_volume_{volume}"] = surfaces
+
         self.write_mesh_quality_data_in_file(mesh)
         previous_hash = self._write_hash(HashEnum.MESH, current_hash)
+
+    def _dict_to_array(self, data: dict[int | float, int | float]):
+        return np.array(list(data.items()))
 
     def write_mesh_quality_data_in_file(self, mesh: Mesh):
         if not mesh.mesh_quality_data:
