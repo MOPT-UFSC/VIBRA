@@ -75,7 +75,7 @@ class ProjectReader:
 
         project.reset_variables()
         project.current_analysis_id = self.read_current_analysis_id()
-        project.model = self.read_model()
+        project.model = self.read_model(project.model)
         project.thumbnail = self.read_thumbnail()
         project.assembler, project.solver = self.read_solution(
             project.current_analysis_id,
@@ -172,10 +172,6 @@ class ProjectReader:
     ) -> Mesh:
         mesh_data_path = self.project_paths.mesh_data_filepath
         if not mesh_data_path.exists():
-            raise FileNotFoundError("The mesh file is missing.")
-
-        geometry_data_path = self.project_paths.geometry_data_filepath
-        if not geometry_data_path.exists():
             raise FileNotFoundError("The mesh file is missing.")
 
         if mesh is None:
