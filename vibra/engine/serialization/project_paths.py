@@ -1,7 +1,7 @@
-from tempfile import TemporaryDirectory
-from typing import Optional
 import shutil
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Optional
 
 
 class ProjectPaths:
@@ -30,6 +30,7 @@ class ProjectPaths:
         self.thumbnail_filepath = self.working_directory / "thumbnail.png"
         self.harmonic_solution_filepath = self.working_directory / "harmonic_solution.hdf5"
         self.modal_solution_filepath = self.working_directory / "modal_solution.hdf5"
+        self.hashes_filepath = self.working_directory / "hashes.json"
         self.geometry_folder = self.working_directory / "geometry_file"
 
     def clear_data(self):
