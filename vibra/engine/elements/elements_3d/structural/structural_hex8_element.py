@@ -19,6 +19,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.model = model
 
         self.connectivity = None
+        self.extra_shape_function = True
         self.element_label = "structural_hexahedron_8"
 
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
@@ -29,6 +30,10 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
+
+
+    def set_extra_shape_function_enabled(self, enabled: bool = False):
+        self.extra_shape_function = enabled
 
 
     def define_integration_points(self, integration_points: int = 8):
@@ -96,7 +101,12 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         # define the shape functions (Atalla and Sgard, 2015, pg. 171)
-        phi = np.zeros((Nz, self.NODES_PER_ELEMENT), dtype=float)
+
+        extra_nodes = 0
+        if self.extra_shape_function:
+            extra_nodes = 3
+
+        phi = np.zeros((Nz, self.NODES_PER_ELEMENT + extra_nodes), dtype=float)
 
         phi[:, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
         phi[:, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
@@ -107,8 +117,13 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         phi[:, 6] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0,  1.0,  1.0)   Node 7
         phi[:, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
 
+        if extra_nodes:
+            phi[:, 8] = (1.0 - xi_1**2)                                  # ->      ( 0.0,  1.0,  1.0)   Node 8
+            phi[:, 9] = (1.0 - xi_2**2)                                  # ->      ( 1.0,  0.0,  1.0)   Node 9
+            phi[:, 10] = (1.0 - xi_3**2)                                 # ->      ( 1.0,  1.0,  0.0)   Node 10
+
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT + extra_nodes), dtype=float)
 
         dphi[:, 0, 0] = -(1.0 - xi_2) * (1.0 - xi_3) / 8
         dphi[:, 0, 1] =  (1.0 - xi_2) * (1.0 - xi_3) / 8
@@ -137,6 +152,11 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         dphi[:, 2, 6] =  (1.0 + xi_1) * (1.0 + xi_2) / 8
         dphi[:, 2, 7] =  (1.0 - xi_1) * (1.0 + xi_2) / 8
 
+        if extra_nodes:
+            dphi[:, 0, 8] = -(2 * xi_1)
+            dphi[:, 1, 9] = -(2 * xi_2)
+            dphi[:, 2, 10] = -(2 * xi_3)
+
         return phi, dphi
 
 
@@ -147,6 +167,10 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
+        extra_nodes = 0
+        if self.extra_shape_function:
+            extra_nodes = 3
+
         # nodes from element
         elem_nodes = self.connectivity[el_index, 1:]
 
@@ -154,7 +178,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         coords = self.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi @ coords
+        JAC = self.dphi[:, :, :self.NODES_PER_ELEMENT] @ coords
 
         # Jacobian determinant and inverse
         detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
@@ -162,7 +186,10 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         # derivatives
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
+        # compute the columns of the B matrix
+        cols_B = int(self.DOF_PER_NODE * (self.NODES_PER_ELEMENT + extra_nodes))
+        
+        B = np.zeros((self.nint, 6, cols_B), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -174,15 +201,24 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
         N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
-        N[:, 0, 0::3] = self.phi
-        N[:, 1, 1::3] = self.phi
-        N[:, 2, 2::3] = self.phi
+        N[:, 0, 0::3] = self.phi[:, :self.NODES_PER_ELEMENT]
+        N[:, 1, 1::3] = self.phi[:, :self.NODES_PER_ELEMENT]
+        N[:, 2, 2::3] = self.phi[:, :self.NODES_PER_ELEMENT]
 
         # integration loop
         Ke, Me = 0, 0
         for i in range(self.nint):
             Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+
+        # condense the stiffness matrix Ke if the extra shape functions were enabled
+        if extra_nodes:
+            Kdd = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
+            Kda = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
+            Kad = Kda.T
+            Kaa = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+
+            Ke = Kdd - Kda @ np.linalg.inv(Kaa) @ Kad
 
         return Ke, Me
 
