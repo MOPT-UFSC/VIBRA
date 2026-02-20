@@ -1,12 +1,15 @@
 import json
 from configparser import ConfigParser
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
+from cffi.pkgconfig import call
 from PIL import Image
 
 
 def read_json(path: Path) -> dict | None:
+    path = Path(path)
     if path.exists():
         with open(path) as f:
             return json.load(f)
@@ -18,6 +21,7 @@ def write_json(path: Path, data: dict):
 
 
 def read_config(path: Path) -> ConfigParser | None:
+    path = Path(path)
     if path.exists():
         with open(path) as f:
             config_string = f.read()
@@ -32,12 +36,39 @@ def write_config(path: Path, config: ConfigParser):
 
 
 def read_image(path: Path) -> Image.Image | None:
+    path = Path(path)
     if path.exists():
         return Image.open(path).copy()
 
 
 def write_image(path: Path, image: Image.Image):
     image.save(path)
+
+
+@contextmanager
+def update_json(path: Path, default_type: list | dict | None = None):
+    """
+    Utility function to read and write a file using "with" syntax.
+    If the function fails to read the data a configurable default type
+    will be returned instead.
+
+    It is supposed to be used as follows:
+
+    ```
+    with update_json(path) as file:
+        file["y"] = file["x"] + 2
+    ```
+    """
+
+    data = read_json(path)
+    if (data is None) and callable(default_type):
+        data = default_type()
+
+    try:
+        yield data
+    finally:
+        if data is not None:
+            write_json(path, data)
 
 
 class NumpyCompatibleEncoder(json.JSONEncoder):
