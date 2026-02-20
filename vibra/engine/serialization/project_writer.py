@@ -117,7 +117,7 @@ class ProjectWriter:
         shutil.copy(geometry_path, internal_path)
         return internal_path
 
-    def write_mesh(self, mesh: Mesh, has_decoupling: bool = False):
+    def write_mesh(self, mesh: Mesh):        
         with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
             file["connectivity/lines_connectivity"] = mesh.lines_connectivity
             file["connectivity/faces_connectivity"] = mesh.faces_connectivity
@@ -126,7 +126,7 @@ class ProjectWriter:
             file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
             file["nodal_data/nodes_from_points"] = np.array(list(mesh.nodes_from_points.items()))
 
-            if has_decoupling:
+            if mesh.has_decoupling():
                 file["connectivity/cache_lines_connectivity"] = mesh.cache_lines_connectivity
                 file["connectivity/cache_faces_connectivity"] = mesh.cache_faces_connectivity
                 file["connectivity/cache_solids_connectivity"] = mesh.cache_solids_connectivity
