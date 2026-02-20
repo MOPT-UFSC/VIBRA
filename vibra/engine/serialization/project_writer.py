@@ -201,12 +201,21 @@ class ProjectWriter:
         if not any([acoustic_tables, structural_tables]):
             return
 
+        current_hash = ProjectHasher.hash_tables(acoustic_tables, structural_tables)
+        previous_hash = self._read_hash("tables")
+
+        if self.project_paths.imported_table_data_filepath.exists():
+            if current_hash == previous_hash:
+                return
+
         with h5py.File(self.project_paths.imported_table_data_filepath, "w") as file:
             for name, array in acoustic_tables.items():
                 file[f"acoustic/{name}"] = array
 
             for name, array in structural_tables.items():
                 file[f"structural/{name}"] = array
+
+        self._write_hash("tables", current_hash)
 
     def write_thumbnail(self, thumbnail: Image):
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
