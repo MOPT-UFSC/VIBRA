@@ -1,3 +1,4 @@
+from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QFileDialog, QLineEdit
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
 from PySide6.QtGui import QCloseEvent, QColor
@@ -28,7 +29,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
@@ -123,21 +123,13 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
+        analysis_setup = app().new_project.model.analysis_setup
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
+            return
 
-        data = self.project.analysis_setup
-        if isinstance(data, dict):
-
-            if "f_min" in data.keys():
-                self.f_min = data["f_min"]
-                self.lineEdit_fmin.setText(str(self.f_min))
-
-            if "f_max" in data.keys():
-                self.f_max = data["f_max"]
-                self.lineEdit_fmax.setText(str(self.f_max))
-
-            if "f_step" in data.keys():
-                self.f_step = data["f_step"]
-                self.lineEdit_fstep.setText(str(self.f_step))
+        self.lineEdit_fmin.setText(str(analysis_setup.f_min))
+        self.lineEdit_fmax.setText(str(analysis_setup.f_max))
+        self.lineEdit_fstep.setText(str(analysis_setup.f_step))
 
     def search_callback(self):
 
@@ -438,8 +430,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         return None, None
 
     def join_model_data(self, excitation_id: int):
-
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
         for k, response_id in enumerate([self.input_selection_id, self.output_selection_id]):
             

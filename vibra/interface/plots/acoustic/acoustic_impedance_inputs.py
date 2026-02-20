@@ -21,11 +21,9 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
-
-        self.acoustic_post = self.project.acoustic_postprocessing
+        self.acoustic_post = app().new_project.postprocessing
 
         self._config_window()
         self._reset_variables()
@@ -38,7 +36,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             self.analysis_method = "Direct method"
 
         self.frequencies = app().new_project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -238,8 +236,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
             if self.comboBox_normalized_impedance.currentText() == "Enabled":
 
-                if self.project.acoustic_assembler.fluid_properties_from_volume:
-                    prop_data = self.project.acoustic_assembler.fluid_properties_from_volume.get(volume_id)
+                if app().new_project.assembler.fluid_properties_from_volume:
+                    prop_data = app().new_project.assembler.fluid_properties_from_volume.get(volume_id)
                     rho_f = prop_data.get("rho_f")
                     C_f = prop_data.get("C_f")
                 else:  
