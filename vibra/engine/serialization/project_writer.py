@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import shutil
 import zipfile
 from dataclasses import asdict
@@ -36,6 +37,8 @@ class ProjectWriter:
         self.project_paths = project_paths
 
     def write_file(self, vibra_path: Path | str):
+        logging.info(f'Writing working directory "{self.project_paths.working_directory}" into file "{vibra_path}".')
+
         vibra_path = Path(vibra_path)
         working_dir = self.project_paths.working_directory
 
@@ -48,6 +51,8 @@ class ProjectWriter:
                 file.write(path, arcname)
 
     def write_project(self, project: NewProject):
+        logging.info("Writing Project.")
+
         self.write_project_setup(project)
         self.write_model(project.model)
 
@@ -58,6 +63,8 @@ class ProjectWriter:
             self.write_thumbnail(project.thumbnail)
 
     def write_model(self, model: Model):
+        logging.info("Writing Model.")
+
         self.write_model_properties(model.properties)
 
         if model.geometry_path is not None:
@@ -67,6 +74,8 @@ class ProjectWriter:
             self.write_mesh(model.mesh)
 
     def write_project_setup(self, project: NewProject):
+        logging.info("Writing project setup.")
+
         project_setup = {
             "mesh_setup": {},
             "analysis_setup": {},
@@ -95,6 +104,8 @@ class ProjectWriter:
         write_json(self.project_paths.project_setup_filepath, project_setup)
 
     def write_analysis_setup(self, analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup | None):
+        logging.info("Writing AnalysisSetup.")
+
         if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
             analysis_setup_dict = asdict(analysis_setup)
         else:
@@ -108,6 +119,8 @@ class ProjectWriter:
         if not geometry_path.is_file():
             raise FileExistsError("Geometry file path does not exist.")
 
+        logging.info("Writing geometry.")
+
         shutil.rmtree(self.project_paths.geometry_folder, ignore_errors=True)
         self.project_paths.geometry_folder.mkdir(exist_ok=True)
         internal_path = self.project_paths.geometry_folder / geometry_path.name
@@ -115,16 +128,21 @@ class ProjectWriter:
         return internal_path
 
     def write_mesh(self, mesh: Mesh):
+        logging.info("Writing Mesh.")
+        print(self.project_paths.working_directory)
+
         current_hash = ProjectHasher.hash_mesh(mesh)
         previous_hash = self._read_hash(HashEnum.MESH)
         required_paths = [
             self.project_paths.mesh_data_filepath,
             self.project_paths.mesh_quality_data_filepath,
             self.project_paths.hashes_filepath,
+            self.project_paths.geometry_data_filepath,
         ]
         required_paths_exist = all([i.exists() for i in required_paths])
 
         if (previous_hash == current_hash) and required_paths_exist:
+            logging.info("Mesh was not written since it did not changed.")
             return
 
         with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
@@ -146,6 +164,11 @@ class ProjectWriter:
             for i, curvatures in mesh.curvatures_surface.items():
                 file[f"curvatures/curvatures_surface/{i}"] = curvatures
 
+        self.write_geometry_related_mesh_parameters(mesh)
+        self.write_mesh_quality_data_in_file(mesh)
+        previous_hash = self._write_hash(HashEnum.MESH, current_hash)
+
+    def write_geometry_related_mesh_parameters(self, mesh: Mesh):
         with h5py.File(self.project_paths.geometry_data_filepath, "w") as file:
             for key, val in mesh.geometry_information.items():
                 file[f"entities/{key}"] = val
@@ -173,12 +196,6 @@ class ProjectWriter:
                 for volume, surfaces in mesh.surfaces_from_volume.items():
                     file[f"adjacencies/cache_surfaces_from_volume_{volume}"] = surfaces
 
-        self.write_mesh_quality_data_in_file(mesh)
-        previous_hash = self._write_hash(HashEnum.MESH, current_hash)
-
-    def _dict_to_array(self, data: dict[int | float, int | float]):
-        return np.array(list(data.items()))
-
     def write_mesh_quality_data_in_file(self, mesh: Mesh):
         if not mesh.mesh_quality_data:
             return
@@ -189,6 +206,8 @@ class ProjectWriter:
         )
 
     def write_model_properties(self, model_properties: ModelProperties):
+        logging.info("Writing ModelProperties.")
+
         self.write_fluid_library(model_properties.fluid_library)
         self.write_material_library(model_properties.material_library)
         self.write_tables_in_file(
@@ -208,16 +227,18 @@ class ProjectWriter:
         write_json(self.project_paths.model_properties_filepath, data)
 
     def write_material_library(self, material_library: MaterialLibrary):
-        material_library_dict = dict()
+        logging.info("Writing MaterialLibrary.")
 
+        material_library_dict = dict()
         for material_id, material in material_library.items():
             material_library_dict[material_id] = asdict(material)
 
         write_json(self.project_paths.material_library_filepath, material_library_dict)
 
     def write_fluid_library(self, fluid_library: FluidLibrary):
-        fluid_library_dict = dict()
+        logging.info("Writing FluidLibrary.")
 
+        fluid_library_dict = dict()
         for fluid_id, fluid in fluid_library.items():
             fluid_library_dict[fluid_id] = asdict(fluid)
 
@@ -231,11 +252,14 @@ class ProjectWriter:
         if not any([acoustic_tables, structural_tables]):
             return
 
+        logging.info("Writing project tables.")
+
         current_hash = ProjectHasher.hash_tables(acoustic_tables, structural_tables)
         previous_hash = self._read_hash(HashEnum.TABLES)
 
         if self.project_paths.imported_table_data_filepath.exists():
             if current_hash == previous_hash:
+                logging.info("Mesh was not written since it did not changed.")
                 return
 
         with h5py.File(self.project_paths.imported_table_data_filepath, "w") as file:
@@ -248,6 +272,7 @@ class ProjectWriter:
         self._write_hash(HashEnum.TABLES, current_hash)
 
     def write_thumbnail(self, thumbnail: Image):
+        logging.info("Writing thumbnail")
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
 
     def write_harmonic_solution(self, solver: HarmonicSolver):
@@ -255,11 +280,14 @@ class ProjectWriter:
         if isinstance(solver.solution, LazyHDF5MatrixLoader):
             return
 
+        logging.info("Writing harmonic solution")
+
         current_hash = ProjectHasher.hash_harmonic_solution(solver)
         previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
             if current_hash == previous_hash:
+                logging.info("Harmonic solution was not written since it did not changed.")
                 return
 
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
@@ -277,11 +305,14 @@ class ProjectWriter:
         if isinstance(solver.solution, LazyHDF5MatrixLoader):
             return
 
+        logging.info("Writing modal solution")
+
         current_hash = ProjectHasher.hash_modal_solution(solver)
         previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
             if current_hash == previous_hash:
+                logging.info("Modal solution was not written since it did not changed.")
                 return
 
         with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
@@ -304,11 +335,15 @@ class ProjectWriter:
         )
 
     def delete_results_data(self):
+        logging.info("Deleting solution data.")
+
         self.project_paths.results_data_filepath.unlink(missing_ok=True)
         self.project_paths.harmonic_solution_filepath.unlink(missing_ok=True)
 
     def delete_mesh_data(self):
+        logging.info("Deleting mesh data")
         self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
+        self._remove_hash(HashEnum.MESH)
 
     def _read_hash(self, name: HashEnum) -> str | None:
         data = read_json(self.project_paths.hashes_filepath)
@@ -319,6 +354,13 @@ class ProjectWriter:
     def _write_hash(self, name: HashEnum, hash: str):
         with update_json(self.project_paths.hashes_filepath, dict) as file:
             file[name] = hash
+
+    def _remove_hash(self, name: HashEnum, hash: str):
+        with update_json(self.project_paths.hashes_filepath, dict) as file:
+            try:
+                file.pop(name)
+            except Exception:
+                ...
 
     def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
         """
@@ -363,3 +405,6 @@ class ProjectWriter:
                         aux[_key] = _data
                 output[key] = aux
         return output
+
+    def _dict_to_array(self, data: dict[int | float, int | float]):
+        return np.array(list(data.items()))

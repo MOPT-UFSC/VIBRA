@@ -62,7 +62,7 @@ class ProjectReader:
         if not vibra_path.is_file():
             raise FileExistsError("Vibra file path does not exist.")
 
-        logging.info("Reading file into working directory.")
+        logging.info(f'Reading file "{vibra_path}" into working directory "{self.project_paths.working_directory}".')
 
         self.project_paths.clear_data()
         with zipfile.ZipFile(vibra_path, "r") as file:
