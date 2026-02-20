@@ -21,11 +21,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
-        self.acoustic_post = self.project.acoustic_postprocessing
+        self.acoustic_post = app().new_project.postprocessing
 
         self._initialize()
         self._create_connections()

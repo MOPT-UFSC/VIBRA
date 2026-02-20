@@ -23,7 +23,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
 
-        self.project = app().project
         self.model = app().new_project.model
         self.mesh = app().new_project.model.mesh
         self.properties = app().new_project.model.properties
@@ -45,7 +44,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             self.analysis_method = "Direct method"
 
         self.frequencies = app().new_project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+        self.solution = app().new_project.solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
