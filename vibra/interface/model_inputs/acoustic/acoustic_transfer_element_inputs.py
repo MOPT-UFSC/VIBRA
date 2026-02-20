@@ -307,7 +307,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
                 self.remove_model_excitations_and_impedances()
                 self.set_surface_velocity(surface_id)
-                self.project.solve_acoustic_harmonic_analysis()
+                app().new_project.solve_acoustic_harmonic_analysis()
                 self.join_model_data(surface_id)
 
             logging.info("Exporting the admittance matrix data... [20/100]")
