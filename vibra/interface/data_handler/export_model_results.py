@@ -141,6 +141,11 @@ class ExportModelResults(QFileDialog):
             if not check:
                 return
             
+            file_extension = self.get_file_extension(check)
+
+            if file_extension not in file_path:
+                file_path += f".{file_extension}"
+            
         else:
             file_path = existing_path
 
@@ -150,3 +155,6 @@ class ExportModelResults(QFileDialog):
             self.export_data_in_spreadsheet_format(file_path, existing_path=existing_path)
         else:
             self.export_data_in_text_format(file_path)
+
+    def get_file_extension(self, check: str) -> str:
+        return check.split(".")[1][:-1]
