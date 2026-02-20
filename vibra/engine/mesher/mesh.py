@@ -139,12 +139,12 @@ class Mesh:
         self.error_data = dict()
 
     def has_decoupling(self) -> bool:
-        return any(
+        return all(
             [
-                self.cache_nodal_coordinates is None,
-                self.cache_lines_connectivity is None,
-                self.cache_faces_connectivity is None,
-                self.cache_solids_connectivity is None,
+                self.cache_nodal_coordinates is not None,
+                self.cache_lines_connectivity is not None,
+                self.cache_faces_connectivity is not None,
+                self.cache_solids_connectivity is not None,
             ]
         )
 
