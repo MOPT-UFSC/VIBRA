@@ -55,7 +55,7 @@ class DataImporter:
             imported_paths, file_extension = QFileDialog.getOpenFileNames(
                 None,
                 caption,
-                folder_path,
+                str(folder_path),
                 str_extensions,
                 **kwargs
                 )
@@ -64,7 +64,7 @@ class DataImporter:
             imported_paths, file_extension = QFileDialog.getOpenFileName(
                 None,
                 caption,
-                folder_path,
+                str(folder_path),
                 str_extensions,
                 **kwargs
                 )
