@@ -287,7 +287,7 @@ class ProjectWriter:
         return data.get(name)
 
     def _write_hash(self, name: HashEnum, hash: str):
-        with update_json(self.project_paths.hashes_filepath) as file:
+        with update_json(self.project_paths.hashes_filepath, dict) as file:
             file[name] = hash
 
     def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
