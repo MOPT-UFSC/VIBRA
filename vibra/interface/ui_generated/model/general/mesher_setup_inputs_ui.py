@@ -46,64 +46,17 @@ class Ui_Dialog(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setHorizontalSpacing(6)
         self.gridLayout_2.setContentsMargins(4, 4, 4, 4)
-        self.comboBox_mesh_quality_metrics = QComboBox(self.frame_element_formulation)
-        self.comboBox_mesh_quality_metrics.addItem("")
-        self.comboBox_mesh_quality_metrics.addItem("")
-        self.comboBox_mesh_quality_metrics.setObjectName(u"comboBox_mesh_quality_metrics")
-        self.comboBox_mesh_quality_metrics.setMinimumSize(QSize(120, 28))
-        self.comboBox_mesh_quality_metrics.setMaximumSize(QSize(140, 16777215))
-        font = QFont()
-        font.setPointSize(10)
-        self.comboBox_mesh_quality_metrics.setFont(font)
-
-        self.gridLayout_2.addWidget(self.comboBox_mesh_quality_metrics, 2, 2, 1, 1)
-
-        self.label_20 = QLabel(self.frame_element_formulation)
-        self.label_20.setObjectName(u"label_20")
-        self.label_20.setMinimumSize(QSize(180, 20))
-        self.label_20.setMaximumSize(QSize(240, 16777215))
-        self.label_20.setFont(font)
-        self.label_20.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_2.addWidget(self.label_20, 3, 1, 1, 1)
-
-        self.comboBox_volumes_interface_behavior = QComboBox(self.frame_element_formulation)
-        self.comboBox_volumes_interface_behavior.addItem("")
-        self.comboBox_volumes_interface_behavior.addItem("")
-        self.comboBox_volumes_interface_behavior.setObjectName(u"comboBox_volumes_interface_behavior")
-        self.comboBox_volumes_interface_behavior.setMinimumSize(QSize(120, 28))
-        self.comboBox_volumes_interface_behavior.setMaximumSize(QSize(140, 16777215))
-        self.comboBox_volumes_interface_behavior.setFont(font)
-        self.comboBox_volumes_interface_behavior.setMinimumContentsLength(0)
-
-        self.gridLayout_2.addWidget(self.comboBox_volumes_interface_behavior, 3, 2, 1, 1)
-
         self.comboBox_element_type = QComboBox(self.frame_element_formulation)
         self.comboBox_element_type.addItem("")
         self.comboBox_element_type.addItem("")
         self.comboBox_element_type.setObjectName(u"comboBox_element_type")
         self.comboBox_element_type.setMinimumSize(QSize(120, 28))
         self.comboBox_element_type.setMaximumSize(QSize(140, 16777215))
+        font = QFont()
+        font.setPointSize(10)
         self.comboBox_element_type.setFont(font)
 
         self.gridLayout_2.addWidget(self.comboBox_element_type, 0, 2, 1, 1)
-
-        self.label_16 = QLabel(self.frame_element_formulation)
-        self.label_16.setObjectName(u"label_16")
-        self.label_16.setMinimumSize(QSize(180, 20))
-        self.label_16.setMaximumSize(QSize(240, 16777215))
-        self.label_16.setFont(font)
-        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_2.addWidget(self.label_16, 0, 1, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer, 0, 0, 1, 1)
 
         self.label_10 = QLabel(self.frame_element_formulation)
         self.label_10.setObjectName(u"label_10")
@@ -113,6 +66,15 @@ class Ui_Dialog(object):
         self.label_10.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_10, 1, 1, 1, 1)
+
+        self.label_19 = QLabel(self.frame_element_formulation)
+        self.label_19.setObjectName(u"label_19")
+        self.label_19.setMinimumSize(QSize(180, 20))
+        self.label_19.setMaximumSize(QSize(240, 16777215))
+        self.label_19.setFont(font)
+        self.label_19.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_2.addWidget(self.label_19, 2, 1, 1, 1)
 
         self.comboBox_shape_function = QComboBox(self.frame_element_formulation)
         self.comboBox_shape_function.addItem("")
@@ -124,14 +86,52 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.comboBox_shape_function, 1, 2, 1, 1)
 
-        self.label_19 = QLabel(self.frame_element_formulation)
-        self.label_19.setObjectName(u"label_19")
-        self.label_19.setMinimumSize(QSize(180, 20))
-        self.label_19.setMaximumSize(QSize(240, 16777215))
-        self.label_19.setFont(font)
-        self.label_19.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addWidget(self.label_19, 2, 1, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer_9, 1, 3, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer, 1, 0, 1, 1)
+
+        self.label_20 = QLabel(self.frame_element_formulation)
+        self.label_20.setObjectName(u"label_20")
+        self.label_20.setMinimumSize(QSize(180, 20))
+        self.label_20.setMaximumSize(QSize(240, 16777215))
+        self.label_20.setFont(font)
+        self.label_20.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_2.addWidget(self.label_20, 3, 1, 1, 1)
+
+        self.label_16 = QLabel(self.frame_element_formulation)
+        self.label_16.setObjectName(u"label_16")
+        self.label_16.setMinimumSize(QSize(180, 20))
+        self.label_16.setMaximumSize(QSize(240, 16777215))
+        self.label_16.setFont(font)
+        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_2.addWidget(self.label_16, 0, 1, 1, 1)
+
+        self.comboBox_mesh_quality_metrics = QComboBox(self.frame_element_formulation)
+        self.comboBox_mesh_quality_metrics.addItem("")
+        self.comboBox_mesh_quality_metrics.addItem("")
+        self.comboBox_mesh_quality_metrics.setObjectName(u"comboBox_mesh_quality_metrics")
+        self.comboBox_mesh_quality_metrics.setMinimumSize(QSize(120, 28))
+        self.comboBox_mesh_quality_metrics.setMaximumSize(QSize(140, 16777215))
+        self.comboBox_mesh_quality_metrics.setFont(font)
+
+        self.gridLayout_2.addWidget(self.comboBox_mesh_quality_metrics, 2, 2, 1, 1)
+
+        self.comboBox_volumes_interface_behavior = QComboBox(self.frame_element_formulation)
+        self.comboBox_volumes_interface_behavior.addItem("")
+        self.comboBox_volumes_interface_behavior.addItem("")
+        self.comboBox_volumes_interface_behavior.setObjectName(u"comboBox_volumes_interface_behavior")
+        self.comboBox_volumes_interface_behavior.setMinimumSize(QSize(120, 28))
+        self.comboBox_volumes_interface_behavior.setMaximumSize(QSize(140, 16777215))
+        self.comboBox_volumes_interface_behavior.setFont(font)
+        self.comboBox_volumes_interface_behavior.setMinimumContentsLength(0)
+
+        self.gridLayout_2.addWidget(self.comboBox_volumes_interface_behavior, 3, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_element_formulation, 0, 0, 1, 1)
@@ -730,22 +730,22 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.comboBox_mesh_quality_metrics.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
-        self.comboBox_mesh_quality_metrics.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
-
-        self.label_20.setText(QCoreApplication.translate("Dialog", u"Volumes interface behavior:", None))
-        self.comboBox_volumes_interface_behavior.setItemText(0, QCoreApplication.translate("Dialog", u"Disconnect nodes", None))
-        self.comboBox_volumes_interface_behavior.setItemText(1, QCoreApplication.translate("Dialog", u"Merge nodes", None))
-
         self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Tetrahedral", None))
         self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Hexahedral", None))
 
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Shape function:", None))
+        self.label_19.setText(QCoreApplication.translate("Dialog", u"Mesh quality metrics:", None))
         self.comboBox_shape_function.setItemText(0, QCoreApplication.translate("Dialog", u"Linear", None))
         self.comboBox_shape_function.setItemText(1, QCoreApplication.translate("Dialog", u"Quadratic", None))
 
-        self.label_19.setText(QCoreApplication.translate("Dialog", u"Mesh quality metrics:", None))
+        self.label_20.setText(QCoreApplication.translate("Dialog", u"Volumes interface behavior:", None))
+        self.label_16.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
+        self.comboBox_mesh_quality_metrics.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
+        self.comboBox_mesh_quality_metrics.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
+
+        self.comboBox_volumes_interface_behavior.setItemText(0, QCoreApplication.translate("Dialog", u"Disconnect nodes", None))
+        self.comboBox_volumes_interface_behavior.setItemText(1, QCoreApplication.translate("Dialog", u"Merge nodes", None))
+
         self.lineEdit_geometry_tolerance.setText(QCoreApplication.translate("Dialog", u"1e-6", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Max. element size:", None))
         self.label_5.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
@@ -835,14 +835,14 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame_element_formulation: QFrame
                                 - (Layout): QGridLayout
-                                        - comboBox_mesh_quality_metrics: QComboBox
-                                        - label_20: QLabel
-                                        - comboBox_volumes_interface_behavior: QComboBox
                                         - comboBox_element_type: QComboBox
-                                        - label_16: QLabel
                                         - label_10: QLabel
-                                        - comboBox_shape_function: QComboBox
                                         - label_19: QLabel
+                                        - comboBox_shape_function: QComboBox
+                                        - label_20: QLabel
+                                        - label_16: QLabel
+                                        - comboBox_mesh_quality_metrics: QComboBox
+                                        - comboBox_volumes_interface_behavior: QComboBox
                             - frame_tab_widgets: QFrame
                                 - (Layout): QGridLayout
                                         - tabWidget_main: QTabWidget

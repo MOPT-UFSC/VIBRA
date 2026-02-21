@@ -11,7 +11,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
+from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import *
 
 from vibra.engine.properties.fluid import Fluid

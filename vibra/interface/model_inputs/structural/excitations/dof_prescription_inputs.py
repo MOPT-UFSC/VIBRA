@@ -9,7 +9,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.utils import are_there_values_different_from_zero
-from vibra.interface.ui_generated.model.setup.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
+from vibra.interface.ui_generated.model.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 
 import numpy as np
 from enum import IntEnum

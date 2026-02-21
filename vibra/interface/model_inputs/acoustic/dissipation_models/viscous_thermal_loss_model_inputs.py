@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
+from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs

@@ -8,7 +8,7 @@ from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.setup.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
+from vibra.interface.ui_generated.model.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
 
 import numpy as np
 
