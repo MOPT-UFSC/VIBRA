@@ -113,30 +113,30 @@ def load_external_mesh_and_solve():
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
-    # Advanced options for hex8 element
+    ## advanced options for structural hex8 element
+    hex8_advanced_options = {"hex8" : {"extra_shape_functions" : False}}
 
-    hex8_advanced_options = {"hex8" : {"extra_shape_functions" : True}}
-
+    # assign the hex8 element advanced options as a global property
     model.properties._set_property("advanced_element_options", hex8_advanced_options)
 
     ## boundary condition
 
-    # Prescribed dof data
+    # dof prescription data
     prescribed_dof_data = {
-                            "element_type": "3d_element",
-                            "real_values": [0.0, 0.0, 0.0],
-                            "imag_values": [0.0, 0.0, 0.0],
-                            }
+        "element_type": "3d_element",
+        "real_values": [0.0, 0.0, 0.0],
+        "imag_values": [0.0, 0.0, 0.0],
+        }
 
     model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=1)
 
     ## Define the analysis setup
 
     analysis_setup = {
-                      "analisys_id" : AnalysisID.STRUCTURAL_MODAL,
-                      "modes_number": 40,
-                      "sigma_factor": 0.01,
-                      }
+        "analisys_id" : AnalysisID.STRUCTURAL_MODAL,
+        "modes_number": 40,
+        "sigma_factor": 0.01,
+        }
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
