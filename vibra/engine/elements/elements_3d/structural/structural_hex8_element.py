@@ -19,7 +19,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.model = model
 
         self.connectivity = None
-        self.extra_shape_function = True
         self.element_label = "structural_hexahedron_8"
 
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
@@ -29,11 +28,24 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.number_of_elements = len(self.solids_connectivity)
 
         self.define_integration_points()
+        self.load_extra_shape_function_state()
         self.process_shape_functions_and_derivatives()
 
 
-    def set_extra_shape_function_enabled(self, enabled: bool = False):
-        self.extra_shape_function = enabled
+    def load_extra_shape_function_state(self):
+        """
+        This method updates the extra shape functions state based on the model global properties.
+        """
+        self.extra_shape_function = False
+        advanced_element_options = self.model.properties._get_property("advanced_element_options")
+        if not isinstance(advanced_element_options, dict):
+            return
+        
+        hex8_options = advanced_element_options.get("hex8", dict)
+        if not isinstance(hex8_options, dict):
+            return
+
+        self.extra_shape_function = hex8_options.get("extra_shape_functions")
 
 
     def define_integration_points(self, integration_points: int = 8):
