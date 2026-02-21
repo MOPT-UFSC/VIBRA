@@ -6,6 +6,7 @@
 !ds_piping_example.dat
 !ds_Lpipe_act_tet4_30mm.dat
 !ds_Lpipe_act_tet10_50mm.dat
+!ds_hex8_cuboid_modal
 
 # Validation files for structural shell DKT-CST element
 !Ke_ref.dat

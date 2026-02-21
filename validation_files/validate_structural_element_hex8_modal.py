@@ -25,13 +25,13 @@ def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
-    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/elements/hex8/results/"
+    results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/"
 
     if not os.path.exists(mesh_path):
         return
     
-    # if not results_path.exists():
-    #     return
+    if not results_path.exists():
+        return
 
     # define the known 'Named selections' from model
     named_selecion_to_tag = { 
@@ -114,7 +114,7 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    hex8_advanced_options = {"hex8" : {"extra_shape_functions" : False}}
+    hex8_advanced_options = {"hex8" : {"extra_shape_functions" : True}}
 
     # assign the hex8 element advanced options as a global property
     model.properties._set_property("advanced_element_options", hex8_advanced_options)
@@ -157,16 +157,18 @@ def load_external_mesh_and_solve():
     modes_indexes = np.arange(natural_frequencies.size)
     nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
 
-    # natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
+    natural_frequencies_ref = np.loadtxt(results_path / "hex8_natural_frequencies.dat")[:, 1]
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
-    # fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
-    # assert np.max(fnat_diff) < 5e-3
+    fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
+    assert np.max(fnat_diff) < 5e-3
 
+    print()
+    print(">>> RESULTS COMPARISON:")
     for i, nat_freq in enumerate(natural_frequencies):
-        print(f"Mode {i+1}: {nat_freq : .8f} Hz")
+        print(f"Mode {i+1}: {nat_freq : .8f} Hz (Vibra) vs {natural_frequencies_ref[i]: .8f} Hz (Ansys)")
 
-    # print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e}")
+    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e}")
 
 if __name__ == "__main__":
 
