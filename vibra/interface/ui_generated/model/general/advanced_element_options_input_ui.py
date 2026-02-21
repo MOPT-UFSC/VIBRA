@@ -183,8 +183,8 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label_18.setText(QCoreApplication.translate("Dialog", u"Option #3:", None))
-        self.comboBox_extra_shape_functions.setItemText(0, QCoreApplication.translate("Dialog", u"enabled", None))
-        self.comboBox_extra_shape_functions.setItemText(1, QCoreApplication.translate("Dialog", u"disabled", None))
+        self.comboBox_extra_shape_functions.setItemText(0, QCoreApplication.translate("Dialog", u"disabled", None))
+        self.comboBox_extra_shape_functions.setItemText(1, QCoreApplication.translate("Dialog", u"enabled", None))
 
         self.label_17.setText(QCoreApplication.translate("Dialog", u"Option #2:", None))
         self.label_16.setText(QCoreApplication.translate("Dialog", u"Extra shape functions:", None))

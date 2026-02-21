@@ -96,12 +96,12 @@
             </property>
             <item>
              <property name="text">
-              <string>enabled</string>
+              <string>disabled</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string>disabled</string>
+              <string>enabled</string>
              </property>
             </item>
            </widget>
