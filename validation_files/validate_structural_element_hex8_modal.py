@@ -157,7 +157,7 @@ def load_external_mesh_and_solve():
     modes_indexes = np.arange(natural_frequencies.size)
     nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
 
-    natural_frequencies_ref = np.loadtxt(results_path / "hex8_natural_frequencies.dat")[:, 1]
+    natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
