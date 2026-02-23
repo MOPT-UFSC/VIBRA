@@ -1,7 +1,7 @@
 from vibra.interface.model_inputs.general.material.set_material_inputs import MaterialInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
-from vibra.interface.model_inputs.general.advanced_element_options_inputs import AdvancedElementOptionsInputs
+from vibra.interface.model_inputs.general.element_options_inputs import ElementOptionsInputs
 from vibra.interface.model_inputs.general.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 #
 from vibra.interface.model_inputs.acoustic.excitations.acoustic_pressure_inputs import AcousticPressureInputs
@@ -82,14 +82,9 @@ class InputUi:
                 self.model_setup_items.enable_and_expand_menu_items()
 
     def advanced_element_options(self):
-        if not self.model_setup_items.item_child_advanced_element_options.isDisabled():
+        if not self.model_setup_items.item_child_element_options.isDisabled():
             app().main_window.action_model_workspace_callback()
-            self.process_input(AdvancedElementOptionsInputs)
-
-    def generate_mesh(self):
-        LoadingWindow(app().project.generate_mesh).run()
-        app().main_window.action_mesh_workspace_callback()
-        self.model_setup_items.item_child_generate_mesh.setDisabled(True)
+            self.process_input(ElementOptionsInputs)
 
     def set_material(self):
         if not self.model_setup_items.item_child_material.isDisabled():
