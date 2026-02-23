@@ -1,6 +1,4 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor, QIcon
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QVBoxLayout
 
 from vibra import app, ICON_DIR
 from vibra.engine.mesher.element_type import (
@@ -16,11 +14,6 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.advanced_element_options_input_ui import AdvancedElementOptionsInput_UI
 
-import logging
-import matplotlib.colors as mcolors
-import numpy as np
-
-from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum, StrEnum
 from gmsh import isInitialized as is_gmsh_initialized
@@ -74,7 +67,7 @@ class AdvancedElementOptionsInputs(AdvancedElementOptionsInput_UI):
         self.setWindowTitle("Vibra")
 
     def _config_widgets(self):
-        # Hex8 - additional options
+        # hide temporarily unused hex8 element options
         self.label_option_2.setVisible(False)
         self.label_option_3.setVisible(False)
         self.comboBox_option_2.setVisible(False)
