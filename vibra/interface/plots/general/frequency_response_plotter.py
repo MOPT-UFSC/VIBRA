@@ -75,7 +75,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_plot_harmonic_lines.clicked.connect(self.open_plot_harmonic_lines_window_callback)
+        self.pushButton_harmonic_lines_plot.clicked.connect(self.open_harmonic_lines_plot_window_callback)
         #
         app().main_window.theme_changed.connect(self.paint_toolbar_icons)
         self._initial_config()
@@ -146,34 +146,44 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)
 
-    def open_plot_harmonic_lines_window_callback(self):
+    def open_harmonic_lines_plot_window_callback(self):
         self.hide()
         harmonic_lines_setup = HarmonicLinesPlotSetup()
         harmonic_lines_setup.settings_confirmed.connect(self.plot_harmonic_lines)
         harmonic_lines_setup.exec()
 
 
-    def plot_harmonic_lines(self, fundamental_freq: float, n_harmonics: int, legend: bool):
+    def plot_harmonic_lines(self, fundamental_freq: float, n_harmonics: int, legend: bool, remove_all: bool):
         if self.x_data is None:
             return
 
-        old_lines = []
-        for line in self.ax.lines:
-            if hasattr(line, "is_harmonic_line") and line.is_harmonic_line:
-                old_lines.append(line)
+        for line in [l for l in self.ax.lines if getattr(l, "is_harmonic_line", False)]:
+                    line.remove()
+                
+        for text in [t for t in self.ax.texts if getattr(t, "is_harmonic_label", False)]:
+            text.remove()
+  
+        if remove_all is False:        
+            x_min, x_max = self.ax.get_xlim()
 
-        for line in old_lines:
-            line.remove()
+            for i in range(n_harmonics):
+                frequency = float((i + 1) * fundamental_freq)
 
-        for i in range(n_harmonics):
-            frequency = (i + 1) * fundamental_freq
+                if x_min <= frequency <= x_max:
+                    line = self.ax.axvline(x=frequency, color="k", alpha=0.3, label='_nolegend_')
+                    line.is_harmonic_line = True
 
-            if frequency <= self.x_data[-1]:
-                line = self.ax.axvline(x=frequency, color="k", linewidth=1)
-                line.is_harmonic_line = True
-
-            if legend:
-                self.ax.text(frequency, 0.95, f'{i + 1}x', transform=self.ax.get_xaxis_transform(), fontsize=9, verticalalignment='bottom', horizontalalignment='left')
+                    if legend:
+                        txt = self.ax.text(
+                            frequency,
+                            0.95,
+                            f"{i + 1}x",
+                            transform=self.ax.get_xaxis_transform(),
+                            fontsize=6,
+                            verticalalignment="bottom",
+                            horizontalalignment="left",
+                        )
+                        txt.is_harmonic_label = True
 
         self.mpl_canvas_frequency_plot.draw()
 

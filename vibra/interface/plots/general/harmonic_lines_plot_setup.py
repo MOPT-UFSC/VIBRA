@@ -13,7 +13,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class HarmonicLinesPlotSetup(HarmonicLinesPlotSetup_UI):
-    settings_confirmed = Signal(float, int, bool)
+    settings_confirmed = Signal(float, int, bool, bool)
 
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -32,6 +32,8 @@ class HarmonicLinesPlotSetup(HarmonicLinesPlotSetup_UI):
     def _create_connections(self):
         self.pushButton_confirm.clicked.connect(self.confirm_callback)
         self.pushButton_cancel.clicked.connect(self.close)
+        self.lineEdit_fundamental_frequency.returnPressed.connect(self.confirm_callback)
+        self.pushButton_remove_all.clicked.connect(self.remove_all_callback)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
@@ -67,13 +69,19 @@ class HarmonicLinesPlotSetup(HarmonicLinesPlotSetup_UI):
         self.fundamental_frequency = float(self.fundamental_freq)
         self.number_of_lines = self.spinBox_number_of_lines.value()
         self.show_legend = self.checkBox_show_legend.isChecked()
+        self.remove_all = False
 
         self.settings_confirmed.emit(
             self.fundamental_frequency,
             self.number_of_lines,
             self.show_legend,
+            self.remove_all,
         )
 
+        self.close()
+
+    def remove_all_callback(self):
+        self.settings_confirmed.emit(0, 0, 0, True)
         self.close()
 
         

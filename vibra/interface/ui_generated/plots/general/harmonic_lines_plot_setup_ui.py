@@ -123,6 +123,15 @@ class Ui_Dialog(object):
 
         self.horizontalLayout_2.addWidget(self.pushButton_cancel)
 
+        self.pushButton_remove_all = QPushButton(self.title_2)
+        self.pushButton_remove_all.setObjectName(u"pushButton_remove_all")
+        self.pushButton_remove_all.setMinimumSize(QSize(100, 30))
+        self.pushButton_remove_all.setMaximumSize(QSize(120, 16777215))
+        self.pushButton_remove_all.setFont(font)
+        self.pushButton_remove_all.setFlat(False)
+
+        self.horizontalLayout_2.addWidget(self.pushButton_remove_all)
+
         self.pushButton_confirm = QPushButton(self.title_2)
         self.pushButton_confirm.setObjectName(u"pushButton_confirm")
         self.pushButton_confirm.setMinimumSize(QSize(100, 30))
@@ -150,6 +159,7 @@ class Ui_Dialog(object):
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Show legend:", None))
         self.checkBox_show_legend.setText("")
         self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
+        self.pushButton_remove_all.setText(QCoreApplication.translate("Dialog", u"Remove all", None))
         self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
     # retranslateUi
 
@@ -175,6 +185,7 @@ class HarmonicLinesPlotSetup_UI(QDialog, Ui_Dialog):
                 - title_2: QFrame
                     - (Layout): QHBoxLayout
                             - pushButton_cancel: QPushButton
+                            - pushButton_remove_all: QPushButton
                             - pushButton_confirm: QPushButton
     """
 

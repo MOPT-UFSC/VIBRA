@@ -1736,7 +1736,7 @@
                      <number>0</number>
                     </property>
                     <item row="0" column="0">
-                     <widget class="QPushButton" name="pushButton_plot_harmonic_lines">
+                     <widget class="QPushButton" name="pushButton_harmonic_lines_plot">
                       <property name="minimumSize">
                        <size>
                         <width>0</width>
@@ -1755,7 +1755,7 @@
                        </font>
                       </property>
                       <property name="text">
-                       <string>Plot harmonic lines</string>
+                       <string>Harmonic lines plot</string>
                       </property>
                      </widget>
                     </item>

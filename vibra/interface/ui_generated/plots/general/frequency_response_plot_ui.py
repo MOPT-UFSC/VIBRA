@@ -629,13 +629,13 @@ class Ui_Dialog(object):
         self.gridLayout_15.setSpacing(0)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
         self.gridLayout_15.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
-        self.pushButton_plot_harmonic_lines = QPushButton(self.frame_30)
-        self.pushButton_plot_harmonic_lines.setObjectName(u"pushButton_plot_harmonic_lines")
-        self.pushButton_plot_harmonic_lines.setMinimumSize(QSize(0, 30))
-        self.pushButton_plot_harmonic_lines.setMaximumSize(QSize(170, 16777215))
-        self.pushButton_plot_harmonic_lines.setFont(font5)
+        self.pushButton_harmonic_lines_plot = QPushButton(self.frame_30)
+        self.pushButton_harmonic_lines_plot.setObjectName(u"pushButton_harmonic_lines_plot")
+        self.pushButton_harmonic_lines_plot.setMinimumSize(QSize(0, 30))
+        self.pushButton_harmonic_lines_plot.setMaximumSize(QSize(170, 16777215))
+        self.pushButton_harmonic_lines_plot.setFont(font5)
 
-        self.gridLayout_15.addWidget(self.pushButton_plot_harmonic_lines, 0, 0, 1, 1)
+        self.gridLayout_15.addWidget(self.pushButton_harmonic_lines_plot, 0, 0, 1, 1)
 
 
         self.gridLayout_31.addLayout(self.gridLayout_15, 6, 0, 1, 1)
@@ -716,7 +716,7 @@ class Ui_Dialog(object):
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Vertical lines: ", None))
         self.radioButton_cross_cursor.setText(QCoreApplication.translate("Dialog", u"Enable cross cursor", None))
         self.radioButton_disable_cursors.setText(QCoreApplication.translate("Dialog", u"Disable cursors", None))
-        self.pushButton_plot_harmonic_lines.setText(QCoreApplication.translate("Dialog", u"Plot harmonic lines", None))
+        self.pushButton_harmonic_lines_plot.setText(QCoreApplication.translate("Dialog", u"Harmonic lines plot", None))
         self.label_14.setText(QCoreApplication.translate("Dialog", u"Frequency response plotter", None))
     # retranslateUi
 
@@ -804,7 +804,7 @@ class FrequencyResponsePlot_UI(QDialog, Ui_Dialog):
                                                                             - radioButton_cross_cursor: QRadioButton
                                                                             - radioButton_disable_cursors: QRadioButton
                                                                             - (Layout): QGridLayout
-                                                                                    - pushButton_plot_harmonic_lines: QPushButton
+                                                                                    - pushButton_harmonic_lines_plot: QPushButton
                 - frame_3: QFrame
                     - (Layout): QGridLayout
                             - label_14: QLabel
