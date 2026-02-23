@@ -40,16 +40,16 @@ class Ui_Dialog(object):
         self.tab_hex8.setObjectName(u"tab_hex8")
         self.gridLayout_4 = QGridLayout(self.tab_hex8)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.label_18 = QLabel(self.tab_hex8)
-        self.label_18.setObjectName(u"label_18")
-        self.label_18.setMinimumSize(QSize(120, 20))
-        self.label_18.setMaximumSize(QSize(160, 16777215))
+        self.label_option_3 = QLabel(self.tab_hex8)
+        self.label_option_3.setObjectName(u"label_option_3")
+        self.label_option_3.setMinimumSize(QSize(120, 20))
+        self.label_option_3.setMaximumSize(QSize(160, 16777215))
         font = QFont()
         font.setPointSize(10)
-        self.label_18.setFont(font)
-        self.label_18.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_option_3.setFont(font)
+        self.label_option_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_4.addWidget(self.label_18, 2, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.label_option_3, 2, 1, 1, 1)
 
         self.comboBox_extra_shape_functions = QComboBox(self.tab_hex8)
         self.comboBox_extra_shape_functions.addItem("")
@@ -61,30 +61,30 @@ class Ui_Dialog(object):
 
         self.gridLayout_4.addWidget(self.comboBox_extra_shape_functions, 0, 2, 1, 1)
 
-        self.label_17 = QLabel(self.tab_hex8)
-        self.label_17.setObjectName(u"label_17")
-        self.label_17.setMinimumSize(QSize(120, 20))
-        self.label_17.setMaximumSize(QSize(160, 16777215))
-        self.label_17.setFont(font)
-        self.label_17.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_option_2 = QLabel(self.tab_hex8)
+        self.label_option_2.setObjectName(u"label_option_2")
+        self.label_option_2.setMinimumSize(QSize(120, 20))
+        self.label_option_2.setMaximumSize(QSize(160, 16777215))
+        self.label_option_2.setFont(font)
+        self.label_option_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
-        self.gridLayout_4.addWidget(self.label_17, 1, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.label_option_2, 1, 1, 1, 1)
 
-        self.comboBox_option2 = QComboBox(self.tab_hex8)
-        self.comboBox_option2.setObjectName(u"comboBox_option2")
-        self.comboBox_option2.setMinimumSize(QSize(100, 0))
-        self.comboBox_option2.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_option2.setFont(font)
+        self.comboBox_option_2 = QComboBox(self.tab_hex8)
+        self.comboBox_option_2.setObjectName(u"comboBox_option_2")
+        self.comboBox_option_2.setMinimumSize(QSize(100, 0))
+        self.comboBox_option_2.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_option_2.setFont(font)
 
-        self.gridLayout_4.addWidget(self.comboBox_option2, 1, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.comboBox_option_2, 1, 2, 1, 1)
 
-        self.comboBox_option3 = QComboBox(self.tab_hex8)
-        self.comboBox_option3.setObjectName(u"comboBox_option3")
-        self.comboBox_option3.setMinimumSize(QSize(100, 0))
-        self.comboBox_option3.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_option3.setFont(font)
+        self.comboBox_option_3 = QComboBox(self.tab_hex8)
+        self.comboBox_option_3.setObjectName(u"comboBox_option_3")
+        self.comboBox_option_3.setMinimumSize(QSize(100, 0))
+        self.comboBox_option_3.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_option_3.setFont(font)
 
-        self.gridLayout_4.addWidget(self.comboBox_option3, 2, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.comboBox_option_3, 2, 2, 1, 1)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -182,11 +182,11 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.label_18.setText(QCoreApplication.translate("Dialog", u"Option #3:", None))
+        self.label_option_3.setText(QCoreApplication.translate("Dialog", u"Option #3:", None))
         self.comboBox_extra_shape_functions.setItemText(0, QCoreApplication.translate("Dialog", u"disabled", None))
         self.comboBox_extra_shape_functions.setItemText(1, QCoreApplication.translate("Dialog", u"enabled", None))
 
-        self.label_17.setText(QCoreApplication.translate("Dialog", u"Option #2:", None))
+        self.label_option_2.setText(QCoreApplication.translate("Dialog", u"Option #2:", None))
         self.label_16.setText(QCoreApplication.translate("Dialog", u"Extra shape functions:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_hex8), QCoreApplication.translate("Dialog", u"Hex8", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_hex20), QCoreApplication.translate("Dialog", u"Hex20", None))
@@ -209,11 +209,11 @@ class AdvancedElementOptionsInput_UI(QDialog, Ui_Dialog):
                             - tabWidget_main: QTabWidget
                                 - tab_hex8: QWidget
                                     - (Layout): QGridLayout
-                                            - label_18: QLabel
+                                            - label_option_3: QLabel
                                             - comboBox_extra_shape_functions: QComboBox
-                                            - label_17: QLabel
-                                            - comboBox_option2: QComboBox
-                                            - comboBox_option3: QComboBox
+                                            - label_option_2: QLabel
+                                            - comboBox_option_2: QComboBox
+                                            - comboBox_option_3: QComboBox
                                             - label_16: QLabel
                                 - tab_hex20: QWidget
                                 - tab_tet4: QWidget

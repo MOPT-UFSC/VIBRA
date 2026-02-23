@@ -56,6 +56,7 @@ class AdvancedElementOptionsInputs(AdvancedElementOptionsInput_UI):
 
         self._initialize()
         self._config_window()
+        self._config_widgets()
         self._create_connections()
         self.update_tab_visibility()
 
@@ -71,6 +72,13 @@ class AdvancedElementOptionsInputs(AdvancedElementOptionsInput_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+
+    def _config_widgets(self):
+        # Hex8 - additional options
+        self.label_option_2.setVisible(False)
+        self.label_option_3.setVisible(False)
+        self.comboBox_option_2.setVisible(False)
+        self.comboBox_option_3.setVisible(False)
 
     def _create_connections(self):
         self.pushButton_confirm.clicked.connect(self.set_element_options_callback)
