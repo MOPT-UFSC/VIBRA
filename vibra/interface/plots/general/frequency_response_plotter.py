@@ -153,7 +153,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         harmonic_lines_setup.exec()
 
 
-    def plot_harmonic_lines(self, fundamental, n_harmonics, legend):
+    def plot_harmonic_lines(self, fundamental_freq: float, n_harmonics: int, legend: bool):
         if self.x_data is None:
             return
 
@@ -165,16 +165,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         for line in old_lines:
             line.remove()
 
-        freqs = [(i + 1) * fundamental for i in range(n_harmonics)]
+        for i in range(n_harmonics):
+            frequency = (i + 1) * fundamental_freq
 
-        for f in freqs:
-            if f <= self.x_data[-1]:
-                line = self.ax.axvline(x=f, color="k", linewidth=1)
+            if frequency <= self.x_data[-1]:
+                line = self.ax.axvline(x=frequency, color="k", linewidth=1)
                 line.is_harmonic_line = True
 
-        if legend:
-            labels = [f"Harmonic {i+1}" for i in range(n_harmonics) if freqs[i] <= self.x_data[-1]]
-            self.ax.legend(labels)
+            if legend:
+                self.ax.text(frequency, 0.95, f'{i + 1}x', transform=self.ax.get_xaxis_transform(), fontsize=9, verticalalignment='bottom', horizontalalignment='left')
 
         self.mpl_canvas_frequency_plot.draw()
 
