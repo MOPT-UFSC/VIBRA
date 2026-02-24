@@ -110,7 +110,9 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    hex8_advanced_options = {"hex8" : {"extra_shape_functions" : True}}
+    hex8_advanced_options = {
+        "hex8" : {"extra_shape_functions" : True}
+        }
 
     # assign the hex8 element advanced options as a global property
     model.properties._set_property("advanced_element_options", hex8_advanced_options)
@@ -142,7 +144,7 @@ def load_external_mesh_and_solve():
     df = 20
     f_min = 20
     f_max = 2000
-    frequencies = np.arange(f_min, f_max + df, df)
+    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
 
     analysis_setup = {
         "analisys_id" : AnalysisID.STRUCTURAL_HARMONIC,
@@ -164,84 +166,68 @@ def load_external_mesh_and_solve():
     t0 = time()
     # Run modal analysis
     harmonic_solver = HarmonicSolver(assembler)
-
     solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
+   # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
-   # compare nodal results
-    node_4882 = 4882
-    response_uy_node_4882 = get_model_response(node_4882, "uy", dofs_per_node, solution)
-    freq_apdl, uy_node_4882_apdl = get_apdl_results(node_4882, "uy")
+    plot_type = "absolute"
 
-    response_uz_node_4882 = get_model_response(node_4882, "uz", dofs_per_node, solution)
-    freq_apdl, uz_node_4882_apdl = get_apdl_results(node_4882, "uz")
-
-    node_5522 = 5522
-    response_uy_node_5522 = get_model_response(node_5522, "uy", dofs_per_node, solution)
-    freq_apdl, uy_node_5522_apdl = get_apdl_results(node_5522, "uy")
-
-    node_6210 = 6210
-    response_uy_node_6210 = get_model_response(node_6210, "uy", dofs_per_node, solution)
-    freq_apdl, uy_node_6210_apdl = get_apdl_results(node_6210, "uy")
-
-    node_6269 = 6269
-    response_uy_node_6269 = get_model_response(node_6269, "uy", dofs_per_node, solution)
-    freq_apdl, uy_node_6269_apdl = get_apdl_results(node_6269, "uy")
-
-    title = f"Harmonic response at node {node_4882}"
-
-    fig1, ax1 = plt.subplots()
-    ax1.semilogy(frequencies, np.abs(response_uy_node_4882), 'r', label='VIBRA')
-    ax1.semilogy(freq_apdl, np.abs(uy_node_4882_apdl), 'k--', label='ANSYS')
-    ax1.set(xlabel='Frequency [Hz]', ylabel='Structural response Uy [m] - Absolute', title=title)
-    ax1.grid()
-    ax1.legend()
-
-    fig2, ax2 = plt.subplots()
-    ax2.semilogy(frequencies, np.abs(response_uz_node_4882), 'r', label='VIBRA')
-    ax2.semilogy(freq_apdl, np.abs(uz_node_4882_apdl), 'k--', label='ANSYS')
-    ax2.set(xlabel='Frequency [Hz]', ylabel='Structural response Uz [m] - Absolute', title=title)
-    ax2.grid()
-    ax2.legend()
-
-    title = f"Harmonic response at node {node_5522}"
-
-    fig3, ax3 = plt.subplots()
-    ax3.semilogy(frequencies, np.abs(response_uy_node_5522), 'r', label='VIBRA')
-    ax3.semilogy(freq_apdl, np.abs(uy_node_5522_apdl), 'k--', label='ANSYS')
-    ax3.set(xlabel='Frequency [Hz]', ylabel='Structural response Uy [m] - Absolute', title=title)
-    ax3.grid()
-    ax3.legend()
-
-    title = f"Harmonic response at node {node_6210}"
-
-    fig4, ax4 = plt.subplots()
-    ax4.semilogy(frequencies, np.abs(response_uy_node_6210), 'r', label='VIBRA')
-    ax4.semilogy(freq_apdl, np.abs(uy_node_6210_apdl), 'k--', label='ANSYS')
-    ax4.set(xlabel='Frequency [Hz]', ylabel='Structural response Uy [m] - Absolute', title=title)
-    ax4.grid()
-    ax4.legend()
-
-    title = f"Harmonic response at node {node_6269}"
-
-    fig5, ax5 = plt.subplots()
-    ax5.semilogy(frequencies, np.abs(response_uy_node_6269), 'r', label='VIBRA')
-    ax5.semilogy(freq_apdl, np.abs(uy_node_6269_apdl), 'k--', label='ANSYS')
-    ax5.set(xlabel='Frequency [Hz]', ylabel='Structural response Uy [m] - Absolute', title=title)
-    ax5.grid()
-    ax5.legend()
-
+    compare_results(4882, dofs_per_node, "uz", frequencies, solution, plot_type=plot_type)
+    compare_results(4882, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
+    compare_results(5522, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
+    compare_results(6210, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
+    compare_results(6269, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
     plt.show()
 
 
-def get_apdl_results(apdl_node_id: int, dof_label: str):
+def compare_results(
+        node_id: int, 
+        dofs_per_node: int, 
+        dof_label: str, 
+        frequencies: np.ndarray, 
+        solution: np.ndarray, 
+        plot_type: str = "absolute",
+        ):
+
+    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
+    freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label)
+
+    title = f"Harmonic response at node {node_id}"
+    x_label = "Frequency [Hz]"
+    y_label = f'Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}'
+
+    fig, ax = plt.subplots()
+    if plot_type == "real":
+        plot_data = np.real
+        plot = ax.plot
+
+    elif plot_type == "imaginary":
+        plot_data = np.imag
+        plot = ax.plot
+
+    else:
+        plot_data = np.abs
+        plot = ax.semilogy
+
+    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
+
+    ax.set(xlabel=x_label, ylabel=y_label, title=title)
+    ax.grid()
+    ax.legend()
+
+
+def get_apdl_reference_results(
+        apdl_node_id: int, 
+        dof_label: str,
+        ) -> np.ndarray | None:
 
     results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/"
     if not results_path.exists():
-        return
+        return None, None
     
     # load mechanical apdl results
     ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
@@ -252,7 +238,11 @@ def get_apdl_results(apdl_node_id: int, dof_label: str):
     return freq_apdl, response_apdl
 
 
-def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, solution: np.ndarray):
+def get_model_response(
+        apdl_node_id: int, 
+        dof_label: str, 
+        dofs_per_node: int, 
+        solution: np.ndarray) -> np.ndarray:
 
     dof_labels = ["ux", "uy", "uz"]
     local_dof = dof_labels.index(dof_label)
