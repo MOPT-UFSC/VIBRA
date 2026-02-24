@@ -116,14 +116,18 @@ class ProjectWriter:
 
     def write_geometry(self, geometry_path: Path | str) -> Path:
         geometry_path = Path(geometry_path)
+        internal_path = self.project_paths.geometry_folder / geometry_path.name
+
         if not geometry_path.is_file():
             raise FileExistsError("Geometry file path does not exist.")
 
-        logging.info("Writing geometry.")
+        if geometry_path.expanduser().resolve() == internal_path.expanduser().resolve():
+            return geometry_path
 
+        logging.info("Writing geometry.")
         shutil.rmtree(self.project_paths.geometry_folder, ignore_errors=True)
         self.project_paths.geometry_folder.mkdir(exist_ok=True)
-        internal_path = self.project_paths.geometry_folder / geometry_path.name
+
         shutil.copy(geometry_path, internal_path)
         return internal_path
 
