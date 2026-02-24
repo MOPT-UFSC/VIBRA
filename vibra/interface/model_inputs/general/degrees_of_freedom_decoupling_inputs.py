@@ -234,13 +234,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             app().new_project.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
-            app().file.remove_mesh_data_from_project_file()
+            app().new_project.project_writer.delete_mesh_data()
 
             logging.info("Processing the post-assignment actions... [40/100]")
-            app().file.remove_results_data_from_project_file()
-
-            logging.info("Processing the post-assignment actions... [50/100]")
-            app().new_project.update_model_properties_file()
+            app().new_project.project_writer.delete_results_data()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().new_project.update_model_properties_file()
@@ -269,10 +266,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.model.process_degrees_of_freedom_decoupling()
 
             logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().file.write_mesh_data_in_file()
-            
-            logging.info("Processing degress of freedom decoupling... [75/100]")
-            app().file.write_geometry_data_in_file()
+            app().new_project.write_to_working_dir()
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
@@ -370,7 +364,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
-        if not app().new_project.model.generated_mesh:
+        if app().new_project.model.mesh is None:
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
