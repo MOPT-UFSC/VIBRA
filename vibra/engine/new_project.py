@@ -161,6 +161,7 @@ class NewProject:
         """
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
+        self.project_writer.write_geometry(path)  # keeping previous file organization
         self.project_writer.write_mesh(mesh)
         self.needs_saving = True
 
