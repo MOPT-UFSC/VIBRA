@@ -22,6 +22,18 @@ class ProjectHasher:
         hasher.update(mesh.faces_connectivity)
         hasher.update(mesh.solids_connectivity)
         hasher.update(mesh.nodal_coordinates)
+
+        if mesh.has_decoupling():
+            mesh.cache_lines_connectivity
+            mesh.cache_faces_connectivity
+            mesh.cache_solids_connectivity
+
+        for i, normals in mesh.normals_surface.items():
+            hasher.update(normals)
+
+        for i, curvatures in mesh.curvatures_surface.items():
+            hasher.update(curvatures)
+
         return hasher.hexdigest()
 
     @staticmethod
