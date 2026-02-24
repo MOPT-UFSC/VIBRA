@@ -110,8 +110,10 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
+    esf = False
+
     hex8_advanced_options = {
-        "hex8" : {"extra_shape_functions" : True}
+        "hex8" : {"extra_shape_functions" : esf}
         }
 
     # assign the hex8 element advanced options as a global property
@@ -175,11 +177,11 @@ def load_external_mesh_and_solve():
 
     plot_type = "absolute"
 
-    compare_results(4882, dofs_per_node, "uz", frequencies, solution, plot_type=plot_type)
-    compare_results(4882, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
-    compare_results(5522, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
-    compare_results(6210, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
-    compare_results(6269, dofs_per_node, "uy", frequencies, solution, plot_type=plot_type)
+    compare_results(4882, dofs_per_node, "uz", frequencies, solution, esf, plot_type=plot_type)
+    compare_results(4882, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    compare_results(5522, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    compare_results(6210, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    compare_results(6269, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
     plt.show()
 
 
@@ -188,14 +190,15 @@ def compare_results(
         dofs_per_node: int, 
         dof_label: str, 
         frequencies: np.ndarray, 
-        solution: np.ndarray, 
+        solution: np.ndarray,
+        esf: bool,
         plot_type: str = "absolute",
         ):
 
     response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
-    freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label)
+    freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label, esf)
 
-    title = f"Harmonic response at node {node_id}"
+    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
     y_label = f'Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}'
 
@@ -223,9 +226,12 @@ def compare_results(
 def get_apdl_reference_results(
         apdl_node_id: int, 
         dof_label: str,
+        extra_shape_functions: bool,
         ) -> np.ndarray | None:
-
-    results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/"
+    
+    folder = "with_esf" if extra_shape_functions else "without_esf"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
+    
     if not results_path.exists():
         return None, None
     
