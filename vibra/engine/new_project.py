@@ -125,7 +125,7 @@ class NewProject:
         """
         Writes project data to the working directory.
         """
-        return self.project_writer.write_project(self)
+        self.project_writer.write_project(self)
         self.needs_saving = True
 
     # TODO: use only "write_to_working_dir"
