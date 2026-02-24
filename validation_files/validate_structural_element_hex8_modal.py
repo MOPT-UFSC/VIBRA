@@ -25,12 +25,7 @@ def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
-    results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/"
-
     if not os.path.exists(mesh_path):
-        return
-    
-    if not results_path.exists():
         return
 
     # define the known 'Named selections' from model
@@ -114,7 +109,11 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    hex8_advanced_options = {"hex8" : {"extra_shape_functions" : True}}
+    esf = True
+
+    hex8_advanced_options = {
+        "hex8" : {"extra_shape_functions" : esf}
+        }
 
     # assign the hex8 element advanced options as a global property
     model.properties._set_property("advanced_element_options", hex8_advanced_options)
@@ -155,9 +154,12 @@ def load_external_mesh_and_solve():
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     
     modes_indexes = np.arange(natural_frequencies.size)
-    nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
 
+    folder = "with_esf" if esf else "without_esf"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
+
+    # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
