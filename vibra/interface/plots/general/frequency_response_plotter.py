@@ -159,11 +159,13 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     ):
         if self.x_data is None:
             return
-
-        for line in [l for l in self.ax.lines if getattr(l, "is_harmonic_line", False)]:
+        
+        plotted_lines = [line for line in self.ax.lines if getattr(line, "is_harmonic_line", False)]
+        for line in plotted_lines:
             line.remove()
-
-        for text in [t for t in self.ax.texts if getattr(t, "is_harmonic_label", False)]:
+        
+        plotted_texts = [text for text in self.ax.texts if getattr(text, "is_harmonic_label", False)]
+        for text in plotted_texts:
             text.remove()
 
         if remove_all is False:
@@ -173,7 +175,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 frequency = float((i + 1) * fundamental_freq)
 
                 if x_min <= frequency <= x_max:
-                    line = self.ax.axvline(x=frequency, color="k", alpha=0.3, label="_nolegend_")
+                    line = self.ax.axvline(x=frequency, color="r", linestyle="--", alpha=0.3, label="_nolegend_")
                     line.is_harmonic_line = True
 
                     legend = ""
@@ -241,7 +243,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         )
 
     def harmonic_lines_remove_all_callback(self):
-        self.plot_harmonic_lines(0, 0, 0, True)
+        self.plot_harmonic_lines(0, 0, False, False, True)
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data
