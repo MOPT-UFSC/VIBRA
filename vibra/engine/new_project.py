@@ -161,9 +161,8 @@ class NewProject:
         """
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
-        self.project_writer.write_geometry(path)  # keeping previous file organization
-        self.project_writer.write_mesh(mesh)
-        self.needs_saving = True
+        self.model.geometry_path = path  # keeping previous file organization
+        self.write_to_working_dir()
 
     def import_geometry(self, path: Path | str):
         """
@@ -176,8 +175,8 @@ class NewProject:
         """
         path = Path(path)
         # self.model.geometry = Geometry(path)
-        self.model.geometry_path = self.project_writer.write_geometry(path)
-        self.needs_saving = True
+        self.model.geometry_path = path
+        self.write_to_working_dir()
 
     def configure_mesh(self, mesh_setup: MeshSetup):
         """
