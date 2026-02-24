@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     # this file is also imported by NewProject
     from vibra.engine.new_project import NewProject
 
-import logging
 import typing
 import zipfile
 from pathlib import Path
@@ -197,10 +196,10 @@ class ProjectReader:
             mesh = Mesh()
 
         cache_paths = [
-            "cache_nodal_coordinates",
-            "cache_lines_connectivity",
-            "cache_faces_connectivity",
-            "cache_solids_connectivity",
+            "nodal_data/cache_nodal_coordinates",
+            "connectivity/cache_lines_connectivity",
+            "connectivity/cache_faces_connectivity",
+            "connectivity/cache_solids_connectivity",
         ]
 
         logging.info("Reading Mesh")

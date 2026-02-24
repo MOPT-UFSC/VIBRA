@@ -157,6 +157,7 @@ class ProjectWriter:
             file["nodal_data/nodes_from_points"] = np.array(list(mesh.nodes_from_points.items()))
 
             if mesh.has_decoupling():
+                file["nodal_data/cache_nodal_coordinates"] = mesh.cache_nodal_coordinates
                 file["connectivity/cache_lines_connectivity"] = mesh.cache_lines_connectivity
                 file["connectivity/cache_faces_connectivity"] = mesh.cache_faces_connectivity
                 file["connectivity/cache_solids_connectivity"] = mesh.cache_solids_connectivity
@@ -342,6 +343,8 @@ class ProjectWriter:
 
         self.project_paths.results_data_filepath.unlink(missing_ok=True)
         self.project_paths.harmonic_solution_filepath.unlink(missing_ok=True)
+        self._remove_hash(HashEnum.HARMONIC_SOLUTION)
+        self._remove_hash(HashEnum.MODAL_SOLUTION)
 
     def delete_mesh_data(self):
         logging.info("Deleting mesh data")
@@ -358,7 +361,7 @@ class ProjectWriter:
         with update_json(self.project_paths.hashes_filepath, dict) as file:
             file[name] = hash
 
-    def _remove_hash(self, name: HashEnum, hash: str):
+    def _remove_hash(self, name: HashEnum):
         with update_json(self.project_paths.hashes_filepath, dict) as file:
             try:
                 file.pop(name)
