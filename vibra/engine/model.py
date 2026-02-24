@@ -1,62 +1,55 @@
 
-from vibra.engine import ModalAnalysisSetup
-from vibra.engine import HarmonicAnalysisSetup
-from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
-from vibra.engine import AnalysisID
-from vibra.engine.mesher.element_setup import (
-TETRAHEDRON_4,
-TETRAHEDRON_10,
-HEXAHEDRON_8,
-HEXAHEDRON_20,
-DEFAULT_ELEMENT_TYPE,
-)
+import logging
+from copy import deepcopy
+from pathlib import Path
+from typing import Callable, Optional
 
+import numpy as np
+
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+
+#1d elements - acoustic
+from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
+from vibra.engine.elements.elements_2d import (
+    ACT_QUADRANGLE_4,
+    ACT_QUADRANGLE_8,
+    # 2d elements - acoustic
+    ACT_TRIANGLE_3,
+    ACT_TRIANGLE_6,
+    # 2D elements - structural
+    STRUCT_TRIANGLE_3,
+)
 from vibra.engine.elements.elements_3d import (
     # 3d elements - acoustic
     ACT_HEXAHEDRON_8C,
     ACT_HEXAHEDRON_20C,
     ACT_TETRAHEDRON_4C,
     ACT_TETRAHEDRON_10C,
-
     # 3d elements - structural
     STRUCT_HEXAHEDRON_8,
     STRUCT_HEXAHEDRON_20,
     STRUCT_TETRAHEDRON_4S,
-    STRUCT_TETRAHEDRON_10S
+    STRUCT_TETRAHEDRON_10S,
 )
-
-from vibra.engine.elements.elements_2d import (
-    # 2d elements - acoustic
-    ACT_TRIANGLE_3,
-    ACT_TRIANGLE_6,
-    ACT_QUADRANGLE_4,
-    ACT_QUADRANGLE_8,
-
-    # 2D elements - structural
-    STRUCT_TRIANGLE_3
-)
-
-#1d elements - acoustic
-from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
-
 from vibra.engine.geometry.geometry import LengthUnits
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.mesher.element_setup import (
+    DEFAULT_ELEMENT_TYPE,
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+)
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-import logging
-import numpy as np
-
-from copy import deepcopy
-from pathlib import Path
-from typing import Optional, Callable
 
 error_title = "Error"
 warning_title = "Warning"
@@ -70,7 +63,7 @@ class Model:
     def reset_variables(self):
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup_new: Optional[MeshSetup] = None
-        self.new_analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup] = None
+        self.new_analysis_setup: Optional[AnalysisSetup] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
@@ -274,8 +267,8 @@ class Model:
                 self.frequencies = None
                 return
 
-    def new_set_analysis_setup(self, analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup]):
-        if not isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup | None):
+    def new_set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
+        if not isinstance(analysis_setup, AnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 
         self.new_analysis_setup = analysis_setup

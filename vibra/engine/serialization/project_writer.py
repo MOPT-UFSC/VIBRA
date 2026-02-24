@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     # this file is imported by NewProject
     from vibra.engine.new_project import NewProject
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
@@ -103,10 +103,10 @@ class ProjectWriter:
 
         write_json(self.project_paths.project_setup_filepath, project_setup)
 
-    def write_analysis_setup(self, analysis_setup: HarmonicAnalysisSetup | ModalAnalysisSetup | None):
+    def write_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         logging.info("Writing AnalysisSetup.")
 
-        if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+        if isinstance(analysis_setup, AnalysisSetup):
             analysis_setup_dict = asdict(analysis_setup)
         else:
             analysis_setup_dict = dict()

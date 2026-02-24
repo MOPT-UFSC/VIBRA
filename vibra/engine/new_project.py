@@ -8,7 +8,7 @@ from typing import Optional
 from PIL.Image import Image
 
 from vibra import errors
-from vibra.engine import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.engine.mesher.mesh import Mesh
@@ -67,9 +67,9 @@ class NewProject:
     def mesh(self) -> Optional[Mesh]:
         return self.model.mesh
 
-    @mesh.setter
-    def mesh(self, mesh: Optional[Mesh]):
-        self.model.mesh = mesh
+    @property
+    def analysis_setup(self):
+        return self.model.new_analysis_setup
 
     @property
     def working_directory(self) -> Path:
@@ -253,7 +253,7 @@ class NewProject:
     def configure_analysis(
         self,
         analysis_id: AnalysisID,
-        analysis_setup: Optional[HarmonicAnalysisSetup | ModalAnalysisSetup],
+        analysis_setup: Optional[AnalysisSetup],
     ):
         self.reset_solution()
         self.current_analysis_id = analysis_id

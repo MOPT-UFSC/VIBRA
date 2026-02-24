@@ -16,7 +16,7 @@ import h5py
 import numpy as np
 from PIL.Image import Image
 
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
@@ -123,7 +123,7 @@ class ProjectReader:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         return AnalysisID(analysis_id)
 
-    def read_analysis_setup(self) -> Optional[HarmonicAnalysisSetup | ModalAnalysisSetup]:
+    def read_analysis_setup(self) -> Optional[AnalysisSetup]:
         logging.info("Reading AnalysisSetup")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
