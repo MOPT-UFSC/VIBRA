@@ -129,7 +129,6 @@ class ProjectWriter:
 
     def write_mesh(self, mesh: Mesh):
         logging.info("Writing Mesh.")
-        print(self.project_paths.working_directory)
 
         current_hash = ProjectHasher.hash_mesh(mesh)
         previous_hash = self._read_hash(HashEnum.MESH)
