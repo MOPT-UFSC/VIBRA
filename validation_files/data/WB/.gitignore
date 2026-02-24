@@ -16,5 +16,10 @@
 !K_memb_ref.dat
 !M_memb_ref.dat
 !natural_frequencies_Ansys.dat
+!response_uy_node_4882_Ansys.dat
+!response_uz_node_4882_Ansys.dat
+!response_uy_node_5522_Ansys.dat
+!response_uy_node_6210_Ansys.dat
+!response_uy_node_6269_Ansys.dat
 
 !mesh_info/*/*
