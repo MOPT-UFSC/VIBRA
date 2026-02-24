@@ -78,7 +78,7 @@ class NewProject:
     @working_directory.setter
     def working_directory(self, path: Optional[Path | str]):
         if hasattr(self, "project_paths"):
-            self.project_paths.set_working_directory(self.working_directory)
+            self.project_paths.set_working_directory(path)
 
     def set_thumbnail(self, thumbnail: Image):
         self.thumbnail = thumbnail
