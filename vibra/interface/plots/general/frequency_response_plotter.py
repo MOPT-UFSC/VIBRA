@@ -1,5 +1,4 @@
 import numpy as np
-from .harmonic_lines_plot_setup import HarmonicLinesPlotSetup
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QDialog, QToolButton, QVBoxLayout
@@ -9,12 +8,13 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
-from vibra.interface.ui_generated.plots.general.frequency_response_plot_ui import (
-    FrequencyResponsePlot_UI,
+from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import (
+    FrequencyResponsePlotter_UI,
 )
+from vibra.interface.general.print_message_input import PrintMessageInput
 
 
-class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
+class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
@@ -75,8 +75,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_harmonic_lines_plot.clicked.connect(self.open_harmonic_lines_plot_window_callback)
+        self.pushButton_harmonic_lines_confirm.clicked.connect(self.harmonic_lines_confirm_callback)
+        self.pushButton_harmonic_lines_remove_all.clicked.connect(self.harmonic_lines_remove_all_callback)
         #
+        self.lineEdit_harmonic_lines_1st_freq.returnPressed.connect(self.harmonic_lines_confirm_callback)
+        # 
         app().main_window.theme_changed.connect(self.paint_toolbar_icons)
         self._initial_config()
 
@@ -146,38 +149,47 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results_data)
 
-    def open_harmonic_lines_plot_window_callback(self):
-        self.hide()
-        harmonic_lines_setup = HarmonicLinesPlotSetup()
-        harmonic_lines_setup.settings_confirmed.connect(self.plot_harmonic_lines)
-        harmonic_lines_setup.exec()
-
-
-    def plot_harmonic_lines(self, fundamental_freq: float, n_harmonics: int, legend: bool, remove_all: bool):
+    def plot_harmonic_lines(
+        self,
+        fundamental_freq: float,
+        n_harmonics: int,
+        show_harmonic: bool,
+        show_frequency: bool,
+        remove_all: bool,
+    ):
         if self.x_data is None:
             return
 
         for line in [l for l in self.ax.lines if getattr(l, "is_harmonic_line", False)]:
-                    line.remove()
-                
+            line.remove()
+
         for text in [t for t in self.ax.texts if getattr(t, "is_harmonic_label", False)]:
             text.remove()
-  
-        if remove_all is False:        
+
+        if remove_all is False:
             x_min, x_max = self.ax.get_xlim()
 
             for i in range(n_harmonics):
                 frequency = float((i + 1) * fundamental_freq)
 
                 if x_min <= frequency <= x_max:
-                    line = self.ax.axvline(x=frequency, color="k", alpha=0.3, label='_nolegend_')
+                    line = self.ax.axvline(x=frequency, color="k", alpha=0.3, label="_nolegend_")
                     line.is_harmonic_line = True
+
+                    legend = ""
+                    newline = ""
+                    if show_harmonic:
+                        legend += f" {i + 1}x"
+                        newline = "\n"
+
+                    if show_frequency:
+                        legend += f"{newline} ({frequency:.0f} Hz)"
 
                     if legend:
                         txt = self.ax.text(
                             frequency,
                             0.95,
-                            f"{i + 1}x",
+                            legend,
                             transform=self.ax.get_xaxis_transform(),
                             fontsize=6,
                             verticalalignment="bottom",
@@ -186,6 +198,50 @@ class FrequencyResponsePlotter(FrequencyResponsePlot_UI):
                         txt.is_harmonic_label = True
 
         self.mpl_canvas_frequency_plot.draw()
+
+    def check__harmonic_lines_plot_values(self):
+        error_title = "Error"
+        self.fundamental_freq = self.lineEdit_harmonic_lines_1st_freq.text().strip()
+
+        if not self.fundamental_freq:
+            title = "Missing input"
+            error_message = "Please input some value for the 'Fundamental frequency'."
+            
+            PrintMessageInput([error_title, title, error_message])
+            return False
+        
+        try:
+            float(self.fundamental_freq)
+        except ValueError:
+            title = "Invalid input"
+            error_message = "The value inputted at 'Fundamental Frequency' must be a number."
+
+            PrintMessageInput([error_title, title, error_message])
+            return False
+        
+        else:
+            return True
+
+    def harmonic_lines_confirm_callback(self):
+        if not self.check__harmonic_lines_plot_values():
+            return
+        
+        fundamental_frequency = float(self.fundamental_freq)
+        number_of_lines = self.spinBox_harmonic_lines_number.value()
+        show_legend = self.checkBox_harmonic_lines_show_harmonic.isChecked()
+        show_frequency = self.checkBox_harmonic_lines_show_frequency.isChecked()
+        remove_all = False
+
+        self.plot_harmonic_lines(
+            fundamental_frequency,
+            number_of_lines,
+            show_legend,
+            show_frequency,
+            remove_all,
+        )
+
+    def harmonic_lines_remove_all_callback(self):
+        self.plot_harmonic_lines(0, 0, 0, True)
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data

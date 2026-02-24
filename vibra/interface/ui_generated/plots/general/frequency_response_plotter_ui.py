@@ -1,0 +1,948 @@
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'frequency_response_plotter.ui'
+##
+## Created by: Qt User Interface Compiler version 6.9.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox,
+    QDialog, QFrame, QGridLayout, QLabel,
+    QLineEdit, QPushButton, QRadioButton, QScrollArea,
+    QSizePolicy, QSpinBox, QVBoxLayout, QWidget)
+
+class Ui_Dialog(object):
+    def setupUi(self, Dialog):
+        if not Dialog.objectName():
+            Dialog.setObjectName(u"Dialog")
+        Dialog.resize(1058, 791)
+        Dialog.setMinimumSize(QSize(900, 600))
+        Dialog.setStyleSheet(u"")
+        self.gridLayout = QGridLayout(Dialog)
+        self.gridLayout.setSpacing(4)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(4, 4, 4, 4)
+        self.frame_content = QFrame(Dialog)
+        self.frame_content.setObjectName(u"frame_content")
+        self.frame_content.setMinimumSize(QSize(0, 200))
+        self.frame_content.setFrameShape(QFrame.Shape.Box)
+        self.frame_content.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_20 = QGridLayout(self.frame_content)
+        self.gridLayout_20.setSpacing(2)
+        self.gridLayout_20.setObjectName(u"gridLayout_20")
+        self.gridLayout_20.setContentsMargins(2, 2, 2, 2)
+        self.frame_widget = QFrame(self.frame_content)
+        self.frame_widget.setObjectName(u"frame_widget")
+        self.frame_widget.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_widget.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_2 = QGridLayout(self.frame_widget)
+        self.gridLayout_2.setSpacing(4)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(4, 4, 4, 4)
+        self.widget_plot = QWidget(self.frame_widget)
+        self.widget_plot.setObjectName(u"widget_plot")
+
+        self.gridLayout_2.addWidget(self.widget_plot, 0, 1, 1, 1)
+
+
+        self.gridLayout_20.addWidget(self.frame_widget, 0, 0, 1, 1)
+
+        self.frame_configs = QFrame(self.frame_content)
+        self.frame_configs.setObjectName(u"frame_configs")
+        self.frame_configs.setMinimumSize(QSize(200, 0))
+        self.frame_configs.setMaximumSize(QSize(290, 1677215))
+        self.frame_configs.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_configs.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_9 = QGridLayout(self.frame_configs)
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.gridLayout_9.setVerticalSpacing(4)
+        self.gridLayout_9.setContentsMargins(4, 4, 4, 4)
+        self.frame_import_export = QFrame(self.frame_configs)
+        self.frame_import_export.setObjectName(u"frame_import_export")
+        self.frame_import_export.setMinimumSize(QSize(0, 44))
+        self.frame_import_export.setMaximumSize(QSize(16777215, 16777215))
+        self.frame_import_export.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_import_export.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_8 = QGridLayout(self.frame_import_export)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_export_data = QPushButton(self.frame_import_export)
+        self.pushButton_export_data.setObjectName(u"pushButton_export_data")
+        self.pushButton_export_data.setEnabled(True)
+        self.pushButton_export_data.setMinimumSize(QSize(120, 30))
+        self.pushButton_export_data.setMaximumSize(QSize(120, 30))
+        font = QFont()
+        font.setFamilies([u"Ubuntu Sans"])
+        font.setPointSize(10)
+        font.setBold(False)
+        font.setItalic(False)
+        self.pushButton_export_data.setFont(font)
+        self.pushButton_export_data.setStyleSheet(u"")
+        self.pushButton_export_data.setAutoDefault(False)
+
+        self.gridLayout_8.addWidget(self.pushButton_export_data, 0, 0, 1, 1)
+
+        self.pushButton_import_data = QPushButton(self.frame_import_export)
+        self.pushButton_import_data.setObjectName(u"pushButton_import_data")
+        self.pushButton_import_data.setEnabled(True)
+        self.pushButton_import_data.setMinimumSize(QSize(120, 30))
+        self.pushButton_import_data.setMaximumSize(QSize(120, 30))
+        self.pushButton_import_data.setFont(font)
+        self.pushButton_import_data.setStyleSheet(u"")
+        self.pushButton_import_data.setAutoDefault(False)
+
+        self.gridLayout_8.addWidget(self.pushButton_import_data, 0, 1, 1, 1)
+
+
+        self.gridLayout_9.addWidget(self.frame_import_export, 0, 0, 1, 1)
+
+        self.scrollArea = QScrollArea(self.frame_configs)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.Shape.Box)
+        self.scrollArea.setFrameShadow(QFrame.Shadow.Raised)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 264, 773))
+        self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(4, 4, 4, 4)
+        self.frame_content_data = QFrame(self.scrollAreaWidgetContents)
+        self.frame_content_data.setObjectName(u"frame_content_data")
+        self.frame_content_data.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_content_data.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_3 = QGridLayout(self.frame_content_data)
+        self.gridLayout_3.setSpacing(0)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
+        self.frame_plot_type = QFrame(self.frame_content_data)
+        self.frame_plot_type.setObjectName(u"frame_plot_type")
+        self.frame_plot_type.setMaximumSize(QSize(16777215, 140))
+        self.frame_plot_type.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_plot_type.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_18 = QGridLayout(self.frame_plot_type)
+        self.gridLayout_18.setObjectName(u"gridLayout_18")
+        self.gridLayout_18.setVerticalSpacing(2)
+        self.gridLayout_18.setContentsMargins(4, 4, 4, 4)
+        self.title_frame = QFrame(self.frame_plot_type)
+        self.title_frame.setObjectName(u"title_frame")
+        self.title_frame.setMinimumSize(QSize(0, 32))
+        self.title_frame.setMaximumSize(QSize(16777215, 32))
+        self.title_frame.setFrameShape(QFrame.Shape.Box)
+        self.title_frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_11 = QGridLayout(self.title_frame)
+        self.gridLayout_11.setSpacing(4)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setContentsMargins(4, 4, 4, 4)
+        self.label_9 = QLabel(self.title_frame)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setEnabled(True)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_9.sizePolicy().hasHeightForWidth())
+        self.label_9.setSizePolicy(sizePolicy)
+        self.label_9.setMinimumSize(QSize(120, 20))
+        self.label_9.setMaximumSize(QSize(165, 32))
+        font1 = QFont()
+        font1.setFamilies([u"MS Shell Dlg 2"])
+        font1.setPointSize(11)
+        font1.setBold(False)
+        font1.setItalic(False)
+        self.label_9.setFont(font1)
+        self.label_9.setFrameShape(QFrame.Shape.NoFrame)
+        self.label_9.setFrameShadow(QFrame.Shadow.Sunken)
+        self.label_9.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_9.setScaledContents(False)
+        self.label_9.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_9.setWordWrap(False)
+        self.label_9.setIndent(0)
+
+        self.gridLayout_11.addWidget(self.label_9, 0, 0, 1, 1)
+
+
+        self.gridLayout_18.addWidget(self.title_frame, 0, 0, 1, 1)
+
+        self.frame_plot_type_content = QFrame(self.frame_plot_type)
+        self.frame_plot_type_content.setObjectName(u"frame_plot_type_content")
+        self.frame_plot_type_content.setMinimumSize(QSize(0, 0))
+        self.frame_plot_type_content.setFrameShape(QFrame.Shape.Box)
+        self.frame_plot_type_content.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_12 = QGridLayout(self.frame_plot_type_content)
+        self.gridLayout_12.setSpacing(4)
+        self.gridLayout_12.setObjectName(u"gridLayout_12")
+        self.gridLayout_12.setContentsMargins(4, 4, 4, 4)
+        self.frame_12 = QFrame(self.frame_plot_type_content)
+        self.frame_12.setObjectName(u"frame_12")
+        self.frame_12.setMaximumSize(QSize(16777215, 28))
+        font2 = QFont()
+        font2.setPointSize(10)
+        font2.setBold(False)
+        self.frame_12.setFont(font2)
+        self.frame_12.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_12.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_10 = QGridLayout(self.frame_12)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.gridLayout_10.setHorizontalSpacing(4)
+        self.gridLayout_10.setVerticalSpacing(2)
+        self.gridLayout_10.setContentsMargins(2, 0, 2, 0)
+        self.comboBox_plot_type = QComboBox(self.frame_12)
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.comboBox_plot_type.sizePolicy().hasHeightForWidth())
+        self.comboBox_plot_type.setSizePolicy(sizePolicy1)
+        self.comboBox_plot_type.setMinimumSize(QSize(80, 0))
+        self.comboBox_plot_type.setMaximumSize(QSize(100, 26))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.comboBox_plot_type.setFont(font3)
+        self.comboBox_plot_type.setStyleSheet(u"")
+
+        self.gridLayout_10.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
+
+        self.label = QLabel(self.frame_12)
+        self.label.setObjectName(u"label")
+        self.label.setMinimumSize(QSize(0, 0))
+        self.label.setMaximumSize(QSize(16777215, 26))
+        self.label.setFont(font2)
+
+        self.gridLayout_10.addWidget(self.label, 0, 1, 1, 1)
+
+        self.frame_19 = QFrame(self.frame_12)
+        self.frame_19.setObjectName(u"frame_19")
+        self.frame_19.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_19.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_10.addWidget(self.frame_19, 0, 3, 1, 1)
+
+        self.frame_21 = QFrame(self.frame_12)
+        self.frame_21.setObjectName(u"frame_21")
+        self.frame_21.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_21.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_10.addWidget(self.frame_21, 0, 0, 1, 1)
+
+
+        self.gridLayout_12.addWidget(self.frame_12, 0, 0, 1, 1)
+
+        self.frame_legends_2 = QFrame(self.frame_plot_type_content)
+        self.frame_legends_2.setObjectName(u"frame_legends_2")
+        self.frame_legends_2.setMaximumSize(QSize(16777215, 28))
+        self.frame_legends_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_legends_2.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_19 = QGridLayout(self.frame_legends_2)
+        self.gridLayout_19.setSpacing(2)
+        self.gridLayout_19.setObjectName(u"gridLayout_19")
+        self.gridLayout_19.setContentsMargins(2, 2, 2, 2)
+        self.checkBox_legends = QCheckBox(self.frame_legends_2)
+        self.checkBox_legends.setObjectName(u"checkBox_legends")
+        self.checkBox_legends.setMinimumSize(QSize(75, 0))
+        self.checkBox_legends.setMaximumSize(QSize(140, 26))
+        self.checkBox_legends.setFont(font3)
+        self.checkBox_legends.setChecked(True)
+
+        self.gridLayout_19.addWidget(self.checkBox_legends, 0, 0, 1, 1)
+
+
+        self.gridLayout_12.addWidget(self.frame_legends_2, 1, 0, 1, 1)
+
+        self.frame_legends_3 = QFrame(self.frame_plot_type_content)
+        self.frame_legends_3.setObjectName(u"frame_legends_3")
+        self.frame_legends_3.setMaximumSize(QSize(16777215, 28))
+        self.frame_legends_3.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_legends_3.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_22 = QGridLayout(self.frame_legends_3)
+        self.gridLayout_22.setSpacing(2)
+        self.gridLayout_22.setObjectName(u"gridLayout_22")
+        self.gridLayout_22.setContentsMargins(2, 2, 2, 2)
+        self.checkBox_grid = QCheckBox(self.frame_legends_3)
+        self.checkBox_grid.setObjectName(u"checkBox_grid")
+        self.checkBox_grid.setMinimumSize(QSize(75, 0))
+        self.checkBox_grid.setMaximumSize(QSize(140, 26))
+        self.checkBox_grid.setFont(font3)
+        self.checkBox_grid.setChecked(True)
+
+        self.gridLayout_22.addWidget(self.checkBox_grid, 0, 0, 1, 1)
+
+
+        self.gridLayout_12.addWidget(self.frame_legends_3, 2, 0, 1, 1)
+
+
+        self.gridLayout_18.addWidget(self.frame_plot_type_content, 1, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_plot_type, 0, 0, 1, 1)
+
+        self.frame_y_axis_data = QFrame(self.frame_content_data)
+        self.frame_y_axis_data.setObjectName(u"frame_y_axis_data")
+        self.frame_y_axis_data.setMaximumSize(QSize(16777215, 220))
+        self.frame_y_axis_data.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_y_axis_data.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_6 = QGridLayout(self.frame_y_axis_data)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setVerticalSpacing(2)
+        self.gridLayout_6.setContentsMargins(4, 4, 4, 4)
+        self.frame_8 = QFrame(self.frame_y_axis_data)
+        self.frame_8.setObjectName(u"frame_8")
+        self.frame_8.setMinimumSize(QSize(0, 32))
+        self.frame_8.setMaximumSize(QSize(16777215, 32))
+        self.frame_8.setFrameShape(QFrame.Shape.Box)
+        self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_5 = QGridLayout(self.frame_8)
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setHorizontalSpacing(6)
+        self.gridLayout_5.setVerticalSpacing(0)
+        self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
+        self.label_8 = QLabel(self.frame_8)
+        self.label_8.setObjectName(u"label_8")
+        self.label_8.setEnabled(True)
+        sizePolicy.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
+        self.label_8.setSizePolicy(sizePolicy)
+        self.label_8.setMinimumSize(QSize(120, 20))
+        self.label_8.setMaximumSize(QSize(165, 32))
+        self.label_8.setFont(font1)
+        self.label_8.setFrameShape(QFrame.Shape.NoFrame)
+        self.label_8.setFrameShadow(QFrame.Shadow.Sunken)
+        self.label_8.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_8.setScaledContents(False)
+        self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_8.setWordWrap(False)
+        self.label_8.setIndent(0)
+
+        self.gridLayout_5.addWidget(self.label_8, 0, 0, 1, 1)
+
+
+        self.gridLayout_6.addWidget(self.frame_8, 0, 0, 1, 1)
+
+        self.frame_4 = QFrame(self.frame_y_axis_data)
+        self.frame_4.setObjectName(u"frame_4")
+        self.frame_4.setMinimumSize(QSize(0, 0))
+        self.frame_4.setSizeIncrement(QSize(0, 0))
+        self.frame_4.setFrameShape(QFrame.Shape.Box)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_4 = QGridLayout(self.frame_4)
+        self.gridLayout_4.setSpacing(4)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
+        self.frame_20 = QFrame(self.frame_4)
+        self.frame_20.setObjectName(u"frame_20")
+        self.frame_20.setMaximumSize(QSize(16777215, 28))
+        self.frame_20.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_20.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_26 = QGridLayout(self.frame_20)
+        self.gridLayout_26.setSpacing(2)
+        self.gridLayout_26.setObjectName(u"gridLayout_26")
+        self.gridLayout_26.setContentsMargins(2, 2, 2, 2)
+        self.radioButton_real = QRadioButton(self.frame_20)
+        self.buttonGroup_y_data = QButtonGroup(Dialog)
+        self.buttonGroup_y_data.setObjectName(u"buttonGroup_y_data")
+        self.buttonGroup_y_data.addButton(self.radioButton_real)
+        self.radioButton_real.setObjectName(u"radioButton_real")
+        self.radioButton_real.setMinimumSize(QSize(140, 0))
+        self.radioButton_real.setMaximumSize(QSize(140, 26))
+        self.radioButton_real.setFont(font3)
+
+        self.gridLayout_26.addWidget(self.radioButton_real, 0, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame_20, 2, 0, 1, 1)
+
+        self.frame_25 = QFrame(self.frame_4)
+        self.frame_25.setObjectName(u"frame_25")
+        self.frame_25.setMaximumSize(QSize(16777215, 28))
+        self.frame_25.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_25.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_27 = QGridLayout(self.frame_25)
+        self.gridLayout_27.setSpacing(2)
+        self.gridLayout_27.setObjectName(u"gridLayout_27")
+        self.gridLayout_27.setContentsMargins(2, 2, 2, 2)
+        self.radioButton_imaginary = QRadioButton(self.frame_25)
+        self.buttonGroup_y_data.addButton(self.radioButton_imaginary)
+        self.radioButton_imaginary.setObjectName(u"radioButton_imaginary")
+        self.radioButton_imaginary.setMinimumSize(QSize(140, 0))
+        self.radioButton_imaginary.setMaximumSize(QSize(140, 26))
+        self.radioButton_imaginary.setFont(font3)
+
+        self.gridLayout_27.addWidget(self.radioButton_imaginary, 0, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame_25, 3, 0, 1, 1)
+
+        self.frame_26 = QFrame(self.frame_4)
+        self.frame_26.setObjectName(u"frame_26")
+        self.frame_26.setMaximumSize(QSize(16777215, 28))
+        self.frame_26.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_26.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_28 = QGridLayout(self.frame_26)
+        self.gridLayout_28.setSpacing(2)
+        self.gridLayout_28.setObjectName(u"gridLayout_28")
+        self.gridLayout_28.setContentsMargins(2, 2, 2, 2)
+        self.radioButton_decibel_scale = QRadioButton(self.frame_26)
+        self.buttonGroup_y_data.addButton(self.radioButton_decibel_scale)
+        self.radioButton_decibel_scale.setObjectName(u"radioButton_decibel_scale")
+        self.radioButton_decibel_scale.setMinimumSize(QSize(140, 0))
+        self.radioButton_decibel_scale.setMaximumSize(QSize(140, 26))
+        self.radioButton_decibel_scale.setFont(font3)
+        self.radioButton_decibel_scale.setIconSize(QSize(30, 30))
+        self.radioButton_decibel_scale.setChecked(False)
+
+        self.gridLayout_28.addWidget(self.radioButton_decibel_scale, 0, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame_26, 4, 0, 1, 1)
+
+        self.frame_10 = QFrame(self.frame_4)
+        self.frame_10.setObjectName(u"frame_10")
+        self.frame_10.setMaximumSize(QSize(16777215, 28))
+        self.frame_10.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_10.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_25 = QGridLayout(self.frame_10)
+        self.gridLayout_25.setSpacing(2)
+        self.gridLayout_25.setObjectName(u"gridLayout_25")
+        self.gridLayout_25.setContentsMargins(2, 2, 2, 2)
+        self.radioButton_absolute = QRadioButton(self.frame_10)
+        self.buttonGroup_y_data.addButton(self.radioButton_absolute)
+        self.radioButton_absolute.setObjectName(u"radioButton_absolute")
+        self.radioButton_absolute.setMinimumSize(QSize(140, 0))
+        self.radioButton_absolute.setMaximumSize(QSize(140, 26))
+        self.radioButton_absolute.setFont(font3)
+        self.radioButton_absolute.setIconSize(QSize(30, 30))
+        self.radioButton_absolute.setChecked(True)
+
+        self.gridLayout_25.addWidget(self.radioButton_absolute, 0, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame_10, 1, 0, 1, 1)
+
+        self.frame_27 = QFrame(self.frame_4)
+        self.frame_27.setObjectName(u"frame_27")
+        self.frame_27.setMaximumSize(QSize(16777215, 28))
+        self.frame_27.setFont(font2)
+        self.frame_27.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_27.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_29 = QGridLayout(self.frame_27)
+        self.gridLayout_29.setObjectName(u"gridLayout_29")
+        self.gridLayout_29.setHorizontalSpacing(4)
+        self.gridLayout_29.setVerticalSpacing(2)
+        self.gridLayout_29.setContentsMargins(2, 2, 2, 2)
+        self.label_4 = QLabel(self.frame_27)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(0, 0))
+        self.label_4.setMaximumSize(QSize(16777215, 26))
+        self.label_4.setFont(font2)
+
+        self.gridLayout_29.addWidget(self.label_4, 0, 0, 1, 1, Qt.AlignmentFlag.AlignRight)
+
+        self.comboBox_differentiate_data = QComboBox(self.frame_27)
+        self.comboBox_differentiate_data.addItem("")
+        self.comboBox_differentiate_data.addItem("")
+        self.comboBox_differentiate_data.addItem("")
+        self.comboBox_differentiate_data.setObjectName(u"comboBox_differentiate_data")
+        sizePolicy1.setHeightForWidth(self.comboBox_differentiate_data.sizePolicy().hasHeightForWidth())
+        self.comboBox_differentiate_data.setSizePolicy(sizePolicy1)
+        self.comboBox_differentiate_data.setMinimumSize(QSize(80, 0))
+        self.comboBox_differentiate_data.setMaximumSize(QSize(100, 26))
+        self.comboBox_differentiate_data.setFont(font3)
+        self.comboBox_differentiate_data.setStyleSheet(u"")
+
+        self.gridLayout_29.addWidget(self.comboBox_differentiate_data, 0, 1, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame_27, 0, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+
+
+        self.gridLayout_6.addWidget(self.frame_4, 1, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_y_axis_data, 1, 0, 1, 1)
+
+        self.frame_cursor_controls = QFrame(self.frame_content_data)
+        self.frame_cursor_controls.setObjectName(u"frame_cursor_controls")
+        self.frame_cursor_controls.setMinimumSize(QSize(0, 200))
+        self.frame_cursor_controls.setMaximumSize(QSize(16777215, 250))
+        self.frame_cursor_controls.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_cursor_controls.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_21 = QGridLayout(self.frame_cursor_controls)
+        self.gridLayout_21.setObjectName(u"gridLayout_21")
+        self.gridLayout_21.setVerticalSpacing(2)
+        self.gridLayout_21.setContentsMargins(4, 4, 4, 0)
+        self.frame_32 = QFrame(self.frame_cursor_controls)
+        self.frame_32.setObjectName(u"frame_32")
+        self.frame_32.setMinimumSize(QSize(85, 32))
+        self.frame_32.setSizeIncrement(QSize(0, 110))
+        self.frame_32.setFrameShape(QFrame.Shape.Box)
+        self.frame_32.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_32 = QGridLayout(self.frame_32)
+        self.gridLayout_32.setSpacing(0)
+        self.gridLayout_32.setObjectName(u"gridLayout_32")
+        self.gridLayout_32.setContentsMargins(4, 4, 4, 4)
+        self.label_13 = QLabel(self.frame_32)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setMinimumSize(QSize(0, 20))
+        self.label_13.setMaximumSize(QSize(16777215, 32))
+        font4 = QFont()
+        font4.setPointSize(11)
+        font4.setBold(False)
+        self.label_13.setFont(font4)
+        self.label_13.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_32.addWidget(self.label_13, 0, 0, 1, 1)
+
+
+        self.gridLayout_21.addWidget(self.frame_32, 0, 0, 1, 1)
+
+        self.frame_cursor_controls_content = QFrame(self.frame_cursor_controls)
+        self.frame_cursor_controls_content.setObjectName(u"frame_cursor_controls_content")
+        self.frame_cursor_controls_content.setMinimumSize(QSize(85, 160))
+        self.frame_cursor_controls_content.setSizeIncrement(QSize(0, 110))
+        self.frame_cursor_controls_content.setFrameShape(QFrame.Shape.Box)
+        self.frame_cursor_controls_content.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_31 = QGridLayout(self.frame_cursor_controls_content)
+        self.gridLayout_31.setSpacing(4)
+        self.gridLayout_31.setObjectName(u"gridLayout_31")
+        self.gridLayout_31.setContentsMargins(8, 4, 4, 4)
+        self.radioButton_cross_cursor = QRadioButton(self.frame_cursor_controls_content)
+        self.buttonGroup_cursor = QButtonGroup(Dialog)
+        self.buttonGroup_cursor.setObjectName(u"buttonGroup_cursor")
+        self.buttonGroup_cursor.addButton(self.radioButton_cross_cursor)
+        self.radioButton_cross_cursor.setObjectName(u"radioButton_cross_cursor")
+        self.radioButton_cross_cursor.setMinimumSize(QSize(75, 0))
+        self.radioButton_cross_cursor.setMaximumSize(QSize(200, 28))
+        self.radioButton_cross_cursor.setFont(font3)
+        self.radioButton_cross_cursor.setChecked(False)
+
+        self.gridLayout_31.addWidget(self.radioButton_cross_cursor, 3, 0, 1, 1)
+
+        self.frame_legends = QFrame(self.frame_cursor_controls_content)
+        self.frame_legends.setObjectName(u"frame_legends")
+        self.frame_legends.setMaximumSize(QSize(16777215, 28))
+        self.frame_legends.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_legends.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_14 = QGridLayout(self.frame_legends)
+        self.gridLayout_14.setSpacing(2)
+        self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.gridLayout_14.setContentsMargins(2, 2, 2, 2)
+        self.checkBox_cursor_legends = QCheckBox(self.frame_legends)
+        self.checkBox_cursor_legends.setObjectName(u"checkBox_cursor_legends")
+        self.checkBox_cursor_legends.setMinimumSize(QSize(75, 0))
+        self.checkBox_cursor_legends.setMaximumSize(QSize(200, 26))
+        self.checkBox_cursor_legends.setFont(font3)
+        self.checkBox_cursor_legends.setChecked(True)
+
+        self.gridLayout_14.addWidget(self.checkBox_cursor_legends, 0, 0, 1, 1)
+
+
+        self.gridLayout_31.addWidget(self.frame_legends, 1, 0, 1, 1)
+
+        self.frame_vertical_lines = QFrame(self.frame_cursor_controls_content)
+        self.frame_vertical_lines.setObjectName(u"frame_vertical_lines")
+        self.frame_vertical_lines.setMaximumSize(QSize(16777215, 28))
+        self.frame_vertical_lines.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_vertical_lines.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_13 = QGridLayout(self.frame_vertical_lines)
+        self.gridLayout_13.setSpacing(2)
+        self.gridLayout_13.setObjectName(u"gridLayout_13")
+        self.gridLayout_13.setContentsMargins(2, 2, 2, 2)
+        self.spinBox_vertical_lines = QSpinBox(self.frame_vertical_lines)
+        self.spinBox_vertical_lines.setObjectName(u"spinBox_vertical_lines")
+        self.spinBox_vertical_lines.setMinimumSize(QSize(0, 0))
+        self.spinBox_vertical_lines.setMaximumSize(QSize(75, 26))
+        font5 = QFont()
+        font5.setPointSize(10)
+        self.spinBox_vertical_lines.setFont(font5)
+        self.spinBox_vertical_lines.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.spinBox_vertical_lines.setMinimum(2)
+        self.spinBox_vertical_lines.setMaximum(20)
+        self.spinBox_vertical_lines.setValue(10)
+
+        self.gridLayout_13.addWidget(self.spinBox_vertical_lines, 0, 2, 1, 1)
+
+        self.label_2 = QLabel(self.frame_vertical_lines)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(0, 0))
+        self.label_2.setMaximumSize(QSize(16777215, 16777215))
+        self.label_2.setBaseSize(QSize(0, 0))
+        self.label_2.setFont(font5)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_2, 0, 1, 1, 1)
+
+
+        self.gridLayout_31.addWidget(self.frame_vertical_lines, 5, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+
+        self.radioButton_harmonic_cursor = QRadioButton(self.frame_cursor_controls_content)
+        self.buttonGroup_cursor.addButton(self.radioButton_harmonic_cursor)
+        self.radioButton_harmonic_cursor.setObjectName(u"radioButton_harmonic_cursor")
+        self.radioButton_harmonic_cursor.setMinimumSize(QSize(75, 0))
+        self.radioButton_harmonic_cursor.setMaximumSize(QSize(200, 28))
+        self.radioButton_harmonic_cursor.setFont(font3)
+        self.radioButton_harmonic_cursor.setChecked(False)
+
+        self.gridLayout_31.addWidget(self.radioButton_harmonic_cursor, 4, 0, 1, 1)
+
+        self.radioButton_disable_cursors = QRadioButton(self.frame_cursor_controls_content)
+        self.buttonGroup_cursor.addButton(self.radioButton_disable_cursors)
+        self.radioButton_disable_cursors.setObjectName(u"radioButton_disable_cursors")
+        self.radioButton_disable_cursors.setMinimumSize(QSize(75, 0))
+        self.radioButton_disable_cursors.setMaximumSize(QSize(200, 26))
+        self.radioButton_disable_cursors.setFont(font3)
+        self.radioButton_disable_cursors.setChecked(True)
+
+        self.gridLayout_31.addWidget(self.radioButton_disable_cursors, 2, 0, 1, 1)
+
+
+        self.gridLayout_21.addWidget(self.frame_cursor_controls_content, 1, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_cursor_controls, 3, 0, 1, 1)
+
+        self.frame_histogram_lines = QFrame(self.frame_content_data)
+        self.frame_histogram_lines.setObjectName(u"frame_histogram_lines")
+        self.frame_histogram_lines.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_histogram_lines.setFrameShadow(QFrame.Shadow.Plain)
+        self.gridLayout_30 = QGridLayout(self.frame_histogram_lines)
+        self.gridLayout_30.setObjectName(u"gridLayout_30")
+        self.gridLayout_30.setVerticalSpacing(2)
+        self.gridLayout_30.setContentsMargins(4, 4, 4, 4)
+        self.frame_title = QFrame(self.frame_histogram_lines)
+        self.frame_title.setObjectName(u"frame_title")
+        self.frame_title.setMaximumSize(QSize(16777215, 40))
+        self.frame_title.setFrameShape(QFrame.Shape.Box)
+        self.frame_title.setFrameShadow(QFrame.Shadow.Raised)
+        self.verticalLayout_3 = QVBoxLayout(self.frame_title)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.label_title_3 = QLabel(self.frame_title)
+        self.label_title_3.setObjectName(u"label_title_3")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.label_title_3.sizePolicy().hasHeightForWidth())
+        self.label_title_3.setSizePolicy(sizePolicy2)
+        font6 = QFont()
+        font6.setPointSize(11)
+        self.label_title_3.setFont(font6)
+        self.label_title_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_3.addWidget(self.label_title_3)
+
+
+        self.gridLayout_30.addWidget(self.frame_title, 0, 0, 1, 1)
+
+        self.frame_content_2 = QFrame(self.frame_histogram_lines)
+        self.frame_content_2.setObjectName(u"frame_content_2")
+        self.frame_content_2.setFrameShape(QFrame.Shape.Box)
+        self.frame_content_2.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_23 = QGridLayout(self.frame_content_2)
+        self.gridLayout_23.setSpacing(4)
+        self.gridLayout_23.setObjectName(u"gridLayout_23")
+        self.gridLayout_23.setContentsMargins(4, 4, 4, 4)
+        self.label_10 = QLabel(self.frame_content_2)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setFont(font5)
+
+        self.gridLayout_23.addWidget(self.label_10, 0, 0, 1, 1)
+
+        self.checkBox_harmonic_lines_show_harmonic = QCheckBox(self.frame_content_2)
+        self.checkBox_harmonic_lines_show_harmonic.setObjectName(u"checkBox_harmonic_lines_show_harmonic")
+        sizePolicy1.setHeightForWidth(self.checkBox_harmonic_lines_show_harmonic.sizePolicy().hasHeightForWidth())
+        self.checkBox_harmonic_lines_show_harmonic.setSizePolicy(sizePolicy1)
+        self.checkBox_harmonic_lines_show_harmonic.setFont(font5)
+        self.checkBox_harmonic_lines_show_harmonic.setChecked(True)
+        self.checkBox_harmonic_lines_show_harmonic.setAutoRepeat(False)
+        self.checkBox_harmonic_lines_show_harmonic.setTristate(False)
+
+        self.gridLayout_23.addWidget(self.checkBox_harmonic_lines_show_harmonic, 2, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
+
+        self.label_11 = QLabel(self.frame_content_2)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setFont(font5)
+
+        self.gridLayout_23.addWidget(self.label_11, 1, 0, 1, 1, Qt.AlignmentFlag.AlignRight)
+
+        self.spinBox_harmonic_lines_number = QSpinBox(self.frame_content_2)
+        self.spinBox_harmonic_lines_number.setObjectName(u"spinBox_harmonic_lines_number")
+        self.spinBox_harmonic_lines_number.setWrapping(False)
+        self.spinBox_harmonic_lines_number.setFrame(True)
+        self.spinBox_harmonic_lines_number.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.spinBox_harmonic_lines_number.setMinimum(1)
+        self.spinBox_harmonic_lines_number.setValue(10)
+
+        self.gridLayout_23.addWidget(self.spinBox_harmonic_lines_number, 1, 1, 1, 1)
+
+        self.lineEdit_harmonic_lines_1st_freq = QLineEdit(self.frame_content_2)
+        self.lineEdit_harmonic_lines_1st_freq.setObjectName(u"lineEdit_harmonic_lines_1st_freq")
+        self.lineEdit_harmonic_lines_1st_freq.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_23.addWidget(self.lineEdit_harmonic_lines_1st_freq, 0, 1, 1, 1)
+
+        self.frame_buttons = QFrame(self.frame_content_2)
+        self.frame_buttons.setObjectName(u"frame_buttons")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.frame_buttons.sizePolicy().hasHeightForWidth())
+        self.frame_buttons.setSizePolicy(sizePolicy3)
+        self.frame_buttons.setMaximumSize(QSize(16777215, 16777215))
+        self.frame_buttons.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_buttons.setFrameShadow(QFrame.Shadow.Plain)
+        self.gridLayout_33 = QGridLayout(self.frame_buttons)
+        self.gridLayout_33.setSpacing(4)
+        self.gridLayout_33.setObjectName(u"gridLayout_33")
+        self.gridLayout_33.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_harmonic_lines_remove_all = QPushButton(self.frame_buttons)
+        self.pushButton_harmonic_lines_remove_all.setObjectName(u"pushButton_harmonic_lines_remove_all")
+        self.pushButton_harmonic_lines_remove_all.setMinimumSize(QSize(100, 30))
+        self.pushButton_harmonic_lines_remove_all.setMaximumSize(QSize(120, 16777215))
+        self.pushButton_harmonic_lines_remove_all.setFont(font5)
+        self.pushButton_harmonic_lines_remove_all.setAutoDefault(False)
+        self.pushButton_harmonic_lines_remove_all.setFlat(False)
+
+        self.gridLayout_33.addWidget(self.pushButton_harmonic_lines_remove_all, 1, 0, 1, 1)
+
+        self.pushButton_harmonic_lines_confirm = QPushButton(self.frame_buttons)
+        self.pushButton_harmonic_lines_confirm.setObjectName(u"pushButton_harmonic_lines_confirm")
+        self.pushButton_harmonic_lines_confirm.setMinimumSize(QSize(100, 30))
+        self.pushButton_harmonic_lines_confirm.setMaximumSize(QSize(120, 30))
+        self.pushButton_harmonic_lines_confirm.setFont(font5)
+        self.pushButton_harmonic_lines_confirm.setAutoDefault(False)
+        self.pushButton_harmonic_lines_confirm.setFlat(False)
+
+        self.gridLayout_33.addWidget(self.pushButton_harmonic_lines_confirm, 1, 1, 1, 1)
+
+
+        self.gridLayout_23.addWidget(self.frame_buttons, 5, 0, 1, 3)
+
+        self.label_12 = QLabel(self.frame_content_2)
+        self.label_12.setObjectName(u"label_12")
+        self.label_12.setFont(font5)
+
+        self.gridLayout_23.addWidget(self.label_12, 0, 2, 1, 1)
+
+        self.checkBox_harmonic_lines_show_frequency = QCheckBox(self.frame_content_2)
+        self.checkBox_harmonic_lines_show_frequency.setObjectName(u"checkBox_harmonic_lines_show_frequency")
+        sizePolicy1.setHeightForWidth(self.checkBox_harmonic_lines_show_frequency.sizePolicy().hasHeightForWidth())
+        self.checkBox_harmonic_lines_show_frequency.setSizePolicy(sizePolicy1)
+        self.checkBox_harmonic_lines_show_frequency.setFont(font5)
+        self.checkBox_harmonic_lines_show_frequency.setChecked(True)
+        self.checkBox_harmonic_lines_show_frequency.setAutoRepeat(False)
+        self.checkBox_harmonic_lines_show_frequency.setTristate(False)
+
+        self.gridLayout_23.addWidget(self.checkBox_harmonic_lines_show_frequency, 3, 0, 1, 3, Qt.AlignmentFlag.AlignHCenter)
+
+
+        self.gridLayout_30.addWidget(self.frame_content_2, 1, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_histogram_lines, 2, 0, 1, 1)
+
+
+        self.verticalLayout.addWidget(self.frame_content_data, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.gridLayout_9.addWidget(self.scrollArea, 1, 0, 1, 1)
+
+
+        self.gridLayout_20.addWidget(self.frame_configs, 0, 1, 1, 1)
+
+
+        self.gridLayout.addWidget(self.frame_content, 1, 0, 1, 2)
+
+        self.big_title_frame = QFrame(Dialog)
+        self.big_title_frame.setObjectName(u"big_title_frame")
+        self.big_title_frame.setMinimumSize(QSize(0, 48))
+        self.big_title_frame.setMaximumSize(QSize(16777215, 48))
+        self.big_title_frame.setFrameShape(QFrame.Shape.Box)
+        self.big_title_frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_7 = QGridLayout(self.big_title_frame)
+        self.gridLayout_7.setSpacing(2)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.gridLayout_7.setContentsMargins(2, 2, 2, 2)
+        self.label_title = QLabel(self.big_title_frame)
+        self.label_title.setObjectName(u"label_title")
+        font7 = QFont()
+        font7.setPointSize(12)
+        font7.setBold(False)
+        self.label_title.setFont(font7)
+        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_7.addWidget(self.label_title, 0, 0, 1, 1)
+
+
+        self.gridLayout.addWidget(self.big_title_frame, 0, 0, 1, 2)
+
+
+        self.retranslateUi(Dialog)
+
+        QMetaObject.connectSlotsByName(Dialog)
+    # setupUi
+
+    def retranslateUi(self, Dialog):
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        self.pushButton_export_data.setText(QCoreApplication.translate("Dialog", u"  Export data  ", None))
+        self.pushButton_import_data.setText(QCoreApplication.translate("Dialog", u"  Import data  ", None))
+        self.label_9.setText(QCoreApplication.translate("Dialog", u"Plot type", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u" log-y", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u" log-x", None))
+        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Dialog", u" lin-lin", None))
+        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Dialog", u" log-log", None))
+
+        self.label.setText(QCoreApplication.translate("Dialog", u"Axes scales:", None))
+        self.checkBox_legends.setText(QCoreApplication.translate("Dialog", u"Show legends", None))
+        self.checkBox_grid.setText(QCoreApplication.translate("Dialog", u"Show grid", None))
+        self.label_8.setText(QCoreApplication.translate("Dialog", u"Y-axis data", None))
+#if QT_CONFIG(whatsthis)
+        self.frame_4.setWhatsThis(QCoreApplication.translate("Dialog", u"Y-axis data type", None))
+#endif // QT_CONFIG(whatsthis)
+        self.radioButton_real.setText(QCoreApplication.translate("Dialog", u"Real part", None))
+        self.radioButton_imaginary.setText(QCoreApplication.translate("Dialog", u"Imaginary part", None))
+        self.radioButton_decibel_scale.setText(QCoreApplication.translate("Dialog", u"Decibel scale", None))
+        self.radioButton_absolute.setText(QCoreApplication.translate("Dialog", u"Absolute", None))
+        self.label_4.setText(QCoreApplication.translate("Dialog", u"Differentiate:", None))
+        self.comboBox_differentiate_data.setItemText(0, QCoreApplication.translate("Dialog", u" none", None))
+        self.comboBox_differentiate_data.setItemText(1, QCoreApplication.translate("Dialog", u" single", None))
+        self.comboBox_differentiate_data.setItemText(2, QCoreApplication.translate("Dialog", u" double", None))
+
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"Cursor controls", None))
+        self.radioButton_cross_cursor.setText(QCoreApplication.translate("Dialog", u"Enable cross cursor", None))
+        self.checkBox_cursor_legends.setText(QCoreApplication.translate("Dialog", u"Show cursor legends", None))
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Vertical lines: ", None))
+        self.radioButton_harmonic_cursor.setText(QCoreApplication.translate("Dialog", u"Enable harmonic cursor", None))
+        self.radioButton_disable_cursors.setText(QCoreApplication.translate("Dialog", u"Disable cursors", None))
+        self.label_title_3.setText(QCoreApplication.translate("Dialog", u"Harmonic lines plot", None))
+        self.label_10.setText(QCoreApplication.translate("Dialog", u"1st frequency", None))
+        self.checkBox_harmonic_lines_show_harmonic.setText(QCoreApplication.translate("Dialog", u"Show harmonic", None))
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"Lines", None))
+        self.pushButton_harmonic_lines_remove_all.setText(QCoreApplication.translate("Dialog", u"Remove all", None))
+        self.pushButton_harmonic_lines_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
+        self.label_12.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
+        self.checkBox_harmonic_lines_show_frequency.setText(QCoreApplication.translate("Dialog", u"Show frequency", None))
+        self.label_title.setText(QCoreApplication.translate("Dialog", u"Frequency response plotter", None))
+    # retranslateUi
+
+
+
+class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
+    """
+    Component Hierarchy:
+    - Dialog: QDialog
+        - (Layout): QGridLayout
+                - frame_content: QFrame
+                    - (Layout): QGridLayout
+                            - frame_widget: QFrame
+                                - (Layout): QGridLayout
+                                        - widget_plot: QWidget
+                            - frame_configs: QFrame
+                                - (Layout): QGridLayout
+                                        - frame_import_export: QFrame
+                                            - (Layout): QGridLayout
+                                                    - pushButton_export_data: QPushButton
+                                                    - pushButton_import_data: QPushButton
+                                        - scrollArea: QScrollArea
+                                            - scrollAreaWidgetContents: QWidget
+                                                - (Layout): QVBoxLayout
+                                                        - frame_content_data: QFrame
+                                                            - (Layout): QGridLayout
+                                                                    - frame_plot_type: QFrame
+                                                                        - (Layout): QGridLayout
+                                                                                - title_frame: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - label_9: QLabel
+                                                                                - frame_plot_type_content: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - frame_12: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - comboBox_plot_type: QComboBox
+                                                                                                        - label: QLabel
+                                                                                                        - frame_19: QFrame
+                                                                                                        - frame_21: QFrame
+                                                                                            - frame_legends_2: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - checkBox_legends: QCheckBox
+                                                                                            - frame_legends_3: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - checkBox_grid: QCheckBox
+                                                                    - frame_y_axis_data: QFrame
+                                                                        - (Layout): QGridLayout
+                                                                                - frame_8: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - label_8: QLabel
+                                                                                - frame_4: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - frame_20: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - radioButton_real: QRadioButton
+                                                                                            - frame_25: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - radioButton_imaginary: QRadioButton
+                                                                                            - frame_26: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - radioButton_decibel_scale: QRadioButton
+                                                                                            - frame_10: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - radioButton_absolute: QRadioButton
+                                                                                            - frame_27: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - label_4: QLabel
+                                                                                                        - comboBox_differentiate_data: QComboBox
+                                                                    - frame_cursor_controls: QFrame
+                                                                        - (Layout): QGridLayout
+                                                                                - frame_32: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - label_13: QLabel
+                                                                                - frame_cursor_controls_content: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - radioButton_cross_cursor: QRadioButton
+                                                                                            - frame_legends: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - checkBox_cursor_legends: QCheckBox
+                                                                                            - frame_vertical_lines: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - spinBox_vertical_lines: QSpinBox
+                                                                                                        - label_2: QLabel
+                                                                                            - radioButton_harmonic_cursor: QRadioButton
+                                                                                            - radioButton_disable_cursors: QRadioButton
+                                                                    - frame_histogram_lines: QFrame
+                                                                        - (Layout): QGridLayout
+                                                                                - frame_title: QFrame
+                                                                                    - (Layout): QVBoxLayout
+                                                                                            - label_title_3: QLabel
+                                                                                - frame_content_2: QFrame
+                                                                                    - (Layout): QGridLayout
+                                                                                            - label_10: QLabel
+                                                                                            - checkBox_harmonic_lines_show_harmonic: QCheckBox
+                                                                                            - label_11: QLabel
+                                                                                            - spinBox_harmonic_lines_number: QSpinBox
+                                                                                            - lineEdit_harmonic_lines_1st_freq: QLineEdit
+                                                                                            - frame_buttons: QFrame
+                                                                                                - (Layout): QGridLayout
+                                                                                                        - pushButton_harmonic_lines_remove_all: QPushButton
+                                                                                                        - pushButton_harmonic_lines_confirm: QPushButton
+                                                                                            - label_12: QLabel
+                                                                                            - checkBox_harmonic_lines_show_frequency: QCheckBox
+                - big_title_frame: QFrame
+                    - (Layout): QGridLayout
+                            - label_title: QLabel
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setupUi(self)
