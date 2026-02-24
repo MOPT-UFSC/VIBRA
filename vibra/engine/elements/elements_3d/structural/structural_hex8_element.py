@@ -179,10 +179,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
-        extra_nodes = 0
-        if self.extra_shape_function:
-            extra_nodes = 3
-
         # nodes from element
         elem_nodes = self.connectivity[el_index, 1:]
 
@@ -199,8 +195,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         dphi_t = invJAC @ self.dphi
 
         # compute the columns of the B matrix
+        extra_nodes = 3 if self.extra_shape_function else 0
         cols_B = int(self.DOF_PER_NODE * (self.NODES_PER_ELEMENT + extra_nodes))
-        
+
         B = np.zeros((self.nint, 6, cols_B), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
