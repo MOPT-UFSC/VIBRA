@@ -139,7 +139,7 @@ class DataImporter:
 
     @staticmethod                      
     def __remove_unnecesary_header_in_data(data: np.ndarray) -> np.ndarray:
-        filtered_data = [row for row in data if not isinstance(row[0], str)]
+        filtered_data = [row for row in data if DataImporter.is_valid_row(row)]
         return np.array(filtered_data, dtype=float)
 
     @staticmethod
@@ -227,9 +227,15 @@ class DataImporter:
                                         columns = [0, 1]
                                         ).to_numpy()
                 
-            filtered_data = [row_data for row_data in sheet_data if not isinstance(row_data[0], str)]
-            sheet_data = np.array(filtered_data, dtype=float)
-
+            sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
             imported_results[sheetname] = sheet_data
 
         return imported_results
+    
+    @staticmethod
+    def is_valid_row(row) -> bool:
+        try:
+            float(row[0])
+            return True
+        except (ValueError, TypeError):
+            return False
