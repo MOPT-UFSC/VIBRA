@@ -867,7 +867,7 @@ class MainWindow(MainWindow_UI):
         project_recovery = (project_path is None)
 
         if project_recovery:
-            LoadingWindow(project.sync_with_working_dir).run()
+            LoadingWindow(project.read_from_working_dir).run()
             project.name = "Recover project"
         else:
             LoadingWindow(project.load_project).run(project_path)

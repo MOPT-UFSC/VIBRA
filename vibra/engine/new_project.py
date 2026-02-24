@@ -115,11 +115,27 @@ class NewProject:
         self.create_connections()
         return self
 
-    def sync_with_working_dir(self) -> NewProject:
+    def read_from_working_dir(self) -> NewProject:
         """
         Reload project data from the working directory.
         """
         return self.project_reader.read_project(self)
+
+    def write_to_working_dir(self):
+        """
+        Writes project data to the working directory.
+        """
+        return self.project_writer.write_project(self)
+        self.needs_saving = True
+
+    # TODO: use only "write_to_working_dir"
+    def update_model_properties_file(self):
+        self.project_writer.write_model_properties(self.model.properties)
+        self.needs_saving = True
+
+    def update_project_setup_file(self):
+        self.project_writer.write_project_setup(self)
+        self.needs_saving = True
 
     def save_project(
         self,
@@ -132,7 +148,7 @@ class NewProject:
         self.save_path = Path(path)
         self.name = name
         if self.project_paths.is_empty():
-            self.project_writer.write_project(self)
+            self.write_to_working_dir()
         self.project_writer.write_file(path)
         self.needs_saving = False
 
@@ -160,15 +176,6 @@ class NewProject:
         path = Path(path)
         # self.model.geometry = Geometry(path)
         self.model.geometry_path = self.project_writer.write_geometry(path)
-        self.needs_saving = True
-
-    # Replace these calls with some type of event handler
-    def update_model_properties_file(self):
-        self.project_writer.write_model_properties(self.model.properties)
-        self.needs_saving = True
-
-    def update_project_setup_file(self):
-        self.project_writer.write_project_setup(self)
         self.needs_saving = True
 
     def configure_mesh(self, mesh_setup: MeshSetup):
