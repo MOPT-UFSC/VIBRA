@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     # this file is imported by NewProject
     from vibra.engine.new_project import NewProject
 
-from vibra.engine.analysis_info import AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
@@ -88,7 +88,8 @@ class ProjectWriter:
             project_setup["length_unit"] = project.model.length_unit
             project_setup["geometry_qf"] = project.model.geometry_qf
 
-        project_setup["analysis_setup"]["analysis_id"] = int(project.current_analysis_id)
+        if project.current_analysis_id != AnalysisID.NO_ANALYSIS:
+            project_setup["analysis_setup"]["analysis_id"] = int(project.current_analysis_id)
 
         if isinstance(project.model.new_analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
             project_setup["analysis_setup"].update(project.model.new_analysis_setup.as_dict())
