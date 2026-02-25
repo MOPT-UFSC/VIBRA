@@ -234,6 +234,7 @@ class ProjectReader:
                 tag = int(key.split("_")[-1])
                 value = [int(i) for i in value]
 
+                # This "startswith" is very sad
                 if key.startswith("points_from_line"):
                     mesh.points_from_line[tag] = value
 
@@ -242,6 +243,15 @@ class ProjectReader:
 
                 elif key.startswith("surfaces_from_volume"):
                     mesh.surfaces_from_volume[tag] = value
+                
+                elif key.startswith("cache_points_from_line"):
+                    mesh.cache_points_from_line[tag] = value
+
+                elif key.startswith("cache_lines_from_surface"):
+                    mesh.cache_lines_from_surface[tag] = value
+
+                elif key.startswith("cache_surfaces_from_volume"):
+                    mesh.cache_surfaces_from_volume[tag] = value
 
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()

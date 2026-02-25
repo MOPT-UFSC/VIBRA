@@ -68,7 +68,7 @@ class ProjectWriter:
         self.write_model_properties(model.properties)
 
         if model.geometry_path is not None:
-            # Copy geometry file to the working dir and 
+            # Copy geometry file to the working dir and
             # update the path to point to the new location.
             model.geometry_path = self.write_geometry(model.geometry_path)
 
@@ -194,13 +194,13 @@ class ProjectWriter:
                 file[f"adjacencies/surfaces_from_volume_{volume}"] = surfaces
 
             if mesh.has_decoupling():
-                for line, points in mesh.points_from_line.items():
+                for line, points in mesh.cache_points_from_line.items():
                     file[f"adjacencies/cache_points_from_line_{line}"] = points
 
-                for surface, lines in mesh.lines_from_surface.items():
+                for surface, lines in mesh.cache_lines_from_surface.items():
                     file[f"adjacencies/cache_lines_from_surface_{surface}"] = lines
 
-                for volume, surfaces in mesh.surfaces_from_volume.items():
+                for volume, surfaces in mesh.cache_surfaces_from_volume.items():
                     file[f"adjacencies/cache_surfaces_from_volume_{volume}"] = surfaces
 
     def write_mesh_quality_data_in_file(self, mesh: Mesh):
