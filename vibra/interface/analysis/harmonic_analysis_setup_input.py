@@ -58,14 +58,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if direct_method:
             self.lineEdit_modes_to_expand.setText("")
             return
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if not isinstance(analysis_setup, dict):
-            return
-
+        
+        analysis_setup = app().new_project.model.new_analysis_setup
         if self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            if analysis_setup.get("analysis_method") == "mode_superposition":
-                modes_to_expand = analysis_setup.get("modes_number")
+            if analysis_setup.analysis_method == "mode_superposition":
+                modes_to_expand = analysis_setup.modes_number
                 self.lineEdit_modes_to_expand.setText(f"{modes_to_expand}")
         else:
             self.lineEdit_modes_to_expand.setText(f"")
@@ -168,10 +165,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def enter_setup_callback(self):
-        # analysis_setup = app().file.read_analysis_setup_from_file()
-        # if analysis_setup is None:
-        #     analysis_setup = dict()
-
         analysis_id = app().main_window.analysis_toolbar.get_current_analysis_id()
         analysis_method = "direct" if self.comboBox_method.currentIndex() == 0 else "mode_superposition"
 

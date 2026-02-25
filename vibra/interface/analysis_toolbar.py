@@ -273,7 +273,7 @@ class AnalysisToolbar(QToolBar):
 
         if app().new_project.model.stop_processing:
             app().new_project.model.toggle_processing_callback()
-            app().file.remove_results_data_from_project_file()
+            app().new_project.project_writer.delete_results_data()
             return
 
         # if is_resume:
@@ -287,19 +287,6 @@ class AnalysisToolbar(QToolBar):
 
         logging.info("Post-processing results... [65/100]")
         app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
-
-        # if not app().file.geometry_data_filepath.exists():
-        #     app().file.write_geometry_data_in_file()
-
-        # logging.info("Post-processing results... [85/100]")
-        # if not app().file.mesh_data_filepath.exists():
-        #     app().file.write_mesh_data_in_file()
-
-        # logging.info("Post-processing results... [90/100]")
-        # app().new_project.update_model_properties_file()
-
-        # logging.info("Post-processing results... [95/100]")
-        # app().file.write_results_data_in_file()
 
     def project_solution_data_reset_callback(self):
 
@@ -324,11 +311,6 @@ class AnalysisToolbar(QToolBar):
 
     def reset_solution(self, force_delete_harmonic = False):
         app().new_project.reset_solution()
-        app().file.remove_results_data_from_project_file()
-
-        if force_delete_harmonic:
-            app().file.delete_harmonic_solution()
-
         self.pushButton_reset_solution.setDisabled(True)
         app().main_window.project_data_modified = True
         app().main_window.action_model_workspace_callback()

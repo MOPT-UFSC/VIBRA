@@ -973,10 +973,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             app().new_project.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
-            app().file.remove_mesh_data_from_project_file()
-
-            logging.info("Processing the post-assignment actions... [40/100]")
-            app().file.remove_results_data_from_project_file()
+            app().new_project.project_writer.delete_mesh_data()
 
             logging.info("Processing the post-assignment actions... [50/100]")
             app().new_project.update_model_properties_file()
@@ -1006,10 +1003,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.model.process_degrees_of_freedom_decoupling()
 
             logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().file.write_mesh_data_in_file()
-            
-            logging.info("Processing degress of freedom decoupling... [75/100]")
-            app().file.write_geometry_data_in_file()
+            app().new_project.write_to_working_dir()
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
