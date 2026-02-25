@@ -13,7 +13,7 @@ import numpy as np
 from copy import deepcopy
 from pathlib import Path
 
-from vibra.project_files.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
+from vibra.engine.serialization.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
 
 from vibra.utils.utils import get_color_rgb, get_list_of_values_from_string

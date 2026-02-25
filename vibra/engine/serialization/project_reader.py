@@ -31,7 +31,7 @@ from vibra.engine.properties import (
 )
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.project_files.file_helpers import read_image, read_json
+from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
 from .project_paths import ProjectPaths
