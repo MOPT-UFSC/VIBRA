@@ -360,19 +360,17 @@ class MainWindow(MainWindow_UI):
     def action_points_callback(self):
         all_ids = app().project.model.mesh.all_point_ids()
         self.selection.set_geometry_selection(points=all_ids)
-        self.update_plots()
+        
 
     def action_faces_callback(self):
         all_ids= app().project.model.mesh.all_surface_ids()
         self.selection.set_geometry_selection(surfaces=all_ids)
-        self.update_plots()
 
     def action_solid_callback(self):
         all_ids = app().project.model.mesh.all_solid_ids()
         self.selection.set_geometry_selection(volumes=all_ids)
-        self.update_plots()
 
-    def action_all_entities_callback(self):
+    def action_all_entities_geometry_callback(self):
         mesh = app().project.model.mesh
         self.selection.set_geometry_selection(
             points=mesh.all_point_ids(),
@@ -380,75 +378,36 @@ class MainWindow(MainWindow_UI):
             surfaces=mesh.all_surface_ids(),
             volumes=mesh.all_solid_ids(),
         )
-        self.update_plots()
+
+    def action_all_entities_mesh_callback(self):
+        mesh = app().project.model.mesh
+        self.selection.set_mesh_selection(
+            nodes=mesh.all_node_ids(),
+            faces=mesh.all_face_element_ids(),
+            solids=mesh.all_solid_element_ids(),
+        )
 
     def action_nodes_callback(self):
         all_ids = app().project.model.mesh.all_node_ids()
         self.selection.set_mesh_selection(nodes=all_ids)
-        self.update_plots()
     
     def action_surface_elements_callback(self):
         all_ids = app().project.model.mesh.all_face_element_ids()
         self.selection.set_mesh_selection(faces=all_ids)
-        self.update_plots()
 
     def action_solid_elements_callback(self):
         all_ids = app().project.model.mesh.all_solid_element_ids()
         self.selection.set_mesh_selection(solids=all_ids)
-        self.update_plots()
 
     def action_clear_selection_callback(self):
         self.selection.clear_selection()
-        self.update_plots()
     
     def action_volume_selection_mode_callback(self, checked):
         self.selection.volume_selection_mode = checked
         self.selection.selection_changed.emit()
     
     def action_invert_selection_callback(self):
-        mesh = app().project.model.mesh
-        selection = self.selection
-
-        geometry_selection_active = any([
-            selection.geometry_points,
-            selection.geometry_lines,
-            selection.geometry_surfaces,
-            selection.geometry_volumes,
-        ])
-        mesh_selection_active = any([
-            selection.mesh_nodes,
-            selection.mesh_faces,
-            selection.mesh_solids,
-        ])
-
-        if not geometry_selection_active and not mesh_selection_active:
-            return
-        
-        if geometry_selection_active:
-            new_geometry_selection = {}
-            if selection.geometry_points:
-                new_geometry_selection["points"] = mesh.all_point_ids() - selection.geometry_points
-            if selection.geometry_lines:
-                new_geometry_selection["lines"] = mesh.all_line_ids() - selection.geometry_lines
-            if selection.geometry_surfaces:
-                new_geometry_selection["surfaces"] = mesh.all_surface_ids() - selection.geometry_surfaces
-            if selection.geometry_volumes:
-                new_geometry_selection["volumes"] = mesh.all_solid_ids() - selection.geometry_volumes
-            if new_geometry_selection:
-                selection.set_geometry_selection(**new_geometry_selection)
-        
-        elif mesh_selection_active:
-            new_mesh_selection = {}
-            if selection.mesh_nodes:
-                    new_mesh_selection["nodes"] = mesh.all_node_ids() - selection.mesh_nodes
-            if selection.mesh_faces:
-                    new_mesh_selection["faces"] = mesh.all_face_element_ids() - selection.mesh_faces
-            if selection.mesh_solids:
-                    new_mesh_selection["solids"] = mesh.all_solid_element_ids() - selection.mesh_solids
-            if new_mesh_selection:
-                selection.set_mesh_selection(**new_mesh_selection)
-
-        self.update_plots()
+        self.selection.invert_selection()
 
     def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)

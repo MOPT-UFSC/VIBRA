@@ -202,7 +202,7 @@
      <addaction name="action_points"/>
      <addaction name="action_faces"/>
      <addaction name="action_solid"/>
-     <addaction name="action_all_entities"/>
+     <addaction name="action_all_entities_geometry"/>
     </widget>
     <widget class="QMenu" name="menu_mesh_select_all">
      <property name="title">
@@ -211,6 +211,7 @@
      <addaction name="action_nodes"/>
      <addaction name="action_surface_elements"/>
      <addaction name="action_solid_elements"/>
+     <addaction name="action_all_entities_mesh"/>
     </widget>
     <addaction name="menu_geometry_select_all"/>
     <addaction name="menu_mesh_select_all"/>
@@ -750,12 +751,12 @@
     <string>Solids</string>
    </property>
   </action>
-  <action name="action_all_entities">
+  <action name="action_all_entities_geometry">
    <property name="checkable">
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>All entities</string>
+    <string>All Entities</string>
    </property>
   </action>
   <action name="action_nodes">
@@ -780,6 +781,11 @@
    </property>
    <property name="text">
     <string>Solid Elements</string>
+   </property>
+  </action>
+  <action name="action_all_entities_mesh">
+   <property name="text">
+    <string>All Entities</string>
    </property>
   </action>
  </widget>
