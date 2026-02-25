@@ -16,7 +16,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from enum import IntEnum
 
 
-class OutputType(IntEnum):
+class DataFormat(IntEnum):
     ABSOLUTE = 0
     REAL = 1
     IMAGINARY = 2
@@ -95,7 +95,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_changed_callback)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
         self.comboBox_harmonic_lines_control.currentIndexChanged.connect(self.plot_harmonic_lines_callback)
-        self.comboBox_output_type.currentIndexChanged.connect(self.output_type_changed_callback)
+        self.comboBox_data_format.currentIndexChanged.connect(self.data_format_changed_callback)
         self.comboBox_cursor_control.currentIndexChanged.connect(self.cursor_controls_changed_callback)
         #
         self.lineEdit_harmonic_lines_1st_freq.textChanged.connect(self.plot_harmonic_lines_callback)
@@ -134,10 +134,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.checkBox_cursor_legends.setDisabled(True)
         self.frame_vertical_lines.setDisabled(True)
 
-    def output_type_changed_callback(self):
+    def data_format_changed_callback(self):
 
         self.cache_plot_type = self.comboBox_plot_type.currentIndex()
-        self.linear_plot = self.comboBox_output_type.currentIndex() != OutputType.ABSOLUTE
+        self.linear_plot = self.comboBox_data_format.currentIndex() != DataFormat.ABSOLUTE
         self.comboBox_plot_type.setDisabled(self.linear_plot)
 
         if self.linear_plot:
@@ -284,8 +284,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.decibel_data = decibel_data
         self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
         self.comboBox_plot_type.setDisabled(True)
-        self.comboBox_output_type.setCurrentIndex(OutputType.DECIBEL_SCALE)
-        self.comboBox_output_type.setDisabled(True)
+        self.comboBox_data_format.setCurrentIndex(DataFormat.DECIBEL_SCALE)
+        self.comboBox_data_format.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data: dict):
@@ -304,7 +304,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.linestyle = data.get("linestyle")
 
     def get_scaled_data(self, data):
-        if self.comboBox_output_type.currentIndex() != OutputType.DECIBEL_SCALE:
+        if self.comboBox_data_format.currentIndex() != DataFormat.DECIBEL_SCALE:
             return data
 
         shift = 0
@@ -325,15 +325,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return None
 
         dif_data = self.process_differentiation(data)
-        output_type_index = self.comboBox_output_type.currentIndex()
+        data_format_index = self.comboBox_data_format.currentIndex()
 
-        if output_type_index == OutputType.REAL:
+        if data_format_index == DataFormat.REAL:
             return np.real(dif_data)
 
-        elif output_type_index == OutputType.IMAGINARY:
+        elif data_format_index == DataFormat.IMAGINARY:
             return np.imag(dif_data)
 
-        elif output_type_index == OutputType.ABSOLUTE:
+        elif data_format_index == DataFormat.ABSOLUTE:
             return np.abs(dif_data)
 
         else:
@@ -341,11 +341,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def get_y_axis_label(self, label: str):
         
-        output_type_index = self.comboBox_output_type.currentIndex()
-        if output_type_index == OutputType.REAL:
+        data_format_index = self.comboBox_data_format.currentIndex()
+        if data_format_index == DataFormat.REAL:
             type_label = "real"
 
-        elif output_type_index == OutputType.IMAGINARY:
+        elif data_format_index == DataFormat.IMAGINARY:
             type_label = "imaginary"
 
         else:
@@ -355,7 +355,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return f"{label} [dB]"
 
         unit = self.get_unit_considering_differentiation()
-        if output_type_index == OutputType.DECIBEL_SCALE:
+        if data_format_index == DataFormat.DECIBEL_SCALE:
             return f"{label} - {type_label} [dB]"
 
         return f"{label} - {type_label} [{unit}]"

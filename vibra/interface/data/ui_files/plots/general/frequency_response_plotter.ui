@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1050</width>
-    <height>791</height>
+    <height>744</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -134,114 +134,6 @@
          <property name="verticalSpacing">
           <number>4</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QFrame" name="frame_import_export">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>44</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Shape::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Shadow::Raised</enum>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_8">
-            <property name="leftMargin">
-             <number>4</number>
-            </property>
-            <property name="topMargin">
-             <number>4</number>
-            </property>
-            <property name="rightMargin">
-             <number>4</number>
-            </property>
-            <property name="bottomMargin">
-             <number>4</number>
-            </property>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pushButton_export_data">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>120</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>120</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <family>Ubuntu Sans</family>
-                <pointsize>10</pointsize>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>  Export data  </string>
-              </property>
-              <property name="autoDefault">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="pushButton_import_data">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>120</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>120</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="font">
-               <font>
-                <family>Ubuntu Sans</family>
-                <pointsize>10</pointsize>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string>  Import data  </string>
-              </property>
-              <property name="autoDefault">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QScrollArea" name="scrollArea">
            <property name="frameShape">
@@ -259,7 +151,7 @@
               <x>0</x>
               <y>0</y>
               <width>282</width>
-              <height>667</height>
+              <height>620</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
@@ -738,10 +630,16 @@
                 </item>
                 <item row="1" column="0">
                  <widget class="QFrame" name="frame_y_axis_data">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>140</height>
+                   </size>
+                  </property>
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>220</height>
+                    <height>140</height>
                    </size>
                   </property>
                   <property name="frameShape">
@@ -910,10 +808,16 @@
                        <number>4</number>
                       </property>
                       <item row="1" column="2">
-                       <widget class="QComboBox" name="comboBox_output_type">
+                       <widget class="QComboBox" name="comboBox_data_format">
                         <property name="minimumSize">
                          <size>
-                          <width>0</width>
+                          <width>132</width>
+                          <height>26</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>140</width>
                           <height>26</height>
                          </size>
                         </property>
@@ -924,17 +828,17 @@
                         </property>
                         <item>
                          <property name="text">
-                          <string>absolute</string>
+                          <string>absolute values</string>
                          </property>
                         </item>
                         <item>
                          <property name="text">
-                          <string>real part</string>
+                          <string>real values</string>
                          </property>
                         </item>
                         <item>
                          <property name="text">
-                          <string>imaginary part</string>
+                          <string>imaginary values</string>
                          </property>
                         </item>
                         <item>
@@ -965,7 +869,7 @@
                          </font>
                         </property>
                         <property name="text">
-                         <string>Output type:</string>
+                         <string>Data format:</string>
                         </property>
                         <property name="alignment">
                          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -1007,13 +911,13 @@
                         </property>
                         <property name="minimumSize">
                          <size>
-                          <width>80</width>
+                          <width>132</width>
                           <height>26</height>
                          </size>
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>100</width>
+                          <width>140</width>
                           <height>26</height>
                          </size>
                         </property>
@@ -1082,13 +986,13 @@
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
-                    <height>200</height>
+                    <height>160</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>16777215</width>
-                    <height>250</height>
+                    <height>160</height>
                    </size>
                   </property>
                   <property name="frameShape">
@@ -1117,7 +1021,13 @@
                     <widget class="QFrame" name="frame_32">
                      <property name="minimumSize">
                       <size>
-                       <width>85</width>
+                       <width>0</width>
+                       <height>32</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
                        <height>32</height>
                       </size>
                      </property>
@@ -1184,8 +1094,14 @@
                     <widget class="QFrame" name="frame_cursor_controls_content">
                      <property name="minimumSize">
                       <size>
-                       <width>85</width>
-                       <height>160</height>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>140</height>
                       </size>
                      </property>
                      <property name="sizeIncrement">
@@ -1442,6 +1358,12 @@
                 </item>
                 <item row="2" column="0">
                  <widget class="QFrame" name="frame_harmonic_lines">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>160</height>
+                   </size>
+                  </property>
                   <property name="frameShape">
                    <enum>QFrame::Shape::NoFrame</enum>
                   </property>
@@ -1775,6 +1697,114 @@
              </item>
             </layout>
            </widget>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QFrame" name="frame_import_export">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>44</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Shape::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Shadow::Raised</enum>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_8">
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>4</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="pushButton_export_data">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>120</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>120</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Ubuntu Sans</family>
+                <pointsize>10</pointsize>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>  Export data  </string>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="pushButton_import_data">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>120</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>120</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Ubuntu Sans</family>
+                <pointsize>10</pointsize>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>  Import data  </string>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>

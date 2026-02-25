@@ -24,7 +24,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(1050, 791)
+        Dialog.resize(1050, 744)
         Dialog.setMinimumSize(QSize(900, 600))
         Dialog.setStyleSheet(u"")
         self.gridLayout = QGridLayout(Dialog)
@@ -66,45 +66,6 @@ class Ui_Dialog(object):
         self.gridLayout_9.setObjectName(u"gridLayout_9")
         self.gridLayout_9.setVerticalSpacing(4)
         self.gridLayout_9.setContentsMargins(4, 4, 4, 4)
-        self.frame_import_export = QFrame(self.frame_configs)
-        self.frame_import_export.setObjectName(u"frame_import_export")
-        self.frame_import_export.setMinimumSize(QSize(0, 44))
-        self.frame_import_export.setMaximumSize(QSize(16777215, 16777215))
-        self.frame_import_export.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_import_export.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_8 = QGridLayout(self.frame_import_export)
-        self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_export_data = QPushButton(self.frame_import_export)
-        self.pushButton_export_data.setObjectName(u"pushButton_export_data")
-        self.pushButton_export_data.setEnabled(True)
-        self.pushButton_export_data.setMinimumSize(QSize(120, 30))
-        self.pushButton_export_data.setMaximumSize(QSize(120, 30))
-        font = QFont()
-        font.setFamilies([u"Ubuntu Sans"])
-        font.setPointSize(10)
-        font.setBold(False)
-        font.setItalic(False)
-        self.pushButton_export_data.setFont(font)
-        self.pushButton_export_data.setStyleSheet(u"")
-        self.pushButton_export_data.setAutoDefault(False)
-
-        self.gridLayout_8.addWidget(self.pushButton_export_data, 0, 0, 1, 1)
-
-        self.pushButton_import_data = QPushButton(self.frame_import_export)
-        self.pushButton_import_data.setObjectName(u"pushButton_import_data")
-        self.pushButton_import_data.setEnabled(True)
-        self.pushButton_import_data.setMinimumSize(QSize(120, 30))
-        self.pushButton_import_data.setMaximumSize(QSize(120, 30))
-        self.pushButton_import_data.setFont(font)
-        self.pushButton_import_data.setStyleSheet(u"")
-        self.pushButton_import_data.setAutoDefault(False)
-
-        self.gridLayout_8.addWidget(self.pushButton_import_data, 0, 1, 1, 1)
-
-
-        self.gridLayout_9.addWidget(self.frame_import_export, 0, 0, 1, 1)
-
         self.scrollArea = QScrollArea(self.frame_configs)
         self.scrollArea.setObjectName(u"scrollArea")
         self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
@@ -112,7 +73,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 282, 667))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 282, 620))
         self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout.setSpacing(2)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -154,12 +115,12 @@ class Ui_Dialog(object):
         self.label_9.setSizePolicy(sizePolicy)
         self.label_9.setMinimumSize(QSize(120, 20))
         self.label_9.setMaximumSize(QSize(165, 32))
-        font1 = QFont()
-        font1.setFamilies([u"MS Shell Dlg 2"])
-        font1.setPointSize(11)
-        font1.setBold(False)
-        font1.setItalic(False)
-        self.label_9.setFont(font1)
+        font = QFont()
+        font.setFamilies([u"MS Shell Dlg 2"])
+        font.setPointSize(11)
+        font.setBold(False)
+        font.setItalic(False)
+        self.label_9.setFont(font)
         self.label_9.setFrameShape(QFrame.Shape.NoFrame)
         self.label_9.setFrameShadow(QFrame.Shadow.Sunken)
         self.label_9.setTextFormat(Qt.TextFormat.AutoText)
@@ -185,10 +146,10 @@ class Ui_Dialog(object):
         self.frame_12 = QFrame(self.frame_plot_type_content)
         self.frame_12.setObjectName(u"frame_12")
         self.frame_12.setMaximumSize(QSize(16777215, 28))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setBold(False)
-        self.frame_12.setFont(font2)
+        font1 = QFont()
+        font1.setPointSize(10)
+        font1.setBold(False)
+        self.frame_12.setFont(font1)
         self.frame_12.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_12.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_10 = QGridLayout(self.frame_12)
@@ -213,12 +174,12 @@ class Ui_Dialog(object):
         self.comboBox_plot_type.setSizePolicy(sizePolicy1)
         self.comboBox_plot_type.setMinimumSize(QSize(80, 26))
         self.comboBox_plot_type.setMaximumSize(QSize(100, 26))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.comboBox_plot_type.setFont(font3)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.comboBox_plot_type.setFont(font2)
         self.comboBox_plot_type.setStyleSheet(u"")
 
         self.gridLayout_10.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
@@ -227,7 +188,7 @@ class Ui_Dialog(object):
         self.label.setObjectName(u"label")
         self.label.setMinimumSize(QSize(0, 0))
         self.label.setMaximumSize(QSize(16777215, 26))
-        self.label.setFont(font2)
+        self.label.setFont(font1)
 
         self.gridLayout_10.addWidget(self.label, 0, 1, 1, 1)
 
@@ -251,7 +212,7 @@ class Ui_Dialog(object):
         self.checkBox_legends.setObjectName(u"checkBox_legends")
         self.checkBox_legends.setMinimumSize(QSize(75, 0))
         self.checkBox_legends.setMaximumSize(QSize(140, 26))
-        self.checkBox_legends.setFont(font3)
+        self.checkBox_legends.setFont(font2)
         self.checkBox_legends.setChecked(True)
 
         self.gridLayout_19.addWidget(self.checkBox_legends, 0, 0, 1, 1)
@@ -272,7 +233,7 @@ class Ui_Dialog(object):
         self.checkBox_grid.setObjectName(u"checkBox_grid")
         self.checkBox_grid.setMinimumSize(QSize(75, 0))
         self.checkBox_grid.setMaximumSize(QSize(140, 26))
-        self.checkBox_grid.setFont(font3)
+        self.checkBox_grid.setFont(font2)
         self.checkBox_grid.setChecked(True)
 
         self.gridLayout_22.addWidget(self.checkBox_grid, 0, 0, 1, 1)
@@ -288,7 +249,8 @@ class Ui_Dialog(object):
 
         self.frame_y_axis_data = QFrame(self.frame_content_data)
         self.frame_y_axis_data.setObjectName(u"frame_y_axis_data")
-        self.frame_y_axis_data.setMaximumSize(QSize(16777215, 220))
+        self.frame_y_axis_data.setMinimumSize(QSize(0, 140))
+        self.frame_y_axis_data.setMaximumSize(QSize(16777215, 140))
         self.frame_y_axis_data.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_y_axis_data.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_6 = QGridLayout(self.frame_y_axis_data)
@@ -299,9 +261,9 @@ class Ui_Dialog(object):
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(0, 32))
         self.frame_8.setMaximumSize(QSize(16777215, 32))
-        font4 = QFont()
-        font4.setPointSize(10)
-        self.frame_8.setFont(font4)
+        font3 = QFont()
+        font3.setPointSize(10)
+        self.frame_8.setFont(font3)
         self.frame_8.setFrameShape(QFrame.Shape.Box)
         self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_8)
@@ -316,7 +278,7 @@ class Ui_Dialog(object):
         self.label_8.setSizePolicy(sizePolicy)
         self.label_8.setMinimumSize(QSize(120, 20))
         self.label_8.setMaximumSize(QSize(165, 32))
-        self.label_8.setFont(font1)
+        self.label_8.setFont(font)
         self.label_8.setFrameShape(QFrame.Shape.NoFrame)
         self.label_8.setFrameShadow(QFrame.Shadow.Sunken)
         self.label_8.setTextFormat(Qt.TextFormat.AutoText)
@@ -340,22 +302,23 @@ class Ui_Dialog(object):
         self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
-        self.comboBox_output_type = QComboBox(self.frame_4)
-        self.comboBox_output_type.addItem("")
-        self.comboBox_output_type.addItem("")
-        self.comboBox_output_type.addItem("")
-        self.comboBox_output_type.addItem("")
-        self.comboBox_output_type.setObjectName(u"comboBox_output_type")
-        self.comboBox_output_type.setMinimumSize(QSize(0, 26))
-        self.comboBox_output_type.setFont(font4)
+        self.comboBox_data_format = QComboBox(self.frame_4)
+        self.comboBox_data_format.addItem("")
+        self.comboBox_data_format.addItem("")
+        self.comboBox_data_format.addItem("")
+        self.comboBox_data_format.addItem("")
+        self.comboBox_data_format.setObjectName(u"comboBox_data_format")
+        self.comboBox_data_format.setMinimumSize(QSize(132, 26))
+        self.comboBox_data_format.setMaximumSize(QSize(140, 26))
+        self.comboBox_data_format.setFont(font3)
 
-        self.gridLayout_4.addWidget(self.comboBox_output_type, 1, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.comboBox_data_format, 1, 2, 1, 1)
 
         self.label_5 = QLabel(self.frame_4)
         self.label_5.setObjectName(u"label_5")
         self.label_5.setMinimumSize(QSize(0, 0))
         self.label_5.setMaximumSize(QSize(16777215, 26))
-        self.label_5.setFont(font2)
+        self.label_5.setFont(font1)
         self.label_5.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_5, 1, 1, 1, 1)
@@ -364,7 +327,7 @@ class Ui_Dialog(object):
         self.label_4.setObjectName(u"label_4")
         self.label_4.setMinimumSize(QSize(0, 0))
         self.label_4.setMaximumSize(QSize(16777215, 26))
-        self.label_4.setFont(font2)
+        self.label_4.setFont(font1)
 
         self.gridLayout_4.addWidget(self.label_4, 2, 1, 1, 1)
 
@@ -375,9 +338,9 @@ class Ui_Dialog(object):
         self.comboBox_differentiate_data.setObjectName(u"comboBox_differentiate_data")
         sizePolicy1.setHeightForWidth(self.comboBox_differentiate_data.sizePolicy().hasHeightForWidth())
         self.comboBox_differentiate_data.setSizePolicy(sizePolicy1)
-        self.comboBox_differentiate_data.setMinimumSize(QSize(80, 26))
-        self.comboBox_differentiate_data.setMaximumSize(QSize(100, 26))
-        self.comboBox_differentiate_data.setFont(font3)
+        self.comboBox_differentiate_data.setMinimumSize(QSize(132, 26))
+        self.comboBox_differentiate_data.setMaximumSize(QSize(140, 26))
+        self.comboBox_differentiate_data.setFont(font2)
         self.comboBox_differentiate_data.setStyleSheet(u"")
 
         self.gridLayout_4.addWidget(self.comboBox_differentiate_data, 2, 2, 1, 1)
@@ -398,8 +361,8 @@ class Ui_Dialog(object):
 
         self.frame_cursor_controls = QFrame(self.frame_content_data)
         self.frame_cursor_controls.setObjectName(u"frame_cursor_controls")
-        self.frame_cursor_controls.setMinimumSize(QSize(0, 200))
-        self.frame_cursor_controls.setMaximumSize(QSize(16777215, 250))
+        self.frame_cursor_controls.setMinimumSize(QSize(0, 160))
+        self.frame_cursor_controls.setMaximumSize(QSize(16777215, 160))
         self.frame_cursor_controls.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_cursor_controls.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_21 = QGridLayout(self.frame_cursor_controls)
@@ -408,7 +371,8 @@ class Ui_Dialog(object):
         self.gridLayout_21.setContentsMargins(4, 4, 4, 0)
         self.frame_32 = QFrame(self.frame_cursor_controls)
         self.frame_32.setObjectName(u"frame_32")
-        self.frame_32.setMinimumSize(QSize(85, 32))
+        self.frame_32.setMinimumSize(QSize(0, 32))
+        self.frame_32.setMaximumSize(QSize(16777215, 32))
         self.frame_32.setSizeIncrement(QSize(0, 110))
         self.frame_32.setFrameShape(QFrame.Shape.Box)
         self.frame_32.setFrameShadow(QFrame.Shadow.Raised)
@@ -420,10 +384,10 @@ class Ui_Dialog(object):
         self.label_13.setObjectName(u"label_13")
         self.label_13.setMinimumSize(QSize(0, 20))
         self.label_13.setMaximumSize(QSize(16777215, 32))
-        font5 = QFont()
-        font5.setPointSize(11)
-        font5.setBold(False)
-        self.label_13.setFont(font5)
+        font4 = QFont()
+        font4.setPointSize(11)
+        font4.setBold(False)
+        self.label_13.setFont(font4)
         self.label_13.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_32.addWidget(self.label_13, 0, 0, 1, 1)
@@ -433,7 +397,8 @@ class Ui_Dialog(object):
 
         self.frame_cursor_controls_content = QFrame(self.frame_cursor_controls)
         self.frame_cursor_controls_content.setObjectName(u"frame_cursor_controls_content")
-        self.frame_cursor_controls_content.setMinimumSize(QSize(85, 160))
+        self.frame_cursor_controls_content.setMinimumSize(QSize(0, 0))
+        self.frame_cursor_controls_content.setMaximumSize(QSize(16777215, 140))
         self.frame_cursor_controls_content.setSizeIncrement(QSize(0, 110))
         self.frame_cursor_controls_content.setFrameShape(QFrame.Shape.Box)
         self.frame_cursor_controls_content.setFrameShadow(QFrame.Shadow.Raised)
@@ -458,7 +423,7 @@ class Ui_Dialog(object):
         self.checkBox_cursor_legends.setObjectName(u"checkBox_cursor_legends")
         self.checkBox_cursor_legends.setMinimumSize(QSize(75, 0))
         self.checkBox_cursor_legends.setMaximumSize(QSize(200, 26))
-        self.checkBox_cursor_legends.setFont(font3)
+        self.checkBox_cursor_legends.setFont(font2)
         self.checkBox_cursor_legends.setChecked(True)
 
         self.gridLayout_14.addWidget(self.checkBox_cursor_legends, 0, 0, 1, 1)
@@ -479,7 +444,7 @@ class Ui_Dialog(object):
         self.spinBox_vertical_lines.setObjectName(u"spinBox_vertical_lines")
         self.spinBox_vertical_lines.setMinimumSize(QSize(60, 26))
         self.spinBox_vertical_lines.setMaximumSize(QSize(100, 26))
-        self.spinBox_vertical_lines.setFont(font4)
+        self.spinBox_vertical_lines.setFont(font3)
         self.spinBox_vertical_lines.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_vertical_lines.setMinimum(2)
         self.spinBox_vertical_lines.setMaximum(20)
@@ -492,7 +457,7 @@ class Ui_Dialog(object):
         self.label_2.setMinimumSize(QSize(0, 0))
         self.label_2.setMaximumSize(QSize(16777215, 16777215))
         self.label_2.setBaseSize(QSize(0, 0))
-        self.label_2.setFont(font4)
+        self.label_2.setFont(font3)
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_2, 0, 0, 1, 2)
@@ -506,7 +471,7 @@ class Ui_Dialog(object):
         self.comboBox_cursor_control.addItem("")
         self.comboBox_cursor_control.setObjectName(u"comboBox_cursor_control")
         self.comboBox_cursor_control.setMinimumSize(QSize(0, 26))
-        self.comboBox_cursor_control.setFont(font4)
+        self.comboBox_cursor_control.setFont(font3)
 
         self.gridLayout_31.addWidget(self.comboBox_cursor_control, 2, 1, 1, 1)
 
@@ -522,6 +487,7 @@ class Ui_Dialog(object):
 
         self.frame_harmonic_lines = QFrame(self.frame_content_data)
         self.frame_harmonic_lines.setObjectName(u"frame_harmonic_lines")
+        self.frame_harmonic_lines.setMaximumSize(QSize(16777215, 160))
         self.frame_harmonic_lines.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_harmonic_lines.setFrameShadow(QFrame.Shadow.Plain)
         self.gridLayout_30 = QGridLayout(self.frame_harmonic_lines)
@@ -545,9 +511,9 @@ class Ui_Dialog(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.label_title_3.sizePolicy().hasHeightForWidth())
         self.label_title_3.setSizePolicy(sizePolicy2)
-        font6 = QFont()
-        font6.setPointSize(11)
-        self.label_title_3.setFont(font6)
+        font5 = QFont()
+        font5.setPointSize(11)
+        self.label_title_3.setFont(font5)
         self.label_title_3.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout_3.addWidget(self.label_title_3)
@@ -565,7 +531,7 @@ class Ui_Dialog(object):
         self.gridLayout_23.setContentsMargins(4, 4, 4, 4)
         self.label_14 = QLabel(self.frame_hlines_main)
         self.label_14.setObjectName(u"label_14")
-        self.label_14.setFont(font4)
+        self.label_14.setFont(font3)
         self.label_14.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_14, 0, 1, 1, 1)
@@ -587,7 +553,7 @@ class Ui_Dialog(object):
         self.comboBox_harmonic_lines_control.addItem("")
         self.comboBox_harmonic_lines_control.setObjectName(u"comboBox_harmonic_lines_control")
         self.comboBox_harmonic_lines_control.setMinimumSize(QSize(0, 26))
-        self.comboBox_harmonic_lines_control.setFont(font4)
+        self.comboBox_harmonic_lines_control.setFont(font3)
 
         self.gridLayout_23.addWidget(self.comboBox_harmonic_lines_control, 0, 2, 1, 1)
 
@@ -595,7 +561,7 @@ class Ui_Dialog(object):
         self.lineEdit_harmonic_lines_1st_freq.setObjectName(u"lineEdit_harmonic_lines_1st_freq")
         self.lineEdit_harmonic_lines_1st_freq.setMinimumSize(QSize(0, 26))
         self.lineEdit_harmonic_lines_1st_freq.setMaximumSize(QSize(16777215, 16777215))
-        self.lineEdit_harmonic_lines_1st_freq.setFont(font4)
+        self.lineEdit_harmonic_lines_1st_freq.setFont(font3)
         self.lineEdit_harmonic_lines_1st_freq.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_23.addWidget(self.lineEdit_harmonic_lines_1st_freq, 1, 2, 1, 1)
@@ -617,7 +583,7 @@ class Ui_Dialog(object):
         self.spinBox_harmonic_lines_number.setObjectName(u"spinBox_harmonic_lines_number")
         self.spinBox_harmonic_lines_number.setMinimumSize(QSize(0, 26))
         self.spinBox_harmonic_lines_number.setMaximumSize(QSize(16777215, 16777215))
-        self.spinBox_harmonic_lines_number.setFont(font4)
+        self.spinBox_harmonic_lines_number.setFont(font3)
         self.spinBox_harmonic_lines_number.setWrapping(False)
         self.spinBox_harmonic_lines_number.setFrame(True)
         self.spinBox_harmonic_lines_number.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -628,19 +594,19 @@ class Ui_Dialog(object):
 
         self.label_10 = QLabel(self.frame_hlines_main)
         self.label_10.setObjectName(u"label_10")
-        self.label_10.setFont(font4)
+        self.label_10.setFont(font3)
 
         self.gridLayout_23.addWidget(self.label_10, 1, 1, 1, 1)
 
         self.label_12 = QLabel(self.frame_hlines_main)
         self.label_12.setObjectName(u"label_12")
-        self.label_12.setFont(font4)
+        self.label_12.setFont(font3)
 
         self.gridLayout_23.addWidget(self.label_12, 1, 3, 1, 1)
 
         self.label_11 = QLabel(self.frame_hlines_main)
         self.label_11.setObjectName(u"label_11")
-        self.label_11.setFont(font4)
+        self.label_11.setFont(font3)
         self.label_11.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_11, 2, 1, 1, 1)
@@ -657,6 +623,45 @@ class Ui_Dialog(object):
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_9.addWidget(self.scrollArea, 1, 0, 1, 1)
+
+        self.frame_import_export = QFrame(self.frame_configs)
+        self.frame_import_export.setObjectName(u"frame_import_export")
+        self.frame_import_export.setMinimumSize(QSize(0, 44))
+        self.frame_import_export.setMaximumSize(QSize(16777215, 16777215))
+        self.frame_import_export.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_import_export.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_8 = QGridLayout(self.frame_import_export)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_export_data = QPushButton(self.frame_import_export)
+        self.pushButton_export_data.setObjectName(u"pushButton_export_data")
+        self.pushButton_export_data.setEnabled(True)
+        self.pushButton_export_data.setMinimumSize(QSize(120, 30))
+        self.pushButton_export_data.setMaximumSize(QSize(120, 30))
+        font6 = QFont()
+        font6.setFamilies([u"Ubuntu Sans"])
+        font6.setPointSize(10)
+        font6.setBold(False)
+        font6.setItalic(False)
+        self.pushButton_export_data.setFont(font6)
+        self.pushButton_export_data.setStyleSheet(u"")
+        self.pushButton_export_data.setAutoDefault(False)
+
+        self.gridLayout_8.addWidget(self.pushButton_export_data, 0, 0, 1, 1)
+
+        self.pushButton_import_data = QPushButton(self.frame_import_export)
+        self.pushButton_import_data.setObjectName(u"pushButton_import_data")
+        self.pushButton_import_data.setEnabled(True)
+        self.pushButton_import_data.setMinimumSize(QSize(120, 30))
+        self.pushButton_import_data.setMaximumSize(QSize(120, 30))
+        self.pushButton_import_data.setFont(font6)
+        self.pushButton_import_data.setStyleSheet(u"")
+        self.pushButton_import_data.setAutoDefault(False)
+
+        self.gridLayout_8.addWidget(self.pushButton_import_data, 0, 1, 1, 1)
+
+
+        self.gridLayout_9.addWidget(self.frame_import_export, 2, 0, 1, 1)
 
 
         self.gridLayout_20.addWidget(self.frame_configs, 0, 1, 1, 1)
@@ -695,8 +700,6 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.pushButton_export_data.setText(QCoreApplication.translate("Dialog", u"  Export data  ", None))
-        self.pushButton_import_data.setText(QCoreApplication.translate("Dialog", u"  Import data  ", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Plot type", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u"log-y", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u"log-x", None))
@@ -710,12 +713,12 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         self.frame_4.setWhatsThis(QCoreApplication.translate("Dialog", u"Y-axis data type", None))
 #endif // QT_CONFIG(whatsthis)
-        self.comboBox_output_type.setItemText(0, QCoreApplication.translate("Dialog", u"absolute", None))
-        self.comboBox_output_type.setItemText(1, QCoreApplication.translate("Dialog", u"real part", None))
-        self.comboBox_output_type.setItemText(2, QCoreApplication.translate("Dialog", u"imaginary part", None))
-        self.comboBox_output_type.setItemText(3, QCoreApplication.translate("Dialog", u"decibel scale", None))
+        self.comboBox_data_format.setItemText(0, QCoreApplication.translate("Dialog", u"absolute values", None))
+        self.comboBox_data_format.setItemText(1, QCoreApplication.translate("Dialog", u"real values", None))
+        self.comboBox_data_format.setItemText(2, QCoreApplication.translate("Dialog", u"imaginary values", None))
+        self.comboBox_data_format.setItemText(3, QCoreApplication.translate("Dialog", u"decibel scale", None))
 
-        self.label_5.setText(QCoreApplication.translate("Dialog", u"Output type:", None))
+        self.label_5.setText(QCoreApplication.translate("Dialog", u"Data format:", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Differentiate:", None))
         self.comboBox_differentiate_data.setItemText(0, QCoreApplication.translate("Dialog", u"none", None))
         self.comboBox_differentiate_data.setItemText(1, QCoreApplication.translate("Dialog", u"single", None))
@@ -741,6 +744,8 @@ class Ui_Dialog(object):
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Frequency (1x):", None))
         self.label_12.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.label_11.setText(QCoreApplication.translate("Dialog", u"Vertical lines:", None))
+        self.pushButton_export_data.setText(QCoreApplication.translate("Dialog", u"  Export data  ", None))
+        self.pushButton_import_data.setText(QCoreApplication.translate("Dialog", u"  Import data  ", None))
         self.label_title.setText(QCoreApplication.translate("Dialog", u"Frequency response plotter", None))
     # retranslateUi
 
@@ -758,10 +763,6 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                         - widget_plot: QWidget
                             - frame_configs: QFrame
                                 - (Layout): QGridLayout
-                                        - frame_import_export: QFrame
-                                            - (Layout): QGridLayout
-                                                    - pushButton_export_data: QPushButton
-                                                    - pushButton_import_data: QPushButton
                                         - scrollArea: QScrollArea
                                             - scrollAreaWidgetContents: QWidget
                                                 - (Layout): QVBoxLayout
@@ -791,7 +792,7 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                                                                             - label_8: QLabel
                                                                                 - frame_4: QFrame
                                                                                     - (Layout): QGridLayout
-                                                                                            - comboBox_output_type: QComboBox
+                                                                                            - comboBox_data_format: QComboBox
                                                                                             - label_5: QLabel
                                                                                             - label_4: QLabel
                                                                                             - comboBox_differentiate_data: QComboBox
@@ -825,6 +826,10 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                                                                             - label_10: QLabel
                                                                                             - label_12: QLabel
                                                                                             - label_11: QLabel
+                                        - frame_import_export: QFrame
+                                            - (Layout): QGridLayout
+                                                    - pushButton_export_data: QPushButton
+                                                    - pushButton_import_data: QPushButton
                 - big_title_frame: QFrame
                     - (Layout): QGridLayout
                             - label_title: QLabel
