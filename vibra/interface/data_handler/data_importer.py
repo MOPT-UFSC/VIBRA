@@ -219,14 +219,18 @@ class DataImporter:
                 sheet_data = read_excel(
                                         path, 
                                         sheet_name = sheetname, 
-                                        columns = [0, 1, 2]
+                                        columns = [0, 1, 2],
+                                        has_header=False,
+                                        infer_schema_length=100
                                         ).to_numpy()
 
             except:
                 sheet_data = read_excel(
                                         path, 
                                         sheet_name = sheetname, 
-                                        columns = [0, 1]
+                                        columns = [0, 1],
+                                        has_header=False,
+                                        infer_schema_length=100
                                         ).to_numpy()
                             
             sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
