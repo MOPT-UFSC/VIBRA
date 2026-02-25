@@ -241,9 +241,6 @@ class Model:
 
 
     def set_analysis_setup(self, analysis_setup: dict):
-        import warnings
-        warnings.warn("set_analysis_setup is deprecated use new_set_analysis_setup instead")
-
         self.frequencies = None
         self.analysis_setup = analysis_setup
 
