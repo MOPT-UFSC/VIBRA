@@ -1585,19 +1585,19 @@
                          </size>
                         </property>
                         <property name="toolTip">
-                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add legends to harmonic lines&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display harmonic line legends&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                         </property>
                         <property name="text">
                          <string/>
                         </property>
                         <property name="icon">
                          <iconset resource="../../../icons/resources.qrc">
-                          <normaloff>:/icons/legend_toggle.png</normaloff>:/icons/legend_toggle.png</iconset>
+                          <normaloff>:/icons/visibility_off.png</normaloff>:/icons/visibility_off.png</iconset>
                         </property>
                         <property name="iconSize">
                          <size>
-                          <width>18</width>
-                          <height>18</height>
+                          <width>20</width>
+                          <height>20</height>
                          </size>
                         </property>
                         <property name="checkable">

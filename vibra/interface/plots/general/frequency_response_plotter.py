@@ -1,9 +1,8 @@
-import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtGui import QCloseEvent, QIcon
 from PySide6.QtWidgets import QDialog, QLineEdit, QToolButton, QVBoxLayout
 
-from vibra import app
+from vibra import app, ICON_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
@@ -14,7 +13,7 @@ from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui im
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 from enum import IntEnum
-
+import numpy as np
 
 class DataFormat(IntEnum):
     ABSOLUTE = 0
@@ -111,6 +110,19 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         #
         self._initial_config()
         self.plot_harmonic_lines_callback()
+
+    def update_harmonic_lines_legend_icon(self):
+
+        show_legend = self.pushButton_show_legend.isChecked()
+        if show_legend:
+            icon = QIcon(str(ICON_DIR / "visibility_off.png"))
+            tool_tip = "Remove harmonic line legends"
+        else:
+            icon = QIcon(str(ICON_DIR / "visibility.png"))
+            tool_tip = "Display harmonic line legends"
+
+        self.pushButton_show_legend.setIcon(icon)
+        self.pushButton_show_legend.setToolTip(tool_tip)
 
     def import_file(self):
 
@@ -255,6 +267,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def plot_harmonic_lines_callback(self):
 
+        self.update_harmonic_lines_legend_icon()
         hline_plot = self.comboBox_harmonic_lines_control.currentText()
         
         plot_hlines = hline_plot != "disabled"

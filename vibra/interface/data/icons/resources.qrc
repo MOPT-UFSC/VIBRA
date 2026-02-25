@@ -46,6 +46,8 @@
         <file>sync_disabled.png</file>
         <file>sync_enabled.png</file>
         <file>user_preferences_icon.png</file>
+        <file>visibility.png</file>
+        <file>visibility_off.png</file>
         <file>zoom_icon.png</file>
         <file>cursors/pan_cursor.png</file>
         <file>cursors/rotation_cursor.png</file>
