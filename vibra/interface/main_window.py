@@ -1,5 +1,4 @@
 import logging
-import os
 import platform
 import sys
 from functools import partial
@@ -27,7 +26,6 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
-from vibra.interface.project.geometry_setup import GeometrySetup
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.section_plane_widget import SectionPlaneWidget
@@ -52,7 +50,7 @@ class MainWindow(MainWindow_UI):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
         self.selection = SelectionHandler(app().new_project)
         self.selection.selection_changed.connect(self.selection_changed_callback)
         self.visualization_filter = VisualizationFilter.all_true()
@@ -67,7 +65,7 @@ class MainWindow(MainWindow_UI):
         self.show_menu_items = True
         self.last_render_index = None
         self._initialize()
-    
+
     def _initialize(self):
         self.dialog = None
         self.project_data_modified = False
@@ -133,7 +131,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
-        self.splitter.widget(0).setMinimumWidth(360)        
+        self.splitter.widget(0).setMinimumWidth(360)
 
     def _config_window(self):
         self.setMinimumHeight(768)
@@ -185,27 +183,27 @@ class MainWindow(MainWindow_UI):
 
         if not self.is_temporary_vibra_folder_empty():
             self.recovery_dialog()
-        
+
         else:
             self.try_to_open_argv_path()
-    
+
     def try_to_open_argv_path(self):
-        '''
+        """
         Check every argument passed in the command line and try to open it if it is a valid file.
-        '''
+        """
 
         if len(sys.argv) <= 1:
             return
-        
+
         for arg in sys.argv[1:]:
             path = Path(arg)
-            
+
             if not path.is_file():
                 continue
-            
+
             if not path.exists():
                 continue
-            
+
             if path.suffix == ".vibra":
                 self.open_project(path)
                 break
@@ -223,6 +221,7 @@ class MainWindow(MainWindow_UI):
         stylesheets.set_theme(theme)
 
         from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
+
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
@@ -347,12 +346,12 @@ class MainWindow(MainWindow_UI):
         if condition:
             self.visualization_filter.color_mode = GeometryColorMode.EMPTY
         else:
-            self.visualization_filter.color_mode = GeometryColorMode.COLORED        
+            self.visualization_filter.color_mode = GeometryColorMode.COLORED
         self.visualization_changed.emit()
-    
+
     def get_renderer_widgets(self) -> list[CommonRenderWidget]:
         return [self.geometry_widget, self.mesh_widget, self.results_widget]
-        
+
     def action_user_preferences_callback(self):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
@@ -360,9 +359,9 @@ class MainWindow(MainWindow_UI):
     def action_points_callback(self):
         all_ids = app().new_project.model.mesh.all_point_ids()
         self.selection.set_geometry_selection(points=all_ids)
-        
+
     def action_faces_callback(self):
-        all_ids= app().new_project.model.mesh.all_surface_ids()
+        all_ids = app().new_project.model.mesh.all_surface_ids()
         self.selection.set_geometry_selection(surfaces=all_ids)
 
     def action_solid_callback(self):
@@ -389,7 +388,7 @@ class MainWindow(MainWindow_UI):
     def action_nodes_callback(self):
         all_ids = app().new_project.model.mesh.all_node_ids()
         self.selection.set_mesh_selection(nodes=all_ids)
-    
+
     def action_surface_elements_callback(self):
         all_ids = app().new_project.model.mesh.all_face_element_ids()
         self.selection.set_mesh_selection(faces=all_ids)
@@ -400,11 +399,11 @@ class MainWindow(MainWindow_UI):
 
     def action_clear_selection_callback(self):
         self.selection.clear_selection()
-    
+
     def action_volume_selection_mode_callback(self, checked):
         self.selection.volume_selection_mode = checked
         self.selection.selection_changed.emit()
-    
+
     def action_invert_selection_callback(self):
         self.selection.invert_selection()
 
@@ -427,7 +426,7 @@ class MainWindow(MainWindow_UI):
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
         self.render_tools_toolbar.show_selection_tool()
-    
+
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
             widget = self.render_widgets_stack.widget(0)
@@ -437,7 +436,7 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.update_items_appearance()
         renders_number = self.render_widgets_stack.count()
         for i in range(renders_number):
-            logging.info(f"Updating renders... [{i+1}/{renders_number}]")
+            logging.info(f"Updating renders... [{i + 1}/{renders_number}]")
             widget = self.render_widgets_stack.widget(i)
             if isinstance(widget, CommonRenderWidget):
                 widget.update_plot(reset_camera)
@@ -477,7 +476,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(True)
         self.action_mesh_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
-        
+
         self.render_tools_toolbar.show_selection_tool()
 
         if app().new_project.is_there_a_valid_solution():
@@ -522,7 +521,7 @@ class MainWindow(MainWindow_UI):
     def action_results_workspace_callback(self):
         if not app().new_project.is_there_a_valid_solution():
             return
-        
+
         self.action_results_workspace.setEnabled(True)
         self.action_results_workspace.setChecked(True)
         self.action_model_workspace.setChecked(False)
@@ -538,12 +537,12 @@ class MainWindow(MainWindow_UI):
 
     def action_open_project_callback(self):
         self.open_project_dialog()
-    
+
     def action_home_exit_callback(self):
         self.close_dialogs()
         self.action_section_plane_callback(False)
         self.action_section_plane.setChecked(False)
-        
+
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
@@ -552,7 +551,7 @@ class MainWindow(MainWindow_UI):
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
-        
+
         self.selection.clear_selection()
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
@@ -720,7 +719,7 @@ class MainWindow(MainWindow_UI):
 
         else:
             raise ValueError(f"File extension {ext} not supported")
-    
+
     def import_geometry_dialog(self):
         path = app().config.get_last_folder_for(
             "geometry_mesh_folder",
@@ -799,7 +798,7 @@ class MainWindow(MainWindow_UI):
             self,
             "Save As",
             str(save_dir),
-            filter="Vibra File (*.vibra)", 
+            filter="Vibra File (*.vibra)",
             **kwargs,
         )
 
@@ -915,7 +914,7 @@ class MainWindow(MainWindow_UI):
         # Actual loading
         project = app().new_project
         config = app().config
-        project_recovery = (project_path is None)
+        project_recovery = project_path is None
 
         if project_recovery:
             LoadingWindow(project.read_from_working_dir).run()
@@ -981,13 +980,10 @@ class MainWindow(MainWindow_UI):
     def action_exit_callback(self):
         self.close_app()
 
-
-    
-
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
         self.visualization_filter.solids = clicked
-        self.visualization_changed.emit() 
+        self.visualization_changed.emit()
 
     def action_line_view_callback(self, clicked: bool):
         self.visualization_filter.lines = clicked
@@ -996,7 +992,7 @@ class MainWindow(MainWindow_UI):
     def action_node_view_callback(self, clicked: bool):
         self.visualization_filter.points = clicked
         self.visualization_changed.emit()
-    
+
     def action_ghost_view_callback(self, clicked: bool):
         self.visualization_filter.ghost = clicked
         self.visualization_changed.emit()
@@ -1122,7 +1118,7 @@ class MainWindow(MainWindow_UI):
 
             if window.isVisible():
                 window.showMinimized()
-    
+
     def restore_open_dialogs(self):
         for window in app().topLevelWidgets():
             if isinstance(window, MainWindow):
@@ -1139,7 +1135,7 @@ class MainWindow(MainWindow_UI):
             return
 
         if not isinstance(app().new_project.assembler, AcousticAssembler):
-            return 
+            return
 
         ExportElementTransferDataInputs()
 
@@ -1156,18 +1152,18 @@ class MainWindow(MainWindow_UI):
         if event.type() == QEvent.Type.ShortcutOverride:
             if event.key() == Qt.Key.Key_F5:
                 self.update_plots()
-            
+
             elif alt_pressed and (event.key() == Qt.Key.Key_P):
                 if self.section_plane.isVisible():
                     return super(MainWindow, self).eventFilter(obj, event)
-                
+
                 active = self.action_section_plane.isChecked()
                 self.action_section_plane.blockSignals(True)
                 self.action_section_plane.setChecked(not active)
                 self.action_section_plane.blockSignals(False)
                 self.section_plane.cutting = not active
                 self.section_plane.value_changed.emit()
-        
+
         return super(MainWindow, self).eventFilter(obj, event)
 
     def closeEvent(self, event: QEvent):
