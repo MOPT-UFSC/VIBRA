@@ -18,36 +18,36 @@ class ProjectHasher:
     @staticmethod
     def hash_mesh(mesh: Mesh) -> str:
         hasher = xxhash.xxh128()
-        hasher.update(mesh.lines_connectivity)
-        hasher.update(mesh.faces_connectivity)
-        hasher.update(mesh.solids_connectivity)
-        hasher.update(mesh.nodal_coordinates)
+        hasher.update(mesh.lines_connectivity.flatten())
+        hasher.update(mesh.faces_connectivity.flatten())
+        hasher.update(mesh.solids_connectivity.flatten())
+        hasher.update(mesh.nodal_coordinates.flatten())
 
         if mesh.has_decoupling():
-            mesh.cache_lines_connectivity
-            mesh.cache_faces_connectivity
-            mesh.cache_solids_connectivity
+            hasher.update(mesh.cache_lines_connectivity.flatten())
+            hasher.update(mesh.cache_faces_connectivity.flatten())
+            hasher.update(mesh.cache_solids_connectivity.flatten())
 
         for i, normals in mesh.normals_surface.items():
-            hasher.update(normals)
+            hasher.update(normals.flatten())
 
         for i, curvatures in mesh.curvatures_surface.items():
-            hasher.update(curvatures)
+            hasher.update(curvatures.flatten())
 
         return hasher.hexdigest()
 
     @staticmethod
     def hash_harmonic_solution(solver: HarmonicSolver) -> str:
         hasher = xxhash.xxh128()
-        hasher.update(solver.frequencies)
-        hasher.update(solver.solution)
+        hasher.update(solver.frequencies.flatten())
+        hasher.update(solver.solution.flatten())
         return hasher.hexdigest()
 
     @staticmethod
     def hash_modal_solution(solver: HarmonicSolver) -> str:
         hasher = xxhash.xxh128()
-        hasher.update(solver.natural_frequencies)
-        hasher.update(solver.solution)
+        hasher.update(solver.natural_frequencies.flatten())
+        hasher.update(solver.solution.flatten())
         return hasher.hexdigest()
 
     @staticmethod
@@ -59,10 +59,10 @@ class ProjectHasher:
 
         for name, array in acoustic_tables.items():
             hasher.update(name)
-            hasher.update(array)
+            hasher.update(array.flatten())
 
         for name, array in structural_tables.items():
             hasher.update(name)
-            hasher.update(array)
+            hasher.update(array.flatten())
 
         return hasher.hexdigest()
