@@ -583,7 +583,7 @@ class Ui_Dialog(object):
         self.gridLayout_23 = QGridLayout(self.frame_content_2)
         self.gridLayout_23.setSpacing(4)
         self.gridLayout_23.setObjectName(u"gridLayout_23")
-        self.gridLayout_23.setContentsMargins(4, 6, 4, 0)
+        self.gridLayout_23.setContentsMargins(4, 4, 4, 4)
         self.label_14 = QLabel(self.frame_content_2)
         self.label_14.setObjectName(u"label_14")
         self.label_14.setFont(font4)
