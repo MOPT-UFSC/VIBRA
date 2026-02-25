@@ -125,11 +125,13 @@ class DataImporter:
                                                     sheet_name = sheetname,  
                                                     columns = cols,
                                                     engine = "openpyxl",
+                                                    has_header=False,
+                                                    infer_schema_length=100
                                                     ).to_numpy()
                             break
                         except:
                             pass
-
+                    
                     sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
                     output_data.append(ImportedData(sheet_data, filename, sufix, sheetname, file_path))
                     if use_first_sheet:
@@ -226,7 +228,7 @@ class DataImporter:
                                         sheet_name = sheetname, 
                                         columns = [0, 1]
                                         ).to_numpy()
-                
+                            
             sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
             imported_results[sheetname] = sheet_data
 
