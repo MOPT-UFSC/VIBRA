@@ -822,7 +822,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 message += "\n\nNote: zero value is not allowed."
 
         except Exception as error_log:
-            message = f"You have typed and invalid value at the {label} input field.\n\n"
+            message = f"You have typed an invalid value at the {label} input field.\n\n"
             message += str(error_log)
 
         if message != "":
