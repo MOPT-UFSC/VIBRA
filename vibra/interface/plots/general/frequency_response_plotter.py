@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QDialog, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QLineEdit, QToolButton, QVBoxLayout
 
 from vibra import app
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -12,6 +12,8 @@ from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui im
     FrequencyResponsePlotter_UI,
 )
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+error_title = "Error"
 
 
 class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
@@ -64,24 +66,26 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         #
         self.comboBox_plot_type.currentIndexChanged.connect(self._update_plot_type)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
+        self.comboBox_harmonic_lines_control.currentIndexChanged.connect(self.plot_harmonic_lines_callback)
+        self.comboBox_output_type.currentIndexChanged.connect(self._update_comboBox)
         #
-        self.radioButton_real.clicked.connect(self._update_comboBox)
-        self.radioButton_imaginary.clicked.connect(self._update_comboBox)
-        self.radioButton_absolute.clicked.connect(self._update_comboBox)
-        self.radioButton_decibel_scale.clicked.connect(self._update_comboBox)
+        self.lineEdit_harmonic_lines_1st_freq.textChanged.connect(self.plot_harmonic_lines_callback)
+        self.lineEdit_harmonic_lines_1st_freq.returnPressed.connect(self.plot_harmonic_lines_callback)
+        #
         self.radioButton_disable_cursors.clicked.connect(self.update_cursor_controls)
         self.radioButton_cross_cursor.clicked.connect(self.update_cursor_controls)
         self.radioButton_harmonic_cursor.clicked.connect(self.update_cursor_controls)
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_harmonic_lines_confirm.clicked.connect(self.harmonic_lines_confirm_callback)
-        self.pushButton_harmonic_lines_remove_all.clicked.connect(self.harmonic_lines_remove_all_callback)
+        self.pushButton_show_legend.clicked.connect(self.plot_harmonic_lines_callback)
         #
-        self.lineEdit_harmonic_lines_1st_freq.returnPressed.connect(self.harmonic_lines_confirm_callback)
+        self.spinBox_harmonic_lines_number.valueChanged.connect(self.plot_harmonic_lines_callback)
         # 
         app().main_window.theme_changed.connect(self.paint_toolbar_icons)
+        #
         self._initial_config()
+        self.plot_harmonic_lines_callback()
 
     def import_file(self):
 
@@ -99,7 +103,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             self.importer.exec()
 
     def _initial_config(self):
-        self.aux_bool = False
+        self.linear_plot = False
         self.plot_type = self.comboBox_plot_type.currentText()
         self.checkBox_cursor_legends.setChecked(False)
         self.checkBox_cursor_legends.setDisabled(True)
@@ -108,14 +112,13 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def _update_comboBox(self):
 
         self.cache_plot_type = self.comboBox_plot_type.currentText()
-        aux_real = self.radioButton_real.isChecked()
-        aux_imag = self.radioButton_imaginary.isChecked()
-        aux_decibel = self.radioButton_decibel_scale.isChecked()
+        output_type = self.comboBox_output_type.currentText()
+        self.linear_plot = output_type != "absolute"
 
-        self.aux_bool = aux_real + aux_imag + aux_decibel
-        if self.aux_bool:
+        if self.linear_plot:
             self.comboBox_plot_type.setDisabled(True)
             self.comboBox_plot_type.setCurrentIndex(2)
+
         else:
             self.comboBox_plot_type.setDisabled(False)
             self.comboBox_plot_type.setCurrentIndex(0)
@@ -153,8 +156,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self,
         fundamental_freq: float,
         n_harmonics: int,
-        show_harmonic: bool,
-        show_frequency: bool,
+        show_legends: bool,
         remove_all: bool,
     ):
         if self.x_data is None:
@@ -180,14 +182,13 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
                     legend = ""
                     newline = ""
-                    if show_harmonic:
+                    if show_legends:
                         legend += f" {i + 1}x"
                         newline = "\n"
 
-                    if show_frequency:
-                        legend += f"{newline} ({frequency:.0f} Hz)"
+                        legend += f"{newline} ({round(frequency, 3)} Hz)"
 
-                    if legend:
+                    if legend != "":
                         txt = self.ax.text(
                             frequency,
                             0.95,
@@ -201,59 +202,69 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         self.mpl_canvas_frequency_plot.draw()
 
-    def check__harmonic_lines_plot_values(self):
-        error_title = "Error"
-        self.fundamental_freq = self.lineEdit_harmonic_lines_1st_freq.text().strip()
+    def check_inputs(
+        self, 
+        line_edit: QLineEdit, 
+        ):
 
-        if not self.fundamental_freq:
-            title = "Missing input"
-            error_message = "Please input some value for the 'Fundamental frequency'."
-            
-            PrintMessageInput([error_title, title, error_message])
-            return False
-        
+        message = ""
+        title = "Invalid value typed"
+        input_value = line_edit.text().replace(",", ".").strip()
+
+        if input_value == "":
+            return None
+
         try:
-            float(self.fundamental_freq)
-        except ValueError:
-            title = "Invalid input"
-            error_message = "The value inputted at 'Fundamental Frequency' must be a number."
+            output_value = float(input_value)
 
-            PrintMessageInput([error_title, title, error_message])
-            return False
+            if output_value <= 0:
+                message = f"Enter a positive non-zero value in the 'Frequency (1x)' input field."
+
+        except Exception as error_log:
+            message = f"You have typed an invalid value in the 'Frequency (1x)' input field.\n\n"
+            message += str(error_log)
+
+        if message != "":
+            self.hide()
+            line_edit.setFocus()
+            PrintMessageInput([error_title, title, message])
+            return None
+
+        return output_value
+
+    def plot_harmonic_lines_callback(self):
+
+        hline_plot = self.comboBox_harmonic_lines_control.currentText()
         
-        else:
-            return True
+        plot_hlines = hline_plot != "disabled"
+        self.lineEdit_harmonic_lines_1st_freq.setEnabled(plot_hlines)
+        self.spinBox_harmonic_lines_number.setEnabled(plot_hlines)
+        self.pushButton_show_legend.setEnabled(plot_hlines)
 
-    def harmonic_lines_confirm_callback(self):
-        if not self.check__harmonic_lines_plot_values():
+        if not plot_hlines:
+            self.plot_harmonic_lines(0, 0, False, True)
             return
-        
-        fundamental_frequency = float(self.fundamental_freq)
+
+        value = self.check_inputs(self.lineEdit_harmonic_lines_1st_freq)
+        if value is None:
+            return
+
         number_of_lines = self.spinBox_harmonic_lines_number.value()
-        show_legend = self.checkBox_harmonic_lines_show_harmonic.isChecked()
-        show_frequency = self.checkBox_harmonic_lines_show_frequency.isChecked()
-        remove_all = False
+        show_legends = self.pushButton_show_legend.isChecked()
 
         self.plot_harmonic_lines(
-            fundamental_frequency,
+            value,
             number_of_lines,
-            show_legend,
-            show_frequency,
-            remove_all,
+            show_legends,
+            False,
         )
-
-    def harmonic_lines_remove_all_callback(self):
-        self.plot_harmonic_lines(0, 0, False, False, True)
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data
         self.comboBox_plot_type.setCurrentIndex(2)
         self.comboBox_plot_type.setDisabled(True)
-        self.radioButton_absolute.setDisabled(True)
-        self.radioButton_real.setDisabled(True)
-        self.radioButton_real.setChecked(True)
-        self.radioButton_imaginary.setDisabled(True)
-        self.radioButton_decibel_scale.setDisabled(True)
+        self.comboBox_output_type.setCurrentText("decibel scale")
+        self.comboBox_output_type.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
 
     def load_data_to_plot(self, data: dict):
@@ -272,7 +283,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.linestyle = data.get("linestyle")
 
     def get_scaled_data(self, data):
-        if self.radioButton_decibel_scale.isChecked():
+        if self.comboBox_output_type.currentText() == "decibel scale":
             if self.comboBox_differentiate_data.currentIndex() != 0:
                 shift = 1
             else:
@@ -284,6 +295,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 return 10*np.log10(data2/((2e-5)**2))
             else:
                 return 10*np.log10(data2)
+
         else:
             return data
 
@@ -292,13 +304,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return None
 
         dif_data = self.process_differentiation(data)
-        if self.radioButton_real.isChecked():
+        output_type = self.comboBox_output_type.currentText()
+
+        if output_type == "real part":
             return np.real(dif_data)
 
-        elif self.radioButton_imaginary.isChecked():
+        elif output_type == "imaginary part":
             return np.imag(dif_data)
 
-        elif self.radioButton_absolute.isChecked():
+        elif output_type == "absolute":
             return np.abs(dif_data)
 
         else:
@@ -306,10 +320,13 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def get_y_axis_label(self, label: str):
         
-        if self.radioButton_real.isChecked():
+        output_type = self.comboBox_output_type.currentText()
+        if output_type == "real part":
             type_label = "real"
-        elif self.radioButton_imaginary.isChecked():
+
+        elif output_type == "imaginary part":
             type_label = "imaginary"
+
         else:
             type_label = "absolute"
 
@@ -317,10 +334,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return f"{label} [dB]"
 
         unit = self.get_unit_considering_differentiation()
-        if self.radioButton_decibel_scale.isChecked():
+        if output_type == "decibel scale":
             return f"{label} - {type_label} [dB]"
-        else:
-            return f"{label} - {type_label} [{unit}]"
+
+        return f"{label} - {type_label} [{unit}]"
 
     def process_differentiation(self, data: np.ndarray):
         frequencies = self.x_data
@@ -390,7 +407,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 if self.y_data is not None:
                     self.mask_x = self.x_data <= 0
                     self.mask_y = self.y_data <= 0
-                    if self.aux_bool:
+                    if self.linear_plot:
                         _plot = self.call_lin_lin_plot()
                     elif True in (self.mask_x + self.mask_y):
                         _plot = self.get_plot_considering_invalid_log_values()
