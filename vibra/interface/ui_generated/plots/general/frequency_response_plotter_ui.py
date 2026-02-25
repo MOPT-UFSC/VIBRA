@@ -755,7 +755,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_harmonic_lines_1st_freq.setText(QCoreApplication.translate("Dialog", u"250", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_show_legend.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Show/Hide legend in harmonic lines</p></body></html>", None))
+        self.pushButton_show_legend.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Add legends to harmonic lines</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_show_legend.setText("")
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Frequency (1x):", None))
