@@ -1,5 +1,5 @@
 from dataclasses import dataclass, replace
-from typing import Literal
+from typing import Literal, Self
 
 import numpy as np
 
@@ -21,7 +21,7 @@ class HarmonicAnalysisSetup:
             self.f_step,
         )
 
-    def replace(self, **changes):
+    def replace(self, **changes) -> Self:
         return replace(self, **changes)
 
     def as_dict(self):
