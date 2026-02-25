@@ -1739,14 +1739,14 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>120</width>
-                <height>30</height>
+                <width>110</width>
+                <height>32</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>120</width>
-                <height>30</height>
+                <height>32</height>
                </size>
               </property>
               <property name="font">
@@ -1761,7 +1761,17 @@
                <string notr="true"/>
               </property>
               <property name="text">
-               <string>  Export data  </string>
+               <string>Export data</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../../../icons/resources.qrc">
+                <normaloff>:/icons/save_as_2.png</normaloff>:/icons/save_as_2.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
               </property>
               <property name="autoDefault">
                <bool>false</bool>
@@ -1775,14 +1785,14 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>120</width>
-                <height>30</height>
+                <width>110</width>
+                <height>32</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>120</width>
-                <height>30</height>
+                <height>32</height>
                </size>
               </property>
               <property name="font">
@@ -1797,7 +1807,17 @@
                <string notr="true"/>
               </property>
               <property name="text">
-               <string>  Import data  </string>
+               <string>Import data</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../../../icons/resources.qrc">
+                <normaloff>:/icons/document_search.png</normaloff>:/icons/document_search.png</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>20</width>
+                <height>20</height>
+               </size>
               </property>
               <property name="autoDefault">
                <bool>false</bool>
