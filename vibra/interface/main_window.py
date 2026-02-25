@@ -358,20 +358,19 @@ class MainWindow(MainWindow_UI):
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def action_points_callback(self):
-        all_ids = app().project.model.mesh.all_point_ids()
+        all_ids = app().new_project.model.mesh.all_point_ids()
         self.selection.set_geometry_selection(points=all_ids)
         
-
     def action_faces_callback(self):
-        all_ids= app().project.model.mesh.all_surface_ids()
+        all_ids= app().new_project.model.mesh.all_surface_ids()
         self.selection.set_geometry_selection(surfaces=all_ids)
 
     def action_solid_callback(self):
-        all_ids = app().project.model.mesh.all_solid_ids()
+        all_ids = app().new_project.model.mesh.all_solid_ids()
         self.selection.set_geometry_selection(volumes=all_ids)
 
     def action_all_entities_geometry_callback(self):
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         self.selection.set_geometry_selection(
             points=mesh.all_point_ids(),
             lines=mesh.all_line_ids(),
@@ -380,7 +379,7 @@ class MainWindow(MainWindow_UI):
         )
 
     def action_all_entities_mesh_callback(self):
-        mesh = app().project.model.mesh
+        mesh = app().new_project.model.mesh
         self.selection.set_mesh_selection(
             nodes=mesh.all_node_ids(),
             faces=mesh.all_face_element_ids(),
@@ -388,15 +387,15 @@ class MainWindow(MainWindow_UI):
         )
 
     def action_nodes_callback(self):
-        all_ids = app().project.model.mesh.all_node_ids()
+        all_ids = app().new_project.model.mesh.all_node_ids()
         self.selection.set_mesh_selection(nodes=all_ids)
     
     def action_surface_elements_callback(self):
-        all_ids = app().project.model.mesh.all_face_element_ids()
+        all_ids = app().new_project.model.mesh.all_face_element_ids()
         self.selection.set_mesh_selection(faces=all_ids)
 
     def action_solid_elements_callback(self):
-        all_ids = app().project.model.mesh.all_solid_element_ids()
+        all_ids = app().new_project.model.mesh.all_solid_element_ids()
         self.selection.set_mesh_selection(solids=all_ids)
 
     def action_clear_selection_callback(self):
