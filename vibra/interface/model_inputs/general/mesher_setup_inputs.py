@@ -123,7 +123,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-        self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
 
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_delete.clicked.connect(self.remove_callback)
@@ -180,28 +179,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
 
     def maximum_element_size_changed_callback(self):
-        if self.synchronize_sizes:
-            min_value = self.doubleSpinBox_maximum_element_size.value()
-        else:
-            min_value = min(
-                self.doubleSpinBox_minimum_element_size.value(),
-                self.doubleSpinBox_maximum_element_size.value(),
-            )
+        if not self.synchronize_sizes:
+            return
 
         with block_signals(self.doubleSpinBox_minimum_element_size):
-            self.doubleSpinBox_minimum_element_size.setValue(min_value)
-
-    def minimum_element_size_changed_callback(self):
-        if self.synchronize_sizes:
-            max_value = self.doubleSpinBox_minimum_element_size.value()
-        else:
-            max_value = max(
-                self.doubleSpinBox_minimum_element_size.value(),
-                self.doubleSpinBox_maximum_element_size.value(),
-            )
-
-        with block_signals(self.doubleSpinBox_maximum_element_size):
-            self.doubleSpinBox_maximum_element_size.setValue(max_value)
+            value = self.doubleSpinBox_maximum_element_size.value()
+            self.doubleSpinBox_minimum_element_size.setValue(value)
 
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
