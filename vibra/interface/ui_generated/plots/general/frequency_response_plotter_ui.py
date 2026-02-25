@@ -15,11 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox,
-    QDialog, QFrame, QGridLayout, QLabel,
-    QLineEdit, QPushButton, QRadioButton, QScrollArea,
-    QSizePolicy, QSpacerItem, QSpinBox, QVBoxLayout,
-    QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
+    QFrame, QGridLayout, QLabel, QLineEdit,
+    QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
+    QSpinBox, QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -197,6 +196,10 @@ class Ui_Dialog(object):
         self.gridLayout_10.setHorizontalSpacing(4)
         self.gridLayout_10.setVerticalSpacing(2)
         self.gridLayout_10.setContentsMargins(2, 0, 2, 0)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_10.addItem(self.horizontalSpacer, 0, 0, 1, 1)
+
         self.comboBox_plot_type = QComboBox(self.frame_12)
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
@@ -228,19 +231,9 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label, 0, 1, 1, 1)
 
-        self.frame_19 = QFrame(self.frame_12)
-        self.frame_19.setObjectName(u"frame_19")
-        self.frame_19.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_19.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_10.addWidget(self.frame_19, 0, 3, 1, 1)
-
-        self.frame_21 = QFrame(self.frame_12)
-        self.frame_21.setObjectName(u"frame_21")
-        self.frame_21.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_21.setFrameShadow(QFrame.Shadow.Raised)
-
-        self.gridLayout_10.addWidget(self.frame_21, 0, 0, 1, 1)
+        self.gridLayout_10.addItem(self.horizontalSpacer_7, 0, 3, 1, 1)
 
 
         self.gridLayout_12.addWidget(self.frame_12, 0, 0, 1, 1)
@@ -251,9 +244,9 @@ class Ui_Dialog(object):
         self.frame_legends_2.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_legends_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_19 = QGridLayout(self.frame_legends_2)
-        self.gridLayout_19.setSpacing(2)
+        self.gridLayout_19.setSpacing(0)
         self.gridLayout_19.setObjectName(u"gridLayout_19")
-        self.gridLayout_19.setContentsMargins(2, 2, 2, 2)
+        self.gridLayout_19.setContentsMargins(0, 0, 0, 0)
         self.checkBox_legends = QCheckBox(self.frame_legends_2)
         self.checkBox_legends.setObjectName(u"checkBox_legends")
         self.checkBox_legends.setMinimumSize(QSize(75, 0))
@@ -272,9 +265,9 @@ class Ui_Dialog(object):
         self.frame_legends_3.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_legends_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_22 = QGridLayout(self.frame_legends_3)
-        self.gridLayout_22.setSpacing(2)
+        self.gridLayout_22.setSpacing(0)
         self.gridLayout_22.setObjectName(u"gridLayout_22")
-        self.gridLayout_22.setContentsMargins(2, 2, 2, 2)
+        self.gridLayout_22.setContentsMargins(0, 0, 0, 0)
         self.checkBox_grid = QCheckBox(self.frame_legends_3)
         self.checkBox_grid.setObjectName(u"checkBox_grid")
         self.checkBox_grid.setMinimumSize(QSize(75, 0))
@@ -448,17 +441,9 @@ class Ui_Dialog(object):
         self.gridLayout_31.setSpacing(4)
         self.gridLayout_31.setObjectName(u"gridLayout_31")
         self.gridLayout_31.setContentsMargins(8, 4, 4, 4)
-        self.radioButton_cross_cursor = QRadioButton(self.frame_cursor_controls_content)
-        self.buttonGroup_cursor = QButtonGroup(Dialog)
-        self.buttonGroup_cursor.setObjectName(u"buttonGroup_cursor")
-        self.buttonGroup_cursor.addButton(self.radioButton_cross_cursor)
-        self.radioButton_cross_cursor.setObjectName(u"radioButton_cross_cursor")
-        self.radioButton_cross_cursor.setMinimumSize(QSize(75, 0))
-        self.radioButton_cross_cursor.setMaximumSize(QSize(200, 28))
-        self.radioButton_cross_cursor.setFont(font3)
-        self.radioButton_cross_cursor.setChecked(False)
+        self.horizontalSpacer_8 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_31.addWidget(self.radioButton_cross_cursor, 3, 0, 1, 1)
+        self.gridLayout_31.addItem(self.horizontalSpacer_8, 2, 0, 1, 1)
 
         self.frame_legends = QFrame(self.frame_cursor_controls_content)
         self.frame_legends.setObjectName(u"frame_legends")
@@ -466,9 +451,9 @@ class Ui_Dialog(object):
         self.frame_legends.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_legends.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_14 = QGridLayout(self.frame_legends)
-        self.gridLayout_14.setSpacing(2)
+        self.gridLayout_14.setSpacing(0)
         self.gridLayout_14.setObjectName(u"gridLayout_14")
-        self.gridLayout_14.setContentsMargins(2, 2, 2, 2)
+        self.gridLayout_14.setContentsMargins(0, 0, 0, 0)
         self.checkBox_cursor_legends = QCheckBox(self.frame_legends)
         self.checkBox_cursor_legends.setObjectName(u"checkBox_cursor_legends")
         self.checkBox_cursor_legends.setMinimumSize(QSize(75, 0))
@@ -479,7 +464,7 @@ class Ui_Dialog(object):
         self.gridLayout_14.addWidget(self.checkBox_cursor_legends, 0, 0, 1, 1)
 
 
-        self.gridLayout_31.addWidget(self.frame_legends, 1, 0, 1, 1)
+        self.gridLayout_31.addWidget(self.frame_legends, 1, 1, 1, 1)
 
         self.frame_vertical_lines = QFrame(self.frame_cursor_controls_content)
         self.frame_vertical_lines.setObjectName(u"frame_vertical_lines")
@@ -492,8 +477,8 @@ class Ui_Dialog(object):
         self.gridLayout_13.setContentsMargins(2, 2, 2, 2)
         self.spinBox_vertical_lines = QSpinBox(self.frame_vertical_lines)
         self.spinBox_vertical_lines.setObjectName(u"spinBox_vertical_lines")
-        self.spinBox_vertical_lines.setMinimumSize(QSize(0, 0))
-        self.spinBox_vertical_lines.setMaximumSize(QSize(75, 26))
+        self.spinBox_vertical_lines.setMinimumSize(QSize(60, 26))
+        self.spinBox_vertical_lines.setMaximumSize(QSize(100, 26))
         self.spinBox_vertical_lines.setFont(font4)
         self.spinBox_vertical_lines.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_vertical_lines.setMinimum(2)
@@ -510,30 +495,24 @@ class Ui_Dialog(object):
         self.label_2.setFont(font4)
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_13.addWidget(self.label_2, 0, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.label_2, 0, 0, 1, 2)
 
 
-        self.gridLayout_31.addWidget(self.frame_vertical_lines, 5, 0, 1, 1, Qt.AlignmentFlag.AlignHCenter)
+        self.gridLayout_31.addWidget(self.frame_vertical_lines, 3, 1, 1, 1, Qt.AlignmentFlag.AlignHCenter)
 
-        self.radioButton_harmonic_cursor = QRadioButton(self.frame_cursor_controls_content)
-        self.buttonGroup_cursor.addButton(self.radioButton_harmonic_cursor)
-        self.radioButton_harmonic_cursor.setObjectName(u"radioButton_harmonic_cursor")
-        self.radioButton_harmonic_cursor.setMinimumSize(QSize(75, 0))
-        self.radioButton_harmonic_cursor.setMaximumSize(QSize(200, 28))
-        self.radioButton_harmonic_cursor.setFont(font3)
-        self.radioButton_harmonic_cursor.setChecked(False)
+        self.comboBox_cursor_control = QComboBox(self.frame_cursor_controls_content)
+        self.comboBox_cursor_control.addItem("")
+        self.comboBox_cursor_control.addItem("")
+        self.comboBox_cursor_control.addItem("")
+        self.comboBox_cursor_control.setObjectName(u"comboBox_cursor_control")
+        self.comboBox_cursor_control.setMinimumSize(QSize(0, 26))
+        self.comboBox_cursor_control.setFont(font4)
 
-        self.gridLayout_31.addWidget(self.radioButton_harmonic_cursor, 4, 0, 1, 1)
+        self.gridLayout_31.addWidget(self.comboBox_cursor_control, 2, 1, 1, 1)
 
-        self.radioButton_disable_cursors = QRadioButton(self.frame_cursor_controls_content)
-        self.buttonGroup_cursor.addButton(self.radioButton_disable_cursors)
-        self.radioButton_disable_cursors.setObjectName(u"radioButton_disable_cursors")
-        self.radioButton_disable_cursors.setMinimumSize(QSize(75, 0))
-        self.radioButton_disable_cursors.setMaximumSize(QSize(200, 26))
-        self.radioButton_disable_cursors.setFont(font3)
-        self.radioButton_disable_cursors.setChecked(True)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_31.addWidget(self.radioButton_disable_cursors, 2, 0, 1, 1)
+        self.gridLayout_31.addItem(self.horizontalSpacer_9, 2, 2, 1, 1)
 
 
         self.gridLayout_21.addWidget(self.frame_cursor_controls_content, 1, 0, 1, 1)
@@ -541,25 +520,25 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.frame_cursor_controls, 3, 0, 1, 1)
 
-        self.frame_histogram_lines = QFrame(self.frame_content_data)
-        self.frame_histogram_lines.setObjectName(u"frame_histogram_lines")
-        self.frame_histogram_lines.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_histogram_lines.setFrameShadow(QFrame.Shadow.Plain)
-        self.gridLayout_30 = QGridLayout(self.frame_histogram_lines)
+        self.frame_harmonic_lines = QFrame(self.frame_content_data)
+        self.frame_harmonic_lines.setObjectName(u"frame_harmonic_lines")
+        self.frame_harmonic_lines.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_harmonic_lines.setFrameShadow(QFrame.Shadow.Plain)
+        self.gridLayout_30 = QGridLayout(self.frame_harmonic_lines)
         self.gridLayout_30.setObjectName(u"gridLayout_30")
         self.gridLayout_30.setVerticalSpacing(2)
         self.gridLayout_30.setContentsMargins(4, 4, 4, 4)
-        self.frame_title = QFrame(self.frame_histogram_lines)
-        self.frame_title.setObjectName(u"frame_title")
-        self.frame_title.setMinimumSize(QSize(0, 32))
-        self.frame_title.setMaximumSize(QSize(16777215, 32))
-        self.frame_title.setFrameShape(QFrame.Shape.Box)
-        self.frame_title.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_3 = QVBoxLayout(self.frame_title)
+        self.frame_hlines_title = QFrame(self.frame_harmonic_lines)
+        self.frame_hlines_title.setObjectName(u"frame_hlines_title")
+        self.frame_hlines_title.setMinimumSize(QSize(0, 32))
+        self.frame_hlines_title.setMaximumSize(QSize(16777215, 32))
+        self.frame_hlines_title.setFrameShape(QFrame.Shape.Box)
+        self.frame_hlines_title.setFrameShadow(QFrame.Shadow.Raised)
+        self.verticalLayout_3 = QVBoxLayout(self.frame_hlines_title)
         self.verticalLayout_3.setSpacing(0)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(4, 4, 4, 4)
-        self.label_title_3 = QLabel(self.frame_title)
+        self.label_title_3 = QLabel(self.frame_hlines_title)
         self.label_title_3.setObjectName(u"label_title_3")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy2.setHorizontalStretch(0)
@@ -574,17 +553,17 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addWidget(self.label_title_3)
 
 
-        self.gridLayout_30.addWidget(self.frame_title, 0, 0, 1, 1)
+        self.gridLayout_30.addWidget(self.frame_hlines_title, 0, 0, 1, 1)
 
-        self.frame_content_2 = QFrame(self.frame_histogram_lines)
-        self.frame_content_2.setObjectName(u"frame_content_2")
-        self.frame_content_2.setFrameShape(QFrame.Shape.Box)
-        self.frame_content_2.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_23 = QGridLayout(self.frame_content_2)
+        self.frame_hlines_main = QFrame(self.frame_harmonic_lines)
+        self.frame_hlines_main.setObjectName(u"frame_hlines_main")
+        self.frame_hlines_main.setFrameShape(QFrame.Shape.Box)
+        self.frame_hlines_main.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_23 = QGridLayout(self.frame_hlines_main)
         self.gridLayout_23.setSpacing(4)
         self.gridLayout_23.setObjectName(u"gridLayout_23")
         self.gridLayout_23.setContentsMargins(4, 4, 4, 4)
-        self.label_14 = QLabel(self.frame_content_2)
+        self.label_14 = QLabel(self.frame_hlines_main)
         self.label_14.setObjectName(u"label_14")
         self.label_14.setFont(font4)
         self.label_14.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
@@ -603,7 +582,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_23.addItem(self.horizontalSpacer_4, 1, 5, 1, 1)
 
-        self.comboBox_harmonic_lines_control = QComboBox(self.frame_content_2)
+        self.comboBox_harmonic_lines_control = QComboBox(self.frame_hlines_main)
         self.comboBox_harmonic_lines_control.addItem("")
         self.comboBox_harmonic_lines_control.addItem("")
         self.comboBox_harmonic_lines_control.setObjectName(u"comboBox_harmonic_lines_control")
@@ -612,7 +591,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_23.addWidget(self.comboBox_harmonic_lines_control, 0, 2, 1, 1)
 
-        self.lineEdit_harmonic_lines_1st_freq = QLineEdit(self.frame_content_2)
+        self.lineEdit_harmonic_lines_1st_freq = QLineEdit(self.frame_hlines_main)
         self.lineEdit_harmonic_lines_1st_freq.setObjectName(u"lineEdit_harmonic_lines_1st_freq")
         self.lineEdit_harmonic_lines_1st_freq.setMinimumSize(QSize(0, 26))
         self.lineEdit_harmonic_lines_1st_freq.setMaximumSize(QSize(16777215, 16777215))
@@ -621,7 +600,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_23.addWidget(self.lineEdit_harmonic_lines_1st_freq, 1, 2, 1, 1)
 
-        self.pushButton_show_legend = QPushButton(self.frame_content_2)
+        self.pushButton_show_legend = QPushButton(self.frame_hlines_main)
         self.pushButton_show_legend.setObjectName(u"pushButton_show_legend")
         self.pushButton_show_legend.setMinimumSize(QSize(30, 0))
         icon = QIcon()
@@ -634,7 +613,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_23.addWidget(self.pushButton_show_legend, 0, 3, 1, 1)
 
-        self.spinBox_harmonic_lines_number = QSpinBox(self.frame_content_2)
+        self.spinBox_harmonic_lines_number = QSpinBox(self.frame_hlines_main)
         self.spinBox_harmonic_lines_number.setObjectName(u"spinBox_harmonic_lines_number")
         self.spinBox_harmonic_lines_number.setMinimumSize(QSize(0, 26))
         self.spinBox_harmonic_lines_number.setMaximumSize(QSize(16777215, 16777215))
@@ -647,19 +626,19 @@ class Ui_Dialog(object):
 
         self.gridLayout_23.addWidget(self.spinBox_harmonic_lines_number, 2, 2, 1, 1)
 
-        self.label_10 = QLabel(self.frame_content_2)
+        self.label_10 = QLabel(self.frame_hlines_main)
         self.label_10.setObjectName(u"label_10")
         self.label_10.setFont(font4)
 
         self.gridLayout_23.addWidget(self.label_10, 1, 1, 1, 1)
 
-        self.label_12 = QLabel(self.frame_content_2)
+        self.label_12 = QLabel(self.frame_hlines_main)
         self.label_12.setObjectName(u"label_12")
         self.label_12.setFont(font4)
 
         self.gridLayout_23.addWidget(self.label_12, 1, 3, 1, 1)
 
-        self.label_11 = QLabel(self.frame_content_2)
+        self.label_11 = QLabel(self.frame_hlines_main)
         self.label_11.setObjectName(u"label_11")
         self.label_11.setFont(font4)
         self.label_11.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
@@ -667,10 +646,10 @@ class Ui_Dialog(object):
         self.gridLayout_23.addWidget(self.label_11, 2, 1, 1, 1)
 
 
-        self.gridLayout_30.addWidget(self.frame_content_2, 1, 0, 1, 1)
+        self.gridLayout_30.addWidget(self.frame_hlines_main, 1, 0, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_histogram_lines, 2, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_harmonic_lines, 2, 0, 1, 1)
 
 
         self.verticalLayout.addWidget(self.frame_content_data)
@@ -719,10 +698,10 @@ class Ui_Dialog(object):
         self.pushButton_export_data.setText(QCoreApplication.translate("Dialog", u"  Export data  ", None))
         self.pushButton_import_data.setText(QCoreApplication.translate("Dialog", u"  Import data  ", None))
         self.label_9.setText(QCoreApplication.translate("Dialog", u"Plot type", None))
-        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u" log-y", None))
-        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u" log-x", None))
-        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Dialog", u" lin-lin", None))
-        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Dialog", u" log-log", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u"log-y", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u"log-x", None))
+        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Dialog", u"lin-lin", None))
+        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Dialog", u"log-log", None))
 
         self.label.setText(QCoreApplication.translate("Dialog", u"Axes scales:", None))
         self.checkBox_legends.setText(QCoreApplication.translate("Dialog", u"Show legends", None))
@@ -743,11 +722,12 @@ class Ui_Dialog(object):
         self.comboBox_differentiate_data.setItemText(2, QCoreApplication.translate("Dialog", u"double", None))
 
         self.label_13.setText(QCoreApplication.translate("Dialog", u"Cursor controls", None))
-        self.radioButton_cross_cursor.setText(QCoreApplication.translate("Dialog", u"Enable cross cursor", None))
         self.checkBox_cursor_legends.setText(QCoreApplication.translate("Dialog", u"Show cursor legends", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Vertical lines: ", None))
-        self.radioButton_harmonic_cursor.setText(QCoreApplication.translate("Dialog", u"Enable harmonic cursor", None))
-        self.radioButton_disable_cursors.setText(QCoreApplication.translate("Dialog", u"Disable cursors", None))
+        self.comboBox_cursor_control.setItemText(0, QCoreApplication.translate("Dialog", u"Disable cursors", None))
+        self.comboBox_cursor_control.setItemText(1, QCoreApplication.translate("Dialog", u"Enable cursor", None))
+        self.comboBox_cursor_control.setItemText(2, QCoreApplication.translate("Dialog", u"Enable h-cursor", None))
+
         self.label_title_3.setText(QCoreApplication.translate("Dialog", u"Harmonic lines plot", None))
         self.label_14.setText(QCoreApplication.translate("Dialog", u"H-lines plot:", None))
         self.comboBox_harmonic_lines_control.setItemText(0, QCoreApplication.translate("Dialog", u"disabled", None))
@@ -798,8 +778,6 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                                                                                 - (Layout): QGridLayout
                                                                                                         - comboBox_plot_type: QComboBox
                                                                                                         - label: QLabel
-                                                                                                        - frame_19: QFrame
-                                                                                                        - frame_21: QFrame
                                                                                             - frame_legends_2: QFrame
                                                                                                 - (Layout): QGridLayout
                                                                                                         - checkBox_legends: QCheckBox
@@ -824,7 +802,6 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                                                                             - label_13: QLabel
                                                                                 - frame_cursor_controls_content: QFrame
                                                                                     - (Layout): QGridLayout
-                                                                                            - radioButton_cross_cursor: QRadioButton
                                                                                             - frame_legends: QFrame
                                                                                                 - (Layout): QGridLayout
                                                                                                         - checkBox_cursor_legends: QCheckBox
@@ -832,14 +809,13 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                                                                                 - (Layout): QGridLayout
                                                                                                         - spinBox_vertical_lines: QSpinBox
                                                                                                         - label_2: QLabel
-                                                                                            - radioButton_harmonic_cursor: QRadioButton
-                                                                                            - radioButton_disable_cursors: QRadioButton
-                                                                    - frame_histogram_lines: QFrame
+                                                                                            - comboBox_cursor_control: QComboBox
+                                                                    - frame_harmonic_lines: QFrame
                                                                         - (Layout): QGridLayout
-                                                                                - frame_title: QFrame
+                                                                                - frame_hlines_title: QFrame
                                                                                     - (Layout): QVBoxLayout
                                                                                             - label_title_3: QLabel
-                                                                                - frame_content_2: QFrame
+                                                                                - frame_hlines_main: QFrame
                                                                                     - (Layout): QGridLayout
                                                                                             - label_14: QLabel
                                                                                             - comboBox_harmonic_lines_control: QComboBox

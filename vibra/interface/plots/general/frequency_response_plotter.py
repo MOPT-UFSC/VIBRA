@@ -13,6 +13,34 @@ from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui im
 )
 from vibra.interface.general.print_message_input import PrintMessageInput
 
+from enum import IntEnum
+
+
+class OutputType(IntEnum):
+    ABSOLUTE = 0
+    REAL = 1
+    IMAGINARY = 2
+    DECIBEL_SCALE = 3
+
+
+class PlotType(IntEnum):
+    LOG_Y = 0
+    LOG_X = 1
+    LIN_LIN = 2
+    LOG_LOG = 3
+
+
+class Differentiate(IntEnum):
+    NONE = 0
+    SINGLE = 1
+    DOUBLE = 2
+
+
+class CursorIndex(IntEnum):
+    DISABLED = 0
+    CROSS = 1
+    HARMONIC = 2
+
 error_title = "Error"
 
 
@@ -64,17 +92,14 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.checkBox_legends.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_cursor_legends.stateChanged.connect(self.plot_data_in_freq_domain)
         #
-        self.comboBox_plot_type.currentIndexChanged.connect(self._update_plot_type)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_changed_callback)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
         self.comboBox_harmonic_lines_control.currentIndexChanged.connect(self.plot_harmonic_lines_callback)
-        self.comboBox_output_type.currentIndexChanged.connect(self._update_comboBox)
+        self.comboBox_output_type.currentIndexChanged.connect(self.output_type_changed_callback)
+        self.comboBox_cursor_control.currentIndexChanged.connect(self.cursor_controls_changed_callback)
         #
         self.lineEdit_harmonic_lines_1st_freq.textChanged.connect(self.plot_harmonic_lines_callback)
         self.lineEdit_harmonic_lines_1st_freq.returnPressed.connect(self.plot_harmonic_lines_callback)
-        #
-        self.radioButton_disable_cursors.clicked.connect(self.update_cursor_controls)
-        self.radioButton_cross_cursor.clicked.connect(self.update_cursor_controls)
-        self.radioButton_harmonic_cursor.clicked.connect(self.update_cursor_controls)
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
@@ -104,41 +129,37 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def _initial_config(self):
         self.linear_plot = False
-        self.plot_type = self.comboBox_plot_type.currentText()
+        self.plot_type_index = self.comboBox_plot_type.currentIndex()
         self.checkBox_cursor_legends.setChecked(False)
         self.checkBox_cursor_legends.setDisabled(True)
         self.frame_vertical_lines.setDisabled(True)
 
-    def _update_comboBox(self):
+    def output_type_changed_callback(self):
 
-        self.cache_plot_type = self.comboBox_plot_type.currentText()
-        output_type = self.comboBox_output_type.currentText()
-        self.linear_plot = output_type != "absolute"
+        self.cache_plot_type = self.comboBox_plot_type.currentIndex()
+        self.linear_plot = self.comboBox_output_type.currentIndex() != OutputType.ABSOLUTE
+        self.comboBox_plot_type.setDisabled(self.linear_plot)
 
         if self.linear_plot:
-            self.comboBox_plot_type.setDisabled(True)
-            self.comboBox_plot_type.setCurrentIndex(2)
-
+            self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
         else:
-            self.comboBox_plot_type.setDisabled(False)
-            self.comboBox_plot_type.setCurrentIndex(0)
-        
-        if self.plot_type == self.cache_plot_type:
+            self.comboBox_plot_type.setCurrentIndex(PlotType.LOG_Y)
+
+        if self.plot_type_index == self.cache_plot_type:
             self.plot_data_in_freq_domain()
 
-    def _update_plot_type(self):
-        self.plot_type = self.comboBox_plot_type.currentText()
+    def plot_type_changed_callback(self):
+        self.plot_type_index = self.comboBox_plot_type.currentIndex()
         self.plot_data_in_freq_domain()
 
-    def update_cursor_controls(self):
-        if self.radioButton_disable_cursors.isChecked():
+    def cursor_controls_changed_callback(self):
+        cursor_disabled = self.comboBox_cursor_control.currentIndex() == CursorIndex.DISABLED
+        self.checkBox_cursor_legends.setDisabled(cursor_disabled)
+        self.frame_vertical_lines.setDisabled(cursor_disabled)
+
+        if cursor_disabled:
             self.checkBox_cursor_legends.setChecked(False)
-            self.checkBox_cursor_legends.setDisabled(True)
-            self.frame_vertical_lines.setDisabled(True)
-        else:
-            self.checkBox_cursor_legends.setDisabled(False)
-            if self.radioButton_harmonic_cursor.isChecked():
-                self.frame_vertical_lines.setDisabled(False)
+
         self.plot_data_in_freq_domain()
 
     def _initialize_canvas(self):
@@ -261,9 +282,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data
-        self.comboBox_plot_type.setCurrentIndex(2)
+        self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
         self.comboBox_plot_type.setDisabled(True)
-        self.comboBox_output_type.setCurrentText("decibel scale")
+        self.comboBox_output_type.setCurrentIndex(OutputType.DECIBEL_SCALE)
         self.comboBox_output_type.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
 
@@ -283,36 +304,36 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.linestyle = data.get("linestyle")
 
     def get_scaled_data(self, data):
-        if self.comboBox_output_type.currentText() == "decibel scale":
-            if self.comboBox_differentiate_data.currentIndex() != 0:
-                shift = 1
-            else:
-                shift = 0
-            self.x_data = self.x_data[shift:]
-            data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
-            # if "Pa" in self.unit:
-            if self.unit == "Pa":
-                return 10*np.log10(data2/((2e-5)**2))
-            else:
-                return 10*np.log10(data2)
-
-        else:
+        if self.comboBox_output_type.currentIndex() != OutputType.DECIBEL_SCALE:
             return data
+
+        shift = 0
+        if self.comboBox_differentiate_data.currentIndex() != Differentiate.NONE:
+            shift = 1
+            
+        self.x_data = self.x_data[shift:]
+        data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
+
+        # if "Pa" in self.unit:
+        if self.unit == "Pa":
+            return 10*np.log10(data2/((2e-5)**2))
+
+        return 10*np.log10(data2)
 
     def get_y_axis_data(self, data: np.ndarray | None):
         if data is None:
             return None
 
         dif_data = self.process_differentiation(data)
-        output_type = self.comboBox_output_type.currentText()
+        output_type_index = self.comboBox_output_type.currentIndex()
 
-        if output_type == "real part":
+        if output_type_index == OutputType.REAL:
             return np.real(dif_data)
 
-        elif output_type == "imaginary part":
+        elif output_type_index == OutputType.IMAGINARY:
             return np.imag(dif_data)
 
-        elif output_type == "absolute":
+        elif output_type_index == OutputType.ABSOLUTE:
             return np.abs(dif_data)
 
         else:
@@ -320,11 +341,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def get_y_axis_label(self, label: str):
         
-        output_type = self.comboBox_output_type.currentText()
-        if output_type == "real part":
+        output_type_index = self.comboBox_output_type.currentIndex()
+        if output_type_index == OutputType.REAL:
             type_label = "real"
 
-        elif output_type == "imaginary part":
+        elif output_type_index == OutputType.IMAGINARY:
             type_label = "imaginary"
 
         else:
@@ -334,23 +355,16 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return f"{label} [dB]"
 
         unit = self.get_unit_considering_differentiation()
-        if output_type == "decibel scale":
+        if output_type_index == OutputType.DECIBEL_SCALE:
             return f"{label} - {type_label} [dB]"
 
         return f"{label} - {type_label} [{unit}]"
 
     def process_differentiation(self, data: np.ndarray):
         frequencies = self.x_data
+        n = self.comboBox_differentiate_data.currentIndex()
 
-        index = self.comboBox_differentiate_data.currentIndex()
-        if index == 0:
-            output_data = data
-        elif index == 1:
-            output_data = data*(1j*2*np.pi)*frequencies
-        else:
-            output_data = data*((1j*2*np.pi*frequencies)**2)
-
-        return output_data
+        return data*((1j*2*np.pi*frequencies)**n)
 
     def get_unit_considering_differentiation(self):
         index = self.comboBox_differentiate_data.currentIndex()
@@ -407,16 +421,22 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 if self.y_data is not None:
                     self.mask_x = self.x_data <= 0
                     self.mask_y = self.y_data <= 0
+
                     if self.linear_plot:
                         _plot = self.call_lin_lin_plot()
+
                     elif True in (self.mask_x + self.mask_y):
                         _plot = self.get_plot_considering_invalid_log_values()
-                    elif "log-log" in self.plot_type:
+
+                    elif self.plot_type_index == PlotType.LOG_LOG:
                         _plot = self.call_log_log_plot()
-                    elif "log-y" in self.plot_type:
+
+                    elif self.plot_type_index == PlotType.LOG_Y:
                         _plot = self.call_semilog_y_plot()
-                    elif "log-x" in self.plot_type:
+
+                    elif self.plot_type_index == PlotType.LOG_X:
                         _plot = self.call_semilog_x_plot()
+
                     else:
                         _plot = self.call_lin_lin_plot()
 
@@ -459,9 +479,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def call_lin_lin_plot(self):
 
-        if self.comboBox_plot_type.currentIndex() != 2:
+        if self.comboBox_plot_type.currentIndex() != PlotType.LIN_LIN:
             self.comboBox_plot_type.blockSignals(True)
-            self.comboBox_plot_type.setCurrentIndex(2)
+            self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
             self.comboBox_plot_type.blockSignals(False)
 
         _plot, = self.ax.plot(  self.x_data, 
@@ -481,8 +501,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     
     def get_plot_considering_invalid_log_values(self):
 
-        if "log-log" in self.plot_type:
-        
+        if self.plot_type_index == PlotType.LOG_LOG:
             if True in self.mask_y[1:] or True in self.mask_x[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -491,8 +510,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 else:
                     _plot = self.call_log_log_plot(first_index=0)
 
-        elif "log-x" in self.plot_type:
-
+        elif self.plot_type_index == PlotType.LOG_X:
             if True in self.mask_x[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -501,8 +519,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 else:
                     _plot = self.call_semilog_x_plot(first_index=0)
 
-        elif "log-y" in self.plot_type:
-
+        elif self.plot_type_index == PlotType.LOG_Y:
             if True in self.mask_y[1:]:
                 _plot = self.call_lin_lin_plot()
             else:
@@ -512,27 +529,27 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                     _plot = self.call_semilog_y_plot(first_index=0)
 
         else:
-        
             _plot = self.call_lin_lin_plot()
-        
+
         return _plot
 
     def call_cursor(self):
 
-        show_cursor = not self.radioButton_disable_cursors.isChecked()
+        show_cursor = self.comboBox_cursor_control.currentIndex() != CursorIndex.DISABLED
         show_legend = self.checkBox_cursor_legends.isChecked()
         
-        if self.radioButton_harmonic_cursor.isChecked():
-            number_vertLines = self.spinBox_vertical_lines.value()    
-        else:
-            number_vertLines = 1
+        number_vlines = 1
+        if self.comboBox_cursor_control.currentIndex() == CursorIndex.HARMONIC:
+            number_vlines = self.spinBox_vertical_lines.value()
 
-        self.cursor = AdvancedCursor(   self.ax, 
-                                        self.x_data, 
-                                        self.y_data, 
-                                        show_cursor,
-                                        show_legend,
-                                        number_vertLines = number_vertLines   )
+        self.cursor = AdvancedCursor(   
+            self.ax, 
+            self.x_data, 
+            self.y_data, 
+            show_cursor,
+            show_legend,
+            number_vlines = number_vlines,
+            )
 
         self.mouse_connection = self.fig.canvas.mpl_connect(s='motion_notify_event', func=self.cursor.mouse_move)
 

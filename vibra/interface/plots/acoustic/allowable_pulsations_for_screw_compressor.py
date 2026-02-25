@@ -9,7 +9,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, OutputType
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import AllowablePulsationsForScrewCompressorInputs_UI
 
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
@@ -212,8 +212,8 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
             return
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.plotter.radioButton_real.setChecked(True)
-        self.plotter._update_comboBox()
+        self.plotter.comboBox_output_type.setCurrentIndex(OutputType.REAL)
+        self.plotter.output_type_changed_callback()
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
