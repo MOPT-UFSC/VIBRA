@@ -26,6 +26,8 @@ class AnalysisChecker:
         if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
             raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
+        self.check_mesh()
+
         self.check_contains_volumes()
         self.check_fluids_volumes()
         self.check_acoustic_harmonic_excitations()
