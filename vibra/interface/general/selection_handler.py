@@ -103,6 +103,48 @@ class SelectionHandler(QObject):
 
         self.selection_changed.emit()
 
+    def invert_selection(self):
+        mesh = self.project.model.mesh
+
+        geometry_selection_active = any([
+            self.geometry_points,
+            self.geometry_lines,
+            self.geometry_surfaces,
+            self.geometry_volumes,
+        ])
+        mesh_selection_active = any([
+            self.mesh_nodes,
+            self.mesh_faces,
+            self.mesh_solids,
+        ])
+
+        if not geometry_selection_active and not mesh_selection_active:
+            return
+
+        if geometry_selection_active:
+            new_geometry_selection = {}
+            if self.geometry_points:
+                new_geometry_selection["points"] = mesh.all_point_ids() - self.geometry_points
+            if self.geometry_lines:
+                new_geometry_selection["lines"] = mesh.all_line_ids() - self.geometry_lines
+            if self.geometry_surfaces:
+                new_geometry_selection["surfaces"] = mesh.all_surface_ids() - self.geometry_surfaces
+            if self.geometry_volumes:
+                new_geometry_selection["volumes"] = mesh.all_solid_ids() - self.geometry_volumes
+            if new_geometry_selection:
+                self.set_geometry_selection(**new_geometry_selection)
+
+        elif mesh_selection_active:
+            new_mesh_selection = {}
+            if self.mesh_nodes:
+                new_mesh_selection["nodes"] = mesh.all_node_ids() - self.mesh_nodes
+            if self.mesh_faces:
+                new_mesh_selection["faces"] = mesh.all_face_element_ids() - self.mesh_faces
+            if self.mesh_solids:
+                new_mesh_selection["solids"] = mesh.all_solid_element_ids() - self.mesh_solids
+            if new_mesh_selection:
+                self.set_mesh_selection(**new_mesh_selection)
+
     def calculate_volumes_to_hide(self):
         volumes_to_hide = set()
         if self.geometry_volumes:
