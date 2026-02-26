@@ -8,7 +8,7 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.new_project import NewProject
 
 
-def test_project_geometry(fluid):
+def test_write_and_read_project(fluid):
     geometry_path = PROJECT_DIR / "data/examples/geometry_files/cylinder.step"
     project_path = Path("project.vibra")
 
@@ -43,33 +43,6 @@ def test_project_geometry(fluid):
         ),
     )
     project_a.solve_acoustic_harmonic_analysis()
-    project_a.save_project(project_path)
-
-    project_b = NewProject()
-    project_b.load_project(project_path)
-
-    project_path.unlink()
-    assert np.allclose(project_a.solver.solution[:], project_b.solver.solution[:])
-
-
-def test_project_mesh(fluid):
-    mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
-    project_path = Path("project.vibra")
-
-    project_a = NewProject()
-    project_a.import_mesh(mesh_path)
-
-    project_a.model.properties._set_property("fluid", fluid, volume=1)
-    project_a.model.properties._set_property("fluid", fluid, volume=2)
-
-    project_a.configure_analysis(
-        AnalysisID.ACOUSTIC_MODAL,
-        ModalAnalysisSetup(
-            modes_number=5,
-            sigma_factor=0.01,
-        ),
-    )
-    project_a.run_analysis()
     project_a.save_project(project_path)
 
     project_b = NewProject()

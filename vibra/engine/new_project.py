@@ -15,6 +15,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
+from vibra.engine.properties import FluidLibrary, Material, MaterialLibrary
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
@@ -70,6 +71,14 @@ class NewProject:
     @property
     def analysis_setup(self):
         return self.model.new_analysis_setup
+
+    @property
+    def fluid_library(self) -> FluidLibrary:
+        return self.model.properties.fluid_library
+
+    @property
+    def material_library(self) -> MaterialLibrary:
+        return self.model.properties.material_library
 
     @property
     def working_directory(self) -> Path:
