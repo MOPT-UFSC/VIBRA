@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QDialog, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import Qt, QSize
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
+from vibra.interface.ui_generated.model.material.material_widget_ui import MaterialWidget_UI
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 
 from vibra.interface.general.pick_color_input import PickColorInput

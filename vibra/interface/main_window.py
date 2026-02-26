@@ -684,7 +684,8 @@ class MainWindow(MainWindow_UI):
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
-        self.import_geometry_or_mesh_dialog()
+        if self.import_geometry_or_mesh_dialog():
+            return
 
         self.render_tools_toolbar.setVisible(True)
 
@@ -811,7 +812,7 @@ class MainWindow(MainWindow_UI):
         )
 
         if not check:
-            return False
+            return True
 
         self.selection.clear_selection()
 
@@ -822,7 +823,7 @@ class MainWindow(MainWindow_UI):
         # call geometry setup
         read = GeometrySetup()
         if not read.complete:
-            return False
+            return True
 
         app().file.write_geometry_in_file(
             Path(load_path),
@@ -848,7 +849,7 @@ class MainWindow(MainWindow_UI):
 
         self.model_setup_widget.model_setup_items.update_items_appearance()
         
-        return True
+        return False
 
     def update_window_title(self, project_path: str | Path):
         if isinstance(project_path, str):

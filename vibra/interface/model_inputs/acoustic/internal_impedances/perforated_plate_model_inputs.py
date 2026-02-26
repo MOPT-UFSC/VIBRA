@@ -13,7 +13,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import PerforatedPlateData
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.setup.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
+from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
 
 from vibra.engine.properties.fluid import Fluid

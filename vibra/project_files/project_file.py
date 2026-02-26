@@ -409,6 +409,9 @@ class ProjectFile:
                     elif isinstance(tags, int):
                         key = f"{property} {tags}"
 
+                    elif isinstance(tags, str):
+                        key = property
+
                     else:
                         continue
 
@@ -440,7 +443,7 @@ class ProjectFile:
             properties = app().project.model.properties
 
             data = dict(
-                        # global_properties = normalize(properties.global_properties),
+                        global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
                         surface_properties = normalize(properties.surface_properties),
                         line_properties = normalize(properties.line_properties),
@@ -491,7 +494,7 @@ class ProjectFile:
             return dict()
 
         model_properties = dict(
-                                # global_properties = denormalize(data.get(""global_properties")),
+                                global_properties = denormalize(data.get("global_properties")),
                                 volume_properties = denormalize(data.get("volume_properties")),
                                 surface_properties = denormalize(data.get("surface_properties")),
                                 line_properties = denormalize(data.get("line_properties")),

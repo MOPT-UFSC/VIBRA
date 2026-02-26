@@ -8,7 +8,7 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.setup.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
+from vibra.interface.ui_generated.model.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 
 import numpy as np
 from enum import IntEnum
