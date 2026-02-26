@@ -29,6 +29,11 @@ class PlotType(IntEnum):
     LOG_LOG = 3
 
 
+class DisplayHarmonicLines(IntEnum):
+    DISABLED = 0
+    ENABLED = 1
+
+
 class Differentiate(IntEnum):
     NONE = 0
     SINGLE = 1
@@ -102,7 +107,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_show_legend.clicked.connect(self.plot_harmonic_lines_callback)
+        self.pushButton_display_hfrequencies.clicked.connect(self.plot_harmonic_lines_callback)
         #
         self.spinBox_harmonic_lines_number.valueChanged.connect(self.plot_harmonic_lines_callback)
         # 
@@ -113,16 +118,16 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def update_harmonic_lines_legend_icon(self):
 
-        show_legend = self.pushButton_show_legend.isChecked()
-        if show_legend:
+        if self.pushButton_display_hfrequencies.isChecked():
             icon = QIcon(str(ICON_DIR / "visibility_off.png"))
-            tool_tip = "Remove harmonic line legends"
+            tool_tip = "Remove harmonic line frequencies"
+
         else:
             icon = QIcon(str(ICON_DIR / "visibility.png"))
-            tool_tip = "Display harmonic line legends"
+            tool_tip = "Display harmonic line frequencies"
 
-        self.pushButton_show_legend.setIcon(icon)
-        self.pushButton_show_legend.setToolTip(tool_tip)
+        self.pushButton_display_hfrequencies.setIcon(icon)
+        self.pushButton_display_hfrequencies.setToolTip(tool_tip)
 
     def import_file(self):
 
@@ -189,7 +194,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self,
         fundamental_freq: float,
         n_harmonics: int,
-        show_legends: bool,
+        display_hfrequencies: bool,
         remove_all: bool,
     ):
         if self.x_data is None:
@@ -203,22 +208,20 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         for text in plotted_texts:
             text.remove()
 
-        if remove_all is False:
+        if not remove_all:
             x_min, x_max = self.ax.get_xlim()
 
             for i in range(n_harmonics):
                 frequency = float((i + 1) * fundamental_freq)
 
                 if x_min <= frequency <= x_max:
-                    line = self.ax.axvline(x=frequency, color="r", linestyle="--", alpha=0.3, label="_nolegend_")
+                    line = self.ax.axvline(x=frequency, color=(214/255, 126/255, 44/255), linestyle="--", alpha=0.8, label="_nolegend_")
                     line.is_harmonic_line = True
 
-                    legend = ""
-                    newline = ""
-                    if show_legends:
-                        legend += f" {i + 1}x"
-                        newline = "\n"
+                    legend = f" {i + 1}x"
+                    newline = "\n"
 
+                    if display_hfrequencies:
                         legend += f"{newline} ({round(frequency, 3)} Hz)"
 
                     if legend != "":
@@ -268,12 +271,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def plot_harmonic_lines_callback(self):
 
         self.update_harmonic_lines_legend_icon()
-        hline_plot = self.comboBox_harmonic_lines_control.currentText()
-        
-        plot_hlines = hline_plot != "disabled"
+        plot_hlines = self.comboBox_harmonic_lines_control.currentIndex() == DisplayHarmonicLines.ENABLED
+
         self.lineEdit_harmonic_lines_1st_freq.setEnabled(plot_hlines)
         self.spinBox_harmonic_lines_number.setEnabled(plot_hlines)
-        self.pushButton_show_legend.setEnabled(plot_hlines)
+        self.pushButton_display_hfrequencies.setEnabled(plot_hlines)
 
         if not plot_hlines:
             self.plot_harmonic_lines(0, 0, False, True)
@@ -284,12 +286,12 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return
 
         number_of_lines = self.spinBox_harmonic_lines_number.value()
-        show_legends = self.pushButton_show_legend.isChecked()
+        display_hfrequencies = self.pushButton_display_hfrequencies.isChecked()
 
         self.plot_harmonic_lines(
             value,
             number_of_lines,
-            show_legends,
+            display_hfrequencies,
             False,
         )
 
@@ -472,7 +474,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                 self.ax.grid()
 
             self.mpl_canvas_frequency_plot.draw()
-            return
+
+            if self.comboBox_harmonic_lines_control.currentIndex() == DisplayHarmonicLines.ENABLED:
+                self.plot_harmonic_lines_callback()
 
     def call_semilog_y_plot(self, first_index=0):
         _plot, = self.ax.semilogy(  self.x_data[first_index:], 

@@ -1322,17 +1322,17 @@
                         </property>
                         <item>
                          <property name="text">
-                          <string>Disable cursors</string>
+                          <string>disable cursors</string>
                          </property>
                         </item>
                         <item>
                          <property name="text">
-                          <string>Enable cursor</string>
+                          <string>enable cursor</string>
                          </property>
                         </item>
                         <item>
                          <property name="text">
-                          <string>Enable h-cursor</string>
+                          <string>enable h-cursor</string>
                          </property>
                         </item>
                        </widget>
@@ -1577,7 +1577,7 @@
                        </widget>
                       </item>
                       <item row="0" column="3">
-                       <widget class="QPushButton" name="pushButton_show_legend">
+                       <widget class="QPushButton" name="pushButton_display_hfrequencies">
                         <property name="minimumSize">
                          <size>
                           <width>30</width>
@@ -1585,7 +1585,7 @@
                          </size>
                         </property>
                         <property name="toolTip">
-                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display harmonic line legends&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display harmonic line frequencies&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                         </property>
                         <property name="text">
                          <string/>

@@ -566,18 +566,18 @@ class Ui_Dialog(object):
 
         self.gridLayout_23.addWidget(self.lineEdit_harmonic_lines_1st_freq, 1, 2, 1, 1)
 
-        self.pushButton_show_legend = QPushButton(self.frame_hlines_main)
-        self.pushButton_show_legend.setObjectName(u"pushButton_show_legend")
-        self.pushButton_show_legend.setMinimumSize(QSize(30, 0))
+        self.pushButton_display_hfrequencies = QPushButton(self.frame_hlines_main)
+        self.pushButton_display_hfrequencies.setObjectName(u"pushButton_display_hfrequencies")
+        self.pushButton_display_hfrequencies.setMinimumSize(QSize(30, 0))
         icon = QIcon()
         icon.addFile(u":/icons/visibility_off.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.pushButton_show_legend.setIcon(icon)
-        self.pushButton_show_legend.setIconSize(QSize(20, 20))
-        self.pushButton_show_legend.setCheckable(True)
-        self.pushButton_show_legend.setChecked(True)
-        self.pushButton_show_legend.setAutoDefault(False)
+        self.pushButton_display_hfrequencies.setIcon(icon)
+        self.pushButton_display_hfrequencies.setIconSize(QSize(20, 20))
+        self.pushButton_display_hfrequencies.setCheckable(True)
+        self.pushButton_display_hfrequencies.setChecked(True)
+        self.pushButton_display_hfrequencies.setAutoDefault(False)
 
-        self.gridLayout_23.addWidget(self.pushButton_show_legend, 0, 3, 1, 1)
+        self.gridLayout_23.addWidget(self.pushButton_display_hfrequencies, 0, 3, 1, 1)
 
         self.spinBox_harmonic_lines_number = QSpinBox(self.frame_hlines_main)
         self.spinBox_harmonic_lines_number.setObjectName(u"spinBox_harmonic_lines_number")
@@ -735,9 +735,9 @@ class Ui_Dialog(object):
         self.label_13.setText(QCoreApplication.translate("Dialog", u"Cursor controls", None))
         self.checkBox_cursor_legends.setText(QCoreApplication.translate("Dialog", u"Show cursor legends", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Vertical lines: ", None))
-        self.comboBox_cursor_control.setItemText(0, QCoreApplication.translate("Dialog", u"Disable cursors", None))
-        self.comboBox_cursor_control.setItemText(1, QCoreApplication.translate("Dialog", u"Enable cursor", None))
-        self.comboBox_cursor_control.setItemText(2, QCoreApplication.translate("Dialog", u"Enable h-cursor", None))
+        self.comboBox_cursor_control.setItemText(0, QCoreApplication.translate("Dialog", u"disable cursors", None))
+        self.comboBox_cursor_control.setItemText(1, QCoreApplication.translate("Dialog", u"enable cursor", None))
+        self.comboBox_cursor_control.setItemText(2, QCoreApplication.translate("Dialog", u"enable h-cursor", None))
 
         self.label_title_3.setText(QCoreApplication.translate("Dialog", u"Harmonic lines plot", None))
         self.label_14.setText(QCoreApplication.translate("Dialog", u"H-lines plot:", None))
@@ -746,9 +746,9 @@ class Ui_Dialog(object):
 
         self.lineEdit_harmonic_lines_1st_freq.setText(QCoreApplication.translate("Dialog", u"250", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_show_legend.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Display harmonic line legends</p></body></html>", None))
+        self.pushButton_display_hfrequencies.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Display harmonic line frequencies</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_show_legend.setText("")
+        self.pushButton_display_hfrequencies.setText("")
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Frequency (1x):", None))
         self.label_12.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.label_11.setText(QCoreApplication.translate("Dialog", u"Vertical lines:", None))
@@ -829,7 +829,7 @@ class FrequencyResponsePlotter_UI(QDialog, Ui_Dialog):
                                                                                             - label_14: QLabel
                                                                                             - comboBox_harmonic_lines_control: QComboBox
                                                                                             - lineEdit_harmonic_lines_1st_freq: QLineEdit
-                                                                                            - pushButton_show_legend: QPushButton
+                                                                                            - pushButton_display_hfrequencies: QPushButton
                                                                                             - spinBox_harmonic_lines_number: QSpinBox
                                                                                             - label_10: QLabel
                                                                                             - label_12: QLabel
