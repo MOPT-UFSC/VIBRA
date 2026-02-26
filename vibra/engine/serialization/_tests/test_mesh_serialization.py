@@ -39,10 +39,14 @@ def test_write_and_read_mesh_project(fluid):
 
 def test_compare_interface_based_mesh_project():
     project_path = PROJECT_DIR / "validation_files/test_projects/cavities.vibra"
+    mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
+
     project_interface = NewProject().load_project(project_path)
 
     project_cli = NewProject()
-    fluid = project_cli.fluid_library.find_by_name("hydrogen")
+    project_cli.import_mesh(mesh_path)
+    fluid = project_cli.fluid_library.find_by_name("Hydrogen")
+    assert fluid is not None
 
     # Not great yet =/
     project_cli.model.properties._set_property("fluid", fluid, volume=1)
@@ -56,6 +60,26 @@ def test_compare_interface_based_mesh_project():
         },
         surface=1,
     )
+
+    # It is not ideal to have two functions setting a single property
+    project_cli.model.properties._set_property(
+        "degrees_of_freedom_decoupling", 
+        data = {"volume_to_decouple" : 1},
+        surface=6
+    )
+    project_cli.mesh.cache_mesh_information()
+    project_cli.model.process_degrees_of_freedom_decoupling()
+
+    project_cli.configure_analysis(
+        AnalysisID.ACOUSTIC_HARMONIC,
+        HarmonicAnalysisSetup(
+            f_min=200,
+            f_max=500,
+            f_step=100,
+            analysis_method="direct",
+        )
+    )
+    project_cli.run_analysis()
 
     assert np.allclose(
         project_interface.solver.solution[:],
