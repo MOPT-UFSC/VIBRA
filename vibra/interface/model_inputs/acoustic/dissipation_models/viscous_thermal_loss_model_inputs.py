@@ -716,7 +716,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = f"You have typed and invalid value at the {label} input field.\n\n"
+                message = f"You have typed an invalid value at the {label} input field.\n\n"
                 message += str(_err)
 
         else:

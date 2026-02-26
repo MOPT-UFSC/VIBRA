@@ -12,6 +12,7 @@
         <file>cube-scan.png</file>
         <file>delete.png</file>
         <file>deselect_icon.png</file>
+        <file>document_search.png</file>
         <file>document_search_blue.png</file>
         <file>exit.png</file>
         <file>exit_to_app_icon.png</file>
@@ -29,6 +30,7 @@
         <file>import_geometry.png</file>
         <file>import_mesh.png</file>
         <file>invert_icon.png</file>
+        <file>legend_toggle.png</file>
         <file>logo_vibra.png</file>
         <file>logo_vibra_comp.png</file>
         <file>mesh.png</file>
@@ -50,6 +52,7 @@
         <file>rotation_icon.png</file>
         <file>save.png</file>
         <file>save_as.png</file>
+        <file>save_as_2.png</file>
         <file>selection_icon.png</file>
         <file>select_all_icon.png</file>
         <file>settings.png</file>
@@ -59,6 +62,8 @@
         <file>sync_disabled.png</file>
         <file>sync_enabled.png</file>
         <file>user_preferences_icon.png</file>
+        <file>visibility.png</file>
+        <file>visibility_off.png</file>
         <file>zoom_icon.png</file>
         <file>cursors/pan_cursor.png</file>
         <file>cursors/rotation_cursor.png</file>
