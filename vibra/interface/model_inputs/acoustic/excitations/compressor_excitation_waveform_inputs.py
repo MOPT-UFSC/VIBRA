@@ -934,8 +934,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.join_waveform_data()
 
         self.waveform_plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.waveform_plotter.radioButton_real.setChecked(True)
-        self.waveform_plotter._update_comboBox()
+        self.waveform_plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.waveform_plotter.data_format_changed_callback()
         self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
 
     def reproduce_audio_callback(self):

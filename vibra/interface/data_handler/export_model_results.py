@@ -2,7 +2,6 @@ from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
 
-import os
 import numpy as np
 import platform
 
@@ -115,13 +114,13 @@ class ExportModelResults(QFileDialog):
 
         existing_path = kwargs.get("existing_path", "")
 
-        if existing_path == "":
+        if not existing_path:
 
             caption = "Export the model results"
 
             path = app().config.get_last_folder_for("exported_data_folder")
             if path is None:
-                directory_path = os.path.expanduser("~")
+                directory_path = Path().home()
             else:
                 directory_path = path
 
@@ -133,25 +132,30 @@ class ExportModelResults(QFileDialog):
             kwargs = dict()
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-            file_name, file_extension = self.getSaveFileName(app().main_window, 
+            file_path, selected_filter = self.getSaveFileName(app().main_window, 
                                                     caption, 
-                                                    directory_path, 
+                                                    str(directory_path), 
                                                     filter = _filter,
                                                     **kwargs)
             
-            if not file_extension:
+            if not file_path:
                 return
             
-            file_extension = file_extension.split(".")[1][:-1]
-            file_path = f"{file_name}.{file_extension}"
+            file_path = Path(file_path)
 
+            if not file_path.suffix:
+                file_extension = f".{self.get_file_extension(selected_filter)}"
+                file_path = file_path.with_suffix(file_extension)
+            
         else:
-            file_extension = existing_path.split(".")[1]
             file_path = existing_path
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
-        if file_extension in ["xls", "xlsx"]:
-            self.export_data_in_spreadsheet_format(file_path, existing_path=existing_path)
+        if file_path.suffix.lower() in [".xls", ".xlsx"]:
+            self.export_data_in_spreadsheet_format(str(file_path), existing_path=existing_path)
         else:
-            self.export_data_in_text_format(file_path)
+            self.export_data_in_text_format(str(file_path))
+
+    def get_file_extension(self, check: str) -> str:
+        return check.split(".")[1][:-1]

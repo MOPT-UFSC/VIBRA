@@ -253,7 +253,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                         message = f"Insert a non-zero positive value to the {label}."
 
             except Exception as _err:
-                message = f"You have typed and invalid value at the {label} input field.\n\n"
+                message = f"You have typed an invalid value at the {label} input field.\n\n"
                 message += str(_err)
 
         else:

@@ -357,6 +357,58 @@ class MainWindow(MainWindow_UI):
         self.close_dialogs()
         self.render_user_preferences = RendererUserPreferencesInput()
 
+    def action_points_callback(self):
+        all_ids = app().project.model.mesh.all_point_ids()
+        self.selection.set_geometry_selection(points=all_ids)
+        
+
+    def action_faces_callback(self):
+        all_ids= app().project.model.mesh.all_surface_ids()
+        self.selection.set_geometry_selection(surfaces=all_ids)
+
+    def action_solid_callback(self):
+        all_ids = app().project.model.mesh.all_solid_ids()
+        self.selection.set_geometry_selection(volumes=all_ids)
+
+    def action_all_entities_geometry_callback(self):
+        mesh = app().project.model.mesh
+        self.selection.set_geometry_selection(
+            points=mesh.all_point_ids(),
+            lines=mesh.all_line_ids(),
+            surfaces=mesh.all_surface_ids(),
+            volumes=mesh.all_solid_ids(),
+        )
+
+    def action_all_entities_mesh_callback(self):
+        mesh = app().project.model.mesh
+        self.selection.set_mesh_selection(
+            nodes=mesh.all_node_ids(),
+            faces=mesh.all_face_element_ids(),
+            solids=mesh.all_solid_element_ids(),
+        )
+
+    def action_nodes_callback(self):
+        all_ids = app().project.model.mesh.all_node_ids()
+        self.selection.set_mesh_selection(nodes=all_ids)
+    
+    def action_surface_elements_callback(self):
+        all_ids = app().project.model.mesh.all_face_element_ids()
+        self.selection.set_mesh_selection(faces=all_ids)
+
+    def action_solid_elements_callback(self):
+        all_ids = app().project.model.mesh.all_solid_element_ids()
+        self.selection.set_mesh_selection(solids=all_ids)
+
+    def action_clear_selection_callback(self):
+        self.selection.clear_selection()
+    
+    def action_volume_selection_mode_callback(self, checked):
+        self.selection.volume_selection_mode = checked
+        self.selection.selection_changed.emit()
+    
+    def action_invert_selection_callback(self):
+        self.selection.invert_selection()
+
     def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
@@ -964,6 +1016,9 @@ class MainWindow(MainWindow_UI):
 
     def action_exit_callback(self):
         self.close_app()
+
+
+    
 
     def action_face_view_callback(self, clicked: bool):
         self.visualization_filter.faces = clicked
