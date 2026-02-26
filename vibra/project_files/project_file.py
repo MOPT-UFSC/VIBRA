@@ -340,14 +340,17 @@ class ProjectFile:
     def write_analysis_setup_in_file(self, analysis_setup: dict):
         project_setup = read_json(self.project_setup_filepath)
         if project_setup is None:
-            return   
-
+            return
+        
         aux = dict()
         for key, data in analysis_setup.items():
-            if key == "frequencies":
-                continue
-            # if isinstance(data, np.ndarray):
-            #     data = list(data)
+
+            if isinstance(data, np.ndarray):
+                if data.size == 0:
+                    continue
+
+                data = list(data)
+
             aux[key] = data
 
         project_setup["analysis_setup"] = aux         
@@ -355,16 +358,11 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_analysis_setup_from_file(self):
-        analysis_setup = None
         project_setup = read_json(self.project_setup_filepath)
+        if not isinstance(project_setup, dict):
+            return dict()
 
-        if project_setup is None:
-            return
-
-        if "analysis_setup" in project_setup.keys():
-            analysis_setup = project_setup["analysis_setup"]
-
-        return analysis_setup
+        return project_setup.get("analysis_setup", dict)
 
     def write_model_setup_in_file(self, project_setup : dict):
         write_json(self.project_setup_filepath, project_setup)
@@ -417,7 +415,7 @@ class ProjectFile:
                     aux = dict()
                     if isinstance(data, dict):
                         for _key, _data in data.items():
-                            if _key in ["values"]:
+                            if _key in ["values", "tables_frequencies"]:
                                 continue
                             elif isinstance(_data, Fluid):
                                 aux[_key] = _data.get_data()

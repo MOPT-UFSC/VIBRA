@@ -451,7 +451,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         run_analysis_button = app().main_window.analysis_toolbar.pushButton_run_analysis
         run_analysis_button.setDisabled(collapsed_elements or disconnected_nodes)
 
-        if app().project.model.analysis_setup is None:
+        if not app().project.model.analysis_setup:
             run_analysis_button.setDisabled(True)
 
         self.check_post_process_mesh_criteria()

@@ -83,11 +83,12 @@ class Model:
         self.f_step = 5
         self.frequencies = None
         self.list_frequencies = list()
+        self.solution_steps_mask = list()
 
+        self.analysis_setup = dict()
         self.decouple_info = dict()
         self.nodes_mapping = dict()
 
-        self.analysis_setup = None
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
 
@@ -249,25 +250,129 @@ class Model:
         self.frequencies = None
         self.analysis_setup = analysis_setup
 
-        self.f_min = analysis_setup.get("f_min", None)
-        self.f_max = analysis_setup.get("f_max", None)
-        self.f_step = analysis_setup.get("f_step", None)
+        self.f_min = analysis_setup.get("f_min")
+        self.f_max = analysis_setup.get("f_max")
+        self.f_step = analysis_setup.get("f_step")
+        frequencies = analysis_setup.get("frequencies")
 
-        if "frequencies" in analysis_setup.keys():
-            self.frequencies = analysis_setup.get("frequencies")
+        if isinstance(frequencies, list):
+            self.frequencies = np.round(np.array(frequencies, dtype=float), 14)
+
+        elif isinstance(frequencies, np.ndarray):
+            self.frequencies = frequencies
 
         elif (self.f_min, self.f_max, self.f_step).count(None) == 0:
 
             try:
-                self.frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step)
+                frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step, dtype=float)
+                frequencies = np.round(frequencies, 14)
 
                 # filters the frequencies vector to mitigate the already identified rounding errors
-                mask = self.frequencies <= self.f_max
-                self.frequencies = self.frequencies[mask]
+                mask = frequencies <= self.f_max
+                _frequencies = frequencies[mask]
 
-            except:
+            except Exception as error_log:
                 self.frequencies = None
+                print(str(error_log))
                 return
+
+            self.frequencies = _frequencies
+            self.analysis_setup["frequencies"] = list(_frequencies)
+
+        solution_steps_mask = self.get_solution_steps_mask()
+        self.solution_steps_mask = solution_steps_mask
+
+        self.analysis_setup["solution_steps_mask"] = solution_steps_mask
+
+
+    def get_solution_steps_mask(self, tol: float = 1e-10):
+
+        if self.frequencies is None:
+            return list()
+
+        all_true = [True for _ in range(self.frequencies.size)]
+        table_frequencies = self.properties.process_all_tables_frequencies_vectors()
+
+        if not table_frequencies:
+            return all_true
+
+        if len(table_frequencies) != 1:
+            return all_true
+
+        mask = list()
+        _table_frequencies = np.array(table_frequencies[0], dtype=float)
+
+        for freq in _table_frequencies:
+            diff_abs = np.min(np.abs(self.frequencies - freq)) < tol
+            mask.append(bool(diff_abs))
+
+        return mask
+
+
+    def has_spectral_content_been_modified(self):
+        cond_A = self.analysis_setup.get("frequency_spacing", "") == "user-defined"
+        cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
+        return cond_A or cond_B
+
+    
+    def is_there_a_compressor_excitation_in_model(self):
+
+        compressor_properties = [
+            "compressor_excitation_spectrum", 
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            ]
+
+        for prop_label in compressor_properties:
+            if self.properties.is_the_surface_property_present_in_the_model(prop_label):
+                return True
+
+        return False
+
+
+    def is_there_a_valid_analysis_setup(self, **kwargs):
+
+        current_analysis_id = kwargs.get("current_analysis_id", None)
+        if not isinstance(self.analysis_setup, dict):
+            return False
+
+        analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        if analysis_id == AnalysisID.NO_ANALYSIS:
+            return False
+
+        if isinstance(current_analysis_id, int):
+            if analysis_id != current_analysis_id:
+                return False
+
+        if analysis_id in [
+            AnalysisID.ACOUSTIC_HARMONIC, 
+            AnalysisID.STRUCTURAL_HARMONIC, 
+            AnalysisID.COUPLED_HARMONIC
+            ]:
+
+            frequencies = self.analysis_setup.get("frequencies")
+            solution_steps_mask = self.analysis_setup.get("solution_steps_mask")
+
+            if isinstance(frequencies, np.ndarray | list):
+                if isinstance(solution_steps_mask, np.ndarray | list):
+                    return True
+
+            for key in ["f_min", "f_max", "f_step"]:
+                if not isinstance(self.analysis_setup.get(key), int | float):    
+                    return False
+
+            return True
+
+        elif analysis_id in [
+            AnalysisID.ACOUSTIC_MODAL, 
+            AnalysisID.STRUCTURAL_MODAL
+            ]:
+
+            for key in ["modes_number", "sigma_factor"]:
+                if not isinstance(self.analysis_setup.get(key), int | float):  
+                    return False
+
+            return True
 
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
@@ -282,23 +387,27 @@ class Model:
         condition_2 = not self.properties.check_if_there_are_tables_at_the_model()
 
         if condition_1 or condition_2:
-
-            # f_min = frequencies[0]
-            # f_max = frequencies[-1]
-            # f_step = frequencies[1] - frequencies[0]
-
-            # frequency_setup = { "f_min" : float(f_min),
-            #                     "f_max" : float(f_max),
-            #                     "f_step" : float(f_step) }
-
-            # self.set_analysis_setup(frequency_setup)
-
             self.list_frequencies = frequencies
-
             return False
 
         if self.list_frequencies != frequencies:
             return True
+
+
+    def get_tabular_frequency_setup(self):
+        """
+        This method returns the frequency setup of the model's tabular data.
+        """
+        tables_frequencies = self.properties.process_all_tables_frequencies_vectors()
+        if len(tables_frequencies) != 1:
+            return None
+        
+        frequencies = tables_frequencies[0]
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0]
+
+        return (f_min, f_max, f_step, frequencies)
 
 
     def get_structural_elements(self):
@@ -723,7 +832,8 @@ class Model:
                 V_in = real_values + 1j * imag_values
 
             elif "values" in sv_data.keys():
-                V_in = sv_data["values"]
+                V_in = sv_data["values"][0]
+                V_in = V_in[self.solution_steps_mask]
 
             P_downstream = V_in * Zo_in / 2
             V_downstream = P_downstream / Zo_in

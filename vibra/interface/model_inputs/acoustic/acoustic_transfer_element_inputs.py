@@ -124,20 +124,18 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def _load_analysis_setup(self):
 
-        data = self.project.analysis_setup
-        if isinstance(data, dict):
+        f_min = self.project.model.analysis_setup.get("f_min")
+        f_max = self.project.model.analysis_setup.get("f_max")
+        f_step = self.project.model.analysis_setup.get("f_step")
+        
+        if isinstance(f_min, float | int):
+            self.lineEdit_fmin.setText(str(f_min))
 
-            if "f_min" in data.keys():
-                self.f_min = data["f_min"]
-                self.lineEdit_fmin.setText(str(self.f_min))
+        if isinstance(f_max, float | int):
+            self.lineEdit_fmax.setText(str(f_max))
 
-            if "f_max" in data.keys():
-                self.f_max = data["f_max"]
-                self.lineEdit_fmax.setText(str(self.f_max))
-
-            if "f_step" in data.keys():
-                self.f_step = data["f_step"]
-                self.lineEdit_fstep.setText(str(self.f_step))
+        if isinstance(f_step, float | int):
+            self.lineEdit_fstep.setText(str(f_step))
 
     def search_callback(self):
 
@@ -274,7 +272,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_frequency_entries():
             return True
 
-        app().project.set_analysis_setup(self.analysis_setup)
+        app().project.model.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
         app().file.write_analysis_setup_in_file(self.analysis_setup)
 

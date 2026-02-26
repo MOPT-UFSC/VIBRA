@@ -113,48 +113,53 @@ class ModelProperties:
 
         if isinstance(data, dict):
 
-            tables_values = list()
+            values_list = list()
             group_label = self.get_data_group_label(property)
 
             if "real_values" in data.keys() and "imag_values" in data.keys():
                 for i, a in enumerate(data["real_values"]):
 
                     if a is None:
-                        tables_values.append(None)
+                        values_list.append(None)
 
                     else:
                         b = data["imag_values"][i]  
                         if b is None:
-                            tables_values.append(a)
+                            values_list.append(a)
                         else:
-                            tables_values.append(a + 1j*b)
-
-            elif "values" in data.keys():
-                tables_values = data["values"]
+                            values_list.append(a + 1j*b)
 
             elif "table_names" in data.keys():
-
                 if group_label == "acoustic":
                     imported_tables = self.acoustic_imported_tables
                 else:
                     imported_tables = self.structural_imported_tables
 
+                frequencies_list = list()
                 for i, table_name in enumerate(data["table_names"]):
-
                     if table_name is None:
-                        tables_values.append(None)
+                        values_list.append(None)
                         continue
 
                     if table_name in imported_tables.keys():
                         data_array = imported_tables[table_name]
+
+                        table_frequencies = [float(freq) for freq in data_array[:, 0]]
+                        frequencies_list.append(table_frequencies)
+
                         if data_array.shape[1] >= 3:
                             values = data_array[:, 1] + 1j * data_array[:, 2]
                         else:
                             values = data_array[:, 1]
 
-                        tables_values.append(values)
+                        values_list.append(values)
 
-            data["values"] = tables_values
+                data["tables_frequencies"] = frequencies_list
+
+            elif "values" in data.keys():
+                values_list = data["values"]
+
+            data["values"] =  values_list
 
         if node is not None:
             self.nodal_properties[property, node] = data
@@ -385,6 +390,43 @@ class ModelProperties:
                         table_names.append(table_name)
 
         return table_names
+    
+    def process_all_tables_frequencies_vectors(self) -> list:
+        """
+        This method process the frequencies vectors from all imported tables.
+        """
+        properties = [  
+            self.volume_properties,
+            self.surface_properties,
+            self.line_properties,
+            self.point_properties,
+            self.group_properties,
+            self.global_properties,
+            self.nodal_properties,
+            self.element_properties,
+            ]
+
+        frequencies_from_tables = list()
+
+        for _property in properties:
+            for (prop_label, *_), prop_data in _property.items():
+                if not isinstance(prop_data, dict):
+                    continue
+
+                tables_frequencies = prop_data.get("tables_frequencies")
+                if tables_frequencies is None:
+                    continue
+
+                if not isinstance(tables_frequencies, list):
+                    continue
+
+                for frequencies in tables_frequencies:
+                    if frequencies in frequencies_from_tables:
+                        continue
+
+                    frequencies_from_tables.append(frequencies)
+
+        return frequencies_from_tables
 
     def is_the_volume_property_present_in_the_model(self, property_to_check: str):
 

@@ -103,11 +103,17 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_frequency_response_function.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
         self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
-        self.item_child_acoustic_pressure_waveform.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
+
+        # only allow waveform plots for equally distributed solution steps with a compressor as the main excitation source
+        cond_A = self.project.model.has_spectral_content_been_modified()
+        cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
+
+        self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
+        self.item_child_acoustic_pressure_waveform.setDisabled(key)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
@@ -136,7 +142,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        if len(app().project.analysis_setup) == 0:
+        if not app().project.model.analysis_setup:
             return
 
         analysis_setup = app().file.read_analysis_setup_from_file()
@@ -214,7 +220,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().project.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = app().project.model.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)

@@ -237,12 +237,12 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
         current_analysis_id = self.get_current_analysis_id()
-        valid_setup = app().project.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
-        self.set_pushbutton_run_analysis_enabled(valid_setup)
+        setup_is_valid = app().project.model.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
+        self.set_pushbutton_run_analysis_enabled(setup_is_valid)
 
     def run_analysis(self, is_resume: bool = False):
 
-        if app().project.model.analysis_setup is None:
+        if not app().project.model.analysis_setup:
             self.configure_analysis()
             return
 
@@ -349,11 +349,11 @@ class AnalysisToolbar(QToolBar):
             elif physical_domain == "Acoustic":
                 self.modal_acoustic()
 
-        setup_complete = app().project.is_analysis_setup_complete()
+        setup_is_valid = app().project.model.is_there_a_valid_analysis_setup()
 
         # disables the run analysis button whenever the analysis setup is incomplete, or there are
         # any mesh-related problems
-        run_analysis_enabled = setup_complete and not (collapsed_elements or disconnected_nodes)
+        run_analysis_enabled = setup_is_valid and not (collapsed_elements or disconnected_nodes)
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
     def harmonic_structural(self):
@@ -384,7 +384,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            app().project.set_analysis_setup(modal.analysis_setup)
+            app().project.model.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
@@ -398,7 +398,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            app().project.set_analysis_setup(modal.analysis_setup)
+            app().project.model.set_analysis_setup(modal.analysis_setup)
             self.pushButton_run_analysis.setEnabled(True)
             self.final_actions()
 
@@ -408,15 +408,15 @@ class AnalysisToolbar(QToolBar):
     def final_actions(self):
         self.reset_solution()
         app().project.create_solver()
-        app().file.write_analysis_setup_in_file(app().project.analysis_setup)
+        app().file.write_analysis_setup_in_file(app().project.model.analysis_setup)
 
     def update_analysis_setup(self, analysis_setup: dict):
 
         keys_to_ignore = list(analysis_setup.keys())
-        if isinstance(app().project.analysis_setup, dict):
-            for key, value in app().project.analysis_setup.items():
-                if key in keys_to_ignore:
-                    continue
-                analysis_setup[key] = value
+        for key, value in app().project.model.analysis_setup.items():
+            if key in keys_to_ignore:
+                continue
 
-        app().project.set_analysis_setup(analysis_setup)
+            analysis_setup[key] = value
+
+        app().project.model.set_analysis_setup(analysis_setup)

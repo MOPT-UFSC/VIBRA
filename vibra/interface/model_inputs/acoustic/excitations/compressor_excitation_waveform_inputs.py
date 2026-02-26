@@ -3,6 +3,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -457,7 +459,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         # output data matrix
         output_data = np.array([freq, np.real(Xf), np.imag(Xf)], dtype=float).T
 
-        mask_min = 0 < freq
+        # filter the zero-frequency component
+        mask_min = freq > 0
         mask_max = freq <= f_max
 
         if export:
@@ -517,14 +520,14 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     
     def load_table(self, line_edit : QLineEdit, direct_load: bool=False):
 
-        imported_file = None
+        imported_values = None
         title = "Error reached while loading 'surface velocity' table"
 
         try:
 
             if direct_load:
                 imported_table_path = line_edit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 extensions = ["csv", "dat", "txt", "xlsx", "xls"]
@@ -534,17 +537,17 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 if not imported_data:
                     return
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 line_edit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 2:
+            if imported_values.shape[1] < 2:
                 self.hide()
                 message = "The imported table has insufficient number of columns. The mass flow data signal "
                 message += "must have two columns in the form: time, and mass flow values."
                 PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            return imported_values
 
         except Exception as log_error:
             self.hide()
@@ -567,7 +570,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        update_analysis_setup_in_file(_frequencies)
 
         real_values = imported_values[:, 1]
         imag_values = imported_values[:, 2]
@@ -576,23 +579,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
 
     def attribute_callback(self):
         if self.tabWidget_main.currentIndex() != 0:
@@ -654,7 +640,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                         self.imported_values = None
                         return
 
-                complex_values = self.normal_surface_velocity_sdata[:, 1] + 1j * self.normal_surface_velocity_sdata[:, 2]
+                complex_values = get_spectral_data_from_array(self.normal_surface_velocity_sdata)
 
             else:
                 if not isinstance(self.mass_flow_sdata, np.ndarray):
@@ -667,8 +653,9 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                         self.imported_values = None
                         return
 
-                complex_values = self.mass_flow_sdata[:, 1] + 1j * self.mass_flow_sdata[:, 2]
+                complex_values = get_spectral_data_from_array(self.mass_flow_sdata)
 
+            # table path from imported tabular data
             table_path = self.lineEdit_table_path.text()
 
             data = {
@@ -783,9 +770,9 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_setup, dict):
-            analysis_setup = self.project.analysis_setup
-            self.project.set_analysis_setup(analysis_setup)
+        analysis_setup = app().project.model.analysis_setup
+        if analysis_setup:
+            app().project.model.set_analysis_setup(analysis_setup)
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_tabs_visibility(self):

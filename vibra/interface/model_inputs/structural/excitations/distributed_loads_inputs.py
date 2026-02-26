@@ -4,11 +4,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.setup.structural.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.setup.structural.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
 
 import numpy as np
 from os.path import basename
@@ -398,23 +398,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if self.Fz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fz)
 
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
-
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
         if self.frequencies[0] == 0:
@@ -445,8 +428,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         imag_values = np.imag(values)
         data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
 
+        update_analysis_setup_in_file(self.frequencies)
+
         self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
 
         return table_name, data
 
@@ -791,13 +775,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
-
     def check_model_frequency_controls(self):
 
         for key, data in self.properties.surface_properties.items():
@@ -806,9 +783,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(app().project.analysis_setup, dict):
-            analysis_setup = app().project.analysis_setup
-            app().project.set_analysis_setup(analysis_setup)
+        analysis_setup = app().project.model.analysis_setup
+        if analysis_setup:
+            app().project.model.set_analysis_setup(analysis_setup)
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self, reset_all=False):

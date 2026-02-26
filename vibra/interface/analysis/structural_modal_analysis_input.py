@@ -4,7 +4,7 @@ from PySide6.QtGui import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.structural.modal_analysis_input_ui import ModalAnalysisInput_UI
+from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import ModalAnalysisInput_UI
 
 error_title = "Error"
 

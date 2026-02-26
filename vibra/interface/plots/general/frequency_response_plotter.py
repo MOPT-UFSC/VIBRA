@@ -111,7 +111,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         #
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
-        self.pushButton_display_hfrequencies.clicked.connect(self.plot_harmonic_lines_callback)
+        self.pushButton_display_hfrequencies.clicked.connect(self.update_harmonic_lines_legend_icon)
         #
         self.spinBox_harmonic_lines_number.valueChanged.connect(self.plot_harmonic_lines_callback)
         # 
@@ -135,6 +135,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         # update the icon colors
         self._paint_icons([self.pushButton_display_hfrequencies])
+
+        self.plot_harmonic_lines_callback()
 
     def _paint_icons_callback(self):
         self._paint_icons()
@@ -300,7 +302,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def plot_harmonic_lines_callback(self):
 
-        self.update_harmonic_lines_legend_icon()
         plot_hlines = self.comboBox_harmonic_lines_control.currentIndex() == DisplayHarmonicLines.ENABLED
 
         self.lineEdit_harmonic_lines_1st_freq.setEnabled(plot_hlines)
@@ -468,6 +469,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                     self.mask_x = self.x_data <= 0
                     self.mask_y = self.y_data <= 0
 
+                    has_single_point = len(self.x_data) == 1
+
                     if self.linear_plot:
                         _plot = self.call_lin_lin_plot()
 
@@ -486,6 +489,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                     else:
                         _plot = self.call_lin_lin_plot()
 
+                    if has_single_point:
+                        _plot.set_marker('o')
+                        _plot.set_markersize(8)
+                
                     self.legends.append(self.legend)
                     self.plots.append(_plot)
 

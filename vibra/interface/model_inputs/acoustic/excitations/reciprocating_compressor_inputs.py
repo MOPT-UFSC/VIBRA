@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -720,32 +721,19 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.update_analysis_setup_in_file(frequencies)
+        update_analysis_setup_in_file(frequencies)
 
+        # real values vector
         real_values = np.real(complex_values)
+        
+        # imaginary values vector
         imag_values = np.imag(complex_values)
+
         data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
 
@@ -837,12 +825,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
             surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-            freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
+            frequencies, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
             surface_velocity = flow_rate / surface_area
-
-            # remove the zero frequency component
-            _freq = freq[1:]
-            _surface_velocity = surface_velocity[1:]
 
             table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
@@ -850,25 +834,25 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                 output_data_type = self.comboBox_output_data_type.currentText()
                 if output_data_type == "Surface velocity [m/s]":
                     unit = "m/s"
-                    output_data = _surface_velocity
+                    output_data = surface_velocity
                 else:
                     unit = "m³/s"
-                    output_data = flow_rate[1:]
+                    output_data = flow_rate
 
-                self.export_reciprocating_compressor_data_excitation(surface_id, _freq, output_data, unit)
+                self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
 
             data = {
                     "connection_type" : connection_type,
                     "table_names" : [table_name],
                     "parameters" : self.parameters,
-                    "values" : [_surface_velocity],
+                    "values" : [surface_velocity],
                     "nodal_attribution" : False,
                     "averaged" : False
                     }
 
             self.remove_conflicting_excitations(surface_id)
 
-            if self.save_table_values(table_name, _freq, _surface_velocity):
+            if self.save_table_values(table_name, frequencies, surface_velocity):
                 return
 
             self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
