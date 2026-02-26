@@ -573,8 +573,8 @@ class Ui_Dialog(object):
         icon.addFile(u":/icons/visibility_off.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.pushButton_display_hfrequencies.setIcon(icon)
         self.pushButton_display_hfrequencies.setIconSize(QSize(20, 20))
-        self.pushButton_display_hfrequencies.setCheckable(True)
-        self.pushButton_display_hfrequencies.setChecked(True)
+        self.pushButton_display_hfrequencies.setCheckable(False)
+        self.pushButton_display_hfrequencies.setChecked(False)
         self.pushButton_display_hfrequencies.setAutoDefault(False)
 
         self.gridLayout_23.addWidget(self.pushButton_display_hfrequencies, 0, 3, 1, 1)

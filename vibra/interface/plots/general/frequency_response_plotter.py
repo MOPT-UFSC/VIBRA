@@ -6,6 +6,7 @@ from vibra import app, ICON_DIR
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import (
     FrequencyResponsePlotter_UI,
@@ -56,6 +57,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         self._config_window()
         self._initialize()
+        self._paint_icons()
         self._initialize_canvas()
         self._create_connections()
 
@@ -82,13 +84,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.title = ""
         self.font_weight = "normal"
 
-        self.colors = [ [0,0,1],
-                        [0,0,0],
-                        [1,0,0],
-                        [0,1,1],
-                        [0.75,0.75,0.75],
-                        [0.5, 0.5, 0.5],
-                        [0.25, 0.25, 0.25] ]
+        self.colors = [ 
+            [0,0,1],
+            [0,0,0],
+            [1,0,0],
+            [0,1,1],
+            [0.75,0.75,0.75],
+            [0.5, 0.5, 0.5],
+            [0.25, 0.25, 0.25],
+            ]
 
     def _create_connections(self):
         #
@@ -111,14 +115,14 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         #
         self.spinBox_harmonic_lines_number.valueChanged.connect(self.plot_harmonic_lines_callback)
         # 
-        app().main_window.theme_changed.connect(self.paint_toolbar_icons)
+        app().main_window.theme_changed.connect(self._paint_icons_callback)
         #
         self._initial_config()
         self.plot_harmonic_lines_callback()
 
     def update_harmonic_lines_legend_icon(self):
 
-        if self.pushButton_display_hfrequencies.isChecked():
+        if "Display" in self.pushButton_display_hfrequencies.toolTip():
             icon = QIcon(str(ICON_DIR / "visibility_off.png"))
             tool_tip = "Remove harmonic line frequencies"
 
@@ -128,6 +132,32 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         self.pushButton_display_hfrequencies.setIcon(icon)
         self.pushButton_display_hfrequencies.setToolTip(tool_tip)
+
+        # update the icon colors
+        self._paint_icons([self.pushButton_display_hfrequencies])
+
+    def _paint_icons_callback(self):
+        self._paint_icons()
+        self.paint_toolbar_icons()
+
+    def _paint_icons(self, widgets: list | None = None):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+
+        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        if widgets is None:
+            widgets = [
+                self.pushButton_export_data,
+                self.pushButton_import_data,
+                self.pushButton_display_hfrequencies,
+                ]
+
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def import_file(self):
 
@@ -286,7 +316,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             return
 
         number_of_lines = self.spinBox_harmonic_lines_number.value()
-        display_hfrequencies = self.pushButton_display_hfrequencies.isChecked()
+        display_hfrequencies = "Remove" in self.pushButton_display_hfrequencies.toolTip()
 
         self.plot_harmonic_lines(
             value,
@@ -419,7 +449,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             # themselves after every click or draw events
             self.paint_toolbar_icons()
             for button in toolbar.findChildren(QToolButton):
-                button.clicked.connect(self.paint_toolbar_icons)                    
+                button.clicked.connect(self.paint_toolbar_icons)
+                  
             self.mpl_canvas_frequency_plot.mpl_connect("draw_event", self.paint_toolbar_icons)
 
             self._layout = QVBoxLayout()
