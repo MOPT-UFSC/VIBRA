@@ -111,9 +111,6 @@ class ModelProperties:
         if any of these exists. Otherwise sets the property as global.
 
         """
-        if data is None:
-            raise ValueError("Data can not be a None value")
-
         if isinstance(data, dict):
 
             tables_values = list()
