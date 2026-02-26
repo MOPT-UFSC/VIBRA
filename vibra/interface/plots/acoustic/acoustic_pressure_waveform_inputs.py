@@ -7,7 +7,7 @@ from vibra.engine import AnalysisID
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
 
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
@@ -123,8 +123,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.plotter.radioButton_real.setChecked(True)
-        self.plotter._update_comboBox()
+        self.plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.plotter.data_format_changed_callback()
+        self.plotter.frame_hlines_main.setDisabled(True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):

@@ -6,7 +6,7 @@ from vibra import app
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
 from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 
 from vibra.utils.signal_processing import extend_signal, process_one_sided_spectrum, get_window_and_correction_factor
@@ -947,8 +947,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.join_waveform_data()
 
         self.waveform_plotter = FrequencyResponsePlotter(close_dialogs=True)
-        self.waveform_plotter.radioButton_real.setChecked(True)
-        self.waveform_plotter._update_comboBox()
+        self.waveform_plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.waveform_plotter.data_format_changed_callback()
         self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
 
     def reproduce_audio_callback(self):

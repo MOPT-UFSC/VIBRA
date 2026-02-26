@@ -663,7 +663,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                             message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
+                message = "Dear user, you have typed an invalid value at the \n"
                 message += f"{label} input field.\n\n"
                 message += str(_err)
 
