@@ -20,9 +20,10 @@ class Element3D:
         raise NotImplementedError("The function elementary_matrices was not implemented")
     
 
-    def get_constitutive_model(self, material: Material, model_type="linear-isotropic"):
-        """This methdo returns the material constitutive model."""
-
+    def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):
+        """
+        This method returns the material constitutive model.
+        """
         rho = material.material_density
         vv = material.poisson_ratio
         E = material.elasticity_modulus
