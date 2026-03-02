@@ -19,8 +19,6 @@ import numpy as np
 
 from time import time
 
-# @pytest.mark.slow
-# @pytest.mark.skip
 
 def load_external_mesh_and_solve(assignment_type: str):
 

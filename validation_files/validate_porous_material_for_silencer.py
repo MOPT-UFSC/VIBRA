@@ -17,7 +17,7 @@ from time import time
 
 pm_model = "DB"
 
-# @pytest.mark.slow
+
 def load_external_mesh_and_solve():
     # return
 

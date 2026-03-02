@@ -26,9 +26,6 @@ from time import time
 mesh_size = "200mm"
 
 
-# @pytest.mark.slow
-# @pytest.mark.skip
-
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)

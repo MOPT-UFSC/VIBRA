@@ -24,8 +24,6 @@ import numpy as np
 from time import time
 from pprint import pprint
 
-# @pytest.mark.slow
-# @pytest.mark.skip
 
 def load_external_mesh_and_solve():
 
