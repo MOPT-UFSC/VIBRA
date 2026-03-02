@@ -265,15 +265,17 @@ class AcousticPostprocessing:
             the x, y, and z directions, computed in the selected surface.
         """
 
-        frequencies = self.harmonic_solver.assembler.model.analysis_setup.get("frequencies")
+        model = self.harmonic_solver.assembler.model
+
+        frequencies = model.analysis_setup.get("frequencies")
         zeros = np.zeros_like(frequencies, dtype=complex)
 
-        rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_volume(volume_id, frequencies)
+        rho, _ = model.get_fluid_properties_from_volume(volume_id, frequencies)
         if rho is None:
             return zeros, None
 
-        frequencies = self.harmonic_solver.assembler.model.frequencies
-        element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
+        frequencies = model.frequencies
+        element_3d = model.acoustic_element_3d
 
         if element_3d is None:
             self.harmonic_solver.assembler.define_acoustic_elements()
@@ -282,14 +284,18 @@ class AcousticPostprocessing:
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
-        data_normals = self.harmonic_solver.assembler.model.mesh.get_surface_nodal_normals(
+        data_normals = model.mesh.get_surface_nodal_normals(
             surface_id, 
             volume_id,
             )
 
-        map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
-            surface_id=surface_id, return_nodes=True)
+        node_ids = model.mesh.get_nodes_from_surface(surface_id)
+        map_elements_to_nodes, filtered_nodes = model.mesh.get_solid_elements_connected_to_nodes(
+            node_ids=node_ids, return_nodes=True)
         
+        # map_elements_to_nodes, filtered_nodes = model.mesh.get_solid_elements_connected_to_nodes(
+        #     surface_id=surface_id, return_nodes=True)
+
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.harmonic_solver.solution[filtered_nodes, :]
@@ -337,7 +343,7 @@ class AcousticPostprocessing:
         particle_velocities["nodal_normals"] = data_normals
 
         ## Uncomment the line below to plot the average normals at the nodes
-        self.harmonic_solver.assembler.model.mesh.set_nodal_normals_data(surface_id, data_normals)
+        model.mesh.set_nodal_normals_data(surface_id, data_normals)
 
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)

@@ -1753,7 +1753,12 @@ class Mesh:
 
         return face_elements_connected_to_nodes
 
-    def get_solid_elements_connected_to_nodes(self, **kwargs) -> tuple[dict, np.ndarray]:
+    def get_solid_elements_connected_to_nodes(
+            self, 
+            node_ids: list[int] | np.ndarray | None = None,
+            surface_id: int | None = None,
+            return_nodes: bool = False,
+            ) -> tuple[dict, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1761,13 +1766,12 @@ class Mesh:
 
         # t0 = time()
 
-        surface_id = kwargs.get("surface_id")
-        if isinstance(surface_id, int):
-            node_ids = self.get_nodes_from_surface(surface_id)
-        else:
-            node_ids = kwargs.get("node_ids")
+        if node_ids is None:
+            if isinstance(surface_id, int):
+                node_ids = self.get_nodes_from_surface(surface_id)
 
-        return_nodes = kwargs.get("return_nodes", False)
+        if node_ids is None:
+            return
 
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         filtered_data = self.solids_connectivity[mask_0, :]
@@ -1799,6 +1803,11 @@ class Mesh:
             return solid_elements_connected_to_nodes, nodes_from_solid_elements
 
         return solid_elements_connected_to_nodes
+
+    
+    def get_global_dofs(self, node_ids: list[int] | np.ndarray, dofs_per_node: int):
+        pass
+    
 
     def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
         """

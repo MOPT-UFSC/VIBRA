@@ -143,7 +143,7 @@ class StructuralPostprocessing:
 
     def get_structural_stresses(
             self, 
-            surface_ids: list[int] | None = None,
+            surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
             element_averaged_stresses: bool = True,
             nodal_averaged_stresses: bool = False,
@@ -167,6 +167,8 @@ class StructuralPostprocessing:
             the x, y, and z directions, computed in the selected surface.
         """
 
+        mesh = self.harmonic_solver.assembler.model.mesh
+
         element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
 
         if element_3d is None:
@@ -177,43 +179,61 @@ class StructuralPostprocessing:
             element_3d.reorder_connect()
 
         node_ids = list()
-        if isinstance(surface_id, list):
+
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
+
+        if isinstance(surface_ids, list):
             for surface_id in surface_ids:
-                surface_nodes = self.harmonic_solver.assembler.model.mesh.get_nodes_from_surface(surface_id)
+                surface_nodes = mesh.get_nodes_from_surface(surface_id)
                 node_ids.extend(surface_nodes)
 
-        if isinstance(volume_id, list):
+        if isinstance(volume_ids, int):
+            volume_ids = [volume_ids]
+
+        if isinstance(volume_ids, list):
             for volume_id in volume_ids:
-                volume_nodes = self.harmonic_solver.assembler.model.mesh.get_nodes_from_volume(volume_id)
+                volume_nodes = mesh.get_nodes_from_volume(volume_id)
                 node_ids.extend(volume_nodes)
 
         if not node_ids:
+            print("Invalid node ids")
             return dict(), dict()
 
         node_ids = np.unique(node_ids)
 
-        map_elements_to_nodes, filtered_nodes = self.harmonic_solver.assembler.model.mesh.get_solid_elements_connected_to_nodes(
+        map_elements_to_nodes, filtered_nodes = mesh.get_solid_elements_connected_to_nodes(
             node_ids=node_ids, return_nodes=True)
+
+        local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
+        dofs_indexes = filtered_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.harmonic_solver.solution[filtered_nodes, :]
+        solution = self.harmonic_solver.solution[dofs_indexes.flatten(), :]
 
-        nodal_stresses_data = defaultdict(list)
-        element_stresses_data = defaultdict(list)
+        nodal_stresses_data = defaultdict(float)
+        element_stresses_data = defaultdict(float)
 
         for node_id, solid_element_ids in map_elements_to_nodes.items():
 
             n_el = len(solid_element_ids)
 
+            if node_id == 6269 - 1:
+                print(node_id, solid_element_ids)
+
             # sigma_ij = 0.
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
-                indexes = np.array([node_to_index.get(node) for node in connect])
+                indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
+
+                dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+                dofs_indexes = dofs_indexes.flatten()
+                
                 sigma_ij = element_3d.process_nodal_stresses(
                     element_id, 
                     node_id,
-                    nodal_solution = solution[indexes, :],
+                    nodal_solution = solution[dofs_indexes, :],
                     solution = None,
                     )
 
@@ -230,15 +250,15 @@ class StructuralPostprocessing:
         sigma_y = dict()
         sigma_z = dict()
         tau_xy = dict()
-        tau_xz = dict()
         tau_yz = dict()
+        tau_xz = dict()
         output_stresses_data = dict()
 
         keys = np.sort(list(input_stresses_data.keys()))
 
         for i, key in enumerate(keys):
 
-            stresses = output_stresses_data.get(key)
+            stresses = input_stresses_data.get(key)
             if stresses is None:
                 continue
 
@@ -246,16 +266,16 @@ class StructuralPostprocessing:
             sigma_y[key] = stresses[1, :]
             sigma_z[key] = stresses[2, :]
             tau_xy[key] = stresses[3, :]
-            tau_xz[key] = stresses[4, :]
-            tau_yz[key] = stresses[5, :]
+            tau_yz[key] = stresses[4, :]
+            tau_xz[key] = stresses[5, :]
 
         output_stresses_data["sigma_x"] = sigma_x
-        output_stresses_data["sigma_x"] = sigma_y
-        output_stresses_data["sigma_x"] = sigma_z
+        output_stresses_data["sigma_y"] = sigma_y
+        output_stresses_data["sigma_z"] = sigma_z
         output_stresses_data["tau_xy"] = tau_xy
-        output_stresses_data["tau_xz"] = tau_xz
         output_stresses_data["tau_yz"] = tau_yz
-        
+        output_stresses_data["tau_xz"] = tau_xz
+
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
         # output_data[:, 0] = ordered_nodes
