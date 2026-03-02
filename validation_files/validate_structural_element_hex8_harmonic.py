@@ -21,8 +21,16 @@ import matplotlib.pyplot as plt
 from time import time
 from pathlib import Path
 
-# @pytest.mark.slow
-# @pytest.mark.skip
+
+stresses_labels = [
+    "sigma_x", 
+    "sigma_y", 
+    "sigma_z", 
+    "tau_xy", 
+    "tau_xz",
+    "tau_yz", 
+    ]
+
 
 def load_external_mesh_and_solve():
 
@@ -261,7 +269,7 @@ def compare_averaged_nodal_stresses_results(
 
     title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
-    y_label = f'Structural response {stress_label.capitalize()} [m] - {plot_type.capitalize()}'
+    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
 
     fig, ax = plt.subplots()
     if plot_type == "real":
@@ -294,7 +302,6 @@ def compare_nodal_stresses_results(
     plot_type: str = "absolute",
     ):
 
-    stresses_labels = ["sigma_x", "sigma_y", "sigma_z", "tau_xy", "tau_yz", "tau_xz"]
     file_name = f"stress_{stress_label}_element_{element_id}_node_{node_id}_Ansys.dat"
 
     row = stresses_labels.index(stress_label)
@@ -304,7 +311,7 @@ def compare_nodal_stresses_results(
 
     title = f"Harmonic response at element {element_id} and node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
-    y_label = f'Structural response {stress_label.capitalize()} [m] - {plot_type.capitalize()}'
+    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
 
     fig, ax = plt.subplots()
     if plot_type == "real":
@@ -336,13 +343,7 @@ def compare_averaging(
     plot_type: str = "absolute",
     ):
 
-    stresses_labels = ["sigma_x", "sigma_y", "sigma_z", "tau_xy", "tau_yz", "tau_xz"]
-    # file_name = f"stress_{stress_label}_element_{element_id}_node_{node_id}_Ansys.dat"
-
     row = stresses_labels.index(stress_label)
-    # response_vibra = nodal_stresses.get((element_id-1, node_id-1))[row, :]
-
-    response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
 
     den = 0
     out_avg_stresses = 0.
@@ -356,11 +357,12 @@ def compare_averaging(
     if den:
         out_avg_stresses /= den
 
+    response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
     freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf, file_name=None)
 
     title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
-    y_label = f'Structural response {stress_label.capitalize()} [m] - {plot_type.capitalize()}'
+    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
 
     fig, ax = plt.subplots()
     if plot_type == "real":
