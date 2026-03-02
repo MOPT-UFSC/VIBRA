@@ -192,7 +192,7 @@ class Ui_Dialog(object):
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_hex20), QCoreApplication.translate("Dialog", u"Hex20", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tet4), QCoreApplication.translate("Dialog", u"Tet4", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tet10), QCoreApplication.translate("Dialog", u"Tet10", None))
-        self.label.setText(QCoreApplication.translate("Dialog", u"Element options", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Advanced element options", None))
         self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
         self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
     # retranslateUi
