@@ -5,6 +5,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import HEXAHEDRON_8
 from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.postprocessing import StructuralPostprocessing
 
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
@@ -172,20 +173,34 @@ def load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
+    structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
+
+    nodal_stresses, element_stresses = structural_post.get_structural_stresses(surface_ids=2)
+
+    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(nodal_stresses)
+    # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
+
    # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
     plot_type = "absolute"
 
-    compare_results(4882, dofs_per_node, "uz", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(4882, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(5522, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(6210, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(6269, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    # displacements plots
+    compare_displacement_results(4882, dofs_per_node, "uz", frequencies, solution, esf, plot_type=plot_type)
+    compare_displacement_results(4882, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    compare_displacement_results(5522, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    compare_displacement_results(6210, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    compare_displacement_results(6269, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+
+    # stresses plots
+    compare_stresses_results(6269, "sigma_x", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type )
+    compare_stresses_results(6269, "sigma_y", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type )
+    compare_stresses_results(6269, "sigma_z", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type )
+
     plt.show()
 
 
-def compare_results(
+def compare_displacement_results(
         node_id: int, 
         dofs_per_node: int, 
         dof_label: str, 
@@ -196,7 +211,7 @@ def compare_results(
         ):
 
     response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
-    freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label, esf)
+    freq_apdl, response_apdl = get_apdl_reference_displacement_results(node_id, dof_label, esf)
 
     title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
@@ -223,7 +238,44 @@ def compare_results(
     ax.legend()
 
 
-def get_apdl_reference_results(
+def compare_stresses_results(
+    node_id: int, 
+    stress_label: str, 
+    frequencies: np.ndarray, 
+    nodal_averaged_stresses: dict,
+    esf: bool,
+    plot_type: str = "absolute",
+    ):
+
+    response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
+    freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf)
+
+    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
+    x_label = "Frequency [Hz]"
+    y_label = f'Structural response {stress_label.capitalize()} [m] - {plot_type.capitalize()}'
+
+    fig, ax = plt.subplots()
+    if plot_type == "real":
+        plot_data = np.real
+        plot = ax.plot
+
+    elif plot_type == "imaginary":
+        plot_data = np.imag
+        plot = ax.plot
+
+    else:
+        plot_data = np.abs
+        plot = ax.semilogy
+
+    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
+
+    ax.set(xlabel=x_label, ylabel=y_label, title=title)
+    ax.grid()
+    ax.legend()
+
+
+def get_apdl_reference_displacement_results(
         apdl_node_id: int, 
         dof_label: str,
         extra_shape_functions: bool,
@@ -237,6 +289,27 @@ def get_apdl_reference_results(
     
     # load mechanical apdl results
     ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
+
+    freq_apdl = ansys_data[:, 0]
+    response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
+
+    return freq_apdl, response_apdl
+
+
+def get_apdl_reference_stresses_results(
+        apdl_node_id: int, 
+        stress_label: str,
+        extra_shape_functions: bool,
+        ) -> np.ndarray | None:
+    
+    folder = "with_esf" if extra_shape_functions else "without_esf"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
+    
+    if not results_path.exists():
+        return None, None
+    
+    # load mechanical apdl results
+    ansys_data = np.loadtxt(results_path / f"stress_{stress_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
 
     freq_apdl = ansys_data[:, 0]
     response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
