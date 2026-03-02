@@ -3,11 +3,14 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
+from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+from collections import defaultdict
+from enum import IntEnum
 
 error_title = "Error"
 warning_title = "Warning"
@@ -19,6 +22,14 @@ def getColorRGB(color):
     tokens = color.split(',')
     return list(map(int, tokens))
 
+class TabType(IntEnum):
+    SETUP = 0
+    LIST = 1
+
+class AttributionType(IntEnum):
+    ALL_BODIES = 0
+    SELECTED_BODIES = 1
+
 
 class SetFluidInputs(SetFluidInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -29,7 +40,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        app().main_window.volume_selection_mode = True
+        app().main_window.selection.volume_selection_mode = True
 
         self.project = app().project
         self.model = app().project.model
@@ -61,6 +72,8 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.complete = False
         self.fluid = None
         self.selected_column = None
+        self.selected_items = defaultdict(list)
+        self.table_model_fluids_cell_clicked = False
 
     def _configure_qt_variables(self):
         self.grid_layout = QGridLayout()
@@ -81,7 +94,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 
     def reset_selected_fluid_lineEdit(self):
-        self.lineEdit_selected_fluid_name.setText("")
+        self.lineEdit_selected_fluid_name.clear()
 
     def load_compressor_info(self):
         self.fluid_widget.load_compressor_info()
@@ -101,7 +114,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.attribution_type_callback()
         self.geometry_selection_callback()
@@ -111,26 +124,22 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.update_fluid_selection()
 
     def cell_clicked_callback(self, row, col):
+        self.table_model_fluids_cell_clicked = True
 
-        selection_id = self.tableWidget_model_fluids.item(row, 0).text()
-        fluid_name = self.tableWidget_model_fluids.item(row, 1).text()
+        selection_text = self.set_selected_items_and_get_selection_text()
 
-        if "-" in selection_id:
+        if not self.selected_items:
+            return
 
-            selection, _selected_id = selection_id.split("-")
-            selected_id = int(_selected_id)
+        app().main_window.selection.set_geometry_selection(**self.selected_items)
 
-            if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [selected_id])
+        self.pushButton_remove.setEnabled(True)
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
 
-            elif selection == "Volume":
-                app().main_window.set_geometry_selection(volumes = [selected_id])
+        app().main_window.action_model_workspace_callback()
 
-            self.pushButton_remove.setEnabled(True)
-            self.lineEdit_selection_id.setText(selection_id)
-            self.lineEdit_selected_fluid_name.setText(fluid_name)
-
-            app().main_window.action_model_workspace_callback()
+        self.table_model_fluids_cell_clicked = False
 
     def reset_fluid_library_callback(self):
         self.hide()
@@ -138,22 +147,85 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.actions_to_finalize()
 
     def geometry_selection_callback(self):
+        if self.tabWidget_main.currentIndex() == TabType.LIST:
+            self.verify_if_selected_volumes_belongs_to_table_model_fluids()
 
-        if self.tabWidget_main.currentIndex() == 1:
             return
 
-        volumes = app().main_window.selected_geometry_volumes
+        volumes = app().main_window.selection.geometry_volumes
         if volumes:
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_attribution_type.setCurrentIndex(AttributionType.SELECTED_BODIES)
 
             if len(volumes):
                 text = ", ".join([str(i) for i in volumes])
                 self.lineEdit_selection_id.setText(text)
+    
+    def verify_if_selected_volumes_belongs_to_table_model_fluids(self):
+        if self.table_model_fluids_cell_clicked:
+            return
+
+        selected_volumes = app().main_window.selection.geometry_volumes
+
+        if not selected_volumes:
+            return
+
+        table_model_fluids_map = self.get_table_widget_model_fluids_items_map()
+
+        self.clear_line_edit_seletction_id()
+        self.tableWidget_model_fluids.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        selected_ids = set(table_model_fluids_map.keys())
+        volumes_in_table_widget = selected_volumes.intersection(selected_ids)
+
+        if not volumes_in_table_widget:
+            return
+
+        self.pushButton_remove.setEnabled(True)
+        self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.MultiSelection)
+
+        self.selected_items["volumes"].clear()
+
+        for volume in volumes_in_table_widget:
+            self.tableWidget_model_fluids.selectRow(table_model_fluids_map[volume])
+            self.selected_items["volumes"].append(volume)
+
+        self.set_selection_text(volumes_in_table_widget)
+        self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.SingleSelection)
+
+    def get_table_widget_model_fluids_items_map(self) -> dict:
+        num_of_rows = self.tableWidget_model_fluids.rowCount()
+        map_id_to_row = dict()
+
+        for row in range(num_of_rows):
+            selected_item = self.tableWidget_model_fluids.item(row, 0)
+
+            _, id = selected_item.text().split("-")
+
+            map_id_to_row[int(id)] = row
+        
+        return map_id_to_row
+
+    def set_selection_text(self, selected_volumes: list | set):
+        selected_volumes = list(selected_volumes)
+        selected_volumes.sort()
+
+        selected_volumes = map(str, selected_volumes)
+        selection_text = "Volumes: "
+        selection_text += ", ".join(selected_volumes)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_seletction_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def _config_widgets(self):
         self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
         self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.tableWidget_model_fluids.setEditTriggers(QAbstractItemView.EditTrigger(0))
+        self.tableWidget_model_fluids.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def update_fluid_selection(self):
 
@@ -165,7 +237,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             return
 
         fluid_name = item.text()
-        self.lineEdit_selected_fluid_name.setText("")
+        self.lineEdit_selected_fluid_name.clear()
         if fluid_name != "":
             self.lineEdit_selected_fluid_name.setText(fluid_name)
 
@@ -174,7 +246,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         index = self.comboBox_attribution_type.currentIndex()
 
         text = ""
-        if index == 0:
+        if index == AttributionType.ALL_BODIES:
             text = "All bodies"
 
         self.lineEdit_selection_id.setText(text)
@@ -194,11 +266,11 @@ class SetFluidInputs(SetFluidInputs_UI):
         volume_ids = list()
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
-        if attribution_type == 0:
+        if attribution_type == AttributionType.ALL_BODIES:
             if "volumes" in self.mesh.geometry_information.keys():
                 volume_ids = self.mesh.geometry_information["volumes"]
 
-        elif attribution_type == 1:
+        else:
             input_ids = self.lineEdit_selection_id.text()
             volume_ids, error_data = self.mesh.check_selected_ids(
                                                                    input_ids, 
@@ -223,31 +295,31 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         self.actions_to_finalize()
 
-        if attribution_type == 0:
+        if attribution_type == AttributionType.ALL_BODIES:
             self.close()
 
     def remove_callback(self):
-
-        text = self.lineEdit_selection_id.text()
-        if "-" not in text:
+        if not self.selected_items:
             return
 
-        selection, str_selected_id = text.split("-")
-        selected_id = int(str_selected_id)
+        for selection_type, ids in self.selected_items.items():
+            for id in ids:
+                if selection_type == "surfaces":
+                    self.properties._remove_surface_property("fluid", id)
+                    self.properties._remove_surface_property("fluid_id", id)
 
-        if selection == "Surface":
-            self.properties._remove_surface_property("fluid", selected_id)
-            self.properties._remove_surface_property("fluid_id", selected_id)
-
-        elif selection == "Volume":
-            self.properties._remove_volume_property("fluid", selected_id)
-            self.properties._remove_volume_property("fluid_id", selected_id)
-            for surface_id in self.mesh.surfaces_from_volume[selected_id]:
-                self.properties._remove_surface_property("fluid", surface_id)
-                self.properties._remove_surface_property("fluid_id", surface_id)
+                elif selection_type == "volumes":
+                    self.properties._remove_volume_property("fluid", id)
+                    self.properties._remove_volume_property("fluid_id", id)
+                    for surface_id in self.mesh.surfaces_from_volume[id]:
+                        self.properties._remove_surface_property("fluid", surface_id)
+                        self.properties._remove_surface_property("fluid_id", surface_id)
+    
+        self.clear_line_edit_seletction_id()
+        self.pushButton_remove.setDisabled(True)
 
         self.actions_to_finalize()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def reset_callback(self):
 
@@ -268,16 +340,16 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.properties._reset_property("fluid_id")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
-        self.lineEdit_selection_id.setText("")
-        self.lineEdit_selected_fluid_name.setText("")
+        self.clear_line_edit_seletction_id()
+        self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
 
         self.load_model_info()
         app().main_window.update_info_text()
-        app().main_window.clear_selection()  # this also updates
+        app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().file.write_model_properties_in_file()
 
@@ -335,55 +407,72 @@ class SetFluidInputs(SetFluidInputs_UI):
         for key in self.properties.volume_properties.keys():
             property, _ = key
             if property == "fluid":
-                self.tabWidget_main.setTabVisible(1, True)
+                self.tabWidget_main.setTabVisible(TabType.LIST, True)
                 return
 
         for key in self.properties.surface_properties.keys():
             property, _ = key
             if property == "fluid":
-                self.tabWidget_main.setTabVisible(1, True)
+                self.tabWidget_main.setTabVisible(TabType.LIST, True)
                 return
 
-        self.tabWidget_main.setTabVisible(1, False)
+        self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
     def tab_event_callback(self):
+        app().main_window.selection.clear_selection()
 
-        self.lineEdit_selected_fluid_name.setText("")
+        self.clear_line_edit_seletction_id()
 
-        if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
+        is_tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
+
+        if is_tab_list:
             self.pushButton_remove.setDisabled(True)
-            self.comboBox_attribution_type.setDisabled(True)
+            self.lineEdit_selection_id.setDisabled(True)
+
+            self.tableWidget_model_fluids.clearSelection()
 
         else:
-            self.comboBox_attribution_type.setDisabled(False)
+            self.lineEdit_selected_fluid_name.clear()
+            self.lineEdit_selection_id.setDisabled(False)
+
             self.attribution_type_callback()
+        
+        self.label_4.setVisible(not is_tab_list)
+        self.comboBox_attribution_type.setVisible(not is_tab_list)
+        self.lineEdit_selected_fluid_name.setVisible(not is_tab_list)
 
-    def on_click_item(self, item):
+    def set_selected_items_and_get_selection_text(self) -> str:
+        selected_cells = self.tableWidget_model_fluids.selectedItems()
 
-        self.pushButton_remove.setDisabled(False)
+        if not selected_cells:
+            return str()
+        
+        selected_items = defaultdict(list)
+        selection_text = str()
 
-        if item.text(0) != "":
-            selection, _selected_id = item.text(0).split("-")
-            selected_id = int(_selected_id)
+        num_of_columns = self.tableWidget_model_fluids.columnCount()
 
-            if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+        for row in range(len(selected_cells) // num_of_columns):
+            index = row * num_of_columns
 
-            elif selection == "Volume":
-                app().main_window.set_geometry_selection(volumes = [int(selected_id)])
+            selected_item = selected_cells[index].text()
 
-            app().main_window.action_model_workspace_callback()
+            selected_type, selected_id = selected_item.split("-")
+            selected_type = selected_type.lower() + "s"
 
-            self.lineEdit_selection_id.setText(item.text(0))
-            self.lineEdit_selected_fluid_name.setText(item.text(1))
+            selected_items[selected_type].append(int(selected_id))
 
-    def on_double_click_item(self, item):
-        self.on_click_item(item)
+        for selected_type, ids in selected_items.items():
+            ids.sort()
+
+            ids = map(str, ids)
+            selection_text += selected_type.capitalize() + ": " + ", ".join(ids) + " "
+
+        self.selected_items = selected_items
+
+        return selection_text
 
     def keyPressEvent(self, event):
-
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.attribute_callback()
 
@@ -392,8 +481,18 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         elif event.key() == Qt.Key_Escape:
             self.close()
+        
+        elif event.key() == Qt.Key_Control:
+            self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.MultiSelection)
+        
+        elif event.key() == Qt.Key_Shift:
+            self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.ContiguousSelection)
+        
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.volume_selection_mode = False
+        app().main_window.selection.volume_selection_mode = False
         return super().closeEvent(a0)

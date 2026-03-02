@@ -4,11 +4,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.setup.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 
 import numpy as np
 from enum import IntEnum
@@ -150,17 +150,17 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        faces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         if faces:
 
@@ -436,7 +436,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path).data
+                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
 
@@ -528,23 +528,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
-
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
 
         if self.frequencies[0] == 0:
@@ -575,8 +558,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         imag_values = np.imag(values)
         data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
 
+        update_analysis_setup_in_file(self.frequencies)
         self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
 
         return table_name, data
 
@@ -885,7 +868,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
         self.tabWidget_main.setTabVisible(2, False)
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -915,16 +898,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             elif selection == "Line":
-                app().main_window.set_geometry_selection(lines = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
 
             elif selection == "Point":
-                app().main_window.set_geometry_selection(points = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
-                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+                app().main_window.selection.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
                 app().main_window.action_mesh_workspace_callback()
@@ -996,8 +979,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.remove_property_from("nodal_loads", selected_id, selection)
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -1038,8 +1021,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.properties._reset_property("nodal_loads")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()
@@ -1049,13 +1032,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         app().file.write_imported_table_data_in_file()
         app().main_window.update_symbols()
 
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
-
     def check_model_frequency_controls(self):
 
         for key, data in self.properties.surface_properties.items():
@@ -1064,9 +1040,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(app().project.analysis_setup, dict):
-            analysis_setup = app().project.analysis_setup
-            app().project.set_analysis_setup(analysis_setup)
+        analysis_setup = app().project.model.analysis_setup
+        if analysis_setup:
+            app().project.model.set_analysis_setup(analysis_setup)
             app().file.write_analysis_setup_in_file(analysis_setup)
 
     def reset_input_fields(self, reset_all=False):

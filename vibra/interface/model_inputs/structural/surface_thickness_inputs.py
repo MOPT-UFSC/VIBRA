@@ -3,10 +3,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
 
 
 window_title_1 = "Error"
@@ -60,11 +59,11 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.treeWidget_surface_thickness.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.attribution_type_callback()
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
 
@@ -246,7 +245,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         if item.text(0) != "":
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
@@ -284,7 +283,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
                 return
 
             for _surface_id in surfaces_to_hide:
-                app().main_window.hidden_surfaces.add(_surface_id)
+                app().main_window.selection.hidden_surfaces.add(_surface_id)
     
             app().main_window.update_hidden_plots()
 

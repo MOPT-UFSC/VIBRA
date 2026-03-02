@@ -18,7 +18,7 @@ def points_info_text():
 
     mesh = app().project.model.mesh
 
-    selected_points = app().main_window.selected_geometry_points
+    selected_points = app().main_window.selection.geometry_points
     node_ids = [mesh.nodes_from_points.get(point_id) for point_id in selected_points]
     point_ids = list(selected_points)
 
@@ -56,7 +56,7 @@ def points_info_text():
     return text
 
 def lines_info_text():
-    line_ids = list(app().main_window.selected_geometry_lines)
+    line_ids = list(app().main_window.selection.geometry_lines)
 
     if len(line_ids) == 0:
         return ""
@@ -84,12 +84,12 @@ def lines_info_text():
     return text
 
 def faces_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
+    volumes = list(app().main_window.selection.geometry_volumes)
 
     if len(volumes) != 0:
         return ""
     
-    surface_ids = list(app().main_window.selected_geometry_surfaces)
+    surface_ids = list(app().main_window.selection.geometry_surfaces)
 
     if len(surface_ids) == 0:
         return ""
@@ -123,7 +123,7 @@ def faces_info_text():
     return text
 
 def volumes_info_text():
-    volume_ids = list(app().main_window.selected_geometry_volumes)
+    volume_ids = list(app().main_window.selection.geometry_volumes)
     if len(volume_ids) == 0:
         return ""
 
@@ -175,8 +175,8 @@ def process_volumes_and_masses(volume_ids: list):
     return volume_compound, fluid_mass, material_mass
 
 def material_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
-    surfaces = list(app().main_window.selected_geometry_surfaces)
+    volumes = list(app().main_window.selection.geometry_volumes)
+    surfaces = list(app().main_window.selection.geometry_surfaces)
 
     text = ""
     if len(volumes) != 1 and len(surfaces) != 1:
@@ -204,8 +204,8 @@ def material_info_text():
     return text
 
 def fluid_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
-    surfaces = list(app().main_window.selected_geometry_surfaces)
+    volumes = list(app().main_window.selection.geometry_volumes)
+    surfaces = list(app().main_window.selection.geometry_surfaces)
 
     text = ""
     if len(volumes) != 1 and len(surfaces) != 1:
@@ -236,7 +236,7 @@ def fluid_info_text():
     return text
 
 def proportional_damping_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
+    volumes = list(app().main_window.selection.geometry_volumes)
     text = ""
 
     if len(volumes) != 1:
@@ -261,7 +261,7 @@ def proportional_damping_info_text():
     return str(tree)
 
 def porous_material_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
+    volumes = list(app().main_window.selection.geometry_volumes)
     text = ""
 
     if len(volumes) != 1:
@@ -280,7 +280,7 @@ def porous_material_info_text():
     return str(tree)
 
 def viscous_thermal_info_text():
-    volumes = list(app().main_window.selected_geometry_volumes)
+    volumes = list(app().main_window.selection.geometry_volumes)
     text = ""
 
     if len(volumes) != 1:
@@ -301,7 +301,7 @@ def viscous_thermal_info_text():
 def perforated_plate_info_text():
 
     text = ""
-    surfaces = list(app().main_window.selected_geometry_surfaces)
+    surfaces = list(app().main_window.selection.geometry_surfaces)
 
     if not surfaces:
         return text
@@ -339,32 +339,35 @@ def perforated_plate_info_text():
 
 def acoustic_boundary_conditions_info_text():
     text = ""
-    selected_faces = list(app().main_window.selected_geometry_surfaces)
+    selected_faces = list(app().main_window.selection.geometry_surfaces)
 
     if len(selected_faces) != 1:
         return text
     
+    surface_id = selected_faces[0]
     properties = app().project.model.properties
 
-    acoustic_pressure = properties._get_property("acoustic_pressure", surface=selected_faces[0])
-    surface_velocity = properties._get_property("surface_velocity", surface=selected_faces[0])
-    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=selected_faces[0])
-    incident_plane_wave = properties._get_property("incident_plane_wave", surface=selected_faces[0])
-    mass_flow_rate = properties._get_property("mass_flow_rate", surface=selected_faces[0])
-    absorption_surface = properties._get_property("absorption_surface", surface=selected_faces[0])
-    specific_impedance = properties._get_property("specific_impedance", surface=selected_faces[0])
+    acoustic_pressure = properties._get_property("acoustic_pressure", surface=surface_id)
+    surface_velocity = properties._get_property("surface_velocity", surface=surface_id)
+    compressor_excitation_spectrum = properties._get_property("compressor_excitation_spectrum", surface=surface_id)
+    compressor_excitation_waveform = properties._get_property("compressor_excitation_waveform", surface=surface_id)
+    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
+    incident_plane_wave = properties._get_property("incident_plane_wave", surface=surface_id)
+    absorption_surface = properties._get_property("absorption_surface", surface=surface_id)
+    specific_impedance = properties._get_property("specific_impedance", surface=surface_id)
 
-    boundary_conditions_list = [
-                                acoustic_pressure,
-                                surface_velocity,
-                                recip_compressor_excitation,
-                                incident_plane_wave,
-                                mass_flow_rate,
-                                absorption_surface,
-                                specific_impedance,
-                                ]
+    properties_data = [
+        acoustic_pressure,
+        surface_velocity,
+        compressor_excitation_spectrum,
+        compressor_excitation_waveform,
+        recip_compressor_excitation,
+        incident_plane_wave,
+        absorption_surface,
+        specific_impedance,
+        ]
 
-    if all(condition is None for condition in boundary_conditions_list):
+    if all(condition is None for condition in properties_data):
         return text
 
     if acoustic_pressure is not None:
@@ -375,15 +378,17 @@ def acoustic_boundary_conditions_info_text():
         values = surface_velocity["values"][0]
         text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
+    if isinstance(compressor_excitation_spectrum, dict):
+        text += get_compressor_excitation_spectrum(compressor_excitation_spectrum)
+
+    if isinstance(compressor_excitation_waveform, dict):
+        text += get_compressor_excitation_waveform(compressor_excitation_waveform)
+
     if isinstance(recip_compressor_excitation, dict):
         text += get_reciprocating_compressor_text(recip_compressor_excitation)
 
     if isinstance(incident_plane_wave, dict):
         text += get_incident_plane_wave_text(incident_plane_wave)
-
-    if mass_flow_rate is not None:
-        values = mass_flow_rate["values"][0]
-        text += acoustic_format("Mass flow rate", values, "Q", "kg/s")
 
     if absorption_surface is not None:
         values = absorption_surface["values"][0]
@@ -410,6 +415,27 @@ def get_incident_plane_wave_text(ipw_data: dict):
     tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
 
     return str(tree_pw)
+
+def get_compressor_excitation_spectrum(data: dict):
+    tree_ec = TreeInfo("Compressor excitation")
+    tree_ec.add_item("Data domain", "frequency")
+    tree_ec.add_item("Compressor type", data.get("compressor_type"))
+    tree_ec.add_item("Connection type", data.get("connection_type"))
+    tree_ec.add_item("Excitation type", data.get("excitation_type"), data.get("excitation_units"))
+
+    return str(tree_ec)
+
+def get_compressor_excitation_waveform(data: dict):
+    tree_ec = TreeInfo("Compressor excitation")
+    tree_ec.add_item("Data domain", "time")
+    tree_ec.add_item("Data source", data.get("data_source"))
+    tree_ec.add_item("Compressor type", data.get("compressor_type"))
+    tree_ec.add_item("Connection type", data.get("connection_type"))
+    tree_ec.add_item("Excitation type", data.get("excitation_type"), data.get("excitation_units"))
+    tree_ec.add_item("Excitation mapping", data.get("excitation_mapping"))
+    tree_ec.add_item("Angular resolution", data.get("angular_resolution"), "deg")
+
+    return str(tree_ec)
 
 def get_reciprocating_compressor_text(rc_data: dict):
 
@@ -514,11 +540,11 @@ def get_mass_source_text(**kwargs):
 
 def mass_source_info_text():
     text = ""
-    selected_volumes = list(app().main_window.selected_geometry_volumes)
-    selected_surfaces = list(app().main_window.selected_geometry_surfaces)
-    selected_lines = list(app().main_window.selected_geometry_lines)
-    selected_points = list(app().main_window.selected_geometry_points)
-    selected_nodes = list(app().main_window.selected_mesh_nodes)
+    selected_volumes = list(app().main_window.selection.geometry_volumes)
+    selected_surfaces = list(app().main_window.selection.geometry_surfaces)
+    selected_lines = list(app().main_window.selection.geometry_lines)
+    selected_points = list(app().main_window.selection.geometry_points)
+    selected_nodes = list(app().main_window.selection.mesh_nodes)
 
     if len(selected_volumes) == 1:
         return get_mass_source_text(volume=selected_volumes[0])
@@ -541,8 +567,8 @@ def structural_boundary_conditions_info_text():
     distributed_loads_area = None
     normal_pressure_load = None
 
-    selected_faces = list(app().main_window.selected_geometry_surfaces)
-    selected_lines = list(app().main_window.selected_geometry_lines)
+    selected_faces = list(app().main_window.selection.geometry_surfaces)
+    selected_lines = list(app().main_window.selection.geometry_lines)
 
     if len(selected_faces) == 1:
         prescribed_dof = app().project.model.properties._get_property(
@@ -630,7 +656,7 @@ def acoustic_format(property_name, value, label, unit, additional_labels=[]):
 
 def nodes_info_text():
     text = ""
-    node_ids = list(app().main_window.selected_mesh_nodes)
+    node_ids = list(app().main_window.selection.mesh_nodes)
 
     if len(node_ids) == 0:
         return ""
@@ -662,7 +688,7 @@ def nodes_info_text():
 
 def mesh_faces_info_text():
     text = ""
-    faces = list(app().main_window.selected_mesh_faces)
+    faces = list(app().main_window.selection.mesh_faces)
 
     if len(faces) > 1:
         text += f"{len(faces)} FACES IN SELECTION:\n"
@@ -675,7 +701,7 @@ def mesh_faces_info_text():
 
 def mesh_solids_info_text():
     text = ""
-    solids_elem_ids = list(app().main_window.selected_mesh_solids)
+    solids_elem_ids = list(app().main_window.selection.mesh_solids)
     if len(solids_elem_ids) > 1:
         text += f"{len(solids_elem_ids)} SOLIDS IN SELECTION:\n"
         text += f"{format_long_sequence(solids_elem_ids)}\n\n"
@@ -691,11 +717,11 @@ def mesh_solids_info_text():
     return text
 
 def mesh_material_info_text():
-    elements = list(app().main_window.selected_mesh_faces)
+    elements = list(app().main_window.selection.mesh_faces)
     text = ""
 
     if not elements:
-        elements = list(app().main_window.selected_mesh_solids)
+        elements = list(app().main_window.selection.mesh_solids)
 
     if len(elements) == 1:
         current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
@@ -718,11 +744,11 @@ def mesh_material_info_text():
     return text
 
 def mesh_fluid_info_text():
-    elements = list(app().main_window.selected_mesh_faces)
+    elements = list(app().main_window.selection.mesh_faces)
     text = ""
 
     if not elements:
-        elements = list(app().main_window.selected_mesh_solids)
+        elements = list(app().main_window.selection.mesh_solids)
 
     if len(elements) == 1:
         current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
@@ -745,7 +771,7 @@ def mesh_fluid_info_text():
 
 def mesh_structural_boundary_conditions_info_text():
     text = ""
-    selected_nodes = list(app().main_window.selected_mesh_nodes)
+    selected_nodes = list(app().main_window.selection.mesh_nodes)
 
     if len(selected_nodes) != 1:
         return text
@@ -819,6 +845,11 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
             tree.add_item(", ".join(r_labels), r_values, units[1])
 
     return str(tree)
+
+def problematic_nodes_info_text(self):
+    text = ""
+    
+    disconnected_nodes = 1
 
 # RESULTS RENDER WIDGET INFO TEXTS
 

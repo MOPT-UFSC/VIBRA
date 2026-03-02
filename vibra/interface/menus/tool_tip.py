@@ -8,7 +8,7 @@ class ToolTip:
     
     def get_tooltip_QTextEdit(self, property_name: str) -> QTextEdit | None:
         if property_name not in self.tool_tips.keys():
-            return
+            return None
         
         text = self.tool_tips[property_name]
         return QTextEdit(markdown=text)

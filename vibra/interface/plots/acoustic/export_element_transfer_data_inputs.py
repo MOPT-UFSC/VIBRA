@@ -13,8 +13,7 @@ import logging
 import numpy as np
 from pathlib import Path
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
@@ -42,10 +41,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
@@ -72,7 +69,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
@@ -81,7 +78,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def geometry_selection_callback(self):
 
-        selected_faces = app().main_window.selected_geometry_surfaces
+        selected_faces = app().main_window.selection.geometry_surfaces
 
         if selected_faces:
 
@@ -220,7 +217,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "
             message += "surface ID to proceed with the transfer function data exportation."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             app().main_window.set_input_widget(self)
             return None
 

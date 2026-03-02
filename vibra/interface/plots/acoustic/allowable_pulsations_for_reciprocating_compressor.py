@@ -37,10 +37,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
@@ -66,14 +64,17 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.pushButton_get_internal_diameter_from_selection.clicked.connect(self.get_internal_diameter_from_selection)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
 
-        surfaces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
         if surfaces and index == 0:
@@ -241,7 +242,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                     message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = f"You have typed and invalid value at the {label} input field.\n\n"
+                message = f"You have typed an invalid value at the {label} input field.\n\n"
                 message += str(_err)
 
         else:

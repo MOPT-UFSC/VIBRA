@@ -39,6 +39,9 @@ class LoadProject:
         logging.info("Loading project... [45/100]")
         self.load_mesh_data()
 
+        logging.info("Loading project... [52/100]")
+        self.load_mesh_error_data()
+
         logging.info("Loading project... [55/100]")
         self.load_project_libraries()
 
@@ -302,6 +305,25 @@ class LoadProject:
         if not self.model.check_path_for_geometry_file(geometry_path):
             self.model.mesh.update_element_type()
 
+    def load_mesh_error_data(self):
+        errors_data = self.file.read_errors_data_from_file()
+        mesh_error = errors_data.get("mesh_error")
+        if not isinstance(mesh_error, dict):
+            return
+
+        mesh = app().project.model.mesh
+        if "collapsed_elements_data" in mesh_error.keys():
+            collapsed_elements_data = mesh_error.get("collapsed_elements_data")
+            mesh.collapsed_elements_data = collapsed_elements_data
+
+            if isinstance(collapsed_elements_data, dict):
+                mesh.collapsed_1d_elements = collapsed_elements_data.get("collpased_1d_elements", set())
+                mesh.collapsed_2d_elements = collapsed_elements_data.get("collpased_2d_elements", set())
+                mesh.collapsed_3d_elements = collapsed_elements_data.get("collpased_3d_elements", set())
+
+        if "disconnected_nodes_data" in mesh_error.keys():
+            mesh.disconnected_nodes_data = mesh_error.get("disconnected_nodes_data", dict())
+
     # def update_render(self):
 
     #     logging.info("Updating render... [20/100]")
@@ -367,18 +389,8 @@ class LoadProject:
                         self.properties._set_property(property, prop_data)
 
     def load_analysis_setup(self):
-
         analysis_setup = self.file.read_analysis_setup_from_file()
-
-        if isinstance(analysis_setup, dict):
-            f_min = analysis_setup.get("f_min")
-            f_max = analysis_setup.get("f_max")
-            f_step = analysis_setup.get("f_step")
-
-            if ([f_min, f_max, f_step]).count(None) == 0:
-                analysis_setup["frequencies"] = np.arange(f_min, f_max + f_step, f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
+        app().project.model.set_analysis_setup(analysis_setup)
         app().project.create_solver()
 
     def load_thumbnail(self):
@@ -409,7 +421,7 @@ class LoadProject:
 
             elif key == "harmonic_acoustic" and project.acoustic_harmonic_solver is not None and project.acoustic_harmonic_solver.project_file is None:
                 project.acoustic_harmonic_solver.solution = data.get("solution")
-                app().main_window.disable_advanced_acoustic_plots_buttons(False)
+                app().main_window.action_export_element_transfer_data.setDisabled(False)
 
             elif key == "harmonic_structural" and project.structural_harmonic_solver is not None and project.structural_harmonic_solver.project_file is None:
                 project.structural_harmonic_solver.displacement_dof = data.get("displacement_dof")
@@ -443,7 +455,7 @@ class LoadProject:
                 structural_harmonic_solver.solution = None
                 project.can_resume_solution = True
 
-        app().main_window.disable_advanced_acoustic_plots_buttons(False)
+        app().main_window.action_export_element_transfer_data.setDisabled(False)
 
 
 def convert_two_columns_array_into_numeric_dictionary(input_data: np.ndarray, values_dtype: int | float=int):

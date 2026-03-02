@@ -21,7 +21,7 @@
        <number>1</number>
       </property>
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <property name="opaqueResize">
        <bool>true</bool>
@@ -37,7 +37,7 @@
         </sizepolicy>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::NoContextMenu</enum>
+        <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
        </property>
        <property name="styleSheet">
         <string notr="true"/>
@@ -141,7 +141,7 @@
      <x>0</x>
      <y>0</y>
      <width>1056</width>
-     <height>21</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -187,12 +187,41 @@
    </widget>
    <widget class="QMenu" name="advanced_results_menu">
     <property name="title">
-     <string>Advanced Results</string>
+     <string>Advanced</string>
     </property>
     <addaction name="action_export_element_transfer_data"/>
    </widget>
+   <widget class="QMenu" name="menu_selection">
+    <property name="title">
+     <string>Selection</string>
+    </property>
+    <widget class="QMenu" name="menu_geometry_select_all">
+     <property name="title">
+      <string>Geometry</string>
+     </property>
+     <addaction name="action_points"/>
+     <addaction name="action_faces"/>
+     <addaction name="action_solid"/>
+     <addaction name="action_all_entities_geometry"/>
+    </widget>
+    <widget class="QMenu" name="menu_mesh_select_all">
+     <property name="title">
+      <string>Mesh</string>
+     </property>
+     <addaction name="action_nodes"/>
+     <addaction name="action_surface_elements"/>
+     <addaction name="action_solid_elements"/>
+     <addaction name="action_all_entities_mesh"/>
+    </widget>
+    <addaction name="menu_geometry_select_all"/>
+    <addaction name="menu_mesh_select_all"/>
+    <addaction name="action_invert_selection"/>
+    <addaction name="action_clear_selection"/>
+    <addaction name="action_volume_selection_mode"/>
+   </widget>
    <addaction name="menu_project"/>
    <addaction name="menu_settings"/>
+   <addaction name="menu_selection"/>
    <addaction name="menu_view_mode"/>
    <addaction name="advanced_results_menu"/>
    <addaction name="menu_help"/>
@@ -536,24 +565,6 @@
     <string>Configure Section Plane</string>
    </property>
   </action>
-  <action name="action_plot_particle_velocity">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/image-plus.png</normaloff>:/icons/image-plus.png</iconset>
-   </property>
-   <property name="text">
-    <string>Plot particle velocity</string>
-   </property>
-  </action>
-  <action name="action_plot_specific_acoustic_impedance">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/image-plus.png</normaloff>:/icons/image-plus.png</iconset>
-   </property>
-   <property name="text">
-    <string>Plot specific acoustic impedance</string>
-   </property>
-  </action>
   <action name="action_export_element_transfer_data">
    <property name="icon">
     <iconset resource="../icons/resources.qrc">
@@ -689,7 +700,92 @@
     <string>Ghost</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::NoRole</enum>
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_invert_selection">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Invert Selection</string>
+   </property>
+  </action>
+  <action name="action_clear_selection">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Clear Selection</string>
+   </property>
+  </action>
+  <action name="action_volume_selection_mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Volume Selection Mode</string>
+   </property>
+  </action>
+  <action name="action_points">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Points</string>
+   </property>
+  </action>
+  <action name="action_faces">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Faces</string>
+   </property>
+  </action>
+  <action name="action_solid">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Solids</string>
+   </property>
+  </action>
+  <action name="action_all_entities_geometry">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>All Entities</string>
+   </property>
+  </action>
+  <action name="action_nodes">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Nodes</string>
+   </property>
+  </action>
+  <action name="action_surface_elements">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Surface Elements</string>
+   </property>
+  </action>
+  <action name="action_solid_elements">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Solid Elements</string>
+   </property>
+  </action>
+  <action name="action_all_entities_mesh">
+   <property name="text">
+    <string>All Entities</string>
    </property>
   </action>
  </widget>

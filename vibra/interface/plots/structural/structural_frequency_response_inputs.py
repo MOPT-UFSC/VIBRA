@@ -49,7 +49,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_dof_combo_box_texts()
 
     def selection_type_callback(self):
@@ -60,10 +60,10 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        faces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         if faces:
             text = ", ".join([str(i) for i in faces])
@@ -111,7 +111,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
     def _load_analysis_setup_and_solution(self):
 
         self.analysis_method = ""
-        analysis_setup = app().project.analysis_setup
+        analysis_setup = app().project.model.analysis_setup
 
         if "analysis_id" in analysis_setup.keys():
             analysis_method = analysis_setup.get("analysis_method", "direct")

@@ -7,7 +7,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.utils.load_data_utils import load_spreadsheet_data
+from vibra.interface.data_handler.data_importer import DataImporter
 
 import os
 import matplotlib.pyplot as plt
@@ -145,7 +145,7 @@ def load_external_mesh_and_solve():
 
     # Define and process the assemble
     assembler = AcousticAssembler(model)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
 
     # t0 = time()
     # # Run modal analysis
@@ -191,7 +191,7 @@ def load_external_mesh_and_solve():
     if solution is not None:
 
         results_path = f"validation_files/data/WB/porous_material_models/results/silencer/WB_results_silencer_{pm_model}_Vn1_Z1_Z2.xlsx"
-        imported_results = load_spreadsheet_data(results_path)
+        imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
 
         pressure_at_input_face = imported_results["input_face_pressure"]
         pressure_at_output_face = imported_results["output_face_pressure"]

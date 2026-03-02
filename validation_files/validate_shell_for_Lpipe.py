@@ -7,7 +7,7 @@ from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.utils.load_data_utils import load_spreadsheet_data
+from vibra.interface.data_handler.data_importer import DataImporter
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 
@@ -167,7 +167,7 @@ def load_external_mesh_and_solve():
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
 
     # Initialize the solver
     # modal_solver = ModalSolver(assembler)
@@ -230,7 +230,7 @@ def load_external_mesh_and_solve():
 
         ## load external results data
         results_path = f"validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
-        imported_results = load_spreadsheet_data(results_path)
+        imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
 
         output_face_ux_lin = imported_results[f"output_face_ux_lin"]
         output_face_ux_quad = imported_results[f"output_face_ux_quad"]

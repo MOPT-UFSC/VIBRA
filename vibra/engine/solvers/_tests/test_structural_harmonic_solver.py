@@ -8,7 +8,7 @@ from vibra.project_files.project_file import ProjectFile
 
 def test_regression_structural_harmonic_solver_solution(datadir, structural_harmonic_analysis):
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
     project_file = ProjectFile(str(datadir))
     harmonic_solver = HarmonicSolver(assembler, project_file)
 
@@ -18,7 +18,7 @@ def test_regression_structural_harmonic_solver_solution(datadir, structural_harm
     saved_solutions = harmonic_solver.solve_direct()
 
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
     in_memory_harmonic_solver = HarmonicSolver(assembler)
 
     # # Solve and store solution in memory
@@ -33,13 +33,13 @@ def test_structural_harmonic_modal_solver_solution(structural_harmonic_analysis)
     
     # Direct solver setup and solve
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
     harmonic_solver = HarmonicSolver(assembler)
     direct_solutions = harmonic_solver.solve_direct()
 
     # Modal solver setup and solve
     assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
     modal_harmonic_solver = HarmonicSolver(assembler)
     modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 

@@ -276,7 +276,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
-            self.frequency_index = analysis_widget.current_frequency_index()
+            self.frequency_index = analysis_widget.get_selected_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
             data = self.structural_post.compute_structural_displacement_field(
@@ -313,7 +313,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
-            self.frequency_index = analysis_widget.current_frequency_index()
+            self.frequency_index = analysis_widget.get_selected_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
             data = self.acoustic_post.compute_acoustic_pressure_field(

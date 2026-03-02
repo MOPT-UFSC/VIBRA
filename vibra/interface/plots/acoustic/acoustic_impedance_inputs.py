@@ -34,10 +34,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
         self.solution = self.project.acoustic_harmonic_solver.solution
@@ -62,7 +60,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
@@ -76,7 +74,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
     def volume_selector_callback(self):
         if self.comboBox_volumes.currentText() != "":
             volume_id = int(self.comboBox_volumes.currentText())
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+            app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
@@ -85,9 +83,12 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def geometry_selection_callback(self):
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
-        nodes = app().main_window.selected_mesh_nodes
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
+        nodes = app().main_window.selection.mesh_nodes
 
         if volumes:
             if len(volumes) == 1:
@@ -139,7 +140,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.comboBox_volumes.clear()
         if external_surfaces_map and internal_surfaces_map:
             self.lineEdit_selection_id.setText("")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().processEvents()
 
             title = "Invalid selection"

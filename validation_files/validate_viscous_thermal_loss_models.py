@@ -7,7 +7,7 @@ from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.utils.load_data_utils import load_spreadsheet_data
+from vibra.interface.data_handler.data_importer import DataImporter
 
 import os
 import matplotlib.pyplot as plt
@@ -147,7 +147,7 @@ def load_external_mesh_and_solve():
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)
@@ -187,7 +187,7 @@ def load_external_mesh_and_solve():
         # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_ducts_results.xlsx"
         # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/only_fluid_results.xlsx"
 
-        imported_results = load_spreadsheet_data(results_path)
+        imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
 
         pressure_at_input_face = imported_results["input_pressure"]
         pressure_at_output_face = imported_results["output_pressure"]

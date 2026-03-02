@@ -5,7 +5,7 @@ from PySide6.QtGui import QCloseEvent, QColor
 from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
+from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -56,7 +56,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.element_transfer_data = dict()
 
     def _configure_qt_variables(self):
-        self.current_lineEdit = self.lineEdit_output_selected_id
+        self.current_line_edit = self.lineEdit_output_selected_id
         self.tabWidget_main.setTabVisible(1, False)
 
     def _create_connections(self):
@@ -66,7 +66,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
@@ -74,12 +74,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def geometry_selection_callback(self):
 
-        selected_faces = app().main_window.selected_geometry_surfaces
+        selected_faces = app().main_window.selection.geometry_surfaces
 
         if len(selected_faces) == 1:
-            if isinstance(self.current_lineEdit, QLineEdit):
+            if isinstance(self.current_line_edit, QLineEdit):
                 _selected_faces = [str(i) for i in selected_faces]
-                self.current_lineEdit.setText(_selected_faces[0])
+                self.current_line_edit.setText(_selected_faces[0])
 
     def invert_selection_callback(self):
 
@@ -108,27 +108,34 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         return filter.clicked
 
     def lineEdit_1_clicked(self):
-        self.current_lineEdit = self.lineEdit_input_selected_id
+        self.current_line_edit = self.lineEdit_input_selected_id
+        self.highlight_line_edit()
 
     def lineEdit_2_clicked(self):
-        self.current_lineEdit = self.lineEdit_output_selected_id
+        self.current_line_edit = self.lineEdit_output_selected_id
+        self.highlight_line_edit()
+
+    def highlight_line_edit(self):
+        self.current_line_edit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+        if self.current_line_edit == self.lineEdit_input_selected_id:
+            self.lineEdit_output_selected_id.setStyleSheet("")
+        elif self.current_line_edit == self.lineEdit_output_selected_id:
+            self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
 
-        data = self.project.analysis_setup
-        if isinstance(data, dict):
+        f_min = self.project.model.analysis_setup.get("f_min")
+        f_max = self.project.model.analysis_setup.get("f_max")
+        f_step = self.project.model.analysis_setup.get("f_step")
+        
+        if isinstance(f_min, float | int):
+            self.lineEdit_fmin.setText(str(f_min))
 
-            if "f_min" in data.keys():
-                self.f_min = data["f_min"]
-                self.lineEdit_fmin.setText(str(self.f_min))
+        if isinstance(f_max, float | int):
+            self.lineEdit_fmax.setText(str(f_max))
 
-            if "f_max" in data.keys():
-                self.f_max = data["f_max"]
-                self.lineEdit_fmax.setText(str(self.f_max))
-
-            if "f_step" in data.keys():
-                self.f_step = data["f_step"]
-                self.lineEdit_fstep.setText(str(self.f_step))
+        if isinstance(f_step, float | int):
+            self.lineEdit_fstep.setText(str(f_step))
 
     def search_callback(self):
 
@@ -149,9 +156,17 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         if not check:
             return True
+        
+        file_extension = self.get_file_extension_from_string(check)
+
+        if file_extension not in path:
+            path += f".{file_extension}"
 
         self.lineEdit_spreadsheet_path.setText(path)
         app().config.write_last_folder_path_in_file("exported_data_folder", path)
+    
+    def get_file_extension_from_string(self, string: str) -> str:
+        return string.split(".")[1][:-1]
 
     def check_typed_ids(self):
 
@@ -236,7 +251,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                     message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
+                message = "Dear user, you have typed an invalid value at the \n"
                 message += f"{label} input field.\n\n"
                 message += str(_err)
 
@@ -257,13 +272,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_frequency_entries():
             return True
 
-        app().project.set_analysis_setup(self.analysis_setup)
+        app().project.model.set_analysis_setup(self.analysis_setup)
         app().project.create_solver()
         app().file.write_analysis_setup_in_file(self.analysis_setup)
 
     def process_data_callback(self):
-        """
-        """
         self.hide()
         self.element_transfer_data.clear()
 
@@ -273,9 +286,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         if self.check_typed_ids():
             return
-        else:
-            self.process_areas()
 
+        self.process_areas()
         if self.configure_analysis():
             return   
 
@@ -286,15 +298,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             else:
                 return
         
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
-        def callback():
+        def compute_model_solution():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
 
                 logging.info(f"Solving model [{5+50*i}/100]...")
                 sleep(1)
 
-                self.remove_model_excitations()
+                self.remove_model_excitations_and_impedances()
                 self.set_surface_velocity(surface_id)
                 self.project.solve_acoustic_harmonic_analysis()
                 self.join_model_data(surface_id)
@@ -308,18 +320,26 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             sleep(0.5)
             logging.info("Exporting the admittance matrix data... [100/100]")
 
-        LoadingWindow(callback).run()
+        LoadingWindow(compute_model_solution).run()
 
-        app().main_window.menu_widget.update_items()
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
         self.print_final_message()
 
-    def remove_model_excitations(self):
+    def remove_model_excitations_and_impedances(self):
 
         model_excitations = [
                              "acoustic_pressure", 
                              "surface_velocity", 
-                             "reciprocating_compressor_excitation", 
-                             "specific_impedance",
+                             "reciprocating_compressor_excitation",
+                             "compressor_excitation_spectrum",
+                             "compressor_excitation_waveform",
+                             "incident_plane_wave",
+                             "mass_source",
+                             ]
+
+        model_impedances = [
+                            "specific_impedance",
+                            "absorption_surface",
                              ]
 
         properties_to_remove = defaultdict(list)
@@ -327,24 +347,48 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             for key in self.properties.surface_properties.keys():
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
-                elif key[0] == property and key[1] in [self.input_selection_id, self.output_selection_id]:
+
+        for property in model_impedances:
+            for key in self.properties.surface_properties.keys():
+                if key[0] == property and key[1] in [self.input_selection_id, self.output_selection_id]:
                     properties_to_remove[key[0]].append(key[1])
 
-        for _prop, _surface_ids in properties_to_remove.items():
-            for _id in _surface_ids:             
-                self.properties._remove_surface_property(_prop, _id)
+        self.remove_table_data(properties_to_remove)
+
+    def remove_table_data(self, properties_to_remove: dict):
+        if not properties_to_remove:
+            return
+
+        table_names = list()
+        for property_label, surface_ids in properties_to_remove.items():
+            for table_name in self.properties.get_property_related_table_names(property_label, surface_ids, "surfaces"):
+                if table_name in table_names:
+                    continue
+
+                table_names.append(table_name)
+
+            for surface_id in surface_ids:
+                self.properties._remove_surface_property(property_label, surface_id)
+
+        for table_name in table_names:
+            self.properties.remove_imported_tables("acoustic", table_name)
+
+        if table_names:
+            app().file.write_imported_table_data_in_file()
 
     def set_surface_velocity(self, surface_id: int):
 
         data = {
-                "real_values": [1.0],
-                "imag_values": [0.0],
+                "real_values" : [1.0],
+                "imag_values" : [0.0],
+                "nodal_attribution" : False,
+                "averaged" : False,
                 }
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
         app().file.write_model_properties_in_file()
-        # app().main_window.set_geometry_selection(surfaces=[surface_id])
+        # app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):
 
@@ -437,7 +481,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def export_data_in_spreadsheet_format(self, export_path: str):
 
-        from pandas import ExcelWriter, DataFrame
+        from pandas import ExcelWriter
+        from polars import DataFrame
 
         with ExcelWriter(export_path) as writer:
 
@@ -458,14 +503,14 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 if isinstance(y_data[0], complex):
                     header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
- 
+
                 else:
                     data_type = data["data_type"]
                     header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
-                df = DataFrame(data_to_export, columns=header)
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                df = DataFrame(data_to_export, schema=header)
+                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def export_data_callback(self):
         if self.element_transfer_data:

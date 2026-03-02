@@ -29,7 +29,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign one material for volumes {volumes_without_material} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(volumes=volumes_without_material)
+                app().main_window.selection.set_geometry_selection(volumes=volumes_without_material)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -40,7 +40,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign one material for surfaces {surfaces_without_material} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(surfaces=surfaces_without_material)
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_without_material)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -50,7 +50,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign the surface thickness for surfaces {surfaces_without_thickness} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(surfaces=surfaces_without_thickness)
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_without_thickness)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -73,7 +73,7 @@ class AnalysisRequirementsChecker:
             message = f"You should assign one fluid for volumes {volumes_without_fluid} "
             message += "to proceed with the analysis solution."
             app().main_window.action_model_workspace_callback()
-            app().main_window.set_geometry_selection(volumes=volumes_without_fluid)
+            app().main_window.selection.set_geometry_selection(volumes=volumes_without_fluid)
             PrintMessageInput([error_title, title, message])
             return True
 
@@ -83,7 +83,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign one fluid for surfaces {surfaces_without_fluid} "
                 message += "to proceed with the analysis solution."
                 app().main_window.action_model_workspace_callback()
-                app().main_window.set_geometry_selection(surfaces=surfaces_without_fluid)
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_without_fluid)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -107,10 +107,11 @@ class AnalysisRequirementsChecker:
     def check_acoustic_harmonic_excitations(self):
 
         prop_labels = [
-                       "acoustic_pressure", 
+                       "acoustic_pressure",
                        "surface_velocity",
-                       "mass_flow_rate",
                        "incident_plane_wave",
+                       "compressor_excitation_spectrum",
+                       "compressor_excitation_waveform",
                        "reciprocating_compressor_excitation",
                        "mass_source",
                        ]
@@ -254,4 +255,4 @@ class AnalysisRequirementsChecker:
             analysis_setup.pop("modes_number")
 
             app().file.write_analysis_setup_in_file(analysis_setup)
-            app().project.set_analysis_setup(analysis_setup)
+            app().project.model.set_analysis_setup(analysis_setup)

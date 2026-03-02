@@ -209,7 +209,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
     def apply_user_preferences(self):
         app().config.user_preferences = self.tmp_user_preferences
 
-        app().main_window.selection_changed.emit()
+        app().main_window.selection.selection_changed.emit()
         self.update_settings()
         self.config.update_config_file()
 

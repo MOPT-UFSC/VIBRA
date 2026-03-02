@@ -4,7 +4,7 @@ from PySide6.QtGui import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.structural.modal_analysis_input_ui import ModalAnalysisInput_UI
+from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import ModalAnalysisInput_UI
 
 error_title = "Error"
 
@@ -55,8 +55,8 @@ class StructuralModalAnalysisInput(ModalAnalysisInput_UI):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
         mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        disconnected_nodes = bool(mesh.disconnected_nodes_data)
+        collapsed_elements = bool(mesh.collapsed_elements_data)
 
         text = ""
         if collapsed_elements:

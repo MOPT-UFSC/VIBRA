@@ -53,6 +53,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
+        self.results_viewer_items.item_child_allowable_pulsations_for_screw_compressor.clicked.connect(self.add_allowable_pulsations_for_screw_compressor_widget)
         self.results_viewer_items.item_child_acoustic_pressure_waveform.clicked.connect(self.add_acoustic_pressure_waveform_widget)
         self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
@@ -117,6 +118,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_allowable_pulsations_for_reciprocating_compressor_widget(self):
         self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_reciprocating_compressor()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_allowable_pulsations_for_screw_compressor_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_screw_compressor()
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()

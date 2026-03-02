@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
+from vibra.interface.ui_generated.model.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -86,4 +86,4 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
         self.highlight_mesh_elements(list_elements)
 
     def highlight_mesh_elements(self, solid_elements: list[int]):
-        app().main_window.set_mesh_selection(solids = solid_elements)
+        app().main_window.selection.set_mesh_selection(solids = solid_elements)

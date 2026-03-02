@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -10,7 +11,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.ui_generated.model.setup.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
+from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
+from vibra.interface.model_inputs.acoustic.definitions.enums import *
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCompressorModel
@@ -66,6 +68,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.exporter = None
 
+        self.tree_item_clicked = False
+        self.last_tab = self.tabWidget_main.currentIndex()
+
     def _config_widget(self):
         #
         widths = [100, 120, 120, 200]
@@ -119,7 +124,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.export_data_checkbox_callback()
@@ -150,19 +155,19 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         index = self.comboBox_fluid_data_source.currentIndex()
 
-        # RefProp
-        if index == 0:
+        if index == FluidDataComboBox.REF_PROP:
             self.lineEdit_isentropic_exponent.setDisabled(True)
             self.lineEdit_molar_mass.setDisabled(True)
 
-        # User-defined
-        elif index == 1:
-            self.lineEdit_isentropic_exponent.setEnabled(True)
+        elif index == FluidDataComboBox.USER_DEFINED:
             self.lineEdit_molar_mass.setEnabled(True)
 
     def geometry_selection_callback(self):
+        if self.tabWidget_main.currentIndex() == RCTabTypes.LIST:
+            self.verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation()
+            return
 
-        selected_surfaces = app().main_window.selected_geometry_surfaces
+        selected_surfaces = app().main_window.selection.geometry_surfaces
 
         if selected_surfaces:
 
@@ -186,14 +191,70 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
             if isinstance(data, dict):
                 self.update_compressor_inputs(data)
+    
+    def verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation(self):
+        if self.tree_item_clicked:
+            return
+
+        selected_surfaces = app().main_window.selection.geometry_surfaces
+
+        if not selected_surfaces:
+            return
+
+        self.clear_line_edit_selection_id()
+        self.treeWidget_compressor_excitation.clearSelection()
+        self.pushButton_remove.setDisabled(True)
+
+        map_id_to_model_index = self.get_tree_widget_compressor_excitation_items_map()
+        selected_ids = set(map_id_to_model_index.keys())
+        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
+
+        if not selected_surfaces_in_tree_widget:
+            return
+        
+        self.pushButton_remove.setEnabled(True)
+        
+        model_selector = self.treeWidget_compressor_excitation.selectionModel()
+
+        for surface_id in selected_surfaces_in_tree_widget:
+            model_index = map_id_to_model_index[surface_id]
+
+            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+
+        self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.set_selection_text(selected_surfaces_in_tree_widget)
+
+    def get_tree_widget_compressor_excitation_items_map(self) -> dict:
+        map_id_to_model_index = dict()
+
+        index = self.treeWidget_compressor_excitation.indexAt(QPoint(0, 0))
+        while index.isValid():
+            item = self.treeWidget_compressor_excitation.itemFromIndex(index)
+            surface_id = int(item.text(0))
+
+            map_id_to_model_index[surface_id] = index
+
+            index = self.treeWidget_compressor_excitation.indexBelow(index)
+        
+        return map_id_to_model_index
 
     def tab_event_callback(self):
-        self.pushButton_remove.setDisabled(True)
-        check = self.tabWidget_main.currentIndex() == 2
-        self.pushButton_confirm.setDisabled(check)
-        if check:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_connection_type.setText("")      
+        current_tab = self.tabWidget_main.currentIndex()
+        tab_list = current_tab == RCTabTypes.LIST
+
+        self.pushButton_confirm.setDisabled(tab_list)
+        self.lineEdit_selection_id.setDisabled(tab_list)
+
+        if self.last_tab == RCTabTypes.LIST or tab_list:
+            app().main_window.selection.clear_selection()
+            self.clear_line_edit_selection_id()
+
+        if tab_list:
+            self.lineEdit_connection_type.clear()   
+            self.pushButton_remove.setDisabled(True)
+            self.treeWidget_compressor_excitation.clearSelection()
+        
+        self.last_tab = current_tab
 
     def update_compressing_cylinders_setup(self):
 
@@ -215,7 +276,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_volume_head_end_angle.setEnabled(True)
         self.pushButton_plot_volume_crank_end_angle.setEnabled(True)
 
-        if self.comboBox_acting_head.currentIndex() == 0:
+        if self.comboBox_acting_head.currentIndex() == ActingHeadComboBox.HEAD_END:
             self.lineEdit_rod_diameter.setDisabled(True)
             self.lineEdit_clearance_crank_end.setDisabled(True)
             self.label_rod_diameter.setDisabled(True)
@@ -227,7 +288,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.pushButton_plot_pressure_crank_end_angle.setDisabled(True)
             self.pushButton_plot_volume_crank_end_angle.setDisabled(True)
 
-        elif self.comboBox_acting_head.currentIndex() == 1:
+        elif self.comboBox_acting_head.currentIndex() == ActingHeadComboBox.CRANK_END:
             self.lineEdit_rod_diameter.setEnabled(True)
             self.lineEdit_clearance_head_end.setDisabled(True)
             self.lineEdit_clearance_crank_end.setEnabled(True)
@@ -243,7 +304,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if self.check_all_parameters(check_all_entries = check_all_entries):
             return None
 
-        if self.comboBox_connection_type.currentIndex() == 0:
+        if self.comboBox_connection_type.currentIndex() == ConnectionTypeComboBox.SUCTION:
             pressure = self.P_suction
             temperature = self.T_suction
 
@@ -283,7 +344,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
             self.fluid_dialog.close()
             if self.selected_fluid.name in self.fluid_dialog.fluid_widget.fluid_name_to_refprop_data.keys():
-                self.comboBox_fluid_data_source.setCurrentIndex(0)
+                self.comboBox_fluid_data_source.setCurrentIndex(FluidDataComboBox.REF_PROP)
 
             self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
             self.lineEdit_isentropic_exponent.setText(f"{self.selected_fluid.isentropic_exponent : .6f}")
@@ -314,9 +375,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if "connection_type" in data.keys():
             connection_type = data["connection_type"]
             if connection_type == 'suction':
-                self.comboBox_connection_type.setCurrentIndex(0)
+                self.comboBox_connection_type.setCurrentIndex(ConnectionTypeComboBox.SUCTION)
             elif connection_type == 'discharge':
-                self.comboBox_connection_type.setCurrentIndex(1)
+                self.comboBox_connection_type.setCurrentIndex(ConnectionTypeComboBox.DISCHARGE)
 
         parameters = data["parameters"]
 
@@ -405,22 +466,22 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.comboBox_frequency_resolution.setCurrentIndex(index)
 
     def reset_entries(self):
-        self.comboBox_acting_head.setCurrentIndex(0)
-        self.comboBox_stage.setCurrentIndex(0)
-        self.comboBox_pressure_units.setCurrentIndex(0)
-        self.comboBox_temperature_units.setCurrentIndex(1)
+        self.comboBox_acting_head.setCurrentIndex(ActingHeadComboBox.HEAD_END)
+        self.comboBox_stage.setCurrentIndex(CompressionStageComboBox.FIRST_STAGE)
+        self.comboBox_pressure_units.setCurrentIndex(PressureUnitComboBox.KGF_CM2_A)
+        self.comboBox_temperature_units.setCurrentIndex(TemperatureUnitComboBox.CELSIUS)
         self.doubleSpinBox_rotational_speed.setValue(360)
-        self.lineEdit_bore_diameter.setText("")
-        self.lineEdit_stroke.setText("")
-        self.lineEdit_connecting_rod_length.setText("")
-        self.lineEdit_rod_diameter.setText("")
-        self.lineEdit_pressure_ratio.setText("")
-        self.lineEdit_clearance_head_end.setText("")
-        self.lineEdit_clearance_crank_end.setText("")
-        self.lineEdit_isentropic_exponent.setText("")
-        self.lineEdit_molar_mass.setText("")
-        self.lineEdit_pressure_at_suction.setText("")
-        self.lineEdit_temperature_at_suction.setText("")
+        self.lineEdit_bore_diameter.clear()
+        self.lineEdit_stroke.clear()
+        self.lineEdit_connecting_rod_length.clear()
+        self.lineEdit_rod_diameter.clear()
+        self.lineEdit_pressure_ratio.clear()
+        self.lineEdit_clearance_head_end.clear()
+        self.lineEdit_clearance_crank_end.clear()
+        self.lineEdit_isentropic_exponent.clear()
+        self.lineEdit_molar_mass.clear()
+        self.lineEdit_pressure_at_suction.clear()
+        self.lineEdit_temperature_at_suction.clear()
         self.spinBox_tdc1_crank_angle.setValue(0)
         self.spinBox_valves_per_head.setValue(1)
         self.spinBox_capacity.setValue(100)
@@ -455,7 +516,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message += "It is necessary to change the selection to proceed with the "
             message += "compressor excitation attribution."
             PrintMessageInput([window_title_1, title, message])
-            self.lineEdit_selection_id.setText("")
+            self.clear_line_edit_selection_id()
             return None
 
         return surface_id
@@ -660,32 +721,19 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             PrintMessageInput([window_title_1, title, message])
             return True
 
-        self.update_analysis_setup_in_file(frequencies)
+        update_analysis_setup_in_file(frequencies)
 
+        # real values vector
         real_values = np.real(complex_values)
+        
+        # imaginary values vector
         imag_values = np.imag(complex_values)
+
         data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
 
     def update_state_properties_at_discharge(self):
 
@@ -707,11 +755,11 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         try:
 
             suction_temperature = float(self.lineEdit_temperature_at_suction.text())
-            if self.comboBox_temperature_units.currentIndex() == 1:
+            if self.comboBox_temperature_units.currentIndex() == TemperatureUnitComboBox.CELSIUS:
                 suction_temperature += 273.15
 
             discharge_temperature = suction_temperature * (pressure_ratio**((gamma-1)/gamma))
-            if self.comboBox_temperature_units.currentIndex() == 1:
+            if self.comboBox_temperature_units.currentIndex() == TemperatureUnitComboBox.CELSIUS:
                 discharge_temperature -= 273.15
 
             self.lineEdit_temperature_at_discharge.setText(f"{discharge_temperature : .6f}")
@@ -733,7 +781,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.process_aquisition_parameters()
 
-        if self.comboBox_connection_type.currentIndex() == 0:
+        if self.comboBox_connection_type.currentIndex() == ConnectionTypeComboBox.SUCTION:
             flow_label = "in_flow"
             connection_type = "suction"
         else:
@@ -777,12 +825,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
             surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-            freq, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
+            frequencies, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
             surface_velocity = flow_rate / surface_area
-
-            # remove the zero frequency component
-            _freq = freq[1:]
-            _surface_velocity = surface_velocity[1:]
 
             table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
@@ -790,25 +834,25 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                 output_data_type = self.comboBox_output_data_type.currentText()
                 if output_data_type == "Surface velocity [m/s]":
                     unit = "m/s"
-                    output_data = _surface_velocity
+                    output_data = surface_velocity
                 else:
                     unit = "m³/s"
-                    output_data = flow_rate[1:]
+                    output_data = flow_rate
 
-                self.export_reciprocating_compressor_data_excitation(surface_id, _freq, output_data, unit)
+                self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
 
             data = {
                     "connection_type" : connection_type,
                     "table_names" : [table_name],
                     "parameters" : self.parameters,
-                    "values" : [_surface_velocity],
+                    "values" : [surface_velocity],
                     "nodal_attribution" : False,
                     "averaged" : False
                     }
 
             self.remove_conflicting_excitations(surface_id)
 
-            if self.save_table_values(table_name, _freq, _surface_velocity):
+            if self.save_table_values(table_name, frequencies, surface_velocity):
                 return
 
             self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
@@ -818,7 +862,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.load_compressor_excitation_info()
         app().file.write_model_properties_in_file()
         app().file.write_imported_table_data_in_file()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
 
     def process_table_file_removal(self, table_names: list):
@@ -830,13 +874,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def remove_conflicting_excitations(self, surface_id: int):
 
         labels = [
-                  "acoustic_pressure", 
-                  "surface_velocity", 
-                  "incident_plane_wave",
-                  "mass_flow_rate", 
-                  "reciprocating_compressor_excitation", 
-                  "reciprocating_pump_excitation"
-                  ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "mass_source",
+            ]
 
         for label in labels:
             table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
@@ -848,14 +893,21 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
+        surface_ids = [int(selected_item.text(0)) for selected_item in self.treeWidget_compressor_excitation.selectedItems()]
 
-        if self.lineEdit_selection_id.text() != "":   
-
-            surface_id = int(self.lineEdit_selection_id.text())
+        if not surface_ids:
+            return
+        
+        for surface_id in surface_ids:
             self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
-            self.actions_to_finalize()
+        
+        self.clear_line_edit_selection_id()
+        self.lineEdit_connection_type.clear()
+        self.pushButton_remove.setDisabled(True)
+
+        app().main_window.selection.clear_selection()
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -907,25 +959,64 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.update_tabs_visibility()
 
     def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            self.lineEdit_connection_type.setText(item.text(1))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
-            self.pushButton_remove.setDisabled(False)
+        self.tree_item_clicked = True
+
+        surface_ids, connection_type = self.get_selected_surfaces_and_connection_type_text()
+
+        if not surface_ids:
+            return
+        
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
+        self.set_selection_text(surface_ids)
+        self.lineEdit_connection_type.setText(connection_type)
+        self.pushButton_remove.setDisabled(False)
+
+        self.tree_item_clicked = False
+
+    def get_selected_surfaces_and_connection_type_text(self):
+        selected_items = self.treeWidget_compressor_excitation.selectedItems()
+
+        if not selected_items:
+            return list(), str() 
+
+        connection_type = set()
+        surface_ids = list()
+
+        for item in selected_items:
+            surface_id = item.text(0)
+            connection_type.add(item.text(1))
+            surface_ids.append(int(surface_id))
+
+        connection_text = connection_type.pop() if len(connection_type) == 1 else "--"
+        
+        return surface_ids, connection_text
+
+    def set_selection_text(self, selected_surfaces: list | set):
+        selected_surfaces = list(selected_surfaces)
+        selected_surfaces.sort()
+
+        selected_surfaces = map(str, selected_surfaces)
+        selection_text = ", ".join(selected_surfaces)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+    
+    def clear_line_edit_selection_id(self):
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_selection_id.setToolTip("")
 
     def update_tabs_visibility(self):
-        self.lineEdit_selection_id.setText("")
-        self.lineEdit_connection_type.setText("")
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_connection_type.clear()
         self.pushButton_remove.setDisabled(True)
 
         for (property, *_) in self.properties.surface_properties.keys():
             if property == "reciprocating_compressor_excitation":
-                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(RCTabTypes.LIST, True)
                 return
 
-        self.tabWidget_main.setTabVisible(2, False)
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(RCTabTypes.LIST, False)
+        self.tabWidget_main.setCurrentIndex(RCTabTypes.SETUP)
 
     def spinBox_event_number_of_points(self):
         if self.aquisition_parameters_processed:
@@ -1144,10 +1235,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.attribute_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
-        if event.key() == Qt.Key_Escape:
+        elif event.key() == Qt.Key_Escape:
             self.close()
+        elif event.key() == Qt.Key_Control:
+            self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.MultiSelection)
+        elif event.key() == Qt.Key_Shift:
+            self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.ContiguousSelection)
+    
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_Control:
+            self.treeWidget_compressor_excitation.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

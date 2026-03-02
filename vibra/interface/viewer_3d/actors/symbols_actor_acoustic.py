@@ -13,6 +13,8 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         self.configure_appearance()
         self.build()
         self.set_zbuffer_offsets(1, -6600)
+        # as the symbols do not change size when zooming, this is needed for reset_camera to work properly
+        self.UseBoundsOff()
 
     def configure_appearance(self):
         self.GetProperty().SetAmbient(0.5)
@@ -23,7 +25,6 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "surface_velocity": self._build_surface_velocity,
             "specific_impedance": self._build_specific_impedance,
             "transfer_impedance": self._build_transfer_impedance,
-            "mass_flow_rate": self._build_mass_flow_rate,
             "degrees_of_freedom_decoupling": self._build_dof_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,
