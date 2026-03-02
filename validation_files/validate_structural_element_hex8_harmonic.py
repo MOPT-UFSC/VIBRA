@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from time import time
+from pathlib import Path
 
 # @pytest.mark.slow
 # @pytest.mark.skip
@@ -175,9 +176,9 @@ def load_external_mesh_and_solve():
 
     structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
 
-    nodal_stresses, element_stresses = structural_post.get_structural_stresses(surface_ids=2)
+    avg_nodal_stresses, _ = structural_post.get_structural_stresses(surface_ids=2)
 
-    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(nodal_stresses)
+    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
     # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
 
    # Nodal results comparisons
@@ -193,9 +194,17 @@ def load_external_mesh_and_solve():
     compare_displacement_results(6269, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
 
     # stresses plots
-    compare_stresses_results(6269, "sigma_x", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type )
-    compare_stresses_results(6269, "sigma_y", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type )
-    compare_stresses_results(6269, "sigma_z", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type )
+    compare_averaged_nodal_stresses_results(6269, "sigma_x", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
+    compare_averaged_nodal_stresses_results(6269, "sigma_y", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
+    compare_averaged_nodal_stresses_results(6269, "sigma_z", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
+    
+    node_id = 6269
+    _, nodal_stresses = structural_post.get_structural_stresses(node_ids = node_id-1)
+
+    for (_elem_id, _node_id) in nodal_stresses.keys():
+        compare_nodal_stresses_results(_elem_id+1, _node_id+1, "sigma_x", frequencies, nodal_stresses, esf, plot_type=plot_type)
+
+    compare_averaging(6269, "sigma_x", frequencies, nodal_stresses, nodal_averaged_stresses, esf, plot_type=plot_type)
 
     plt.show()
 
@@ -238,7 +247,7 @@ def compare_displacement_results(
     ax.legend()
 
 
-def compare_stresses_results(
+def compare_averaged_nodal_stresses_results(
     node_id: int, 
     stress_label: str, 
     frequencies: np.ndarray, 
@@ -275,6 +284,105 @@ def compare_stresses_results(
     ax.legend()
 
 
+def compare_nodal_stresses_results(
+    element_id: int,
+    node_id: int,
+    stress_label: str, 
+    frequencies: np.ndarray, 
+    nodal_stresses: dict,
+    esf: bool,
+    plot_type: str = "absolute",
+    ):
+
+    stresses_labels = ["sigma_x", "sigma_y", "sigma_z", "tau_xy", "tau_yz", "tau_xz"]
+    file_name = f"stress_{stress_label}_element_{element_id}_node_{node_id}_Ansys.dat"
+
+    row = stresses_labels.index(stress_label)
+    response_vibra = nodal_stresses.get((element_id-1, node_id-1))[row, :]
+
+    freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf, file_name=file_name)
+
+    title = f"Harmonic response at element {element_id} and node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
+    x_label = "Frequency [Hz]"
+    y_label = f'Structural response {stress_label.capitalize()} [m] - {plot_type.capitalize()}'
+
+    fig, ax = plt.subplots()
+    if plot_type == "real":
+        plot_data = np.real
+        plot = ax.plot
+
+    elif plot_type == "imaginary":
+        plot_data = np.imag
+        plot = ax.plot
+
+    else:
+        plot_data = np.abs
+        plot = ax.semilogy
+
+    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
+
+    ax.set(xlabel=x_label, ylabel=y_label, title=title)
+    ax.grid()
+    ax.legend()
+
+def compare_averaging(    
+    node_id: int,
+    stress_label: str, 
+    frequencies: np.ndarray, 
+    nodal_stresses: dict,
+    nodal_averaged_stresses: dict,
+    esf: bool,
+    plot_type: str = "absolute",
+    ):
+
+    stresses_labels = ["sigma_x", "sigma_y", "sigma_z", "tau_xy", "tau_yz", "tau_xz"]
+    # file_name = f"stress_{stress_label}_element_{element_id}_node_{node_id}_Ansys.dat"
+
+    row = stresses_labels.index(stress_label)
+    # response_vibra = nodal_stresses.get((element_id-1, node_id-1))[row, :]
+
+    response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
+
+    den = 0
+    out_avg_stresses = 0.
+    for key, stresses in nodal_stresses.items():
+        if key[1] != node_id-1:
+            continue
+
+        den += 1
+        out_avg_stresses += stresses[row, :]
+
+    if den:
+        out_avg_stresses /= den
+
+    freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf, file_name=None)
+
+    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
+    x_label = "Frequency [Hz]"
+    y_label = f'Structural response {stress_label.capitalize()} [m] - {plot_type.capitalize()}'
+
+    fig, ax = plt.subplots()
+    if plot_type == "real":
+        plot_data = np.real
+        plot = ax.plot
+
+    elif plot_type == "imaginary":
+        plot_data = np.imag
+        plot = ax.plot
+
+    else:
+        plot_data = np.abs
+        plot = ax.semilogy
+
+    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+    plot(frequencies, plot_data(out_avg_stresses), 'b', label='Vibra (ext.)')
+    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
+
+    ax.set(xlabel=x_label, ylabel=y_label, title=title)
+    ax.grid()
+    ax.legend()
+
 def get_apdl_reference_displacement_results(
         apdl_node_id: int, 
         dof_label: str,
@@ -300,6 +408,7 @@ def get_apdl_reference_stresses_results(
         apdl_node_id: int, 
         stress_label: str,
         extra_shape_functions: bool,
+        file_name: str | None = None,
         ) -> np.ndarray | None:
     
     folder = "with_esf" if extra_shape_functions else "without_esf"
@@ -309,7 +418,16 @@ def get_apdl_reference_stresses_results(
         return None, None
     
     # load mechanical apdl results
-    ansys_data = np.loadtxt(results_path / f"stress_{stress_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
+    if not isinstance(file_name, str):
+        file_path = results_path / f"stress_{stress_label}_node_{apdl_node_id}_Ansys.dat"
+    else:
+        file_path = results_path / file_name
+
+    if not file_path.exists():
+        print(f"Invalid path: {file_path}")
+        return None, None
+
+    ansys_data = np.loadtxt(file_path, skiprows=2)
 
     freq_apdl = ansys_data[:, 0]
     response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
