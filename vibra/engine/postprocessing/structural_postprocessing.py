@@ -142,7 +142,8 @@ class StructuralPostprocessing:
 
 
     def get_structural_stresses(
-            self, 
+            self,
+            node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
             element_averaged_stresses: bool = True,
@@ -178,24 +179,28 @@ class StructuralPostprocessing:
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
-        node_ids = list()
+        if isinstance(node_ids, int):
+            node_ids = [node_ids]
 
-        if isinstance(surface_ids, int):
-            surface_ids = [surface_ids]
+        if not isinstance(node_ids, np.ndarray | list):
 
-        if isinstance(surface_ids, list):
-            for surface_id in surface_ids:
-                surface_nodes = mesh.get_nodes_from_surface(surface_id)
-                node_ids.extend(surface_nodes)
+            node_ids = list()
+            if isinstance(surface_ids, int):
+                surface_ids = [surface_ids]
 
-        if isinstance(volume_ids, int):
-            volume_ids = [volume_ids]
+            if isinstance(surface_ids, list):
+                for surface_id in surface_ids:
+                    surface_nodes = mesh.get_nodes_from_surface(surface_id)
+                    node_ids.extend(surface_nodes)
 
-        if isinstance(volume_ids, list):
-            for volume_id in volume_ids:
-                volume_nodes = mesh.get_nodes_from_volume(volume_id)
-                node_ids.extend(volume_nodes)
+            if isinstance(volume_ids, int):
+                volume_ids = [volume_ids]
 
+            if isinstance(volume_ids, list):
+                for volume_id in volume_ids:
+                    volume_nodes = mesh.get_nodes_from_volume(volume_id)
+                    node_ids.extend(volume_nodes)
+    
         if not node_ids:
             print("Invalid node ids")
             return dict(), dict()
@@ -212,17 +217,16 @@ class StructuralPostprocessing:
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.harmonic_solver.solution[dofs_indexes.flatten(), :]
 
-        nodal_stresses_data = defaultdict(float)
-        element_stresses_data = defaultdict(float)
+        nodal_stresses_data = dict()
+        avg_nodal_stresses_data = defaultdict(float)
 
         for node_id, solid_element_ids in map_elements_to_nodes.items():
 
             n_el = len(solid_element_ids)
 
-            if node_id == 6269 - 1:
+            if len(node_ids) == 1:
                 print(node_id, solid_element_ids)
 
-            # sigma_ij = 0.
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
                 indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
@@ -237,11 +241,10 @@ class StructuralPostprocessing:
                     solution = None,
                     )
 
-                # nodal_stresses_data[(element_id, node_id)] = sigma_ij
-                nodal_stresses_data[node_id] += sigma_ij / n_el
-                element_stresses_data[element_id] += sigma_ij / element_3d.NODES_PER_ELEMENT               
+                nodal_stresses_data[(element_id, node_id)] = sigma_ij
+                avg_nodal_stresses_data[node_id] += sigma_ij / n_el         
 
-        return nodal_stresses_data, element_stresses_data
+        return avg_nodal_stresses_data, nodal_stresses_data
 
 
     def nodal_stresses_post_process(self, input_stresses_data: dict):
@@ -250,8 +253,9 @@ class StructuralPostprocessing:
         sigma_y = dict()
         sigma_z = dict()
         tau_xy = dict()
-        tau_yz = dict()
         tau_xz = dict()
+        tau_yz = dict()
+
         output_stresses_data = dict()
 
         keys = np.sort(list(input_stresses_data.keys()))
@@ -266,8 +270,8 @@ class StructuralPostprocessing:
             sigma_y[key] = stresses[1, :]
             sigma_z[key] = stresses[2, :]
             tau_xy[key] = stresses[3, :]
-            tau_yz[key] = stresses[4, :]
-            tau_xz[key] = stresses[5, :]
+            tau_xz[key] = stresses[4, :]
+            tau_yz[key] = stresses[5, :]
 
         output_stresses_data["sigma_x"] = sigma_x
         output_stresses_data["sigma_y"] = sigma_y
