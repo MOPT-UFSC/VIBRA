@@ -169,7 +169,29 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             dphi[:, 1, 9] = -(2 * xi_2)
             dphi[:, 2, 10] = -(2 * xi_3)
 
+        if Nz == 1:
+            return phi[0, :], dphi[0, :, :]
+
         return phi, dphi
+
+
+    @property
+    def isoparametric_coordinates(self):
+        """
+        """
+        ## calculation points (Atalla and Sgard, 2015, pg. 170)
+        isop_coordinates = np.array([ 
+            [-1.0, -1.0, -1.0],      # ->      (-1.0, -1.0, -1.0)   Node 1
+            [ 1.0, -1.0, -1.0],      # ->      ( 1.0, -1.0, -1.0)   Node 2
+            [ 1.0,  1.0, -1.0],      # ->      ( 1.0,  1.0, -1.0)   Node 3
+            [-1.0,  1.0, -1.0],      # ->      (-1.0,  1.0, -1.0)   Node 4
+            [-1.0, -1.0,  1.0],      # ->      (-1.0, -1.0,  1.0)   Node 5
+            [ 1.0, -1.0,  1.0],      # ->      ( 1.0, -1.0,  1.0)   Node 6
+            [ 1.0,  1.0,  1.0],      # ->      ( 1.0,  1.0,  1.0)   Node 7
+            [-1.0,  1.0,  1.0],      # ->      (-1.0,  1.0,  1.0)   Node 8
+            ], dtype=float)
+
+        return isop_coordinates
 
 
     def elementary_matrices(self, el_index: int, material: Material):
@@ -230,6 +252,89 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Ke = Kdd - Kda @ np.linalg.inv(Kaa) @ Kad
 
         return Ke, Me
+
+
+    def process_nodal_stresses(
+        self,
+        element_id : int,
+        node_id : int,
+        nodal_solution : np.ndarray | None = None,
+        solution: np.ndarray | None = None,
+        **kwargs
+        ):
+
+        node_ids = kwargs.get("node_ids")
+
+        if node_ids is None:
+            node_ids = self.connectivity[element_id, 1:]
+
+        if isinstance(nodal_solution, np.ndarray):
+            Ue = nodal_solution
+        elif isinstance(solution, np.ndarray):
+            Ue = solution[node_ids, :]    
+        else:
+            return 0.
+
+        if self.connectivity is None:
+            self.reorder_connect()
+
+        # get the volume ID from element
+        vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+
+        material = self.model.properties._get_property("material", volume=vol_id)
+        if not isinstance(material, Material):
+            return 0.
+
+        const_mat, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
+
+        index = np.where(node_ids==node_id)[0]
+        if index.size != 1:
+            print(f"The nodal stress for element {element_id} and {node_id} cannot be evaluated.")
+            return 0.
+
+        # local coordinates
+        (ssx, ttx, rrx) = self.isoparametric_coordinates[index[0], :]
+
+        # derivative of the shape function at the selected point
+        _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
+
+        # nodal coordinates from element
+        coords = self.nodal_coordinates[node_ids, 1:4]
+
+        # Jacobian matrix
+        JAC = dphi[:, :self.NODES_PER_ELEMENT] @ coords
+
+        # inverse of Jacobian matrix
+        _, invJAC = self.get_detJAC_and_invJAC(JAC)
+
+        # derivative of shape functions
+        dphi_t = invJAC @ dphi[:, :self.NODES_PER_ELEMENT]
+
+        # compute the columns of the B matrix
+        B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
+        B[0, 0::3] = dphi_t[0, :]
+        B[1, 1::3] = dphi_t[1, :]
+        B[2, 2::3] = dphi_t[2, :]
+        B[3, 0::3] = dphi_t[1, :]
+        B[3, 1::3] = dphi_t[0, :]
+        B[4, 0::3] = dphi_t[2, :]
+        B[4, 2::3] = dphi_t[0, :]
+        B[5, 1::3] = dphi_t[2, :]
+        B[5, 2::3] = dphi_t[1, :]
+
+        # calculate the nodal stress tensor
+        nodal_stresses = const_mat @ (B @ Ue)
+
+        # ## validation print
+        # print()
+        # print(element_id)
+        # print(dphi_t.shape)
+        # print(const_mat.shape)
+        # print(B.shape)
+        # print(Ue.shape)
+        # print(nodal_stresses.shape)
+
+        return nodal_stresses
 
 
     def reorder_connect(self):

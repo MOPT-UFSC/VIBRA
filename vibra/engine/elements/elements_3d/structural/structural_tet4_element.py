@@ -181,6 +181,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
         return Ke, Me
 
+
     def process_nodal_stresses(
         self,
         element_id : int,
