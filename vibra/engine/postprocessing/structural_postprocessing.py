@@ -82,8 +82,6 @@ class StructuralPostprocessing:
             if r_max_i > r_max:
                 r_max = r_max_i
 
-        # print("get_max_min_values_of_displacements", r_min, r_max)
-
         if disp_type == "u_sum":
             return 0., r_max
 
@@ -224,9 +222,6 @@ class StructuralPostprocessing:
 
             n_el = len(solid_element_ids)
 
-            if len(node_ids) == 1:
-                print(node_id, solid_element_ids)
-
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
                 indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
@@ -234,15 +229,16 @@ class StructuralPostprocessing:
                 dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
                 dofs_indexes = dofs_indexes.flatten()
                 
-                sigma_ij = element_3d.process_nodal_stresses(
-                    element_id, 
-                    node_id,
-                    nodal_solution = solution[dofs_indexes, :],
-                    solution = None,
+                element_stresses = element_3d.process_stresses_at_integration_points(
+                    element_id,
+                    nodal_solution = solution[dofs_indexes, :]
                     )
 
-                nodal_stresses_data[(element_id, node_id)] = sigma_ij
-                avg_nodal_stresses_data[node_id] += sigma_ij / n_el         
+                nodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
+                for i, e_node in enumerate(connect):
+                    nodal_stresses_data[(element_id, e_node)] = nodal_stresses[i, :, :]
+
+                avg_nodal_stresses_data[node_id] += nodal_stresses_data[(element_id, node_id)] / n_el         
 
         return avg_nodal_stresses_data, nodal_stresses_data
 
