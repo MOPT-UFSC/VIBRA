@@ -4,6 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine.properties.acoustic_pressure import AcousticPressure, AcousticPressureTable
+from vibra.engine.properties.mass_source import MassSource, MassSourceTable
 from vibra.engine.properties.surface_velocity import SurfaceVelocity, SurfaceVelocityTable
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.ui_generated.model.setup.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
@@ -173,15 +174,14 @@ class MassSourceInputs(MassSourceInputs_UI):
         else:
             data = self.model.properties._get_property("mass_source", node=selection_id)
 
-        if isinstance(data, dict):
+        if isinstance(data, MassSourceTable):
+            self.tabWidget_main.setCurrentIndex(1)
+            self.lineEdit_table_path.setText(data.table_paths[0])
 
-            if "table_paths" in data.keys():
-                self.tabWidget_main.setCurrentIndex(1)
-                self.lineEdit_table_path.setText(data["table_paths"][0])
-            else:
-                self.tabWidget_main.setCurrentIndex(0)
-                self.lineEdit_real_value.setText(str(data["real_values"][0]))
-                self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
+        elif isinstance(data, MassSource):
+            self.tabWidget_main.setCurrentIndex(0)
+            self.lineEdit_real_value.setText(str(data.real_values[0]))
+            self.lineEdit_imag_value.setText(str(data.imag_values[0]))
 
     def attribution_type_callback(self):
 
@@ -493,7 +493,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return real_F + 1j * imag_F
 
     def check_constant_values(self):
-        
         selection_data = self.check_selection_data()
         if selection_data is None:
             return
@@ -503,28 +502,35 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         self.remove_conflicting_excitations(selection_ids, selection_type)
-        
+
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is not None:
-
             real_values = [np.real(mass_source)]
             imag_values = [np.imag(mass_source)]
-            
+            vol_id = None
+
             if selection_type in ["points", "nodes", "lines", "surfaces"]:
                 current_text = self.comboBox_inherit_fluid_from.currentText()
                 vol_id = int(current_text.split(" - ")[1])
-                data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        "volume_id" : vol_id
-                        }
 
-            else:
-                data = {
-                        "real_values": real_values,
-                        "imag_values": imag_values,
-                        }
+            data = MassSource(real_values, imag_values, vol_id)
+
+            # if selection_type in ["points", "nodes", "lines", "surfaces"]:
+            #     current_text = self.comboBox_inherit_fluid_from.currentText()
+            #     vol_id = int(current_text.split(" - ")[1])
+            #     data = {
+            #             "real_values": real_values,
+            #             "imag_values": imag_values,
+            #             "volume_id" : vol_id
+            #             }
+            #
+            # else:
+            #     data = MassSource(real_values, imag_values)
+            #     data = {
+            #             "real_values": real_values,
+            #             "imag_values": imag_values,
+            #             }
 
             for selection_id in selection_ids:
                 if selection_type == "points":
@@ -626,7 +632,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
     def check_table_values(self):
-
         selection_data = self.check_selection_data()
         if selection_data is None:
             return
@@ -666,19 +671,25 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if selection_type in ["points", "nodes", "lines", "surfaces"]:
                     current_text = self.comboBox_inherit_fluid_from.currentText()
                     vol_id = int(current_text.split(" - ")[1])
-                    data = {
-                            "table_names" : [table_name],
-                            "table_paths" : [table_path],
-                            "values" : [complex_values],
-                            "volume_id" : vol_id
-                            }
+ 
+                data = MassSourceTable([table_name], [table_path], [complex_values], vol_id)
 
-                else:
-                    data = {
-                            "table_names" : [table_name],
-                            "table_paths" : [table_path],
-                            "values" : [complex_values],
-                            }
+                # if selection_type in ["points", "nodes", "lines", "surfaces"]:
+                #     current_text = self.comboBox_inherit_fluid_from.currentText()
+                #     vol_id = int(current_text.split(" - ")[1])
+                #     # data = {
+                #     #         "table_names" : [table_name],
+                #     #         "table_paths" : [table_path],
+                #     #         "values" : [complex_values],
+                #     #         "volume_id" : vol_id
+                #     #         }
+                #
+                # else:
+                #     # data = {
+                #     #         "table_names" : [table_name],
+                #     #         "table_paths" : [table_path],
+                #     #         "values" : [complex_values],
+                #     #         }
 
                 if selection_type == "points":
                     self.properties._set_property("mass_source", data, point=selection_id)
@@ -932,11 +943,12 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if property != "mass_source":
                     continue
 
-                if "table_names" in data.keys():
+                str_value = ""
+                if isinstance(data, MassSourceTable):
                     str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
+                elif isinstance(data, MassSource):
+                    real_values = np.array(data.real_values)
+                    imag_values = np.array(data.imag_values)
                     complex_values = real_values + 1j * imag_values
                     str_value = str(complex_values)
 
