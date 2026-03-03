@@ -209,10 +209,12 @@ def load_external_mesh_and_solve():
     node_id = 6269
     _, nodal_stresses = structural_post.get_structural_stresses(node_ids = node_id-1)
 
-    for (_elem_id, _node_id) in nodal_stresses.keys():
-        compare_nodal_stresses_results(_elem_id+1, _node_id+1, "sigma_x", frequencies, nodal_stresses, esf, plot_type=plot_type)
+    stress_label = "sigma_z"
 
-    compare_averaging(6269, "sigma_x", frequencies, nodal_stresses, nodal_averaged_stresses, esf, plot_type=plot_type)
+    for (_elem_id, _node_id) in nodal_stresses.keys():
+        compare_nodal_stresses_results(_elem_id+1, _node_id+1, stress_label, frequencies, nodal_stresses, esf, plot_type=plot_type)
+
+    compare_averaging(node_id, stress_label, frequencies, nodal_stresses, nodal_averaged_stresses, esf, plot_type=plot_type)
 
     plt.show()
 
@@ -333,7 +335,7 @@ def compare_nodal_stresses_results(
     ax.grid()
     ax.legend()
 
-def compare_averaging(    
+def compare_averaging(
     node_id: int,
     stress_label: str, 
     frequencies: np.ndarray, 
@@ -359,6 +361,11 @@ def compare_averaging(
 
     response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
     freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf, file_name=None)
+
+    max_abs_diff = np.max(np.abs(response_vibra - out_avg_stresses))
+    
+    print()
+    print(f"Maximum difference: {max_abs_diff}")
 
     title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
