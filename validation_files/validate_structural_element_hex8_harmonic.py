@@ -120,7 +120,7 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = False
+    esf = True
 
     hex8_advanced_options = {
         "hex8" : {"extra_shape_functions" : esf}
@@ -205,11 +205,11 @@ def load_external_mesh_and_solve():
     compare_averaged_nodal_stresses_results(6269, "sigma_x", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
     compare_averaged_nodal_stresses_results(6269, "sigma_y", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
     compare_averaged_nodal_stresses_results(6269, "sigma_z", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
-    
+
     node_id = 6269
     _, nodal_stresses = structural_post.get_structural_stresses(node_ids = node_id-1)
 
-    stress_label = "sigma_z"
+    stress_label = "sigma_x"
 
     for (_elem_id, _node_id) in nodal_stresses.keys():
         compare_nodal_stresses_results(_elem_id+1, _node_id+1, stress_label, frequencies, nodal_stresses, esf, plot_type=plot_type)
