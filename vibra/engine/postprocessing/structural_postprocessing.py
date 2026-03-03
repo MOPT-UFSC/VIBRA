@@ -236,7 +236,7 @@ class StructuralPostprocessing:
 
                 nodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
                 for i, e_node in enumerate(connect):
-                    nodal_stresses_data[(element_id, e_node)] = nodal_stresses[i, :, :]
+                    nodal_stresses_data[(element_id, e_node)] = nodal_stresses[:, i, :]
 
                 avg_nodal_stresses_data[node_id] += nodal_stresses_data[(element_id, node_id)] / n_el         
 

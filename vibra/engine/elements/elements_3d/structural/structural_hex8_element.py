@@ -362,11 +362,11 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B, Ue = self.get_data_to_compute_stresses(element_id, Ue, const_mat)
 
         # initialize the element stresses matrix
-        element_stresses = np.zeros((self.nint, 6, Ue.shape[1]), dtype=complex)
+        element_stresses = np.zeros((6, self.nint, Ue.shape[1]), dtype=complex)
 
         # calculate the nodal stress tensor
         for i in range(self.nint):
-            element_stresses[i, :, :] = const_mat @ (B[i, :, :] @ Ue)
+            element_stresses[:, i, :] = const_mat @ (B[i, :, :] @ Ue)
 
         if element_averaged:
             return np.average(element_stresses, axis=0)
@@ -386,11 +386,14 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         """
 
-        Nf = element_stresses.shape[2]
-        nodal_stresses = np.zeros((self.NODES_PER_ELEMENT, 6, Nf), dtype=complex)
+        # Nf = element_stresses.shape[2]
+        # nodal_stresses = np.zeros((self.NODES_PER_ELEMENT, 6, Nf), dtype=complex)
 
-        for i in range(6):
-            nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
+        # for i in range(6):
+        #     nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
+
+        nodal_stresses = self.phi_inv @ element_stresses
+        # nodal_stresses = np.transpose(nodal_stresses, axes=(1, 0, 2))
 
         return nodal_stresses
 
