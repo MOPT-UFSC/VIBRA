@@ -122,12 +122,12 @@ def load_external_mesh_and_solve():
     ## advanced options for structural hex8 element
     esf = False
 
-    hex8_advanced_options = {
+    element_options = {
         "hex8" : {"extra_shape_functions" : esf}
         }
 
     # assign the hex8 element advanced options as a global property
-    model.properties._set_property("advanced_element_options", hex8_advanced_options)
+    model.properties._set_property("advanced_element_options", element_options)
 
     ## boundary condition
 
@@ -183,8 +183,11 @@ def load_external_mesh_and_solve():
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
     structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
-
-    avg_nodal_stresses, _ = structural_post.get_structural_stresses(surface_ids=2)
+    
+    t0 = time()
+    avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
+    dt = time() - t0
+    print(f"Time to compute nodal stresses: {dt} s")
 
     nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
     # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)

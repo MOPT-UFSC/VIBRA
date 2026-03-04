@@ -12,7 +12,7 @@ from vibra.engine.solvers import ModalSolver, HarmonicSolver
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
 from collections import defaultdict
-
+from time import time
 
 class StructuralPostprocessing:
     def __init__(self, project: 'Project'=None, structural_modal_solver: ModalSolver=None, structural_harmonic_solver: HarmonicSolver=None):
@@ -140,6 +140,119 @@ class StructuralPostprocessing:
 
 
     def get_structural_stresses(
+            self,
+            node_ids : int | list[int] | None = None,
+            surface_ids: int | list[int] | None = None,
+            volume_ids: list[int] | None = None,
+            element_averaged_stresses: bool = True,
+            nodal_averaged_stresses: bool = False,
+            ):
+        """
+        This method computes the nodal average particle velocity in the selected surface.
+
+        Parameters
+        ----------
+        surface_id: int
+            The selected surface ID.
+
+        rho: float
+            The fluid density related to the selected surface.
+
+        Returns
+        -------
+
+        particle_velocities: dict
+            A dictionary with the normal particle velocity and its components in
+            the x, y, and z directions, computed in the selected surface.
+        """
+
+        t0 = time()
+
+        mesh = self.harmonic_solver.assembler.model.mesh
+
+        element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
+
+        if element_3d is None:
+            self.harmonic_solver.assembler.define_structural_elements()
+            element_3d = self.harmonic_solver.assembler.element_3d
+
+        if element_3d.connectivity is None:
+            element_3d.reorder_connect()
+
+        if isinstance(node_ids, int):
+            node_ids = [node_ids]
+
+        if not isinstance(node_ids, np.ndarray | list):
+
+            node_ids = list()
+            if isinstance(surface_ids, int):
+                surface_ids = [surface_ids]
+
+            if isinstance(surface_ids, list):
+                for surface_id in surface_ids:
+                    surface_nodes = mesh.get_nodes_from_surface(surface_id)
+                    node_ids.extend(surface_nodes)
+
+            if isinstance(volume_ids, int):
+                volume_ids = [volume_ids]
+
+            if isinstance(volume_ids, list):
+                for volume_id in volume_ids:
+                    volume_nodes = mesh.get_nodes_from_volume(volume_id)
+                    node_ids.extend(volume_nodes)
+    
+        if not node_ids:
+            print("Invalid node ids")
+            return dict(), dict()
+
+        node_ids = np.unique(node_ids)
+        element_ids, element_nodes = mesh.get_solid_elements_from_nodes(node_ids, return_enodes=True)
+        
+        dt = time() - t0
+        print(f"Time 1: {dt} s")
+
+        t0 = time()
+
+        # local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
+        # dofs_indexes = element_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+
+        # # Load all frequency solutions to optimize multiple load
+        # node_to_index = dict(zip(element_nodes, np.arange(element_nodes.size, dtype=int)))
+        # solution = self.harmonic_solver.solution[dofs_indexes.flatten(), :]
+
+        nodal_stresses_data = dict()
+
+        avg_den = defaultdict(int)
+        avg_nodal_stresses_data = defaultdict(float)
+
+        for element_id in element_ids:
+            connect = element_3d.connectivity[element_id, 1:]
+            # indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
+            # dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+            # dofs_indexes = dofs_indexes.flatten()
+
+            element_stresses = element_3d.process_stresses_at_integration_points(
+                element_id,
+                nodal_solution = None, #solution[dofs_indexes, :]
+                solution = self.harmonic_solver.solution,
+                )
+
+            enodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
+            for i, e_node in enumerate(connect):
+                avg_den[e_node] += 1
+                avg_nodal_stresses_data[e_node] += enodal_stresses[:, i, :]
+                nodal_stresses_data[(element_id, e_node)] = enodal_stresses[:, i, :]
+
+        for _node_id, den in avg_den.items():
+            avg_nodal_stresses_data[_node_id] /= den
+
+        dt = time() - t0
+        print(f"Time 2: {dt} s")
+
+        return avg_nodal_stresses_data, nodal_stresses_data
+
+
+    def get_structural_stresses_ref(
             self,
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,

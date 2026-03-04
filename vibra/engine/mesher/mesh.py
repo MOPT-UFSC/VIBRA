@@ -1804,6 +1804,27 @@ class Mesh:
 
         return solid_elements_connected_to_nodes
 
+
+    def get_solid_elements_from_nodes(
+            self, 
+            node_ids : list[int] | np.ndarray,
+            return_enodes: bool = True,
+            ):
+
+        mask = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.solids_connectivity[mask, 0]
+
+        if return_enodes:
+            # unique, counts = np.unique(self.solids_connectivity[mask, 4:], return_counts=True)
+            # counts_map = dict(zip(unique, counts))
+
+            unique = np.unique(self.solids_connectivity[mask, 4:])
+            element_nodes = np.sort(unique)
+
+            return element_ids, element_nodes#, counts_map
+
+        return element_ids
+
     
     def get_global_dofs(self, node_ids: list[int] | np.ndarray, dofs_per_node: int):
         pass

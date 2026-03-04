@@ -12,6 +12,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
     NODES_PER_ELEMENT = 8
     DOF_PER_NODE = 3
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
 
     def __init__(self, model: "Model"):
 
@@ -340,8 +341,11 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         if isinstance(nodal_solution, np.ndarray):
             Ue = nodal_solution
+
         elif isinstance(solution, np.ndarray):
-            Ue = solution[node_ids, :]    
+            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indexes.flatten(), :]    
+
         else:
             return 0.
 
