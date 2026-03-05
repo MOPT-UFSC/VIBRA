@@ -31,6 +31,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
+        self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
 
         self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
@@ -91,6 +92,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_material": "material",
             "item_child_fluid": "fluid",
             "item_child_mesh_setup": "mesh_setup",
+            "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_surface_thickness": "surface_thickness",
             "item_child_prescribed_dof": "prescribed_dof",
@@ -152,6 +154,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_acoustic_model_setup.setHidden(True)
 
         self.item_child_mesh_setup.setDisabled(True)
+        self.item_child_element_options.setDisabled(True)
         self.item_child_material.setDisabled(True)
         self.item_child_fluid.setDisabled(True)
 
@@ -448,6 +451,9 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_mesh_setup_callback(self):
         app().main_window.input_ui.mesh_setup()
 
+    def item_child_element_options_callback(self):
+        app().main_window.input_ui.advanced_element_options()
+
     def item_child_surface_thickness_callback(self):
         app().main_window.input_ui.set_surface_thickness()
 
@@ -520,6 +526,7 @@ class ModelSetupItems(CommonMenuItems):
     def modify_general_settings_items_access(self, key: bool):
         imported_geometry = app().new_project.model.mesh.geometry_imported
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
+        self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_material.setDisabled(key)
         self.item_child_fluid.setDisabled(key)
 

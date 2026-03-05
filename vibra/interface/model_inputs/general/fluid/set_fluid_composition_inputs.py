@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
-from vibra.interface.ui_generated.model.setup.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
+from vibra.interface.ui_generated.model.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
 from vibra.interface.model_inputs.general.fluid.refprop_interface import RefpropInterface
 from vibra.interface.model_inputs.general.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
 from vibra.interface.general.print_message_input import PrintMessageInput

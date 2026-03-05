@@ -237,8 +237,8 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
         current_analysis_id = self.get_current_analysis_id()
-        valid_setup = app().new_project.is_analysis_id_valid(current_analysis_id)
-        self.set_pushbutton_run_analysis_enabled(valid_setup)
+        setup_is_valid = app().new_project.is_analysis_id_valid(current_analysis_id)
+        self.set_pushbutton_run_analysis_enabled(setup_is_valid)
 
     def run_analysis(self, is_resume: bool = False):
 
@@ -333,12 +333,12 @@ class AnalysisToolbar(QToolBar):
             case AnalysisID.ACOUSTIC_MODAL:
                 self.modal_acoustic()
 
-        setup_complete = app().new_project.is_analysis_setup_complete()
+        setup_is_valid = app().new_project.is_analysis_setup_complete()
         broken_mesh = collapsed_elements or disconnected_nodes
 
         # disables the run analysis button whenever the analysis setup
         # is incomplete, or there are any mesh-related problems
-        run_analysis_enabled = setup_complete and not broken_mesh
+        run_analysis_enabled = setup_is_valid and not broken_mesh
         self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
 
     # TODO: these functions are almost equal.

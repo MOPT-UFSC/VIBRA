@@ -6,11 +6,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.setup.structural.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
 
 import numpy as np
 from os.path import basename
@@ -283,26 +283,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         if  self.pressure_table_path is None:
             self.lineEdit_reset(self.lineEdit_table_path)
 
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup = app().new_project.model.new_analysis_setup
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            new_analysis_setup = analysis_setup.replace(
-                f_min=f_min,
-                f_max=f_max,
-                f_step=f_step,
-            )
-        else:
-            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
-
-        app().new_project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            new_analysis_setup,
-        )
-
     def save_table_files(self, selected_id: int, values: np.ndarray):
 
         if self.frequencies[0] == 0:
@@ -333,8 +313,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         imag_values = np.imag(values)
         data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
 
+        update_analysis_setup_in_file(self.frequencies)
         self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
 
         return table_name, data
 
@@ -568,13 +548,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         app().main_window.update_info_text()
         app().new_project.update_model_properties_file()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 

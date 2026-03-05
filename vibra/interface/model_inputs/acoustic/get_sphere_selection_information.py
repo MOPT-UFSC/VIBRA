@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
+from vibra.interface.ui_generated.model.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 

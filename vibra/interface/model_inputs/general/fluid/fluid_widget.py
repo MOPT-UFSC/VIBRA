@@ -13,7 +13,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.errors import InvalidFluidError
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
-from vibra.interface.ui_generated.model.setup.fluid.fluid_widget_ui import FluidWidget_UI
+from vibra.interface.ui_generated.model.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
 error_title = "Error"

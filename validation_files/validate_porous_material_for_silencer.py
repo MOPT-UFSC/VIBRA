@@ -145,7 +145,7 @@ def load_external_mesh_and_solve():
 
     # Define and process the assemble
     assembler = AcousticAssembler(model)
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
 
     # t0 = time()
     # # Run modal analysis

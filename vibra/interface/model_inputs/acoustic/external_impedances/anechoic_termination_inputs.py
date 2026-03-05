@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
+from vibra.interface.ui_generated.model.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType

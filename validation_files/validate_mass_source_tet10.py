@@ -202,7 +202,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.process_assemble(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)

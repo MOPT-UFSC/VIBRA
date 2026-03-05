@@ -5,11 +5,12 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
-from vibra.interface.ui_generated.model.setup.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
+from vibra.interface.ui_generated.model.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 import numpy as np
 
@@ -51,9 +52,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
         for i, w in enumerate([120]):
             self.treeWidget_absorption_surface.setColumnWidth(i, w)
             self.treeWidget_absorption_surface.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -256,7 +254,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                         message = f"Insert a non-zero positive value to the {label}."
 
             except Exception as _err:
-                message = f"You have typed and invalid value at the {label} input field.\n\n"
+                message = f"You have typed an invalid value at the {label} input field.\n\n"
                 message += str(_err)
 
         else:
@@ -299,9 +297,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         imag_values = [None]
 
         data = {
-                "real_values" : real_values,
-                "imag_values" : imag_values,
-                }
+            "real_values" : real_values,
+            "imag_values" : imag_values,
+            }
 
         for surface_id in surface_ids:
             self.properties._set_property("absorption_surface", data, surface=surface_id)
@@ -311,30 +309,34 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'absorption surface' table"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the absorption surface")
                 
                 if not imported_data:
-                    return
+                    return None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 2:
+            if imported_values.shape[1] < 2:
                 message = "The imported table has insufficient number of columns. The absorption coefficient"
                 message += " data must have two columns in the form: frequencies and real values."
                 PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
+
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -344,6 +346,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
+        # define the frequencies vector
         _frequencies = imported_values[:, 0]
 
         if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
@@ -356,37 +359,21 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        update_analysis_setup_in_file(_frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+
+        # imaginary values vector
         # imag_values = imported_values[:, 2]
 
+        # TODO: check the spectral content of the absorption surface
         data = np.array([_frequencies, real_values], dtype=float).T
         # data = np.array([_frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup = app().new_project.model.new_analysis_setup
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            new_analysis_setup = analysis_setup.replace(
-                f_min=f_min,
-                f_max=f_max,
-                f_step=f_step,
-            )
-        else:
-            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
-
-        app().new_project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            new_analysis_setup,
-        )
 
     def load_specific_impedance_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -411,8 +398,10 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         if self.lineEdit_table_path.text() != "":
 
             if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
+                self.imported_values = self.load_table( 
+                    self.lineEdit_table_path, 
+                    direct_load = True,
+                    )
                 
             for surface_id in surface_ids:
 
@@ -431,14 +420,17 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 if self.imported_values is None:
                     return
 
-                absorption_coefficient = list(self.imported_values[:, 1])
+                # complex values computed from tabular data
+                complex_values = get_spectral_data_from_array(self.imported_values)
+
+                # table path from imported tabular data
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "table_names": [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [absorption_coefficient]
-                        }
+                    "table_names": [table_name],
+                    "table_paths" : [table_path],
+                    "values" : [complex_values],
+                    }
 
                 self.properties._set_property("absorption_surface", data, surface=surface_id)
 
@@ -530,13 +522,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         app().main_window.update_info_text()
         app().new_project.update_model_properties_file()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 

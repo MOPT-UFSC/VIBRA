@@ -70,7 +70,7 @@ class Ui_Dialog(object):
         self.pushButton_leftButton.setMaximumSize(QSize(100, 30))
         self.pushButton_leftButton.setFont(font)
         self.pushButton_leftButton.setStyleSheet(u"")
-        self.pushButton_leftButton.setAutoDefault(True)
+        self.pushButton_leftButton.setAutoDefault(False)
         self.pushButton_leftButton.setFlat(False)
 
         self.gridLayout.addWidget(self.pushButton_leftButton, 0, 1, 1, 1)
@@ -130,7 +130,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.pushButton_rightButton.setDefault(False)
-        self.pushButton_leftButton.setDefault(True)
+        self.pushButton_leftButton.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Dialog)

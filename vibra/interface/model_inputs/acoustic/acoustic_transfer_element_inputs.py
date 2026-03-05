@@ -6,7 +6,7 @@ from PySide6.QtGui import QCloseEvent, QColor
 from vibra.engine import AnalysisID
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
+from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -123,7 +123,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
-        analysis_setup = app().new_project.model.analysis_setup
+        analysis_setup = app().new_project.model.new_analysis_setup
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return
 
@@ -245,7 +245,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                     message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
+                message = "Dear user, you have typed an invalid value at the \n"
                 message += f"{label} input field.\n\n"
                 message += str(_err)
 

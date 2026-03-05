@@ -112,8 +112,8 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 # Creates the QCheckButtons to control data to be plotted
                 self.ids_to_checkBox[id] = QCheckBox()
 
-                checkbox_conteiner = QWidget()
-                cointeiner_layout = QHBoxLayout(checkbox_conteiner)
+                checkbox_container = QWidget()
+                cointeiner_layout = QHBoxLayout(checkbox_container)
                 cointeiner_layout.addStretch()
                 cointeiner_layout.addWidget(self.ids_to_checkBox[id])
                 cointeiner_layout.addStretch()
@@ -125,13 +125,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 if "sheetname" in data.keys():
                     _item = QTreeWidgetItem([str(data["filename"]), str(data["sheetname"])])
                     self.treeWidget_import_sheet_files.addTopLevelItem(_item)
-                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, checkbox_conteiner)
+                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, checkbox_container)
 
                     _item.setTextAlignment(2, Qt.AlignCenter)
                 else:
                     _item = QTreeWidgetItem([str(data["filename"])])
                     self.treeWidget_import_text_files.addTopLevelItem(_item)
-                    self.treeWidget_import_text_files.setItemWidget(_item, 1, checkbox_conteiner)
+                    self.treeWidget_import_text_files.setItemWidget(_item, 1, checkbox_container)
 
                 for i in range(5):
                     _item.setTextAlignment(i, Qt.AlignCenter)

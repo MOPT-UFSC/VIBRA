@@ -5,12 +5,13 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.engine import HarmonicAnalysisSetup
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
-from vibra.interface.ui_generated.model.setup.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
+from vibra.interface.ui_generated.model.acoustic.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
 
 error_title = "Error"
 
@@ -51,8 +52,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
-
         self.radioButton_element_integration_constant.setChecked(True)
         self.radioButton_element_integration_table.setChecked(True)
 
@@ -63,7 +62,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         #
         self.pushButton_attribute.clicked.connect(self.attribute_callback)
         self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_change_frequency_setup.clicked.connect(self.change_frequency_setup)
         self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -86,9 +84,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         #
         self.radioButton_element_integration_constant.setChecked(True)
         self.radioButton_element_integration_table.setChecked(True)
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
+
         for i, w in enumerate([120]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
             self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -290,30 +286,34 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'surface velocity' table"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the surface velocity")
                                 
                 if not imported_data:
-                    return
+                    return None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([error_title, title, message])
                 return None
+            
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
 
-            return imported_file
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -323,6 +323,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
+        # define the frequencies vector
         _frequencies = imported_values[:, 0]
 
         if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
@@ -335,9 +336,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        update_analysis_setup_in_file(_frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+        
+        # imaginary values vector
         imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
@@ -346,28 +350,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         return False
 
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-        analysis_id = app().new_project.current_analysis_id
-        analysis_setup = app().new_project.model.analysis_setup
-
-        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
-            analysis_setup = HarmonicAnalysisSetup(0, 0, 0)
-
-        analysis_setup.f_min = frequencies[0]
-        analysis_setup.f_max = frequencies[-1]
-        analysis_setup.f_step = frequencies[1] - frequencies[0]
-
-        app().new_project.configure_analysis(
-            analysis_id,
-            analysis_setup,
-        )
-
     def load_surface_velocity_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
-        if isinstance(self.imported_values, np.ndarray):
-            self.pushButton_change_frequency_setup.setDisabled(False)
-        else:
-            self.pushButton_change_frequency_setup.setDisabled(True)
 
     def check_table_values(self):
 
@@ -389,9 +373,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         if self.lineEdit_table_path.text() != "":
 
             if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
-                
+                self.imported_values = self.load_table( 
+                    self.lineEdit_table_path, 
+                    direct_load = True 
+                    )
+
             for surface_id in surface_ids:
 
                 if isinstance(self.imported_values, np.ndarray):
@@ -409,19 +395,22 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 if self.imported_values is None:
                     return
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+                # complex values computed from tabular data
+                complex_values = get_spectral_data_from_array(self.imported_values)
 
+                # table path from imported tabular data
                 table_path = self.lineEdit_table_path.text()
+
                 key_avg = self.checkBox_averaged_constant_values.isChecked()
                 nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
 
                 data = {
-                        "table_names" : [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [complex_values],                   
-                        "averaged" : key_avg,
-                        "nodal_attribution" : nodal_attribution,
-                        }
+                    "table_names" : [table_name],
+                    "table_paths" : [table_path],
+                    "values" : [complex_values],                   
+                    "averaged" : key_avg,
+                    "nodal_attribution" : nodal_attribution,
+                    }
 
                 self.properties._set_property("surface_velocity", data, surface=surface_id)
 
@@ -513,13 +502,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         # app().new_project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
         for key, data in self.properties.surface_properties.items():

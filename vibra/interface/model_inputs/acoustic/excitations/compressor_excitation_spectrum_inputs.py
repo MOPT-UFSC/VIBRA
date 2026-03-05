@@ -5,10 +5,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.setup.acoustic.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
+from vibra.interface.ui_generated.model.acoustic.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
 
 import numpy as np
 
@@ -44,7 +46,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.complex_values = None
         self.imported_values = None
         self.keep_window_open = True
 
@@ -149,12 +150,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading compressor excitation data"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = np.loadtxt(imported_table_path, delimiter=",")
+                imported_values = np.loadtxt(imported_table_path, delimiter=",")
 
             else:
                 extensions = ["csv", "dat", "txt", "xlsx", "xls"]
@@ -162,18 +163,22 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 imported_data = DataImporter.import_single_file("imported_table_folder", extensions, caption)
 
                 if not imported_data:
-                    return
+                    return None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
+
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -183,10 +188,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
         
-        # filter the zero-frequency component
-        mask = imported_values[:, 0] > 0
-        imported_values = imported_values[mask, :]
-
         # define the frequencies vector
         frequencies = imported_values[:, 0]
 
@@ -200,7 +201,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(frequencies)
+        update_analysis_setup_in_file(frequencies)
 
         # real values vector
         real_values = imported_values[:, 1]
@@ -208,34 +209,11 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         # imaginary values vector
         imag_values = imported_values[:, 2]
 
-        # complex values vector
-        self.complex_values = real_values + 1j * imag_values
-
         data = np.array([frequencies, real_values, imag_values], dtype=float).T
 
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup = app().new_project.model.new_analysis_setup
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            new_analysis_setup = analysis_setup.replace(
-                f_min=f_min,
-                f_max=f_max,
-                f_step=f_step,
-            )
-        else:
-            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
-
-        app().new_project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            new_analysis_setup,
-        )
 
     def load_compressor_excitation_spectrum_data(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -286,12 +264,17 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                     table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
-                        self.complex_values = None
                         self.imported_values = None
                         return
 
             else:
                 return
+
+            # complex values computed from tabular data
+            complex_values = get_spectral_data_from_array(self.imported_values)
+
+            # table path from imported tabular data
+            table_path = self.lineEdit_table_path.text()
 
             table_path = self.lineEdit_table_path.text()
 
@@ -302,7 +285,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "connection_type" : connection_type,
                 "table_paths" : [table_path],
                 "table_names" : [table_name],
-                "values" : [self.complex_values],
+                "values" : [complex_values],
                 "nodal_attribution": False,
                 "averaged": False,
                 }
@@ -408,7 +391,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             app().new_project.current_analysis_id,
             app().new_project.model.new_analysis_setup,
         )
-
 
     def update_tabs_visibility(self):
 

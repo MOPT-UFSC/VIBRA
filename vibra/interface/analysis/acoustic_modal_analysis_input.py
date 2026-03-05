@@ -5,12 +5,12 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.acoustic.acoustic_modal_analysis_input_ui import AcousticModalAnalysisInput_UI
+from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import ModalAnalysisInput_UI
 
 error_title = "Error"
 
 
-class AcousticModalAnalysisInput(AcousticModalAnalysisInput_UI):
+class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
     def __init__(self, analysis_id: AnalysisID):
         super().__init__()
 

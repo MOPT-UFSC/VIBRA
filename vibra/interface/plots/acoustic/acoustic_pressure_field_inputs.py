@@ -32,7 +32,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         app().main_window.render_tools_toolbar.hide_selection_tool()
 
     def _initialize(self):
-        self.current_frequency = None
+        self.selected_frequency_index = None
 
     def _configure_qt_variables(self):
         #
@@ -98,9 +98,9 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
 
         if selector_mask.any():
-            self.current_frequency = self.indexes[selector_mask][0]
+            self.selected_frequency_index = self.indexes[selector_mask][0]
 
-        if self.current_frequency is None:
+        if self.selected_frequency_index is None:
             return
 
         LoadingWindow(app().main_window.results_widget.update_plot).run()
@@ -144,9 +144,10 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
-    def current_frequency_index(self):
-        if self.current_frequency is not None:
-            return self.current_frequency
+    def get_selected_frequency_index(self):
+        if self.selected_frequency_index is not None:
+            return self.selected_frequency_index
+
         return 0
 
     def on_click_item(self, item):

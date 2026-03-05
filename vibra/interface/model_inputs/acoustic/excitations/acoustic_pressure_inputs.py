@@ -5,8 +5,9 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data.data_manager import get_spectral_data_from_array
+from vibra.interface.ui_generated.model.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -15,8 +16,7 @@ from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabT
 import os
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+error_title = "Error"
 
 
 class AcousticPressureInputs(AcousticPressureInputs_UI):
@@ -55,7 +55,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
-        self.pushButton_change_frequency_setup.setDisabled(True)
         self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
         self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 
@@ -74,9 +73,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
     
     def _config_widgets(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
         for i, w in enumerate([120]):
             self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
             self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -201,7 +197,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 real_F = float(lineEdit_real.text())
             except Exception:
                 message = "Wrong input for real part of acoustic pressure."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_real_value.setFocus()
                 self.stop = True
                 return
@@ -213,7 +209,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 imag_F = float(lineEdit_imag.text())
             except Exception:
                 message = "Wrong input for imaginary part of acoustic pressure."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 self.lineEdit_imag_value.setFocus()
                 self.stop = True
                 return
@@ -262,45 +258,50 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one acoustic pressure\n"
             message += "before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'acoustic pressure' table"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the acoustic pressure")
-                
+
                 if not imported_data:
-                    return
-                
-                imported_file = imported_data.data
+                    return None
+
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
+
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
+        # define the frequencies vector
         _frequencies = imported_values[:, 0]
 
         if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
@@ -310,12 +311,15 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        update_analysis_setup_in_file(_frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+        
+        # imaginary values vector
         imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
@@ -323,26 +327,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.properties.add_imported_tables("acoustic", table_name, data)
 
         return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup = app().new_project.model.new_analysis_setup
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            new_analysis_setup = analysis_setup.replace(
-                f_min=f_min,
-                f_max=f_max,
-                f_step=f_step,
-            )
-        else:
-            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
-
-        app().new_project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            new_analysis_setup,
-        )
 
     def load_acoustic_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
@@ -352,7 +336,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
                                                                 input_ids, 
-                                                                selection = "surfaces"
+                                                                selection = "surfaces",
                                                                 )
 
         if error_data is not None:
@@ -366,8 +350,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if self.lineEdit_table_path.text() != "":
 
             if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
+                self.imported_values = self.load_table( 
+                    self.lineEdit_table_path, 
+                    direct_load = True,
+                    )
 
             for surface_id in surface_ids:
 
@@ -386,14 +372,17 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 if self.imported_values is None:
                     return
 
-                complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+                # complex values computed from tabular data
+                complex_values = get_spectral_data_from_array(self.imported_values)
+
+                # table path from imported tabular data
                 table_path = self.lineEdit_table_path.text()
 
                 data = {
-                        "table_names" : [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [complex_values],
-                        }
+                    "table_names" : [table_name],
+                    "table_paths" : [table_path],
+                    "values" : [complex_values],
+                    }
 
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
@@ -403,7 +392,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             title = "Additional inputs required"
             message = "You must inform at least one acoustic pressure\n"
             message += "table path before confirming the input!"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
 
     def process_table_file_removal(self, table_names: list):
@@ -486,13 +475,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.update_info_text()
         app().new_project.update_model_properties_file()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
         for key, data in self.properties.surface_properties.items():

@@ -1,5 +1,4 @@
 import logging
-from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
 
@@ -24,7 +23,7 @@ from vibra.engine.mesher.element_setup import (
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.mesh.mesher_setup_inputs_ui import MesherSetupInputs_UI
+from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
 

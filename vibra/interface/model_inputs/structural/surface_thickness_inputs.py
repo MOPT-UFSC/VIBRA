@@ -3,10 +3,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
 
 
 window_title_1 = "Error"

@@ -88,24 +88,27 @@ class AcousticAssembler:
 
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "acoustic_pressure":
+            if property != "acoustic_pressure":
+                continue
 
-                if "values" in data.keys():
-                    complex_values = data["values"]
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
+            if "values" in data.keys():
+                complex_values = data["values"]
 
-                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                if nodes is None:
-                    continue
+            else:
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
 
-                for _ in nodes:
-                    for _complex_values in complex_values:
-                        global_prescribed.append(_complex_values)
+            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            if nodes is None:
+                continue
+
+            for _ in nodes:
+                for _complex_values in complex_values:
+                    global_prescribed.append(_complex_values[self.model.solution_steps_mask])
 
         # TODO: implement same structure for lines
+        # TODO: refactor this method
 
         try:
 
@@ -239,25 +242,27 @@ class AcousticAssembler:
             density, speed_of_sound = self.get_fluid_properties_from_surface(surface_id)
 
             if "anechoic_termination" in data.keys():
-                _complex_values = density * speed_of_sound
+                complex_values = density * speed_of_sound
 
             elif property_label ==  "absorption_surface":
-                alpha = np.array(data.get("values")[0], dtype=float)
+                alpha = data.get("values")[0]
+
                 Z_0 = density * speed_of_sound
                 Z_s = Z_0 * ((1 + (1-alpha)**(1/2)) / (1 - (1-alpha)**(1/2)))
-                _complex_values = Z_s
+                complex_values = Z_s
 
             else:
-                _complex_values = data.get("values")[0]
+                complex_values = data.get("values")[0]
 
-            complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
+            # normalize data type to array
+            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
-                aux_data[el] = complex_values
+                aux_data[el] = complex_values_array
 
         if aux_connect:
             integration_data = {
@@ -296,7 +301,7 @@ class AcousticAssembler:
                 continue
 
             data: dict
-            _complex_values = data.get("values")[0]
+            complex_values = data.get("values")[0]
 
             if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                 excitation_type = data.get("excitation_type")
@@ -311,20 +316,21 @@ class AcousticAssembler:
                         density, _ = self.get_fluid_properties_from_surface(surface_id)
 
                         # convert the mass flow rate to surface velocity (oscilatting flow)
-                        _complex_values /= (density * area)
+                        complex_values /= (density * area)
 
                     else:
                         # convert the volumetric flow rate to surface velocity (oscilatting flow)
-                        _complex_values /= area
+                        complex_values /= area
 
-            complex_values = self.get_value_in_array_form(_complex_values, flatten=True)
+            # normalize data type to array
+            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
-                aux_data[el] = complex_values
+                aux_data[el] = complex_values_array
 
         if aux_connect:
             integration_data = {
@@ -417,8 +423,9 @@ class AcousticAssembler:
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             data: dict
-            values = data.get("values")
-            p_inc = self.get_value_in_array_form(values[0], flatten=True)
+
+            # normalize data type to array
+            p_inc = self.get_value_in_array_form(data.get("values")[0], flatten=True)
             Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
 
             for i, el in enumerate(surf_elements):
@@ -547,7 +554,12 @@ class AcousticAssembler:
         return integration_data
 
 
-    def get_value_in_array_form(self, value: float | np.ndarray, flatten: bool = False) -> np.ndarray:
+    def get_value_in_array_form(
+            self, 
+            value: float | np.ndarray, 
+            flatten: bool = False, 
+            filter_frequencies: bool=True,
+            ) -> np.ndarray:
         """
         This method returns, for a given input value, an output vector with 
         the same length as the frequencies vector.
@@ -574,7 +586,6 @@ class AcousticAssembler:
             output_vector = value * aux_ones
 
         elif isinstance(value, np.ndarray):
-
             if value.shape[0] == 1:
                 output_vector = value * aux_ones
 
@@ -583,7 +594,13 @@ class AcousticAssembler:
 
             else:
                 output_vector = value
-        
+
+        if filter_frequencies:
+            # filter values based on the solution steps mask
+            if output_vector.shape[1] - self.number_frequencies:
+                if self.model.solution_steps_mask:
+                    output_vector = output_vector[:, self.model.solution_steps_mask]
+
         if flatten:
             return output_vector.flatten()
 
@@ -621,20 +638,24 @@ class AcousticAssembler:
                 continue
 
             _complex_values = values[0]
-
-            if isinstance(_complex_values, complex | float):
-                Z_tr = _complex_values * aux_ones
-
-            elif isinstance(_complex_values, np.ndarray):
-
-                if _complex_values.shape[0] == 1:
-                    Z_tr = _complex_values * aux_ones
-
-                else:
-                    Z_tr = _complex_values
-
-            else:
+            if not isinstance(_complex_values, complex | float | np.ndarray):
                 continue
+
+            Z_tr = self.get_value_in_array_form(_complex_values, flatten=True)
+
+            # if isinstance(_complex_values, complex | float):
+            #     Z_tr = _complex_values * aux_ones
+
+            # elif isinstance(_complex_values, np.ndarray):
+
+            #     if _complex_values.shape[0] == 1:
+            #         Z_tr = _complex_values * aux_ones
+
+            #     else:
+            #         Z_tr = _complex_values
+
+            # else:
+            #     continue
 
             decouple_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_ids)
             if not isinstance(decouple_data, dict):
@@ -798,7 +819,7 @@ class AcousticAssembler:
                     self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
                 if "values" in data.keys():
-                    _complex_values = data.get("values")[0]
+                    complex_values = data.get("values")[0]
 
                 volume_id = data.get("volume_id")
                 fluid = self.model.properties._get_property("fluid", volume=volume_id)
@@ -806,11 +827,15 @@ class AcousticAssembler:
 
                 if prop_label == "nodal_properties":
                     node_id = args[0]
+
                 else:
                     point_id = args[0]
                     node_id = self.model.mesh.nodes_from_points.get(point_id)
 
-                self.mass_source_vector_points[node_id, :] += self.get_value_in_array_form(_complex_values, flatten=True) / density
+                # normalize data type to array
+                complex_values_array = self.get_value_in_array_form(complex_values)
+
+                self.mass_source_vector_points[node_id, :] += complex_values_array / density
 
         if self.mass_source_vector_points.any():
             self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_indexes, :]
@@ -833,15 +858,18 @@ class AcousticAssembler:
                 self.mass_source_vector_lines = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             if "values" in data.keys():
-                _complex_values = data.get("values")[0]
+                complex_values = data.get("values")[0]
 
             nodes = self.model.mesh.get_nodes_from_line(args[0])
             if nodes is None:
                 continue
 
-            aux_ones = np.ones((len(nodes), 1), dtype=float)
+            aux_ones = np.ones((nodes.size, 1), dtype=float)
 
-            self.mass_source_vector_lines[nodes, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+            # normalize data type to array
+            complex_values_array = self.get_value_in_array_form(complex_values)
+
+            self.mass_source_vector_lines[nodes, :] += aux_ones @ complex_values_array
 
         if self.mass_source_vector_lines.any():
             self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_indexes, :]
@@ -864,15 +892,18 @@ class AcousticAssembler:
                 self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             if "values" in data.keys():
-                _complex_values = data.get("values")[0]
+                complex_values = data.get("values")[0]
 
             nodes = self.model.mesh.get_nodes_from_surface(args[0])
             if nodes is None:
                 continue
 
-            aux_ones = np.ones((nodes.size, 1))
+            aux_ones = np.ones((nodes.size, 1), dtype=float)
 
-            self.mass_source_vector_surfaces[nodes, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+            # normalize data type to array
+            complex_values_array = self.get_value_in_array_form(complex_values)
+
+            self.mass_source_vector_surfaces[nodes, :] += aux_ones @ complex_values_array
 
         if self.mass_source_vector_surfaces.any():
             self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.unprescribed_indexes, :]
@@ -895,12 +926,18 @@ class AcousticAssembler:
                 self.mass_source_vector_volumes = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             if "values" in data.keys():
-                _complex_values = data.get("values")[0]
+                complex_values = data.get("values")[0]
 
             nodes = self.model.mesh.get_nodes_from_volume(args[0])
-            aux_ones = np.ones((nodes.size, 1))
+            if nodes is None:
+                continue
 
-            self.mass_source_vector_volumes[nodes, :] += aux_ones @ self.get_value_in_array_form(_complex_values)
+            aux_ones = np.ones((nodes.size, 1), dtype=float)
+
+            # normalize data type to array
+            complex_values_array = self.get_value_in_array_form(complex_values)
+
+            self.mass_source_vector_volumes[nodes, :] += aux_ones @ complex_values_array
 
         if self.mass_source_vector_volumes.any():
             self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.unprescribed_indexes, :]
@@ -1710,12 +1747,16 @@ class AcousticAssembler:
         return output
 
 
-    def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=True):
+        """
+        This method assembles the global matrices of the acoustic model.
+        """
 
+        logging.info("Processing data to assemble global matrices... [10/100]")
         self.define_acoustic_elements()
         self.update_number_of_frequencies()
 
-        logging.info("Processing data to assemble global matrices... [10/100]")
+        logging.info("Processing data to assemble global matrices... [20/100]")
         t0 = time()
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
@@ -1758,6 +1799,12 @@ class AcousticAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
 
+
+    def assemble_model_excitations(self):
+        """
+        This method assembles the excitations of the acoustic model.
+        """
+
         logging.info("Processing element related loads... [75/100]")
         B = self.get_acoustic_excitations_by_element_integration()
 
@@ -1772,6 +1819,15 @@ class AcousticAssembler:
 
         logging.info("Finishing the model building... [98/100]")
         self.mass_flow_vectors = A + B
+
+
+    def assemble_global_matrices_and_excitations(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+        """
+        This method assembles the global matrices and excitations of the acoustic model.
+        """
+
+        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices)        
+        self.assemble_model_excitations()
 
 
     def reinsert_the_prescribed_dof(self, solution: np.ndarray, modal_analysis=False):

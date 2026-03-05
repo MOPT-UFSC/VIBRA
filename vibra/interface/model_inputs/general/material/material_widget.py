@@ -15,7 +15,7 @@ from vibra.errors import InvalidMaterialError
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
-from vibra.interface.ui_generated.model.setup.material.material_widget_ui import MaterialWidget_UI
+from vibra.interface.ui_generated.model.material.material_widget_ui import MaterialWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
 

@@ -5,13 +5,15 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.utils.bidict import bidict
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.model.setup.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
+from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 
 from copy import deepcopy
@@ -61,9 +63,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.decoupling_map = bidict()
 
     def _configure_qt_variables(self):
-        #
-        self.pushButton_change_frequency_setup.setDisabled(True)
-        #
         for i in range(2):
             self.treeWidget_transfer_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -270,29 +269,33 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
         title = "Error reached while loading 'specific impedance' table"
-        imported_file = None
+        imported_values = None
 
         try:
             if direct_load:
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the specific impedance")
 
                 if not imported_data:
-                    return
+                    return None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([error_title, title, message])
                 return None
 
-            return imported_file
+            # filter the zero-frequency component
+            mask = imported_values[:, 0] > 0
+            _imported_values = imported_values[mask, :]
+
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -302,7 +305,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 
-        _frequencies = imported_values[:, 0]
+        mask = imported_values[:, 0] > 0
+        _imported_values = imported_values[mask, :]
+        _frequencies = _imported_values[:, 0]
 
         if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
@@ -314,9 +319,12 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.update_analysis_setup_in_file(_frequencies)
+        update_analysis_setup_in_file(_frequencies)
 
+        # real values vector
         real_values = imported_values[:, 1]
+
+        # imaginary values vector
         imag_values = imported_values[:, 2]
 
         data = np.array([_frequencies, real_values, imag_values], dtype=float).T
@@ -356,16 +364,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.hide()
         self.actions_to_finalize()
-
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().new_project.update_model_properties_file()
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("transfer_impedance", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -496,53 +494,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def load_user_defined_transfer_impedance(self):
         self.imported_values = self.load_table(self.lineEdit_user_defined_transfer_impedance_path)
 
-    def save_table_values(self, table_name: str, imported_values: np.ndarray):
-
-        mask = imported_values[:, 0] > 0
-        _imported_values = imported_values[mask, :]
-        _frequencies = _imported_values[:, 0]
-
-        if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
-            title = "Project frequency setup cannot be modified"
-            message = "The following imported table of values has a frequency setup "
-            message += "different from the others already imported ones. The current "
-            message += "project frequency setup is not going to be modified."
-            message += f"\n\n{table_name}"
-            PrintMessageInput([error_title, title, message])
-            return True
-
-        self.update_analysis_setup_in_file(_frequencies)
-
-        real_values = _imported_values[:, 1]
-        imag_values = _imported_values[:, 2]
-
-        data = np.array([_frequencies, real_values, imag_values], dtype=float).T
-
-        self.properties.add_imported_tables("acoustic", table_name, data)
-
-        return False
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup = app().new_project.model.new_analysis_setup
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            new_analysis_setup = analysis_setup.replace(
-                f_min=f_min,
-                f_max=f_max,
-                f_step=f_step,
-            )
-        else:
-            new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
-
-        app().new_project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            new_analysis_setup,
-        )
-
     def include_transfer_impedance_table_data(self, surface_id: int | list[int]):
 
         if isinstance(surface_id, int):
@@ -556,7 +507,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.ti_data.clear()
             return
 
-        complex_values = self.imported_values[:, 1] + 1j * self.imported_values[:, 2]
+        # complex values computed from tabular data
+        complex_values = get_spectral_data_from_array(self.imported_values)
+
+        # table path from imported tabular data
         table_path = self.lineEdit_table_path.text()
 
         self.ti_data["table_names"] = [table_name]
@@ -803,7 +757,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 message += "\n\nNote: zero value is not allowed."
 
         except Exception as error_log:
-            message = f"You have typed and invalid value at the {label} input field.\n\n"
+            message = f"You have typed an invalid value at the {label} input field.\n\n"
             message += str(error_log)
 
         if message != "":

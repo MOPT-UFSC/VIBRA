@@ -4,7 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.setup.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
 from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
@@ -744,7 +744,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                             message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
+                message = "Dear user, you have typed an invalid value at the \n"
                 message += f"{label} input field.\n\n"
                 message += str(_err)
 

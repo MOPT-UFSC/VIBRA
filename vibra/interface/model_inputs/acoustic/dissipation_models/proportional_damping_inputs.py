@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, SetupTabType
@@ -176,7 +176,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
                             message += "\n\nNote: zero value is not allowed."
 
             except Exception as _err:
-                message = "Dear user, you have typed and invalid value at the \n"
+                message = "Dear user, you have typed an invalid value at the \n"
                 message += f"{label} input field.\n\n"
                 message += str(_err)
 
