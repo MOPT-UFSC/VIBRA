@@ -12,7 +12,7 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
     mask_frequencies: Optional[np.ndarray[tuple[int], bool]] = None
     _: KW_ONLY
     analysis_method: Literal["direct", "mode_superposition"] = "direct"
-    global_damping: None | tuple[float, ...] = None
+    global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: None | int = None
 
     def __post_init__(self):
@@ -21,6 +21,11 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
         if self.mask_frequencies is not None:
             self.mask_frequencies = np.array(self.mask_frequencies, dtype=bool)
             assert self.all_frequencies.shape == self.mask_frequencies.shape
+
+    def get_mask(self): 
+        if self.mask_frequencies is None:
+            return np.ones(self.f_size, dtype=bool)
+        return self.mask_frequencies
 
     def frequencies(self):
         if self.mask_frequencies is None:
@@ -47,10 +52,12 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
 
     def as_dict(self):
         data = {
+            "frequency_spacing": "user-defined",
             "f_min": self.f_min,
             "f_max": self.f_max,
-            "f_step": self.f_step,
-            "frequencies": self.frequencies(),
+            "f_step": self.all_frequencies[1] - self.all_frequencies[0],
+            "frequencies": self.all_frequencies,
+            "solution_steps_mask": self.get_mask()
         }
 
         if self.global_damping is not None:
