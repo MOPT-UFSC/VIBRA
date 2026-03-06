@@ -16,6 +16,8 @@ class ResultsViewerItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
+        self.project = app().new_project
+
         self.setObjectName("results_viewer_items")
         self._create_items()
         self._create_connections()

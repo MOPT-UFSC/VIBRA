@@ -57,7 +57,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
         #
-        if app().project.structural_modal_solver.complex_natural_frequencies.size:
+        if app().new_project.structural_modal_solver.complex_natural_frequencies.size:
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 

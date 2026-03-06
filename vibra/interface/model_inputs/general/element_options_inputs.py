@@ -42,7 +42,7 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
         super().__init__()
 
         app().main_window.set_input_widget(self)
-        self.model = app().project.model
+        self.model = app().new_project.model
 
         self._initialize()
         self._config_window()
@@ -90,7 +90,7 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
 
     def update_tab_visibility(self):
 
-        mesh_setup = app().project.model.mesh_setup
+        mesh_setup = app().new_project.model.mesh_setup
         if not isinstance(mesh_setup, dict):
             return
 

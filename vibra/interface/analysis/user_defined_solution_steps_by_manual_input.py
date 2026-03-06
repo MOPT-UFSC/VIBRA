@@ -92,10 +92,10 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         
         self.index_to_push_buttons.clear()
 
-        if app().project.model.properties.check_if_there_are_tables_at_the_model():
+        if app().new_project.model.properties.check_if_there_are_tables_at_the_model():
             return
 
-        frequencies = app().project.model.analysis_setup.get("frequencies")
+        frequencies = app().new_project.model.analysis_setup.get("frequencies")
         if isinstance(frequencies, np.ndarray):
             self.user_defined_solution_steps = list(frequencies)
         elif isinstance(frequencies, list):
@@ -113,7 +113,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.reset_table()
 
         if not self.user_defined_solution_steps:
-            if app().project.model.frequencies is None:
+            if app().new_project.model.frequencies is None:
                 return
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
