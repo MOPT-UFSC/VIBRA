@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 import numpy as np
 
-from .harmonic_analysis_setup import HarmonicAnalysisSetup
+from .harmonic_analysis_setup import AnalysisMethod, HarmonicAnalysisSetup
 
 
 @dataclass
@@ -11,7 +11,7 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
     all_frequencies: np.ndarray[tuple[int], float]
     mask_frequencies: Optional[np.ndarray[tuple[int], bool]] = None
     _: KW_ONLY
-    analysis_method: Literal["direct", "mode_superposition"] = "direct"
+    analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: None | int = None
 

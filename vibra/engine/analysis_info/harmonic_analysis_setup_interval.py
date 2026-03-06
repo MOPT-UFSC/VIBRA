@@ -1,9 +1,8 @@
 from dataclasses import KW_ONLY, dataclass
-from typing import Literal
 
 import numpy as np
 
-from .harmonic_analysis_setup import HarmonicAnalysisSetup
+from .harmonic_analysis_setup import HarmonicAnalysisSetup, AnalysisMethod
 
 
 @dataclass
@@ -12,7 +11,7 @@ class HarmonicAnalysisSetupInterval(HarmonicAnalysisSetup):
     f_max: float
     f_step: float = 1
     _: KW_ONLY
-    analysis_method: Literal["direct", "mode_superposition"] = "direct"
+    analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: None | int = None
 
