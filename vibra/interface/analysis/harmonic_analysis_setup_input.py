@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QLineEdit
 from PySide6.QtGui import Qt
 
 from vibra import app
-from vibra.engine import AnalysisID
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
@@ -17,11 +17,6 @@ import numpy as np
 from enum import StrEnum
 
 error_title = "Error"
-
-
-class FrequencySpacingTypes(StrEnum):
-    USER_DEFINED = "user-defined"
-    EQUALLY_DISTRIBUTED = "equally distributed"
 
 
 class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
@@ -233,7 +228,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.update_solution_steps_controls_visibility()
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
-        if self.analysis_setup.get("frequency_spacing") == FrequencySpacingTypes.USER_DEFINED:
+        if self.analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
             self.comboBox_frequency_spacing.setCurrentText("User-defined")
 
     def load_analysis_type(self):
@@ -349,7 +344,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         existing_frequencies = self.model.analysis_setup.get("frequencies", list())
 
-        if frequency_spacing == FrequencySpacingTypes.USER_DEFINED:
+        if frequency_spacing == FrequencySpacing.USER_DEFINED:
             if not self.user_defined_solution_steps:
                 if not existing_frequencies:
                     self.hide()
@@ -381,9 +376,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
 
-            if frequency_spacing == FrequencySpacingTypes.USER_DEFINED:
+            if frequency_spacing == FrequencySpacing.USER_DEFINED:
                 if not self.user_defined_solution_steps:
-                    if self.model.analysis_setup.get("frequency_spacing") == FrequencySpacingTypes.USER_DEFINED:
+                    if self.model.analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
                         self.user_defined_solution_steps = existing_frequencies
 
                 analysis_setup.update({"frequencies" : self.user_defined_solution_steps})

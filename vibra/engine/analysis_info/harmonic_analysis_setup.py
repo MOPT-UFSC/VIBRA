@@ -1,15 +1,26 @@
 from abc import abstractmethod
 from dataclasses import replace
+from enum import StrEnum, auto
 from typing import Literal, Self
 
 import numpy as np
+
+
+class FrequencySpacing(StrEnum):
+    USER_DEFINED = "user-defined"
+    EQUALLY_DISTRIBUTED = "equally distributed"
+
+
+class AnalysisMethod(StrEnum):
+    DIRECT = auto()
+    MODE_SUPERPOSITION = auto()
 
 
 class HarmonicAnalysisSetup:
     f_min: float
     f_max: float
     f_size: float
-    analysis_method: Literal["direct", "mode_superposition"] = "direct"
+    analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: None | int = None
 
