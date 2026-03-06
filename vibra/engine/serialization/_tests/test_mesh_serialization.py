@@ -2,12 +2,9 @@ from pathlib import Path
 
 import numpy as np
 
-from example import fluid_library
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupInterval, ModalAnalysisSetup
-from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.new_project import NewProject
-from vibra.engine.properties import FluidLibrary
 
 
 def test_write_and_read_mesh_project(fluid):
