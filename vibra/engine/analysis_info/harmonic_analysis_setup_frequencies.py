@@ -23,7 +23,21 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
             assert self.all_frequencies.shape == self.mask_frequencies.shape
 
     def frequencies(self):
-        return self.all_frequencies[self.mask_frequencies]
+        if self.mask_frequencies is None:
+            return self.all_frequencies.copy()
+        return self.all_frequencies[self.mask_frequencies].copy()
+
+    @property
+    def f_min(self):
+        if self.mask_frequencies is None:
+            return self.all_frequencies[0]
+        return self.frequencies()[0]
+
+    @property
+    def f_max(self):
+        if self.mask_frequencies is None:
+            return self.all_frequencies[-1]
+        return self.frequencies()[-1]
 
     @property
     def f_size(self):
