@@ -1,20 +1,19 @@
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QDialog, QLineEdit
-from PySide6.QtWidgets import QLineEdit
+from enum import StrEnum
+
+import numpy as np
 from PySide6.QtGui import Qt
+from PySide6.QtWidgets import QDialog, QLineEdit
 
 from vibra import app
-from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.engine import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetupFrequencies, HarmonicAnalysisSetupInterval
 from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
-
-import numpy as np
-from enum import StrEnum
 
 error_title = "Error"
 
@@ -37,12 +36,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self._config_widgets()
         self._create_connections()
 
+        self.load_table_data()
         self.set_default_values()
         self.update_harmonic_analysis_title()
         self._paint_icons()
 
-        self.load_table_data()
-        self.load_analysis_setup()
         self.check_mesh_related_issues()
         self.update_display_table_visibility()
 
@@ -93,7 +91,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -220,8 +218,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             f_min = analysis_setup.f_min
             f_max = analysis_setup.f_max
             f_step = analysis_setup.f_step
-            if global_damping is not None:
-                global_damping = analysis_setup.global_damping
+            global_damping = analysis_setup.global_damping
 
         self.load_analysis_type()
         self.load_damping_inputs(self.analysis_id, global_damping)
@@ -483,14 +480,27 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["global_damping"] = [alpha, beta, eta]
 
-        self.analysis_setup = HarmonicAnalysisSetup(
-            analysis_setup["f_min"],
-            analysis_setup["f_max"],
-            analysis_setup["f_step"],
-            analysis_setup["analysis_method"],
-            analysis_setup.get("global_damping", None),
-            analysis_setup.get("modes_number", None),
-        )
+        match frequency_spacing:
+            case FrequencySpacing.EQUALLY_DISTRIBUTED:
+                self.analysis_setup = HarmonicAnalysisSetupInterval(
+                    analysis_setup["f_min"],
+                    analysis_setup["f_max"],
+                    analysis_setup["f_step"],
+                    analysis_method=analysis_setup["analysis_method"],
+                    global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
+                    modes_number=analysis_setup.get("modes_number", None),
+                )
+            case FrequencySpacing.USER_DEFINED:
+                self.analysis_setup = HarmonicAnalysisSetupFrequencies(
+                    analysis_setup["frequencies"],
+                    analysis_setup.get("solution_steps_mask", None),
+                    analysis_method=analysis_setup["analysis_method"],
+                    global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
+                    modes_number=analysis_setup.get("modes_number", None),
+                )
+            case _:
+                raise TypeError(f'Invalid frequency spacing "{frequency_spacing}"')
+
         app().new_project.configure_analysis(
             self.analysis_id,
             self.analysis_setup,

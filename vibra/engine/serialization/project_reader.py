@@ -33,8 +33,6 @@ from vibra.engine.properties import (
     FluidLibrary,
     Material,
     MaterialLibrary,
-    default_fluid_library,
-    default_material_library,
 )
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
@@ -156,12 +154,16 @@ class ProjectReader:
                         f_max=analysis_setup_dict.get("f_max", 0),
                         f_step=analysis_setup_dict.get("f_step", 0),
                         analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping=analysis_setup_dict.get("global_damping", None),
+                        global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
+                        modes_number=analysis_setup_dict.get("modes_number", None)
                     )
                 case FrequencySpacing.USER_DEFINED:
                     return HarmonicAnalysisSetupFrequencies(
                         analysis_setup_dict.get("frequencies", []),
                         analysis_setup_dict.get("solution_steps_mask"),
+                        analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
+                        global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
+                        modes_number=analysis_setup_dict.get("modes_number", None)
                     )
 
         elif analysis_id.is_modal():
@@ -328,7 +330,7 @@ class ProjectReader:
 
         material_library_data = read_json(self.project_paths.material_library_filepath)
         if material_library_data is None:
-            return default_material_library()
+            return MaterialLibrary.default()
 
         material_library = MaterialLibrary()
 
@@ -352,7 +354,7 @@ class ProjectReader:
 
         fluid_library_data = read_json(self.project_paths.fluid_library_filepath)
         if fluid_library_data is None:
-            return default_fluid_library()
+            return FluidLibrary.default()
 
         fluid_library = FluidLibrary()
 

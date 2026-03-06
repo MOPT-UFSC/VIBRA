@@ -36,10 +36,11 @@ class HarmonicAnalysisSetupInterval(HarmonicAnalysisSetup):
             "f_max": self.f_max,
             "f_step": self.f_step,
             "frequencies": self.frequencies(),
-            "solution_steps_mask": np.ones(self.f_size, dtype=bool)
+            "solution_steps_mask": np.ones(self.f_size, dtype=bool),
+            "global_damping": self.global_damping,
         }
 
         if self.modes_number is not None:
-            data["modes_number"] = self.global_damping
+            data["modes_number"] = self.modes_number
 
         return data

@@ -59,12 +59,10 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
             "f_step": self.all_frequencies[1] - self.all_frequencies[0],
             "frequencies": self.all_frequencies,
             "solution_steps_mask": self.get_mask(),
+            "global_damping": self.global_damping,
         }
 
-        if self.global_damping is not None:
-            data["global_damping"] = self.global_damping
-
         if self.modes_number is not None:
-            data["modes_number"] = self.global_damping
+            data["modes_number"] = self.modes_number
 
         return data
