@@ -21,8 +21,9 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
         if self.mask_frequencies is not None:
             self.mask_frequencies = np.array(self.mask_frequencies, dtype=bool)
             assert self.all_frequencies.shape == self.mask_frequencies.shape
+        assert self.all_frequencies.size > 0
 
-    def get_mask(self): 
+    def get_mask(self):
         if self.mask_frequencies is None:
             return np.ones(self.f_size, dtype=bool)
         return self.mask_frequencies
@@ -57,7 +58,7 @@ class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
             "f_max": self.f_max,
             "f_step": self.all_frequencies[1] - self.all_frequencies[0],
             "frequencies": self.all_frequencies,
-            "solution_steps_mask": self.get_mask()
+            "solution_steps_mask": self.get_mask(),
         }
 
         if self.global_damping is not None:

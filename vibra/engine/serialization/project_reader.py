@@ -16,7 +16,14 @@ import h5py
 import numpy as np
 from PIL.Image import Image
 
-from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    AnalysisSetup,
+    FrequencySpacing,
+    HarmonicAnalysisSetupFrequencies,
+    HarmonicAnalysisSetupInterval,
+    ModalAnalysisSetup,
+)
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
@@ -30,8 +37,8 @@ from vibra.engine.properties import (
     default_material_library,
 )
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.engine.serialization.file_helpers import read_image, read_json
+from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
 from .project_paths import ProjectPaths
@@ -137,13 +144,25 @@ class ProjectReader:
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
 
         if analysis_id.is_harmonic():
-            return HarmonicAnalysisSetup(
-                f_min=analysis_setup_dict.get("f_min", 0),
-                f_max=analysis_setup_dict.get("f_max", 0),
-                f_step=analysis_setup_dict.get("f_step", 0),
-                analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
-                global_damping=analysis_setup_dict.get("global_damping", None),
+            frequency_spacing = analysis_setup_dict.get(
+                "frequency_spacing",
+                FrequencySpacing.EQUALLY_DISTRIBUTED,
             )
+
+            match frequency_spacing:
+                case FrequencySpacing.EQUALLY_DISTRIBUTED:
+                    return HarmonicAnalysisSetupInterval(
+                        f_min=analysis_setup_dict.get("f_min", 0),
+                        f_max=analysis_setup_dict.get("f_max", 0),
+                        f_step=analysis_setup_dict.get("f_step", 0),
+                        analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
+                        global_damping=analysis_setup_dict.get("global_damping", None),
+                    )
+                case FrequencySpacing.USER_DEFINED:
+                    return HarmonicAnalysisSetupFrequencies(
+                        analysis_setup_dict.get("frequencies", []),
+                        analysis_setup_dict.get("solution_steps_mask"),
+                    )
 
         elif analysis_id.is_modal():
             return ModalAnalysisSetup(
@@ -243,7 +262,7 @@ class ProjectReader:
 
                 elif key.startswith("surfaces_from_volume"):
                     mesh.surfaces_from_volume[tag] = value
-                
+
                 elif key.startswith("cache_points_from_line"):
                     mesh.cache_points_from_line[tag] = value
 
