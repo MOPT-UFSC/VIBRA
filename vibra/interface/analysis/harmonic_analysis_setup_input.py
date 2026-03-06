@@ -215,10 +215,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         analysis_setup = app().new_project.model.new_analysis_setup
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            global_damping = analysis_setup.global_damping
+
+        if isinstance(analysis_setup, HarmonicAnalysisSetupInterval):
             f_min = analysis_setup.f_min
             f_max = analysis_setup.f_max
             f_step = analysis_setup.f_step
-            global_damping = analysis_setup.global_damping
 
         self.load_analysis_type()
         self.load_damping_inputs(self.analysis_id, global_damping)
