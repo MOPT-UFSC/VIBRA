@@ -1,5 +1,6 @@
 from dataclasses import KW_ONLY, dataclass, replace
 from typing import Literal, Optional, Self
+from abc import abstractmethod
 
 import numpy as np
 
@@ -18,16 +19,18 @@ class HarmonicAnalysisSetup:
     def replace(self, **changes) -> Self:
         return replace(self, **changes)
 
+    @abstractmethod
     def frequencies(self) -> np.ndarray: ...
 
+    @abstractmethod
     def as_dict(self) -> dict: ...
 
 
 @dataclass
-class IntervalHarmonicAnalysisSetup(HarmonicAnalysisSetup):
+class HarmonicAnalysisSetupInterval(HarmonicAnalysisSetup):
     f_min: int | float
     f_max: int | float
-    f_step: int | float
+    f_step: int | float = 1
     _: KW_ONLY
     analysis_method: Literal["direct", "mode_superposition"] = "direct"
     global_damping: None | tuple[float, ...] = None
@@ -58,7 +61,7 @@ class IntervalHarmonicAnalysisSetup(HarmonicAnalysisSetup):
 
 
 @dataclass
-class FrequenciesHarmonicAnalysisSetup(HarmonicAnalysisSetup):
+class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
     all_frequencies: np.ndarray[tuple[int], float]
     mask_frequencies: Optional[np.ndarray[tuple[int], bool]] = None
     _: KW_ONLY
