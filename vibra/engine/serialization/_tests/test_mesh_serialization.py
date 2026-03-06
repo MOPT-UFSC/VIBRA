@@ -4,7 +4,7 @@ import numpy as np
 
 from example import fluid_library
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupInterval, ModalAnalysisSetup
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.new_project import NewProject
 from vibra.engine.properties import FluidLibrary
@@ -62,22 +62,18 @@ def test_compare_interface_based_mesh_project():
     )
 
     # It is not ideal to have two functions setting a single property
-    project_cli.model.properties._set_property(
-        "degrees_of_freedom_decoupling", 
-        data = {"volume_to_decouple" : 1},
-        surface=6
-    )
+    project_cli.model.properties._set_property("degrees_of_freedom_decoupling", data={"volume_to_decouple": 1}, surface=6)
     project_cli.mesh.cache_mesh_information()
     project_cli.model.process_degrees_of_freedom_decoupling()
 
     project_cli.configure_analysis(
         AnalysisID.ACOUSTIC_HARMONIC,
-        HarmonicAnalysisSetup(
+        HarmonicAnalysisSetupInterval(
             f_min=200,
             f_max=500,
             f_step=100,
             analysis_method="direct",
-        )
+        ),
     )
     project_cli.run_analysis()
 
