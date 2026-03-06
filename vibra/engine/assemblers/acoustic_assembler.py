@@ -105,7 +105,12 @@ class AcousticAssembler:
 
             for _ in nodes:
                 for _complex_values in complex_values:
-                    global_prescribed.append(_complex_values[self.model.solution_steps_mask])
+                    if isinstance(_complex_values, np.ndarray):
+                        _values = _complex_values[self.model.solution_steps_mask]
+                    else:
+                        _values = _complex_values
+
+                    global_prescribed.append(_values)
 
         # TODO: implement same structure for lines
         # TODO: refactor this method
