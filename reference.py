@@ -70,13 +70,13 @@ acoustic_model.process_viscous_thermal_model_properties()
 
 # Direct solver setup and solve
 assembler = AcousticAssembler(acoustic_model)
-assembler.process_assemble()
+assembler.assemble_global_matrices_and_excitations()
 harmonic_solver = HarmonicSolver(assembler)
 direct_solutions = harmonic_solver.solve_direct()
 
 # Modal solver setup and solve
 assembler = AcousticAssembler(acoustic_model)
-assembler.process_assemble()
+assembler.assemble_global_matrices_and_excitations()
 modal_harmonic_solver = HarmonicSolver(assembler)
 modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 

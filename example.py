@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupInterval, ModalAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
@@ -25,14 +25,14 @@ mesh_setup = MeshSetup(
 fluid_library = FluidLibrary.default()
 fluid = fluid_library.find_by_name("Air std")
 
-analysis_setup_a = HarmonicAnalysisSetup(
+analysis_setup_a = HarmonicAnalysisSetupInterval(
     f_min=200,
     f_max=500,
     f_step=100,
     analysis_method="direct",
 )
 
-analysis_setup_b = HarmonicAnalysisSetup(
+analysis_setup_b = HarmonicAnalysisSetupInterval(
     f_min=200,
     f_max=500,
     f_step=100,
