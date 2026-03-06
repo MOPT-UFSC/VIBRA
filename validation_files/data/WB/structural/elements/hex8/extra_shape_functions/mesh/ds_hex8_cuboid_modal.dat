@@ -7293,15 +7293,15 @@ nblock,3,,7984
 -1
 /wb,elem,start            !  set before creation of elements
 /com,*********** Elements for Body 1 "cuboid_example-FreeParts|Ressalto-extrus_o1" ***********
-
-ET,1,SOLID45
-
-KEYOPT,1,1,0   
-KEYOPT,1,2,0   
-KEYOPT,1,4,0   
-KEYOPT,1,5,0   
+!
+et,1,SOLID45
+!  
+KEYOPT,1,1,0
+KEYOPT,1,2,0
+KEYOPT,1,4,0
+KEYOPT,1,5,0
 KEYOPT,1,6,0
-
+!
 eblock,19,solid,,5760
 (19i9)
         1        1        1        1        0        0        0        0        8        0        1     1940     1943     1946     1942     2642     2650     2685     2682
@@ -13136,31 +13136,7 @@ CMBLOCK,OUTPUT_FACE,NODE,      119
       6262      6263      6264      6265      6266      6267      6268      6269
       6270      6271      6272      6273      6274      6275      6276      6277
       6278      6279      6280      6281      6282      6283      6284
-/golist
-/wb,load,start             !  starting to send loads
-/com,*********** Fixed Supports ***********
-CMBLOCK,_FIXEDSU,NODE,      119
-(8i10)
-      4724      4725      4726      4730      4742      4843      4844      5151
-      5152      5153      5157      5169      5270      5271      6165      6167
-      6168      6169      6171      6173      6174      6175      6178      6179
-      6182      6183      6184      6192      6193      7170      7171      7172
-      7173      7174      7175      7176      7177      7178      7179      7180
-      7181      7182      7183      7184      7185      7186      7187      7188
-      7189      7190      7191      7192      7193      7194      7195      7196
-      7197      7198      7199      7200      7201      7202      7203      7204
-      7205      7206      7207      7208      7209      7210      7211      7212
-      7213      7214      7215      7216      7217      7218      7219      7220
-      7221      7222      7223      7224      7225      7226      7227      7228
-      7229      7230      7231      7232      7233      7234      7235      7236
-      7237      7238      7239      7240      7241      7242      7243      7244
-      7245      7246      7247      7248      7249      7250      7251      7252
-      7253      7254      7255      7256      7257      7258      7259
-cmsel,s,_FIXEDSU
-d,all,all
-nsel,all
-/gst,on,on
-fini
+
 
 /solu
 antype,2                   ! modal analysis
@@ -13169,31 +13145,55 @@ modopt,lanb,40
 outres,erase
 outres,all,none
 outres,nsol,all
+outres,eangl,all
+outres,etmp,all
+outres,veng,all
+outres,strs,all
+outres,epel,all
+outres,rsol,all
+outres,cont,all
 mxpand                    ! default expand in case of complex solution
 
-solve
+EMATWRITE, YES
+WRFULL,YES
+
+SOLVE
 /com *************** Write FE CONNECTORS ********* 
 CEWRITE,file,ce,,INTE
 *get,_nmodalsolproc,active,0,numcpu
-fini
 
-/POST1
+FINISH
 
-N_MODES = 40
-*DIM, natural_frequencies, ARRAY, N_MODES, 2
+!/POST1
+/AUX2
 
-*DO,j,1,N_MODES,1
+! commands to create dense matrix
 
-*GET,natural_frequencies(j,2),MODE,j,FREQ
+!*DIM, n_el, ARRAY, 4, 1
+
+!n_el(1, 1) = 3784
+!n_el(2, 1) = 3793
+!n_el(3, 1) = 3824
+!n_el(4, 1) = 3838
+
+*DO, n_el, 200, 4000, 200
+
+*DMAT, MatK, D, IMPORT, EMAT, file.emat, STIFF, n_el
+*EXPORT, MatK, MMF, Ke_%n_el%_ansys.txt,
+
+*DMAT, MatM, D, IMPORT, EMAT, file.emat, MASS, n_el
+*EXPORT, MatM, MMF, Me_%n_el%_ansys.txt,
 
 *ENDDO
 
-*DIM,MODES_INDEXES,ARRAY,N_MODES,1
-*VFILL, MODES_INDEXES, ramp, 1, 1
+! Stiffness global matrix
+!*DMAT,K_dense,D,IMPORT,FULL,file.full,STIFF
+!*EXPORT,K_dense,CSV,Ke_ansys.csv,24,
+!*PRINT,K_dense,Kdense_full.dat
 
-*VFUN, natural_frequencies(1,1), COMP, MODES_INDEXES(1,1)
-
-*MWRITE, natural_frequencies, hex8_natural_frequencies, dat
-(F10.0,TL1,10000E20.12)
+! Mass global matrix
+!*DMAT,M_dense,D,IMPORT,FULL,file.full,MASS
+!*EXPORT,M_dense,CSV,Me_ansys.csv,24,
+!*PRINT,M_dense,Mdense_full.dat
 
 FINISH

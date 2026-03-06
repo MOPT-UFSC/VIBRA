@@ -13205,10 +13205,14 @@ outres,epel,all
 outres,rsol,all
 outres,cont,all
 
+EMATWRITE, YES
+WRFULL,YES
+
 SOLVE
 
 FINISH  
 /POST26 
+
 FILE,'file','rst','.'   
 /UI,COLL,1  
 NUMVAR,200
@@ -13288,5 +13292,27 @@ NSEL, S, NODE, , node_c
 ESLN, S, 0
 ELIST       
 ALLSEL, ALL
+
+!/POST1
+/AUX2
+
+! commands to create dense matrix
+
+! Stiffness global matrix
+*DMAT,K_MatrixDense,D,IMPORT,FULL,file1.full,STIFF
+*EXPORT,K_MatrixDense,CSV,Kdense_full.csv,24,
+!*PRINT,K_MatrixDense,Kdense_full.dat
+
+*DO, n_el, 1, 10, 1
+
+*DMAT, MatK, D, IMPORT, EMAT, file1.emat, STIFF, n_el
+*EXPORT, MatK, MMF, Ke_%n_el.txt
+
+*DMAT, MatM, D, IMPORT, EMAT, file1.emat, MASS, n_el
+*EXPORT, MatM, MMF, Me_%n_el.txt
+
+*ENDDO
+
+FINISH
 
 
