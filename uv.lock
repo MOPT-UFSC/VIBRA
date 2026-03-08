@@ -8,6 +8,53 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "cad-widgets"
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cadquery-ocp" },
+    { name = "cadquery-ocp-stubs" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pyside6" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e1/8d/2d7f13e3e23d34517ae65ab567669b8ad12cbbde1cba34147a1198d50f90/cad_widgets-0.1.7.tar.gz", hash = "sha256:844adfd88939d6b5d9767163747d77070331ade67d52f482f2bb630ae7e95993", size = 155813, upload-time = "2026-03-09T20:52:52.196Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b4/c9/165a1265a1c75701fd325b020a6ce9b08c6f90f2832137dcd716402712c3/cad_widgets-0.1.7-py3-none-any.whl", hash = "sha256:e2aea19e84a8551f8248cabf846f48f450e388959aa3857f821be80f0caaa4ea", size = 37744, upload-time = "2026-03-09T20:52:50.784Z" },
+]
+
+[[package]]
+name = "cadquery-ocp"
+version = "7.7.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ac/8f/7156c0a580c7c899cc04d412e2269fe97bac1e6951d6e0d0aca9c3905fa8/cadquery_ocp-7.7.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:7f2faf716855f9a8372493e001e6e318da75b046472e7ee69881d2a4e6b65a04", size = 185073889, upload-time = "2024-01-02T13:45:11.609Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/c1/d43a51eeb0356e47c5ff6bf0c4fed9964ad4378b271cc5fd944b76f037e9/cadquery_ocp-7.7.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:10c9883a318212968525f3fece504106b81ca9ba4e187b00b8817b1f944e302a", size = 165366113, upload-time = "2024-11-22T21:00:19.183Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/c8/ca16b397406352b38f98e1ac22fc7fc93224748006dbf7bffff1f9237c96/cadquery_ocp-7.7.2-cp310-cp310-manylinux_2_35_x86_64.whl", hash = "sha256:35e2c8ca923e4ba77b833357eb14c7e8a939f17285ef6acde7c26961989a8dfe", size = 142972863, upload-time = "2024-01-02T13:45:20.535Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/83/230868a5870673edb0dad4de8edea354514c81966360975b23e20316d3d2/cadquery_ocp-7.7.2-cp310-cp310-win_amd64.whl", hash = "sha256:4fc230711d52a9e7d71ab4c79c957287c7f2f85e5f09e036b573e6851df4d1ba", size = 90945205, upload-time = "2024-01-02T13:45:27.67Z" },
+    { url = "https://files.pythonhosted.org/packages/36/c2/8ba0015b2e34f206f28a62f9d53658a7ae4ab74e1005b88b6606192b9313/cadquery_ocp-7.7.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:488401fa4d070e3eb17729fb8b6494bd3577f0913c4e901e674c4d8fcd9ac1fe", size = 185073573, upload-time = "2024-01-02T13:45:36.659Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/01/fbb595b765e3a5da35e0b50ccb5a99b1bbfb40d2cdbdf3d819898cfcf72e/cadquery_ocp-7.7.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:6a4d2bd759cc2800ac91664357e55aba889c996c7492bd595ed63b0c517869d3", size = 165369427, upload-time = "2024-11-22T21:00:39.38Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/ce/e38d7fb8ee5f3d5c57b2fe8914bea8e8307b693bb07b8c8d87786824d54e/cadquery_ocp-7.7.2-cp311-cp311-manylinux_2_35_x86_64.whl", hash = "sha256:2be9408551c03e1c715e3b158b41ce458178ecf530ba644e3e884a5989feb611", size = 142960738, upload-time = "2024-01-02T13:45:45.325Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/50/b28f6b56479c8bd72cfdc0706ce2cef8645a36a47ea0ee1f53552a17ab08/cadquery_ocp-7.7.2-cp311-cp311-win_amd64.whl", hash = "sha256:8e1f90250924ac50344bf0867e3d9a927f077583351b270b4e0e171033dd2046", size = 90967269, upload-time = "2024-01-02T13:45:52.315Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/da/52d0d0b148a015ded47b4f51cd0d5dba43f71bdc94f2050e9b8209d30786/cadquery_ocp-7.7.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:78a7903267cd9986181b634a315ca66fac1bb9e6dbfaf60724d812b3a2cc77bf", size = 186017529, upload-time = "2024-01-02T13:46:01.745Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/15/f738b679609071932395138925eb97358c36eebf6433ac2596e9b7f7a2cf/cadquery_ocp-7.7.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:51ffbcd6d356d4f0c2e5f9e1581226121cd730fe4521eabac05e9d71e6a43f6f", size = 166437260, upload-time = "2024-11-22T21:00:59.664Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/78/f81639f0cd4e899ed2cee705a255ef1abe8d97b06f6f3f4b6aaf8d4b2a5d/cadquery_ocp-7.7.2-cp312-cp312-manylinux_2_35_x86_64.whl", hash = "sha256:7ac2d83b4f4b3d7c35421a1d9f8fec2adc73b6ed6cac50c1ffcede5552e38e9b", size = 143036527, upload-time = "2024-01-02T13:46:10.993Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/20/0525739dbeb8bac7738efcff2a700ac55256b52bc331fb2cd8d9f1201635/cadquery_ocp-7.7.2-cp312-cp312-win_amd64.whl", hash = "sha256:d9e5c8ef5aeb1d3fb8f0b207ed1a2b781d22dc3e9b9c0551f52342f5a6ee7fc5", size = 91287161, upload-time = "2024-01-02T13:46:17.408Z" },
+]
+
+[[package]]
+name = "cadquery-ocp-stubs"
+version = "7.9.3.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/10/8c/e1272880046f956542dea4d4ef211e3d36920a6efbc9b359831bbb1be89a/cadquery_ocp_stubs-7.9.3.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:08661ffdc8d58bc57f1762236243ee60511d06158b369d0352a7ac9df2c90cfb", size = 2851475, upload-time = "2026-02-15T13:40:09.345Z" },
+    { url = "https://files.pythonhosted.org/packages/01/2d/1f220eca090c1da6a72db5e44ff2a03d3d2b55e119550977ccdf1b7ac21a/cadquery_ocp_stubs-7.9.3.1-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:a4339566692b5c466b8983eb4c23ce970f3b2e033f7f54b8c7b23a1cd5c283fb", size = 2851475, upload-time = "2026-02-15T13:40:11.4Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/1a/a73b841ef62a02ec1ba7d9dc502b4027a7a1e6096d248505f0d3a563a7f0/cadquery_ocp_stubs-7.9.3.1-py3-none-manylinux_2_31_aarch64.whl", hash = "sha256:c2168857cff2630f800e9af13962f5b3fbd15092a326879c953abb6ec1ebc89d", size = 2851734, upload-time = "2026-02-15T13:40:12.64Z" },
+    { url = "https://files.pythonhosted.org/packages/69/f4/b28d7867b6f5c7cbda20d78f4ed4c06dbb33d314af5fa9232b431cc1beee/cadquery_ocp_stubs-7.9.3.1-py3-none-manylinux_2_31_x86_64.whl", hash = "sha256:841eb9853a0a94348a7380eebe3239b3e041b956b61db424e82df3b941870dd4", size = 2851735, upload-time = "2026-02-15T13:40:14.299Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/79/947d15da3a79c8b3f93bcae0257da0eccbba2923af988d3354e727a08f01/cadquery_ocp_stubs-7.9.3.1-py3-none-win_amd64.whl", hash = "sha256:3b16a29b4b45aef16bba19ebef5e26f8fa283d84816812b25fdb4f0c290c4a94", size = 2899780, upload-time = "2026-02-15T13:40:16.293Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.11.12"
 source = { registry = "https://pypi.org/simple" }
@@ -1551,6 +1598,7 @@ name = "vibra"
 version = "0.4.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cad-widgets" },
     { name = "ctrefprop" },
     { name = "fastexcel" },
     { name = "fileboxes" },
@@ -1583,6 +1631,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cad-widgets" },
     { name = "ctrefprop", specifier = ">=0.10.5,<0.11.0" },
     { name = "fastexcel", specifier = ">=0.18.0" },
     { name = "fileboxes", specifier = ">=0.1.4,<0.2.0" },
