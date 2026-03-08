@@ -38,6 +38,7 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
+from vibra.interface.viewer_3d.render_widgets.cad_render_widget import CADRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
@@ -102,12 +103,13 @@ class MainWindow(MainWindow_UI):
         self.create_recents_menu()
         self.create_status_bar()
 
-        self.clear_render_widgets_stack()
+        self.clear_render_widgets_stack()    
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
+        self.render_widgets_stack.addWidget(self.cad_render_widget)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.update_visualization_filter)
@@ -263,6 +265,8 @@ class MainWindow(MainWindow_UI):
 
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
+        self.cad_render_widget = CADRenderWidget()
+        self.cad_render_widget.on_shapes_exported.connect(self._import_geometry_or_mesh)
 
     def _load_menu_widgets(self):
         self.results_viewer_widget = ResultsViewerWidget()
@@ -684,10 +688,23 @@ class MainWindow(MainWindow_UI):
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
-        if self.import_geometry_or_mesh_dialog():
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Getting geometry")
+        msg_box.setText("Would you like to draw or import a geometry file?")
+        
+        draw_button = msg_box.addButton("Draw", QMessageBox.ButtonRole.AcceptRole)
+        import_button = msg_box.addButton("Import", QMessageBox.ButtonRole.RejectRole)
+        
+        msg_box.exec()
+        
+        if msg_box.clickedButton() == import_button:
+            if self.import_geometry_or_mesh_dialog():
+                return
+        
+        if msg_box.clickedButton() == draw_button:
+            self.render_tools_toolbar.setVisible(False)
+            self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
-
-        self.render_tools_toolbar.setVisible(True)
 
     def save_project_dialog(self):
         if app().project.save_path is None:
@@ -813,10 +830,14 @@ class MainWindow(MainWindow_UI):
 
         if not check:
             return True
+        
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
+        return self._import_geometry_or_mesh(load_path)
+    
+    def _import_geometry_or_mesh(self, load_path: str):
 
         self.selection.clear_selection()
 
-        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
         app().project.reset_variables()
         app().project.reset_solutions()
 
@@ -848,6 +869,8 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_or_mesh(_geometry_path)
 
         self.model_setup_widget.model_setup_items.update_items_appearance()
+
+        self.render_tools_toolbar.setVisible(True)
         
         return False
 
