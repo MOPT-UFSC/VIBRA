@@ -1,7 +1,7 @@
 from .analysis_id import AnalysisID
 from .harmonic_analysis_setup import AnalysisMethod, FrequencySpacing, HarmonicAnalysisSetup
-from .harmonic_analysis_setup_frequencies import HarmonicAnalysisSetupList
-from .harmonic_analysis_setup_interval import HarmonicAnalysisSetupInterval
+from .harmonic_analysis_setup_list import HarmonicAnalysisSetupList
+from .harmonic_analysis_setup_range import HarmonicAnalysisSetupRange
 from .modal_analysis_setup import ModalAnalysisSetup
 
 AnalysisSetup = HarmonicAnalysisSetup | ModalAnalysisSetup
@@ -12,8 +12,8 @@ __all__ = [
     "HarmonicAnalysisSetup",
     "ModalAnalysisSetup",
     "AnalysisSetup",
-    "HarmonicAnalysisSetupFrequencies",
-    "HarmonicAnalysisSetupInterval",
+    "HarmonicAnalysisSetupList",
+    "HarmonicAnalysisSetupRange",
     "FrequencySpacing",
     "AnalysisMethod",
 ]

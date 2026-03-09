@@ -21,7 +21,7 @@ from vibra.engine.analysis_info import (
     AnalysisSetup,
     FrequencySpacing,
     HarmonicAnalysisSetupList,
-    HarmonicAnalysisSetupInterval,
+    HarmonicAnalysisSetupRange,
     ModalAnalysisSetup,
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -149,7 +149,7 @@ class ProjectReader:
 
             match frequency_spacing:
                 case FrequencySpacing.EQUALLY_DISTRIBUTED:
-                    return HarmonicAnalysisSetupInterval(
+                    return HarmonicAnalysisSetupRange(
                         f_min=analysis_setup_dict.get("f_min", 0),
                         f_max=analysis_setup_dict.get("f_max", 0),
                         f_step=analysis_setup_dict.get("f_step", 0),

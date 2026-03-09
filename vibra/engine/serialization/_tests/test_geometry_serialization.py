@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupInterval, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.new_project import NewProject
 
@@ -36,7 +36,7 @@ def test_write_and_read_project(fluid):
 
     project_a.configure_analysis(
         AnalysisID.ACOUSTIC_HARMONIC,
-        HarmonicAnalysisSetupInterval(
+        HarmonicAnalysisSetupRange(
             f_min=100,
             f_max=500,
             f_step=200,
