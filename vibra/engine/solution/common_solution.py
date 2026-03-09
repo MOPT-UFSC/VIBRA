@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Any, Generator
+from typing import Any, Generator, Optional
 
 import numpy as np
 
@@ -64,10 +64,17 @@ class ModalSolution(Solution):
 class StructuralSolution(Solution):
     frequencies: Array1D
     results: Array2D
+    status: np.ndarray[tuple[int], bool]
 
-    def __init__(self, frequencies: Array1D, results: Array2D):
+    def __init__(
+        self,
+        frequencies: Array1D,
+        results: Array2D,
+        status: Optional[np.ndarray[tuple[int], bool]] = None,
+    ):
         self.frequencies = self._immutable_array(frequencies)
         self.results = self._immutable_array(results)
+        self.status = self._create_status(status)
         super().__init__()
 
     @cached_property
@@ -77,6 +84,11 @@ class StructuralSolution(Solution):
     @cached_property
     def number_of_frequencies(self):
         return len(self.number_of_frequencies)
+
+    def _create_status(self, status: Optional[np.ndarray[tuple[int], bool]]):
+        if status is None:
+            return np.ones_like(self.frequencies, dtype=bool)
+        return self._immutable_array(status)
 
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.frequencies, self.results)
