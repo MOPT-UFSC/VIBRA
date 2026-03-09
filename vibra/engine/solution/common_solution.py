@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Any
+from typing import Any, Generator
 
 import numpy as np
 
@@ -57,6 +57,9 @@ class ModalSolution(Solution):
     def number_of_modes(self):
         return len(self.natural_frequencies)
 
+    def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
+        yield from zip(self.natural_frequencies, self.modal_shape)
+
 
 class StructuralSolution(Solution):
     frequencies: Array1D
@@ -72,5 +75,8 @@ class StructuralSolution(Solution):
         return np.iscomplex(self.frequencies) or np.iscomplex(self.results)
 
     @cached_property
-    def number_of_modes(self):
-        return len(self.natural_frequencies)
+    def number_of_frequencies(self):
+        return len(self.number_of_frequencies)
+
+    def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
+        yield from zip(self.frequencies, self.results)
