@@ -6,7 +6,7 @@ from .harmonic_analysis_setup import HarmonicAnalysisSetup, AnalysisMethod
 
 
 @dataclass
-class HarmonicAnalysisSetupInterval(HarmonicAnalysisSetup):
+class HarmonicAnalysisSetupRange(HarmonicAnalysisSetup):
     f_min: float
     f_max: float
     f_step: float = 1

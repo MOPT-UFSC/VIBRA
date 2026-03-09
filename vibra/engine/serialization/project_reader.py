@@ -20,7 +20,7 @@ from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisSetup,
     FrequencySpacing,
-    HarmonicAnalysisSetupFrequencies,
+    HarmonicAnalysisSetupList,
     HarmonicAnalysisSetupInterval,
     ModalAnalysisSetup,
 )
@@ -158,7 +158,7 @@ class ProjectReader:
                         modes_number=analysis_setup_dict.get("modes_number", None)
                     )
                 case FrequencySpacing.USER_DEFINED:
-                    return HarmonicAnalysisSetupFrequencies(
+                    return HarmonicAnalysisSetupList(
                         analysis_setup_dict.get("frequencies", []),
                         analysis_setup_dict.get("solution_steps_mask"),
                         analysis_method=analysis_setup_dict.get("analysis_method", "direct"),

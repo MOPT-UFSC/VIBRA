@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QDialog, QLineEdit
 
 from vibra import app
 from vibra.engine import HarmonicAnalysisSetup
-from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetupFrequencies, HarmonicAnalysisSetupInterval
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetupList, HarmonicAnalysisSetupInterval
 from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
@@ -493,7 +493,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                     modes_number=analysis_setup.get("modes_number", None),
                 )
             case FrequencySpacing.USER_DEFINED:
-                self.analysis_setup = HarmonicAnalysisSetupFrequencies(
+                self.analysis_setup = HarmonicAnalysisSetupList(
                     analysis_setup["frequencies"],
                     analysis_setup.get("solution_steps_mask", None),
                     analysis_method=analysis_setup["analysis_method"],

@@ -7,7 +7,7 @@ from .harmonic_analysis_setup import AnalysisMethod, HarmonicAnalysisSetup
 
 
 @dataclass
-class HarmonicAnalysisSetupFrequencies(HarmonicAnalysisSetup):
+class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
     all_frequencies: np.ndarray[tuple[int], float]
     mask_frequencies: Optional[np.ndarray[tuple[int], bool]] = None
     _: KW_ONLY
