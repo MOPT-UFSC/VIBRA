@@ -65,15 +65,6 @@ class ModalSolution(Solution):
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.natural_frequencies, self.modal_shape)
 
-    def __eq__(self, other: Self):
-        return all(
-            [
-                isinstance(other, ModalSolution),
-                np.allclose(self.natural_frequencies, other.natural_frequencies),
-                np.allclose(self.modal_shape, other.modal_shape),
-            ]
-        )
-
 
 class HarmonicSolution(Solution):
     frequencies: Array1D
@@ -116,13 +107,3 @@ class HarmonicSolution(Solution):
 
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.frequencies, self.results)
-
-    def __eq__(self, other: Self):
-        return all(
-            [
-                isinstance(other, HarmonicSolution),
-                np.allclose(self.frequencies, other.frequencies),
-                np.allclose(self.results, other.results),
-                np.allclose(self.status, other.status),
-            ]
-        )
