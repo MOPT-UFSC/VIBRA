@@ -1,4 +1,4 @@
-from functools import cached_property
+from functools import cache, cached_property
 from typing import Any, Generator, Optional
 
 import numpy as np
@@ -15,9 +15,8 @@ Array2D = np.ndarray[
 
 
 class Solution:
-    def __init__(self, lazy: bool = False):
+    def __init__(self):
         # After calling the init this "cannot" be modified anymore
-        self.lazy = lazy
         self.writeable = False
 
     def _immutable_array(self, array_like: np.typing.ArrayLike) -> Array1D | Array2D:
@@ -57,11 +56,17 @@ class ModalSolution(Solution):
     def number_of_modes(self):
         return len(self.natural_frequencies)
 
+    def get_row(self, row_index: int) -> Array1D:
+        return self.modal_shape[row_index, :]
+
+    def get_column(self, column_index: int) -> Array1D:
+        return self.modal_shape[:, column_index]
+
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.natural_frequencies, self.modal_shape)
 
 
-class StructuralSolution(Solution):
+class HarmonicSolution(Solution):
     frequencies: Array1D
     results: Array2D
     status: np.ndarray[tuple[int], bool]
@@ -84,6 +89,16 @@ class StructuralSolution(Solution):
     @cached_property
     def number_of_frequencies(self):
         return len(self.number_of_frequencies)
+
+    @cached_property
+    def has_partial_solutions(self):
+        return not all(self.status)
+
+    def get_row(self, row_index: int) -> Array1D:
+        return self.results[row_index, :]
+
+    def get_column(self, column_index: int) -> Array1D:
+        return self.results[:, column_index]
 
     def _create_status(self, status: Optional[np.ndarray[tuple[int], bool]]):
         if status is None:
