@@ -15,8 +15,9 @@ Array2D = np.ndarray[
 
 
 class Solution:
-    def __init__(self):
+    def __init__(self, lazy: bool = False):
         # After calling the init this "cannot" be modified anymore
+        self.lazy = lazy
         self.writeable = False
 
     def _immutable_array(self, array_like: np.typing.ArrayLike) -> Array1D | Array2D:
@@ -40,7 +41,7 @@ class Solution:
 
 
 class ModalSolution(Solution):
-    natural_frequencies: Array2D
+    natural_frequencies: Array1D
     modal_shape: Array2D
 
     def __init__(self, natural_frequencies: Array1D, modal_shape: Array2D):
@@ -58,4 +59,18 @@ class ModalSolution(Solution):
 
 
 class StructuralSolution(Solution):
-    pass
+    frequencies: Array1D
+    results: Array2D
+
+    def __init__(self, frequencies: Array1D, results: Array2D):
+        self.frequencies = self._immutable_array(frequencies)
+        self.results = self._immutable_array(results)
+        super().__init__()
+
+    @cached_property
+    def iscomplex(self):
+        return np.iscomplex(self.frequencies) or np.iscomplex(self.results)
+
+    @cached_property
+    def number_of_modes(self):
+        return len(self.natural_frequencies)
