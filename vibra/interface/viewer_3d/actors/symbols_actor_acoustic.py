@@ -80,7 +80,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             avg_normal = np.average(surface_normals, axis=0).round(6)
 
         curvatures_surface = mesh.curvatures_surface.get(surface_id)
-        contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
+        contains_curvature = (curvatures_surface is not None) and (np.average(curvatures_surface) > 1e-4)
         center_coords = np.average(surface_coordinates, axis=0)
 
         if contains_curvature:
