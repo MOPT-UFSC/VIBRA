@@ -1,12 +1,12 @@
-from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+import logging
+
+import numpy as np
+from scipy.sparse.linalg import eigs
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-
-import logging
-import numpy as np
-
-from scipy.sparse.linalg import eigs
+from vibra.engine.solution import AcousticModalSolution, ModalSolution, StructuralModalSolution
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 
 class ModalSolver:
@@ -20,8 +20,9 @@ class ModalSolver:
         self.complex_natural_frequencies = np.array([])
         self.displacement_dof = None
 
-    def solve(self, which="LM", full_solution: bool = True):
-        """ This method solves the acoustic modal analysis for both damped and undamped problems.
+    def solve(self, which="LM", full_solution: bool = True) -> ModalSolution:
+        """
+        This method solves the acoustic modal analysis for both damped and undamped problems.
         """
 
         self.reset_variables()
@@ -45,6 +46,7 @@ class ModalSolver:
 
         except Exception as error_log:
             from traceback import print_exception
+
             print_exception(error_log)
             eigenvalues, eigenvectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which)
 
@@ -91,5 +93,14 @@ class ModalSolver:
 
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
+            return StructuralModalSolution(
+                self.natural_frequencies,
+                self.solution,
+                self.displacement_dof,
+            )
 
-        return self.natural_frequencies, self.solution
+        else:
+            return AcousticModalSolution(
+                self.natural_frequencies,
+                self.solution,
+            )
