@@ -1,7 +1,5 @@
 from typing import Self
 
-import numpy as np
-
 from vibra.engine.analysis_info import AnalysisID
 
 from .common_solution import CommonHarmonicSolution
