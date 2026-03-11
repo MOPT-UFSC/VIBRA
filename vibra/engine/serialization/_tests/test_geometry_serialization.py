@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.new_project import NewProject
 
