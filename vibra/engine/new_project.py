@@ -146,7 +146,7 @@ class NewProject:
         self.needs_saving = True
 
     def update_project_setup_file(self):
-        self.project_writer.write_project_setup(self)
+        self.project_writer.write_project_setup(self.model)
         self.needs_saving = True
 
     def save_project(

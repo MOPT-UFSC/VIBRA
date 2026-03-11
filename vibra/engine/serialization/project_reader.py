@@ -84,7 +84,7 @@ class ProjectReader:
 
         project.reset_variables()
         project.model = self.read_model(project.model)
-        project.assembler, project.solver = self.read_solution(project.model)
+        project.assembler, project.solver = self.read_assembler_and_solver(project.model)
 
         return project
 
@@ -394,7 +394,7 @@ class ProjectReader:
 
         return read_image(self.project_paths.thumbnail_filepath)
 
-    def read_solution(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
+    def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
         # TODO: create Solution classes, so we don't need to create pointless Assemblers and Solvers here
         logging.info("Reading Solution.")

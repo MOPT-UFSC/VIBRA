@@ -53,7 +53,6 @@ class ProjectWriter:
     def write_project(self, project: NewProject):
         logging.info("Writing Project.")
 
-        self.write_project_setup(project)
         self.write_model(project.model)
 
         if isinstance(project.solver, ModalSolver) and (project.solver.solution is not None):
@@ -62,6 +61,7 @@ class ProjectWriter:
     def write_model(self, model: Model):
         logging.info("Writing Model.")
 
+        self.write_project_setup(model)
         self.write_model_properties(model.properties)
 
         if model.thumbnail is not None:
@@ -75,7 +75,7 @@ class ProjectWriter:
         if model.mesh is not None:
             self.write_mesh(model.mesh)
 
-    def write_project_setup(self, project: NewProject):
+    def write_project_setup(self, model: Model):
         logging.info("Writing project setup.")
 
         project_setup = {
@@ -83,18 +83,18 @@ class ProjectWriter:
             "analysis_setup": {},
         }
 
-        if isinstance(project.model.geometry_path, Path):
-            project_setup["geometry_filename"] = project.model.geometry_path.name
-            project_setup["length_unit"] = project.model.length_unit
-            project_setup["geometry_qf"] = project.model.geometry_qf
+        if isinstance(model.geometry_path, Path):
+            project_setup["geometry_filename"] = model.geometry_path.name
+            project_setup["length_unit"] = model.length_unit
+            project_setup["geometry_qf"] = model.geometry_qf
 
-        if project.model.analysis_id != AnalysisID.NO_ANALYSIS:
-            project_setup["analysis_setup"]["analysis_id"] = int(project.model.analysis_id)
+        if model.analysis_id != AnalysisID.NO_ANALYSIS:
+            project_setup["analysis_setup"]["analysis_id"] = int(model.analysis_id)
 
-        if isinstance(project.model.new_analysis_setup, AnalysisSetup):
-            project_setup["analysis_setup"].update(project.model.new_analysis_setup.as_dict())
+        if isinstance(model.new_analysis_setup, AnalysisSetup):
+            project_setup["analysis_setup"].update(model.new_analysis_setup.as_dict())
 
-        mesh_setup = project.model.mesh_setup_new
+        mesh_setup = model.mesh_setup_new
         if mesh_setup is not None:
             project_setup["mesh_setup"].update(
                 asdict(mesh_setup),
