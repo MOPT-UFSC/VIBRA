@@ -176,13 +176,16 @@ class AnalysisChecker:
             )  # fmt: skip
 
     def check_acoustic_harmonic_excitations(self):
-        if self._any_property_attributed(
+        if self._any_property_attributed("reciprocating_compressor_excitation"):
+            return
+
+        if self._any_true_property_attributed(
             "acoustic_pressure",
             "surface_velocity",
             "mass_flow_rate",
             "incident_plane_wave",
-            "reciprocating_compressor_excitation",
             "mass_source",
+            allows_zero=True,
         ):
             return
 
@@ -192,7 +195,7 @@ class AnalysisChecker:
         )  # fmt: skip
 
     def check_structural_harmonic_excitations(self):
-        if self._any_property_attributed(
+        if self._any_true_property_attributed(
             "prescribed_dof",
             "nodal_loads",
             "distributed_loads",
@@ -207,7 +210,7 @@ class AnalysisChecker:
         )  # fmt: skip
 
     def check_mode_superposition_prescribed_dof_criterion(self):
-        if self._any_property_attributed("prescribed_dof", allows_zero=True):
+        if self._any_true_property_attributed("prescribed_dof", allows_zero=True):
             return
 
         raise errors.InvalidModelExcitationError(
@@ -215,7 +218,13 @@ class AnalysisChecker:
             "there are any nonzero prescribed degrees of freedom."
         )  # fmt: skip
 
-    def _any_property_attributed(self, *property_names: str, allows_zero: bool = False):
+    def _any_property_attributed(self, *property_names: str):
+        for _, prop_label, _, data in self.model.properties.iterate_properties():
+            if prop_label in property_names:
+                return True
+        return False
+
+    def _any_true_property_attributed(self, *property_names: str, allows_zero: bool = False):
         for _, prop_label, _, data in self.model.properties.iterate_properties():
             if prop_label not in property_names:
                 continue

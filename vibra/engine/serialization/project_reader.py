@@ -155,7 +155,7 @@ class ProjectReader:
                         f_step=analysis_setup_dict.get("f_step", 0),
                         analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
                         global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number=analysis_setup_dict.get("modes_number", None)
+                        modes_number=analysis_setup_dict.get("modes_number", None),
                     )
                 case FrequencySpacing.USER_DEFINED:
                     return HarmonicAnalysisSetupList(
@@ -163,7 +163,7 @@ class ProjectReader:
                         analysis_setup_dict.get("solution_steps_mask"),
                         analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
                         global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number=analysis_setup_dict.get("modes_number", None)
+                        modes_number=analysis_setup_dict.get("modes_number", None),
                     )
 
         elif analysis_id.is_modal():
@@ -211,7 +211,7 @@ class ProjectReader:
 
         geometry_data_path = self.project_paths.geometry_data_filepath
         if not geometry_data_path.exists():
-            raise FileNotFoundError("The mesh file is missing.")
+            raise FileNotFoundError("The geometry file is missing.")
 
         if mesh is None:
             mesh = Mesh()
@@ -288,10 +288,12 @@ class ProjectReader:
 
         fluid_library = self.read_fluid_library()
         material_library = self.read_material_library()
-        # TODO: read imported tables
+        self.read_acoustic_tables()
 
         model_properties.fluid_library = fluid_library
         model_properties.material_library = material_library
+        model_properties.acoustic_imported_tables = self.read_acoustic_tables()
+        model_properties.structural_imported_tables = self.read_structural_tables()
 
         property_data = read_json(self.project_paths.model_properties_filepath)
         if property_data is None:
@@ -379,6 +381,38 @@ class ProjectReader:
             fluid_library[fluid_id] = fluid
 
         return fluid_library
+
+    def read_acoustic_tables(self) -> dict[str, np.ndarray]:
+        tables = dict()
+
+        table_data_path = self.project_paths.imported_table_data_filepath
+        if not table_data_path.exists():
+            return tables
+
+        with h5py.File(table_data_path, "r") as file:
+            if "acoustic" not in file:
+                return tables
+
+            for name, dataset in file["acoustic"].items():
+                tables[name] = np.array(dataset)
+
+        return tables
+
+    def read_structural_tables(self) -> dict[str, np.ndarray]:
+        tables = dict()
+
+        table_data_path = self.project_paths.imported_table_data_filepath
+        if not table_data_path.exists():
+            return tables
+
+        with h5py.File(table_data_path, "r") as file:
+            if "structural" not in file:
+                return tables
+
+            for name, dataset in file["structural"].items():
+                tables[name] = np.array(dataset)
+
+        return tables
 
     def read_thumbnail(self) -> Optional[Image]:
         if not self.project_paths.thumbnail_filepath.exists():
