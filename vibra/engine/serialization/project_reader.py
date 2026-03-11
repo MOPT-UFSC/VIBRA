@@ -30,6 +30,15 @@ from vibra.engine.properties import (
 )
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
+from vibra.engine.solution import (
+    AcousticHarmonicSolution,
+    AcousticModalSolution,
+    HarmonicSolution,
+    ModalSolution,
+    Solution,
+    StructuralHarmonicSolution,
+    StructuralModalSolution,
+)
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
@@ -86,6 +95,8 @@ class ProjectReader:
 
         if self.project_paths.mesh_data_filepath.exists():
             model.mesh = self.read_mesh()
+
+        model.solution = self.read_solution(model)
 
         return model
 
@@ -371,6 +382,51 @@ class ProjectReader:
         logging.info("Reading Thumbnail")
 
         return read_image(self.project_paths.thumbnail_filepath)
+
+    def read_solution(self, model: Model) -> Optional[Solution]:
+        if model.analysis_id.is_harmonic():
+            return self.read_harmonic_solution()
+        elif model.analysis_id.is_modal():
+            return self.read_modal_solution()
+        else:
+            return None
+
+    def read_harmonic_solution(self) -> Optional[HarmonicSolution]:
+        if not self.project_paths.harmonic_solution_filepath.exists():
+            return None
+
+        with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
+            if "displacement_dof" in file:
+                return StructuralHarmonicSolution(
+                    file["frequencies"],
+                    file["solution"],
+                    file["displacement_dof"],
+                    file["solution_status"],
+                )
+            else:
+                return AcousticHarmonicSolution(
+                    file["frequencies"],
+                    file["solution"],
+                    file["solution_status"],
+                )
+
+    def read_modal_solution(self) -> Optional[ModalSolution]:
+        if not self.project_paths.modal_solution_filepath.exists():
+            return None
+
+        with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
+            if "displacement_dof" in file:
+                return StructuralModalSolution(
+                    file["frequencies"],
+                    file["solution"],
+                    file["displacement_dof"],
+                )
+            else:
+                return AcousticModalSolution(
+                    file["frequencies"],
+                    file["solution"],
+                    file["solution_status"],
+                )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 

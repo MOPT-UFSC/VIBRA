@@ -47,6 +47,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.engine.solution import Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -68,6 +69,7 @@ class Model:
         self.mesh_setup_new: Optional[MeshSetup] = None
         self.new_analysis_setup: Optional[AnalysisSetup] = None
         self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
+        self.solution: Optional[Solution] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
