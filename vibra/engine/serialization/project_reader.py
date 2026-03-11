@@ -1,16 +1,10 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
-
-if TYPE_CHECKING:
-    # This is to avoid circular imports since
-    # this file is also imported by NewProject
-    from vibra.engine.new_project import NewProject
-
 import typing
 import zipfile
 from pathlib import Path
+from typing import Optional
 
 import h5py
 import numpy as np
@@ -53,7 +47,7 @@ class ProjectReader:
     def __init__(self, project_paths: ProjectPaths):
         self.project_paths = project_paths
 
-    def read_file(self, vibra_path: Path | str):
+    def unpack_into_working_directory(self, vibra_path: Path | str):
         """
         This method reads the vibra file into the working directory
         defined on the constructor.
@@ -71,22 +65,6 @@ class ProjectReader:
         self.project_paths.clear_data()
         with zipfile.ZipFile(vibra_path, "r") as file:
             file.extractall(path=self.project_paths.working_directory)
-
-    def read_project(self, project: Optional[NewProject] = None) -> NewProject:
-        if project is None:
-            # This is to avoid circular imports since
-            # this file is imported by NewProject
-            from vibra.engine.new_project import NewProject
-
-            project = NewProject()
-
-        logging.info("Reading project.")
-
-        project.reset_variables()
-        project.model = self.read_model(project.model)
-        project.assembler, project.solver = self.read_assembler_and_solver(project.model)
-
-        return project
 
     def read_model(self, model: Optional[Model] = None) -> Model:
         if model is None:

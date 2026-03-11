@@ -64,8 +64,8 @@ class NewProject:
 
     def create_connections(self):
         return
-        self.model.properties.modified.connect(self.update_model_properties_file)
-        self.model.analysis_setup_modified.connect(self.update_project_setup_file)
+        # self.model.properties.modified.connect(self.update_model_properties_file)
+        # self.model.analysis_setup_modified.connect(self.update_project_setup_file)
 
     @property
     def mesh(self) -> Optional[Mesh]:
@@ -93,7 +93,7 @@ class NewProject:
             self.project_paths.set_working_directory(path)
 
     def set_thumbnail(self, thumbnail: Image):
-        self.thumbnail = thumbnail
+        self.model.thumbnail = thumbnail
         self.project_writer.write_thumbnail(thumbnail)
         self.needs_saving = True
 
@@ -121,23 +121,27 @@ class NewProject:
         """
         Unpacks the vibra file into the working directory and reads data from it.
         """
-        self.project_reader.read_file(path)
-        self.project_reader.read_project(self)
+        self.reset_solution()
+        self.project_reader.unpack_into_working_directory(path)
+        self.model = self.project_reader.read_model(self.model)
+        self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
         self.save_path = Path(path)
-        self.create_connections()
         return self
 
     def read_from_working_dir(self) -> NewProject:
         """
         Reload project data from the working directory.
         """
-        return self.project_reader.read_project(self)
+        self.model = self.project_reader.read_model(self.model)
+        return self
 
     def write_to_working_dir(self):
         """
         Writes project data to the working directory.
         """
-        self.project_writer.write_project(self)
+        self.project_writer.write_model(self.model)
+        if isinstance(self.solver, ModalSolver) and (self.solver.solution is not None):
+            self.write_modal_solution(self.solver)
         self.needs_saving = True
 
     # TODO: use only "write_to_working_dir"
@@ -158,7 +162,7 @@ class NewProject:
         Packs the data from the working directory into a .vibra file.
         """
         self.save_path = Path(path)
-        self.name = name
+        self.model.name = name
         if self.project_paths.is_empty():
             self.write_to_working_dir()
         self.project_writer.write_file(path)

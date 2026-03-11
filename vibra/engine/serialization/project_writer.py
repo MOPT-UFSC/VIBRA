@@ -5,16 +5,11 @@ import shutil
 import zipfile
 from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import h5py
 import numpy as np
 from PIL import Image
-
-if TYPE_CHECKING:
-    # This is to avoid circular imports since
-    # this file is imported by NewProject
-    from vibra.engine.new_project import NewProject
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
 from vibra.engine.mesher.mesh import Mesh
@@ -49,14 +44,6 @@ class ProjectWriter:
 
                 arcname = path.relative_to(working_dir)
                 file.write(path, arcname)
-
-    def write_project(self, project: NewProject):
-        logging.info("Writing Project.")
-
-        self.write_model(project.model)
-
-        if isinstance(project.solver, ModalSolver) and (project.solver.solution is not None):
-            self.write_modal_solution(project.solver)
 
     def write_model(self, model: Model):
         logging.info("Writing Model.")
