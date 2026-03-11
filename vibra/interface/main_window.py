@@ -918,7 +918,7 @@ class MainWindow(MainWindow_UI):
 
         if project_recovery:
             LoadingWindow(project.read_from_working_dir).run()
-            project.name = "Recover project"
+            project.model.name = "Recover project"
         else:
             LoadingWindow(project.load_project).run(project_path)
             config.add_recent_file(project_path)
@@ -926,7 +926,7 @@ class MainWindow(MainWindow_UI):
 
         # Interface update
         self.update_recents_menu()
-        self.setWindowTitle(project.name)
+        self.setWindowTitle(project.model.name)
 
         self.status_bar.update_geometry_information()
         self.status_bar.update_mesh_information()

@@ -919,7 +919,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         # No idea of what it does
         app().new_project.configure_analysis(
-            app().new_project.current_analysis_id,
+            app().new_project.model.analysis_id,
             app().new_project.model.new_analysis_setup,
         )
 

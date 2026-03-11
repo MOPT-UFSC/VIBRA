@@ -43,7 +43,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def _load_analysis_setup(self):
         self.analysis_method = ""
-        if app().new_project.current_analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
     def _initialize(self):

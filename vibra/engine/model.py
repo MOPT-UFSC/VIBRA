@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
+from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
@@ -60,9 +61,13 @@ class Model:
         self.reset_variables()
 
     def reset_variables(self):
+        self.name: str = "Model"
+        self.thumbnail: Optional[Image] = None
+
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup_new: Optional[MeshSetup] = None
         self.new_analysis_setup: Optional[AnalysisSetup] = None
+        self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
@@ -311,7 +316,7 @@ class Model:
         return False
 
     def is_there_a_valid_analysis_setup(self, **kwargs):
-        current_analysis_id = kwargs.get("current_analysis_id", None)
+        current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
         if not isinstance(self.analysis_setup, dict):
             return False
 

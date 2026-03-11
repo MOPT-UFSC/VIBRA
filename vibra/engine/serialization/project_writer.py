@@ -24,8 +24,8 @@ from vibra.engine.properties.libraries.fluid_library import FluidLibrary
 from vibra.engine.properties.libraries.material_library import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.engine.serialization.file_helpers import read_json, update_json, write_image, write_json
+from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
 
 from .project_hasher import HashEnum, ProjectHasher
@@ -59,13 +59,13 @@ class ProjectWriter:
         if isinstance(project.solver, ModalSolver) and (project.solver.solution is not None):
             self.write_modal_solution(project.solver)
 
-        if project.thumbnail is not None:
-            self.write_thumbnail(project.thumbnail)
-
     def write_model(self, model: Model):
         logging.info("Writing Model.")
 
         self.write_model_properties(model.properties)
+
+        if model.thumbnail is not None:
+            self.write_thumbnail(model.thumbnail)
 
         if model.geometry_path is not None:
             # Copy geometry file to the working dir and
@@ -88,8 +88,8 @@ class ProjectWriter:
             project_setup["length_unit"] = project.model.length_unit
             project_setup["geometry_qf"] = project.model.geometry_qf
 
-        if project.current_analysis_id != AnalysisID.NO_ANALYSIS:
-            project_setup["analysis_setup"]["analysis_id"] = int(project.current_analysis_id)
+        if project.model.analysis_id != AnalysisID.NO_ANALYSIS:
+            project_setup["analysis_setup"]["analysis_id"] = int(project.model.analysis_id)
 
         if isinstance(project.model.new_analysis_setup, AnalysisSetup):
             project_setup["analysis_setup"].update(project.model.new_analysis_setup.as_dict())

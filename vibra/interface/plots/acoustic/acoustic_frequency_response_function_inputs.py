@@ -106,7 +106,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if app().new_project.current_analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
         self.frequencies = app().new_project.model.frequencies

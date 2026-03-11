@@ -210,7 +210,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self.actors_exists():
             return
 
-        if app().new_project.current_analysis_id == AnalysisID.NO_ANALYSIS:
+        if app().new_project.model.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
 
@@ -244,7 +244,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         displacements = None
         colormap = app().config.user_preferences.color_map
-        analysis_id = app().new_project.current_analysis_id
+        analysis_id = app().new_project.model.analysis_id
 
         if phase is None:
             phase = np.radians(animation_toolbar.phase_slider.value())
@@ -519,7 +519,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         text = ""
-        analysis_id = app().new_project.current_analysis_id
+        analysis_id = app().new_project.model.analysis_id
 
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
@@ -548,7 +548,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             AnalysisID.ACOUSTIC_HARMONIC: "Pa",
         }
 
-        analysis_id = app().new_project.current_analysis_id
+        analysis_id = app().new_project.model.analysis_id
         unit = unit_mapping.get(analysis_id, "--")
 
         self.colorbar_actor.SetTitle(f"Unit: [{unit}]")

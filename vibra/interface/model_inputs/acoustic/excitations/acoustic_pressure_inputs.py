@@ -485,7 +485,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         # I am not sure what it is suposed to do.
         app().new_project.configure_analysis(
-            app().new_project.current_analysis_id,
+            app().new_project.model.analysis_id,
             app().new_project.model.new_analysis_setup,
         )
 

@@ -142,7 +142,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        analysis_id = app().new_project.current_analysis_id
+        analysis_id = app().new_project.model.analysis_id
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
@@ -214,7 +214,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().new_project.current_analysis_id
+        analysis_id = app().new_project.model.analysis_id
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)

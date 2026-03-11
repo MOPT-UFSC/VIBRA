@@ -83,13 +83,8 @@ class ProjectReader:
         logging.info("Reading project.")
 
         project.reset_variables()
-        project.current_analysis_id = self.read_current_analysis_id()
         project.model = self.read_model(project.model)
-        project.thumbnail = self.read_thumbnail()
-        project.assembler, project.solver = self.read_solution(
-            project.current_analysis_id,
-            project.model,
-        )
+        project.assembler, project.solver = self.read_solution(project.model)
 
         return project
 
@@ -100,6 +95,8 @@ class ProjectReader:
         logging.info("Reading model.")
 
         model.reset_variables()
+        model.thumbnail = self.read_thumbnail()
+        model.analysis_id = self.read_current_analysis_id()
 
         analysis_setup = self.read_analysis_setup()
         if analysis_setup is not None:
@@ -397,28 +394,24 @@ class ProjectReader:
 
         return read_image(self.project_paths.thumbnail_filepath)
 
-    def read_solution(
-        self,
-        analysis_id: AnalysisID,
-        model: Model,
-    ) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
+    def read_solution(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
         # TODO: create Solution classes, so we don't need to create pointless Assemblers and Solvers here
         logging.info("Reading Solution.")
 
-        if analysis_id.is_acoustic():
+        if model.analysis_id.is_acoustic():
             assembler = AcousticAssembler(model)
-        elif analysis_id.is_structural():
+        elif model.analysis_id.is_structural():
             assembler = StructuralAssembler(model)
         else:
             return None, None
 
-        if analysis_id.is_harmonic():
+        if model.analysis_id.is_harmonic():
             solver = HarmonicSolver(assembler)
             if self.project_paths.harmonic_solution_filepath.exists():
                 solver.solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
 
-        elif analysis_id.is_modal():
+        elif model.analysis_id.is_modal():
             solver = ModalSolver(assembler)
             if self.project_paths.modal_solution_filepath.exists():
                 solver.solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)

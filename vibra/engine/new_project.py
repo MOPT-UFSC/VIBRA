@@ -37,19 +37,15 @@ class NewProject:
         self.create_connections()
 
     def reset_variables(self):
-        self.name: str = "Project"
-        self.thumbnail: Optional[Image] = None
-        self.save_path: Optional[Path] = None
-        self.needs_saving: bool = False
-
         self.model = Model()
-        self.current_analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
-
         self.project_reader = ProjectReader(self.project_paths)
         self.project_writer = ProjectWriter(self.project_paths)
 
-        # TODO: We don't actually need the assemblers and solvers to be public.
-        # The only public information must be the Solution, for which a few classes shoud be created.
+        self.save_path: Optional[Path] = None
+        self.needs_saving: bool = False
+
+        # TODO: Store the Solution, not the solvers and assemblers.
+        # Except if it is used to cache a few matrices somehow.
         self.mesh_setup: Optional[MeshSetup] = None
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
         self.solver: Optional[HarmonicSolver | ModalSolver] = None
@@ -106,7 +102,7 @@ class NewProject:
         self.needs_saving = True
 
     def run_analysis(self) -> Solution:
-        match self.current_analysis_id:
+        match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 return self.solve_structural_modal_analysis()
             case AnalysisID.STRUCTURAL_HARMONIC:
@@ -116,7 +112,7 @@ class NewProject:
             case AnalysisID.ACOUSTIC_HARMONIC:
                 return self.solve_acoustic_harmonic_analysis()
             case _:
-                raise NotImplementedError(f'Analysis type "{self.current_analysis_id.name}" is not implemented.')
+                raise NotImplementedError(f'Analysis type "{self.model.analysis_id.name}" is not implemented.')
 
     def load_project(
         self,
@@ -267,12 +263,12 @@ class NewProject:
         analysis_setup: Optional[AnalysisSetup],
     ):
         self.reset_solution()
-        self.current_analysis_id = analysis_id
+        self.model.analysis_id = analysis_id
         self.model.new_set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
     def solve_structural_modal_analysis(self) -> StructuralModalSolution:
-        self.current_analysis_id = AnalysisID.STRUCTURAL_MODAL
+        self.model.analysis_id = AnalysisID.STRUCTURAL_MODAL
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -294,7 +290,7 @@ class NewProject:
         return solution
 
     def solve_structural_harmonic_analysis(self) -> StructuralHarmonicSolution:
-        self.current_analysis_id = AnalysisID.STRUCTURAL_HARMONIC
+        self.model.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -322,7 +318,7 @@ class NewProject:
         return solution
 
     def solve_acoustic_modal_analysis(self) -> AcousticModalSolution:
-        self.current_analysis_id = AnalysisID.ACOUSTIC_MODAL
+        self.model.analysis_id = AnalysisID.ACOUSTIC_MODAL
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -344,7 +340,7 @@ class NewProject:
         return solution
 
     def solve_acoustic_harmonic_analysis(self) -> AcousticHarmonicSolution:
-        self.current_analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+        self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -380,7 +376,7 @@ class NewProject:
 
     def is_analysis_id_valid(self, analysis_id: Optional[AnalysisID]) -> bool:
         if analysis_id is None:
-            analysis_id = self.current_analysis_id
+            analysis_id = self.model.analysis_id
 
         if analysis_id.is_harmonic() and isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
             return True
@@ -392,23 +388,23 @@ class NewProject:
 
     def is_analysis_setup_complete(self):
         try:
-            AnalysisChecker(self.model).check_analysis_id(self.current_analysis_id)
+            AnalysisChecker(self.model).check_analysis_id(self.model.analysis_id)
         except Exception:
             return False
         else:
             return True
 
     def is_there_a_valid_solution(self) -> bool:
-        if self.current_analysis_id.is_acoustic() and not isinstance(self.assembler, AcousticAssembler):
+        if self.model.analysis_id.is_acoustic() and not isinstance(self.assembler, AcousticAssembler):
             return False
 
-        if self.current_analysis_id.is_structural() and not isinstance(self.assembler, StructuralAssembler):
+        if self.model.analysis_id.is_structural() and not isinstance(self.assembler, StructuralAssembler):
             return False
 
-        if self.current_analysis_id.is_harmonic() and not isinstance(self.solver, HarmonicSolver):
+        if self.model.analysis_id.is_harmonic() and not isinstance(self.solver, HarmonicSolver):
             return False
 
-        if self.current_analysis_id.is_modal() and not isinstance(self.solver, ModalSolver):
+        if self.model.analysis_id.is_modal() and not isinstance(self.solver, ModalSolver):
             return False
 
         if self.solver is None:
@@ -423,18 +419,18 @@ class NewProject:
         analysis_type = ""
         physical_domain = ""
 
-        if self.current_analysis_id.is_harmonic():
+        if self.model.analysis_id.is_harmonic():
             analysis_type = "harmonic"
-        elif self.current_analysis_id.is_modal():
+        elif self.model.analysis_id.is_modal():
             analysis_type = "modal"
-        elif self.current_analysis_id.is_static():
+        elif self.model.analysis_id.is_static():
             physical_domain = "static"
 
-        if self.current_analysis_id.is_acoustic():
+        if self.model.analysis_id.is_acoustic():
             physical_domain = "acoustic"
-        elif self.current_analysis_id.is_structural():
+        elif self.model.analysis_id.is_structural():
             physical_domain = "structural"
-        elif self.current_analysis_id.is_coupled():
+        elif self.model.analysis_id.is_coupled():
             analysis_type = "coupled"
 
         return analysis_type, physical_domain

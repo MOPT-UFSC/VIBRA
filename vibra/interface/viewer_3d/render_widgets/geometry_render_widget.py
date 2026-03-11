@@ -185,11 +185,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         logging.info("Updating the geometry render... [95/100]")
         self.update()
 
-        if app().new_project.thumbnail is None:
+        if app().new_project.model.thumbnail is None:
             self.save_thumbnail()
 
     def save_thumbnail(self):
-        thumbnail = app().new_project.thumbnail
+        thumbnail = app().new_project.model.thumbnail
 
         self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
 
