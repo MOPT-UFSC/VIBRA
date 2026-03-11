@@ -3,6 +3,8 @@ from typing import Any, Generator, Optional
 
 import numpy as np
 
+from vibra.engine.analysis_info import AnalysisID
+
 Array1D = np.ndarray[
     tuple[int],
     float | complex,
@@ -15,9 +17,29 @@ Array2D = np.ndarray[
 
 
 class Common:
+    analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
+
     def __init__(self):
         # After calling the init this "cannot" be modified anymore
         self.writeable = False
+
+    def is_harmonic(self):
+        return self.analysis_id.is_harmonic()
+
+    def is_modal(self):
+        return self.analysis_id.is_modal()
+
+    def is_static(self):
+        return self.analysis_id.is_static()
+
+    def is_structural(self):
+        return self.analysis_id.is_structural()
+
+    def is_acoustic(self):
+        return self.analysis_id.is_acoustic()
+
+    def is_coupled(self):
+        return self.analysis_id.is_coupled()
 
     def _immutable_array(self, array_like: np.typing.ArrayLike) -> Array1D | Array2D:
         """

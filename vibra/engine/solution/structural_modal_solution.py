@@ -1,9 +1,13 @@
 from functools import cached_property
 
+from vibra.engine.analysis_info import AnalysisID
+
 from .common_solution import Array1D, Array2D, CommonModalSolution
 
 
 class StructuralModalSolution(CommonModalSolution):
+    analysis_id = AnalysisID.STRUCTURAL_MODAL
+
     def __init__(
         self,
         natural_frequencies: Array1D,

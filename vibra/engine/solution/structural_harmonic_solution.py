@@ -3,10 +3,14 @@ from typing import Optional
 
 import numpy as np
 
+from vibra.engine.analysis_info import AnalysisID
+
 from .common_solution import Array1D, Array2D, CommonHarmonicSolution
 
 
 class StructuralHarmonicSolution(CommonHarmonicSolution):
+    analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+
     def __init__(
         self,
         frequencies: Array1D,
