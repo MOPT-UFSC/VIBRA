@@ -26,6 +26,7 @@ def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_a
     for i, _ in enumerate(frequencies):
         assert np.allclose(saved_solutions[:, i], in_memory_solutions[:, i])
 
+
 def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
     # Define the analysis frequency setup
     df = 100

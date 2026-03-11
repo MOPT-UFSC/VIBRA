@@ -142,12 +142,18 @@ class HarmonicSolver:
 
         t0 = time()        
         modal_solver = ModalSolver(self.assembler)
-        natural_frequencies, eigenvectors = modal_solver.solve(full_solution=False)
+        modal_solution = modal_solver.solve(full_solution=False)
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
 
         if is_proportionally_damped:
-            self.compute_proportionally_damped_frequency_sweep(solution, eigenvectors, natural_frequencies, print_log, is_resume)
+            self.compute_proportionally_damped_frequency_sweep(
+                solution,
+                modal_solution.modal_shape,
+                modal_solution.natural_frequencies,
+                print_log,
+                is_resume,
+            )
         else:
             self.compute_frequency_sweep(solution, print_log, is_resume)
 

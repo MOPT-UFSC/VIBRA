@@ -333,7 +333,7 @@ class NewProject:
         self.assembler.assemble_global_matrices_and_excitations()
 
         t0 = perf_counter()
-        _, solution = self.solver.solve()
+        solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
         self.needs_saving = True
         dt = perf_counter() - t0
