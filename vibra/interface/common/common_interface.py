@@ -66,9 +66,9 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
 
     if physical_domain == "acoustic":
-        complex_natural_frequencies = app().new_project.acoustic_modal_solver.complex_natural_frequencies
+        complex_natural_frequencies = app().new_project.solver.complex_natural_frequencies
     else:
-        complex_natural_frequencies = app().new_project.structural_modal_solver.complex_natural_frequencies
+        complex_natural_frequencies = app().new_project.solver.complex_natural_frequencies
 
     if complex_natural_frequencies.size:
         cols = 3
