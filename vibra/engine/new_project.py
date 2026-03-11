@@ -5,6 +5,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Optional
 
+import numpy as np
 from PIL.Image import Image
 
 from vibra import errors
@@ -22,6 +23,7 @@ from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solution import (
     AcousticHarmonicSolution,
     AcousticModalSolution,
+    HarmonicSolution,
     Solution,
     StructuralHarmonicSolution,
     StructuralModalSolution,
@@ -82,6 +84,15 @@ class NewProject:
     @property
     def material_library(self) -> MaterialLibrary:
         return self.model.properties.material_library
+
+    @property
+    def can_resume_solution(self) -> bool:
+        solution = self.model.solution
+
+        if not isinstance(solution, HarmonicSolution):
+            return False
+
+        return not np.all(solution.status)
 
     @property
     def working_directory(self) -> Path:
