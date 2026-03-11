@@ -50,13 +50,13 @@ class HarmonicSolver:
 
         if isinstance(self.assembler, StructuralAssembler):
             return StructuralHarmonicSolution(
-                self.assembler.model.frequencies,
+                self.assembler.model.new_analysis_setup.frequencies(),
                 self.solution,
                 self.displacement_dof,
             )
         else:
             return AcousticHarmonicSolution(
-                self.assembler.model.frequencies,
+                self.assembler.model.new_analysis_setup.frequencies(),
                 self.solution,
             )
 
