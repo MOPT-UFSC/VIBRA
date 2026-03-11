@@ -42,11 +42,12 @@ def test_write_and_read_project(fluid):
             f_step=200,
         ),
     )
-    project_a.solve_acoustic_harmonic_analysis()
+    solution_a = project_a.solve_acoustic_harmonic_analysis()
     project_a.save_project(project_path)
 
     project_b = NewProject()
     project_b.load_project(project_path)
+    solution_b = project_b.model.solution
 
     project_path.unlink()
-    assert np.allclose(project_a.solver.solution[:], project_b.solver.solution[:])
+    assert solution_a == solution_b

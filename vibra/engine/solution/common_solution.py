@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Any, Generator, Optional
+from typing import Any, Generator, Optional, Self
 
 import numpy as np
 
@@ -98,6 +98,15 @@ class CommonModalSolution(Common):
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.natural_frequencies, self.modal_shape)
 
+    def __eq__(self, other: Self) -> bool:
+        return all(
+            [
+                np.allclose(self.natural_frequencies, other.natural_frequencies),
+                np.allclose(self.modal_shape, other.modal_shape),
+                np.allclose(self.complex_natural_frequencies, other.complex_natural_frequencies),
+            ]
+        )
+
 
 class CommonHarmonicSolution(Common):
     frequencies: Array1D
@@ -140,3 +149,12 @@ class CommonHarmonicSolution(Common):
 
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.frequencies, self.results)
+
+    def __eq__(self, other: Self) -> bool:
+        return all(
+            [
+                np.allclose(self.frequencies, other.frequencies),
+                np.allclose(self.results, other.results),
+                np.allclose(self.status, other.status),
+            ]
+        )

@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Optional
+from typing import Optional, Self
 
 import numpy as np
 
@@ -31,3 +31,12 @@ class StructuralHarmonicSolution(CommonHarmonicSolution):
 
     def get_column(self, column_index: int) -> Array1D:
         return self.results_reordered[:, column_index]
+
+    def __eq__(self, other: Self) -> bool:
+        return all(
+            [
+                isinstance(other, StructuralHarmonicSolution),
+                super().__eq__(other),
+                np.allclose(self.displacement_dof, other.displacement_dof),
+            ]
+        )
