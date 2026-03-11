@@ -91,16 +91,23 @@ class ModalSolver:
         if full_solution:
             self.solution = self.assembler.reinsert_the_prescribed_dof(self.solution)
 
+        if self.complex_natural_frequencies.size:
+            cnf = self.complex_natural_frequencies
+        else:
+            cnf = None
+
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
             return StructuralModalSolution(
                 self.natural_frequencies,
                 self.solution,
                 self.displacement_dof,
+                complex_natural_frequencies=cnf,
             )
 
         else:
             return AcousticModalSolution(
                 self.natural_frequencies,
                 self.solution,
+                complex_natural_frequencies=cnf,
             )

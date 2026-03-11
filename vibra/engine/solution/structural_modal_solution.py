@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import Optional
 
 from vibra.engine.analysis_info import AnalysisID
 
@@ -13,9 +14,14 @@ class StructuralModalSolution(CommonModalSolution):
         natural_frequencies: Array1D,
         modal_shape: Array2D,
         displacement_dof: Array2D,
+        complex_natural_frequencies: Optional[Array1D] = None,
     ):
         self.displacement_dof: Array2D = self._immutable_array(displacement_dof)
-        super().__init__(natural_frequencies, modal_shape)
+        super().__init__(
+            natural_frequencies,
+            modal_shape,
+            complex_natural_frequencies=complex_natural_frequencies,
+        )
 
     @cached_property
     def results_reordered(self) -> Array2D:

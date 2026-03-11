@@ -5,6 +5,9 @@ import numpy as np
 
 from vibra.engine.analysis_info import AnalysisID
 
+# Até dá pra deixar o tipo do array configurável
+# mas só depois do python 3.12, acho que é muito
+# recente pra forçar uma versão mais nova
 Array1D = np.ndarray[
     tuple[int],
     float | complex,
@@ -21,7 +24,7 @@ class Common:
 
     def __init__(self):
         # After calling the init this "cannot" be modified anymore
-        self.writeable = False
+        self._writeable = False
 
     def is_harmonic(self):
         return self.analysis_id.is_harmonic()
@@ -54,7 +57,7 @@ class Common:
 
     def __setattr__(self, name: str, value: Any):
         # workaround to make this class immutable
-        if hasattr(self, "writeable") and not self.writeable and name != "writeable":
+        if hasattr(self, "writeable") and not self._writeable and name != "writeable":
             raise ValueError(f"Class {self.__class__.__name__} is immutable")
 
         else:
@@ -64,10 +67,18 @@ class Common:
 class CommonModalSolution(Common):
     natural_frequencies: Array1D
     modal_shape: Array2D
+    complex_natural_frequencies: Optional[Array1D] = None
 
-    def __init__(self, natural_frequencies: Array1D, modal_shape: Array2D):
+    def __init__(
+        self,
+        natural_frequencies: Array1D,
+        modal_shape: Array2D,
+        complex_natural_frequencies: Optional[Array1D],
+    ):
         self.natural_frequencies = self._immutable_array(natural_frequencies)
         self.modal_shape = self._immutable_array(modal_shape)
+        if complex_natural_frequencies is not None:
+            self.complex_natural_frequencies = self._immutable_array(complex_natural_frequencies)
         super().__init__()
 
     @cached_property
