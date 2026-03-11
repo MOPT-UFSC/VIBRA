@@ -19,10 +19,10 @@ import numpy as np
 from time import time
 
 
-def load_external_mesh_and_solve():
+def load_external_mesh_and_solve(extra_shape_function: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
+    mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
     if not os.path.exists(mesh_path):
         return
 
@@ -107,14 +107,14 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = True
+    esf = extra_shape_function
 
-    hex8_advanced_options = {
+    element_options = {
         "hex8" : {"extra_shape_functions" : esf}
         }
 
     # assign the hex8 element advanced options as a global property
-    model.properties._set_property("advanced_element_options", hex8_advanced_options)
+    model.properties._set_property("advanced_element_options", element_options)
 
     ## boundary condition
 
@@ -151,12 +151,11 @@ def load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     
-    modes_indexes = np.arange(natural_frequencies.size)
-
     folder = "with_esf" if esf else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
 
+    # modes_indexes = np.arange(natural_frequencies.size)
     # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
@@ -172,4 +171,4 @@ def load_external_mesh_and_solve():
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve()
+    load_external_mesh_and_solve(extra_shape_function=True)

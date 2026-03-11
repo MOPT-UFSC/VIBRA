@@ -32,10 +32,10 @@ stresses_labels = [
     ]
 
 
-def load_external_mesh_and_solve():
+def load_external_mesh_and_solve(extra_shape_function: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
+    mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
     if not os.path.exists(mesh_path):
         return
     
@@ -120,7 +120,7 @@ def load_external_mesh_and_solve():
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = False
+    esf = extra_shape_function
 
     element_options = {
         "hex8" : {"extra_shape_functions" : esf}
@@ -382,7 +382,7 @@ def get_apdl_reference_displacement_results(
         ) -> np.ndarray | None:
     
     folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
     
     if not results_path.exists():
         return None, None
@@ -404,7 +404,7 @@ def get_apdl_reference_stresses_results(
         ) -> np.ndarray | None:
     
     folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
     
     if not results_path.exists():
         return None, None
@@ -443,4 +443,4 @@ def get_model_response(
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve()
+    load_external_mesh_and_solve(extra_shape_function=True)

@@ -35,11 +35,7 @@ stresses_labels = [
 def load_external_mesh_and_solve(case: str, extra_shape_function: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_{case}_modal.dat"
-
-    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
-    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_one_element_cube_translated_modal.dat"
-    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_eight_element_cube_translated_modal.dat"
+    mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_{case}_modal.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -184,7 +180,7 @@ def load_external_mesh_and_solve(case: str, extra_shape_function: bool = False):
     Me = assembler.data_M[0, :, :]
 
     folder = "with_esf" if esf else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/{case}/"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/{case}/"
 
     # Ke_ansys = np.loadtxt(results_path / "Ke_ansys.csv", delimiter=",")
     # Me_ansys = np.loadtxt(results_path / "Me_ansys.csv", delimiter=",")
