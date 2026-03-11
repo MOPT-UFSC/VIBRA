@@ -1,9 +1,9 @@
 from functools import cached_property
 
-from .common_solution import Array1D, Array2D, ModalSolution
+from .common_solution import Array1D, Array2D, CommonModalSolution
 
 
-class StructuralModalSolution(ModalSolution):
+class StructuralModalSolution(CommonModalSolution):
     def __init__(
         self,
         natural_frequencies: Array1D,

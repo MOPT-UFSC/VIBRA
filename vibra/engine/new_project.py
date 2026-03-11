@@ -15,10 +15,17 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
-from vibra.engine.properties import FluidLibrary, Material, MaterialLibrary
+from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
+from vibra.engine.solution import (
+    AcousticHarmonicSolution,
+    AcousticModalSolution,
+    Solution,
+    StructuralHarmonicSolution,
+    StructuralModalSolution,
+)
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
@@ -98,7 +105,7 @@ class NewProject:
         self.project_paths.clear_data()
         self.needs_saving = True
 
-    def run_analysis(self):
+    def run_analysis(self) -> Solution:
         match self.current_analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 return self.solve_structural_modal_analysis()
@@ -161,7 +168,7 @@ class NewProject:
         self.project_writer.write_file(path)
         self.needs_saving = False
 
-    def import_mesh(self, path: Path | str):
+    def import_mesh(self, path: Path | str) -> Mesh:
         """
         Loads a complete mesh from a file.
 
@@ -172,6 +179,7 @@ class NewProject:
         self.model.mesh = mesh
         self.model.geometry_path = path  # keeping previous file organization
         self.write_to_working_dir()
+        return mesh
 
     def import_geometry(self, path: Path | str):
         """
@@ -214,13 +222,6 @@ class NewProject:
             self.mesh_setup,
         )
 
-        # if mesh.disconnected_nodes:
-        #     raise errors.MeshException(
-        #         "The generated mesh contains disconnected nodes.",
-        #         "Please check the mesh setup and try again.",
-        #         nodes=mesh.disconnected_nodes,
-        #     )
-
         if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:
             message = "The generated mesh contains collapsed elements."
             message += "Please check the mesh setup and try again.\n"
@@ -243,21 +244,22 @@ class NewProject:
         self.needs_saving = True
         return mesh
 
-    def generate_visual_mesh(self):
+    def generate_visual_mesh(self) -> Mesh:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
         self.model.process_visual_geometry_mesh(self.model.geometry_path)
         self.project_writer.write_mesh(self.model.mesh)
+        return self.model.mesh
 
     def generate_mesh_from_geometry(
         self,
         geometry_path: Path | str,
         mesh_setup: MeshSetup,
-    ):
+    ) -> Mesh:
         self.import_geometry(geometry_path)
         self.configure_mesh(mesh_setup)
-        self.generate_mesh()
+        return self.generate_mesh()
 
     def configure_analysis(
         self,
@@ -269,7 +271,7 @@ class NewProject:
         self.model.new_set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self):
+    def solve_structural_modal_analysis(self) -> StructuralModalSolution:
         self.current_analysis_id = AnalysisID.STRUCTURAL_MODAL
         self.update_project_setup_file()
 
@@ -291,7 +293,7 @@ class NewProject:
 
         return solution
 
-    def solve_structural_harmonic_analysis(self):
+    def solve_structural_harmonic_analysis(self) -> StructuralHarmonicSolution:
         self.current_analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         self.update_project_setup_file()
 
@@ -319,7 +321,7 @@ class NewProject:
 
         return solution
 
-    def solve_acoustic_modal_analysis(self):
+    def solve_acoustic_modal_analysis(self) -> AcousticModalSolution:
         self.current_analysis_id = AnalysisID.ACOUSTIC_MODAL
         self.update_project_setup_file()
 
@@ -341,7 +343,7 @@ class NewProject:
 
         return solution
 
-    def solve_acoustic_harmonic_analysis(self):
+    def solve_acoustic_harmonic_analysis(self) -> AcousticHarmonicSolution:
         self.current_analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 

@@ -3,10 +3,10 @@ from typing import Optional
 
 import numpy as np
 
-from .common_solution import Array1D, Array2D, HarmonicSolution
+from .common_solution import Array1D, Array2D, CommonHarmonicSolution
 
 
-class StructuralHarmonicSolution(HarmonicSolution):
+class StructuralHarmonicSolution(CommonHarmonicSolution):
     def __init__(
         self,
         frequencies: Array1D,

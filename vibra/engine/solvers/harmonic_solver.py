@@ -5,7 +5,7 @@ import numpy as np
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solution import AcousticHarmonicSolution, HarmonicSolution, StructuralHarmonicSolution
+from vibra.engine.solution import AcousticHarmonicSolution, CommonHarmonicSolution, StructuralHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
@@ -28,7 +28,7 @@ class HarmonicSolver:
         self.displacement_dof = None
         self._linear_solver = None
 
-    def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
+    def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> CommonHarmonicSolution:
         """
         This method solves the acoustic harmonic analysis using the
         direct method for both damped and undamped problems.
@@ -149,7 +149,7 @@ class HarmonicSolver:
         print_log: bool = False,
         is_resume: bool = False,
         is_proportionally_damped: bool = False,
-    ) -> HarmonicSolution:
+    ) -> CommonHarmonicSolution:
         logging.info("Solving harmonic analysis (mode superposition method)... [10/100]")
         solution = self._get_solution_handler(is_resume)
 

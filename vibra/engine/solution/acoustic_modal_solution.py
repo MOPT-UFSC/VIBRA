@@ -1,5 +1,5 @@
-from .common_solution import ModalSolution
+from .common_solution import CommonModalSolution
 
 
 # a lot more stuff will be implemented soon
-class AcousticModalSolution(ModalSolution): ...
+class AcousticModalSolution(CommonModalSolution): ...

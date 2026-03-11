@@ -14,7 +14,7 @@ Array2D = np.ndarray[
 ]
 
 
-class Solution:
+class Common:
     def __init__(self):
         # After calling the init this "cannot" be modified anymore
         self.writeable = False
@@ -39,7 +39,7 @@ class Solution:
             return super().__setattr__(name, value)
 
 
-class ModalSolution(Solution):
+class CommonModalSolution(Common):
     natural_frequencies: Array1D
     modal_shape: Array2D
 
@@ -66,7 +66,7 @@ class ModalSolution(Solution):
         yield from zip(self.natural_frequencies, self.modal_shape)
 
 
-class HarmonicSolution(Solution):
+class CommonHarmonicSolution(Common):
     frequencies: Array1D
     results: Array2D
     status: np.ndarray[tuple[int], bool]
