@@ -5,7 +5,7 @@ from scipy.sparse.linalg import eigs
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solution import AcousticModalSolution, CommonModalSolution, StructuralModalSolution
+from vibra.engine.solution import AcousticModalSolution, ModalSolution, StructuralModalSolution
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 
@@ -20,7 +20,7 @@ class ModalSolver:
         self.complex_natural_frequencies = np.array([])
         self.displacement_dof = None
 
-    def solve(self, which="LM", full_solution: bool = True) -> CommonModalSolution:
+    def solve(self, which="LM", full_solution: bool = True) -> ModalSolution:
         """
         This method solves the acoustic modal analysis for both damped and undamped problems.
         """
