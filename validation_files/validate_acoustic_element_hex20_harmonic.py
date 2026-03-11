@@ -187,15 +187,16 @@ def load_external_mesh_and_solve():
     # Run harmonic analysis
 
     t0 = time()
-    solution = harmonic_solver.solve_direct(print_log=True)
+    s = harmonic_solver.solve_direct(print_log=True)
+    solution = s.results
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
     input_rows = mesh.external_nodes_from_surfaces[1]
     output_rows = mesh.external_nodes_from_surfaces[2]
 
-    input_pressure = np.average(solution[input_rows, :], axis=0).flatten()
-    output_pressure = np.average(solution[output_rows, :], axis=0).flatten()
+    input_pressure = np.average(solution.results[input_rows, :], axis=0).flatten()
+    output_pressure = np.average(solution.results[output_rows, :], axis=0).flatten()
 
     t0 = time()
 

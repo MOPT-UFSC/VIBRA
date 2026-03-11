@@ -168,7 +168,8 @@ def load_external_mesh_and_solve():
     t0 = time()
     # Run modal analysis
     harmonic_solver = HarmonicSolver(assembler)
-    solution = harmonic_solver.solve_direct(print_log=True)
+    s = harmonic_solver.solve_direct(print_log=True)
+    solution = s.results
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
@@ -198,7 +199,7 @@ def compare_results(
     response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
     freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label, esf)
 
-    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
+    title = f'Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}'
     x_label = "Frequency [Hz]"
     y_label = f'Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}'
 

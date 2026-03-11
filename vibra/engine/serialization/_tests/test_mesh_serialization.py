@@ -24,14 +24,14 @@ def test_write_and_read_mesh_project(fluid):
             sigma_factor=0.01,
         ),
     )
-    project_a.run_analysis()
+    solution_a = project_a.run_analysis()
     project_a.save_project(project_path)
 
     project_b = NewProject()
     project_b.load_project(project_path)
 
     project_path.unlink()
-    assert np.allclose(project_a.solver.solution[:], project_b.solver.solution[:])
+    assert np.allclose(solution_a.modal_shape, project_b.solver.solution[:])
 
 
 def test_compare_interface_based_mesh_project():

@@ -1,17 +1,15 @@
-from vibra.engine.solvers.linear_solver import SolverType, initialize_solver, LinearSolver
+import logging
+from time import time
 
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
-from vibra.project_files.project_file import ProjectFile
+import numpy as np
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-
+from vibra.engine.solution import AcousticHarmonicSolution, HarmonicSolution, StructuralHarmonicSolution
 from vibra.engine.solvers import ModalSolver
-
-import logging
-import numpy as np
-
-from time import time
+from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
+from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
+from vibra.project_files.project_file import ProjectFile
 
 
 class HarmonicSolver:
@@ -30,7 +28,7 @@ class HarmonicSolver:
         self.displacement_dof = None
         self._linear_solver = None
 
-    def solve_direct(self, print_log: bool = False, is_resume: bool = False):
+    def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
         """
         This method solves the acoustic harmonic analysis using the
         direct method for both damped and undamped problems.
@@ -41,16 +39,27 @@ class HarmonicSolver:
             This argument controls the printing of the solution steps to the terminal.
         """
 
-        logging.info(f"Solving harmonic analysis (direct method)... [10/100]")
+        logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
         solution = self._get_solution_handler(is_resume)
 
         self.compute_frequency_sweep(solution, print_log, is_resume)
 
-        logging.info(f"Solving harmonic analysis (direct method)... [99/100]")
+        logging.info("Solving harmonic analysis (direct method)... [99/100]")
         self._closing_solution_handler(solution)
 
-        return self.solution
+        if isinstance(self.assembler, StructuralAssembler):
+            return StructuralHarmonicSolution(
+                self.assembler.model.frequencies,
+                self.solution,
+                self.displacement_dof,
+            )
+        else:
+            return AcousticHarmonicSolution(
+                self.assembler.model.frequencies,
+                self.solution,
+            )
+
 
     def _get_solution_handler(self, is_resume):
         if isinstance(self.assembler, StructuralAssembler):
@@ -86,7 +95,6 @@ class HarmonicSolver:
 
         # compute the solution for each frequency step
         for i, freq in enumerate(frequencies):
-
             if self.assembler.model.stop_processing:
                 return
 
@@ -136,15 +144,20 @@ class HarmonicSolver:
             self._linear_solver = linear_solver
             return linear_solver
 
-    def solve_mode_superposition(self, print_log: bool = False, is_resume: bool = False, is_proportionally_damped: bool = False):
-        logging.info(f"Solving harmonic analysis (mode superposition method)... [10/100]")
+    def solve_mode_superposition(
+        self,
+        print_log: bool = False,
+        is_resume: bool = False,
+        is_proportionally_damped: bool = False,
+    ) -> HarmonicSolution:
+        logging.info("Solving harmonic analysis (mode superposition method)... [10/100]")
         solution = self._get_solution_handler(is_resume)
 
-        t0 = time()        
+        t0 = time()
         modal_solver = ModalSolver(self.assembler)
         modal_solution = modal_solver.solve(full_solution=False)
         dt = time() - t0
-        print(f"Elapsed time to solve modal analysis: {dt : .6f} [s]")
+        print(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(
@@ -159,7 +172,17 @@ class HarmonicSolver:
 
         self._closing_solution_handler(solution)
 
-        return self.solution
+        if isinstance(self.assembler, StructuralAssembler):
+            return StructuralHarmonicSolution(
+                self.assembler.model.frequencies,
+                self.solution,
+                self.displacement_dof,
+            )
+        else:
+            return AcousticHarmonicSolution(
+                self.assembler.model.frequencies,
+                self.solution,
+            )
 
     def compute_proportionally_damped_frequency_sweep(self, solution, modes, natural_frequencies, print_log, is_resume):
         # frequencies vector [in hertz]
@@ -184,7 +207,7 @@ class HarmonicSolver:
             f = self.assembler.get_combined_nodal_loads_vector(index=i)
 
             omega = 2 * np.pi * freq
-            A = omega_n ** 2 - omega ** 2 + 1j * (omega * (beta * (omega_n ** 2) + alpha) + eta * (omega_n ** 2))
+            A = omega_n**2 - omega**2 + 1j * (omega * (beta * (omega_n**2) + alpha) + eta * (omega_n**2))
             diag = np.diag(1 / A)
 
             # compute the solution for each frequency step

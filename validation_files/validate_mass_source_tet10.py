@@ -210,7 +210,8 @@ def load_external_mesh_and_solve(assignment_type: str):
     # Run harmonic analysis
 
     t0 = time()
-    solution = harmonic_solver.solve_direct(print_log=True)
+    s = harmonic_solver.solve_direct(print_log=True)
+    solution = s.results
     dt = time() - t0
     print(f"Elapsed time to solve harmonic analysis: {round(dt, 4)}")
 
