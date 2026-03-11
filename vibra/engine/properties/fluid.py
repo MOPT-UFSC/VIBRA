@@ -1,9 +1,10 @@
 from dataclasses import asdict, dataclass
+from typing import Optional
 
 
 @dataclass
 class Fluid:
-    name: str = None
+    name: Optional[str] = None
     fluid_density: float = 0.0
     speed_of_sound: float = 0.0
     color: tuple = (0, 0, 0)

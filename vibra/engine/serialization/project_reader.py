@@ -335,18 +335,9 @@ class ProjectReader:
             return MaterialLibrary.default()
 
         material_library = MaterialLibrary()
-
         for material_id, material_data in material_library_data.items():
             material_id = int(material_id)
-            material = Material(
-                name=material_data.get("name"),
-                material_density=material_data.get("material_density"),
-                poisson_ratio=material_data.get("poisson_ratio"),
-                elasticity_modulus=material_data.get("elasticity_modulus"),
-                thermal_expansion_coefficient=material_data.get("thermal_expansion_coefficient"),
-                color=material_data.get("color"),
-                identifier=material_id,
-            )
+            material = Material(**material_data)
             material_library[material_id] = material
 
         return material_library
@@ -359,25 +350,9 @@ class ProjectReader:
             return FluidLibrary.default()
 
         fluid_library = FluidLibrary()
-
         for fluid_id, fluid_data in fluid_library_data.items():
             fluid_id = int(fluid_id)
-            fluid = Fluid(
-                name=fluid_data.get("name"),
-                fluid_density=fluid_data.get("fluid_density"),
-                speed_of_sound=fluid_data.get("speed_of_sound"),
-                color=fluid_data.get("color"),
-                identifier=fluid_id,
-                isentropic_exponent=fluid_data.get("isentropic_exponent"),
-                thermal_conductivity=fluid_data.get("thermal_conductivity"),
-                specific_heat_Cp=fluid_data.get("specific_heat_Cp"),
-                dynamic_viscosity=fluid_data.get("dynamic_viscosity"),
-                temperature=fluid_data.get("temperature"),
-                pressure=fluid_data.get("pressure"),
-                molar_mass=fluid_data.get("molar_mass"),
-                key_mixture=fluid_data.get("key_mixture"),
-                molar_fractions=fluid_data.get("molar_fractions"),
-            )
+            fluid = Fluid(**fluid_data)
             fluid_library[fluid_id] = fluid
 
         return fluid_library
