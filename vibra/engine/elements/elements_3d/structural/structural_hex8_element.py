@@ -78,6 +78,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         xi_3 = self.num_int_data[:, 2]
 
         self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
+        self.dphi_esf = self.get_shape_functions_derivatives_for_extra_shape_functions(xi_1, xi_2, xi_3)
+        _, self.dphi_0 = self.get_shape_functions_and_derivatives(0, 0, 0)
+
         self.phi_inv = self.inverse_of_shape_functions()
 
 
@@ -99,7 +102,12 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             return None
 
 
-    def get_shape_functions_and_derivatives(self, xi_1: np.ndarray|float, xi_2: np.ndarray|float, xi_3: np.ndarray|float):
+    def get_shape_functions_and_derivatives(
+            self, 
+            xi_1: np.ndarray | float, 
+            xi_2: np.ndarray | float, 
+            xi_3: np.ndarray | float,
+            ):
 
         """
         This method returns the shape functions and its derivatives.
@@ -132,9 +140,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         # define the shape functions (Atalla and Sgard, 2015, pg. 171)
-
-        esf = 3 if self.extra_shape_function else 0
-        phi = np.zeros((Nz, self.NODES_PER_ELEMENT + esf), dtype=float)
+        phi = np.zeros((Nz, self.NODES_PER_ELEMENT), dtype=float)
 
         phi[:, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
         phi[:, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
@@ -145,13 +151,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         phi[:, 6] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0,  1.0,  1.0)   Node 7
         phi[:, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
 
-        if esf:
-            phi[:, 8] = (1.0 - xi_1**2)                                  # ->      ( 0.0,  1.0,  1.0)   Node 8
-            phi[:, 9] = (1.0 - xi_2**2)                                  # ->      ( 1.0,  0.0,  1.0)   Node 9
-            phi[:, 10] = (1.0 - xi_3**2)                                 # ->      ( 1.0,  1.0,  0.0)   Node 10
-
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT + esf), dtype=float)
+        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
 
         dphi[:, 0, 0] = -(1.0 - xi_2) * (1.0 - xi_3) / 8
         dphi[:, 0, 1] =  (1.0 - xi_2) * (1.0 - xi_3) / 8
@@ -180,15 +181,35 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         dphi[:, 2, 6] =  (1.0 + xi_1) * (1.0 + xi_2) / 8
         dphi[:, 2, 7] =  (1.0 - xi_1) * (1.0 + xi_2) / 8
 
-        if esf:
-            dphi[:, 0, 8] = -(2 * xi_1)
-            dphi[:, 1, 9] = -(2 * xi_2)
-            dphi[:, 2, 10] = -(2 * xi_3)
-
         if Nz == 1:
             return phi[0, :], dphi[0, :, :]
 
         return phi, dphi
+
+
+    def get_shape_functions_derivatives_for_extra_shape_functions(
+            self, 
+            xi_1: np.ndarray | float, 
+            xi_2: np.ndarray | float, 
+            xi_3: np.ndarray | float,
+            ):
+
+        if isinstance(xi_1, np.ndarray):
+            Nz = xi_1.size
+        else:
+            Nz = 1
+
+        # phi = np.zeros((Nz, 3), dtype=float)
+        # phi_esf[:, 0] = (1.0 - xi_1**2)
+        # phi_esf[:, 1] = (1.0 - xi_2**2)
+        # phi_esf[:, 2] = (1.0 - xi_3**2)
+
+        dphi_esf = np.zeros((Nz, 3, 3), dtype=float)
+        dphi_esf[:, 0, 0] = -(2 * xi_1)
+        dphi_esf[:, 1, 1] = -(2 * xi_2)
+        dphi_esf[:, 2, 2] = -(2 * xi_3)
+
+        return dphi_esf
 
 
     @property
@@ -216,67 +237,11 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         return local_coords
 
 
-    def elementary_matrices(self, el_index: int, material: Material):
-        """This method returns elementary stiffness and mass matrices for HEXAHEDRON-8 nodes.
-        ANSYS SOLID45 w/o extra diplacements (very simple)
+    def process_detJAC_and_B_matrix(self, element_id: int):
         """
-
-        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
-
-        # nodes from element
-        elem_nodes = self.connectivity[el_index, 1:]
-
-        # element nodal coords
-        coords = self.nodal_coordinates[elem_nodes, 1:4]
-
-        # Jacobian matrix
-        JAC = self.dphi[:, :, :self.NODES_PER_ELEMENT] @ coords
-
-        # Jacobian determinant and inverse
-        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
-
-        # derivatives
-        dphi_t = invJAC @ self.dphi
-
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT + self.extra_dofs), dtype=float)
-        B[:, 0, 0::3] = dphi_t[:, 0, :]
-        B[:, 1, 1::3] = dphi_t[:, 1, :]
-        B[:, 2, 2::3] = dphi_t[:, 2, :]
-        B[:, 3, 0::3] = dphi_t[:, 1, :]
-        B[:, 3, 1::3] = dphi_t[:, 0, :]
-        B[:, 4, 0::3] = dphi_t[:, 2, :]
-        B[:, 4, 2::3] = dphi_t[:, 0, :]
-        B[:, 5, 1::3] = dphi_t[:, 2, :]
-        B[:, 5, 2::3] = dphi_t[:, 1, :]
-
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
-        N[:, 0, 0::3] = self.phi[:, :self.NODES_PER_ELEMENT]
-        N[:, 1, 1::3] = self.phi[:, :self.NODES_PER_ELEMENT]
-        N[:, 2, 2::3] = self.phi[:, :self.NODES_PER_ELEMENT]
-
-        # integration loop
-        Ke, Me = 0, 0
-        for i in range(self.nint):
-            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-
-        # condense the stiffness matrix Ke if the extra shape functions were enabled
-        if self.extra_dofs:
-            Kaa = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
-            Kab = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
-            Kba = Kab.T
-            # Kba = Ke[self.DOF_PER_ELEMENT :, 0 : self.DOF_PER_ELEMENT]
-            Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
-
-            Ke = Kaa - Kab @ np.linalg.inv(Kbb) @ Kba
-
-        return Ke, Me
-
-
-    def get_data_to_compute_stresses(self, element_id: int, nodal_solution: np.ndarray, const_mat: np.ndarray):
-
-        # nodal solution
-        Ue = nodal_solution
+        This method computes and returns the matrix of shape functions 
+        derivatives B and the determinant of the Jacobian matrix detJAC. 
+        """
 
         # nodes from element
         elem_nodes = self.connectivity[element_id, 1:]
@@ -285,7 +250,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         coords = self.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi[:, :, :self.NODES_PER_ELEMENT] @ coords
+        JAC = self.dphi @ coords
 
         # Jacobian determinant and inverse
         detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
@@ -293,34 +258,99 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         # derivatives
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT + self.extra_dofs), dtype=float)
-        B[:, 0, 0::3] = dphi_t[:, 0, :]
-        B[:, 1, 1::3] = dphi_t[:, 1, :]
-        B[:, 2, 2::3] = dphi_t[:, 2, :]
-        B[:, 3, 0::3] = dphi_t[:, 1, :]
-        B[:, 3, 1::3] = dphi_t[:, 0, :]
-        B[:, 4, 0::3] = dphi_t[:, 2, :]
-        B[:, 4, 2::3] = dphi_t[:, 0, :]
-        B[:, 5, 1::3] = dphi_t[:, 2, :]
-        B[:, 5, 2::3] = dphi_t[:, 1, :]
+        # initialize the B matrix
+        edof = self.DOF_PER_ELEMENT
+        B = np.zeros((self.nint, 6, edof + self.extra_dofs), dtype=float)
 
-        if self.extra_dofs:
+        B[:, 0, 0:edof:3] = dphi_t[:, 0, :]
+        B[:, 1, 1:edof:3] = dphi_t[:, 1, :]
+        B[:, 2, 2:edof:3] = dphi_t[:, 2, :]
+        B[:, 3, 0:edof:3] = dphi_t[:, 1, :]
+        B[:, 3, 1:edof:3] = dphi_t[:, 0, :]
+        B[:, 4, 0:edof:3] = dphi_t[:, 2, :]
+        B[:, 4, 2:edof:3] = dphi_t[:, 0, :]
+        B[:, 5, 1:edof:3] = dphi_t[:, 2, :]
+        B[:, 5, 2:edof:3] = dphi_t[:, 1, :]
+
+        if self.extra_shape_function:
+        
+            JAC_0 = self.dphi_0 @ coords
+            detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+            dphi_esf_t = (detJAC_0 / detJAC) * invJAC_0 @ self.dphi_esf
+
+            B[:, 0, edof + 0::3] = dphi_esf_t[:, 0, :]
+            B[:, 1, edof + 1::3] = dphi_esf_t[:, 1, :]
+            B[:, 2, edof + 2::3] = dphi_esf_t[:, 2, :]
+            B[:, 3, edof + 0::3] = dphi_esf_t[:, 1, :]
+            B[:, 3, edof + 1::3] = dphi_esf_t[:, 0, :]
+            B[:, 4, edof + 0::3] = dphi_esf_t[:, 2, :]
+            B[:, 4, edof + 2::3] = dphi_esf_t[:, 0, :]
+            B[:, 5, edof + 1::3] = dphi_esf_t[:, 2, :]
+            B[:, 5, edof + 2::3] = dphi_esf_t[:, 1, :]
+
+        return detJAC, B
+
+
+    def elementary_matrices(self, element_id: int, material: Material):
+        """This method returns elementary stiffness and mass matrices for 
+        HEXAHEDRON-8 nodes (ANSYS SOLID45 w/o extra diplacements).
+        """
+
+        # get constitutive law matrix D and the material's density
+        D, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
+
+        # process the determinant of Jacobian and the B matrix
+        detJAC, B = self.process_detJAC_and_B_matrix(element_id)
+
+        # initialize the matrix of shape functions N
+        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N[:, 0, 0::3] = self.phi
+        N[:, 1, 1::3] = self.phi
+        N[:, 2, 2::3] = self.phi
+
+        # integration loop
+        Ke, Me = 0., 0.
+        for i in range(self.nint):
+            Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+
+        # condense the stiffness matrix Ke if the extra shape functions were enabled
+        if self.extra_shape_function:
+            Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
+            Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
+            Kau = Kua.T
+            Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+
+            Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
+
+        return Ke, Me
+
+
+    def get_data_to_compute_stresses(self, element_id: int, nodal_solution: np.ndarray, D: np.ndarray):
+
+        # nodal solution
+        Ue = nodal_solution
+
+        # process the determinant of Jacobian and the B matrix
+        detJAC, B = self.process_detJAC_and_B_matrix(element_id)
+
+        if self.extra_shape_function:
 
             # initialize the stiffness matrix Ke
             Ke = 0.
 
             # integrate the stiffness matrix
             for i in range(self.nint):
-                Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+                Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
-            Kab = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
-            Kba = Kab.T
-            Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+            Kau = Ke[self.DOF_PER_ELEMENT :, 0 : self.DOF_PER_ELEMENT]
+            Kaa = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
 
-            a = -np.linalg.inv(Kbb) @ (Kba @ Ue)
+            # extra dofs results
+            u_esf = -np.linalg.inv(Kaa) @ (Kau @ Ue)
 
-            # compute the extended nodal results
-            Ue = np.append(Ue, a, axis=0)
+            # extend element solution with extra dofs results
+            Ue = np.append(Ue, u_esf, axis=0)
 
         return B, Ue
 
@@ -360,20 +390,20 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         if not isinstance(material, Material):
             return 0.
 
-        const_mat, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
+        D, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # get data to compute the stress (with or without ESF)
-        B, Ue = self.get_data_to_compute_stresses(element_id, Ue, const_mat)
+        B, Ue = self.get_data_to_compute_stresses(element_id, Ue, D)
 
         # initialize the element stresses matrix
         element_stresses = np.zeros((6, self.nint, Ue.shape[1]), dtype=complex)
 
         # calculate the nodal stress tensor
         for i in range(self.nint):
-            element_stresses[:, i, :] = const_mat @ (B[i, :, :] @ Ue)
+            element_stresses[:, i, :] = D @ (B[i, :, :] @ Ue)
 
         if element_averaged:
-            return np.average(element_stresses, axis=0)
+            return np.average(element_stresses, axis=1)
 
         return element_stresses
 
