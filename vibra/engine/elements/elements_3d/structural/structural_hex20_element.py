@@ -27,21 +27,33 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.solids_connectivity)
 
-        self.define_integration_points()
-        self.process_shape_functions_and_derivatives()
+        self.define_integration_points_for_Ke()
+        self.define_integration_points_for_Me()
+        self.process_shape_functions_and_derivatives_for_Ke()
+        self.process_shape_functions_and_derivatives_for_Me()
 
 
-    def define_integration_points(self, integration_points: int = 14):
-        """ 
+    def define_integration_points_for_Ke(self, integration_points: int = 8):
+        """
         This method defines the integration points and their
         weights for numerical integration.
         """
-        self.nint = integration_points
-        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
-        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.nint_K = integration_points
+        self.num_int_data_K = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps_K = self.num_int_data_K[:, -1].reshape(-1, 1, 1)
 
 
-    def process_shape_functions_and_derivatives(self):
+    def define_integration_points_for_Me(self, integration_points: int = 14):
+        """
+        This method defines the integration points and their
+        weights for numerical integration.
+        """
+        self.nint_M = integration_points
+        self.num_int_data_M = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps_M = self.num_int_data_M[:, -1].reshape(-1, 1, 1)
+
+
+    def process_shape_functions_and_derivatives_for_Ke(self):
         """
         This method returns the shape functions and its derivatives
         for all integration points.
@@ -56,11 +68,33 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         """
 
         ## coordinates from integration points
-        xi_1 = self.num_int_data[:, 0]
-        xi_2 = self.num_int_data[:, 1]
-        xi_3 = self.num_int_data[:, 2]
+        xi_1 = self.num_int_data_K[:, 0]
+        xi_2 = self.num_int_data_K[:, 1]
+        xi_3 = self.num_int_data_K[:, 2]
 
-        self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
+        self.phi_K, self.dphi_K = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
+
+
+    def process_shape_functions_and_derivatives_for_Me(self):
+        """
+        This method returns the shape functions and its derivatives
+        for all integration points.
+
+        Returns
+        -------
+        phi: np.ndarray
+            The shape functions evaluated in the integration points.
+
+        dphi: np.ndarray
+            The shape functions derivatives.
+        """
+
+        ## coordinates from integration points
+        xi_1 = self.num_int_data_M[:, 0]
+        xi_2 = self.num_int_data_M[:, 1]
+        xi_3 = self.num_int_data_M[:, 2]
+
+        self.phi_M, self.dphi_M = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
 
     def get_shape_functions_and_derivatives(self, xi_1: np.ndarray|float, xi_2: np.ndarray|float, xi_3: np.ndarray|float):
@@ -190,7 +224,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         return phi, dphi
 
 
-    def elementary_matrices(self, el_index: int, material: Material):
+    def elementary_matrices(self, element_id: int, material: Material):
         """This method returns elementary stiffness and mass matrices for HEXAHEDRON-20 nodes.
         ANSYS SOLID95 - Do not compare with new Ansys solid elements
         """
@@ -198,21 +232,23 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # nodes from element
-        elem_nodes = self.connectivity[el_index, 1:]
+        elem_nodes = self.connectivity[element_id, 1:]
 
         # element nodal coords
         coords = self.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi @ coords
+        JAC_K = self.dphi_K @ coords
+        JAC_M = self.dphi_M @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
+        detJAC_K, invJAC_K = self.get_detJAC_and_invJAC(JAC_K)
+        detJAC_M, invJAC_M = self.get_detJAC_and_invJAC(JAC_M)
 
         # derivatives
-        dphi_t = invJAC @ self.dphi
+        dphi_t = invJAC_K @ self.dphi_K
 
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint_K, 6, self.DOF_PER_ELEMENT), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -223,16 +259,31 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
-        N[:, 0, 0::3] = self.phi
-        N[:, 1, 1::3] = self.phi
-        N[:, 2, 2::3] = self.phi
+        N = np.zeros((self.nint_M, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N[:, 0, 0::3] = self.phi_M
+        N[:, 1, 1::3] = self.phi_M
+        N[:, 2, 2::3] = self.phi_M
 
         # integration loop
         Ke, Me = 0, 0
-        for i in range(self.nint):
-            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+        
+        for i in range(self.nint_K):
+            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
+
+        for i in range(self.nint_M):
+            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
+
+        # if self.nint_M >= self.nint_K:
+        #     for i in range(self.nint_M):
+        #         Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
+        #         if i <= self.nint_K:
+        #             Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
+
+        # else:
+        #     for i in range(self.nint_K):
+        #         Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
+        #         if i <= self.nint_M:
+        #             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
 
         return Ke, Me
 
