@@ -224,7 +224,7 @@ def load_external_mesh_and_solve():
         node_out = 1
 
         # Load the external data
-        ext_data = LoadExternalData(results_path / "one_element", rho_0)
+        ext_data = LoadExternalData(results_path / "one_element", fluid_density=rho_0)
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()

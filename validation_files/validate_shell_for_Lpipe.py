@@ -76,7 +76,7 @@ def load_external_mesh_and_solve():
 
     # # Load the external data
     # path = f"validation_files/data/WB/structural/shell/pipes/results/results_for_L_pipe.xlsx"
-    # ext_data = LoadExternalData(path, rho_0)
+    # ext_data = LoadExternalData(path, fluid_density=rho_0)
 
     # assign the created fluid
     model = Model()

@@ -274,7 +274,7 @@ def load_external_mesh_and_solve(assignment_type: str):
         if not os.path.exists(path):
             return
 
-        ext_data = LoadExternalData(path, rho_0)
+        ext_data = LoadExternalData(path, fluid_density=rho_0)
 
         WB_pressure_data = ext_data.load_nodal_pressures()
         WB_particle_velocities_data = ext_data.load_particle_velocities()

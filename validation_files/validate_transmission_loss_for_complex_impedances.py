@@ -104,7 +104,7 @@ def load_external_mesh_and_solve():
     # Load the external data
     path = "validation_files/data/WB/transmission_loss/results/Zo_real"
     # path = "validation_files/data/WB/transmission_loss/results/Zo_complex"
-    ext_data = LoadExternalData(path, rho_0)
+    ext_data = LoadExternalData(path, fluid_density=rho_0)
 
     # Set the defined fluid
     model = Model()

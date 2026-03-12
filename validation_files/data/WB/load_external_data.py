@@ -9,7 +9,7 @@ labels = [
           ]
 
 class LoadExternalData:
-    def __init__(self, path: str | Path, fluid_density: float):
+    def __init__(self, path: str | Path, fluid_density: float | None = None):
 
         if isinstance(path, str):
             self.folder_path = Path(path)
@@ -21,6 +21,45 @@ class LoadExternalData:
     def get_frequencies(self):
         path = self.folder_path / "analysis_frequencies.dat"
         return np.loadtxt(path).reshape(-1, 1)
+
+    def load_displacements(self):
+
+        output_data = dict()
+
+        paths = [
+                self.folder_path / "displacements_input_face.dat",
+                self.folder_path / "displacements_output_face.dat"
+                ]
+
+        frequencies = self.get_frequencies()
+
+        for i, path in enumerate(paths):
+
+            data = np.loadtxt(path)
+            rows, cols = data.shape
+
+            array_Ux = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+            array_Uy = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+            array_Uz = np.zeros((rows, len(frequencies) + 1), dtype=complex)
+
+            node_ids = data[:, 0]
+            array_Ux[:, 0] = node_ids
+            array_Ux[:, 1:] = (data[:, 1::6] + 1j * data[:, 2::6])
+            dict_Ux = dict(zip(node_ids, array_Ux[:, 1:]))
+
+            array_Uy[:, 0] = node_ids
+            array_Uy[:, 1:] = (data[:, 3::6] + 1j * data[:, 4::6])
+            dict_Uy = dict(zip(node_ids, array_Uy[:, 1:]))
+
+            array_Uz[:, 0] = node_ids
+            array_Uz[:, 1:] = (data[:, 5::6] + 1j * data[:, 6::6])
+            dict_Uz = dict(zip(node_ids, array_Uz[:, 1:]))
+
+            output_data["Ux", labels[i]] = [frequencies, array_Ux, dict_Ux]
+            output_data["Uy", labels[i]] = [frequencies, array_Uy, dict_Uy]
+            output_data["Uz", labels[i]] = [frequencies, array_Uz, dict_Uz]
+
+        return output_data
 
     def load_nodal_pressures(self):
 
