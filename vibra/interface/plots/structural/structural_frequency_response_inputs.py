@@ -110,7 +110,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.comboBox_dof_selector.addItems(active_dof_labels)
 
     def _load_analysis_setup_and_solution(self):
-        analysis_setup = app().project.model.new_analysis_setup
+        analysis_setup = app().project.model.analysis_setup
 
         self.analysis_method = ""
         if isinstance(analysis_setup, HarmonicAnalysisSetup):

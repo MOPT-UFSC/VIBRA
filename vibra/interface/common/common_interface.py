@@ -8,7 +8,7 @@ from vibra.engine.analysis_info import HarmonicAnalysisSetup, HarmonicAnalysisSe
 
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
-    analysis_setup = app().project.model.new_analysis_setup
+    analysis_setup = app().project.model.analysis_setup
 
     # The previous version looks like an HarmonicAnalysisSetupRange,
     # but I think that the HarmonicAnalysisSetupList is more suitable.

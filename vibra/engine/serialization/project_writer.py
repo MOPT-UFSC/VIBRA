@@ -78,8 +78,8 @@ class ProjectWriter:
         if model.analysis_id != AnalysisID.NO_ANALYSIS:
             project_setup["analysis_setup"]["analysis_id"] = int(model.analysis_id)
 
-        if isinstance(model.new_analysis_setup, AnalysisSetup):
-            project_setup["analysis_setup"].update(model.new_analysis_setup.as_dict())
+        if isinstance(model.analysis_setup, AnalysisSetup):
+            project_setup["analysis_setup"].update(model.analysis_setup.as_dict())
 
         mesh_setup = model.mesh_setup_new
         if mesh_setup is not None:

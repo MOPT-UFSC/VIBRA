@@ -123,7 +123,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
-        analysis_setup = app().project.model.new_analysis_setup
+        analysis_setup = app().project.model.analysis_setup
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return
 

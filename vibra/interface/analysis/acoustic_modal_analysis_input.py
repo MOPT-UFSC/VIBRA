@@ -42,7 +42,7 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
 
     def _load_analysis_setup(self):
-        analysis_setup = app().project.model.new_analysis_setup
+        analysis_setup = app().project.model.analysis_setup
 
         if isinstance(analysis_setup, ModalAnalysisSetup) and self.analysis_id.is_modal():
             modes_number = analysis_setup.modes_number

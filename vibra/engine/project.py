@@ -76,7 +76,7 @@ class Project:
 
     @property
     def analysis_setup(self):
-        return self.model.new_analysis_setup
+        return self.model.analysis_setup
 
     @property
     def fluid_library(self) -> FluidLibrary:
@@ -320,7 +320,7 @@ class Project:
 
         t0 = perf_counter()
 
-        analysis_method = self.model.new_analysis_setup.analysis_method
+        analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
             solution = self.solver.solve_direct()
         elif analysis_method == "mode_superposition":
@@ -374,7 +374,7 @@ class Project:
 
         t0 = perf_counter()
 
-        analysis_method = self.model.new_analysis_setup.analysis_method
+        analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
             solution = self.solver.solve_direct()
         elif analysis_method == "mode_superposition":
@@ -394,10 +394,10 @@ class Project:
         if analysis_id is None:
             analysis_id = self.model.analysis_id
 
-        if analysis_id.is_harmonic() and isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
+        if analysis_id.is_harmonic() and isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
             return True
 
-        if analysis_id.is_modal() and isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
+        if analysis_id.is_modal() and isinstance(self.model.analysis_setup, ModalAnalysisSetup):
             return True
 
         return False

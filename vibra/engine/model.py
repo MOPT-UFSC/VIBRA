@@ -67,7 +67,7 @@ class Model:
 
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup_new: Optional[MeshSetup] = None
-        self.new_analysis_setup: Optional[AnalysisSetup] = None
+        self.analysis_setup: Optional[AnalysisSetup] = None
         self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
         self.solution: Optional[Solution] = None
 
@@ -276,7 +276,7 @@ class Model:
         if not isinstance(analysis_setup, AnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 
-        self.new_analysis_setup = analysis_setup
+        self.analysis_setup = analysis_setup
 
         # Keeping retro compatibility. It will be removed soon.
         if analysis_setup is None:

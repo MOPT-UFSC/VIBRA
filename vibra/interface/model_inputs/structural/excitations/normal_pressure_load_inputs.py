@@ -560,7 +560,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         # No idea of what it does
         app().project.configure_analysis(
             app().project.model.analysis_id,
-            app().project.model.new_analysis_setup,
+            app().project.model.analysis_setup,
         )
 
     def reset_input_fields(self):

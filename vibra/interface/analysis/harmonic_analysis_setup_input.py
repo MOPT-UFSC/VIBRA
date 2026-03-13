@@ -163,7 +163,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.lineEdit_modes_to_expand.clear()
             return
         
-        analysis_setup = app().project.model.new_analysis_setup
+        analysis_setup = app().project.model.analysis_setup
         if self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if analysis_setup.analysis_method == "mode_superposition":
                 modes_to_expand = analysis_setup.modes_number
@@ -213,7 +213,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         f_step = 5
         global_damping = (0.0, 0.0, 0.0)
 
-        analysis_setup = app().project.model.new_analysis_setup
+        analysis_setup = app().project.model.analysis_setup
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
             global_damping = analysis_setup.global_damping
 
@@ -231,7 +231,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.comboBox_frequency_spacing.setCurrentText("User-defined")
 
     def load_analysis_type(self):
-        analysis_setup = app().project.model.new_analysis_setup
+        analysis_setup = app().project.model.analysis_setup
         self.comboBox_method.blockSignals(True)
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:

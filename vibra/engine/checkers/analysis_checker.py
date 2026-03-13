@@ -23,7 +23,7 @@ class AnalysisChecker:
                 raise NotImplementedError(f'Analysis type "{analysis_id.name}" is not implemented.')
 
     def check_acoustic_harmonic_analysis(self):
-        if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
+        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
             raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
         self.check_mesh()
@@ -33,7 +33,7 @@ class AnalysisChecker:
         self.check_acoustic_harmonic_excitations()
 
     def check_structural_harmonic_analysis(self):
-        if not isinstance(self.model.new_analysis_setup, HarmonicAnalysisSetup):
+        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
             raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
         self.check_mesh()
@@ -45,11 +45,11 @@ class AnalysisChecker:
 
         self.check_structural_harmonic_excitations()
 
-        if self.model.new_analysis_setup.analysis_method == "mode_superposition":
+        if self.model.analysis_setup.analysis_method == "mode_superposition":
             self.check_mode_superposition_prescribed_dof_criterion()
 
     def check_acoustic_modal_analysis(self):
-        if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
+        if not isinstance(self.model.analysis_setup, ModalAnalysisSetup):
             raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
         self.check_mesh()
@@ -59,7 +59,7 @@ class AnalysisChecker:
         self.check_frequency_varying_fluid_properties_for_modal_analysis()
 
     def check_structural_modal_analysis(self):
-        if not isinstance(self.model.new_analysis_setup, ModalAnalysisSetup):
+        if not isinstance(self.model.analysis_setup, ModalAnalysisSetup):
             raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
         self.check_mesh()
