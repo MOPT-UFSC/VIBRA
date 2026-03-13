@@ -1,3 +1,4 @@
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra import PROJECT_DIR
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
@@ -60,22 +61,14 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
         "diameter": 0.005,
     }
     acoustic_model.set_viscous_thermal_model_data(viscous_thermal_model_data, volume=1)
+    analysis_setup = HarmonicAnalysisSetupRange(
+        f_min=100,
+        f_max=300,
+        f_step=100,
+    )
 
-    # Define the analysis frequency setup
-    df = 100
-    f_min = 100
-    f_max = 300
-    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    analysis_setup = {
-        "analysis_id": 3,
-        "f_min": f_min,
-        "f_max": f_max,
-        "f_step": df,
-        "frequencies": frequencies,
-    }
-
-    acoustic_model.set_analysis_setup(analysis_setup)
+    acoustic_model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+    acoustic_model.new_set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 
     return acoustic_model
@@ -130,20 +123,11 @@ def structural_model(material: Material) -> Model:
 
 @pytest.fixture(scope="module")
 def structural_harmonic_analysis(structural_model: Model) -> Model:
-    # Define the analysis frequency setup
-    df = 200
-    f_min = 100
-    f_max = 500
-    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
+    analysis_setup = HarmonicAnalysisSetupRange(
+        f_min=100,
+        f_max=500,
+        f_step=200,
+    )
 
-    analysis_setup = {
-        "analysis_id": 3,
-        "f_min": f_min,
-        "f_max": f_max,
-        "f_step": df,
-        "frequencies": frequencies,
-    }
-
-    structural_model.set_analysis_setup(analysis_setup)
-
+    structural_model.new_set_analysis_setup(analysis_setup)
     return structural_model
