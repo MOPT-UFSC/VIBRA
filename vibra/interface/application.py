@@ -6,9 +6,6 @@ from vibra.engine.project import Project
 from vibra.interface.config import Config
 from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
-from vibra.project_files.load_project import LoadProject
-from vibra.project_files.old_project import OldProject
-from vibra.project_files.project_file import ProjectFile
 
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
@@ -26,12 +23,7 @@ class Application(QApplication):
 
         # global params
         self.config = Config()
-
         self.new_project = Project(TEMP_PROJECT_DIR)
-
-        self.file = ProjectFile(TEMP_PROJECT_DIR)
-        self.old_project = OldProject(self.file)
-        self.load_project = LoadProject()
 
         # gui
         self.main_window = MainWindow()
