@@ -560,7 +560,7 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        alpha, beta, eta = self.model.analysis_setup.get("global_damping", (0, 0, 0))
+        alpha, beta, eta = self.model.old_analysis_setup.get("global_damping", (0, 0, 0))
 
         frequencies = self.model.frequencies
         omega = 2 * np.pi * frequencies[index]
@@ -595,7 +595,7 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
+        global_damping = self.model.old_analysis_setup.get("global_damping", (0, 0, 0, 0))
         alpha_v, beta_v, alpha_h, beta_h = global_damping
 
         frequencies = self.model.frequencies
@@ -649,7 +649,7 @@ class StructuralAssembler:
     def build_harmonic_system(self, freq, i):
         omega = 2 * np.pi * freq
 
-        global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0))
+        global_damping = self.model.old_analysis_setup.get("global_damping", (0, 0, 0))
         alpha, beta, eta = global_damping
 
         M = self.mass_matrix

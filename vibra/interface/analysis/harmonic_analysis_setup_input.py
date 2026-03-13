@@ -24,7 +24,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
 
         self.model = app().project.model
-        self.analysis_setup = app().project.model.analysis_setup
+        self.analysis_setup = app().project.model.old_analysis_setup
         self.analysis_id = AnalysisID(analysis_id)
         self.ud_interface = None
 
@@ -341,7 +341,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         analysis_method = "direct" if self.comboBox_method.currentIndex() == 0 else "mode_superposition"
         frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
 
-        existing_frequencies = self.model.analysis_setup.get("frequencies", list())
+        existing_frequencies = self.model.old_analysis_setup.get("frequencies", list())
 
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
             if not self.user_defined_solution_steps:
@@ -377,7 +377,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             if frequency_spacing == FrequencySpacing.USER_DEFINED:
                 if not self.user_defined_solution_steps:
-                    if self.model.analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
+                    if self.model.old_analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
                         self.user_defined_solution_steps = existing_frequencies
 
                 analysis_setup.update({"frequencies" : self.user_defined_solution_steps})

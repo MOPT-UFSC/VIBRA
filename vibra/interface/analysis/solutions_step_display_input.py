@@ -52,7 +52,7 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
                 
         if isinstance(frequencies, np.ndarray):
             self.tableWidget_solution_steps.setRowCount(frequencies.size)
-            frequency_spacing = self.model.analysis_setup.get("frequency_spacing", "--")
+            frequency_spacing = self.model.old_analysis_setup.get("frequency_spacing", "--")
 
             for index, freq in enumerate(frequencies):
                 self.tableWidget_solution_steps.setItem(index, 0, QTableWidgetItem(str(index+1)))

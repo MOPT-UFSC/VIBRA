@@ -859,7 +859,7 @@ def analysis_info_text(frequency_index: int):
     if not project.is_there_a_valid_solution():
         return ""
 
-    analysis_setup = project.model.analysis_setup
+    analysis_setup = project.model.old_analysis_setup
     analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
     if analysis_id == AnalysisID.NO_ANALYSIS:

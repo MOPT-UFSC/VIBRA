@@ -205,7 +205,7 @@ class AnalysisRequirementsChecker:
         if self.check_structural_harmonic_excitations():
             return True
 
-        if self.model.analysis_setup.get("analysis_method") == "mode_superposition":
+        if self.model.old_analysis_setup.get("analysis_method") == "mode_superposition":
             if self.check_mode_superposition_prescribed_dof_criterion():
                 return True
 

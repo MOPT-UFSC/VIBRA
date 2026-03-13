@@ -95,7 +95,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         if app().project.model.properties.check_if_there_are_tables_at_the_model():
             return
 
-        frequencies = app().project.model.analysis_setup.get("frequencies")
+        frequencies = app().project.model.old_analysis_setup.get("frequencies")
         if isinstance(frequencies, np.ndarray):
             self.user_defined_solution_steps = list(frequencies)
         elif isinstance(frequencies, list):

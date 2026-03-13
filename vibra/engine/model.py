@@ -87,7 +87,7 @@ class Model:
         self.list_frequencies = list()
         self.solution_steps_mask = list()
 
-        self.analysis_setup = dict()
+        self.old_analysis_setup = dict()
         self.decouple_info = dict()
         self.nodes_mapping = dict()
 
@@ -237,7 +237,7 @@ class Model:
                 
 
         self.frequencies = None
-        self.analysis_setup = analysis_setup
+        self.old_analysis_setup = analysis_setup
 
         self.f_min = analysis_setup.get("f_min")
         self.f_max = analysis_setup.get("f_max")
@@ -265,12 +265,12 @@ class Model:
                 return
 
             self.frequencies = _frequencies
-            self.analysis_setup["frequencies"] = list(_frequencies)
+            self.old_analysis_setup["frequencies"] = list(_frequencies)
 
         solution_steps_mask = self.get_solution_steps_mask()
         self.solution_steps_mask = solution_steps_mask
 
-        self.analysis_setup["solution_steps_mask"] = solution_steps_mask
+        self.old_analysis_setup["solution_steps_mask"] = solution_steps_mask
 
     def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):
@@ -307,7 +307,7 @@ class Model:
         return mask
 
     def has_spectral_content_been_modified(self):
-        cond_A = self.analysis_setup.get("frequency_spacing", "") == "user-defined"
+        cond_A = self.old_analysis_setup.get("frequency_spacing", "") == "user-defined"
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
 
@@ -326,10 +326,10 @@ class Model:
 
     def is_there_a_valid_analysis_setup(self, **kwargs):
         current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
-        if not isinstance(self.analysis_setup, dict):
+        if not isinstance(self.old_analysis_setup, dict):
             return False
 
-        analysis_id = self.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = self.old_analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return False
 
@@ -338,22 +338,22 @@ class Model:
                 return False
 
         if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            frequencies = self.analysis_setup.get("frequencies")
-            solution_steps_mask = self.analysis_setup.get("solution_steps_mask")
+            frequencies = self.old_analysis_setup.get("frequencies")
+            solution_steps_mask = self.old_analysis_setup.get("solution_steps_mask")
 
             if isinstance(frequencies, np.ndarray | list):
                 if isinstance(solution_steps_mask, np.ndarray | list):
                     return True
 
             for key in ["f_min", "f_max", "f_step"]:
-                if not isinstance(self.analysis_setup.get(key), int | float):
+                if not isinstance(self.old_analysis_setup.get(key), int | float):
                     return False
 
             return True
 
         elif analysis_id in [AnalysisID.ACOUSTIC_MODAL, AnalysisID.STRUCTURAL_MODAL]:
             for key in ["modes_number", "sigma_factor"]:
-                if not isinstance(self.analysis_setup.get(key), int | float):
+                if not isinstance(self.old_analysis_setup.get(key), int | float):
                     return False
 
             return True
@@ -527,7 +527,7 @@ class Model:
 
         # prevent frequency-varying fluid properties
         # while solving acoustic modal analysis
-        analysis_id = self.analysis_setup.get("analysis_id")
+        analysis_id = self.old_analysis_setup.get("analysis_id")
         is_harmonic = analysis_id == AnalysisID.ACOUSTIC_HARMONIC
 
         for vol_id in self.mesh.elements_from_volume.keys():

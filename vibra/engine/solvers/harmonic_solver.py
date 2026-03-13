@@ -188,7 +188,7 @@ class HarmonicSolver:
         # frequencies vector [in hertz]
         frequencies = self.assembler.model.frequencies
 
-        (alpha, beta, eta) = self.assembler.model.analysis_setup.get("global_damping", (0, 0, 0))
+        (alpha, beta, eta) = self.assembler.model.old_analysis_setup.get("global_damping", (0, 0, 0))
         omega_n = 2 * np.pi * natural_frequencies
         # Phi is the matrix of the eigenvectors
         Phi = modes

@@ -784,7 +784,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_setup = app().project.model.analysis_setup
+        analysis_setup = app().project.model.old_analysis_setup
         if isinstance(analysis_setup, dict):
             frequencies = analysis_setup.get("frequencies", None)
 
