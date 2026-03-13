@@ -131,7 +131,7 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
             return
 
         self.model.properties._set_property("advanced_element_options", advanced_options)
-        app().file.write_model_properties_in_file()
+        app().new_project.update_model_properties_file()
 
         self.close()
 
