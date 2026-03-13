@@ -161,7 +161,7 @@ def load_external_mesh_and_solve():
                       "frequencies" : frequencies
                       }
 
-    model.set_analysis_setup(analysis_setup)
+    model.old_set_analysis_setup(analysis_setup)
 
     ## Configure porous material
     # pm_data = get_porous_material_data(model=pm_model)

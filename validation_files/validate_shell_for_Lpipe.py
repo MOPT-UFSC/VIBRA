@@ -152,7 +152,7 @@ def load_external_mesh_and_solve():
                       "frequencies" : frequencies
                       }
 
-    model.set_analysis_setup(analysis_setup)
+    model.old_set_analysis_setup(analysis_setup)
 
     # harmonic_solver = HarmonicSolver(assembler)
     # # Define the analysis setup
@@ -163,7 +163,7 @@ def load_external_mesh_and_solve():
     #                   }
     
     # # Set the analysis setup
-    # model.set_analysis_setup(analysis_setup)
+    # model.old_set_analysis_setup(analysis_setup)
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)

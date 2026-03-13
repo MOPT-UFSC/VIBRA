@@ -65,7 +65,7 @@ model.set_mesh_setup(mesh_setup)
 model.process_mesh()
 
 acoustic_model = model
-acoustic_model.set_analysis_setup(analysis_setup)
+acoustic_model.old_set_analysis_setup(analysis_setup)
 acoustic_model.process_viscous_thermal_model_properties()
 
 # Direct solver setup and solve

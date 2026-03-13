@@ -255,4 +255,4 @@ class AnalysisRequirementsChecker:
             analysis_setup.pop("modes_number")
 
             app().file.write_analysis_setup_in_file(analysis_setup)
-            app().project.model.set_analysis_setup(analysis_setup)
+            app().old_project.model.old_set_analysis_setup(analysis_setup)

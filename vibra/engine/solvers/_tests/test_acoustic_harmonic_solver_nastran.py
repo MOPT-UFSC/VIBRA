@@ -73,7 +73,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
         "frequencies": frequencies,
     }
 
-    model.set_analysis_setup(analysis_setup)
+    model.old_set_analysis_setup(analysis_setup)
     model.process_viscous_thermal_model_properties()
 
     return model

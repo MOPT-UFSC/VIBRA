@@ -229,7 +229,13 @@ class Model:
         self.mesh = mesh
         self.generated_mesh = True
 
-    def set_analysis_setup(self, analysis_setup: dict):
+    def old_set_analysis_setup(self, analysis_setup: dict, supress_warning: bool = False):
+        if not supress_warning:
+            import warnings
+
+            warnings.warn("This method is deprecated, use new_set_analysis_setup", DeprecationWarning)
+                
+
         self.frequencies = None
         self.analysis_setup = analysis_setup
 
@@ -272,10 +278,11 @@ class Model:
 
         self.new_analysis_setup = analysis_setup
 
+        # Keeping retro compatibility. It will be removed soon.
         if analysis_setup is None:
-            self.set_analysis_setup({})
+            self.old_set_analysis_setup({}, supress_warning=True)
         else:
-            self.set_analysis_setup(analysis_setup.as_dict())
+            self.old_set_analysis_setup(analysis_setup.as_dict(), supress_warning=True)
 
     def get_solution_steps_mask(self, tol: float = 1e-10):
         if self.frequencies is None:

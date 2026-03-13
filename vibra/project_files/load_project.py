@@ -20,8 +20,8 @@ class LoadProject:
 
     def initialize(self):
         self.file = app().file
-        self.model = app().project.model
-        self.properties = app().project.model.properties
+        self.model = app().old_project.model
+        self.properties = app().old_project.model.properties
 
     def load(self):
         logging.info("Loading project... [25/100]")
@@ -143,7 +143,7 @@ class LoadProject:
         if not geometry_data:
             # forces the project to reset, ensuring backward
             # compatibility with older versions of project files
-            app().project.reset_solutions()
+            app().old_project.reset_solutions()
             self.file.remove_mesh_data_from_project_file()
             self.file.remove_results_data_from_project_file()
             return
@@ -290,8 +290,8 @@ class LoadProject:
 
                 mesh_setup["ElementType"] = solid_element
 
-                app().project.reset_solutions()
-                app().project.set_mesh_setup(mesh_setup)
+                app().old_project.reset_solutions()
+                app().old_project.set_mesh_setup(mesh_setup)
 
     def load_mesh_data(self):
 
@@ -311,7 +311,7 @@ class LoadProject:
         if not isinstance(mesh_error, dict):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().old_project.model.mesh
         if "collapsed_elements_data" in mesh_error.keys():
             collapsed_elements_data = mesh_error.get("collapsed_elements_data")
             mesh.collapsed_elements_data = collapsed_elements_data
@@ -337,10 +337,10 @@ class LoadProject:
         imported_tables = app().file.read_imported_table_data_from_file()
 
         if "acoustic" in imported_tables.keys():
-            app().project.model.properties.acoustic_imported_tables = imported_tables["acoustic"]
+            app().old_project.model.properties.acoustic_imported_tables = imported_tables["acoustic"]
 
         if "structural" in imported_tables.keys():
-            app().project.model.properties.structural_imported_tables = imported_tables["structural"]
+            app().old_project.model.properties.structural_imported_tables = imported_tables["structural"]
 
     def load_model_properties(self):
 
@@ -390,17 +390,17 @@ class LoadProject:
 
     def load_analysis_setup(self):
         analysis_setup = self.file.read_analysis_setup_from_file()
-        app().project.model.set_analysis_setup(analysis_setup)
-        app().project.create_solver()
+        app().old_project.model.old_set_analysis_setup(analysis_setup)
+        app().old_project.create_solver()
 
     def load_thumbnail(self):
         thumbnail = self.file.read_thumbnail()
         if thumbnail is not None:
-            app().project.thumbnail = thumbnail
+            app().old_project.thumbnail = thumbnail
 
     def load_analysis_results(self):
 
-        project = app().project
+        project = app().old_project
         results_data = self.file.read_results_data_from_file()
 
         for key, data in results_data.items():

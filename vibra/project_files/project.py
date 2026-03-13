@@ -21,7 +21,7 @@ import logging
 from time import sleep, time
 
 
-class Project(QObject):
+class OldProject(QObject):
 
     can_resume_solution_changed = Signal(bool)
 
@@ -243,7 +243,7 @@ class Project(QObject):
         analysis_id = self.model.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
-        interrupt_function = app().project.model.toggle_processing_callback
+        interrupt_function = app().old_project.model.toggle_processing_callback
 
         if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             if checker.check_structural_harmonic_analysis():

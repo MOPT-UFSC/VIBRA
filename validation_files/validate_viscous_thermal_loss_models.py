@@ -124,7 +124,7 @@ def load_external_mesh_and_solve():
                       "frequencies" : frequencies
                       }
 
-    model.set_analysis_setup(analysis_setup)
+    model.old_set_analysis_setup(analysis_setup)
 
     # Configure the viscous-thermal models
 

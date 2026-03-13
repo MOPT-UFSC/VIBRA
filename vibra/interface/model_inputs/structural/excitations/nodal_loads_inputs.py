@@ -486,7 +486,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             #                         "f_max" : f_max,
             #                         "f_step" : f_step }
 
-            #     app().new_project.model.set_analysis_setup(frequency_setup)
+            #     app().new_project.model.old_set_analysis_setup(frequency_setup)
 
             return imported_values, imported_table_path
 

@@ -176,7 +176,7 @@ def load_external_mesh_and_solve():
                       }
 
     # Set the analysis setup
-    model.set_analysis_setup(analysis_setup)
+    model.old_set_analysis_setup(analysis_setup)
 
     assembler = AcousticAssembler(model)
 

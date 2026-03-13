@@ -41,7 +41,7 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
         }
     )
 
-    app().new_project.model.set_analysis_setup(analysis_setup)
+    app().new_project.model.old_set_analysis_setup(analysis_setup)
     app().file.write_analysis_setup_in_file(analysis_setup)
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
