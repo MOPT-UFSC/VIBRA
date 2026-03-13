@@ -1,9 +1,12 @@
 from abc import abstractmethod
 from dataclasses import replace
 from enum import StrEnum, auto
-from typing import Literal, Self
+from typing import Callable, Literal, ParamSpec, Self, TypeVar
 
 import numpy as np
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 class FrequencySpacing(StrEnum):
@@ -35,6 +38,16 @@ class HarmonicAnalysisSetup:
 
     def replace(self, **changes) -> Self:
         return replace(self, **changes)
+
+    def convert_to(self, cls: Callable[P, T], **kwargs: P.kwargs) -> T:
+        # TODO: this type hints are not working very well, fix them manually
+        if not isinstance(cls, HarmonicAnalysisSetup):
+            raise ValueError('You can only convert to another subclass of "HarmonicAnalysisSetup"')
+
+        kwargs.setdefault("analysis_method", self.analysis_method)
+        kwargs.setdefault("global_damping", self.global_damping)
+        kwargs.setdefault("modes_number", self.modes_number)
+        return cls(**kwargs)
 
     def __iter__(self):
         yield from self.frequencies()

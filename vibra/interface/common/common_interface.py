@@ -1,48 +1,31 @@
+from pathlib import Path
+
+import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QWidget
 
 from vibra import app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup, HarmonicAnalysisSetupList
 
-from pathlib import Path
-import numpy as np
-
-
-# def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-#     f_min = frequencies[0]
-#     f_max = frequencies[-1]
-#     f_step = frequencies[1] - frequencies[0] 
-
-#     analysis_setup = app().new_project.model.new_analysis_setup
-#     if isinstance(analysis_setup, HarmonicAnalysisSetup):
-#         new_analysis_setup = analysis_setup.replace(
-#             f_min=f_min,
-#             f_max=f_max,
-#             f_step=f_step,
-#         )
-#     else:
-#         new_analysis_setup = HarmonicAnalysisSetup(f_min, f_max, f_step)
-
-#     app().new_project.configure_analysis(
-#         AnalysisID.ACOUSTIC_HARMONIC,
-#         new_analysis_setup,
-#     )
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
+    analysis_setup = app().new_project.model.new_analysis_setup
 
-    analysis_setup = app().file.read_analysis_setup_from_file()
+    # The previous version looks like an HarmonicAnalysisSetupRange,
+    # but I think that the HarmonicAnalysisSetupList is more suitable.
+    # If I am wrong please let me know.
+    if isinstance(analysis_setup, HarmonicAnalysisSetup):
+        new_analysis_setup = analysis_setup.convert_to(
+            HarmonicAnalysisSetupList,
+            all_frequencies=frequencies,
+        )
+    else:
+        new_analysis_setup = HarmonicAnalysisSetupList(frequencies)
 
-    analysis_setup.update(
-        {
-            "frequency_spacing" : "tabular",
-            "f_min" : float(frequencies[0]),
-            "f_max" : float(frequencies[-1]),
-            "f_step" : float(frequencies[1] - frequencies[0]),
-            "frequencies" : None,
-            "solution_steps_mask" : list(),
-        }
+    app().new_project.configure_analysis(
+        app().new_project.model.analysis_id,
+        new_analysis_setup,
     )
 
-    app().new_project.model.old_set_analysis_setup(analysis_setup)
-    app().file.write_analysis_setup_in_file(analysis_setup)
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
@@ -57,8 +40,8 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
         parent,
         caption,
         last_path,
-        filter = _filter,
-        )
+        filter=_filter,
+    )
 
     if not extension:
         return
@@ -93,7 +76,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
             modal_data_to_export[i, :] = [mode, value]
 
     if "Text file" in extension:
-        np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=',', header=header)
+        np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=",", header=header)
 
     else:
         from pandas import ExcelWriter
