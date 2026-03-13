@@ -4,14 +4,14 @@ import numpy as np
 
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
-from vibra.engine.new_project import NewProject
+from vibra.engine.project import Project
 
 
 def test_write_and_read_mesh_project(fluid):
     mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
     project_path = Path("project.vibra")
 
-    project_a = NewProject()
+    project_a = Project()
     project_a.import_mesh(mesh_path)
 
     project_a.model.properties._set_property("fluid", fluid, volume=1)
@@ -27,7 +27,7 @@ def test_write_and_read_mesh_project(fluid):
     solution_a = project_a.run_analysis()
     project_a.save_project(project_path)
 
-    project_b = NewProject()
+    project_b = Project()
     project_b.load_project(project_path)
 
     project_path.unlink()
@@ -38,9 +38,9 @@ def test_compare_interface_based_mesh_project():
     project_path = PROJECT_DIR / "validation_files/test_projects/cavities.vibra"
     mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
 
-    project_interface = NewProject().load_project(project_path)
+    project_interface = Project().load_project(project_path)
 
-    project_cli = NewProject()
+    project_cli = Project()
     project_cli.import_mesh(mesh_path)
     fluid = project_cli.fluid_library.find_by_name("Hydrogen")
     assert fluid is not None

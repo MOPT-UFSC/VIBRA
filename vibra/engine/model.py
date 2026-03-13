@@ -233,7 +233,7 @@ class Model:
         if not supress_warning:
             import warnings
 
-            warnings.warn("This method is deprecated, use new_set_analysis_setup", DeprecationWarning)
+            warnings.warn("This method is deprecated, use set_analysis_setup", DeprecationWarning)
                 
 
         self.frequencies = None
@@ -272,7 +272,7 @@ class Model:
 
         self.analysis_setup["solution_steps_mask"] = solution_steps_mask
 
-    def new_set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
+    def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 

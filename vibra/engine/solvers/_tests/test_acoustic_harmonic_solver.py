@@ -33,7 +33,7 @@ def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_a
 
 def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
     analysis_setup = HarmonicAnalysisSetupRange(f_min=200, f_max=500, f_step=100)
-    acoustic_model.new_set_analysis_setup(analysis_setup)
+    acoustic_model.set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 
     # Direct solver setup and solve

@@ -31,7 +31,8 @@ from vibra.engine.solution import (
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
-class NewProject:
+
+class Project:
     def __init__(self, working_directory: Optional[Path | str] = None):
         self.project_paths = ProjectPaths(working_directory)
 
@@ -128,7 +129,7 @@ class NewProject:
     def load_project(
         self,
         path: Path | str,
-    ) -> NewProject:
+    ) -> Project:
         """
         Unpacks the vibra file into the working directory and reads data from it.
         """
@@ -139,7 +140,7 @@ class NewProject:
         self.save_path = Path(path)
         return self
 
-    def read_from_working_dir(self) -> NewProject:
+    def read_from_working_dir(self) -> Project:
         """
         Reload project data from the working directory.
         """
@@ -279,7 +280,7 @@ class NewProject:
     ):
         self.reset_solution()
         self.model.analysis_id = analysis_id
-        self.model.new_set_analysis_setup(analysis_setup)
+        self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
     def solve_structural_modal_analysis(self) -> StructuralModalSolution:

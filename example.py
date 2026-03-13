@@ -6,7 +6,7 @@ from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, M
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
-from vibra.engine.new_project import NewProject
+from vibra.engine.project import Project
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties import FluidLibrary
 from vibra.engine.properties.material import Material
@@ -46,7 +46,7 @@ data_Vn = {
     "averaged": False,
 }
 
-project = NewProject()
+project = Project()
 project.generate_mesh_from_geometry(geometry_path, mesh_setup)
 project.configure_analysis(
     analysis_id=AnalysisID.ACOUSTIC_HARMONIC,

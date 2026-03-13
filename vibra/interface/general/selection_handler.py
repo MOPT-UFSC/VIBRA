@@ -1,11 +1,11 @@
 from PySide6.QtCore import Signal, QObject
 
-from vibra.engine.new_project import NewProject
+from vibra.engine.project import Project
 
 class SelectionHandler(QObject):
     selection_changed = Signal()
     
-    def __init__(self, project: NewProject):
+    def __init__(self, project: Project):
         super().__init__()
         self.project = project
         self.mesh_nodes = set()

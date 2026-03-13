@@ -66,7 +66,7 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
     )
 
     acoustic_model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
-    acoustic_model.new_set_analysis_setup(analysis_setup)
+    acoustic_model.set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 
     return acoustic_model
@@ -129,5 +129,5 @@ def structural_harmonic_analysis(structural_model: Model) -> Model:
         f_step=200,
     )
 
-    structural_model.new_set_analysis_setup(analysis_setup)
+    structural_model.set_analysis_setup(analysis_setup)
     return structural_model

@@ -5,7 +5,7 @@ import numpy as np
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.mesher.mesh_setup import MeshSetup
-from vibra.engine.new_project import NewProject
+from vibra.engine.project import Project
 
 
 def test_write_and_read_project(fluid):
@@ -24,7 +24,7 @@ def test_write_and_read_project(fluid):
         "averaged": False,
     }
 
-    project_a = NewProject()
+    project_a = Project()
     project_a.import_geometry(geometry_path)
     project_a.configure_mesh(mesh_setup)
     project_a.generate_mesh()
@@ -45,7 +45,7 @@ def test_write_and_read_project(fluid):
     solution_a = project_a.solve_acoustic_harmonic_analysis()
     project_a.save_project(project_path)
 
-    project_b = NewProject()
+    project_b = Project()
     project_b.load_project(project_path)
     solution_b = project_b.model.solution
 
