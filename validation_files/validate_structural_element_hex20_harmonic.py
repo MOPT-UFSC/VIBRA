@@ -20,7 +20,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from time import time
-from pathlib import Path
+
+
+udof_labels = [
+    "ux", 
+    "uy", 
+    "uz",
+    ]
 
 
 stresses_labels = [
@@ -33,7 +39,7 @@ stresses_labels = [
     ]
 
 
-dof_index = {
+udof_index = {
     "Ux" : 0,
     "Uy" : 1,
     "Uz" : 2,
@@ -141,7 +147,7 @@ def load_external_mesh_and_solve(integration_type: str):
     # nodal load data
     nodal_load_data = {
         "element_type": "3d_element",
-        "real_values": [0.0, 1.0, 0.0],
+        "real_values": [0.0, 1.0, 1.0],
         "imag_values": [0.0, 0.0, 0.0],
         "nodal_attribution": True,
         "averaged": False,
@@ -183,59 +189,57 @@ def load_external_mesh_and_solve(integration_type: str):
     # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
-    # path = f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic"
-    # ext_data = LoadExternalData(path)
+    path = f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic"
+    ext_data = LoadExternalData(path)
 
-    # WB_displacements_data = ext_data.load_displacements()
+    WB_displacements_data = ext_data.load_displacements(entire_solution=True)
+    WB_stresses_data = ext_data.load_stresses(entire_solution=True)
 
-    # freq_WB, _, output_displacements_WB = WB_displacements_data["Uy", "output_face"]
-    # output_displacement_WB = np.average(list(output_displacements_WB.values()), axis=0)
+    structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
 
-    # input_nodes = mesh.external_nodes_from_surfaces[1]
-    # output_nodes = mesh.external_nodes_from_surfaces[2]
+    t0 = time()
+    avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
+    dt = time() - t0
+    print(f"Time to compute nodal stresses: {dt} s")
 
-    # output_rows = output_nodes * dofs_per_node + dof_index.get("Uy")
-    # output_displacement = np.average(solution[output_rows, :], axis=0).flatten()
-
-    # abs_diff_output_face = np.abs((output_displacement - output_displacement_WB) / output_displacement_WB)
-    # print(f"Deviation (output face): {100 * np.max(abs_diff_output_face)} %")
-
-    # title = f"Harmonic response at output face"
-
-    # fig1, ax1 = plt.subplots()
-    # ax1.semilogy(frequencies, np.abs(output_displacement), 'r', label='VIBRA')
-    # ax1.semilogy(freq_WB, np.abs(output_displacement_WB), 'k--', label='ANSYS')
-    # ax1.set(xlabel='Frequency [Hz]', ylabel='Nodal displacement [m] - Absolute', title=title)
-    # ax1.grid()
-    # ax1.legend()
-
-    # structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
-    
-#     t0 = time()
-#     avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
-#     dt = time() - t0
-#     print(f"Time to compute nodal stresses: {dt} s")
-
-#     nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
+    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
 #     # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
 
     # node_id = 6200
     plot_type = "absolute"
-    stress_label = "sigma_x"
+    # stress_label = "sigma_x"
 
-    # displacements plots
-    print()
-    compare_displacement_results(6200, dofs_per_node, "ux", frequencies, solution, integration_type, plot_type=plot_type)
-    compare_displacement_results(6200, dofs_per_node, "uy", frequencies, solution, integration_type, plot_type=plot_type)
-    compare_displacement_results(6200, dofs_per_node, "uz", frequencies, solution, integration_type, plot_type=plot_type)
-    compare_displacement_results(6228, dofs_per_node, "ux", frequencies, solution, integration_type, plot_type=plot_type)
-    compare_displacement_results(6228, dofs_per_node, "uy", frequencies, solution, integration_type, plot_type=plot_type)
-    compare_displacement_results(6228, dofs_per_node, "uz", frequencies, solution, integration_type, plot_type=plot_type)
+    for node_id in [6200, 6228, 6628]:
 
-#     compare_displacement_results(4882, dofs_per_node, "uy", frequencies, solution, integration_type, plot_type=plot_type)
-#     compare_displacement_results(5522, dofs_per_node, "uy", frequencies, solution, integration_type, plot_type=plot_type)
-#     compare_displacement_results(6210, dofs_per_node, "uy", frequencies, solution, integration_type, plot_type=plot_type)
-#     compare_displacement_results(6269, dofs_per_node, "uy", frequencies, solution, integration_type, plot_type=plot_type)
+        print()
+        # displacements plots
+        for dof_label in udof_labels:
+            compare_nodal_displacements_results(
+                node_id,
+                dofs_per_node,
+                dof_label,
+                frequencies,
+                solution,
+                integration_type,
+                WB_displacements_data,
+                plot_type=plot_type,
+                )
+
+        # # plots for stresses
+        # for stress_label in stresses_labels[0:3]:
+        #     compare_averaged_nodal_stresses_results(
+        #         node_id, 
+        #         stress_label, 
+        #         frequencies, 
+        #         nodal_averaged_stresses, 
+        #         integration_type, 
+        #         WB_stresses_data,
+        #         plot_type=plot_type,
+        #         )
+
+    # # input_nodes = mesh.external_nodes_from_surfaces[1]
+    # output_nodes = mesh.external_nodes_from_surfaces[2]
+    # output_rows = output_nodes * dofs_per_node + udof_index.get("Uy")
 
 #     # stresses plots
 #     print()
@@ -264,20 +268,36 @@ def load_external_mesh_and_solve(integration_type: str):
     plt.show()
 
 
-def compare_displacement_results(
+def compare_nodal_displacements_results(
         node_id: int, 
         dofs_per_node: int, 
         dof_label: str, 
         frequencies: np.ndarray, 
         solution: np.ndarray,
-        integration_type: str,
+        esf: bool,
+        solution_reference: dict,
+        named_selection: str = "all_solutions",
         plot_type: str = "absolute",
         ):
 
-    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
-    freq_apdl, response_apdl = get_apdl_reference_displacement_results(node_id, dof_label, integration_type)
+    response_vibra = get_model_response(
+        node_id, 
+        dof_label, 
+        dofs_per_node, 
+        solution,
+        )
 
-    title = f"Harmonic response at node {node_id} - ({integration_type})"
+    freq_ref, response_ref = get_reference_nodal_response(
+        node_id, 
+        dof_label, 
+        named_selection, 
+        solution_reference,
+        )
+
+    if response_ref is None:
+        return
+
+    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
     y_label = f'Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}'
 
@@ -295,16 +315,16 @@ def compare_displacement_results(
         plot = ax.semilogy
 
     plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
-    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
+    plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
     ax.legend()
 
-    if response_vibra.size != response_apdl.size:
+    if response_vibra.size != response_ref.size:
         return
-    
-    abs_diff = np.abs((response_vibra - response_apdl) / response_apdl)
+
+    abs_diff = np.abs((response_vibra - response_ref) / response_ref)
     max_abs_diff = 100 * np.max(abs_diff)
     freq_max_diff = frequencies[np.argmax(abs_diff)]
 
@@ -316,14 +336,24 @@ def compare_averaged_nodal_stresses_results(
     stress_label: str, 
     frequencies: np.ndarray, 
     nodal_averaged_stresses: dict,
-    esf: bool,
+    integration_type: str,
+    solution_reference,
+    named_selection: str = "all_solutions",
     plot_type: str = "absolute",
     ):
 
     response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
-    freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf)
 
-    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
+    freq_ref, response_ref = get_reference_nodal_response(
+        node_id, 
+        stress_label, 
+        named_selection, 
+        solution_reference,
+        )
+
+    # freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf)
+
+    title = f"Harmonic response at node {node_id} - ({integration_type})"
     x_label = "Frequency [Hz]"
     y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
 
@@ -341,16 +371,18 @@ def compare_averaged_nodal_stresses_results(
         plot = ax.semilogy
 
     plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
-    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
+
+    if isinstance(response_ref, np.ndarray):
+        plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
     ax.legend()
 
-    if response_vibra.size != response_apdl.size:
+    if response_vibra.size != response_ref.size:
         return
 
-    abs_diff = np.abs((response_vibra - response_apdl) / response_apdl)
+    abs_diff = np.abs((response_vibra - response_ref) / response_ref)
     max_abs_diff = 100 * np.max(abs_diff)
     freq_max_diff = frequencies[np.argmax(abs_diff)]
 
@@ -408,16 +440,17 @@ def compare_nodal_stresses_results(
 def get_apdl_reference_displacement_results(
         apdl_node_id: int, 
         dof_label: str,
-        integration_type: str,
+        extra_shape_functions: bool,
         ) -> np.ndarray | None:
     
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic/"
-
+    folder = "with_esf" if extra_shape_functions else "without_esf"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
+    
     if not results_path.exists():
         return None, None
     
     # load mechanical apdl results
-    ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.csv", delimiter=",", skiprows=2)
+    ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
 
     freq_apdl = ansys_data[:, 0]
     response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
@@ -462,12 +495,32 @@ def get_model_response(
         dofs_per_node: int, 
         solution: np.ndarray) -> np.ndarray:
 
-    dof_labels = ["ux", "uy", "uz"]
-    local_dof = dof_labels.index(dof_label)
+    local_dof = udof_labels.index(dof_label)
 
     index = int((apdl_node_id - 1) * dofs_per_node) + local_dof
 
     return solution[index, :]
+
+
+def get_reference_nodal_response(
+    node_id: int,
+    _label: str,
+    named_selection: str,
+    solution_reference: dict,
+    ):
+
+    key = (_label, named_selection)
+    freq_ref, _, nodal_solution_ref = solution_reference.get(key, (None, None, None))
+
+    if freq_ref is None:
+        return None, None
+
+    if not isinstance(nodal_solution_ref, dict):
+        return None, None
+
+    response_ref = nodal_solution_ref.get(node_id)
+
+    return freq_ref, response_ref
 
 
 if __name__ == "__main__":
