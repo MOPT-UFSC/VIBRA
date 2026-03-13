@@ -40,22 +40,22 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
     def build(self):
         self.clear_symbols()
 
-        point_properties = app().new_project.model.properties.point_properties
+        point_properties = app().project.model.properties.point_properties
         for property_name, point_id in point_properties.keys():
             self._call_build_functions(property_name, point_id=point_id)
 
-        line_properties = app().new_project.model.properties.line_properties
+        line_properties = app().project.model.properties.line_properties
         for property_name, line_id in line_properties.keys():
             self._call_build_functions(property_name, line_id=line_id)
 
-        surface_properties = app().new_project.model.properties.surface_properties
+        surface_properties = app().project.model.properties.surface_properties
         for property_name, surface_id in surface_properties.keys():
             self._call_build_functions(property_name, surface_id=surface_id)
 
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[nodes, 1:]
 
@@ -80,7 +80,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         return center_coords, avg_normal
 
     def _get_center_coords_and_normals_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         nodes = mesh.get_nodes_from_line(line_id)
         line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
@@ -91,7 +91,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         return (line_coordinates[index - 1, :], line_coordinates[index, :], line_coordinates[index + 1, :])
 
     def _get_center_coords_and_normals_point(self, point_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         point_nodes = mesh.nodes_from_points.get(point_id)
         points_coordinates = mesh.nodal_coordinates[point_nodes, 1:]
 
@@ -103,17 +103,17 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
         if surface_id != -1:
             coords, _ = self._get_center_coords_and_normals(surface_id)
-            surface_properties = app().new_project.model.properties.surface_properties
+            surface_properties = app().project.model.properties.surface_properties
             property = surface_properties[property_name, surface_id]
 
         if line_id != -1:
             coords = self._get_center_coords_and_normals_line(line_id)[1]
-            line_properties = app().new_project.model.properties.line_properties
+            line_properties = app().project.model.properties.line_properties
             property = line_properties[property_name, line_id]
 
         if point_id != -1:
             coords = self._get_center_coords_and_normals_point(point_id)
-            point_properties = app().new_project.model.properties.point_properties
+            point_properties = app().project.model.properties.point_properties
             property = point_properties[property_name, point_id]
 
         if coords is not None and property is not None:
@@ -143,17 +143,17 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
             coords, _ = self._get_center_coords_and_normals(surface_id)
-            surface_properties = app().new_project.model.properties.surface_properties
+            surface_properties = app().project.model.properties.surface_properties
             property = surface_properties[property_name, surface_id]
 
         if line_id != -1:
             coords = self._get_center_coords_and_normals_line(line_id)[1]
-            line_properties = app().new_project.model.properties.line_properties
+            line_properties = app().project.model.properties.line_properties
             property = line_properties[property_name, line_id]
 
         if point_id != -1:
             coords = self._get_center_coords_and_normals_point(point_id)
-            point_properties = app().new_project.model.properties.point_properties
+            point_properties = app().project.model.properties.point_properties
             property = point_properties[property_name, point_id]
 
         if property is not None and coords is not None:
@@ -183,7 +183,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
         if surface_id != -1:
-            surface_properties = app().new_project.model.properties.surface_properties
+            surface_properties = app().project.model.properties.surface_properties
             property = surface_properties[property_name, surface_id]
 
             coords, normal = self._get_center_coords_and_normals(surface_id)
@@ -202,7 +202,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
 
         if line_id != -1:
-            line_properties = app().new_project.model.properties.line_properties
+            line_properties = app().project.model.properties.line_properties
             property = line_properties[property_name, line_id]
 
             coords = self._get_center_coords_and_normals_line(line_id)
@@ -222,7 +222,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         if surface_id == -1:
             return
         
-        surface_properties = app().new_project.model.properties.surface_properties
+        surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
         coords, normal = self._get_center_coords_and_normals(surface_id)

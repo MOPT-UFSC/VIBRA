@@ -7,7 +7,7 @@ class MeshInfoBar(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.mesh = app().new_project.model.mesh
+        self.mesh = app().project.model.mesh
         if self.mesh is None:
             return
 

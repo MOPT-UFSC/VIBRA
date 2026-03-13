@@ -34,7 +34,7 @@ class GeometrySelection:
         surface_ids, surface_distance = self._pick_surface(x, y)
 
         volume_ids = set()
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         for surface in surface_ids:
             surface_volumes = mesh.volumes_from_surface.get(surface, [])
             volume_ids.update(surface_volumes)
@@ -80,7 +80,7 @@ class GeometrySelection:
         self.section_plane_config = None
 
     def _pick_point(self, x: int, y: int) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set(), float("inf")
 
@@ -169,7 +169,7 @@ class GeometrySelection:
         y1: int,
     ) -> set[int]:
 
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -187,7 +187,7 @@ class GeometrySelection:
         return {mesh.points_from_nodes[i] for i in equivalent_node_indexes}
 
     def _pick_lines_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -206,7 +206,7 @@ class GeometrySelection:
         return set(all_lines) - set(unselected)
 
     def _pick_surfaces_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -225,7 +225,7 @@ class GeometrySelection:
         return set(all_surfaces) - set(unselected)
 
     def _pick_volumes_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -237,7 +237,7 @@ class GeometrySelection:
         return set(mesh.solids_connectivity[mask_selected_elements, 1].astype(int))
 
     def _get_points_coords(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -248,7 +248,7 @@ class GeometrySelection:
         return mesh.nodal_coordinates[node_indexes]
 
     def _area_pick_node_internal_indexes(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 

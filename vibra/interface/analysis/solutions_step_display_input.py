@@ -11,8 +11,8 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
-        self.project = app().new_project
-        self.model = app().new_project.model
+        self.project = app().project
+        self.model = app().project.model
 
         self._initialize()
         self._config_window()

@@ -78,7 +78,7 @@ class FluidWidget(FluidWidget_UI):
         self.tableWidget_fluid_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
     def reload_table_of_fluids(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         number_of_rows = len(RowsEnum)
         number_of_cols = len(properties.fluid_library)
 
@@ -121,7 +121,7 @@ class FluidWidget(FluidWidget_UI):
         if fluid is None:
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         new_fluid = fluid.copy()
         new_fluid.name = properties.fluid_library.get_dupplicated_name(fluid.name)
         properties.fluid_library.add(new_fluid)
@@ -135,7 +135,7 @@ class FluidWidget(FluidWidget_UI):
         if selected_column < 0:
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         fluid = properties.fluid_library.get_from_ordered_index(selected_column)
         if fluid is not None:
             properties.remove_fluid(fluid)
@@ -154,7 +154,7 @@ class FluidWidget(FluidWidget_UI):
         if not self._get_reset_library_confirmation():
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         fluids_to_remove = list(properties.fluid_library.values())
         for fluid in fluids_to_remove:
             properties.remove_fluid(fluid)
@@ -237,7 +237,7 @@ class FluidWidget(FluidWidget_UI):
         if selected_column < 0:
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         return properties.fluid_library.get_from_ordered_index(selected_column)
 
     def _hide_parent_dialog(self):
@@ -268,7 +268,7 @@ class FluidWidget(FluidWidget_UI):
             return True
 
     def _update_library_with_column(self, col: int):
-        fluid_library = app().new_project.model.properties.fluid_library
+        fluid_library = app().project.model.properties.fluid_library
         fluid = fluid_library.get_from_ordered_index(col)
         if fluid is None:
             # Create a temporary fluid to be updated
@@ -350,11 +350,11 @@ class FluidWidget(FluidWidget_UI):
         return selected_items[-1].column()
 
     def _has_buffer_column(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         return self.tableWidget_fluid_data.columnCount() > len(properties.fluid_library)
 
     def _add_empty_column(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         column_index = len(properties.fluid_library)
         self.tableWidget_fluid_data.setColumnCount(column_index + 1)
 
@@ -399,7 +399,7 @@ class FluidWidget(FluidWidget_UI):
                 item.setText(str(value))
 
     def _update_size_policy(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
 
         if len(properties.fluid_library) > 6:
             self.tableWidget_fluid_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)

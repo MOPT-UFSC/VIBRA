@@ -85,7 +85,7 @@ class InputUi:
                 self.model_setup_items.enable_and_expand_menu_items()
 
     def generate_mesh(self):
-        LoadingWindow(app().new_project.generate_mesh).run()
+        LoadingWindow(app().project.generate_mesh).run()
         app().main_window.action_mesh_workspace_callback()
         self.model_setup_items.item_child_generate_mesh.setDisabled(True)
 
@@ -190,15 +190,15 @@ class InputUi:
             self.process_input(AcousticTransferElementInputs)
 
     def plot_structural_mode_shapes(self):
-        if app().new_project.model.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
+        if app().project.model.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
             return self.process_input(PlotStructuralModeShapeInputs)
 
     def plot_displacement_field(self):
-        if app().new_project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return self.process_input(PlotDisplacementFieldInputs)
 
     def plot_structural_frequency_response(self):
-        if app().new_project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return self.process_input(PlotStructuralFrequencyResponseInputs)
 
     def plot_reaction_frequency_response(self):
@@ -214,47 +214,47 @@ class InputUi:
             app().main_window.show_geometry_render_widget()
 
     def plot_acoustic_mode_shapes(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_MODAL:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_MODAL:
             return self.process_input(AcousticModeShapeInputs)
 
     def plot_acoustic_pressure_field(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AcousticPressureFieldInputs)
 
     def plot_acoustic_pressure_frequency_response(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AcousticPressureFrequencyResponseInputs)
 
     def plot_acoustic_pressure_frequency_response_function(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AcousticPressureFrequencyResponseFunctionInputs)
 
     def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
 
     def plot_allowable_pulsation_criteria_for_screw_compressor(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AllowablePulsationsForScrewCompressorInputs)
 
     def plot_acoustic_pressure_waveform(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AcousticPressureWaveformInputs)
 
     def plot_TL_NR(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(TransmissionLossInputs)
 
     def plot_particle_velocity(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(ParticleVelocityInputs)
 
     def plot_acoustic_impedance(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AcousticImpedanceInputs)
 
     def plot_absorption_coefficient_from_surface(self):
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(SurfaceAbsorptionCoefficientInputs)
 
     def empty_project_action_message(self):

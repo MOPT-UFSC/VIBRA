@@ -87,11 +87,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
     def update_plot(self, reset_camera=False):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
         
-        if app().new_project.solver is None:
+        if app().project.solver is None:
             return
 
         logging.info("Updating the results render... [10/100]")
@@ -210,7 +210,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self.actors_exists():
             return
 
-        if app().new_project.model.analysis_id == AnalysisID.NO_ANALYSIS:
+        if app().project.model.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
 
@@ -244,7 +244,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         displacements = None
         colormap = app().config.user_preferences.color_map
-        analysis_id = app().new_project.model.analysis_id
+        analysis_id = app().project.model.analysis_id
 
         if phase is None:
             phase = np.radians(animation_toolbar.phase_slider.value())
@@ -257,7 +257,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().new_project.postprocessing
+            postprocessing = app().project.postprocessing
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
@@ -280,7 +280,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().new_project.postprocessing
+            postprocessing = app().project.postprocessing
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
@@ -302,7 +302,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().new_project.postprocessing
+            postprocessing = app().project.postprocessing
             if not isinstance(postprocessing, AcousticPostprocessing):
                 return
 
@@ -325,7 +325,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().new_project.postprocessing
+            postprocessing = app().project.postprocessing
             if not isinstance(postprocessing, AcousticPostprocessing):
                 return
 
@@ -395,7 +395,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self.analysis_actor, AnalysisActor):
             return
 
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -415,7 +415,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self.analysis_actor, HollowAnalysisActor):
             return
 
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -515,11 +515,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_info_text(self):
-        if not app().new_project.is_there_a_valid_solution():
+        if not app().project.is_there_a_valid_solution():
             return
 
         text = ""
-        analysis_id = app().new_project.model.analysis_id
+        analysis_id = app().project.model.analysis_id
 
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
@@ -548,7 +548,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             AnalysisID.ACOUSTIC_HARMONIC: "Pa",
         }
 
-        analysis_id = app().new_project.model.analysis_id
+        analysis_id = app().project.model.analysis_id
         unit = unit_mapping.get(analysis_id, "--")
 
         self.colorbar_actor.SetTitle(f"Unit: [{unit}]")

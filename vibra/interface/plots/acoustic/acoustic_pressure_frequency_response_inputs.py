@@ -19,9 +19,9 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         app().main_window.show_geometry_render_widget()
 
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._reset_variables()
         self._create_connections()
@@ -35,11 +35,11 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if app().new_project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = app().new_project.model.frequencies
-        self.solution = app().new_project.solver.solution
+        self.frequencies = app().project.model.frequencies
+        self.solution = app().project.solver.solution
 
     def _reset_variables(self):
         self.exporter = None

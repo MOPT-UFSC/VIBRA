@@ -42,9 +42,9 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
         
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
         
         self._config_window()
         self._initialize()
@@ -667,7 +667,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         # define the frequencies vector
         _frequencies = imported_values[:, 0]
 
-        if app().new_project.model.change_analysis_frequency_setup(list(_frequencies)):
+        if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
             self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
@@ -777,7 +777,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().new_project.update_model_properties_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
@@ -886,7 +886,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.check_model_frequency_controls()
         self.comboBox_inherit_fluid_from.clear()
         app().main_window.update_info_text()
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
 
@@ -918,9 +918,9 @@ class MassSourceInputs(MassSourceInputs_UI):
                         return
 
         # No idea of what it does
-        app().new_project.configure_analysis(
-            app().new_project.model.analysis_id,
-            app().new_project.model.new_analysis_setup,
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.new_analysis_setup,
         )
 
     def reset_input_fields(self):

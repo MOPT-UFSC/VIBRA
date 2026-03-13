@@ -55,7 +55,7 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
     def reload_table_of_materials(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         number_of_rows = len(RowsEnum)
         number_of_cols = len(properties.material_library)
 
@@ -97,7 +97,7 @@ class MaterialWidget(MaterialWidget_UI):
         if material is None:
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         new_material = material.copy()
         new_material.name = properties.fluid_library.get_dupplicated_name(material.name)
         properties.material_library.add(new_material)
@@ -110,7 +110,7 @@ class MaterialWidget(MaterialWidget_UI):
         if selected_column < 0:
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         material = properties.material_library.get_from_ordered_index(selected_column)
         if material is not None:
             properties.remove_material(material)
@@ -128,7 +128,7 @@ class MaterialWidget(MaterialWidget_UI):
         if not self._get_reset_library_confirmation():
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         materials_to_remove = list(properties.material_library.values())
         for material in materials_to_remove:
             properties.remove_material(material)
@@ -141,7 +141,7 @@ class MaterialWidget(MaterialWidget_UI):
             self._pick_color(row, col)
 
     def item_changed_callback(self, item: QTableWidgetItem):
-        material_library = app().new_project.model.properties.material_library
+        material_library = app().project.model.properties.material_library
 
         with block_signals(self.tableWidget_material_data):
             match item.row():
@@ -233,7 +233,7 @@ class MaterialWidget(MaterialWidget_UI):
         if selected_column < 0:
             return
 
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         return properties.material_library.get_from_ordered_index(selected_column)
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -266,7 +266,7 @@ class MaterialWidget(MaterialWidget_UI):
             return True
 
     def _update_library_with_column(self, col: int):
-        material_library = app().new_project.model.properties.material_library
+        material_library = app().project.model.properties.material_library
         material = material_library.get_from_ordered_index(col)
         if material is None:
             # Create a temporary material to be updated
@@ -338,11 +338,11 @@ class MaterialWidget(MaterialWidget_UI):
         return selected_items[-1].column()
 
     def _has_buffer_column(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         return self.tableWidget_material_data.columnCount() > len(properties.material_library)
 
     def _add_empty_column(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
         column_index = len(properties.material_library)
         self.tableWidget_material_data.setColumnCount(column_index + 1)
 
@@ -382,7 +382,7 @@ class MaterialWidget(MaterialWidget_UI):
                 item.setText(str(value))
 
     def _update_size_policy(self):
-        properties = app().new_project.model.properties
+        properties = app().project.model.properties
 
         if len(properties.material_library) > 6:
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)

@@ -57,7 +57,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
         #
-        solver = app().new_project.solver
+        solver = app().project.solver
         if isinstance(solver, ModalSolver) and solver.complex_natural_frequencies.size:
             widths = [60, 160]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
@@ -152,7 +152,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         return plot_types[index]
 
     def load_natural_frequencies(self):
-        solver = app().new_project.solver
+        solver = app().project.solver
 
         if not isinstance(solver, ModalSolver):
             return

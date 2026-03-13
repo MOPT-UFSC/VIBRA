@@ -48,9 +48,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._config_window()
@@ -282,7 +282,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.selection.clear_selection()
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         self.load_info()
         self.actions_to_finalize()
 
@@ -315,7 +315,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("porous_material_model", volume_id)
 
-                app().new_project.update_model_properties_file()
+                app().project.update_model_properties_file()
                 self.actions_to_finalize()
                 self.close()
 
@@ -423,7 +423,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             for volume in volumes:
                 self.properties._set_property("porous_material_model", model.get_data(), volume=volume)
             
-            app().new_project.update_model_properties_file()
+            app().project.update_model_properties_file()
                                                   
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
@@ -711,7 +711,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 
-            app().new_project.update_model_properties_file()
+            app().project.update_model_properties_file()
             self.actions_to_finalize()
             self.load_info()
 
@@ -784,7 +784,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_setup = app().new_project.model.analysis_setup
+        analysis_setup = app().project.model.analysis_setup
         if isinstance(analysis_setup, dict):
             frequencies = analysis_setup.get("frequencies", None)
 

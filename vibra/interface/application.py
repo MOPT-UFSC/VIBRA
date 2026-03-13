@@ -23,7 +23,7 @@ class Application(QApplication):
 
         # global params
         self.config = Config()
-        self.new_project = Project(TEMP_PROJECT_DIR)
+        self.project = Project(TEMP_PROJECT_DIR)
 
         # gui
         self.main_window = MainWindow()

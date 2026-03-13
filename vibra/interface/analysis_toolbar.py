@@ -183,7 +183,7 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.blockSignals(block_signals)
             self.combo_box_physical_domain.blockSignals(block_signals)
 
-        analysis_type, physical_domain = app().new_project.get_analysis_type_and_physical_domain()
+        analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
 
         if analysis_type == "harmonic":
             self.combo_box_analysis_type.setCurrentIndex(0)
@@ -237,12 +237,12 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
         current_analysis_id = self.get_current_analysis_id()
-        setup_is_valid = app().new_project.is_analysis_id_valid(current_analysis_id)
+        setup_is_valid = app().project.is_analysis_id_valid(current_analysis_id)
         self.set_pushbutton_run_analysis_enabled(setup_is_valid)
 
     def run_analysis(self, is_resume: bool = False):
 
-        if app().new_project.model.analysis_setup is None:
+        if app().project.model.analysis_setup is None:
             self.configure_analysis()
             return
 
@@ -253,7 +253,7 @@ class AnalysisToolbar(QToolBar):
         app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         ## Do not solve models if there are disconnected nodes or collapsed elements!
-        mesh = app().new_project.model.mesh   
+        mesh = app().project.model.mesh   
         if mesh.disconnected_nodes_data:
             return
 
@@ -261,19 +261,19 @@ class AnalysisToolbar(QToolBar):
             return
 
         self.update_analysis_combo_boxes()
-        interrupt_function = app().new_project.model.toggle_processing_callback
+        interrupt_function = app().project.model.toggle_processing_callback
 
         LoadingWindow(
-            app().new_project.run_analysis,
+            app().project.run_analysis,
             interrupt_function,
         ).run()
 
         app().main_window.configure_results_render_widget()
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
-        if app().new_project.model.stop_processing:
-            app().new_project.model.toggle_processing_callback()
-            app().new_project.project_writer.delete_results_data()
+        if app().project.model.stop_processing:
+            app().project.model.toggle_processing_callback()
+            app().project.project_writer.delete_results_data()
             return
 
         # if is_resume:
@@ -310,7 +310,7 @@ class AnalysisToolbar(QToolBar):
         self.reset_solution(True)
 
     def reset_solution(self, force_delete_harmonic = False):
-        app().new_project.reset_solution()
+        app().project.reset_solution()
         self.pushButton_reset_solution.setDisabled(True)
         app().main_window.project_data_modified = True
         app().main_window.action_model_workspace_callback()
@@ -319,7 +319,7 @@ class AnalysisToolbar(QToolBar):
     def configure_analysis(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 
@@ -333,7 +333,7 @@ class AnalysisToolbar(QToolBar):
             case AnalysisID.ACOUSTIC_MODAL:
                 self.modal_acoustic()
 
-        setup_is_valid = app().new_project.is_analysis_setup_complete()
+        setup_is_valid = app().project.is_analysis_setup_complete()
         broken_mesh = collapsed_elements or disconnected_nodes
 
         # disables the run analysis button whenever the analysis setup
@@ -348,7 +348,7 @@ class AnalysisToolbar(QToolBar):
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
 
         if harmonic.setup_defined:
-            app().new_project.configure_analysis(
+            app().project.configure_analysis(
                 analysis_id,
                 harmonic.analysis_setup,
             )
@@ -362,7 +362,7 @@ class AnalysisToolbar(QToolBar):
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
 
         if harmonic.setup_defined:
-            app().new_project.configure_analysis(
+            app().project.configure_analysis(
                 analysis_id,
                 harmonic.analysis_setup,
             )
@@ -375,7 +375,7 @@ class AnalysisToolbar(QToolBar):
         modal = StructuralModalAnalysisInput(analysis_id)
 
         if modal.setup_defined:
-            app().new_project.configure_analysis(
+            app().project.configure_analysis(
                 analysis_id,
                 modal.analysis_setup,
             )
@@ -392,7 +392,7 @@ class AnalysisToolbar(QToolBar):
             return
 
         if modal.setup_defined:
-            app().new_project.configure_analysis(
+            app().project.configure_analysis(
                 analysis_id,
                 modal.analysis_setup,
             )

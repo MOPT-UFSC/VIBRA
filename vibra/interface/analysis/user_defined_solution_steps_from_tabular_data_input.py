@@ -83,7 +83,7 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
 
         self.index_to_check_box.clear()
 
-        table_frequencies = app().new_project.model.properties.process_all_tables_frequencies_vectors()
+        table_frequencies = app().project.model.properties.process_all_tables_frequencies_vectors()
         self.tableWidget_frequencies.clearContents()
         self.tableWidget_frequencies.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
@@ -130,10 +130,10 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         self.lineEdit_fstep.setText("{}".format(round(f_step, 14)))
 
     def set_enabled_frequencies_checked(self):
-        if app().new_project.model.frequencies is None:
+        if app().project.model.frequencies is None:
             return
 
-        solution_steps_mask = app().new_project.model.solution_steps_mask
+        solution_steps_mask = app().project.model.solution_steps_mask
 
         for index, _bool in enumerate(solution_steps_mask):
             step_check_box = self.index_to_check_box[index]

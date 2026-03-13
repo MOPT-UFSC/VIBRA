@@ -45,9 +45,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._config_window()
@@ -157,7 +157,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.clear_line_edit_selection_id()
 
         app().main_window.selection.clear_selection()
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         self.actions_to_finalize()
         self.load_info()
 
@@ -191,7 +191,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     self.properties._remove_volume_property("viscous_thermal_model", volume_id)
 
                 self.models = list()
-                app().new_project.update_model_properties_file()
+                app().project.update_model_properties_file()
                 self.load_info()
         self.actions_to_finalize()
 
@@ -348,7 +348,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 for volume in volumes:
                     self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
             
-            app().new_project.update_model_properties_file()
+            app().project.update_model_properties_file()
     
     def map_existing_viscous_thermal_loss_models(self):
         self.map_model_id_to_models: defaultdict[int, RectangularDuctData|CircularDuctData] = defaultdict()
@@ -584,7 +584,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         return map_id_to_model_index
 
     def generate_mesh(self):
-        if not app().new_project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             self.mesher = MesherSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None
@@ -681,7 +681,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         self.actions_to_finalize()
         self.load_info()
     
@@ -749,7 +749,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         warnings.filterwarnings('ignore')
 
         frequencies = None
-        analysis_setup = app().new_project.model.analysis_setup
+        analysis_setup = app().project.model.analysis_setup
         if isinstance(analysis_setup, dict):
             frequencies = analysis_setup.get("frequencies", None)
 

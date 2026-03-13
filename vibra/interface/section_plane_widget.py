@@ -142,8 +142,8 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.value_changed.emit()
         self.closed.emit()
 
-        nodes_to_highlight = list(np.unique(app().new_project.model.mesh.nodes_to_highlight))
-        faces_to_highlight = app().new_project.model.mesh.efaces_to_highlight
+        nodes_to_highlight = list(np.unique(app().project.model.mesh.nodes_to_highlight))
+        faces_to_highlight = app().project.model.mesh.efaces_to_highlight
 
         if nodes_to_highlight or faces_to_highlight:
             app().main_window.selection.set_mesh_selection(

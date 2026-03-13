@@ -51,7 +51,7 @@ class MainWindow(MainWindow_UI):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.selection = SelectionHandler(app().new_project)
+        self.selection = SelectionHandler(app().project)
         self.selection.selection_changed.connect(self.selection_changed_callback)
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
@@ -357,19 +357,19 @@ class MainWindow(MainWindow_UI):
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def action_points_callback(self):
-        all_ids = app().new_project.model.mesh.all_point_ids()
+        all_ids = app().project.model.mesh.all_point_ids()
         self.selection.set_geometry_selection(points=all_ids)
 
     def action_faces_callback(self):
-        all_ids = app().new_project.model.mesh.all_surface_ids()
+        all_ids = app().project.model.mesh.all_surface_ids()
         self.selection.set_geometry_selection(surfaces=all_ids)
 
     def action_solid_callback(self):
-        all_ids = app().new_project.model.mesh.all_solid_ids()
+        all_ids = app().project.model.mesh.all_solid_ids()
         self.selection.set_geometry_selection(volumes=all_ids)
 
     def action_all_entities_geometry_callback(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         self.selection.set_geometry_selection(
             points=mesh.all_point_ids(),
             lines=mesh.all_line_ids(),
@@ -378,7 +378,7 @@ class MainWindow(MainWindow_UI):
         )
 
     def action_all_entities_mesh_callback(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         self.selection.set_mesh_selection(
             nodes=mesh.all_node_ids(),
             faces=mesh.all_face_element_ids(),
@@ -386,15 +386,15 @@ class MainWindow(MainWindow_UI):
         )
 
     def action_nodes_callback(self):
-        all_ids = app().new_project.model.mesh.all_node_ids()
+        all_ids = app().project.model.mesh.all_node_ids()
         self.selection.set_mesh_selection(nodes=all_ids)
 
     def action_surface_elements_callback(self):
-        all_ids = app().new_project.model.mesh.all_face_element_ids()
+        all_ids = app().project.model.mesh.all_face_element_ids()
         self.selection.set_mesh_selection(faces=all_ids)
 
     def action_solid_elements_callback(self):
-        all_ids = app().new_project.model.mesh.all_solid_element_ids()
+        all_ids = app().project.model.mesh.all_solid_element_ids()
         self.selection.set_mesh_selection(solids=all_ids)
 
     def action_clear_selection_callback(self):
@@ -479,7 +479,7 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().new_project.is_there_a_valid_solution():
+        if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
         else:
             self.action_results_workspace.setEnabled(False)
@@ -504,7 +504,7 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().new_project.is_there_a_valid_solution():
+        if app().project.is_there_a_valid_solution():
             self.action_results_workspace.setEnabled(True)
         else:
             self.action_results_workspace.setEnabled(False)
@@ -519,7 +519,7 @@ class MainWindow(MainWindow_UI):
         self.animation_toolbar.pause_animation()
 
     def action_results_workspace_callback(self):
-        if not app().new_project.is_there_a_valid_solution():
+        if not app().project.is_there_a_valid_solution():
             return
 
         self.action_results_workspace.setEnabled(True)
@@ -556,8 +556,8 @@ class MainWindow(MainWindow_UI):
         self.results_widget.remove_all_actors()
         self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
-        app().new_project.reset_variables()
-        app().new_project.clear_working_directory()
+        app().project.reset_variables()
+        app().project.clear_working_directory()
         self.action_unhide_all_callback()
 
         self.analysis_toolbar.setDisabled(True)
@@ -572,7 +572,7 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_dialog()
 
     def action_hide_selection_callback(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
 
         if not mesh.are_there_volumes_in_geometry():
             PrintMessageInput(
@@ -593,7 +593,7 @@ class MainWindow(MainWindow_UI):
         self.hide_volumes(app().main_window.selection.hidden_volumes)
 
     def hide_volumes(self, volumes: set[int]):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
 
         volumes = set(volumes)
         selected_volume_surfaces = set()
@@ -616,8 +616,8 @@ class MainWindow(MainWindow_UI):
                 len(self.selection.hidden_surfaces) != 0,
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
-                bool(app().new_project.model.mesh.collapsed_elements_data),
-                bool(app().new_project.model.mesh.disconnected_nodes_data),
+                bool(app().project.model.mesh.collapsed_elements_data),
+                bool(app().project.model.mesh.disconnected_nodes_data),
             ]
         )
 
@@ -710,11 +710,11 @@ class MainWindow(MainWindow_UI):
 
         ext = Path(load_path).suffix.strip(".")
         if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
-            app().new_project.reset_project()
+            app().project.reset_project()
             self.import_geometry(load_path)
 
         elif ext in SUPPORTED_MESH_EXTENSIONS:
-            app().new_project.reset_project()
+            app().project.reset_project()
             self.import_mesh(load_path)
 
         else:
@@ -743,7 +743,7 @@ class MainWindow(MainWindow_UI):
         if not check:
             return
 
-        app().new_project.reset_project()
+        app().project.reset_project()
         self.import_geometry(load_path)
 
     def import_mesh_dialog(self):
@@ -769,11 +769,11 @@ class MainWindow(MainWindow_UI):
         if not check:
             return
 
-        app().new_project.reset_project()
+        app().project.reset_project()
         self.import_mesh(load_path)
 
     def save_project_dialog(self):
-        save_path = app().new_project.save_path
+        save_path = app().project.save_path
         if save_path is None:
             return self.save_project_as_dialog()
         else:
@@ -807,10 +807,10 @@ class MainWindow(MainWindow_UI):
 
         if obj.ignore_results_data:
             # TODO: check if app().new_project.reset_solution() makes more sense
-            app().new_project.project_writer.delete_results_data()
+            app().project.project_writer.delete_results_data()
 
         if obj.ignore_mesh_data:
-            app().new_project.project_writer.delete_mesh_data()
+            app().project.project_writer.delete_mesh_data()
 
         if not file_path.endswith(".vibra"):
             file_path += ".vibra"
@@ -826,7 +826,7 @@ class MainWindow(MainWindow_UI):
             app().config.write_last_folder_path_in_file("project_folder", path)
             logging.info("Saving project data... [30/100]")
 
-            app().new_project.save_project(path, name=path.stem)
+            app().project.save_project(path, name=path.stem)
             logging.info("Saving project data... [75/100]")
 
             # Update interface
@@ -873,8 +873,8 @@ class MainWindow(MainWindow_UI):
         )
 
         path = Path(path)
-        LoadingWindow(app().new_project.import_geometry).run(path)
-        LoadingWindow(app().new_project.generate_visual_mesh).run()
+        LoadingWindow(app().project.import_geometry).run(path)
+        LoadingWindow(app().project.generate_visual_mesh).run()
 
         # Interface update
         LoadingWindow(self.geometry_widget.update_plot).run()
@@ -892,7 +892,7 @@ class MainWindow(MainWindow_UI):
         )
 
         path = Path(path)
-        LoadingWindow(app().new_project.import_mesh).run(path)
+        LoadingWindow(app().project.import_mesh).run(path)
 
         # Interface update
         LoadingWindow(self.geometry_widget.update_plot).run()
@@ -912,7 +912,7 @@ class MainWindow(MainWindow_UI):
         """
 
         # Actual loading
-        project = app().new_project
+        project = app().project
         config = app().config
         project_recovery = project_path is None
 
@@ -1056,9 +1056,9 @@ class MainWindow(MainWindow_UI):
     def close_app(self):
         self.minimize_dialogs()
 
-        condition_1 = app().new_project.save_path is None
-        condition_2 = not app().new_project.project_paths.is_empty()
-        condition_3 = app().new_project.needs_saving
+        condition_1 = app().project.save_path is None
+        condition_2 = not app().project.project_paths.is_empty()
+        condition_3 = app().project.needs_saving
         condition = (condition_1 and condition_2) or condition_3
 
         if condition:
@@ -1131,10 +1131,10 @@ class MainWindow(MainWindow_UI):
                 window.showNormal()
 
     def action_export_element_transfer_data_callback(self):
-        if not isinstance(app().new_project.solver, HarmonicSolver):
+        if not isinstance(app().project.solver, HarmonicSolver):
             return
 
-        if not isinstance(app().new_project.assembler, AcousticAssembler):
+        if not isinstance(app().project.assembler, AcousticAssembler):
             return
 
         ExportElementTransferDataInputs()

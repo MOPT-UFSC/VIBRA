@@ -14,8 +14,8 @@ warning_title = "Warning"
 class AnalysisRequirementsChecker:
     def __init__(self):
 
-        self.model = app().new_project.model
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.properties = app().project.model.properties
 
         self.surface_ids = self.model.mesh.geometry_information["surfaces"]
         self.volume_ids = self.model.mesh.geometry_information["volumes"]

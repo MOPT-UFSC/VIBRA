@@ -174,9 +174,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def _contains_property(self, property_name: str) -> bool:
 
-        model = app().new_project.model
-        mesh = app().new_project.model.mesh
-        properties = app().new_project.model.properties
+        model = app().project.model
+        mesh = app().project.model.mesh
+        properties = app().project.model.properties
 
         property_dicts = [
             properties.acoustic_imported_tables,
@@ -275,12 +275,12 @@ class ModelSetupItems(CommonMenuItems):
 
         if property_name == "surface_thickness":
             if physical_domain == "structural":
-                if app().new_project.model.mesh is not None:
-                    volume_exists = app().new_project.model.mesh.are_there_volumes_in_geometry()
+                if app().project.model.mesh is not None:
+                    volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
                     if not volume_exists:
                         return True
 
-                    st_check = app().new_project.model.is_surface_thickness_properly_applied_in_model()
+                    st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
                     if isinstance(st_check, list) and st_check:
                         return True
 
@@ -294,7 +294,7 @@ class ModelSetupItems(CommonMenuItems):
         """
 
         volume_exists = None
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         toolbar = app().main_window.analysis_toolbar
 
         if mesh is not None:
@@ -309,7 +309,7 @@ class ModelSetupItems(CommonMenuItems):
                 toolbar.combo_box_physical_domain.setCurrentIndex(0)
                 return
 
-        _, physical_domain = app().new_project.get_analysis_type_and_physical_domain()
+        _, physical_domain = app().project.get_analysis_type_and_physical_domain()
         if physical_domain == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
         else:
@@ -344,7 +344,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
-            mesh = app().new_project.model.mesh
+            mesh = app().project.model.mesh
             if mesh is not None:
                 collapsed_elements = bool(mesh.collapsed_elements_data)
                 item_child.set_error(collapsed_elements)
@@ -354,7 +354,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _are_there_disconnected_nodes(self, item_child):
         if item_child.property_name == "mesh_setup":
-            mesh = app().new_project.model.mesh
+            mesh = app().project.model.mesh
             if mesh is not None:
                 disconnected_nodes = bool(mesh.disconnected_nodes_data)
                 item_child.set_error(disconnected_nodes)
@@ -370,7 +370,7 @@ class ModelSetupItems(CommonMenuItems):
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().new_project.get_analysis_type_and_physical_domain()
+            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
@@ -401,7 +401,7 @@ class ModelSetupItems(CommonMenuItems):
 
                     # special treatment for compressors
                     if item_child.property_name == "compressor_excitation_waveform":
-                        surface_properties = app().new_project.model.properties.surface_properties
+                        surface_properties = app().project.model.properties.surface_properties
                         for key in surface_properties.items():
                             if key[0][0] == "compressor_excitation_waveform":
                                 # compressor_type = property_data.get("compressor_type", "reciprocating")
@@ -414,7 +414,7 @@ class ModelSetupItems(CommonMenuItems):
                                     item_child.set_icon("other_compressor")
                     
                     if item_child.property_name == "compressor_excitation_spectrum":
-                        surface_properties = app().new_project.model.properties.surface_properties
+                        surface_properties = app().project.model.properties.surface_properties
                         for key in surface_properties.items():
                             if key[0][0] == "compressor_excitation_spectrum":
                                 # compressor_type = property_data.get("compressor_type", "reciprocating")
@@ -524,7 +524,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
 
     def modify_general_settings_items_access(self, key: bool):
-        imported_geometry = app().new_project.model.mesh.geometry_imported
+        imported_geometry = app().project.model.mesh.geometry_imported
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_material.setDisabled(key)

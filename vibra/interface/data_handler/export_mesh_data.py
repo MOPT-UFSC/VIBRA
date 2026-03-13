@@ -18,8 +18,8 @@ class ExportMeshData(ExportMesh_UI):
 
         app().main_window.set_input_widget(self)
         
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = self.model.properties
 
         if self.mesh is None:
@@ -97,7 +97,7 @@ class ExportMeshData(ExportMesh_UI):
             return
 
     def generate_mesh(self):
-        if not app().new_project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             self.mesher = MesherSetupInputs(close_after_generate=True)
             if not self.mesher.complete:
                 self.mesher = None

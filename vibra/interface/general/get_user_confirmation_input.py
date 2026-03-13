@@ -10,7 +10,7 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
 
         app().main_window.set_input_widget(self)
 
-        self.model = app().new_project.model
+        self.model = app().project.model
         self.properties = self.model.properties
 
         self.title = title

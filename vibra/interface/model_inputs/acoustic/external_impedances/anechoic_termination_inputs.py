@@ -21,9 +21,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._initialize()
         self._config_window()
@@ -240,7 +240,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().new_project.update_model_properties_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -310,7 +310,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
@@ -322,9 +322,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                     return
 
         # No idea of what it does
-        app().new_project.configure_analysis(
-            app().new_project.model.analysis_id,
-            app().new_project.model.new_analysis_setup,
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.new_analysis_setup,
         )
 
     def update_tabs_visibility(self):

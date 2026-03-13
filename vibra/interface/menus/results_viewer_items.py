@@ -16,7 +16,7 @@ class ResultsViewerItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
-        self.project = app().new_project
+        self.project = app().project
 
         self.setObjectName("results_viewer_items")
         self._create_items()
@@ -142,7 +142,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        analysis_id = app().new_project.model.analysis_id
+        analysis_id = app().project.model.analysis_id
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
@@ -194,14 +194,14 @@ class ResultsViewerItems(CommonMenuItems):
     def update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(self, analysis_id: int):
         compressor_exists = False
         if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            compressor_exists = app().new_project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
+            compressor_exists = app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
 
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(not compressor_exists)
 
     def update_allowable_pulsation_criteria_visibility_for_screw_compressor(self, analysis_id: int):
         compressor_exists = False
         if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            for (prop_label, *args), prop_data in app().new_project.model.properties.surface_properties.items():
+            for (prop_label, *args), prop_data in app().project.model.properties.surface_properties.items():
                 if prop_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                     compressor_type = prop_data.get("compressor_type")
                     if compressor_type == "screw":
@@ -214,7 +214,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().new_project.model.analysis_id
+        analysis_id = app().project.model.analysis_id
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)

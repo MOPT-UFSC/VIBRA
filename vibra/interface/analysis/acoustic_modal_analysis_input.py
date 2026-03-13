@@ -42,7 +42,7 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
 
     def _load_analysis_setup(self):
-        analysis_setup = app().new_project.model.new_analysis_setup
+        analysis_setup = app().project.model.new_analysis_setup
 
         if isinstance(analysis_setup, ModalAnalysisSetup) and self.analysis_id.is_modal():
             modes_number = analysis_setup.modes_number
@@ -57,7 +57,7 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
     def check_mesh_related_issues(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
 

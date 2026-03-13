@@ -20,8 +20,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -371,7 +371,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def actions_to_finalize(self):
         app().main_window.update_info_text()
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def keyPressEvent(self, event):

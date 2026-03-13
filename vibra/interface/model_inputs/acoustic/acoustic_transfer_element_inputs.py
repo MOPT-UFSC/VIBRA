@@ -29,9 +29,9 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().new_project.model
-        self.mesh = app().new_project.model.mesh
-        self.properties = app().new_project.model.properties
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
 
         self._config_window()
         self._reset_variables()
@@ -123,7 +123,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
-        analysis_setup = app().new_project.model.new_analysis_setup
+        analysis_setup = app().project.model.new_analysis_setup
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return
 
@@ -263,7 +263,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_frequency_entries():
             return True
 
-        app().new_project.configure_analysis(
+        app().project.configure_analysis(
             AnalysisID.ACOUSTIC_HARMONIC
         )
 
@@ -282,7 +282,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.configure_analysis():
             return   
 
-        if not app().new_project.model.generated_mesh:
+        if not app().project.model.generated_mesh:
             obj = MesherSetupInputs()
             if obj.complete:
                 app().main_window.update_plots()
@@ -299,7 +299,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
                 self.remove_model_excitations_and_impedances()
                 self.set_surface_velocity(surface_id)
-                app().new_project.solve_acoustic_harmonic_analysis()
+                app().project.solve_acoustic_harmonic_analysis()
                 self.join_model_data(surface_id)
 
             logging.info("Exporting the admittance matrix data... [20/100]")
@@ -365,7 +365,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.properties.remove_imported_tables("acoustic", table_name)
 
         if table_names:
-            app().new_project.update_model_properties_file()
+            app().project.update_model_properties_file()
 
     def set_surface_velocity(self, surface_id: int):
 
@@ -378,7 +378,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
-        app().new_project.update_model_properties_file()
+        app().project.update_model_properties_file()
         # app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def process_areas(self):
@@ -430,7 +430,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         return None, None
 
     def join_model_data(self, excitation_id: int):
-        self.solution = app().new_project.solver.solution
+        self.solution = app().project.solver.solution
 
         for k, response_id in enumerate([self.input_selection_id, self.output_selection_id]):
             

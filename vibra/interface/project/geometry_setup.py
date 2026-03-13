@@ -42,10 +42,10 @@ class GeometrySetup(GeometrySetup_UI):
     def proceed_callback(self):
 
         length_unit = self.comboBox_length_units.currentText()
-        app().new_project.model.set_length_unit(length_unit)
+        app().project.model.set_length_unit(length_unit)
 
         quality_factor = self.get_geometry_quality_factor()
-        app().new_project.model.set_geometry_quality_factor(quality_factor)
+        app().project.model.set_geometry_quality_factor(quality_factor)
 
         self.complete = True
         self.close()

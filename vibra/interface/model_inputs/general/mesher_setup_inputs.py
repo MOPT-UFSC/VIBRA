@@ -152,7 +152,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_selected_ids.setDisabled(True)
 
     def _load_current_mesh_setup(self):
-        mesh_setup = app().new_project.mesh_setup
+        mesh_setup = app().project.mesh_setup
 
         if mesh_setup is None:
             self._load_initial_element_size()
@@ -172,7 +172,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_mesh_quality_table()
 
     def _load_initial_element_size(self):
-        element_size = app().new_project.model.initial_element_size
+        element_size = app().project.model.initial_element_size
         if element_size is not None:
             self.doubleSpinBox_maximum_element_size.setValue(element_size)
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
@@ -298,8 +298,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def generate_mesh_callback(self):
         def generate():
             mesh_setup = self._get_mesh_setup()
-            app().new_project.configure_mesh(mesh_setup)
-            app().new_project.generate_mesh()
+            app().project.configure_mesh(mesh_setup)
+            app().project.generate_mesh()
 
         LoadingWindow(generate).run()
         LoadingWindow(self.actions_to_finalize).run()
@@ -332,7 +332,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             )
 
     def update_mesh_quality_table(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
 
         if mesh.mesh_quality_data:
             self._show_quality_table(True)
@@ -511,7 +511,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -540,7 +540,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -560,7 +560,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -651,7 +651,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         plot_ui.exec_()
 
     def plot_bad_elements(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -675,7 +675,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.bad_elements_showed = True
 
     def check_unprocessed_mesh_refining(self):
-        mesh_setup = app().new_project.mesh_setup
+        mesh_setup = app().project.mesh_setup
         if mesh_setup is None:
             return
 

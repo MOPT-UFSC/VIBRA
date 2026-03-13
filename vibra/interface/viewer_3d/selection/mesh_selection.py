@@ -24,7 +24,7 @@ class MeshSelection:
         self.cell_picker.SetTolerance(0.0018)
 
     def precompute_data(self):
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return
 
@@ -98,7 +98,7 @@ class MeshSelection:
         to the node is smaller than the node visual radius.
         """
 
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set(), float("inf")
 
@@ -163,7 +163,7 @@ class MeshSelection:
         x1: int,
         y1: int,
     ) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -179,7 +179,7 @@ class MeshSelection:
         return picked_nodes
 
     def _area_pick_faces(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 
@@ -203,7 +203,7 @@ class MeshSelection:
         x1: int,
         y1: int,
     ) -> set[int]:
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         if mesh is None:
             return set()
 

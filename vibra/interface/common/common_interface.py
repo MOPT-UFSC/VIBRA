@@ -8,7 +8,7 @@ from vibra.engine.analysis_info import HarmonicAnalysisSetup, HarmonicAnalysisSe
 
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
-    analysis_setup = app().new_project.model.new_analysis_setup
+    analysis_setup = app().project.model.new_analysis_setup
 
     # The previous version looks like an HarmonicAnalysisSetupRange,
     # but I think that the HarmonicAnalysisSetupList is more suitable.
@@ -21,8 +21,8 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
     else:
         new_analysis_setup = HarmonicAnalysisSetupList(frequencies)
 
-    app().new_project.configure_analysis(
-        app().new_project.model.analysis_id,
+    app().project.configure_analysis(
+        app().project.model.analysis_id,
         new_analysis_setup,
     )
 
@@ -49,9 +49,9 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
 
     if physical_domain == "acoustic":
-        complex_natural_frequencies = app().new_project.solver.complex_natural_frequencies
+        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
     else:
-        complex_natural_frequencies = app().new_project.solver.complex_natural_frequencies
+        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
 
     if complex_natural_frequencies.size:
         cols = 3

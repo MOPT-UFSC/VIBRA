@@ -23,8 +23,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         super().__init__()
 
 
-        self.model = app().new_project.model
-        self.analysis_setup = app().new_project.model.analysis_setup
+        self.model = app().project.model
+        self.analysis_setup = app().project.model.analysis_setup
         self.analysis_id = AnalysisID(analysis_id)
         self.ud_interface = None
 
@@ -163,7 +163,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.lineEdit_modes_to_expand.clear()
             return
         
-        analysis_setup = app().new_project.model.new_analysis_setup
+        analysis_setup = app().project.model.new_analysis_setup
         if self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if analysis_setup.analysis_method == "mode_superposition":
                 modes_to_expand = analysis_setup.modes_number
@@ -213,7 +213,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         f_step = 5
         global_damping = (0.0, 0.0, 0.0)
 
-        analysis_setup = app().new_project.model.new_analysis_setup
+        analysis_setup = app().project.model.new_analysis_setup
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
             global_damping = analysis_setup.global_damping
 
@@ -231,7 +231,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.comboBox_frequency_spacing.setCurrentText("User-defined")
 
     def load_analysis_type(self):
-        analysis_setup = app().new_project.model.new_analysis_setup
+        analysis_setup = app().project.model.new_analysis_setup
         self.comboBox_method.blockSignals(True)
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
@@ -318,7 +318,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def check_mesh_related_issues(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().new_project.model.mesh
+        mesh = app().project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
         collapsed_elements = bool(mesh.collapsed_elements_data)
 
@@ -503,7 +503,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             case _:
                 raise TypeError(f'Invalid frequency spacing "{frequency_spacing}"')
 
-        app().new_project.configure_analysis(
+        app().project.configure_analysis(
             self.analysis_id,
             self.analysis_setup,
         )

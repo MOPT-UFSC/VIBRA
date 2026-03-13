@@ -122,7 +122,7 @@ class LinesActor(vtkActor):
 
         all_lines_elements = list()
         for line in lines:
-            indexes = app().new_project.model.mesh.elements_from_line.get(line, [])
+            indexes = app().project.model.mesh.elements_from_line.get(line, [])
             all_lines_elements.extend(indexes)
 
         cells = []
