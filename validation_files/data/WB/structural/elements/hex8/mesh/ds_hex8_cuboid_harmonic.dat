@@ -1,5 +1,4 @@
 /batch
-!/CLEAR,NOSTART
 /config,noeldb,1     ! force off writing results to database
 *get,_wallstrt,active,,time,wall
 ! ANSYS input file written by Workbench version 2023 R2
@@ -14,9 +13,9 @@
 /COM,
 ! ****** End   Custom Load Command Snippet ******
 *DIM,_wb_ProjectScratch_dir,string,248
-_wb_ProjectScratch_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\dp0\SYS-2\MECH\'
+_wb_ProjectScratch_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\dp0\SYS-10\MECH\'
 *DIM,_wb_SolverFiles_dir,string,248
-_wb_SolverFiles_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\dp0\SYS-2\MECH\'
+_wb_SolverFiles_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\dp0\SYS-10\MECH\'
 *DIM,_wb_userfiles_dir,string,248
 _wb_userfiles_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\user_files\'
 /com,--- Data in consistent MKS units. See Solving Units in the help system for more information.
@@ -7294,9 +7293,10 @@ nblock,3,,7984
 -1
 /wb,elem,start            !  set before creation of elements
 /com,*********** Elements for Body 1 "cuboid_example-FreeParts|Ressalto-extrus_o1" ***********
-et,1,solid45
+!
+et,1,SOLID45
 !  
-KEYOPT,1,1,1
+KEYOPT,1,1,0
 KEYOPT,1,2,0
 KEYOPT,1,4,0
 KEYOPT,1,5,0
@@ -13065,7 +13065,7 @@ eblock,19,solid,,5760
         1        1        1        1        0        0        0        0        8        0     5759     1592     4614     4723     6214     6826     4731     4722     6277
         1        1        1        1        0        0        0        0        8        0     5760     1593     4556     4727     6884     7237     4730     4726     7184
 -1
-!Material Id = {45BAC572-1BC8-48FB-8D9B-ACB957E405CB}
+!Material Id = {44A76338-D7C3-4FDF-AB22-669EDF6AF89A}
 /wb,elem,end               !  done creating elements
 /com,*********** Send User Defined Coordinate System(s) ***********
 csys,0
@@ -13136,6 +13136,10 @@ CMBLOCK,OUTPUT_FACE,NODE,      119
       6262      6263      6264      6265      6266      6267      6268      6269
       6270      6271      6272      6273      6274      6275      6276      6277
       6278      6279      6280      6281      6282      6283      6284
+/com,*********** Send Named Selection as Element Component ***********
+esel,s,type,,1
+cm,MAIN_BODY,elem
+esel,all
 /golist
 /wb,load,start             !  starting to send loads
 /com,*********** Fixed Supports ***********
@@ -13156,36 +13160,20 @@ CMBLOCK,_FIXEDSU,NODE,      119
       7237      7238      7239      7240      7241      7242      7243      7244
       7245      7246      7247      7248      7249      7250      7251      7252
       7253      7254      7255      7256      7257      7258      7259
-cmsel,s,_FIXEDSU
-d,all,all
+
+
+cmsel,s,INPUT_FACE
+D,ALL,ALL,
 nsel,all
-/com,*********** Define Force Without Surface Effect Elements "Force" ***********
-local,12,0,0.,0.,0.,0.,0.,0.
-csys,0
-CMBLOCK,_CM198_3,ELEM,        9
-(8i10)
-      5731      5735      5739      5743      5746      5749      5752      5755
-      5758
-CMBLOCK,_CM198_4,ELEM,        7
-(8i10)
-      5732      5736      5741      5745      5750      5757      5759
-CMBLOCK,_CM198_6,ELEM,       80
-(8i10)
-      3740      3741      3742      3743      3745      3746      3747      3748
-      3767      3768      3770      3772      3773      3774      3775      3776
-      3778      3780      3781      3782      3784      3785      3787      3788
-      3790      3791      3793      3799      3800      3805      3806      3808
-      3809      3810      3815      3819      3820      3822      3823      3824
-      3825      3826      3827      3834      3838      3839      3841      3844
-      3845      3846      3849      3851      3853      3855      3856      3857
-      3859      3860      3861      3862      3866      3876      3877      3887
-      3893      3896      3933      3943      3945      3948      3950      3955
-      4350      4362      4611      4878      4880      4883      4886      4889
+esel,all
 
 cmsel,s,OUTPUT_FACE
 F,ALL,FY,1,
+F,ALL,FZ,1,
 nsel,all
 esel,all
+
+n_freq = 20
 
 /solu
 antype,harm
@@ -13193,7 +13181,7 @@ hropt,full
 thexpand,off     ! ignore thermal strains
 kbc,1
 harfrq,0,2000
-nsub,100
+nsub,n_freq
 outres,erase
 outres,all,none
 outres,nsol,all
@@ -13211,8 +13199,105 @@ WRFULL,YES
 SOLVE
 
 FINISH  
-/POST26 
 
+/POST1
+
+N_COL_U = 1 + 6*n_freq
+
+!
+*dim,ratio,ARRAY,N_FREQ,1
+*DIM,frequencies,ARRAY,N_FREQ,1
+!
+ESEL, ALL
+NSEL, ALL
+
+!CMSEL,S,'input_face',NODE
+CM,LIST_NODES,NODE
+!
+*GET,N_NODES_IF,NODE,,COUNT
+*GET,N_MAX_IF,NODE,,num,max
+!
+*DIM,DISPLACEMENS_IF,ARRAY,N_NODES_IF,N_COL_U
+*DIM,mask_IF,array,N_MAX_IF
+*DIM,NODES_NS_IF,ARRAY,N_NODES_IF,1
+*DIM,NODES_ID_FULL_IF,ARRAY,N_MAX_IF,1
+*DIM,data_full_UIF,array,N_MAX_IF,N_COL_U
+!
+*VGET,NODES_NS_IF,NODE,,NLIST
+*VGET,mask_IF(1),NODE,,NSEL
+*VFILL,NODES_ID_FULL_IF,ramp,1,1
+
+!Harmonic Analysis create a 2*Nf set of results (Real part + Imaginary part)
+
+*DO,I,1,N_FREQ,1
+
+! STORE REAL PART OF DISPLACEMENT
+
+SET,1,I,,0
+
+*GET, frequencies(I,1), ACTIVE, 0, SET, FREQ,
+
+*VMASK,mask_IF(1)
+*VGET,data_full_UIF(1,2+(I-1)*6),NODE,all,U,X
+
+*VMASK,mask_IF(1)
+*VGET,data_full_UIF(1,4+(I-1)*6),NODE,all,U,Y
+
+*VMASK,mask_IF(1)
+*VGET,data_full_UIF(1,6+(I-1)*6),NODE,all,U,Z
+
+! STORE IMAGINARY PART OF DISPLACEMENT
+
+SET,1,I,,1
+
+*VMASK,mask_IF(1)
+*VGET,data_full_UIF(1,3+(I-1)*6),NODE,all,U,X
+
+*VMASK,mask_IF(1)
+*VGET,data_full_UIF(1,5+(I-1)*6),NODE,all,U,Y
+
+*VMASK,mask_IF(1)
+*VGET,data_full_UIF(1,7+(I-1)*6),NODE,all,U,Z
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,2+(I-1)*6),COMP,data_full_UIF(1,2+(I-1)*6)
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,4+(I-1)*6),COMP,data_full_UIF(1,4+(I-1)*6)
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,6+(I-1)*6),COMP,data_full_UIF(1,6+(I-1)*6)
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,3+(I-1)*6),COMP,data_full_UIF(1,3+(I-1)*6)
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,5+(I-1)*6),COMP,data_full_UIF(1,5+(I-1)*6)
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,7+(I-1)*6),COMP,data_full_UIF(1,7+(I-1)*6)
+
+*ENDDO
+
+*VMASK,mask_IF(1)
+*VFUN,DISPLACEMENS_IF(1,1),COMP,NODES_ID_FULL_IF(1,1)
+
+!!! Exporta os resultados nodais - pressões Re{P} e Im{P}
+
+*MWRITE,DISPLACEMENS_IF,nodal_solution_reference,dat
+(F10.0,TL1,10000E20.12)
+
+!!! Vetor frequencias da Analise Harmonica
+
+*CFOPEN, analysis_frequencies, dat
+*VWRITE,frequencies(1,1)
+(F10.4)
+*CFCLOS
+
+
+FINISH
+
+/POST26 
 FILE,'file','rst','.'   
 /UI,COLL,1  
 NUMVAR,200
@@ -13223,96 +13308,16 @@ PRCPLX,1
 FILLDATA,191,,,,1,1 
 REALVAR,191,191 
 
-NSOL,2,6269,U,Y, UY_3,  
-STORE,MERGE 
-
-NSOL,3,6210,U,Y, UY_4,  
-STORE,MERGE 
-
-NSOL,4,5522,U,Y, UY_5,  
-STORE,MERGE 
-
-NSOL,5,4882,U,Y, UY_6,  
-STORE,MERGE 
-
-NSOL,6,4882,U,Z, UZ_6,  
-STORE,MERGE 
-
-ANSOL,7,6269,S,X,SX_7   
+NSOL,2,6200,U,Y, UY_3,  
 STORE,MERGE
 
-ANSOL,8,6269,S,Y,SY_8   
-STORE,MERGE
-
-ANSOL,9,6269,S,Z,SZ_9   
-STORE,MERGE
-
-node_c = 6269
-
-ESOL,10,3838,node_c,S,X
-STORE,MERGE
-
-ESOL,11,3824,node_c,S,X
-STORE,MERGE
-
-ESOL,12,3784,node_c,S,X
-STORE,MERGE
-
-ESOL,13,3793,node_c,S,X
-STORE,MERGE
-
-ANSOL,14,node_c,S,X,SX_14
-STORE,MERGE
 
 XVAR,1  
 PLVAR,2,
 
-! Save time history variables to file response_uy_node_6269.dat 
-*CREATE,scratch,gui 
-*DEL,_P26_EXPORT
-*DIM,_P26_EXPORT,TABLE,100,2
-VGET,_P26_EXPORT(1,0),1 
-VGET,_P26_EXPORT(1,1),2,,0  
-VGET,_P26_EXPORT(1,2),2,,1  
-/OUTPUT,'response_uy_node_6269','dat','.'   
-*VWRITE,'FREQ','UY_3',' '   
-%14C %14C %14C  
-*VWRITE,' ','REAL','IMAGINARY'  
-%14C %14C %14C  
-*VWRITE,_P26_EXPORT(1,0),_P26_EXPORT(1,1),_P26_EXPORT(1,2)  
-%14.5G %14.5G %14.5G
-/OUTPUT,TERM
-*END
-/INPUT,scratch,gui  
-! End of time history save 
+!   Commands inserted into this file will be executed immediately after the ANSYS /POST1 command.
 
-FINISH
-/PREP7
-NSEL, S, NODE, , node_c
-ESLN, S, 0
-ELIST       
-ALLSEL, ALL
-
-!/POST1
-/AUX2
-
-! commands to create dense matrix
-
-! Stiffness global matrix
-*DMAT,K_MatrixDense,D,IMPORT,FULL,file1.full,STIFF
-*EXPORT,K_MatrixDense,CSV,Kdense_full.csv,24,
-!*PRINT,K_MatrixDense,Kdense_full.dat
-
-*DO, n_el, 1, 10, 1
-
-*DMAT, MatK, D, IMPORT, EMAT, file1.emat, STIFF, n_el
-*EXPORT, MatK, MMF, Ke_%n_el.txt
-
-*DMAT, MatM, D, IMPORT, EMAT, file1.emat, MASS, n_el
-*EXPORT, MatM, MMF, Me_%n_el.txt
-
-*ENDDO
-
-FINISH
-
+!   Active UNIT system in Workbench when this object was created:  Metric (m, kg, N, s, V, A)
+!   NOTE:  Any data that requires units (such as mass) is assumed to be in the consistent solver unit system.
+!                See Solving Units in the help system for more information.
 
