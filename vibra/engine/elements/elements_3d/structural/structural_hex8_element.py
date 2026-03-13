@@ -273,7 +273,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B[:, 5, 2:edof:3] = dphi_t[:, 1, :]
 
         if self.extra_shape_function:
-        
+
+            #TODO: add reference
+
             JAC_0 = self.dphi_0 @ coords
             detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
             dphi_esf_t = (detJAC_0 / detJAC) * invJAC_0 @ self.dphi_esf

@@ -48,6 +48,49 @@ class Element3D:
 
             return factor * const_law, rho
 
+    def get_detJAC(self, JAC: np.ndarray):
+        """
+        This function computes the determinant of Jacobian matrix.
+
+        Parameters
+        ----------
+        JAC: np.array
+            The Jacobian matrices.
+
+        Returns
+        -------
+        det_jac: np.ndarray
+            The determinant of Jacobian matrix.
+
+        """
+        if len(JAC.shape) == 3:
+
+            det_jac = (
+                JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
+                + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
+                + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
+            ) - (
+                JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
+                + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
+                + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
+            )
+
+            det_jac = det_jac.reshape(-1, 1, 1)
+
+        else:
+
+            det_jac = (
+                JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
+                + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
+                + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
+            ) - (
+                JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
+                + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
+                + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
+            )
+
+        return det_jac
+
 
     def get_detJAC_and_invJAC(self, JAC: np.ndarray):
         """
@@ -68,19 +111,9 @@ class Element3D:
             The inverse of Jacobian matrix.
         """
 
+        det_jac = self.get_detJAC(JAC)
+
         if len(JAC.shape) == 3:
-
-            det_jac = (
-                JAC[:, 0, 0] * JAC[:, 1, 1] * JAC[:, 2, 2]
-                + JAC[:, 0, 1] * JAC[:, 1, 2] * JAC[:, 2, 0]
-                + JAC[:, 0, 2] * JAC[:, 1, 0] * JAC[:, 2, 1]
-            ) - (
-                JAC[:, 2, 0] * JAC[:, 1, 1] * JAC[:, 0, 2]
-                + JAC[:, 2, 1] * JAC[:, 1, 2] * JAC[:, 0, 0]
-                + JAC[:, 2, 2] * JAC[:, 1, 0] * JAC[:, 0, 1]
-            )
-            det_jac = det_jac.reshape(-1, 1, 1)
-
             adj_matrix = np.zeros((det_jac.shape[0], 3, 3), dtype=float)
             adj_matrix[:, 0, 0] =  ((JAC[:, 1, 1] * JAC[:, 2, 2]) - (JAC[:, 2, 1] * JAC[:, 1, 2]))
             adj_matrix[:, 1, 0] = -((JAC[:, 1, 0] * JAC[:, 2, 2]) - (JAC[:, 1, 2] * JAC[:, 2, 0]))
@@ -93,17 +126,6 @@ class Element3D:
             adj_matrix[:, 2, 2] =  ((JAC[:, 0, 0] * JAC[:, 1, 1]) - (JAC[:, 0, 1] * JAC[:, 1, 0]))
 
         else:
-
-            det_jac = (
-                JAC[0, 0] * JAC[1, 1] * JAC[2, 2]
-                + JAC[0, 1] * JAC[1, 2] * JAC[2, 0]
-                + JAC[0, 2] * JAC[1, 0] * JAC[2, 1]
-            ) - (
-                JAC[2, 0] * JAC[1, 1] * JAC[0, 2]
-                + JAC[2, 1] * JAC[1, 2] * JAC[0, 0]
-                + JAC[2, 2] * JAC[1, 0] * JAC[0, 1]
-            )
-
             adj_matrix = np.zeros((3, 3), dtype=float)
             adj_matrix[0, 0] =  ((JAC[1, 1] * JAC[2, 2]) - (JAC[2, 1] * JAC[1, 2]))
             adj_matrix[1, 0] = -((JAC[1, 0] * JAC[2, 2]) - (JAC[1, 2] * JAC[2, 0]))

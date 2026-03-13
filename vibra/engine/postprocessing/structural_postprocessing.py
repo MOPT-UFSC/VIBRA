@@ -1,18 +1,19 @@
-from functools import cache
-
-import numpy as np
-
-from typing import Literal, TYPE_CHECKING
+    
+from vibra.engine.solvers import ModalSolver, HarmonicSolver
+from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 
 if TYPE_CHECKING:
     from vibra.project_files.project import Project
-    
-from vibra.engine.solvers import ModalSolver, HarmonicSolver
+
+import numpy as np
+from collections import defaultdict
+from functools import cache
+from time import time
+from typing import Literal, TYPE_CHECKING
+
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
-from collections import defaultdict
-from time import time
 
 class StructuralPostprocessing:
     def __init__(self, project: 'Project'=None, structural_modal_solver: ModalSolver=None, structural_harmonic_solver: HarmonicSolver=None):
@@ -358,15 +359,7 @@ class StructuralPostprocessing:
 
     def nodal_stresses_post_process(self, input_stresses_data: dict):
 
-        sigma_x = dict()
-        sigma_y = dict()
-        sigma_z = dict()
-        tau_xy = dict()
-        tau_xz = dict()
-        tau_yz = dict()
-
-        output_stresses_data = dict()
-
+        nodal_stresses = NodalStresses()
         keys = np.sort(list(input_stresses_data.keys()))
 
         for i, key in enumerate(keys):
@@ -375,19 +368,15 @@ class StructuralPostprocessing:
             if stresses is None:
                 continue
 
-            sigma_x[key] = stresses[0, :]
-            sigma_y[key] = stresses[1, :]
-            sigma_z[key] = stresses[2, :]
-            tau_xy[key] = stresses[3, :]
-            tau_xz[key] = stresses[4, :]
-            tau_yz[key] = stresses[5, :]
+            nodal_stresses.sigma_x[key] = stresses[0, :]
+            nodal_stresses.sigma_y[key] = stresses[1, :]
+            nodal_stresses.sigma_z[key] = stresses[2, :]
+            nodal_stresses.tau_xy[key] = stresses[3, :]
+            nodal_stresses.tau_xz[key] = stresses[4, :]
+            nodal_stresses.tau_yz[key] = stresses[5, :]
 
-        output_stresses_data["sigma_x"] = sigma_x
-        output_stresses_data["sigma_y"] = sigma_y
-        output_stresses_data["sigma_z"] = sigma_z
-        output_stresses_data["tau_xy"] = tau_xy
-        output_stresses_data["tau_yz"] = tau_yz
-        output_stresses_data["tau_xz"] = tau_xz
+        return nodal_stresses
+
 
         ## Only for validation purposes
         # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
@@ -399,5 +388,3 @@ class StructuralPostprocessing:
         # fname = f"nodal_normals_data_surface_{surface_id}.dat"
         # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
         # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
-
-        return output_stresses_data
