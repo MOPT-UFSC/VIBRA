@@ -32,6 +32,8 @@ from cad_widgets import (
     ConeProperties,
     TorusProperties,
     ImportedProperties,
+    RectangleProperties,
+    CircleProperties,
 )
 
 class CADRenderWidget(QWidget):
@@ -130,7 +132,8 @@ class CADRenderWidget(QWidget):
         self.geometry_tree.shape_visibility_changed.connect(
             self._on_shape_visibility_changed
         )
-        self.geometry_tree.shape_selected.connect(self._on_shape_selected)
+        self.geometry_tree.shapes_selected.connect(self._on_shapes_selected)
+        self.viewer.shape_selection_changed.connect(self._on_viewer_selection_changed)
         self.geometry_tree.shape_creation_requested.connect(
             self._on_shape_creation_requested
         )
@@ -152,6 +155,9 @@ class CADRenderWidget(QWidget):
         self.geometry_tree.import_requested.connect(
             self._on_import_requested
         )
+        self.geometry_tree.shape_split_to_faces_requested.connect(
+            self._on_shape_split_to_faces_requested
+        )
 
         # Connect property editor signals
         self.property_editor.properties_changed.connect(self._on_properties_changed)
@@ -171,16 +177,29 @@ class CADRenderWidget(QWidget):
         """Handle shape visibility changes from the geometry tree."""
         self.viewer.set_shape_visibility(shape_id, visible)
 
-    def _on_shape_selected(self, shape_id: str):
-        """Handle shape selection in the tree."""
-        managed_shape = self.geometry_manager.get_shape(shape_id)
-        if managed_shape:
-            self.property_editor.set_shape(
-                shape_id,
-                managed_shape.shape_type,
-                managed_shape.name,
-                managed_shape.properties.to_dict()
-            )
+    def _update_property_editor_for_selection(self, shape_ids: list):
+        if len(shape_ids) == 1:
+            managed_shape = self.geometry_manager.get_shape(shape_ids[0])
+            if managed_shape:
+                self.property_editor.set_shape(
+                    shape_ids[0],
+                    managed_shape.shape_type,
+                    managed_shape.name,
+                    managed_shape.properties.to_dict(),
+                    managed_shape.color,
+                )
+        else:
+            self.property_editor.clear_shape()
+
+    def _on_shapes_selected(self, shape_ids: list):
+        """Handle shape selection from tree (multi-select aware)."""
+        self.viewer.select_shapes(shape_ids)
+        self._update_property_editor_for_selection(shape_ids)
+
+    def _on_viewer_selection_changed(self, shape_ids: list):
+        """Handle shape selection from OCP viewer (reverse sync to tree)."""
+        self.geometry_tree.select_shapes(shape_ids)
+        self._update_property_editor_for_selection(shape_ids)
     
     def _on_shape_creation_requested(self, shape_type: ShapeType):
         """
@@ -201,6 +220,8 @@ class CADRenderWidget(QWidget):
             ShapeType.CYLINDER: CylinderProperties(),
             ShapeType.CONE: ConeProperties(),
             ShapeType.TORUS: TorusProperties(),
+            ShapeType.RECTANGLE: RectangleProperties(),
+            ShapeType.CIRCLE: CircleProperties(),
         }
         
         properties = properties_map.get(shape_type, BoxProperties())
@@ -378,3 +399,12 @@ class CADRenderWidget(QWidget):
             self.on_shapes_exported.emit(filename)  # Emit signal with the filename
         else:            
             QMessageBox.critical(self, "Model Creation Error", "Failed to create model")
+    
+    def _on_shape_split_to_faces_requested(self, shape_id: str):
+        """Handle split-to-faces request from geometry tree."""
+        face_ids = self.geometry_manager.split_to_faces(shape_id)
+        if face_ids:
+            self.viewer.fit_all()
+            self.property_editor.clear_shape()
+        else:
+            QMessageBox.warning(self, "Operation Failed", "Split to surfaces failed")

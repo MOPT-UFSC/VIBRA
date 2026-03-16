@@ -9,7 +9,7 @@ resolution-markers = [
 
 [[package]]
 name = "cad-widgets"
-version = "0.1.7"
+version = "0.1.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cadquery-ocp" },
@@ -18,9 +18,9 @@ dependencies = [
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pyside6" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e1/8d/2d7f13e3e23d34517ae65ab567669b8ad12cbbde1cba34147a1198d50f90/cad_widgets-0.1.7.tar.gz", hash = "sha256:844adfd88939d6b5d9767163747d77070331ade67d52f482f2bb630ae7e95993", size = 155813, upload-time = "2026-03-09T20:52:52.196Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/5d/e37142e0ef686cc27814b5a98a74e956fc9be7f73f34b8dfef64ae6733e1/cad_widgets-0.1.9.tar.gz", hash = "sha256:f81c7d36c92819e00321b599edd45b9c1441a5b5d98800e8aee04fb38a99cf2d", size = 164354, upload-time = "2026-03-16T14:27:04.126Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b4/c9/165a1265a1c75701fd325b020a6ce9b08c6f90f2832137dcd716402712c3/cad_widgets-0.1.7-py3-none-any.whl", hash = "sha256:e2aea19e84a8551f8248cabf846f48f450e388959aa3857f821be80f0caaa4ea", size = 37744, upload-time = "2026-03-09T20:52:50.784Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/12/6b28a892a2cfaec6038a0faecd786f003ff1db6402e0df922f0ea34b997e/cad_widgets-0.1.9-py3-none-any.whl", hash = "sha256:97ab2d1b910d9389f753285e312062e8bdfc14726b40d93813519822b07eba94", size = 41308, upload-time = "2026-03-16T14:27:02.488Z" },
 ]
 
 [[package]]
