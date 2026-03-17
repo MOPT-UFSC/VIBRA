@@ -1,7 +1,7 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import replace
 from enum import StrEnum, auto
-from typing import Callable, Literal, ParamSpec, Self, TypeVar
+from typing import Callable, ParamSpec, Self, TypeVar
 
 import numpy as np
 
@@ -19,7 +19,7 @@ class AnalysisMethod(StrEnum):
     MODE_SUPERPOSITION = auto()
 
 
-class HarmonicAnalysisSetup:
+class HarmonicAnalysisSetup(ABC):
     f_min: float
     f_max: float
     f_size: float
@@ -28,9 +28,13 @@ class HarmonicAnalysisSetup:
     modes_number: None | int = None
 
     def __init__(self, *args, **kwargs):
-        subclass_names = ", ".join([f"{cls.__module__}.{cls.__name__}" for cls in self.__class__.__subclasses__()])
+        super().__init__(*args, **kwargs)
+
+        subclass_names = [f"{cls.__module__}.{cls.__name__}" for cls in self.__class__.__subclasses__()]
         msg = "HarmonicAnalysisSetup can not be intantiated.\n"
-        msg += f"Use one of the following classes instead: {subclass_names}"
+        msg += "Use one of the following classes instead:\n"
+        for name in subclass_names:
+            msg += f"\t{name}\n"
         raise TypeError(msg)
 
     def replace(self, **changes) -> Self:
