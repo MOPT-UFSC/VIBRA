@@ -984,10 +984,11 @@ class MainWindow(MainWindow_UI):
     
     def remove_property(self):
         selected_geometry_entities = {
-            "lines": self.selected_geometry_lines,
-            "points": self.selected_geometry_points,
-            "surfaces": self.selected_geometry_surfaces,
-            "volumes": self.selected_geometry_volumes}
+            "points": self.selection.geometry_points,
+            "lines": self.selection.geometry_lines,
+            "surfaces": self.selection.geometry_surfaces,
+            "volumes": self.selection.geometry_volumes,
+        }
 
         self.close_dialogs()
 
