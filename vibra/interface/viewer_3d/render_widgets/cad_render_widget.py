@@ -161,6 +161,7 @@ class CADRenderWidget(QWidget):
 
         # Connect property editor signals
         self.property_editor.properties_changed.connect(self._on_properties_changed)
+        self.property_editor.color_changed.connect(self._on_color_changed)
         
         # Connect geometry manager signals to components
         self.geometry_manager.shape_created.connect(self.viewer.on_shape_created)
@@ -245,6 +246,10 @@ class CADRenderWidget(QWidget):
         
         # Clear property editor if this shape was being edited
         self.property_editor.clear_shape()
+
+    def _on_color_changed(self, shape_id: str, color: tuple):
+        """Handle color change from the property editor."""
+        self.geometry_manager.update_shape_color(shape_id, color)
 
     def _on_properties_changed(self, shape_id: str, properties_dict: dict):
         """Handle property changes from the editor."""
