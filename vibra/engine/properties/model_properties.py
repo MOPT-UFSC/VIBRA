@@ -6,7 +6,6 @@ import numpy as np
 from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.utils.signal import VibraSignal
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -56,7 +55,6 @@ class ModelProperties:
 
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
-        self.modified = VibraSignal()
         self._reset_variables()
 
     def _reset_variables(self):
@@ -190,8 +188,6 @@ class ModelProperties:
 
         else:
             self.global_properties[property, "global"] = data
-        
-        self.modified.emit()
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()

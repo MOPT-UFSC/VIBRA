@@ -67,8 +67,6 @@ class Project:
 
     def create_connections(self):
         return
-        # self.model.properties.modified.connect(self.update_model_properties_file)
-        # self.model.analysis_setup_modified.connect(self.update_project_setup_file)
 
     @property
     def mesh(self) -> Optional[Mesh]:
