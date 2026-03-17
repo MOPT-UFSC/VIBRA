@@ -7,9 +7,9 @@ from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, M
 from vibra.engine.project import Project
 
 
-def test_write_and_read_mesh_project(fluid):
+def test_write_and_read_mesh_project(fluid, datadir: Path):
     mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
-    project_path = Path("project.vibra")
+    project_path = datadir / "project.vibra"
 
     project_a = Project()
     project_a.import_mesh(mesh_path)
