@@ -21,10 +21,9 @@ from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solution import (
-    AcousticModalSolution,
     HarmonicSolution,
+    ModalSolution,
     Solution,
-    StructuralModalSolution,
 )
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
@@ -278,7 +277,7 @@ class Project:
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self) -> StructuralModalSolution:
+    def solve_structural_modal_analysis(self) -> ModalSolution:
         self.model.analysis_id = AnalysisID.STRUCTURAL_MODAL
         self.update_project_setup_file()
 
@@ -328,7 +327,7 @@ class Project:
 
         return solution
 
-    def solve_acoustic_modal_analysis(self) -> AcousticModalSolution:
+    def solve_acoustic_modal_analysis(self) -> ModalSolution:
         self.model.analysis_id = AnalysisID.ACOUSTIC_MODAL
         self.update_project_setup_file()
 

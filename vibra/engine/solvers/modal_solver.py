@@ -5,7 +5,7 @@ from scipy.sparse.linalg import eigs
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solution import AcousticModalSolution, ModalSolution, StructuralModalSolution
+from vibra.engine.solution import ModalSolution
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 
@@ -96,18 +96,10 @@ class ModalSolver:
         else:
             cnf = None
 
-        if isinstance(self.assembler, StructuralAssembler):
-            self.displacement_dof = self.assembler.displacement_dof
-            return StructuralModalSolution(
-                self.natural_frequencies,
-                self.solution,
-                self.displacement_dof,
-                complex_natural_frequencies=cnf,
-            )
-
-        else:
-            return AcousticModalSolution(
-                self.natural_frequencies,
-                self.solution,
-                complex_natural_frequencies=cnf,
-            )
+        return ModalSolution(
+            analysis_id=self.assembler.model.analysis_id,
+            natural_frequencies=self.natural_frequencies,
+            modal_shape=self.solution,
+            displacement_dof=self.displacement_dof,
+            complex_natural_frequencies=cnf,
+        )

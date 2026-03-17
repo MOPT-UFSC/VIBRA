@@ -31,11 +31,9 @@ from vibra.engine.properties import (
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.engine.solution import (
-    AcousticModalSolution,
     HarmonicSolution,
     ModalSolution,
     Solution,
-    StructuralModalSolution,
 )
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
@@ -410,19 +408,17 @@ class ProjectReader:
         if not self.project_paths.modal_solution_filepath.exists():
             return None
 
+        analysis_id = self.read_current_analysis_id()
+
         with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
-            if "displacement_dof" in file:
-                return StructuralModalSolution(
-                    file["frequencies"],
-                    file["solution"],
-                    file["displacement_dof"],
-                )
-            else:
-                return AcousticModalSolution(
-                    file["frequencies"],
-                    file["solution"],
-                    file["solution_status"],
-                )
+            file: h5py.File
+
+            return ModalSolution(
+                analysis_id=analysis_id,
+                natural_frequencies=file["frequencies"],
+                modal_shape=file["solution"],
+                displacement_dof=file.get("displacement_dof"),
+            )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 

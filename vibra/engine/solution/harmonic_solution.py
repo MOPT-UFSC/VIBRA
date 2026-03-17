@@ -21,7 +21,7 @@ class HarmonicSolution(CommonSolution):
         self.frequencies = self._immutable_array(frequencies)
         self.results = self._immutable_array(results)
         self.status = self._create_status(status)
-        self.displacement_dof = (self._create_displacement_dof(displacement_dof),)
+        self.displacement_dof: Array2D = self._optional_immutable_array(displacement_dof)
         super().__init__()
 
     @cached_property
@@ -52,11 +52,6 @@ class HarmonicSolution(CommonSolution):
             return np.ones_like(self.frequencies, dtype=bool)
         return self._immutable_array(status)
 
-    def _create_displacement_dof(self, displacement_dof: Optional[Array2D]) -> Optional[Array2D]:
-        if displacement_dof is None:
-            return None
-        return self._immutable_array(displacement_dof)
-
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
         yield from zip(self.frequencies, self.results)
 
@@ -65,13 +60,16 @@ class HarmonicSolution(CommonSolution):
             return False
 
         match self.displacement_dof, other.displacement_dof:
+            case None, None:
+                pass
+
             case None, _:
                 return False
 
             case _, None:
                 return False
 
-            case np.ndarray(), np.ndarray():
+            case _, _:
                 if not np.allclose(self.displacement_dof, other.displacement_dof):
                     return False
 
