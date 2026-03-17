@@ -3,9 +3,10 @@ from time import time
 
 import numpy as np
 
+from vibra.engine import HarmonicAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.solution import AcousticHarmonicSolution, HarmonicSolution, StructuralHarmonicSolution
+from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
@@ -48,18 +49,16 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
         self._closing_solution_handler(solution)
 
-        if isinstance(self.assembler, StructuralAssembler):
-            return StructuralHarmonicSolution(
-                self.assembler.model.analysis_setup.frequencies(),
-                self.solution,
-                self.displacement_dof,
-            )
-        else:
-            return AcousticHarmonicSolution(
-                self.assembler.model.analysis_setup.frequencies(),
-                self.solution,
-            )
+        analysis_id = self.assembler.model.analysis_id
+        analysis_setup = self.assembler.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
+        return HarmonicSolution(
+            analysis_id=analysis_id,
+            frequencies=analysis_setup.frequencies(),
+            results=self.solution,
+            displacement_dof=self.displacement_dof,
+        )
 
     def _get_solution_handler(self, is_resume):
         if isinstance(self.assembler, StructuralAssembler):
@@ -171,18 +170,16 @@ class HarmonicSolver:
             self.compute_frequency_sweep(solution, print_log, is_resume)
 
         self._closing_solution_handler(solution)
+        analysis_id = self.assembler.model.analysis_id
+        analysis_setup = self.assembler.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
-        if isinstance(self.assembler, StructuralAssembler):
-            return StructuralHarmonicSolution(
-                self.assembler.model.frequencies,
-                self.solution,
-                self.displacement_dof,
-            )
-        else:
-            return AcousticHarmonicSolution(
-                self.assembler.model.frequencies,
-                self.solution,
-            )
+        return HarmonicSolution(
+            analysis_id=analysis_id,
+            frequencies=analysis_setup.frequencies(),
+            results=self.solution,
+            displacement_dof=self.displacement_dof,
+        )
 
     def compute_proportionally_damped_frequency_sweep(self, solution, modes, natural_frequencies, print_log, is_resume):
         # frequencies vector [in hertz]

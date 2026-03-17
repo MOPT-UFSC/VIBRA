@@ -31,12 +31,10 @@ from vibra.engine.properties import (
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.engine.solution import (
-    AcousticHarmonicSolution,
     AcousticModalSolution,
     HarmonicSolution,
     ModalSolution,
     Solution,
-    StructuralHarmonicSolution,
     StructuralModalSolution,
 )
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
@@ -395,20 +393,18 @@ class ProjectReader:
         if not self.project_paths.harmonic_solution_filepath.exists():
             return None
 
+        analysis_id = self.read_current_analysis_id()
+
         with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
-            if "displacement_dof" in file:
-                return StructuralHarmonicSolution(
-                    file["frequencies"],
-                    file["solution"],
-                    file["displacement_dof"],
-                    file["solution_status"],
-                )
-            else:
-                return AcousticHarmonicSolution(
-                    file["frequencies"],
-                    file["solution"],
-                    file["solution_status"],
-                )
+            file: h5py.File
+
+            return HarmonicSolution(
+                analysis_id=analysis_id,
+                frequencies=file["frequencies"],
+                results=file["solution"],
+                status=file["solution_status"],
+                displacement_dof=file.get("displacement_dof"),
+            )
 
     def read_modal_solution(self) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():

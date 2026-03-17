@@ -21,15 +21,12 @@ from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solution import (
-    AcousticHarmonicSolution,
     AcousticModalSolution,
     HarmonicSolution,
     Solution,
-    StructuralHarmonicSolution,
     StructuralModalSolution,
 )
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-
 
 
 class Project:
@@ -303,7 +300,7 @@ class Project:
 
         return solution
 
-    def solve_structural_harmonic_analysis(self) -> StructuralHarmonicSolution:
+    def solve_structural_harmonic_analysis(self) -> HarmonicSolution:
         self.model.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         self.update_project_setup_file()
 
@@ -353,7 +350,7 @@ class Project:
 
         return solution
 
-    def solve_acoustic_harmonic_analysis(self) -> AcousticHarmonicSolution:
+    def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
         self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 

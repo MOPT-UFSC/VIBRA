@@ -19,7 +19,7 @@ Array2D = np.ndarray[
 ]
 
 
-class Common:
+class CommonSolution:
     analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
 
     def __init__(self):
@@ -64,7 +64,7 @@ class Common:
             return super().__setattr__(name, value)
 
 
-class CommonModalSolution(Common):
+class CommonModalSolution(CommonSolution):
     natural_frequencies: Array1D
     modal_shape: Array2D
     complex_natural_frequencies: Optional[Array1D] = None
@@ -108,7 +108,7 @@ class CommonModalSolution(Common):
         )
 
 
-class CommonHarmonicSolution(Common):
+class CommonHarmonicSolution(CommonSolution):
     frequencies: Array1D
     results: Array2D
     status: np.ndarray[tuple[int], bool]

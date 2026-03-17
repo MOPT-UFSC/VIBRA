@@ -3,6 +3,7 @@ from .acoustic_harmonic_solution import AcousticHarmonicSolution
 from .acoustic_modal_solution import AcousticModalSolution
 from .structural_harmonic_solution import StructuralHarmonicSolution
 from .structural_modal_solution import StructuralModalSolution
+from .harmonic_solution import HarmonicSolution
 
 """
 Here I am using multiple type aliases to group similar analysis.
@@ -20,7 +21,6 @@ But I do not think many new classes will be created, and in any case we already
 need to manually update this file anyway to include the imports.
 """
 ModalSolution = AcousticModalSolution | StructuralModalSolution
-HarmonicSolution = AcousticHarmonicSolution | StructuralHarmonicSolution
 AcousticSolution = AcousticModalSolution | AcousticHarmonicSolution
 StructuralSolution = StructuralModalSolution | StructuralHarmonicSolution
 Solution = AcousticHarmonicSolution | AcousticModalSolution | StructuralModalSolution | StructuralHarmonicSolution
@@ -31,8 +31,6 @@ __all__ = [
     "HarmonicSolution",
     "AcousticSolution",
     "StructuralSolution",
-    "StructuralHarmonicSolution",
-    "AcousticHarmonicSolution",
     "AcousticModalSolution",
     "StructuralModalSolution",
 ]
