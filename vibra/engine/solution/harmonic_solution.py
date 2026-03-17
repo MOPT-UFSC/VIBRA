@@ -60,21 +60,16 @@ class HarmonicSolution(CommonSolution):
             return False
 
         match self.displacement_dof, other.displacement_dof:
+            case np.ndarray(), np.ndarray():
+                dofs_equal = np.allclose(self.displacement_dof, other.displacement_dof)
             case None, None:
-                pass
-
-            case None, _:
-                return False
-
-            case _, None:
-                return False
-
+                dofs_equal = True
             case _, _:
-                if not np.allclose(self.displacement_dof, other.displacement_dof):
-                    return False
+                dofs_equal = False
 
         return all(
             [
+                dofs_equal,
                 np.allclose(self.frequencies, other.frequencies),
                 np.allclose(self.results, other.results),
                 np.allclose(self.status, other.status),
