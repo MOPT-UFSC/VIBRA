@@ -28,9 +28,6 @@ class HarmonicAnalysisSetup:
     modes_number: None | int = None
 
     def __init__(self, *args, **kwargs):
-        # Overriding ABC was not raising an error for me.
-        # Maybe there is a better way to prevent abstract initialization.
-
         subclass_names = ", ".join([f"{cls.__module__}.{cls.__name__}" for cls in self.__class__.__subclasses__()])
         msg = "HarmonicAnalysisSetup can not be intantiated.\n"
         msg += f"Use one of the following classes instead: {subclass_names}"
