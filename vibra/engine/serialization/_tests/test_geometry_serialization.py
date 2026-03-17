@@ -8,9 +8,9 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.project import Project
 
 
-def test_write_and_read_project(fluid):
+def test_write_and_read_project(fluid, datadir: Path):
     geometry_path = PROJECT_DIR / "data/examples/geometry_files/cylinder.step"
-    project_path = Path("project.vibra")
+    project_path = datadir / "project.vibra"
 
     mesh_setup = MeshSetup(
         minimum_element_size=50,
