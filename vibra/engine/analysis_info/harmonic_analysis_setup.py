@@ -27,16 +27,6 @@ class HarmonicAnalysisSetup(ABC):
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: None | int = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        subclass_names = [f"{cls.__module__}.{cls.__name__}" for cls in self.__class__.__subclasses__()]
-        msg = "HarmonicAnalysisSetup can not be intantiated.\n"
-        msg += "Use one of the following classes instead:\n"
-        for name in subclass_names:
-            msg += f"\t{name}\n"
-        raise TypeError(msg)
-
     def replace(self, **changes) -> Self:
         return replace(self, **changes)
 
