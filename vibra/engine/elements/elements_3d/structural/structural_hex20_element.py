@@ -34,6 +34,29 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         self.process_shape_functions_and_derivatives_for_Me()
 
 
+    @property
+    def corner_nodes_indexes(self):
+        return np.arange(8, dtype=int)
+
+
+    @property
+    def midside_nodes_indexes_map(self):
+        return {
+            8 : (0, 1),      # Q -> (I, J)
+            9 : (1, 2),      # R -> (J, K)
+            10 : (2, 3),     # S -> (K, L)
+            11 : (3, 4),     # T -> (L, I)
+            12 : (4, 5),     # U -> (M, N)
+            13 : (5, 6),     # V -> (N, O)
+            14 : (6, 7),     # W -> (O, P)
+            15 : (7, 4),     # X -> (P, M)
+            16 : (4, 0),     # Y -> (M, I)
+            17 : (5, 1),     # Z -> (N, J)
+            18 : (6, 2),     # A -> (O, K)
+            19 : (7, 3),     # B -> (P, L)
+            }
+
+
     def define_integration_points_for_Ke(self, integration_points: int = 8):
         """
         This method defines the integration points and their
@@ -74,24 +97,28 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         xi_3 = self.num_int_data_K[:, 2]
 
         self.phi_K, self.dphi_K = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
-        self.phi_inv = self.inverse_of_shape_functions()
+        self.phi_K_trilinear = self.get_shape_functions_for_linear_stress_extrapolation(xi_1, xi_2, xi_3)
+        self.phi_inv = self.inverse_of_trilinear_shape_functions()
 
 
-    def inverse_of_shape_functions(self):
+    def inverse_of_trilinear_shape_functions(self):
         """
         This method returns the inverse of shape functions matrix N applied
         at integration points (Gauss-Legendre quadrature points).
         """
-        N = self.phi_K
+        N = self.phi_K_trilinear
         n_intp, n_nodes = N.shape
 
         if n_intp == n_nodes:
+            # print("N_int = N_nodes")
             return np.linalg.inv(N)
 
-        elif n_intp < n_nodes:
+        elif n_intp > n_nodes:
+            # print("N_int > N_nodes")
             return np.linalg.inv(N.T @ N) @ N.T
 
         else:
+            print("Not implemented stress extrapolation for N_int < N_nodes")
             return None
 
 
@@ -244,6 +271,55 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         return phi, dphi
 
 
+    def get_shape_functions_for_linear_stress_extrapolation(
+            self, 
+            xi_1: np.ndarray | float, 
+            xi_2: np.ndarray | float, 
+            xi_3: np.ndarray | float,
+            ):
+
+        """
+        This method returns the shape functions and its derivatives.
+        
+        Parameters
+        ----------
+        xi_1: np.ndarray
+            The x coordinates of the integration points.
+        
+        xi_2: np.ndarray
+            The y coordinates of the integration points.
+
+        xi_3: np.ndarray
+            The z coordinates of the integration points.
+
+        Returns
+        -------
+        phi: np.ndarray
+            The shape functions evaluated in the integration points.
+
+        dphi: np.ndarray
+            The shape functions derivatives.
+        """
+
+        Nz = xi_1.size
+
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+
+        # define the shape functions (Atalla and Sgard, 2015, pg. 171)
+        phi = np.zeros((Nz, 8), dtype=float)
+
+        phi[:, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
+        phi[:, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
+        phi[:, 2] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0,  1.0, -1.0)   Node 3
+        phi[:, 3] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0,  1.0, -1.0)   Node 4
+        phi[:, 4] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0, -1.0,  1.0)   Node 5
+        phi[:, 5] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0, -1.0,  1.0)   Node 6
+        phi[:, 6] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0,  1.0,  1.0)   Node 7
+        phi[:, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
+
+        return phi
+
+
     def process_detJAC_and_B_matrix(self, element_id: int, return_coords: bool=False):
         """
         This method computes and returns the matrix of shape functions 
@@ -316,18 +392,6 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         for i in range(self.nint_M):
             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
 
-        # if self.nint_M >= self.nint_K:
-        #     for i in range(self.nint_M):
-        #         Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
-        #         if i <= self.nint_K:
-        #             Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
-
-        # else:
-        #     for i in range(self.nint_K):
-        #         Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
-        #         if i <= self.nint_M:
-        #             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
-
         return Ke, Me
 
  
@@ -350,7 +414,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
 
         elif isinstance(solution, np.ndarray):
             indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
-            Ue = solution[indexes.flatten(), :]    
+            Ue = solution[indexes.flatten(), :]
 
         else:
             return 0.
@@ -401,9 +465,6 @@ class STRUCT_HEXAHEDRON_20(Element3D):
 
         # for i in range(6):
         #     nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
-
-        print(self.phi_inv.shape)
-        print(element_stresses.shape)
 
         nodal_stresses = self.phi_inv @ element_stresses
         # nodal_stresses = np.transpose(nodal_stresses, axes=(1, 0, 2))

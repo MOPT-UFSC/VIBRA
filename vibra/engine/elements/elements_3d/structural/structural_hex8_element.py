@@ -32,6 +32,13 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.process_shape_functions_and_derivatives()
 
 
+    @property
+    def corner_nodes_indexes(self):
+        indexes = np.arange(self.NODES_PER_ELEMENT, dtype=int)
+        return indexes[:8]
+
+
+
     def load_extra_shape_function_state(self):
         """
         This method updates the extra shape functions state based on the model global properties.
