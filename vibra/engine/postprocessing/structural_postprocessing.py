@@ -2,15 +2,14 @@
 from vibra.engine.solvers import ModalSolver, HarmonicSolver
 from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 
-if TYPE_CHECKING:
-    from vibra.project_files.project import Project
-
 import numpy as np
 from collections import defaultdict
 from functools import cache
 from time import time
-from typing import Literal, TYPE_CHECKING
 
+from typing import Literal, TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.project_files.project import Project
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
@@ -145,33 +144,38 @@ class StructuralPostprocessing:
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
-            element_averaged_stresses: bool = True,
-            nodal_averaged_stresses: bool = False,
             ):
         """
-        This method computes the nodal average particle velocity in the selected surface.
+        This method computes the nodal averaged stresses and the nodal stresses 
+        for each element.
 
         Parameters
         ----------
-        surface_id: int
-            The selected surface ID.
+        node_ids: int, list[int], None. (default None)
+            The selected node IDs.
 
-        rho: float
-            The fluid density related to the selected surface.
+        surface_ids: int, list[int], None. (default None)
+            The selected surface IDs.
+
+        volume_ids: int, list[int], None. (default None)
+            The selected volume IDss.
 
         Returns
         -------
+        avg_nodal_stresses_data: dict
+            A dictionary whose keys are the node_ids and the values are the averaged
+            nodal stresses.
 
-        particle_velocities: dict
-            A dictionary with the normal particle velocity and its components in
-            the x, y, and z directions, computed in the selected surface.
+        nodal_stresses_data: dict
+            A dictionary whose keys are the tuples in the form (element_id, node_id) 
+            and the values are the nodal stresses for each element.
+
         """
 
         t0 = time()
 
         mesh = self.harmonic_solver.assembler.model.mesh
-
-        element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
+        element_3d = self.harmonic_solver.assembler.model.structural_element_3d
 
         if element_3d is None:
             self.harmonic_solver.assembler.define_structural_elements()
@@ -207,8 +211,8 @@ class StructuralPostprocessing:
             return dict(), dict()
 
         node_ids = np.unique(node_ids)
-        element_ids, element_nodes = mesh.get_solid_elements_from_nodes(node_ids, return_enodes=True)
-        
+        element_ids = mesh.get_solid_elements_from_nodes(node_ids)
+
         dt = time() - t0
         print(f"Time 1: {dt} s")
 
@@ -226,6 +230,9 @@ class StructuralPostprocessing:
         avg_den = defaultdict(int)
         avg_nodal_stresses_data = defaultdict(float)
 
+        corner_indexes = element_3d.corner_nodes_indexes
+        midside_indexes_map = element_3d.midside_nodes_indexes_map
+
         for element_id in element_ids:
             connect = element_3d.connectivity[element_id, 1:]
             # indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
@@ -239,10 +246,21 @@ class StructuralPostprocessing:
                 )
 
             enodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
+
             for i, e_node in enumerate(connect):
                 avg_den[e_node] += 1
-                avg_nodal_stresses_data[e_node] += enodal_stresses[:, i, :]
-                nodal_stresses_data[(element_id, e_node)] = enodal_stresses[:, i, :]
+
+                if i in corner_indexes:
+                    avg_nodal_stresses_data[e_node] += enodal_stresses[:, i, :]
+                    nodal_stresses_data[(element_id, e_node)] = enodal_stresses[:, i, :]
+
+                else:
+
+                    (index_1, index_2) = midside_indexes_map.get(i)
+                    avg_stress = (enodal_stresses[:, index_1, :] + enodal_stresses[:, index_2, :]) / 2
+
+                    avg_nodal_stresses_data[e_node] += avg_stress
+                    nodal_stresses_data[(element_id, e_node)] = avg_stress
 
         for _node_id, den in avg_den.items():
             avg_nodal_stresses_data[_node_id] /= den
@@ -258,31 +276,35 @@ class StructuralPostprocessing:
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
-            element_averaged_stresses: bool = True,
-            nodal_averaged_stresses: bool = False,
             ):
         """
-        This method computes the nodal average particle velocity in the selected surface.
+        This method computes the nodal averaged stresses and the nodal stresses 
+        for each element.
 
         Parameters
         ----------
-        surface_id: int
-            The selected surface ID.
+        node_ids: int, list[int], None. (default None)
+            The selected node IDs.
 
-        rho: float
-            The fluid density related to the selected surface.
+        surface_ids: int, list[int], None. (default None)
+            The selected surface IDs.
+
+        volume_ids: int, list[int], None. (default None)
+            The selected volume IDss.
 
         Returns
         -------
+        avg_nodal_stresses_data: dict
+            A dictionary whose keys are the node_ids and the values are the averaged
+            nodal stresses.
 
-        particle_velocities: dict
-            A dictionary with the normal particle velocity and its components in
-            the x, y, and z directions, computed in the selected surface.
+        nodal_stresses_data: dict
+            A dictionary whose keys are the tuples in the form (element_id, node_id) 
+            and the values are the nodal stresses for each element.
         """
 
         mesh = self.harmonic_solver.assembler.model.mesh
-
-        element_3d = self.harmonic_solver.assembler.model.acoustic_element_3d
+        element_3d = self.harmonic_solver.assembler.model.structural_element_3d
 
         if element_3d is None:
             self.harmonic_solver.assembler.define_structural_elements()
@@ -360,10 +382,8 @@ class StructuralPostprocessing:
     def nodal_stresses_post_process(self, input_stresses_data: dict):
 
         nodal_stresses = NodalStresses()
-        keys = np.sort(list(input_stresses_data.keys()))
 
-        for i, key in enumerate(keys):
-
+        for key in input_stresses_data.keys():
             stresses = input_stresses_data.get(key)
             if stresses is None:
                 continue
