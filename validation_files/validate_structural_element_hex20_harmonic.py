@@ -10,6 +10,7 @@ from vibra.engine.postprocessing import StructuralPostprocessing
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from validation_files.data.WB.load_external_data import LoadExternalData
+from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -49,10 +50,11 @@ udof_index = {
 def load_external_mesh_and_solve(integration_type: str):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex20/mesh/ds_hex20_cuboid_modal.dat"
+    filename = "ds_hex20_cuboid_harmonic.dat"
+    mesh_path = f"validation_files/data/WB/structural/elements/hex20/mesh/{filename}"
     if not os.path.exists(mesh_path):
         return
-    
+
     # define the known 'Named selections' from model
     named_selecion_to_tag = { 
                              "input_face" : 1,
@@ -189,7 +191,7 @@ def load_external_mesh_and_solve(integration_type: str):
     # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
-    path = f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic"
+    path = f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic/"
     ext_data = LoadExternalData(path)
 
     WB_displacements_data = ext_data.load_displacements(entire_solution=True)
@@ -198,16 +200,31 @@ def load_external_mesh_and_solve(integration_type: str):
     structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
 
     t0 = time()
-    avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
+    avg_nodal_stresses, nodal_stresses_data = structural_post.get_structural_stresses(volume_ids=1)
     dt = time() - t0
     print(f"Time to compute nodal stresses: {dt} s")
 
     nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
-#     # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
+    # nodal_stresses = structural_post.nodal_stresses_post_process(nodal_stresses_data)
 
-    # node_id = 6200
+    # sigma_x_el3780 = (nodal_stresses.sigma_x[(3780-1, 6200-1)] + nodal_stresses.sigma_x[(3780-1, 6257-1)]) / 2
+    # sigma_x_el3784 = (nodal_stresses.sigma_x[(3784-1, 6200-1)] + nodal_stresses.sigma_x[(3784-1, 6257-1)]) / 2
+    # sigma_x_node25428 = (sigma_x_el3780 + sigma_x_el3784) / 2
+
+    # sigma_x_el3791 = (nodal_stresses.sigma_x[(3791-1, 6200-1)] + nodal_stresses.sigma_x[(3791-1, 6262-1)]) / 2
+    # sigma_x_el3793 = (nodal_stresses.sigma_x[(3793-1, 6200-1)] + nodal_stresses.sigma_x[(3793-1, 6262-1)]) / 2
+    # sigma_x_node25429 = (sigma_x_el3791 + sigma_x_el3793) / 2
+
+    # sigma_x_25428 = getattr(nodal_averaged_stresses, "sigma_x")[25428 - 1]
+    # sigma_x_25429 = getattr(nodal_averaged_stresses, "sigma_x")[25429 - 1]
+
+    # print("Results for node 25428")
+    # print(np.allclose(sigma_x_node25428, sigma_x_25428, atol=1e-8))
+
+    # print("Results for node 25429")
+    # print(np.allclose(sigma_x_node25429, sigma_x_25429, atol=1e-8))
+
     plot_type = "absolute"
-    # stress_label = "sigma_x"
 
     for node_id in [6200, 6228, 6628]:
 
@@ -225,45 +242,21 @@ def load_external_mesh_and_solve(integration_type: str):
                 plot_type=plot_type,
                 )
 
-        # # plots for stresses
-        # for stress_label in stresses_labels[0:3]:
-        #     compare_averaged_nodal_stresses_results(
-        #         node_id, 
-        #         stress_label, 
-        #         frequencies, 
-        #         nodal_averaged_stresses, 
-        #         integration_type, 
-        #         WB_stresses_data,
-        #         plot_type=plot_type,
-        #         )
+        # plots for stresses
+        for stress_label in stresses_labels[0:3]:
+            compare_averaged_nodal_stresses_results(
+                node_id, 
+                stress_label, 
+                frequencies, 
+                nodal_averaged_stresses, 
+                integration_type, 
+                WB_stresses_data,
+                plot_type=plot_type,
+                )
 
     # # input_nodes = mesh.external_nodes_from_surfaces[1]
     # output_nodes = mesh.external_nodes_from_surfaces[2]
     # output_rows = output_nodes * dofs_per_node + udof_index.get("Uy")
-
-#     # stresses plots
-#     print()
-#     compare_averaged_nodal_stresses_results(6269, "sigma_x", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
-#     compare_averaged_nodal_stresses_results(6269, "sigma_y", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
-#     compare_averaged_nodal_stresses_results(6269, "sigma_z", frequencies, nodal_averaged_stresses, esf, plot_type=plot_type)
-
-#     _, nodal_stresses = structural_post.get_structural_stresses(node_ids = node_id-1)
-
-#     print()
-#     for (_elem_id, _node_id) in nodal_stresses.keys():
-
-#         if _node_id + 1 != node_id:
-#             continue
-
-#         compare_nodal_stresses_results(
-#             _elem_id + 1, 
-#             _node_id + 1, 
-#             stress_label, 
-#             frequencies, 
-#             nodal_stresses, 
-#             esf, 
-#             plot_type=plot_type,
-#             )
 
     plt.show()
 
@@ -274,7 +267,7 @@ def compare_nodal_displacements_results(
         dof_label: str, 
         frequencies: np.ndarray, 
         solution: np.ndarray,
-        esf: bool,
+        integration_type: str,
         solution_reference: dict,
         named_selection: str = "all_solutions",
         plot_type: str = "absolute",
@@ -297,7 +290,15 @@ def compare_nodal_displacements_results(
     if response_ref is None:
         return
 
-    title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
+    if response_vibra.size == response_ref.size:
+        abs_diff = np.abs((response_vibra - response_ref) / response_ref)
+        max_abs_diff = 100 * np.max(abs_diff)
+        freq_max_diff = frequencies[np.argmax(abs_diff)]
+
+        print(f"Maximum difference for {dof_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
+        # return
+
+    title = f"Harmonic response at node {node_id} ({integration_type})"
     x_label = "Frequency [Hz]"
     y_label = f'Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}'
 
@@ -321,28 +322,19 @@ def compare_nodal_displacements_results(
     ax.grid()
     ax.legend()
 
-    if response_vibra.size != response_ref.size:
-        return
-
-    abs_diff = np.abs((response_vibra - response_ref) / response_ref)
-    max_abs_diff = 100 * np.max(abs_diff)
-    freq_max_diff = frequencies[np.argmax(abs_diff)]
-
-    print(f"Maximum difference for {dof_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
-
 
 def compare_averaged_nodal_stresses_results(
     node_id: int, 
     stress_label: str, 
     frequencies: np.ndarray, 
-    nodal_averaged_stresses: dict,
+    nodal_averaged_stresses: NodalStresses,
     integration_type: str,
     solution_reference,
     named_selection: str = "all_solutions",
     plot_type: str = "absolute",
     ):
 
-    response_vibra = nodal_averaged_stresses.get(stress_label)[node_id - 1]
+    response_vibra = getattr(nodal_averaged_stresses, stress_label)[node_id - 1]
 
     freq_ref, response_ref = get_reference_nodal_response(
         node_id, 
@@ -351,9 +343,15 @@ def compare_averaged_nodal_stresses_results(
         solution_reference,
         )
 
-    # freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf)
+    if response_vibra.size == response_ref.size:
+        if np.sum(np.abs(response_ref)):
+            abs_diff = np.abs((response_vibra - response_ref) / response_ref)
+            max_abs_diff = 100 * np.max(abs_diff)
+            freq_max_diff = frequencies[np.argmax(abs_diff)]
 
-    title = f"Harmonic response at node {node_id} - ({integration_type})"
+            print(f"Maximum difference for averaged {stress_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
+
+    title = f"Harmonic response at node {node_id} ({integration_type})"
     x_label = "Frequency [Hz]"
     y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
 
@@ -378,115 +376,6 @@ def compare_averaged_nodal_stresses_results(
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
     ax.legend()
-
-    if response_vibra.size != response_ref.size:
-        return
-
-    abs_diff = np.abs((response_vibra - response_ref) / response_ref)
-    max_abs_diff = 100 * np.max(abs_diff)
-    freq_max_diff = frequencies[np.argmax(abs_diff)]
-
-    print(f"Maximum difference for averaged {stress_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
-
-
-def compare_nodal_stresses_results(
-    element_id: int,
-    node_id: int,
-    stress_label: str, 
-    frequencies: np.ndarray, 
-    nodal_stresses: dict,
-    esf: bool,
-    plot_type: str = "absolute",
-    ):
-
-    file_name = f"stress_{stress_label}_element_{element_id}_node_{node_id}_Ansys.dat"
-
-    row = stresses_labels.index(stress_label)
-    response_vibra = nodal_stresses.get((element_id-1, node_id-1))[row, :]
-
-    freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf, file_name=file_name)
-
-    title = f"Harmonic response at element {element_id} and node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
-    x_label = "Frequency [Hz]"
-    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
-
-    fig, ax = plt.subplots()
-    if plot_type == "real":
-        plot_data = np.real
-        plot = ax.plot
-
-    elif plot_type == "imaginary":
-        plot_data = np.imag
-        plot = ax.plot
-
-    else:
-        plot_data = np.abs
-        plot = ax.semilogy
-
-    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
-    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
-
-    ax.set(xlabel=x_label, ylabel=y_label, title=title)
-    ax.grid()
-    ax.legend()
-
-    abs_diff = np.abs((response_vibra - response_apdl) / response_apdl)
-    max_abs_diff = 100 * np.max(abs_diff)
-    freq_max_diff = frequencies[np.argmax(abs_diff)]
-
-    print(f"Maximum difference for {stress_label.capitalize()} @ element {element_id} / node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
-
-
-def get_apdl_reference_displacement_results(
-        apdl_node_id: int, 
-        dof_label: str,
-        extra_shape_functions: bool,
-        ) -> np.ndarray | None:
-    
-    folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
-    
-    if not results_path.exists():
-        return None, None
-    
-    # load mechanical apdl results
-    ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
-
-    freq_apdl = ansys_data[:, 0]
-    response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
-
-    return freq_apdl, response_apdl
-
-
-def get_apdl_reference_stresses_results(
-        apdl_node_id: int, 
-        stress_label: str,
-        extra_shape_functions: bool,
-        file_name: str | None = None,
-        ) -> np.ndarray | None:
-    
-    folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
-    
-    if not results_path.exists():
-        return None, None
-    
-    # load mechanical apdl results
-    if not isinstance(file_name, str):
-        file_path = results_path / f"stress_{stress_label}_node_{apdl_node_id}_Ansys.dat"
-    else:
-        file_path = results_path / file_name
-
-    if not file_path.exists():
-        print(f"Invalid path: {file_path}")
-        return None, None
-
-    ansys_data = np.loadtxt(file_path, skiprows=2)
-
-    freq_apdl = ansys_data[:, 0]
-    response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
-
-    return freq_apdl, response_apdl
 
 
 def get_model_response(
