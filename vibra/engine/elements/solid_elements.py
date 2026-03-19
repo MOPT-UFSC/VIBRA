@@ -18,7 +18,12 @@ class Element3D:
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")
-    
+
+
+    @property
+    def midside_nodes_indexes_map(self):
+        return dict()
+
 
     def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):
         """
