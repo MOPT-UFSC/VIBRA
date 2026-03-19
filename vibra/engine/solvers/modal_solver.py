@@ -96,6 +96,8 @@ class ModalSolver:
         else:
             cnf = None
 
+        self.displacement_dof = self.assembler.displacement_dof
+
         return ModalSolution(
             analysis_id=self.assembler.model.analysis_id,
             natural_frequencies=self.natural_frequencies,
