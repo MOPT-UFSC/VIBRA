@@ -445,7 +445,7 @@ class AcousticAssembler:
 
             data: dict
 
-            volume_id = data.get("volume_id")
+            volume_id = data.volume_id
             fluid_properties = self.fluid_properties_from_volume.get(volume_id)
 
             mu_0 = fluid_properties.get("mu_0")
@@ -789,7 +789,9 @@ class AcousticAssembler:
             if not self.mass_source_vector_surfaces.any():
                 self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
-            if "values" in data.keys():
+            if hasattr(data, "values"):
+                _complex_values = data.values[0]
+            elif "values" in data.keys():
                 _complex_values = data.get("values")[0]
 
             nodes = self.model.mesh.get_nodes_from_surface(args[0])

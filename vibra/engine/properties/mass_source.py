@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from vibra.engine.properties.property import Property
+from vibra.engine.properties.property import GroupLabel, Property
 
 
 @dataclass
@@ -28,6 +28,9 @@ class MassSource(Property):
                     values.append(a + 1j * b)
 
         return values
+
+    def get_group_label(self) -> GroupLabel:
+        return GroupLabel.ACOUSTIC
 
     def to_dict(self) -> dict[str, list[float] | int | None | list[None | float | complex]]:
         return dict(

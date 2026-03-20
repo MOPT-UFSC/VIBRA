@@ -515,7 +515,7 @@ def get_mass_source_text(**kwargs):
     else:
         return ""
 
-    values = mass_source.get("values")[0]
+    values = mass_source.values[0]
     return acoustic_format("Mass source", values, "Qm", unit_label)
 
 def mass_source_info_text():
