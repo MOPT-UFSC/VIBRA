@@ -1,11 +1,19 @@
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import IntEnum
+
+
+class BbarDilatationalEvaluation(IntEnum):
+    VOLUME_AVERAGED = 0
+    ELEMENT_CENTRE = 1
+
 
 @dataclass
 class HEX8_structural:
-    extra_shape_functions: bool = False
-    option_2: bool = False
-    option_3: bool = False
+    Bbar_formulation: bool = field(default_factory=False)
+    reduced_integration: bool = field(default_factory=False)
+    extra_shape_functions: bool = field(default_factory=False)
+    Bbar_dilatational_evaluation: IntEnum = field(default_factory=BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
     def get_data(self) -> dict:
         data = dict()
