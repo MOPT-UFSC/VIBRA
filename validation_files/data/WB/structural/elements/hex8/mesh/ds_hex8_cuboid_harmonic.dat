@@ -7293,6 +7293,7 @@ nblock,3,,7984
 -1
 /wb,elem,start            !  set before creation of elements
 /com,*********** Elements for Body 1 "cuboid_example-FreeParts|Ressalto-extrus_o1" ***********
+
 !
 et,1,SOLID45
 !  
@@ -7302,6 +7303,16 @@ KEYOPT,1,4,0
 KEYOPT,1,5,0
 KEYOPT,1,6,0
 !
+
+!
+!et,1,SOLID185
+!  
+!KEYOPT,1,2,0
+!KEYOPT,1,3,0
+!KEYOPT,1,6,0
+!KEYOPT,1,8,0
+!
+
 eblock,19,solid,,5760
 (19i9)
         1        1        1        1        0        0        0        0        8        0        1     1940     1943     1946     1942     2642     2650     2685     2682

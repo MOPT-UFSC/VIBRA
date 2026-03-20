@@ -3,6 +3,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import HEXAHEDRON_8
+from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.postprocessing import StructuralPostprocessing
@@ -132,14 +133,16 @@ def load_external_mesh_and_solve(**kwargs):
     extra_shape_function = kwargs.get("extra_shape_function", False)
     Bbar_formulation = kwargs.get("Bbar_formulation", False)
     reduced_integration = kwargs.get("reduced_integration", False)
+    Bbar_dilatational_evaluation = kwargs.get("Bbar_dilatational_evaluation", BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
-    element_options = {
-        "hex8" : {
-            "extra_shape_functions" : extra_shape_function,
-            "Bbar_formulation" : Bbar_formulation,
-            "reduced_integration" : reduced_integration,
-            }
-        }
+    element_options = HEX8_structural(
+        Bbar_formulation, 
+        reduced_integration, 
+        extra_shape_function,
+        Bbar_dilatational_evaluation,
+    )
+
+    element_options = {"hex8" : element_options}
 
     # assign the hex8 element advanced options as a global property
     model.properties._set_property("advanced_element_options", element_options)
@@ -204,7 +207,7 @@ def load_external_mesh_and_solve(**kwargs):
     else:
         folder = "with_esf" if extra_shape_function else "without_esf"
 
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/harmonic/{folder}/"
     ext_data = LoadExternalData(results_path)
 
     WB_displacements_data = ext_data.load_displacements(entire_solution=True)
@@ -413,4 +416,9 @@ def get_reference_nodal_response(
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve(extra_shape_function=False, Bbar_formulation=True, reduced_integration=False)
+    load_external_mesh_and_solve(
+        extra_shape_function = False,
+        reduced_integration = False,
+        Bbar_formulation = True,
+        Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
+        )

@@ -3,6 +3,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.element_type import HEXAHEDRON_8
+from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.postprocessing import StructuralPostprocessing
@@ -121,17 +122,19 @@ def load_external_mesh_and_solve(case: str, **kwargs):
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    extra_shape_function = kwargs.get("extra_shape_function", False)
+    extra_shape_functions = kwargs.get("extra_shape_functions", False)
     Bbar_formulation = kwargs.get("Bbar_formulation", False)
     reduced_integration = kwargs.get("reduced_integration", False)
+    Bbar_dilatational_evaluation = kwargs.get("Bbar_dilatational_evaluation", BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
-    element_options = {
-        "hex8" : {
-            "extra_shape_functions" : extra_shape_function,
-            "Bbar_formulation" : Bbar_formulation,
-            "reduced_integration" : reduced_integration,
-            }
-        }
+    element_options = HEX8_structural(
+        Bbar_formulation, 
+        reduced_integration, 
+        extra_shape_functions,
+        Bbar_dilatational_evaluation,
+    )
+
+    element_options = {"hex8" : element_options}
 
     # assign the hex8 element advanced options as a global property
     model.properties._set_property("advanced_element_options", element_options)
@@ -190,7 +193,7 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     elif reduced_integration:
         folder = "reduced_integration"
     else:
-        folder = "with_esf" if extra_shape_function else "without_esf"
+        folder = "with_esf" if extra_shape_functions else "without_esf"
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/elementar/{folder}/"
 
@@ -208,14 +211,6 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
     print()
 
-    print(f">>> Results for: {folder}")
-
-    print("\nKe [:3, :3] - Vibra")
-    print(np.real(Ke[:3, :3]))
-
-    print("\nKe [:3, :3] - Ansys")
-    print(Ke_ansys[:3, :3])
-
     # n_elements = int(case.split("_")[1].replace("e", ""))
 
     # for elem_id in range(1, n_elements+1, 1):
@@ -223,8 +218,8 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     #     Ke = assembler.data_K[elem_id-1, :, :]
     #     Me = assembler.data_M[elem_id-1, :, :]
 
-    #     Ke_ansys = np.loadtxt(results_path / f"Ke_{elem_id}_ansys.txt", skiprows=7)
-    #     Me_ansys = np.loadtxt(results_path / f"Me_{elem_id}_ansys.txt", skiprows=7)
+    #     Ke_ansys = np.loadtxt(results_path / f"{case}/Ke_{elem_id}_ansys.txt", skiprows=7)
+    #     Me_ansys = np.loadtxt(results_path / f"{case}/Me_{elem_id}_ansys.txt", skiprows=7)
 
     #     triu_ind = np.triu_indices(24)
 
@@ -250,5 +245,13 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
+
 if __name__ == "__main__":
-    load_external_mesh_and_solve("cube_1e", extra_shape_function=False, Bbar_formulation=True, reduced_integration=False)
+
+    load_external_mesh_and_solve( 
+        "cube_1e",
+        extra_shape_functions = False,
+        reduced_integration = False,
+        Bbar_formulation = True,
+        Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
+        )
