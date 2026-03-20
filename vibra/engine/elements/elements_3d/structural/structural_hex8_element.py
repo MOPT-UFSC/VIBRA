@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_Bbar import matricesH8S_Bbar
+from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
+
 
 class STRUCT_HEXAHEDRON_8(Element3D):
 
@@ -384,8 +386,16 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
 
-        # # if element_id in [0]:
-        # Ke_2, Me_2 = matricesH8S_Bbar(
+        # Ke, Me = matricesH8S_Bbar(
+        #     element_id, 
+        #     self.nodal_coordinates, 
+        #     self.connectivity, 
+        #     material.elasticity_modulus,
+        #     material.poisson_ratio, 
+        #     material.material_density
+        #     )
+
+        # Ke, Me = matricesH8S_FB(
         #     element_id, 
         #     self.nodal_coordinates, 
         #     self.connectivity, 
