@@ -9,7 +9,7 @@ import numpy as np
 from PIL.Image import Image
 
 from vibra import errors
-from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, AnalysisType, HarmonicAnalysisSetup, ModalAnalysisSetup, PhysicalDomain
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.engine.mesher.mesh import Mesh
@@ -425,25 +425,25 @@ class Project:
 
         return self.solver.solution.size > 0
 
-    def get_analysis_type_and_physical_domain(self) -> tuple[str, str]:
-        analysis_type = ""
-        physical_domain = ""
-
+    def get_analysis_type(self) -> AnalysisType:
         if self.model.analysis_id.is_harmonic():
-            analysis_type = "harmonic"
+            return AnalysisType.HARMONIC
         elif self.model.analysis_id.is_modal():
-            analysis_type = "modal"
+            return AnalysisType.MODAL
         elif self.model.analysis_id.is_static():
-            physical_domain = "static"
+            return AnalysisType.STATIC
+        else:
+            return AnalysisType.NO_ANALYSIS_TYPE
 
+    def get_physical_domain(self) -> PhysicalDomain:
         if self.model.analysis_id.is_acoustic():
-            physical_domain = "acoustic"
+            return PhysicalDomain.ACOUSTIC
         elif self.model.analysis_id.is_structural():
-            physical_domain = "structural"
+            return PhysicalDomain.STRUCTURAL
         elif self.model.analysis_id.is_coupled():
-            analysis_type = "coupled"
-
-        return analysis_type, physical_domain
+            return PhysicalDomain.COUPLED
+        else:
+            return PhysicalDomain.NO_PHYSICAL_DOMAIN
 
     def mark_project_as_modified(self):
         self.needs_saving = True

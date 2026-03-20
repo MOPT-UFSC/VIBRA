@@ -1,34 +1,20 @@
-from PySide6.QtWidgets import QToolBar, QComboBox, QLabel, QPushButton, QWidget
-from PySide6.QtGui import QIcon, QFont
-from PySide6.QtCore import Qt, QSize, Signal
+import logging
+
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QFont, QIcon
+from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
 from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
-from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
+from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 
-import logging
-from typing import Literal
-from time import time
-
-AnalysisType = Literal[
-    "",
-    "Harmonic",
-    "Modal"
-]
-
-PhysicalDomain = Literal[
-    "",
-    "Structural",
-    "Acoustic"
-]
-
 
 class AnalysisToolbar(QToolBar):
-
     enable_pushbutons = Signal()
 
     def __init__(self):
@@ -92,7 +78,7 @@ class AnalysisToolbar(QToolBar):
         for widget_type in widgets_type:
             for widget in self.findChildren(widget_type):
                 widget.setFont(font)
-        
+
         self.setStyleSheet(
             """
             QToolBar {
@@ -164,7 +150,7 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_reset_solution.setCursor(Qt.PointingHandCursor)
         self.pushButton_reset_solution.setToolTip("Reset Solution")
         self.pushButton_reset_solution.setDisabled(True)
-    
+
     def _load_analysis_types(self):
 
         for analysis_type in ["Harmonic", "Modal"]:
@@ -183,21 +169,24 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.blockSignals(block_signals)
             self.combo_box_physical_domain.blockSignals(block_signals)
 
-        analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+        analysis_type = app().project.get_analysis_type()
+        physical_domain = app().project.get_physical_domain()
 
-        if analysis_type == "harmonic":
-            self.combo_box_analysis_type.setCurrentIndex(0)
-        elif analysis_type == "modal":
-            self.combo_box_analysis_type.setCurrentIndex(1)
-        elif analysis_type == "static":
-            self.combo_box_analysis_type.setCurrentIndex(2)
+        match analysis_type:
+            case AnalysisType.HARMONIC:
+                self.combo_box_analysis_type.setCurrentIndex(0)
+            case AnalysisType.MODAL:
+                self.combo_box_analysis_type.setCurrentIndex(1)
+            case AnalysisType.STATIC:
+                self.combo_box_analysis_type.setCurrentIndex(2)
 
-        if physical_domain == "structural":
-            self.combo_box_physical_domain.setCurrentIndex(0)
-        elif physical_domain == "acoustic":
-            self.combo_box_physical_domain.setCurrentIndex(1)
-        elif physical_domain == "coupled":
-            self.combo_box_physical_domain.setCurrentIndex(2)
+        match physical_domain:
+            case PhysicalDomain.STRUCTURAL:
+                self.combo_box_physical_domain.setCurrentIndex(0)
+            case PhysicalDomain.ACOUSTIC:
+                self.combo_box_physical_domain.setCurrentIndex(1)
+            case PhysicalDomain.COUPLED:
+                self.combo_box_physical_domain.setCurrentIndex(2)
 
         if block_signals:
             self.combo_box_analysis_type.blockSignals(False)
@@ -253,7 +242,7 @@ class AnalysisToolbar(QToolBar):
         app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         ## Do not solve models if there are disconnected nodes or collapsed elements!
-        mesh = app().project.model.mesh   
+        mesh = app().project.model.mesh
         if mesh.disconnected_nodes_data:
             return
 
@@ -295,10 +284,10 @@ class AnalysisToolbar(QToolBar):
         tool_tip = "Be aware, this process cannot be undone."
 
         buttons_config = {
-                          "left_button_label": "Cancel", 
-                          "right_button_label": "Delete all",
-                          "right_toolTip" : tool_tip
-                          }
+            "left_button_label": "Cancel",
+            "right_button_label": "Delete all",
+            "right_toolTip": tool_tip,
+        }
 
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
         if read._cancel:
@@ -309,7 +298,7 @@ class AnalysisToolbar(QToolBar):
 
         self.reset_solution(True)
 
-    def reset_solution(self, force_delete_harmonic = False):
+    def reset_solution(self, force_delete_harmonic=False):
         app().project.reset_solution()
         self.pushButton_reset_solution.setDisabled(True)
         app().main_window.project_data_modified = True
@@ -369,7 +358,7 @@ class AnalysisToolbar(QToolBar):
 
         if harmonic.solve_analysis:
             self.run_analysis()
-    
+
     def modal_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_MODAL
         modal = StructuralModalAnalysisInput(analysis_id)

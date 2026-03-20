@@ -1,22 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import replace
-from enum import StrEnum, auto
 from typing import Callable, ParamSpec, Self, TypeVar
 
 import numpy as np
 
+from .analysis_enums import AnalysisMethod
+
 P = ParamSpec("P")
 T = TypeVar("T")
-
-
-class FrequencySpacing(StrEnum):
-    USER_DEFINED = "user-defined"
-    EQUALLY_DISTRIBUTED = "equally distributed"
-
-
-class AnalysisMethod(StrEnum):
-    DIRECT = auto()
-    MODE_SUPERPOSITION = auto()
 
 
 class HarmonicAnalysisSetup(ABC):

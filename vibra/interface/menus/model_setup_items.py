@@ -309,7 +309,8 @@ class ModelSetupItems(CommonMenuItems):
                 toolbar.combo_box_physical_domain.setCurrentIndex(0)
                 return
 
-        _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+        physical_domain = app().project.get_physical_domain()
+
         if physical_domain == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
         else:
@@ -370,7 +371,8 @@ class ModelSetupItems(CommonMenuItems):
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type = app().project.get_analysis_type()
+            physical_domain = app().project.get_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()

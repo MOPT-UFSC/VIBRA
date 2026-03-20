@@ -219,7 +219,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         try:
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            physical_domain = app().project.get_physical_domain()
 
         self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
         self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
@@ -453,7 +453,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             analysis_type = analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type = app().project.get_analysis_type()
+            physical_domain = app().project.get_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()

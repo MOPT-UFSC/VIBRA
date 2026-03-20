@@ -1,5 +1,6 @@
+from .analysis_enums import AnalysisMethod, AnalysisType, FrequencySpacing, PhysicalDomain
 from .analysis_id import AnalysisID
-from .harmonic_analysis_setup import AnalysisMethod, FrequencySpacing, HarmonicAnalysisSetup
+from .harmonic_analysis_setup import HarmonicAnalysisSetup
 from .harmonic_analysis_setup_list import HarmonicAnalysisSetupList
 from .harmonic_analysis_setup_range import HarmonicAnalysisSetupRange
 from .modal_analysis_setup import ModalAnalysisSetup
@@ -16,4 +17,6 @@ __all__ = [
     "HarmonicAnalysisSetupRange",
     "FrequencySpacing",
     "AnalysisMethod",
+    "AnalysisType",
+    "PhysicalDomain",
 ]
