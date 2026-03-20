@@ -7,12 +7,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_Bbar import matricesH8S_Bbar
+
 class STRUCT_HEXAHEDRON_8(Element3D):
 
     NODES_PER_ELEMENT = 8
     DOF_PER_NODE = 3
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
     LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
+
+    dil_projector = np.array([1, 1, 1, 0, 0, 0], dtype=float).reshape(-1, 1)
+    m_mt = dil_projector @ dil_projector.T
+
 
     def __init__(self, model: "Model"):
 
@@ -28,7 +34,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.number_of_elements = len(self.solids_connectivity)
 
         self.define_integration_points()
-        self.load_extra_shape_function_state()
+        self.load_element_options()
         self.process_shape_functions_and_derivatives()
 
 
@@ -38,21 +44,22 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         return indexes[:8]
 
 
-
-    def load_extra_shape_function_state(self):
+    def load_element_options(self):
         """
         This method updates the extra shape functions state based on the model global properties.
         """
         self.extra_shape_function = False
+        self.Bbar_formulation = False
         advanced_element_options = self.model.properties._get_property("advanced_element_options")
         if not isinstance(advanced_element_options, dict):
             return
-        
+
         hex8_options = advanced_element_options.get("hex8", dict)
         if not isinstance(hex8_options, dict):
             return
 
-        self.extra_shape_function = hex8_options.get("extra_shape_functions")
+        self.extra_shape_function = hex8_options.get("extra_shape_functions", False)
+        self.Bbar_formulation = hex8_options.get("Bbar_formulation", False)
 
 
     def define_integration_points(self, integration_points: int = 8):
@@ -225,25 +232,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         return int(self.DOF_PER_NODE * esf)
 
 
-    @property
-    def local_coordinates(self):
-        """
-        """
-        ## calculation points (Atalla and Sgard, 2015, pg. 170)
-        local_coords = np.array([ 
-            [-1.0, -1.0, -1.0],      # ->      (-1.0, -1.0, -1.0)   Node 1
-            [ 1.0, -1.0, -1.0],      # ->      ( 1.0, -1.0, -1.0)   Node 2
-            [ 1.0,  1.0, -1.0],      # ->      ( 1.0,  1.0, -1.0)   Node 3
-            [-1.0,  1.0, -1.0],      # ->      (-1.0,  1.0, -1.0)   Node 4
-            [-1.0, -1.0,  1.0],      # ->      (-1.0, -1.0,  1.0)   Node 5
-            [ 1.0, -1.0,  1.0],      # ->      ( 1.0, -1.0,  1.0)   Node 6
-            [ 1.0,  1.0,  1.0],      # ->      ( 1.0,  1.0,  1.0)   Node 7
-            [-1.0,  1.0,  1.0],      # ->      (-1.0,  1.0,  1.0)   Node 8
-            ], dtype=float)
-
-        return local_coords
-
-
     def process_detJAC_and_B_matrix(self, element_id: int):
         """
         This method computes and returns the matrix of shape functions 
@@ -279,12 +267,76 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B[:, 5, 1:edof:3] = dphi_t[:, 2, :]
         B[:, 5, 2:edof:3] = dphi_t[:, 1, :]
 
-        if self.extra_shape_function:
+        if self.Bbar_formulation:
+            # B-bar: compute B at centroid (0, 0, 0) and extract dilatational part
+
+            # Jacobian matrix at the centroid (0, 0, 0)
+            JAC_0 = self.dphi_0 @ coords
+
+            # Jacobian determinant and inverse at the centroid
+            detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+
+            # derivatives in global coordinates variables
+            dphi_t0 = invJAC_0 @ self.dphi_0
+       
+            # initialize the B0 matrix
+            B0 = np.zeros((6, edof), dtype=float)
+
+            B0[0, 0:edof:3] = dphi_t0[0, :]
+            B0[1, 1:edof:3] = dphi_t0[1, :]
+            B0[2, 2:edof:3] = dphi_t0[2, :]
+            B0[3, 0:edof:3] = dphi_t0[1, :]
+            B0[3, 1:edof:3] = dphi_t0[0, :]
+            B0[4, 0:edof:3] = dphi_t0[2, :]
+            B0[4, 2:edof:3] = dphi_t0[0, :]
+            B0[5, 1:edof:3] = dphi_t0[2, :]
+            B0[5, 2:edof:3] = dphi_t0[1, :]
+
+            # dilatational part of B at centroid: Bbar_dil = (1/3) m @ m^T B0
+            Bbar_dil = (1/3) * self.m_mt @ B0
+            # Bbar_dil = np.zeros((6, edof), dtype=float)
+            # Bbar_dil[0, 0:edof:3] = dphi_t0[0, :] / 3
+            # Bbar_dil[1, 0:edof:3] = dphi_t0[0, :] / 3
+            # Bbar_dil[2, 0:edof:3] = dphi_t0[0, :] / 3
+            # Bbar_dil[0, 1:edof:3] = dphi_t0[1, :] / 3
+            # Bbar_dil[1, 1:edof:3] = dphi_t0[1, :] / 3
+            # Bbar_dil[2, 1:edof:3] = dphi_t0[1, :] / 3
+            # Bbar_dil[0, 2:edof:3] = dphi_t0[2, :] / 3
+            # Bbar_dil[1, 2:edof:3] = dphi_t0[2, :] / 3
+            # Bbar_dil[2, 2:edof:3] = dphi_t0[2, :] / 3
+
+
+            # B_dil = (1/3) * m * m^T * B  extracts the volumetric part of B
+            B_dil = (1/3) * self.m_mt @ B
+            # B_dil = np.zeros((self.nint, 6, edof), dtype=float)
+            # B_dil[:, 0, 0:edof:3] = dphi_t[:, 0, :] / 3
+            # B_dil[:, 1, 0:edof:3] = dphi_t[:, 0, :] / 3
+            # B_dil[:, 2, 0:edof:3] = dphi_t[:, 0, :] / 3
+            # B_dil[:, 0, 1:edof:3] = dphi_t[:, 1, :] / 3
+            # B_dil[:, 1, 1:edof:3] = dphi_t[:, 1, :] / 3
+            # B_dil[:, 2, 1:edof:3] = dphi_t[:, 1, :] / 3
+            # B_dil[:, 0, 2:edof:3] = dphi_t[:, 2, :] / 3
+            # B_dil[:, 1, 2:edof:3] = dphi_t[:, 2, :] / 3
+            # B_dil[:, 2, 2:edof:3] = dphi_t[:, 2, :] / 3
+
+            # B-bar: replace dilatational part of B by centroid dilatational part
+            # Bbar = B - B_dil(gauss_pt) + Bbar_dil(centroid)
+            Bbar = B - B_dil + Bbar_dil
+
+            return detJAC, Bbar
+
+        elif self.extra_shape_function:
 
             #TODO: add reference
+            # Zienkiewicz, O. C., Taylor, R. L. The Finite Element Method: Its Basis and Fundamentals. Seventh Edition. pg 271-275
 
+            # Jacobian matrix at the centroid (0, 0, 0)
             JAC_0 = self.dphi_0 @ coords
+
+            # Jacobian determinant and inverse at the centroid
             detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+        
+            # adjusted derivatives in global coordinates variables (satisfy the stress patch test)
             dphi_esf_t = (detJAC_0 / detJAC) * invJAC_0 @ self.dphi_esf
 
             B[:, 0, edof + 0::3] = dphi_esf_t[:, 0, :]
@@ -331,6 +383,26 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
 
             Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
+
+        # # if element_id in [0]:
+        # Ke_2, Me_2 = matricesH8S_Bbar(
+        #     element_id, 
+        #     self.nodal_coordinates, 
+        #     self.connectivity, 
+        #     material.elasticity_modulus,
+        #     material.poisson_ratio, 
+        #     material.material_density
+        #     )
+
+        # mask_Ke = Ke != 0
+        # mask_Me = Me != 0
+
+        # dif_Ke = 100 * np.max(np.abs(Ke[mask_Ke] - Ke_2[mask_Ke]) / (Ke[mask_Ke] + Ke_2[mask_Ke]))
+        # dif_Me = 100 * np.max(np.abs(Me[mask_Me] - Me_2[mask_Me]) / (Me[mask_Me] + Me_2[mask_Me]))
+
+        # print()
+        # print(f"Maximum difference for Ke (#{element_id}): {dif_Ke} [%]")
+        # print(f"Maximum difference for Me (#{element_id}): {dif_Me} [%]")
 
         return Ke, Me
 

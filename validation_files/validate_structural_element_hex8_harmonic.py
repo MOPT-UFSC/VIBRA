@@ -41,7 +41,7 @@ stresses_labels = [
     ]
 
 
-def load_external_mesh_and_solve(extra_shape_function: bool = False):
+def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
@@ -129,10 +129,14 @@ def load_external_mesh_and_solve(extra_shape_function: bool = False):
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = extra_shape_function
+    extra_shape_function = kwargs.get("extra_shape_function", False)
+    Bbar_formulation = kwargs.get("Bbar_formulation", False)
 
     element_options = {
-        "hex8" : {"extra_shape_functions" : esf}
+        "hex8" : {
+            "extra_shape_functions" : extra_shape_function,
+            "Bbar_formulation" : Bbar_formulation,
+            }
         }
 
     # assign the hex8 element advanced options as a global property
@@ -191,7 +195,11 @@ def load_external_mesh_and_solve(extra_shape_function: bool = False):
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
-    folder = "with_esf" if extra_shape_function else "without_esf"
+    if Bbar_formulation:
+        folder = "Bbar"
+    else:
+        folder = "with_esf" if extra_shape_function else "without_esf"
+
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
     ext_data = LoadExternalData(results_path)
 
@@ -226,7 +234,7 @@ def load_external_mesh_and_solve(extra_shape_function: bool = False):
                 udof_label,
                 frequencies,
                 solution,
-                esf,
+                extra_shape_function,
                 WB_displacements_data,
                 plot_type=plot_type,
                 )
@@ -238,31 +246,10 @@ def load_external_mesh_and_solve(extra_shape_function: bool = False):
                 stress_label, 
                 frequencies, 
                 nodal_averaged_stresses, 
-                esf, 
+                extra_shape_function, 
                 WB_stresses_data,
                 plot_type=plot_type,
                 )
-
-    # node_id = 6269
-    # stress_label = "sigma_x"
-
-    # _, nodal_stresses = structural_post.get_structural_stresses(node_ids = node_id-1)
-
-    # print()
-    # for (_elem_id, _node_id) in nodal_stresses.keys():
-
-    #     if _node_id + 1 != node_id:
-    #         continue
-
-    #     compare_nodal_stresses_results(
-    #         _elem_id + 1, 
-    #         _node_id + 1, 
-    #         stress_label, 
-    #         frequencies, 
-    #         nodal_stresses, 
-    #         esf, 
-    #         plot_type=plot_type,
-    #         )
 
     plt.show()
 
@@ -524,4 +511,4 @@ def get_reference_nodal_response(
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve(extra_shape_function=True)
+    load_external_mesh_and_solve(extra_shape_function=False, Bbar_formulation=True)
