@@ -131,11 +131,13 @@ def load_external_mesh_and_solve(**kwargs):
     ## advanced options for structural hex8 element
     extra_shape_function = kwargs.get("extra_shape_function", False)
     Bbar_formulation = kwargs.get("Bbar_formulation", False)
+    reduced_integration = kwargs.get("reduced_integration", False)
 
     element_options = {
         "hex8" : {
             "extra_shape_functions" : extra_shape_function,
             "Bbar_formulation" : Bbar_formulation,
+            "reduced_integration" : reduced_integration,
             }
         }
 
@@ -196,7 +198,9 @@ def load_external_mesh_and_solve(**kwargs):
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
     if Bbar_formulation:
-        folder = "Bbar"
+        folder = "full_integration"
+    elif reduced_integration:
+        folder = "reduced_integration"
     else:
         folder = "with_esf" if extra_shape_function else "without_esf"
 
@@ -337,8 +341,6 @@ def compare_averaged_nodal_stresses_results(
         solution_reference,
         )
 
-    # freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf)
-
     title = f"Harmonic response at node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
     x_label = "Frequency [Hz]"
     y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
@@ -373,106 +375,6 @@ def compare_averaged_nodal_stresses_results(
     freq_max_diff = frequencies[np.argmax(abs_diff)]
 
     print(f"Maximum difference for averaged {stress_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
-
-
-def compare_nodal_stresses_results(
-    element_id: int,
-    node_id: int,
-    stress_label: str, 
-    frequencies: np.ndarray, 
-    nodal_stresses: dict,
-    esf: bool,
-    plot_type: str = "absolute",
-    ):
-
-    file_name = f"stress_{stress_label}_element_{element_id}_node_{node_id}_Ansys.dat"
-
-    row = stresses_labels.index(stress_label)
-    response_vibra = nodal_stresses.get((element_id-1, node_id-1))[row, :]
-
-    freq_apdl, response_apdl = get_apdl_reference_stresses_results(node_id, stress_label, esf, file_name=file_name)
-
-    title = f"Harmonic response at element {element_id} and node {node_id} - {"(ESF included)" if esf else "(ESF excluded)"}"
-    x_label = "Frequency [Hz]"
-    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
-
-    fig, ax = plt.subplots()
-    if plot_type == "real":
-        plot_data = np.real
-        plot = ax.plot
-
-    elif plot_type == "imaginary":
-        plot_data = np.imag
-        plot = ax.plot
-
-    else:
-        plot_data = np.abs
-        plot = ax.semilogy
-
-    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
-    plot(freq_apdl, plot_data(response_apdl), 'k--', label='APDL')
-
-    ax.set(xlabel=x_label, ylabel=y_label, title=title)
-    ax.grid()
-    ax.legend()
-
-    abs_diff = np.abs((response_vibra - response_apdl) / response_apdl)
-    max_abs_diff = 100 * np.max(abs_diff)
-    freq_max_diff = frequencies[np.argmax(abs_diff)]
-
-    print(f"Maximum difference for {stress_label.capitalize()} @ element {element_id} / node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
-
-
-def get_apdl_reference_displacement_results(
-        apdl_node_id: int, 
-        dof_label: str,
-        extra_shape_functions: bool,
-        ) -> np.ndarray | None:
-    
-    folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
-    
-    if not results_path.exists():
-        return None, None
-    
-    # load mechanical apdl results
-    ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
-
-    freq_apdl = ansys_data[:, 0]
-    response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
-
-    return freq_apdl, response_apdl
-
-
-def get_apdl_reference_stresses_results(
-        apdl_node_id: int, 
-        stress_label: str,
-        extra_shape_functions: bool,
-        file_name: str | None = None,
-        ) -> np.ndarray | None:
-    
-    folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/"
-    
-    if not results_path.exists():
-        return None, None
-    
-    # load mechanical apdl results
-    if not isinstance(file_name, str):
-        file_path = results_path / f"stress_{stress_label}_node_{apdl_node_id}_Ansys.dat"
-    else:
-        file_path = results_path / file_name
-
-    if not file_path.exists():
-        print(f"Invalid path: {file_path}")
-        return None, None
-
-    ansys_data = np.loadtxt(file_path, skiprows=2)
-
-    freq_apdl = ansys_data[:, 0]
-    response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
-
-    return freq_apdl, response_apdl
 
 
 def get_model_response(
@@ -511,4 +413,4 @@ def get_reference_nodal_response(
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve(extra_shape_function=False, Bbar_formulation=True)
+    load_external_mesh_and_solve(extra_shape_function=False, Bbar_formulation=True, reduced_integration=False)

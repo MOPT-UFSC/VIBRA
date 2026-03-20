@@ -32,7 +32,7 @@ stresses_labels = [
     ]
 
 
-def load_external_mesh_and_solve(case: str, extra_shape_function: bool = False):
+def load_external_mesh_and_solve(case: str, **kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_{case}_modal.dat"
@@ -121,10 +121,16 @@ def load_external_mesh_and_solve(case: str, extra_shape_function: bool = False):
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = extra_shape_function
+    extra_shape_function = kwargs.get("extra_shape_function", False)
+    Bbar_formulation = kwargs.get("Bbar_formulation", False)
+    reduced_integration = kwargs.get("reduced_integration", False)
 
     element_options = {
-        "hex8" : {"extra_shape_functions" : esf}
+        "hex8" : {
+            "extra_shape_functions" : extra_shape_function,
+            "Bbar_formulation" : Bbar_formulation,
+            "reduced_integration" : reduced_integration,
+            }
         }
 
     # assign the hex8 element advanced options as a global property
@@ -179,44 +185,59 @@ def load_external_mesh_and_solve(case: str, extra_shape_function: bool = False):
     Ke = assembler.data_K[0, :, :]
     Me = assembler.data_M[0, :, :]
 
-    folder = "with_esf" if esf else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/{folder}/{case}/"
+    if Bbar_formulation:
+        folder = "full_integration"
+    elif reduced_integration:
+        folder = "reduced_integration"
+    else:
+        folder = "with_esf" if extra_shape_function else "without_esf"
 
-    # Ke_ansys = np.loadtxt(results_path / "Ke_ansys.csv", delimiter=",")
-    # Me_ansys = np.loadtxt(results_path / "Me_ansys.csv", delimiter=",")
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/elementar/{folder}/"
 
-    # mask = np.where(Me_ansys != 0)
+    Ke_ansys = np.loadtxt(results_path / "Ke_ansys.csv", delimiter=",")
+    Me_ansys = np.loadtxt(results_path / "Me_ansys.csv", delimiter=",")
 
-    # dev_Ke = np.abs((Ke_ansys - Ke) / Ke_ansys)
-    # dev_Me = np.abs((Me_ansys[mask] - Me[mask]) / Me_ansys[mask])
+    mask_M = np.where(Me_ansys != 0)
+    mask_K = np.where(Ke_ansys != 0)
 
-    # print()
-    # print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
-    # print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
-    # print()
+    dev_Ke = np.abs((Ke_ansys[mask_K] - Ke[mask_K]) / Ke_ansys[mask_K])
+    dev_Me = np.abs((Me_ansys[mask_M] - Me[mask_M]) / Me_ansys[mask_M])
 
-    n_elements = int(case.split("_")[1].replace("e", ""))
+    print()
+    print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
+    print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
+    print()
 
-    for elem_id in range(1, n_elements+1, 1):
+    print(f">>> Results for: {folder}")
 
-        Ke = assembler.data_K[elem_id-1, :, :]
-        Me = assembler.data_M[elem_id-1, :, :]
+    print("\nKe [:3, :3] - Vibra")
+    print(np.real(Ke[:3, :3]))
 
-        Ke_ansys = np.loadtxt(results_path / f"Ke_{elem_id}_ansys.txt", skiprows=7)
-        Me_ansys = np.loadtxt(results_path / f"Me_{elem_id}_ansys.txt", skiprows=7)
+    print("\nKe [:3, :3] - Ansys")
+    print(Ke_ansys[:3, :3])
 
-        triu_ind = np.triu_indices(24)
+    # n_elements = int(case.split("_")[1].replace("e", ""))
 
-        mask = np.where(Me_ansys != 0)
+    # for elem_id in range(1, n_elements+1, 1):
 
-        dev_Ke = np.abs((Ke_ansys - Ke[triu_ind]) / Ke_ansys)
-        dev_Me = np.abs((Me_ansys[mask] - Me[triu_ind].flatten()[mask]) / Me_ansys[mask])
+    #     Ke = assembler.data_K[elem_id-1, :, :]
+    #     Me = assembler.data_M[elem_id-1, :, :]
 
-        print()
-        print(f"Results for element #{elem_id}:")
-        print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
-        print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
-        print()
+    #     Ke_ansys = np.loadtxt(results_path / f"Ke_{elem_id}_ansys.txt", skiprows=7)
+    #     Me_ansys = np.loadtxt(results_path / f"Me_{elem_id}_ansys.txt", skiprows=7)
+
+    #     triu_ind = np.triu_indices(24)
+
+    #     mask = np.where(Me_ansys != 0)
+
+    #     dev_Ke = np.abs((Ke_ansys - Ke[triu_ind]) / Ke_ansys)
+    #     dev_Me = np.abs((Me_ansys[mask] - Me[triu_ind].flatten()[mask]) / Me_ansys[mask])
+
+    #     print()
+    #     print(f"Results for element #{elem_id}:")
+    #     print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
+    #     print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
+    #     print()
 
 
     # np.savetxt(f"Ke_vibra.csv", Ke, delimiter=",")
@@ -230,4 +251,4 @@ def load_external_mesh_and_solve(case: str, extra_shape_function: bool = False):
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve("cube_512e", extra_shape_function=True)
+    load_external_mesh_and_solve("cube_1e", extra_shape_function=False, Bbar_formulation=True, reduced_integration=False)
