@@ -1,5 +1,10 @@
 from ast import Call
-from typing import Iterable, Sequence, Type, Callable
+from types import UnionType
+from typing import Generator, Iterable, Sequence, Type, Callable
+
+from numpy import true_divide
+from vibra.engine.properties.acoustic_pressure import AcousticPressure
+from vibra.engine.properties.mass_source import MassSource
 from vibra.engine.properties.property import GroupLabel, Property
 from vibra.engine.properties.surface_velocity import SurfaceVelocity
 
@@ -35,46 +40,79 @@ class PointID(VibraID): ...
 class LineID(VibraID): ...
 
 
+PropertiesKey = tuple[VibraID, type[Property]]
+
+
 class ModelProperties:
+    EQUIVALENT_PROPERTIES: list[set[type[Property]]] = [
+        {SurfaceVelocity, AcousticPressure},
+        {MassSource},
+    ]
+
     def __init__(self) -> None:
-        self.equivalent_properties: dict[GroupLabel, set[Property]] = list()
-        self._config_property_list()
+        self._properties: dict[PropertiesKey, Property] = dict()
 
-    def _config_property_list(self):
-        for label in GroupLabel:
-            print(label)
+    def add_property(self, vibra_id: VibraID, property: Property):
+        self.remove_equivalent_properties(vibra_id, type(property))
+        self._properties[vibra_id, type(property)] = property
 
-    def add_property(self, vibra_ids: VibraID, property: Property):
+    def remove_property(self, vibra_id: VibraID, property_type: type[Property]) -> Property | None:
+        return self._properties.pop((vibra_id, property_type), None)
+
+    def remove_all_properties_on_id(self, vibra_id: VibraID):
         ...
 
-    def remove_property(
-        self, vibra_id: VibraID, property: type[Property] | None = None
+    def remove_equivalent_properties(
+        self, vibra_id: VibraID, property_type: type[Property]
     ):
-        ...
+        self.remove_property(vibra_id, property_type)
 
-    def get_properties_by_id(self, vibra_id: VibraID) -> Sequence[Property]:
-        ...
+        for property_set in self.EQUIVALENT_PROPERTIES:
+            if property_type not in property_set:
+                continue
 
-    def get_ids_by_property(self, property: type[Property]) -> Sequence[VibraID]:
-        ...
+            for property in property_set:
+                self.remove_property(vibra_id, property)
 
-    def get_property(self, vibra_id: VibraID, property: type[Property]) -> Property:
-        ...
+    def get_properties_by_id(self, vibra_id: VibraID) -> Generator[Property]:
+        func = lambda key, _: key == vibra_id
 
-    def reset_property(self, property: type[Property]):
-        ...
+        for _, value in self.filter(func):
+            yield value
 
-    def keys(self) -> Sequence[VibraID]:
-        ...
+    def get_ids_by_property(
+        self, property_type: type[Property]
+    ) -> Generator[VibraID]:
+        func = lambda _, property: isinstance(property, property_type)
 
-    def values(self) -> Sequence[Property]:
-        ...
+        for id, _ in self.filter(func):
+            yield id
 
-    def items(self) -> Sequence[tuple[VibraID, Property]]:
-        ...
+    def get_property(
+        self, vibra_id: VibraID, property_type: type[Property]
+    ) -> Property:
+        return self._properties[vibra_id, property_type]
 
-    def filter(self, func: Callable[[VibraID, Property], bool]) -> Sequence[tuple[VibraID, Property]]:
-        ...
+    def reset_property(self, property_type: type[Property]): ...
+
+    def keys(self) -> Generator[VibraID]:
+        for vibra_id, _ in self._properties.keys():
+            yield vibra_id
+
+    def values(self) -> Generator[Property]:
+        for value in self._properties.values()
+            yield value
+
+    def items(self) -> Generator[tuple[VibraID, Property]]:
+        for (vibra_id, _), value in self._properties.items():
+            yield (vibra_id, value)
+
+    def filter(
+        self, func: Callable[[VibraID, Property], bool]
+    ) -> Generator[tuple[VibraID, Property]]:
+        for vibra_id, value in self.items():
+            if func(vibra_id, value):
+                yield (vibra_id, value)
 
 
 a = PointID(2)
