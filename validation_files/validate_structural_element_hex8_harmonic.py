@@ -133,11 +133,17 @@ def load_external_mesh_and_solve(**kwargs):
     extra_shape_function = kwargs.get("extra_shape_function", False)
     Bbar_formulation = kwargs.get("Bbar_formulation", False)
     reduced_integration = kwargs.get("reduced_integration", False)
+    simple_enhanced_strain = kwargs.get("simple_enhanced_strain", False)
+    enhanced_assumed_strain = kwargs.get("enhanced_assumed_strain", False)
+    EAS_internal_dofs = kwargs.get("EAS_internal_dofs", 9)
     Bbar_dilatational_evaluation = kwargs.get("Bbar_dilatational_evaluation", BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
     element_options = HEX8_structural(
-        Bbar_formulation, 
-        reduced_integration, 
+        Bbar_formulation,
+        reduced_integration,
+        simple_enhanced_strain,
+        enhanced_assumed_strain,
+        EAS_internal_dofs,
         extra_shape_function,
         Bbar_dilatational_evaluation,
     )
@@ -204,8 +210,16 @@ def load_external_mesh_and_solve(**kwargs):
         folder = "full_integration"
     elif reduced_integration:
         folder = "reduced_integration"
+    elif simple_enhanced_strain:
+        folder = "simple_enhanced_strain"
+    elif enhanced_assumed_strain:
+        folder = "enhanced_assumed_strain"
     else:
         folder = "with_esf" if extra_shape_function else "without_esf"
+
+    print()
+    print(folder)
+    print()
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/harmonic/{folder}/"
     ext_data = LoadExternalData(results_path)
@@ -419,6 +433,9 @@ if __name__ == "__main__":
     load_external_mesh_and_solve(
         extra_shape_function = False,
         reduced_integration = False,
-        Bbar_formulation = True,
+        simple_enhanced_strain = False,
+        enhanced_assumed_strain = True,
+        EAS_internal_dofs = 9,
+        Bbar_formulation = False,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
         )
