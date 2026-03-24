@@ -59,8 +59,17 @@ class ModelProperties:
     def remove_property(self, vibra_id: VibraID, property_type: type[Property]) -> Property | None:
         return self._properties.pop((vibra_id, property_type), None)
 
-    def remove_all_properties_on_id(self, vibra_id: VibraID):
-        ...
+    def remove_all_properties_by_id(self, vibra_id: VibraID):
+        properties_to_remove = list(self.get_properties_by_id(vibra_id))
+
+        for property in properties_to_remove:
+            self.remove_property(vibra_id, type(property))
+
+    def remove_all_properties_by_type(self, property_type: type[Property]):
+        ids_to_remove = list(self.get_ids_by_property(property_type))
+
+        for id in ids_to_remove:
+            self.remove_property(id, property_type)
 
     def remove_equivalent_properties(
         self, vibra_id: VibraID, property_type: type[Property]
@@ -92,8 +101,6 @@ class ModelProperties:
         self, vibra_id: VibraID, property_type: type[Property]
     ) -> Property:
         return self._properties[vibra_id, property_type]
-
-    def reset_property(self, property_type: type[Property]): ...
 
     def keys(self) -> Generator[VibraID]:
         for vibra_id, _ in self._properties.keys():
