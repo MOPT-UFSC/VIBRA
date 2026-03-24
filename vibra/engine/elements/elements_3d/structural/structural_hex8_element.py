@@ -230,8 +230,105 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
     @property
     def extra_dofs(self):
-        esf = 3 if self.element_options.extra_shape_functions else 0
-        return int(self.DOF_PER_NODE * esf)
+        if self.element_options.extra_shape_functions:
+            return int(3 * self.DOF_PER_NODE)
+
+        elif self.element_options.enhanced_assumed_strain:
+            return self.element_options.EAS_internal_dofs
+
+        return 0
+
+
+    def get_inverse_transpose_T0_matrix(self, J0: np.ndarray) -> np.ndarray:
+        """
+        This method returns the inverse transpose T0 matrix to compute the
+        shape functions derivative matrix B for the enhanced assumed strain
+        element formulation.
+
+        Parameter
+        ---------
+        J0: np.ndarray
+            The Jacobian evaluated at the element centre.
+
+        """
+
+        T0 = np.array(
+            [
+            [      J0[0, 0]**2,       J0[1, 0]**2,       J0[2, 0]**2,                     2*J0[0, 0]*J0[1, 0],                     2*J0[0, 0]*J0[2, 0],                     2*J0[1, 0]*J0[2, 0]],
+            [      J0[0, 1]**2,       J0[1, 1]**2,       J0[2, 1]**2,                     2*J0[0, 1]*J0[1, 1],                     2*J0[0, 1]*J0[2, 1],                     2*J0[1, 1]*J0[2, 1]],
+            [      J0[0, 2]**2,       J0[1, 2]**2,       J0[2, 2]**2,                     2*J0[0, 2]*J0[1, 2],                     2*J0[0, 2]*J0[2, 2],                     2*J0[1, 2]*J0[2, 2]],
+            [J0[0, 0]*J0[0, 1], J0[1, 0]*J0[1, 1], J0[2, 0]*J0[2, 1], (J0[0, 0]*J0[1, 1] + J0[1, 0]*J0[0, 1]), (J0[0, 0]*J0[2, 1] + J0[2, 0]*J0[0, 1]), (J0[1, 0]*J0[2, 1] + J0[2, 0]*J0[1, 1])],
+            [J0[0, 0]*J0[0, 2], J0[1, 0]*J0[1, 2], J0[2, 0]*J0[2, 2], (J0[0, 0]*J0[1, 2] + J0[1, 0]*J0[0, 2]), (J0[0, 0]*J0[2, 2] + J0[2, 0]*J0[0, 2]), (J0[1, 0]*J0[2, 2] + J0[2, 0]*J0[1, 2])],
+            [J0[0, 1]*J0[0, 2], J0[1, 1]*J0[1, 2], J0[2, 1]*J0[2, 2], (J0[0, 1]*J0[1, 2] + J0[1, 1]*J0[0, 2]), (J0[0, 1]*J0[2, 2] + J0[2, 1]*J0[0, 2]), (J0[1, 1]*J0[2, 2] + J0[2, 1]*J0[1, 2])],
+            ], dtype=float)
+
+        return np.linalg.inv(T0).T
+
+
+    def get_Mxi_matrix(self):
+        """
+        This method returns the interpolation matrix for the additional strain
+        fields proposed by Andelfinger and Ramm.
+
+        Reference: U. Andelfinger and E Ramm. EAS-Elements for Two-Dimensional, Three-Dimensional, 
+        Plate and Shell Structures and Their Equivalence to HR-Elements. International Journal 
+        for Numerical Methods in Engineering. Vol. 36. 1311–1337. 1993.
+
+        """
+
+        xi = self.num_int_data[:, 0]
+        eta = self.num_int_data[:, 1]
+        zeta = self.num_int_data[:, 2]
+
+        M_xi = np.zeros((self.nint, 6, 30), dtype=float)
+
+        # Block 25~28
+        M_xi[:, 0, 0] = xi
+        M_xi[:, 1, 1] = eta
+        M_xi[:, 2, 2] = zeta
+
+        # Block 29~33
+        M_xi[:, 3, 3] = xi
+        M_xi[:, 3, 4] = eta
+        M_xi[:, 4, 5] = xi
+        M_xi[:, 4, 6] = zeta
+        M_xi[:, 5, 7] = eta
+        M_xi[:, 5, 8] = zeta
+
+        # Block 34~39
+        M_xi[:, 3, 9 ] = xi * zeta
+        M_xi[:, 3, 10] = eta * zeta
+        M_xi[:, 4, 11] = xi * eta
+        M_xi[:, 4, 12] = eta * zeta
+        M_xi[:, 5, 13] = xi * eta
+        M_xi[:, 5, 14] = xi * zeta
+
+        # Block 40~45
+        M_xi[:, 0, 15] = xi * eta
+        M_xi[:, 0, 16] = xi * zeta
+        M_xi[:, 1, 17] = xi * eta
+        M_xi[:, 1, 18] = eta * zeta
+        M_xi[:, 2, 19] = xi * zeta
+        M_xi[:, 2, 20] = eta * zeta
+
+        # Block 46~48
+        M_xi[:, 3, 21] = xi * eta
+        M_xi[:, 4, 22] = xi * zeta
+        M_xi[:, 5, 23] = eta * zeta
+
+        # Block 49~51
+        M_xi[:, 0, 24] = xi * eta * zeta
+        M_xi[:, 1, 25] = xi * eta * zeta
+        M_xi[:, 2, 26] = xi * eta * zeta
+
+        # Block 52~54
+        M_xi[:, 3, 27] = xi * eta * zeta
+        M_xi[:, 4, 28] = xi * eta * zeta
+        M_xi[:, 5, 29] = xi * eta * zeta
+
+        last_col = self.element_options.EAS_internal_dofs
+
+        return M_xi[:, :, :last_col]
 
 
     def process_detJAC_and_B_matrix(self, element_id: int):
@@ -346,6 +443,23 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             B[:, 5, edof + 1::3] = dphi_esf_t[:, 2, :]
             B[:, 5, edof + 2::3] = dphi_esf_t[:, 1, :]
 
+        elif self.element_options.enhanced_assumed_strain:
+
+            # Jacobian matrix at the centroid (0, 0, 0)
+            JAC_0 = self.dphi_0 @ coords
+
+            # Jacobian determinant and inverse at the centroid
+            detJAC_0, _ = self.get_detJAC_and_invJAC(JAC_0)
+
+            # compute the inverse transpose T0 matrix
+            T0_it = self.get_inverse_transpose_T0_matrix(JAC_0)
+
+            # compute the M_xi matrix
+            M_xi = self.get_Mxi_matrix()
+
+            # extend the matrix of shape function derivatives B
+            B[:, :, edof:] = (detJAC_0 / detJAC) * T0_it @ M_xi
+
         return detJAC, B
 
 
@@ -390,7 +504,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
         # condense the stiffness matrix Ke if the extra shape functions were enabled
-        if self.element_options.extra_shape_functions:
+        if self.element_options.extra_shape_functions or self.element_options.enhanced_assumed_strain:
             Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
             Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
             Kau = Kua.T
@@ -428,7 +542,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         # process the determinant of Jacobian and the B matrix
         detJAC, B = self.process_detJAC_and_B_matrix(element_id)
 
-        if self.element_options.extra_shape_functions:
+        if self.element_options.extra_shape_functions or self.element_options.enhanced_assumed_strain:
 
             # initialize the stiffness matrix Ke
             Ke = 0.
