@@ -63,7 +63,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         This method returns the inverse of shape functions matrix N applied
         at integration points (Gauss-Legendre quadrature points).
         """
-        N = self.phi_K_trilinear
+        N = self.phi
         n_intp, n_nodes = N.shape
 
         if n_intp == n_nodes:
@@ -123,21 +123,21 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         phi[:, 3] = xi_1      # ->      (1.0, 0.0, 0.0)   Node 4
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((3, self.NODES_PER_ELEMENT), dtype=float)
-        dphi[0, 0] = -1
-        dphi[0, 1] =  0
-        dphi[0, 2] =  0
-        dphi[0, 3] =  1
+        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi[:, 0, 0] = -1
+        dphi[:, 0, 1] =  0
+        dphi[:, 0, 2] =  0
+        dphi[:, 0, 3] =  1
 
-        dphi[1, 0] = -1
-        dphi[1, 1] =  1
-        dphi[1, 2] =  0
-        dphi[1, 3] =  0
+        dphi[:, 1, 0] = -1
+        dphi[:, 1, 1] =  1
+        dphi[:, 1, 2] =  0
+        dphi[:, 1, 3] =  0
 
-        dphi[2, 0] = -1
-        dphi[2, 1] =  0
-        dphi[2, 2] =  1
-        dphi[2, 3] =  0
+        dphi[:, 2, 0] = -1
+        dphi[:, 2, 1] =  0
+        dphi[:, 2, 2] =  1
+        dphi[:, 2, 3] =  0
 
         return phi, dphi
 
