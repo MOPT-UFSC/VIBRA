@@ -350,10 +350,27 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
 
     def elementary_matrices(self, element_id: int, material: Material):
-        """This method returns elementary stiffness and mass matrices for 
-        HEXAHEDRON-8 nodes (ANSYS SOLID45 w/o extra diplacements).
         """
+        This method integrates the elementary stiffness and mass matrices
+        for the structural linear hexahedron element.
 
+        Parameters
+        ----------
+        element_id: int
+            The element index.  
+        
+        material: Material
+            An object of the material dataclass.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness matrix.
+
+        Me: np.ndarray
+            The elementary mass matrix.
+
+        """
         # get constitutive law matrix D and the material's density
         D, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 

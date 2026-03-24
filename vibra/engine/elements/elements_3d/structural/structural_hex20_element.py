@@ -355,21 +355,38 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
         if return_coords:
-            return coords, detJAC_K, B
+            return detJAC_K, B, coords
 
         return detJAC_K, B
 
 
     def elementary_matrices(self, element_id: int, material: Material):
-        """This method returns elementary stiffness and mass matrices for HEXAHEDRON-20 nodes.
-        ANSYS SOLID95 - Do not compare with new Ansys solid elements
         """
+        This method integrates the elementary stiffness and mass matrices
+        for the structural quadratic hexahedron element.
 
+        Parameters
+        ----------
+        element_id: int
+            The element index.  
+        
+        material: Material
+            An object of the material dataclass.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness matrix.
+
+        Me: np.ndarray
+            The elementary mass matrix.
+
+        """
         # get constitutive law matrix D and the material's density
         const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # process the determinant of Jacobian and the B matrix  
-        coords, detJAC_K, B = self.process_detJAC_and_B_matrix(element_id, return_coords=True)
+        detJAC_K, B, coords = self.process_detJAC_and_B_matrix(element_id, return_coords=True)
 
         # Jacobian matrix
         JAC_M = self.dphi_M @ coords
