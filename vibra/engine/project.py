@@ -31,9 +31,7 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 class Project:
     def __init__(self, working_directory: Optional[Path | str] = None):
         self.project_paths = ProjectPaths(working_directory)
-
         self.reset_variables()
-        self.create_connections()
 
     def reset_variables(self):
         self.model = Model()
@@ -61,12 +59,13 @@ class Project:
         self.clear_working_directory()
         self.reset_variables()
 
-    def create_connections(self):
-        return
-
     @property
     def mesh(self) -> Optional[Mesh]:
         return self.model.mesh
+
+    @property
+    def analysis_id(self):
+        return self.model.analysis_id
 
     @property
     def analysis_setup(self):
@@ -97,17 +96,29 @@ class Project:
     def working_directory(self, path: Optional[Path | str]):
         if hasattr(self, "project_paths"):
             self.project_paths.set_working_directory(path)
+        else:
+            self.project_paths = ProjectPaths(path)
 
     def set_thumbnail(self, thumbnail: Image):
+        """
+        Set the thumbnail of the model and updates it in the working directory.
+        """
         self.model.thumbnail = thumbnail
         self.project_writer.write_thumbnail(thumbnail)
-        self.needs_saving = True
+        self.mark_project_as_modified()
 
     def clear_working_directory(self):
+        """
+        Empties the working directory folder.
+        """
         self.project_paths.clear_data()
-        self.needs_saving = True
+        self.mark_project_as_modified()
 
     def run_analysis(self) -> Solution:
+        """
+        Executes the solution currently configured in the model.
+        It might raise errors if the analysis is not propperly configured.
+        """
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 return self.solve_structural_modal_analysis()
@@ -148,16 +159,16 @@ class Project:
         self.project_writer.write_model(self.model)
         if isinstance(self.solver, ModalSolver) and (self.solver.solution is not None):
             self.write_modal_solution(self.solver)
-        self.needs_saving = True
+        self.mark_project_as_modified()
 
     # TODO: use only "write_to_working_dir"
     def update_model_properties_file(self):
         self.project_writer.write_model_properties(self.model.properties)
-        self.needs_saving = True
+        self.mark_project_as_modified()
 
     def update_project_setup_file(self):
         self.project_writer.write_project_setup(self.model)
-        self.needs_saving = True
+        self.mark_project_as_modified()
 
     def save_project(
         self,
@@ -165,7 +176,7 @@ class Project:
         name: str = "Project",
     ):
         """
-        Packs the data from the working directory into a .vibra file.
+        Packs the data from the working directory into a `.vibra` file.
         """
         self.save_path = Path(path)
         self.model.name = name
@@ -247,10 +258,13 @@ class Project:
 
         self.reset_solution()
         self.project_writer.write_mesh(mesh)
-        self.needs_saving = True
+        self.mark_project_as_modified()
         return mesh
 
     def generate_visual_mesh(self) -> Mesh:
+        """
+        Utility method to create a fast mesh intended to be used only for visualization purposes.
+        """
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
@@ -263,6 +277,9 @@ class Project:
         geometry_path: Path | str,
         mesh_setup: MeshSetup,
     ) -> Mesh:
+        """
+        Loads a geometry and uses it to generate a mesh.
+        """
         self.import_geometry(geometry_path)
         self.configure_mesh(mesh_setup)
         return self.generate_mesh()
@@ -272,6 +289,10 @@ class Project:
         analysis_id: AnalysisID,
         analysis_setup: Optional[AnalysisSetup],
     ):
+        """
+        Defines the `AnalysisID` and the `AnalysisSetup` required to
+        execute a analysis.
+        """
         self.reset_solution()
         self.model.analysis_id = analysis_id
         self.model.set_analysis_setup(analysis_setup)
@@ -293,7 +314,7 @@ class Project:
         t0 = perf_counter()
         solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
-        self.needs_saving = True
+        self.mark_project_as_modified()
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
@@ -343,7 +364,7 @@ class Project:
         t0 = perf_counter()
         solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
-        self.needs_saving = True
+        self.mark_project_as_modified()
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
@@ -377,16 +398,17 @@ class Project:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
         self.project_writer.write_harmonic_solution(self.solver)
-        self.needs_saving = True
+        self.mark_project_as_modified()
 
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
 
         return solution
 
-    def is_analysis_id_valid(self, analysis_id: Optional[AnalysisID]) -> bool:
-        if analysis_id is None:
-            analysis_id = self.model.analysis_id
+    def is_analysis_id_valid(self, analysis_id: AnalysisID) -> bool:
+        """
+        Checks if the provided AnalysisID corresponds to the current model AnalysisSetup.
+        """
 
         if analysis_id.is_harmonic() and isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
             return True
@@ -396,7 +418,11 @@ class Project:
 
         return False
 
-    def is_analysis_setup_complete(self):
+    def is_analysis_setup_complete(self) -> bool:
+        """
+        Checks if the current model setup is ready to be executed.
+        """
+
         try:
             AnalysisChecker(self.model).check_analysis_id(self.model.analysis_id)
         except Exception:
@@ -405,6 +431,10 @@ class Project:
             return True
 
     def is_there_a_valid_solution(self) -> bool:
+        """
+        Check if is there a valid analysis solution.
+        """
+
         if self.model.analysis_id.is_acoustic() and not isinstance(self.assembler, AcousticAssembler):
             return False
 
@@ -426,6 +456,11 @@ class Project:
         return self.solver.solution.size > 0
 
     def get_analysis_type(self) -> AnalysisType:
+        """
+        Gets the current analysis typs as a string according
+        to the `AnalysisID` provided in the model.
+        """
+
         if self.model.analysis_id.is_harmonic():
             return AnalysisType.HARMONIC
         elif self.model.analysis_id.is_modal():
@@ -436,6 +471,11 @@ class Project:
             return AnalysisType.NO_ANALYSIS_TYPE
 
     def get_physical_domain(self) -> PhysicalDomain:
+        """
+        Gets the current physical domain as a string according
+        to the `AnalysisID` provided in the model.
+        """
+
         if self.model.analysis_id.is_acoustic():
             return PhysicalDomain.ACOUSTIC
         elif self.model.analysis_id.is_structural():
@@ -446,4 +486,7 @@ class Project:
             return PhysicalDomain.NO_PHYSICAL_DOMAIN
 
     def mark_project_as_modified(self):
+        """
+        Indicates that something was modified and that the project need to be saved.
+        """
         self.needs_saving = True
