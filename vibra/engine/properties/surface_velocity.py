@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from vibra.engine.properties.property import Property
+from vibra.engine.properties.property import GroupLabel, Property
 
 
 @dataclass
@@ -14,6 +14,9 @@ class SurfaceVelocity(Property):
     def __post_init__(self):
         """build the values list"""
         self.values = self._build_values()
+
+    def get_group_label(self) -> GroupLabel:
+        return GroupLabel.ACOUSTIC
 
     def _build_values(self) -> list[None | float | complex]:
         values = list()
