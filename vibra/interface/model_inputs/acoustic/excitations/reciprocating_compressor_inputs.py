@@ -1226,7 +1226,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def is_file_path_valid(self, file_path: str):
         if Path(dirname(file_path)).exists():
-            ext = file_path.split(".")[-1]
+            ext = file_path.split(".")[-1].lower()
             if ext in SUPPORTED_OUTPUT_DATA_EXTENSIONS:
                 return True
         return False

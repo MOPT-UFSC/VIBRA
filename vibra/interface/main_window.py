@@ -708,7 +708,7 @@ class MainWindow(MainWindow_UI):
             load_path,
         )
 
-        ext = Path(load_path).suffix.strip(".")
+        ext = Path(load_path).suffix.strip(".").lower()
         if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
             app().project.reset_project()
             self.import_geometry(load_path)
@@ -753,10 +753,10 @@ class MainWindow(MainWindow_UI):
         )
 
         ext_filter = (
-            ";;Geometry Files ({geo})"
+            ";;Mesh Files ({mesh})"
             ";;All Files (*)"
         ).format(
-            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
+            mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
         )  # fmt: skip
 
         load_path, check = QFileDialog.getOpenFileName(

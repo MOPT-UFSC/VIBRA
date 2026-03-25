@@ -92,4 +92,4 @@ def screen_to_world_coords(xyz, renderer):
 
 
 def qt_extensions(extensions: list[str]) -> str:
-    return " ".join(f"*.{ext}" for ext in extensions)
+    return " ".join(f"*.{ext.upper()} *.{ext.lower()}" for ext in extensions)

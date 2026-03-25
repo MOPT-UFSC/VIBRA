@@ -129,7 +129,7 @@ class Model:
         if isinstance(path, Path):
             path = str(path)
 
-        ext = path.split(".")[-1]
+        ext = path.split(".")[-1].lower()
         if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
             return True
 

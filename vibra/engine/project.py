@@ -190,6 +190,8 @@ class Project:
         Loads a complete mesh from a file.
 
         The supported mesh formats are:
+            - *.bdf
+            - *.nas
             - *.msh
         """
         mesh = Mesh().load_mesh(path)
