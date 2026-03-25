@@ -53,6 +53,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         """
 
         self.element_options = HEX8_structural
+        self.static_condensation_required = False
 
         advanced_element_options = self.model.properties._get_property("advanced_element_options")
         if not isinstance(advanced_element_options, dict):
@@ -61,6 +62,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         element_options = advanced_element_options.get("hex8")
         if isinstance(element_options, HEX8_structural):
             self.element_options = element_options
+
+        self.static_condensation_required = element_options.extra_shape_functions or element_options.enhanced_assumed_strain
 
 
     def define_integration_points(self, integration_points: int = 8):
@@ -538,7 +541,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
         # static condensation of the elementary stiffness matrix Ke
-        if self.element_options.extra_shape_functions or self.element_options.enhanced_assumed_strain:
+        if self.static_condensation_required:
             Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
             Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
             Kau = Kua.T
@@ -583,7 +586,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         # process the determinant of Jacobian and the B matrix
         detJAC, B = self.process_detJAC_and_B_matrix(element_id)
 
-        if self.element_options.extra_shape_functions or self.element_options.enhanced_assumed_strain:
+        if self.static_condensation_required:
 
             # initialize the stiffness matrix Ke
             Ke = 0.
@@ -596,10 +599,10 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Kaa = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
 
             # extra dofs results
-            u_esf = -np.linalg.inv(Kaa) @ (Kau @ Ue)
+            alpha = -np.linalg.inv(Kaa) @ (Kau @ Ue)
 
             # extend element solution with extra dofs results
-            Ue = np.append(Ue, u_esf, axis=0)
+            Ue = np.append(Ue, alpha, axis=0)
 
         return B, Ue
 
