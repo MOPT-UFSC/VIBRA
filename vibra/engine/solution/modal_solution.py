@@ -47,10 +47,18 @@ class ModalSolution(CommonSolution):
         yield from zip(self.natural_frequencies, self.modal_shape)
 
     def __eq__(self, other: Self) -> bool:
+        match self.displacement_dof, other.displacement_dof:
+            case np.ndarray(), np.ndarray() as a, b:
+                cnf_equal = np.allclose(a, b)
+            case None, None:
+                cnf_equal = True
+            case _, _:
+                cnf_equal = False
+
         return all(
             [
                 np.allclose(self.natural_frequencies, other.natural_frequencies),
                 np.allclose(self.modal_shape, other.modal_shape),
-                np.allclose(self.complex_natural_frequencies, other.complex_natural_frequencies),
+                cnf_equal,
             ]
         )
