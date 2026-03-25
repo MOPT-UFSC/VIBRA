@@ -192,7 +192,7 @@ def load_external_mesh_and_solve(**kwargs):
     for i, nat_freq in enumerate(natural_frequencies):
         print(f"Mode {i+1}: {nat_freq : .8f} Hz (Vibra) vs {natural_frequencies_ref[i]: .8f} Hz (Ansys)")
 
-    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e}")
+    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e} %")
 
 
 if __name__ == "__main__":
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         reduced_integration = False,
         simple_enhanced_strain = False,
         enhanced_assumed_strain = True,
-        EAS_internal_dofs = 24,
+        EAS_internal_dofs = 9+4,
         Bbar_formulation = False,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
         )

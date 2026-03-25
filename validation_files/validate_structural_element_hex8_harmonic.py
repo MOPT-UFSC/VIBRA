@@ -46,6 +46,8 @@ def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
+    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_64e_harmonic.dat"
+
     if not os.path.exists(mesh_path):
         return
     
@@ -222,6 +224,8 @@ def load_external_mesh_and_solve(**kwargs):
     print()
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/harmonic/{folder}/"
+    # results_path = results_path / "cube_64e/"
+
     ext_data = LoadExternalData(results_path)
 
     WB_displacements_data = ext_data.load_displacements(entire_solution=True)
@@ -243,8 +247,13 @@ def load_external_mesh_and_solve(**kwargs):
     # define the plot type
     plot_type = "absolute"
 
+    if "cube_64" in str(mesh_path):
+        node_ids = [60, 67, 98]
+    else:
+        node_ids = [5100, 6199, 6232]
+
     # displacements plots
-    for node_id in [5100, 6199, 6232]:
+    for node_id in node_ids:
 
         print()
         # plots for displacements
@@ -435,7 +444,7 @@ if __name__ == "__main__":
         reduced_integration = False,
         simple_enhanced_strain = False,
         enhanced_assumed_strain = True,
-        EAS_internal_dofs = 9,
+        EAS_internal_dofs = 9+4,
         Bbar_formulation = False,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
         )
