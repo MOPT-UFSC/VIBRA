@@ -128,6 +128,8 @@ class Project:
                 return self.solve_acoustic_modal_analysis()
             case AnalysisID.ACOUSTIC_HARMONIC:
                 return self.solve_acoustic_harmonic_analysis()
+            case AnalysisID.NO_ANALYSIS:
+                raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
                 raise NotImplementedError(f'Analysis type "{self.model.analysis_id.name}" is not implemented.')
 
