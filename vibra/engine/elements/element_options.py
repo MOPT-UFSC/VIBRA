@@ -14,7 +14,7 @@ class HEX8_structural:
     reduced_integration: bool = field(default_factory=False)
     simple_enhanced_strain: bool = field(default_factory=False)
     enhanced_assumed_strain: bool = field(default_factory=False)
-    EAS_internal_dofs: int = field(default_factory = 15)
+    EAS_internal_dofs: int = field(default_factory = 9+4)
     extra_shape_functions: bool = field(default_factory=False)
     Bbar_dilatational_evaluation: IntEnum = field(default_factory=BbarDilatationalEvaluation.VOLUME_AVERAGED)
 

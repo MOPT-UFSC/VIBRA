@@ -7,10 +7,10 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
+
 from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 
 import numpy as np
-
 
 class STRUCT_HEXAHEDRON_8(Element3D):
 
@@ -239,11 +239,11 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         return 0
 
 
-    def get_inverse_transpose_T0_matrix(self, J0: np.ndarray) -> np.ndarray:
+    def get_inverse_T0_matrix(self, J0: np.ndarray) -> np.ndarray:
         """
-        This method returns the inverse transpose T0 matrix to compute the
-        shape functions derivative matrix B for the enhanced assumed strain
-        element formulation.
+        This method returns the inverse transpose of the transformation matrix 
+        T0 used to compute the shape functions derivative matrix B for 
+        the enhanced assumed strain element formulation.
 
         Parameter
         ---------
@@ -261,11 +261,11 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             [J0[0, 0]*J0[0, 2], J0[1, 0]*J0[1, 2], J0[2, 0]*J0[2, 2], (J0[0, 0]*J0[1, 2] + J0[1, 0]*J0[0, 2]), (J0[0, 0]*J0[2, 2] + J0[2, 0]*J0[0, 2]), (J0[1, 0]*J0[2, 2] + J0[2, 0]*J0[1, 2])],
             [J0[0, 1]*J0[0, 2], J0[1, 1]*J0[1, 2], J0[2, 1]*J0[2, 2], (J0[0, 1]*J0[1, 2] + J0[1, 1]*J0[0, 2]), (J0[0, 1]*J0[2, 2] + J0[2, 1]*J0[0, 2]), (J0[1, 1]*J0[2, 2] + J0[2, 1]*J0[1, 2])],
             ], dtype=float)
+        
+        return np.linalg.inv(T0)
 
-        return np.linalg.inv(T0).T
 
-
-    def get_Mxi_matrix(self):
+    def get_interpolation_matrix_Mxi(self):
         """
         This method returns the interpolation matrix for the additional strain
         fields proposed by Andelfinger and Ramm.
@@ -282,12 +282,12 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         M_xi = np.zeros((self.nint, 6, 30), dtype=float)
 
-        # Block 25~28
+        # Alternative M_xi matrix
+
         M_xi[:, 0, 0] = xi
         M_xi[:, 1, 1] = eta
         M_xi[:, 2, 2] = zeta
 
-        # Block 29~33
         M_xi[:, 3, 3] = xi
         M_xi[:, 3, 4] = eta
         M_xi[:, 4, 5] = xi
@@ -295,36 +295,59 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         M_xi[:, 5, 7] = eta
         M_xi[:, 5, 8] = zeta
 
-        # Block 34~39
-        M_xi[:, 3, 9 ] = xi * zeta
-        M_xi[:, 3, 10] = eta * zeta
-        M_xi[:, 4, 11] = xi * eta
-        M_xi[:, 4, 12] = eta * zeta
-        M_xi[:, 5, 13] = xi * eta
-        M_xi[:, 5, 14] = xi * zeta
+        M_xi[:, 0, 9 ] = M_xi[:, 1, 9 ] = M_xi[:, 2, 9 ] = xi * eta
+        M_xi[:, 0, 10] = M_xi[:, 1, 10] = M_xi[:, 2, 10] = eta * zeta
+        M_xi[:, 0, 11] = M_xi[:, 1, 11] = M_xi[:, 2, 11] = xi * zeta
 
-        # Block 40~45
-        M_xi[:, 0, 15] = xi * eta
-        M_xi[:, 0, 16] = xi * zeta
-        M_xi[:, 1, 17] = xi * eta
-        M_xi[:, 1, 18] = eta * zeta
-        M_xi[:, 2, 19] = xi * zeta
-        M_xi[:, 2, 20] = eta * zeta
+        M_xi[:, 0, 12] = xi * eta * zeta
+        M_xi[:, 1, 12] = xi * eta * zeta
+        M_xi[:, 2, 12] = xi * eta * zeta
 
-        # Block 46~48
-        M_xi[:, 3, 21] = xi * eta
-        M_xi[:, 4, 22] = xi * zeta
-        M_xi[:, 5, 23] = eta * zeta
+        #NOTE: Matrix proposed by Andelfinger and Ramm
 
-        # Block 49~51
-        M_xi[:, 0, 24] = xi * eta * zeta
-        M_xi[:, 1, 25] = xi * eta * zeta
-        M_xi[:, 2, 26] = xi * eta * zeta
+        # # Block 25~28
+        # M_xi[:, 0, 0] = xi
+        # M_xi[:, 1, 1] = eta
+        # M_xi[:, 2, 2] = zeta
 
-        # Block 52~54
-        M_xi[:, 3, 27] = xi * eta * zeta
-        M_xi[:, 4, 28] = xi * eta * zeta
-        M_xi[:, 5, 29] = xi * eta * zeta
+        # # Block 29~33
+        # M_xi[:, 3, 3] = xi
+        # M_xi[:, 3, 4] = eta
+        # M_xi[:, 4, 5] = xi
+        # M_xi[:, 4, 6] = zeta
+        # M_xi[:, 5, 7] = eta
+        # M_xi[:, 5, 8] = zeta
+
+        # # Block 34~39
+        # M_xi[:, 3, 9 ] = xi * zeta
+        # M_xi[:, 3, 10] = eta * zeta
+        # M_xi[:, 4, 11] = xi * eta
+        # M_xi[:, 4, 12] = eta * zeta
+        # M_xi[:, 5, 13] = xi * eta
+        # M_xi[:, 5, 14] = xi * zeta
+
+        # # Block 40~45
+        # M_xi[:, 0, 15] = xi * eta
+        # M_xi[:, 0, 16] = xi * zeta
+        # M_xi[:, 1, 17] = xi * eta
+        # M_xi[:, 1, 18] = eta * zeta
+        # M_xi[:, 2, 19] = xi * zeta
+        # M_xi[:, 2, 20] = eta * zeta
+
+        # # Block 46~48
+        # M_xi[:, 3, 21] = xi * eta
+        # M_xi[:, 4, 22] = xi * zeta
+        # M_xi[:, 5, 23] = eta * zeta
+
+        # # Block 49~51
+        # M_xi[:, 0, 24] = xi * eta * zeta
+        # M_xi[:, 1, 25] = xi * eta * zeta
+        # M_xi[:, 2, 26] = xi * eta * zeta
+
+        # # Block 52~54
+        # M_xi[:, 3, 27] = xi * eta * zeta
+        # M_xi[:, 4, 28] = xi * eta * zeta
+        # M_xi[:, 5, 29] = xi * eta * zeta
 
         last_col = self.element_options.EAS_internal_dofs
 
@@ -445,20 +468,31 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         elif self.element_options.enhanced_assumed_strain:
 
-            # Jacobian matrix at the centroid (0, 0, 0)
+            # # Jacobian matrix at the centroid (0, 0, 0)
             JAC_0 = self.dphi_0 @ coords
+
+            # # integrate the element volume
+            # e_vol = np.sum(detJAC * self.wps, axis=0)
 
             # Jacobian determinant and inverse at the centroid
             detJAC_0, _ = self.get_detJAC_and_invJAC(JAC_0)
 
             # compute the inverse transpose T0 matrix
-            T0_it = self.get_inverse_transpose_T0_matrix(JAC_0)
+            inv_T0 = self.get_inverse_T0_matrix(JAC_0)
 
-            # compute the M_xi matrix
-            M_xi = self.get_Mxi_matrix()
+            # compute the interpolation matrix M_xi
+            M_xi = self.get_interpolation_matrix_Mxi()
 
             # extend the matrix of shape function derivatives B
-            B[:, :, edof:] = (detJAC_0 / detJAC) * T0_it @ M_xi
+            B[:, :, edof:] = (detJAC_0 / detJAC) * inv_T0.T @ M_xi
+
+            # # evaluate the patch test
+            # integral_patch_test = 0.
+            # for i in range(self.nint):
+            #     integral_patch_test += (detJAC_0 / detJAC[i, :, :]) * (inv_T0.T @ M_xi[i, :, :]) * (detJAC[i, :, :] * self.wps[i])
+
+            # if np.linalg.norm(integral_patch_test) > 1e-15:
+            #     print(f"Patch test not satisfied for the element #{element_id}")
 
         return detJAC, B
 
@@ -503,7 +537,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
             Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
-        # condense the stiffness matrix Ke if the extra shape functions were enabled
+        # static condensation of the elementary stiffness matrix Ke
         if self.element_options.extra_shape_functions or self.element_options.enhanced_assumed_strain:
             Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
             Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
@@ -512,7 +546,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
 
-        # Ke, Me = matricesH8S_FB(
+        # TODO: remove these lines of code after validating the FB element
+
+        # Ke_2, Me_2 = matricesH8S_FB(
         #     element_id, 
         #     self.nodal_coordinates, 
         #     self.connectivity, 
@@ -521,15 +557,20 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         #     material.material_density
         #     )
 
-        # mask_Ke = Ke != 0
-        # mask_Me = Me != 0
+        # if element_id < 2:
 
-        # dif_Ke = 100 * np.max(np.abs(Ke[mask_Ke] - Ke_2[mask_Ke]) / (Ke[mask_Ke] + Ke_2[mask_Ke]))
-        # dif_Me = 100 * np.max(np.abs(Me[mask_Me] - Me_2[mask_Me]) / (Me[mask_Me] + Me_2[mask_Me]))
+        #     mask_Ke = Ke != 0
+        #     mask_Me = Me != 0
 
-        # print()
-        # print(f"Maximum difference for Ke (#{element_id}): {dif_Ke} [%]")
-        # print(f"Maximum difference for Me (#{element_id}): {dif_Me} [%]")
+        #     dif_Ke = 100 * np.max(np.abs(Ke[mask_Ke] - Ke_2[mask_Ke]) / (Ke[mask_Ke] + Ke_2[mask_Ke]))
+        #     dif_Me = 100 * np.max(np.abs(Me[mask_Me] - Me_2[mask_Me]) / (Me[mask_Me] + Me_2[mask_Me]))
+
+        #     print()
+        #     print(f"Maximum difference for Ke (#{element_id}): {dif_Ke} [%]")
+        #     print(f"Maximum difference for Me (#{element_id}): {dif_Me} [%]")
+
+        # Ke = 0.5 * (Ke + Ke.T)
+        # Me = 0.5 * (Me + Me.T)
 
         return Ke, Me
 
