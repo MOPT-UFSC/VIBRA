@@ -107,7 +107,7 @@ class ModelProperties:
             yield vibra_id
 
     def values(self) -> Generator[Property]:
-        for value in self._properties.values()
+        for value in self._properties.values():
             yield value
 
     def items(self) -> Generator[tuple[VibraID, Property]]:
@@ -121,24 +121,26 @@ class ModelProperties:
             if func(vibra_id, value):
                 yield (vibra_id, value)
 
+    def __str__(self) -> str:
+        str_list_to_return = list()
+        for id, property in self.items():
+            s = f'{id} = {property.name()}'
+            str_list_to_return.append(s)
 
-a = PointID(2)
-b = LineID(2)
-c = PointID(2)
-
-g = GlobalID()
-h = GlobalID()
-
-sv = SurfaceVelocity([1], [2])
-print(sv.name())
+        return f'{type(self).__name__}({", ".join(str_list_to_return)})'
 
 mp = ModelProperties()
-mp.add_property(sv, PointID(2))
+sv = SurfaceVelocity([1], [0])
+sv2 = SurfaceVelocity([2], [0])
+ap = AcousticPressure([3], [0])
+
+mp.add_property(PointID(2), sv)
+mp.add_property(PointID(3), sv2)
+mp.add_property(LineID(0), ap)
+
+print(mp)
 
 
-assert a != b
-assert a == c
-assert g != a
-assert g == h
-assert hash(a) == hash(c)
-assert hash(a) != hash(b)
+
+
+
