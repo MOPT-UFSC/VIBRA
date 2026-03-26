@@ -311,6 +311,10 @@ class MainWindow(MainWindow_UI):
             new_widget.copy_camera_from(last_widget)
             # if last_widget is not a valid render the operation will be ignored
 
+        if new_widget is self.cad_render_widget:
+            self.render_tools_toolbar.setVisible(False)
+            self.stacked_setup.setVisible(False)
+
         self.last_render_index = new_index
 
     def selection_changed_callback(self):
@@ -702,7 +706,6 @@ class MainWindow(MainWindow_UI):
                 return
         
         if msg_box.clickedButton() == draw_button:
-            self.render_tools_toolbar.setVisible(False)
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
 
