@@ -88,7 +88,7 @@ class ProjectWriter:
             )
             project_setup["mesh_setup"]["mesh_refinement_parameters"] = [
                 (i.entity_type, i.element_size, i.entity_ids) 
-                for i in mesh_setup.refinement_parameterss
+                for i in mesh_setup.refinement_parameters
             ]  # fmt: skip
 
         write_json(self.project_paths.project_setup_filepath, project_setup)
