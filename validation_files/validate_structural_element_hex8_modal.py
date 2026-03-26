@@ -24,6 +24,9 @@ def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
+    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_64e_harmonic.dat"
+    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
+
     if not os.path.exists(mesh_path):
         return
 
@@ -178,6 +181,11 @@ def load_external_mesh_and_solve(**kwargs):
         folder = "with_esf" if extra_shape_function else "without_esf"
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/modal/{folder}/"
+
+    if folder == "reduced_integration":
+        hg_label = "with_hg"
+        results_path = results_path / f"{hg_label}/"
+
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_reference.dat")[:, 1]
 
     # modes_indexes = np.arange(natural_frequencies.size)
@@ -190,7 +198,7 @@ def load_external_mesh_and_solve(**kwargs):
     print()
     print(">>> RESULTS COMPARISON:")
     for i, nat_freq in enumerate(natural_frequencies):
-        print(f"Mode {i+1}: {nat_freq : .8f} Hz (Vibra) vs {natural_frequencies_ref[i]: .8f} Hz (Ansys)")
+        print(f"Mode {i+1}: {nat_freq : .14f} Hz (Vibra) vs {natural_frequencies_ref[i]: .14f} Hz (Ansys)")
 
     print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e} %")
 
@@ -199,9 +207,9 @@ if __name__ == "__main__":
 
     load_external_mesh_and_solve(
         extra_shape_function = False,
-        reduced_integration = False,
+        reduced_integration = True,
         simple_enhanced_strain = False,
-        enhanced_assumed_strain = True,
+        enhanced_assumed_strain = False,
         EAS_internal_dofs = 9+4,
         Bbar_formulation = False,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,

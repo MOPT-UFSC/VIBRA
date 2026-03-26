@@ -36,7 +36,10 @@ stresses_labels = [
 def load_external_mesh_and_solve(case: str, **kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_{case}_modal.dat"
+    if case == "cube_1e":
+        mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_1e_modal.dat"
+    else:
+        mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -122,15 +125,21 @@ def load_external_mesh_and_solve(case: str, **kwargs):
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    extra_shape_functions = kwargs.get("extra_shape_functions", False)
+    extra_shape_function = kwargs.get("extra_shape_function", False)
     Bbar_formulation = kwargs.get("Bbar_formulation", False)
     reduced_integration = kwargs.get("reduced_integration", False)
+    simple_enhanced_strain = kwargs.get("simple_enhanced_strain", False)
+    enhanced_assumed_strain = kwargs.get("enhanced_assumed_strain", False)
+    EAS_internal_dofs = kwargs.get("EAS_internal_dofs", 9)
     Bbar_dilatational_evaluation = kwargs.get("Bbar_dilatational_evaluation", BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
     element_options = HEX8_structural(
-        Bbar_formulation, 
-        reduced_integration, 
-        extra_shape_functions,
+        Bbar_formulation,
+        reduced_integration,
+        simple_enhanced_strain,
+        enhanced_assumed_strain,
+        EAS_internal_dofs,
+        extra_shape_function,
         Bbar_dilatational_evaluation,
     )
 
@@ -192,48 +201,70 @@ def load_external_mesh_and_solve(case: str, **kwargs):
         folder = "full_integration"
     elif reduced_integration:
         folder = "reduced_integration"
+    elif simple_enhanced_strain:
+        folder = "simple_enhanced_strain"
+    elif enhanced_assumed_strain:
+        folder = "enhanced_assumed_strain"
     else:
-        folder = "with_esf" if extra_shape_functions else "without_esf"
+        folder = "with_esf" if extra_shape_function else "without_esf"
+
+    print()
+    print(folder)
+    print()
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/elementar/{folder}/"
 
-    Ke_ansys = np.loadtxt(results_path / "Ke_ansys.csv", delimiter=",")
-    Me_ansys = np.loadtxt(results_path / "Me_ansys.csv", delimiter=",")
+    if folder == "reduced_integration":
+        hg_label = "without_hg"
+        results_path = results_path / f"{hg_label}/"
 
-    mask_M = np.where(Me_ansys != 0)
-    mask_K = np.where(Ke_ansys != 0)
+    ## NOTE: Use this part to compare the one-element cube results
 
-    dev_Ke = np.abs((Ke_ansys[mask_K] - Ke[mask_K]) / Ke_ansys[mask_K])
-    dev_Me = np.abs((Me_ansys[mask_M] - Me[mask_M]) / Me_ansys[mask_M])
+    if case == "cube_1e":
 
-    print()
-    print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
-    print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
-    print()
+        Ke_ansys = np.loadtxt(results_path / "Ke_ansys.csv", delimiter=",")
+        Me_ansys = np.loadtxt(results_path / "Me_ansys.csv", delimiter=",")
 
-    # n_elements = int(case.split("_")[1].replace("e", ""))
+        mask_M = np.where(Me_ansys != 0)
+        mask_K = np.where(Ke_ansys != 0)
 
-    # for elem_id in range(1, n_elements+1, 1):
+        dev_Ke = np.abs((Ke_ansys[mask_K] - Ke[mask_K]) / Ke_ansys[mask_K])
+        dev_Me = np.abs((Me_ansys[mask_M] - Me[mask_M]) / Me_ansys[mask_M])
 
-    #     Ke = assembler.data_K[elem_id-1, :, :]
-    #     Me = assembler.data_M[elem_id-1, :, :]
+        print()
+        # print(dev_Ke)
+        # print(dev_Me)
+        print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
+        print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
+        print()
 
-    #     Ke_ansys = np.loadtxt(results_path / f"{case}/Ke_{elem_id}_ansys.txt", skiprows=7)
-    #     Me_ansys = np.loadtxt(results_path / f"{case}/Me_{elem_id}_ansys.txt", skiprows=7)
+    else:
 
-    #     triu_ind = np.triu_indices(24)
+        ## NOTE: Use this part to compare the first 64 elements of cuboid results
 
-    #     mask = np.where(Me_ansys != 0)
+        n_elements = 64
+        for elem_id in range(1, n_elements+1, 1):
 
-    #     dev_Ke = np.abs((Ke_ansys - Ke[triu_ind]) / Ke_ansys)
-    #     dev_Me = np.abs((Me_ansys[mask] - Me[triu_ind].flatten()[mask]) / Me_ansys[mask])
+            Ke = assembler.data_K[elem_id-1, :, :]
+            Me = assembler.data_M[elem_id-1, :, :]
 
-    #     print()
-    #     print(f"Results for element #{elem_id}:")
-    #     print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
-    #     print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
-    #     print()
+            Ke_ansys = np.loadtxt(results_path / f"Ke_{elem_id}_ansys.txt", skiprows=7)
+            Me_ansys = np.loadtxt(results_path / f"Me_{elem_id}_ansys.txt", skiprows=7)
 
+            triu_ind = np.triu_indices(24)
+
+            mask = np.where(Me_ansys != 0)
+
+            dev_Ke = np.abs((Ke_ansys - Ke[triu_ind]) / Ke_ansys)
+            dev_Me = np.abs((Me_ansys[mask] - Me[triu_ind].flatten()[mask]) / Me_ansys[mask])
+
+            print()
+            print(f"Results for element #{elem_id}:")
+            print(f"Maximum relative deviation for Ke: {np.max(dev_Ke)}")
+            print(f"Maximum relative deviation for Me: {np.max(dev_Me)}")
+            # print(dev_Ke)
+            # print(dev_Me)
+            print()
 
     # np.savetxt(f"Ke_vibra.csv", Ke, delimiter=",")
     # np.savetxt(f"Me_vibra.csv", Me, delimiter=",")
@@ -249,9 +280,12 @@ def load_external_mesh_and_solve(case: str, **kwargs):
 if __name__ == "__main__":
 
     load_external_mesh_and_solve( 
-        "cube_1e",
-        extra_shape_functions = False,
-        reduced_integration = False,
-        Bbar_formulation = True,
+        "cuboid",
+        extra_shape_function = False,
+        reduced_integration = True,
+        simple_enhanced_strain = False,
+        enhanced_assumed_strain = False,
+        EAS_internal_dofs = 9+4,
+        Bbar_formulation = False,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
         )

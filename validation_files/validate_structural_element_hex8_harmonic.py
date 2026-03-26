@@ -224,7 +224,6 @@ def load_external_mesh_and_solve(**kwargs):
     print()
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/harmonic/{folder}/"
-    # results_path = results_path / "cube_64e/"
 
     ext_data = LoadExternalData(results_path)
 
@@ -441,9 +440,9 @@ if __name__ == "__main__":
 
     load_external_mesh_and_solve(
         extra_shape_function = False,
-        reduced_integration = False,
+        reduced_integration = True,
         simple_enhanced_strain = False,
-        enhanced_assumed_strain = True,
+        enhanced_assumed_strain = False,
         EAS_internal_dofs = 9+4,
         Bbar_formulation = False,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
