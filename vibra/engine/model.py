@@ -73,7 +73,7 @@ class Model:
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
-        self.mesh_setup = None
+        self.mesh_setup_old = None
         self.stop_processing = False
         self.generated_mesh = False
         self.geometry_path = None
@@ -139,7 +139,7 @@ class Model:
         self.properties = properties
 
     def set_mesh_setup(self, mesh_setup: dict):
-        self.mesh_setup = mesh_setup
+        self.mesh_setup_old = mesh_setup
         self.mesh.set_element_type(mesh_setup.get("ElementType", DEFAULT_ELEMENT_TYPE))
 
     def initialize_mesh(self):
@@ -213,13 +213,13 @@ class Model:
             )
             raise IncompleteSetupError(message, context=context)
 
-        if self.mesh_setup is None:
+        if self.mesh_setup_old is None:
             message = "Mesh setup not defined"
             context = "The mesh setup has not been defined yet.You should to configure the mesher to proceed."
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
+        self.mesh.load_cad(self.geometry_path, **self.mesh_setup_old)
 
         self.generated_mesh = True
         if self.disable_resume_callback is not None:

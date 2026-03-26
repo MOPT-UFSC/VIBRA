@@ -90,7 +90,7 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
 
     def update_tab_visibility(self):
 
-        mesh_setup = app().project.model.mesh_setup
+        mesh_setup = app().project.model.mesh_setup_old
         if not isinstance(mesh_setup, dict):
             return
 

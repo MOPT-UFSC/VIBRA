@@ -43,7 +43,6 @@ class Project:
 
         # TODO: Store the Solution, not the solvers and assemblers.
         # Except if it is used to cache a few matrices somehow.
-        self.mesh_setup: Optional[MeshSetup] = None
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
         self.solver: Optional[HarmonicSolver | ModalSolver] = None
         self.postprocessing: Optional[AcousticPostprocessing | StructuralPostprocessing] = None
@@ -221,7 +220,7 @@ class Project:
         Configures how to create a mesh from a geometry.
         This method might be called before or after loading a geometry.
         """
-        self.mesh_setup = mesh_setup
+        self.model.mesh_setup_new = mesh_setup
         self.update_project_setup_file()
 
     def generate_mesh(self) -> Mesh:
@@ -235,12 +234,12 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        if self.mesh_setup is None:
+        if self.model.mesh_setup_new is None:
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
         mesh = Mesh().new_load_cad(
             self.model.geometry_path,
-            self.mesh_setup,
+            self.model.mesh_setup_new,
         )
 
         if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:

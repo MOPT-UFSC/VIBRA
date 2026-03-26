@@ -189,7 +189,7 @@ class ModelSetupItems(CommonMenuItems):
             properties.point_properties,
             properties.element_properties,
             properties.nodal_properties,
-            ]
+        ]
 
         if property_name == "material":
             if mesh.are_there_volumes_in_geometry():
@@ -218,7 +218,7 @@ class ModelSetupItems(CommonMenuItems):
             if collapsed_elements or disconnected_nodes:
                 return False
 
-            return model.mesh_setup is not None
+            return model.mesh_setup_new is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
         if property_name == "surface_thickness":

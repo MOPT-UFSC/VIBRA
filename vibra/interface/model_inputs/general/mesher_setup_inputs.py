@@ -152,7 +152,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_selected_ids.setDisabled(True)
 
     def _load_current_mesh_setup(self):
-        mesh_setup = app().project.mesh_setup
+        mesh_setup = app().project.model.mesh_setup_new
 
         if mesh_setup is None:
             self._load_initial_element_size()
@@ -675,7 +675,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.bad_elements_showed = True
 
     def check_unprocessed_mesh_refining(self):
-        mesh_setup = app().project.mesh_setup
+        mesh_setup = app().project.model.mesh_setup_new
         if mesh_setup is None:
             return
 
