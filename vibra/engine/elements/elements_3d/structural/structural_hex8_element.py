@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
+from vibra.engine.elements.elements_3d.structural.hex8_flanagan_belytschko import get_B_analytic, compute_hourglass_stiffness
 
 from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 
@@ -18,6 +19,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
     DOF_PER_NODE = 3
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
     LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
+
+    aux_ones = np.ones(DOF_PER_ELEMENT, dtype=float)
 
     dil_projector = np.array([1, 1, 1, 0, 0, 0], dtype=float).reshape(-1, 1)
     m_mt = dil_projector @ dil_projector.T
@@ -378,6 +381,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         # derivatives
         dphi_t = invJAC @ self.dphi
 
+        # for validation purposes
+        self.B_grad = np.sum(dphi_t * detJAC * self.wps, axis=0) / np.sum(detJAC * self.wps, axis=0)
+
         # initialize the B matrix
         edof = self.DOF_PER_ELEMENT
         B = np.zeros((self.nint, 6, edof + self.extra_dofs), dtype=float)
@@ -528,37 +534,74 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         # process the determinant of Jacobian and the B matrix
         detJAC, B = self.process_detJAC_and_B_matrix(element_id)
 
-        # initialize the matrix of shape functions N
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
-        N[:, 0, 0::3] = self.phi
-        N[:, 1, 1::3] = self.phi
-        N[:, 2, 2::3] = self.phi
+        if self.element_options.reduced_integration:
 
-        # integration loop
-        Ke, Me = 0., 0.
-        for i in range(self.nint):
-            Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+            # the reduced element integration implies one integration 
+            # point for the stiffness matrix and adopts the lumped mass matrix 
 
-        # static condensation of the elementary stiffness matrix Ke
-        if self.static_condensation_required:
-            Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
-            Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
-            Kau = Kua.T
-            Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+            # integrate the volume of the element
+            e_vol = np.sum(detJAC * self.wps, axis=0)
 
-            Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
+            # calculate the nodal mass (total mass divided by element nodes)
+            nodal_mass = (rho * e_vol[0]) / self.NODES_PER_ELEMENT
 
-        # TODO: remove these lines of code after validating the FB element
+            # compute the lumped mass matrix
+            Me = np.diag(self.aux_ones * nodal_mass)
 
-        # Ke_2, Me_2 = matricesH8S_FB(
-        #     element_id, 
-        #     self.nodal_coordinates, 
-        #     self.connectivity, 
-        #     material.elasticity_modulus,
-        #     material.poisson_ratio, 
-        #     material.material_density
-        #     )
+            # nodes from element
+            elem_nodes = self.connectivity[element_id, 1:]
+
+            # element nodal coords
+            coords = self.nodal_coordinates[elem_nodes, 1:4]
+
+            # obtain the analytical B_mean and volume
+            B_mean, V = get_B_analytic(coords)
+
+            # equivalent to dphi_t
+            dphi_t_an = B_mean / V                 
+
+            # create the averaged B matrix
+            B0 = self.calcB(dphi_t_an)
+            
+            # uniform strain stiffness
+            K_unif = B0.T @ D @ B0 * V             
+
+            #TODO: the hourglass stiffness compensation model must be improved
+            K_hg = compute_hourglass_stiffness(K_unif, coords, dphi_t_an)
+
+            # add the correction matrix K_hg to penalizes the hourglasses modes
+            # resultant from reduced integration
+            Ke = K_unif + K_hg*1
+
+        else:
+
+            # initialize the matrix of shape functions N
+            N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
+            N[:, 0, 0::3] = self.phi
+            N[:, 1, 1::3] = self.phi
+            N[:, 2, 2::3] = self.phi
+
+            # integration loop
+            Ke, Me = 0., 0.
+            for i in range(self.nint):
+                Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+                Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+
+            # static condensation of the elementary stiffness matrix Ke
+            if self.static_condensation_required:
+                Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
+                Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
+                Kau = Kua.T
+                Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+
+                Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
+
+        # # nodes from element
+        # elem_nodes = self.connectivity[element_id, 1:]
+
+        # # element nodal coords
+        # coords = self.nodal_coordinates[elem_nodes, 1:4]
+
 
         # if element_id < 2:
 
@@ -712,3 +755,35 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return self.ind_rows, self.ind_cols
+
+    def calcB(self, dphi_t):
+        """ Assemble B matrix (6x24) from dphi_t (3x8).
+        """
+        if len(dphi_t.shape) == 2:
+            B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
+            # fill the B matrix
+            B[0, 0::3] = dphi_t[0, :]
+            B[1, 1::3] = dphi_t[1, :]
+            B[2, 2::3] = dphi_t[2, :]
+            B[3, 0::3] = dphi_t[1, :]
+            B[3, 1::3] = dphi_t[0, :]
+            B[4, 0::3] = dphi_t[2, :]
+            B[4, 2::3] = dphi_t[0, :]
+            B[5, 1::3] = dphi_t[2, :]
+            B[5, 2::3] = dphi_t[1, :]
+
+        else:
+            B = np.zeros((dphi_t.shape[0], 6, self.DOF_PER_ELEMENT), dtype=float)
+
+            # fill the B matrix
+            B[:, 0, 0::3] = dphi_t[:, 0, :]
+            B[:, 1, 1::3] = dphi_t[:, 1, :]
+            B[:, 2, 2::3] = dphi_t[:, 2, :]
+            B[:, 3, 0::3] = dphi_t[:, 1, :]
+            B[:, 3, 1::3] = dphi_t[:, 0, :]
+            B[:, 4, 0::3] = dphi_t[:, 2, :]
+            B[:, 4, 2::3] = dphi_t[:, 0, :]
+            B[:, 5, 1::3] = dphi_t[:, 2, :]
+            B[:, 5, 2::3] = dphi_t[:, 1, :]
+
+        return B

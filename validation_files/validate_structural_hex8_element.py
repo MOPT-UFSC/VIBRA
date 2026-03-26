@@ -215,7 +215,7 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/elementar/{folder}/"
 
     if folder == "reduced_integration":
-        hg_label = "without_hg"
+        hg_label = "with_hg"
         results_path = results_path / f"{hg_label}/"
 
     ## NOTE: Use this part to compare the one-element cube results

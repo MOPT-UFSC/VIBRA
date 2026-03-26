@@ -152,6 +152,7 @@ def calcB_analytic(xel):
     B_mean[1, :] = bohex(zz, xx)   # B_y from (z, x)
     B_mean[2, :] = bohex(xx, yy)   # B_z from (x, y)
     V = xx @ B_mean[0, :]           # eq. 15
+    # print(xx @ B_mean[0, :], yy @ B_mean[1, :], zz @ B_mean[2, :])
     return B_mean, V
 
 
@@ -186,7 +187,7 @@ def matricesH8S(ee, coord, connect, E, vv, rho):
     return Ke, Me
 
 
-def matricesH8S_FB(ee, coord, connect, E, vv, rho, kappa=0.125):
+def matricesH8S_FB(ee, coord, connect, E, vv, rho, B_grad, kappa=0.125):
     """ H8 stiffness and mass matrices -- Flanagan-Belytschko formulation.
         Uniform strain with analytic B (exact for arbitrary geometry)
         + orthogonal hourglass control.
@@ -210,34 +211,76 @@ def matricesH8S_FB(ee, coord, connect, E, vv, rho, kappa=0.125):
     xel = coord[ie, 1:4]
     B_mean, V = calcB_analytic(xel)     # B_mean (3x8), V exact
     dphi_t_an = B_mean / V                 # equivalent to dphi_t
+
+    # if ee == 0:
+    #     print(dphi_t_an)
+    #     print(B_grad)
+
+    # dphi_t_an = B_grad
+    # B_mean = B_grad * V
+
     B0 = calcB(dphi_t_an)               # (6x24)
     Ke = B0.T @ CTTV @ B0 * V             # uniform strain stiffness
-    #
+    
+    # O comportamento do código até este ponto está satisfatório, porém 
+    # a compensação do HG está estranha
+
     # ------------------------------------------------------------------
     # PART 2: Hourglass stiffness (eq. 49, 54)
     # ------------------------------------------------------------------
-    gamma = np.zeros((4, 8))
-    for alpha in range(4):
-        gamma[alpha, :] = GAMMA[alpha, :]
-        for i in range(3):
-            xG = xel[:, i] @ GAMMA[alpha, :]
-            gamma[alpha, :] -= (1./V) * B_mean[i, :] * xG
+    # gamma = np.zeros((4, 8))
+    # for alpha in range(4):
+    #     gamma[alpha, :] = GAMMA[alpha, :]
+    #     for i in range(3):
+    #         xG = xel[:, i] @ GAMMA[alpha, :]
+    #         gamma[alpha, :] -= (1./V) * B_mean[i, :] * xG
     #
-    BtB = 0.
-    for i in range(3):
-        for I in range(8):
-            BtB += B_mean[i, I]**2
-    coeff = kappa * (lam + 2.*mu) / 3. * BtB / V
-    #
+    # BtB = 0.
+    # for i in range(3):
+    #     for I in range(8):
+    #         BtB += B_mean[i, I]**2
+    # coeff = kappa * (lam + 2.*mu) / 3. * BtB / V
+    # #
+    # Ke_hg = np.zeros((24, 24))
+    # for alpha in range(4):
+    #     for I in range(8):
+    #         for J in range(8):
+    #             val = coeff * gamma[alpha, I] * gamma[alpha, J]
+    #             for i in range(3):
+    #                 Ke_hg[3*I+i, 3*J+i] += val
+
+    # 3. Estabilização de Hourglass (Flanagan-Belytschko)
+    # Vetores h clássicos
+    h = np.array([
+        [1, 1, -1, -1, -1, -1, 1, 1], 
+        [1, -1, -1, 1, -1, 1, 1, -1],
+        [1, -1, 1, -1, 1, -1, 1, -1], 
+        [-1, 1, -1, 1, 1, -1, 1, -1]
+    ])
+
+    h_factor = 0.14568
+
     Ke_hg = np.zeros((24, 24))
-    for alpha in range(4):
-        for I in range(8):
-            for J in range(8):
-                val = coeff * gamma[alpha, I] * gamma[alpha, J]
-                for i in range(3):
-                    Ke_hg[3*I+i, 3*J+i] += val
+    # Coeficiente de rigidez baseado no traço de K0 para escala correta
+    # O Ansys usa ~5% da rigidez média para HG
+    kappa = (h_factor * 0.05 * np.trace(Ke) / 24.0)
+
+    for a in range(4):
+        # Projeção/Ortogonalização
+        gamma = h[a] - (h[a] @ xel @ dphi_t_an)
+        
+        # Expansão para 3 DOFs
+        for d in range(3):
+            Gamma_v = np.zeros(24)
+            Gamma_v[d::3] = gamma
+            # Normalização pelo comprimento do vetor para manter h_factor adimensional
+            Ke_hg += kappa * np.outer(Gamma_v, Gamma_v) / np.dot(gamma, gamma)
+
     Ke += Ke_hg
-    #
+
+    if ee == 0:
+        print(Ke[:3,:3])
+
     # ------------------------------------------------------------------
     # MASS: consistent via 2x2x2 Gauss
     # ------------------------------------------------------------------
