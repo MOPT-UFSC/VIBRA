@@ -220,7 +220,7 @@ class Project:
         Configures how to create a mesh from a geometry.
         This method might be called before or after loading a geometry.
         """
-        self.model.mesh_setup_new = mesh_setup
+        self.model.mesh_setup = mesh_setup
         self.update_project_setup_file()
 
     def generate_mesh(self) -> Mesh:
@@ -234,12 +234,12 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        if self.model.mesh_setup_new is None:
+        if self.model.mesh_setup is None:
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
         mesh = Mesh().new_load_cad(
             self.model.geometry_path,
-            self.model.mesh_setup_new,
+            self.model.mesh_setup,
         )
 
         if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:

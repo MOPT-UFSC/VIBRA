@@ -66,7 +66,7 @@ class Model:
         self.thumbnail: Optional[Image] = None
 
         self.length_unit: LengthUnits = "millimeter"
-        self.mesh_setup_new: Optional[MeshSetup] = None
+        self.mesh_setup: Optional[MeshSetup] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
         self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
         self.solution: Optional[Solution] = None

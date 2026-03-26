@@ -218,7 +218,7 @@ class ModelSetupItems(CommonMenuItems):
             if collapsed_elements or disconnected_nodes:
                 return False
 
-            return model.mesh_setup_new is not None
+            return model.mesh_setup is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
         if property_name == "surface_thickness":

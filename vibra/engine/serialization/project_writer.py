@@ -81,7 +81,7 @@ class ProjectWriter:
         if isinstance(model.analysis_setup, AnalysisSetup):
             project_setup["analysis_setup"].update(model.analysis_setup.as_dict())
 
-        mesh_setup = model.mesh_setup_new
+        mesh_setup = model.mesh_setup
         if mesh_setup is not None:
             project_setup["mesh_setup"].update(
                 asdict(mesh_setup),
