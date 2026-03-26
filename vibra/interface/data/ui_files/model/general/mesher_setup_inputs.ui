@@ -306,7 +306,7 @@
             <string>Mesh quality metrics:</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -344,7 +344,7 @@
          <item row="1" column="3">
           <spacer name="horizontalSpacer_9">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -357,7 +357,7 @@
          <item row="1" column="0">
           <spacer name="horizontalSpacer">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -417,7 +417,7 @@
             <string>Element type:</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -521,7 +521,7 @@
             <enum>QTabWidget::TabShape::Rounded</enum>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <property name="tabBarAutoHide">
             <bool>false</bool>
@@ -994,8 +994,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>446</width>
-                      <height>216</height>
+                      <width>530</width>
+                      <height>247</height>
                      </rect>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_17">
@@ -2041,9 +2041,10 @@
   <tabstop>doubleSpinBox_minimum_element_size</tabstop>
   <tabstop>doubleSpinBox_size_factor</tabstop>
   <tabstop>lineEdit_geometry_tolerance</tabstop>
-  <tabstop>pushButton_generate_mesh</tabstop>
-  <tabstop>pushButton_exit</tabstop>
   <tabstop>pushButton_syncrhonize</tabstop>
+  <tabstop>pushButton_exit</tabstop>
+  <tabstop>pushButton_generate_mesh</tabstop>
+  <tabstop>scrollArea</tabstop>
   <tabstop>comboBox_2d_algorithm</tabstop>
   <tabstop>comboBox_3d_algorithm</tabstop>
   <tabstop>comboBox_recombination_algorithm</tabstop>
@@ -2052,13 +2053,14 @@
   <tabstop>comboBox_second_order_incomplete</tabstop>
   <tabstop>lineEdit_selected_ids</tabstop>
   <tabstop>doubleSpinBox_refined_element_size</tabstop>
-  <tabstop>pushButton_add</tabstop>
-  <tabstop>pushButton_delete</tabstop>
-  <tabstop>pushButton_show_bad_elements</tabstop>
-  <tabstop>pushButton_plot_histogram</tabstop>
-  <tabstop>tableWidget_mesh_quality</tabstop>
-  <tabstop>scrollArea</tabstop>
   <tabstop>tableWidget_refining_mesh_data</tabstop>
+  <tabstop>pushButton_delete</tabstop>
+  <tabstop>pushButton_add</tabstop>
+  <tabstop>tableWidget_mesh_quality</tabstop>
+  <tabstop>pushButton_plot_histogram</tabstop>
+  <tabstop>pushButton_show_bad_elements</tabstop>
+  <tabstop>comboBox_mesh_quality_metrics</tabstop>
+  <tabstop>comboBox_volumes_interface_behavior</tabstop>
  </tabstops>
  <resources>
   <include location="../../../icons/resources.qrc"/>
