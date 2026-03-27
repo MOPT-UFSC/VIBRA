@@ -198,8 +198,9 @@ class AnalysisToolbar(QToolBar):
     def set_pushbutton_resume_analysis_enabled(self, enable=True):
         self.pushButton_resume_analysis.setEnabled(enable)
 
-    def update_pushbutton_resume_analysis(self, can_resume_value: bool):
-        self.pushButton_resume_analysis.setEnabled(can_resume_value)
+    def update_pushbutton_resume_analysis(self):
+        can_resume_solution = app().project.can_resume_solution
+        self.pushButton_resume_analysis.setEnabled(can_resume_solution)
 
     def set_pushbutton_reset_solution_enabled(self):
         self.pushButton_reset_solution.setEnabled(True)
