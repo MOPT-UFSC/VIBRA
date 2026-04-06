@@ -228,58 +228,56 @@ def matricesH8S_FB(ee, coord, connect, E, vv, rho, B_grad, kappa=0.125):
     # ------------------------------------------------------------------
     # PART 2: Hourglass stiffness (eq. 49, 54)
     # ------------------------------------------------------------------
-    # gamma = np.zeros((4, 8))
-    # for alpha in range(4):
-    #     gamma[alpha, :] = GAMMA[alpha, :]
-    #     for i in range(3):
-    #         xG = xel[:, i] @ GAMMA[alpha, :]
-    #         gamma[alpha, :] -= (1./V) * B_mean[i, :] * xG
+    gamma = np.zeros((4, 8))
+    for alpha in range(4):
+        gamma[alpha, :] = GAMMA[alpha, :]
+        for i in range(3):
+            xG = xel[:, i] @ GAMMA[alpha, :]
+            gamma[alpha, :] -= (1./V) * B_mean[i, :] * xG
+    
+    BtB = 0.
+    for i in range(3):
+        for I in range(8):
+            BtB += B_mean[i, I]**2
+    coeff = kappa * (lam + 2.*mu) / 3. * BtB / V
     #
-    # BtB = 0.
-    # for i in range(3):
-    #     for I in range(8):
-    #         BtB += B_mean[i, I]**2
-    # coeff = kappa * (lam + 2.*mu) / 3. * BtB / V
-    # #
-    # Ke_hg = np.zeros((24, 24))
-    # for alpha in range(4):
-    #     for I in range(8):
-    #         for J in range(8):
-    #             val = coeff * gamma[alpha, I] * gamma[alpha, J]
-    #             for i in range(3):
-    #                 Ke_hg[3*I+i, 3*J+i] += val
-
-    # 3. Estabilização de Hourglass (Flanagan-Belytschko)
-    # Vetores h clássicos
-    h = np.array([
-        [1, 1, -1, -1, -1, -1, 1, 1], 
-        [1, -1, -1, 1, -1, 1, 1, -1],
-        [1, -1, 1, -1, 1, -1, 1, -1], 
-        [-1, 1, -1, 1, 1, -1, 1, -1]
-    ])
-
-    h_factor = 0.14568
-
     Ke_hg = np.zeros((24, 24))
-    # Coeficiente de rigidez baseado no traço de K0 para escala correta
-    # O Ansys usa ~5% da rigidez média para HG
-    kappa = (h_factor * 0.05 * np.trace(Ke) / 24.0)
+    for alpha in range(4):
+        for I in range(8):
+            for J in range(8):
+                val = coeff * gamma[alpha, I] * gamma[alpha, J]
+                for i in range(3):
+                    Ke_hg[3*I+i, 3*J+i] += val
 
-    for a in range(4):
-        # Projeção/Ortogonalização
-        gamma = h[a] - (h[a] @ xel @ dphi_t_an)
+    # # 3. Estabilização de Hourglass (Flanagan-Belytschko)
+    # # Vetores h clássicos
+    # h = np.array([
+    #     [1, 1, -1, -1, -1, -1, 1, 1], 
+    #     [1, -1, -1, 1, -1, 1, 1, -1],
+    #     [1, -1, 1, -1, 1, -1, 1, -1], 
+    #     [-1, 1, -1, 1, 1, -1, 1, -1]
+    # ])
+
+    # h_factor = 0.14568
+
+    # Ke_hg = np.zeros((24, 24))
+    # # Coeficiente de rigidez baseado no traço de K0 para escala correta
+    # # O Ansys usa ~5% da rigidez média para HG
+    # kappa = (h_factor * 0.05 * np.trace(Ke) / 24.0)
+
+    # for a in range(4):
+    #     # Projeção/Ortogonalização
+    #     gamma = h[a] - (h[a] @ xel @ dphi_t_an)
         
-        # Expansão para 3 DOFs
-        for d in range(3):
-            Gamma_v = np.zeros(24)
-            Gamma_v[d::3] = gamma
-            # Normalização pelo comprimento do vetor para manter h_factor adimensional
-            Ke_hg += kappa * np.outer(Gamma_v, Gamma_v) / np.dot(gamma, gamma)
+    #     # Expansão para 3 DOFs
+    #     for d in range(3):
+    #         Gamma_v = np.zeros(24)
+    #         Gamma_v[d::3] = gamma
+    #         # Normalização pelo comprimento do vetor para manter h_factor adimensional
+    #         Ke_hg += kappa * np.outer(Gamma_v, Gamma_v) / np.dot(gamma, gamma)
 
-    Ke += Ke_hg
+    return Ke_hg
 
-    if ee == 0:
-        print(Ke[:3,:3])
 
     # ------------------------------------------------------------------
     # MASS: consistent via 2x2x2 Gauss

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
-from vibra.engine.elements.elements_3d.structural.hex8_flanagan_belytschko import get_B_analytic, compute_hourglass_stiffness
+from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import get_B_analytic, compute_hourglass_stiffness, calcular_k_stab_corrigido
 
 from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 
@@ -567,7 +567,44 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             K_unif = B0.T @ D @ B0 * V             
 
             #TODO: the hourglass stiffness compensation model must be improved
-            K_hg = compute_hourglass_stiffness(K_unif, coords, dphi_t_an)
+
+            # hourglass stabilization matrix K_hg
+            K_hg = compute_hourglass_stiffness(K_unif, coords, dphi_t_an, material, e_vol[0])
+            # K_hg = calcular_k_stab_corrigido(coords, material.elasticity_modulus, material.poisson_ratio, 0.1)
+            # K_hg = matricesH8S_FB(element_id, self.nodal_coordinates, self.connectivity, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
+
+            ## PATCH TEST FOR ORTHOGONAL STABILIZATION ()
+            
+            # constant rotation about z-axis
+            theta_z = 0.01
+            u_rot = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
+            
+            u_rot[0::3] = -theta_z * coords[:, 1]
+            u_rot[1::3] =  theta_z * coords[:, 0]
+            u_rot[2::3] = 0
+
+            fr_int = K_hg @ u_rot
+            fr_residual = np.linalg.norm(fr_int)
+
+            if fr_residual > 1e-6:
+                print(f"Patch test failed for constat rotation at the element {element_id} - Residue: {fr_residual : '%.12e'}")
+
+            # constant deformation epsilon_x
+            e_def = 0.01
+            u_def = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
+
+            u_def[0::3] = e_def * coords[:, 0]
+            u_def[1::3] = 0
+            u_def[2::3] = 0
+
+            fd_int = K_hg @ u_def
+            fd_residual = np.linalg.norm(fd_int)
+
+            if fd_residual > 1e-6:
+                print(f"Patch test failed for constat deformation x at the element {element_id} - Residue: {fd_residual : '%.12e'}")
+
+            if element_id == 0:
+                print(K_hg[:4, :4])
 
             # add the correction matrix K_hg to penalizes the hourglasses modes
             # resultant from reduced integration
