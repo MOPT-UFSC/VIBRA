@@ -527,8 +527,7 @@ class Model:
 
         # prevent frequency-varying fluid properties
         # while solving acoustic modal analysis
-        analysis_id = self.old_analysis_setup.get("analysis_id")
-        is_harmonic = analysis_id == AnalysisID.ACOUSTIC_HARMONIC
+        is_harmonic = self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC
 
         for vol_id in self.mesh.elements_from_volume.keys():
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
