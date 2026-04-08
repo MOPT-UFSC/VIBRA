@@ -123,7 +123,7 @@ class FluidWidget(FluidWidget_UI):
 
         properties = app().project.model.properties
         new_fluid = fluid.copy()
-        new_fluid.name = properties.fluid_library.get_dupplicated_name(fluid.name)
+        new_fluid.name = properties.fluid_library.get_duplicated_name(fluid.name)
         properties.fluid_library.add(new_fluid)
 
         self.reload_table_of_fluids()

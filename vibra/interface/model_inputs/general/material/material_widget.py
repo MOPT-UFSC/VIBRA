@@ -99,7 +99,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         properties = app().project.model.properties
         new_material = material.copy()
-        new_material.name = properties.fluid_library.get_dupplicated_name(material.name)
+        new_material.name = properties.fluid_library.get_duplicated_name(material.name)
         properties.material_library.add(new_material)
 
         self.reload_table_of_materials()

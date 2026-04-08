@@ -86,7 +86,7 @@ class PropertyLibrary(Generic[T]):
     def contains(self, obj: T) -> bool:
         return obj in self._data.values()
 
-    def get_dupplicated_name(self, name: str) -> str:
+    def get_duplicated_name(self, name: str) -> str:
         ENDS_WITH_COPY_PATTERN = re.compile(r"\(copy \d+\)")
         DIGITS_PATTERN = re.compile(r"\d+")
 
