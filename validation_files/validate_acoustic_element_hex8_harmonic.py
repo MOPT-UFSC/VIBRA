@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
@@ -174,6 +174,7 @@ def load_external_mesh_and_solve():
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     assembler = AcousticAssembler(model)
 

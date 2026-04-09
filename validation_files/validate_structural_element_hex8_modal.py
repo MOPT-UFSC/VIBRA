@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
-from vibra.engine import ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
@@ -128,6 +128,7 @@ def load_external_mesh_and_solve():
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_MODAL)
 
     assembler = StructuralAssembler(model)
 

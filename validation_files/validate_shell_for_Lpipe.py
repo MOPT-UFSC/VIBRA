@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -120,7 +120,12 @@ def load_external_mesh_and_solve():
     model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=2)
 
     # Nodal loads data
-    distributed_load_data = {"element_type": "2d_element", "real_values": [100.0, None, None], "imag_values": [0.0, None, None], "unit": "N/m²"}
+    distributed_load_data = {
+        "element_type": "2d_element",
+        "real_values": [100.0, None, None],
+        "imag_values": [0.0, None, None],
+        "unit": "N/m²",
+    }
 
     model.properties._set_property("distributed_loads", distributed_load_data, surface=3)
 
@@ -132,7 +137,9 @@ def load_external_mesh_and_solve():
         global_damping=(1e-3, 1e-7, 0),
     )
     frequencies = analysis_setup.frequencies()
+
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
 
     # harmonic_solver = HarmonicSolver(assembler)
     # # Define the analysis setup

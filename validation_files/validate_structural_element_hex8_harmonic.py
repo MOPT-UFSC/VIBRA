@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
@@ -144,7 +144,9 @@ def load_external_mesh_and_solve():
         global_damping=(0.0, 0.0, 0e-2),
     )
     frequencies = analysis_setup.frequencies()
+
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
 
     # df = 20
     # f_min = 20

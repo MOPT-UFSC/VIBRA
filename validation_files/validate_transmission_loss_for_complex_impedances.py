@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -119,7 +119,12 @@ def load_external_mesh_and_solve():
     model.properties._set_property("fluid", fluid, surface=2)
 
     # Normal surface velocity data
-    data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
+    data_Vn = {
+        "real_values": [1],
+        "imag_values": [0],
+        "nodal_attribution": False,
+        "averaged": False,
+    }
 
     # Impedance data - constant value
     data_Z = {
@@ -152,7 +157,9 @@ def load_external_mesh_and_solve():
         f_step=5,
     )
     frequencies = analysis_setup.frequencies()
+
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     ## Configure porous material
     # pm_data = get_porous_material_data(model=pm_model)

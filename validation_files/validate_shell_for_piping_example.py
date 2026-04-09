@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -145,6 +145,7 @@ def load_external_mesh_and_solve():
     frequencies = analysis_setup.frequencies()
 
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
 
     # harmonic_solver = HarmonicSolver(assembler)
     # # Define the analysis setup

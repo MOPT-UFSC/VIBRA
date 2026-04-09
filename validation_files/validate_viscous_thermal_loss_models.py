@@ -4,7 +4,7 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -120,7 +120,9 @@ def load_external_mesh_and_solve():
         f_step=5,
     )
     frequencies = analysis_setup.frequencies()
+
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
 
     # Configure the viscous-thermal models
 

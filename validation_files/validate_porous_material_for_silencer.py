@@ -12,7 +12,6 @@ from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
-from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.interface.data_handler.data_importer import DataImporter
 

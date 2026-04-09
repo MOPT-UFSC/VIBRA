@@ -1,25 +1,24 @@
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
-from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_setup import TETRAHEDRON_10
-from vibra.engine.model import Model
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.solvers.harmonic_solver import HarmonicSolver
-from vibra.external_mesh.external_mesh_data import ExternalMeshData
+from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
-
-from typing import TYPE_CHECKING
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.mesher.element_setup import TETRAHEDRON_10
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
+from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.solvers.harmonic_solver import HarmonicSolver
+from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
+from time import time
+
 import matplotlib.pyplot as plt
 import numpy as np
-
-from time import time
 
 # @pytest.mark.slow
 # @pytest.mark.skip
@@ -171,6 +170,7 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     # ## Define the perforated plate setup
 
