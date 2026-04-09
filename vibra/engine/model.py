@@ -10,6 +10,7 @@ from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra import errors
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -234,7 +235,6 @@ class Model:
             import warnings
 
             warnings.warn("This method is deprecated, use set_analysis_setup", DeprecationWarning)
-                
 
         self.frequencies = None
         self.old_analysis_setup = analysis_setup
@@ -271,6 +271,9 @@ class Model:
         self.solution_steps_mask = solution_steps_mask
 
         self.old_analysis_setup["solution_steps_mask"] = solution_steps_mask
+
+    def set_analysis_id(self, analysis_id: AnalysisID):
+        self.analysis_id = analysis_id
 
     def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):
@@ -329,15 +332,14 @@ class Model:
         if not isinstance(self.old_analysis_setup, dict):
             return False
 
-        analysis_id = self.old_analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-        if analysis_id == AnalysisID.NO_ANALYSIS:
+        if self.analysis_id == AnalysisID.NO_ANALYSIS:
             return False
 
         if isinstance(current_analysis_id, int):
-            if analysis_id != current_analysis_id:
+            if self.analysis_id != current_analysis_id:
                 return False
 
-        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+        if self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             frequencies = self.old_analysis_setup.get("frequencies")
             solution_steps_mask = self.old_analysis_setup.get("solution_steps_mask")
 
@@ -351,7 +353,7 @@ class Model:
 
             return True
 
-        elif analysis_id in [AnalysisID.ACOUSTIC_MODAL, AnalysisID.STRUCTURAL_MODAL]:
+        elif self.analysis_id in [AnalysisID.ACOUSTIC_MODAL, AnalysisID.STRUCTURAL_MODAL]:
             for key in ["modes_number", "sigma_factor"]:
                 if not isinstance(self.old_analysis_setup.get(key), int | float):
                     return False
@@ -528,6 +530,8 @@ class Model:
         # prevent frequency-varying fluid properties
         # while solving acoustic modal analysis
         is_harmonic = self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC
+        if self.analysis_id == AnalysisID.NO_ANALYSIS:
+            raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
         for vol_id in self.mesh.elements_from_volume.keys():
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
