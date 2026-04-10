@@ -1,38 +1,29 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from vibra.engine.properties.property import GroupLabel, Property
+import numpy as np
 
 
 @dataclass
 class MassSource(Property):
-    real_values: list[float]
-    imag_values: list[float]
+    value: complex
     volume_id: int | None = None
-    values: list[None | float | complex] = field(init=False)
-
-    def __post_init__(self):
-        """build the values list"""
-        self.values = self._build_values()
-
-    def _build_values(self) -> list[None | float | complex]:
-        values: list[None | float | complex] = list()
-
-        for i, a in enumerate(self.real_values):
-            if a is None:
-                values.append(None)
-
-            else:
-                b = self.imag_values[i]
-                if b is None:
-                    values.append(a)
-                else:
-                    values.append(a + 1j * b)
-
-        return values
 
     def get_group_label(self) -> GroupLabel:
         return GroupLabel.ACOUSTIC
 
-    def to_dict(self) -> dict[str, list[float] | int | None | list[None | float | complex]]:
+    @property
+    def real_values(self) -> list[float]:
+        return [np.real(self.value)]
+    
+    @property
+    def imag_values(self) -> list[float]:
+        return [np.imag(self.value)]
+
+    @property
+    def values(self) -> list[complex]:
+        return [self.value]
+
+    def to_dict(self) -> dict[str, list[float] | int | None | list[complex]]:
         return dict(
             real_values=self.real_values,
             imag_values=self.imag_values,
@@ -48,13 +39,16 @@ class MassSource(Property):
         :param data_dict: A dictionary containing "real_values: list[float]", "imag_values: [float]" and "volume_id: int | None" keys.
         :type data_dict: dict[str, list[float] | list[None | float | complex] | int | None]
         """
-        real = [float(x) for x in data.get("real_values", [])]
-        real = data["real_values"]
-        imaginary = data["imag_values"]
-        volume_id = data["volume_id"] if "volume_id" in data.keys() else None
+        try:
+            real = data["real_values"]
+            imaginary = data["imag_values"]
+            volume_id = data["volume_id"] if "volume_id" in data.keys() else None
 
-        return MassSource(real_values=real, imag_values=imaginary, volume_id=volume_id)
+            mass_source = cls(value=(real[0] + imaginary[0]*1j), volume_id=volume_id)
+        except Exception as e:
+            raise ArgumentError("Invalid argument") from e
 
+        return mass_source
 
 @dataclass
 class MassSourceTable(Property):
@@ -62,6 +56,9 @@ class MassSourceTable(Property):
     table_paths: list[str]
     values: list[None | float | complex]
     volume_id: int | None = None
+
+    def get_group_label(self) -> GroupLabel:
+        return GroupLabel.ACOUSTIC
 
     def to_dict(self) -> dict[str, list[str] | list[None | float | complex] | int | None]:
         return dict(
@@ -83,4 +80,4 @@ class MassSourceTable(Property):
         paths = data["table_paths"]
         values = data["values"]
 
-        return MassSourceTable(table_names=names, table_paths=paths, values=values)
+        return cls(table_names=names, table_paths=paths, values=values)

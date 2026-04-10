@@ -172,11 +172,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if acoustic_pressure is not None:
-
-            real_values = [np.real(acoustic_pressure)]
-            imag_values = [np.imag(acoustic_pressure)]
-
-            data = AcousticPressure(real_values, imag_values)
+            data = AcousticPressure(acoustic_pressure)
 
             for surface_id in surface_ids:
                 self.properties._set_property("acoustic_pressure", data, surface=surface_id)

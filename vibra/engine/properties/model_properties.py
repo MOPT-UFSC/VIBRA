@@ -251,7 +251,8 @@ class ModelProperties:
                       self.element_properties,
                       ]
 
-        for data in data_dicts: keys_to_remove = []
+        for data in data_dicts:
+            keys_to_remove = []
 
             for key in data.keys():
                 if len(key) == 2:

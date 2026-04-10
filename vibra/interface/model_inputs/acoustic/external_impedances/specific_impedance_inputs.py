@@ -202,10 +202,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                                                         )
 
         if specific_impedance is not None:
-            real_values = [np.real(specific_impedance)]
-            imag_values = [np.imag(specific_impedance)]
-
-            data = SpecifcImpedance(real_values=real_values, imag_values=imag_values)
+            data = SpecifcImpedance(specific_impedance)
 
             for surface_id in surface_ids:
                 self.properties._set_property("specific_impedance", data, surface=surface_id)
@@ -405,7 +402,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             surface_ids = list()
             for (property, *args), data in self.properties.surface_properties.items():
                 if property == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
+                    if isinstance(data, AnechoicTermination):
                         continue
                     surface_ids.append(args[0])
 

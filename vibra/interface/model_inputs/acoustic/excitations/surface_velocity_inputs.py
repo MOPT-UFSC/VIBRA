@@ -205,14 +205,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         surface_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if surface_velocity is not None:
-
-            real_values = [np.real(surface_velocity)]
-            imag_values = [np.imag(surface_velocity)]
-
             nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
             key_avg = self.checkBox_averaged_constant_values.isChecked()
 
-            data = SurfaceVelocity(real_values, imag_values, nodal_attribution, key_avg)
+            data = SurfaceVelocity(surface_velocity, nodal_attribution, key_avg)
 
             for surface_id in surface_ids:
                 self.properties._set_property("surface_velocity", data, surface=surface_id)

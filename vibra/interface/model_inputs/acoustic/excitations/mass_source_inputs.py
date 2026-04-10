@@ -506,31 +506,13 @@ class MassSourceInputs(MassSourceInputs_UI):
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is not None:
-            real_values = [np.real(mass_source)]
-            imag_values = [np.imag(mass_source)]
             vol_id = None
 
             if selection_type in ["points", "nodes", "lines", "surfaces"]:
                 current_text = self.comboBox_inherit_fluid_from.currentText()
                 vol_id = int(current_text.split(" - ")[1])
 
-            data = MassSource(real_values, imag_values, vol_id)
-
-            # if selection_type in ["points", "nodes", "lines", "surfaces"]:
-            #     current_text = self.comboBox_inherit_fluid_from.currentText()
-            #     vol_id = int(current_text.split(" - ")[1])
-            #     data = {
-            #             "real_values": real_values,
-            #             "imag_values": imag_values,
-            #             "volume_id" : vol_id
-            #             }
-            #
-            # else:
-            #     data = MassSource(real_values, imag_values)
-            #     data = {
-            #             "real_values": real_values,
-            #             "imag_values": imag_values,
-            #             }
+            data = MassSource(mass_source, vol_id)
 
             for selection_id in selection_ids:
                 if selection_type == "points":

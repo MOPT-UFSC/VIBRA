@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 
-from vibra.engine.properties.property import Property
+from vibra.engine.properties.property import GroupLabel, Property
 
 
 @dataclass
 class AnechoicTermination(Property):
     volume_id: int
+
+    def get_group_label(self) -> GroupLabel:
+        return GroupLabel.ACOUSTIC
 
     def to_dict(self) -> dict[str, int]:
         return dict(
@@ -23,4 +26,4 @@ class AnechoicTermination(Property):
         """
         volume_id = data["volume_id"]
 
-        return AnechoicTermination(volume_id=volume_id)
+        return cls(volume_id=volume_id)

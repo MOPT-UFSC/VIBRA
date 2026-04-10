@@ -213,10 +213,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         if absorption_coefficient is None:
             return
 
-        real_values = [absorption_coefficient]
-        imag_values = [None]
-
-        data = AbsorptionSurface(real_values, imag_values)
+        data = AbsorptionSurface(absorption_coefficient)
 
         for surface_id in surface_ids:
             self.properties._set_property("absorption_surface", data, surface=surface_id)
