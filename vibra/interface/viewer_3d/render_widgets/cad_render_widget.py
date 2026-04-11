@@ -1,4 +1,5 @@
 
+import logging
 import tempfile
 
 from PySide6.QtWidgets import (
@@ -16,14 +17,9 @@ from PySide6.QtCore import Qt, Signal
 
 from cad_widgets import (
     OCPWidget,
-    ViewToolbar,
-    SelectionToolbar,
     GeometryTreeWidget,
     PropertyEditorWidget,
-    ViewDirection,
-    ProjectionType,
     DisplayMode,
-    SelectionMode,
     ShapeType,
     GeometryManager,
     BoxProperties,
@@ -36,6 +32,8 @@ from cad_widgets import (
     CircleProperties,
 )
 
+from vibra.interface.viewer_3d.render_widgets.cad_view_toolbar import CADViewToolbar
+
 class CADRenderWidget(QWidget):
     on_shapes_exported = Signal(str)  # Signal emitted with the filename when shapes are exported
 
@@ -45,7 +43,7 @@ class CADRenderWidget(QWidget):
         # Create geometry manager
         self.geometry_manager = GeometryManager()
 
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(self._create_left_panel())
         splitter.addWidget(self._create_right_panel())
         splitter.setSizes([350, 1050])
@@ -71,20 +69,15 @@ class CADRenderWidget(QWidget):
 
     def _create_right_panel(self) -> QWidget:
         """Build the right panel containing the toolbars and the 3D viewer."""
-        self.view_toolbar = ViewToolbar(orientation="horizontal", show_projection_type=False)
+        self.view_toolbar = CADViewToolbar(self)
         self.view_toolbar.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         self.view_toolbar.setMaximumHeight(self.view_toolbar.sizeHint().height())
-
-        self.selection_toolbar = SelectionToolbar(orientation="horizontal")
-        self.selection_toolbar.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        self.selection_toolbar.setMaximumHeight(self.selection_toolbar.sizeHint().height())
 
         self.create_model_btn = QPushButton("Create Model")
         self.create_model_btn.clicked.connect(self._on_create_model_requested)
 
         toolbars_layout = QHBoxLayout()
         toolbars_layout.addWidget(self.view_toolbar)
-        toolbars_layout.addWidget(self.selection_toolbar)
         toolbars_layout.addWidget(self.create_model_btn)
         toolbars_layout.addStretch()
 
@@ -101,31 +94,12 @@ class CADRenderWidget(QWidget):
     def _connect_signals(self):
         """Connect toolbar signals to viewer methods."""
         # Connect view toolbar signals
-        self.view_toolbar.projection_changed.connect(
-            lambda direction_str: self.viewer.set_projection(
-                ViewDirection(direction_str)
-            )
-        )
-
-        self.view_toolbar.projection_type_changed.connect(
-            lambda proj_type_str: self.viewer.set_projection_type(
-                ProjectionType(proj_type_str)
-            )
-        )
-
         self.view_toolbar.display_mode_changed.connect(
             lambda mode_str: self.viewer.set_display_mode(DisplayMode(mode_str))
         )
 
         self.view_toolbar.transparency_changed.connect(
             self.viewer.set_global_transparency
-        )
-
-        self.view_toolbar.fit_all_requested.connect(self.viewer.fit_all)
-
-        # Connect selection toolbar signals
-        self.selection_toolbar.selection_mode_changed.connect(
-            lambda mode_str: self.viewer.set_selection_mode(SelectionMode(mode_str))
         )
 
         # Connect geometry tree signals
@@ -268,7 +242,7 @@ class CADRenderWidget(QWidget):
             self.geometry_manager.update_shape(shape_id, properties)
 
         except Exception as e:
-            print(f"Failed to update shape properties: {e}")
+            logging.error(f"Failed to update shape properties: {e}", stack_info=True)
 
     def _on_clear_all(self):
         """Handle clear all request from UI."""

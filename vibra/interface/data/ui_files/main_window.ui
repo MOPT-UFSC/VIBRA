@@ -111,15 +111,6 @@
    <addaction name="action_save"/>
    <addaction name="action_save_as"/>
    <addaction name="separator"/>
-   <addaction name="action_top_view"/>
-   <addaction name="action_bottom_view"/>
-   <addaction name="action_right_view"/>
-   <addaction name="action_left_view"/>
-   <addaction name="action_front_view"/>
-   <addaction name="action_back_view"/>
-   <addaction name="action_isometric_view"/>
-   <addaction name="action_zoom_to_fit"/>
-   <addaction name="separator"/>
    <addaction name="action_node_view"/>
    <addaction name="action_line_view"/>
    <addaction name="action_face_view"/>
@@ -355,87 +346,6 @@
     <string>Reset Project</string>
    </property>
   </action>
-  <action name="action_top_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/top.png</normaloff>:/icons/views/top.png</iconset>
-   </property>
-   <property name="text">
-    <string>Top View</string>
-   </property>
-  </action>
-  <action name="action_bottom_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/bottom.png</normaloff>:/icons/views/bottom.png</iconset>
-   </property>
-   <property name="text">
-    <string>Bottom View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+2</string>
-   </property>
-  </action>
-  <action name="action_right_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/right.png</normaloff>:/icons/views/right.png</iconset>
-   </property>
-   <property name="text">
-    <string>Right View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+3</string>
-   </property>
-  </action>
-  <action name="action_left_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/left.png</normaloff>:/icons/views/left.png</iconset>
-   </property>
-   <property name="text">
-    <string>Left View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+4</string>
-   </property>
-  </action>
-  <action name="action_front_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/front.png</normaloff>:/icons/views/front.png</iconset>
-   </property>
-   <property name="text">
-    <string>Front View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+5</string>
-   </property>
-  </action>
-  <action name="action_back_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/back.png</normaloff>:/icons/views/back.png</iconset>
-   </property>
-   <property name="text">
-    <string>Back View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+6</string>
-   </property>
-  </action>
-  <action name="action_isometric_view">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/orthogonal.png</normaloff>:/icons/views/orthogonal.png</iconset>
-   </property>
-   <property name="text">
-    <string>Isometric View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+7</string>
-   </property>
-  </action>
   <action name="action_node_view">
    <property name="checkable">
     <bool>true</bool>
@@ -503,15 +413,6 @@
    </property>
    <property name="text">
     <string>Symbols</string>
-   </property>
-  </action>
-  <action name="action_zoom_to_fit">
-   <property name="icon">
-    <iconset resource="../icons/resources.qrc">
-     <normaloff>:/icons/views/zoom_icon.png</normaloff>:/icons/views/zoom_icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom To Fit</string>
    </property>
   </action>
   <action name="action_structural_workspace">

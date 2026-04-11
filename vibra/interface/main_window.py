@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
+from vibra.interface.camera_toolbar import CameraToolbar
 from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
@@ -110,6 +111,7 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.addWidget(self.cad_render_widget)
+        self.camera_toolbar = CameraToolbar(self.render_widgets_stack)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.update_visualization_filter)
@@ -118,6 +120,7 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
 
+        self.addToolBar(self.camera_toolbar)
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
@@ -920,7 +923,7 @@ class MainWindow(MainWindow_UI):
                 self.update_toolbar_and_menu_items_after_load_project()
                 self.analysis_toolbar.check_analysis_setup_callback()
                 self.status_bar.setVisible(True)
-                self.action_front_view_callback()
+                self.camera_toolbar.set_front_view()
                 self.update_mesh_information()
 
                 self.mesh_widget.update_plot()
@@ -1074,47 +1077,6 @@ class MainWindow(MainWindow_UI):
 
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
-
-    def action_top_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_top_view()
-
-    def action_bottom_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_bottom_view()
-
-    def action_right_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_right_view()
-
-    def action_left_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_left_view()
-
-    def action_front_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_front_view()
-
-    def action_back_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_back_view()
-
-    def action_isometric_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_isometric_view()
-
-    def action_zoom_to_fit_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.renderer.ResetCamera()
-            widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
         self.visualization_filter.symbols = clicked
