@@ -136,6 +136,7 @@ class CADRenderWidget(QWidget):
         # Connect property editor signals
         self.property_editor.properties_changed.connect(self._on_properties_changed)
         self.property_editor.color_changed.connect(self._on_color_changed)
+        self.property_editor.name_changed.connect(self._on_name_changed)
         
         # Connect geometry manager signals to components
         self.geometry_manager.shape_created.connect(self.viewer.on_shape_created)
@@ -225,6 +226,12 @@ class CADRenderWidget(QWidget):
         """Handle color change from the property editor."""
         self.geometry_manager.update_shape_color(shape_id, color)
 
+    def _on_name_changed(self, shape_id: str, name: str):
+        """Handle name change from the property editor."""
+        if not self.geometry_manager.rename_shape(shape_id, name):
+            logging.error(f"Failed to rename shape {shape_id} to '{name}'")
+            self.property_editor.revert_name()
+
     def _on_properties_changed(self, shape_id: str, properties_dict: dict):
         """Handle property changes from the editor."""
         managed_shape = self.geometry_manager.get_shape(shape_id)
@@ -239,10 +246,14 @@ class CADRenderWidget(QWidget):
             )
             
             # Update the shape (this will emit shape_updated signal)
-            self.geometry_manager.update_shape(shape_id, properties)
+            result = self.geometry_manager.update_shape(shape_id, properties)
+            if result is None:
+                logging.error(f"Failed to update shape properties for {shape_id}: update returned None")
+                self.property_editor.revert_properties()
 
         except Exception as e:
-            logging.error(f"Failed to update shape properties: {e}", stack_info=True)
+            logging.error(f"Failed to update shape properties: {e}")
+            self.property_editor.revert_properties()
 
     def _on_clear_all(self):
         """Handle clear all request from UI."""
