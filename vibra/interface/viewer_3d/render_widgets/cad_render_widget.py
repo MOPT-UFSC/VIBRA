@@ -32,6 +32,7 @@ from cad_widgets import (
     CircleProperties,
 )
 
+from cad_widgets.models.shape_properties import ArrayProperties
 from vibra.interface.viewer_3d.render_widgets.cad_view_toolbar import CADViewToolbar
 
 class CADRenderWidget(QWidget):
@@ -131,6 +132,9 @@ class CADRenderWidget(QWidget):
         )
         self.geometry_tree.shape_split_to_faces_requested.connect(
             self._on_shape_split_to_faces_requested
+        )
+        self.geometry_tree.shape_array_requested.connect(
+            self._on_shape_array_requested
         )
 
         # Connect property editor signals
@@ -322,6 +326,14 @@ class CADRenderWidget(QWidget):
                 QMessageBox.information(self, "Export Success", f"Shape exported to {filename}")
             else:
                 QMessageBox.critical(self, "Export Error", f"Failed to export shape to {filename}")
+
+    def _on_shape_array_requested(self, shape_id: str):
+        """Handle shape array request from geometry tree."""
+        arr_id = self.geometry_manager.create_shape_array(shape_id, ArrayProperties())
+        if arr_id:
+            self.property_editor.clear_shape()
+        else:
+            QMessageBox.warning(self, "Operation Failed", "Array creation failed")
 
     def _on_export_iges_requested(self, shape_id: str):
         """
