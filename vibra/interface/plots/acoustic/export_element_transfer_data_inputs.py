@@ -127,15 +127,16 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def search_callback(self):
 
-        last_path = app().config.get_last_folder_for("imported_table_folder")
-        if last_path is None:
-            last_path = str(Path().home())
+        last_path = app().config.get_last_folder_for(
+            "imported_table_folder",
+            default=Path().home(),
+        )
 
         caption = "Choose a file to import element transfer data"
         path, check = QFileDialog.getOpenFileName(
             self,
             caption,
-            last_path,
+            str(last_path),
             "Table File (*.xls; *.xlsx;)",
         )
 

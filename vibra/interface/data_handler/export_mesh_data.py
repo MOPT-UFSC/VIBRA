@@ -54,7 +54,7 @@ class ExportMeshData(ExportMesh_UI):
         app().main_window.theme_changed.connect(self.update_icons_color)
 
     def search_folder(self):
-        self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', self.temp_path)
+        self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', str(self.temp_path))
         self.lineEdit_folder_path.setText(str(self.folder_path))
         if self.folder_path == "":
             return True

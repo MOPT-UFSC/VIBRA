@@ -55,7 +55,7 @@ class RefpropInterface:
 
         user_path = os.path.expanduser("~")
         title = 'Choose the REFPROP folder'
-        REFPROP_PATH = QFileDialog.getExistingDirectory(None, title, user_path)
+        REFPROP_PATH = QFileDialog.getExistingDirectory(None, title, str(user_path))
 
         if REFPROP_PATH == "":
             return None

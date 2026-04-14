@@ -39,7 +39,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
     export_path, extension = QFileDialog.getSaveFileName(
         parent,
         caption,
-        last_path,
+        str(last_path),
         filter=_filter,
     )
 

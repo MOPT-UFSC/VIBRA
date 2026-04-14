@@ -135,16 +135,17 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         caption = "Set a file name to export the acoustic element transfer data"
 
-        last_path = app().config.get_last_folder_for("exported_data_folder")
-        if last_path is None:
-            last_path = str(Path().home())
+        last_path = app().config.get_last_folder_for(
+            "exported_data_folder",
+            default=Path().home(),
+        )
 
         _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls)"
 
         path, check = QFileDialog.getSaveFileName( 
             self, 
             caption, 
-            last_path, 
+            str(last_path),
             filter = _filter
         )
 
