@@ -292,12 +292,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             return   
 
         if not app().project.model.generated_mesh:
-            obj = MesherSetupInputs()
+            obj = MesherSetupInputs(close_after_generate=True)
             if obj.complete:
                 app().main_window.update_plots()
             else:
                 return
-        
+
         app().main_window.selection.set_geometry_selection()
 
         def compute_model_solution():

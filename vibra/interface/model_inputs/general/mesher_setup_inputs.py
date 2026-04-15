@@ -61,10 +61,10 @@ warning_title = "Warning"
 
 
 class MesherSetupInputs(MesherSetupInputs_UI):
-    def __init__(self, **kwargs):
+    def __init__(self, close_after_generate: bool = False, **kwargs):
         super().__init__()
 
-        self.close_after_generate = kwargs.get("close_after_generate", False)
+        self.close_after_generate = close_after_generate
 
         app().main_window.set_input_widget(self)
         self.mesh = app().project.model.mesh
