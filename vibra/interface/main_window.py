@@ -16,6 +16,7 @@ from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 from vibra import app, TEMP_PROJECT_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, LIGHT_ICON_COLOR
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
+from vibra.interface.camera_toolbar import CameraToolbar
 from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
@@ -38,6 +39,7 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
+from vibra.interface.viewer_3d.render_widgets.cad_render_widget import CADRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
@@ -102,12 +104,14 @@ class MainWindow(MainWindow_UI):
         self.create_recents_menu()
         self.create_status_bar()
 
-        self.clear_render_widgets_stack()
+        self.clear_render_widgets_stack()    
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
+        self.render_widgets_stack.addWidget(self.cad_render_widget)
+        self.camera_toolbar = CameraToolbar(self.render_widgets_stack)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.update_visualization_filter)
@@ -116,6 +120,7 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
 
+        self.addToolBar(self.camera_toolbar)
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
@@ -263,6 +268,8 @@ class MainWindow(MainWindow_UI):
 
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
+        self.cad_render_widget = CADRenderWidget()
+        self.cad_render_widget.on_shapes_exported.connect(self._import_geometry_or_mesh)
 
     def _load_menu_widgets(self):
         self.results_viewer_widget = ResultsViewerWidget()
@@ -306,6 +313,10 @@ class MainWindow(MainWindow_UI):
             last_widget = self.render_widgets_stack.widget(self.last_render_index)
             new_widget.copy_camera_from(last_widget)
             # if last_widget is not a valid render the operation will be ignored
+
+        if new_widget is self.cad_render_widget:
+            self.render_tools_toolbar.setVisible(False)
+            self.stacked_setup.setVisible(False)
 
         self.last_render_index = new_index
 
@@ -684,10 +695,22 @@ class MainWindow(MainWindow_UI):
 
     def new_project_dialog(self):
         self.reset_temporary_vibra_folder()
-        if self.import_geometry_or_mesh_dialog():
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Getting geometry")
+        msg_box.setText("Would you like to draw or import a geometry file?")
+        
+        draw_button = msg_box.addButton("Draw", QMessageBox.ButtonRole.AcceptRole)
+        import_button = msg_box.addButton("Import", QMessageBox.ButtonRole.RejectRole)
+        
+        msg_box.exec()
+        
+        if msg_box.clickedButton() == import_button:
+            if self.import_geometry_or_mesh_dialog():
+                return
+        
+        if msg_box.clickedButton() == draw_button:
+            self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
-
-        self.render_tools_toolbar.setVisible(True)
 
     def save_project_dialog(self):
         if app().project.save_path is None:
@@ -813,10 +836,14 @@ class MainWindow(MainWindow_UI):
 
         if not check:
             return True
+        
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
+        return self._import_geometry_or_mesh(load_path)
+    
+    def _import_geometry_or_mesh(self, load_path: str):
 
         self.selection.clear_selection()
 
-        app().config.write_last_folder_path_in_file("geometry_mesh_folder", load_path)
         app().project.reset_variables()
         app().project.reset_solutions()
 
@@ -848,6 +875,8 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_or_mesh(_geometry_path)
 
         self.model_setup_widget.model_setup_items.update_items_appearance()
+
+        self.render_tools_toolbar.setVisible(True)
         
         return False
 
@@ -894,7 +923,7 @@ class MainWindow(MainWindow_UI):
                 self.update_toolbar_and_menu_items_after_load_project()
                 self.analysis_toolbar.check_analysis_setup_callback()
                 self.status_bar.setVisible(True)
-                self.action_front_view_callback()
+                self.camera_toolbar.set_front_view()
                 self.update_mesh_information()
 
                 self.mesh_widget.update_plot()
@@ -1048,47 +1077,6 @@ class MainWindow(MainWindow_UI):
 
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
-
-    def action_top_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_top_view()
-
-    def action_bottom_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_bottom_view()
-
-    def action_right_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_right_view()
-
-    def action_left_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_left_view()
-
-    def action_front_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_front_view()
-
-    def action_back_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_back_view()
-
-    def action_isometric_view_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.set_isometric_view()
-
-    def action_zoom_to_fit_callback(self):
-        widget = self.render_widgets_stack.currentWidget()
-        if isinstance(widget, CommonRenderWidget):
-            widget.renderer.ResetCamera()
-            widget.update()
 
     def action_hide_show_symbols_callback(self, clicked: bool):
         self.visualization_filter.symbols = clicked

@@ -25,6 +25,7 @@ dependencies = [
     "pyarrow>=22.0.0",
     "fastexcel>=0.18.0",
     "pandas>=2.3.3",
+    "cad-widgets",
 ]
 
 [dependency-groups]
