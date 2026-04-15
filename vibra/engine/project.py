@@ -199,6 +199,7 @@ class Project:
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
         self.model.geometry_path = path  # keeping previous file organization
+        self.model.generated_mesh = True
         self.write_to_working_dir()
         return mesh
 
@@ -258,6 +259,7 @@ class Project:
             )
 
         self.model.mesh = mesh
+        self.model.generated_mesh = True
         self.model.process_degrees_of_freedom_decoupling()
 
         self.reset_solution()

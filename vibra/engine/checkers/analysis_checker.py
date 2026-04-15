@@ -75,6 +75,9 @@ class AnalysisChecker:
         if mesh is None:
             raise errors.InvalidMeshSetupError("There is no mesh available")
 
+        if self.model.generated_mesh:
+            raise errors.InvalidMeshSetupError("No mesh was generated")
+
         if mesh.disconnected_nodes_data:
             text = "Collapsed elements have been detected during the mesh post-processing. \n"
             text += "The model solution will stay deactivated until the collapsed-related \n"
