@@ -7,6 +7,9 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
+[manifest]
+overrides = [{ name = "vtk", specifier = ">=9.4.2,<9.5" }]
+
 [[package]]
 name = "cad-widgets"
 version = "0.1.15"

@@ -28,6 +28,9 @@ dependencies = [
     "cad-widgets",
 ]
 
+[tool.uv]
+override-dependencies = ["vtk>=9.4.2,<9.5"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.3.5,<9",
