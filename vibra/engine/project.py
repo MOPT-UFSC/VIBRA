@@ -144,6 +144,7 @@ class Project:
         self.model = self.project_reader.read_model(self.model)
         self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
         self.save_path = Path(path)
+        self.needs_saving = False
         return self
 
     def read_from_working_dir(self) -> Project:
