@@ -160,7 +160,7 @@ class Model:
                     ElementType=DEFAULT_ELEMENT_TYPE,
                 )
 
-            except:
+            except Exception:
                 self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
                 element_size = 10
@@ -838,7 +838,7 @@ class Model:
             if prop != "porous_material_model":
                 continue
 
-            if not volume_id in self.mesh.surfaces_from_volume.keys():
+            if volume_id not in self.mesh.surfaces_from_volume.keys():
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
@@ -884,7 +884,7 @@ class Model:
             if prop != "viscous_thermal_model":
                 continue
 
-            if not volume_id in self.mesh.surfaces_from_volume.keys():
+            if volume_id not in self.mesh.surfaces_from_volume.keys():
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
