@@ -25,16 +25,8 @@ class StrictDoubleValidator(QDoubleValidator):
         if not string:
             return QDoubleValidator.State.Intermediate, string, pos
 
-        if string == "-":
-            return QDoubleValidator.State.Intermediate, string, pos
-
         if string.count(".") > 1:
             return QDoubleValidator.State.Invalid, string, pos
-
-        if is_numeric(string):
-            value = float(string)
-            if value < self.bottom() or value > self.top():
-                return QDoubleValidator.State.Intermediate, string, pos
 
         return_value = super().validate(string, pos)
         if return_value[0] == QDoubleValidator.State.Acceptable:
