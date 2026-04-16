@@ -27,14 +27,11 @@ dependencies = [
     "pandas>=2.3.3",
     "xxhash>=3.6.0",
     "pint>=0.24.4",
+    "cad-widgets",
 ]
 
 [dependency-groups]
-dev = [
-    "pytest>=8.3.5,<9",
-    "pytest-datadir>=1.7.2,<2",
-    "invoke>=2.2.0,<3",
-]
+dev = ["pytest>=8.3.5,<9", "pytest-datadir>=1.7.2,<2", "invoke>=2.2.0,<3"]
 
 [build-system]
 requires = ["hatchling"]

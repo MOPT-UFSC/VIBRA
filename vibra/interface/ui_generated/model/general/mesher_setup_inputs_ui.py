@@ -747,9 +747,9 @@ class Ui_Dialog(object):
         self.gridLayout.addWidget(self.frame_buttons, 3, 0, 1, 1)
 
         QWidget.setTabOrder(self.comboBox_element_type, self.comboBox_shape_function)
-        QWidget.setTabOrder(self.comboBox_shape_function, self.comboBox_mesh_quality_metrics1)
-        QWidget.setTabOrder(self.comboBox_mesh_quality_metrics1, self.comboBox_volumes_interface_behavior1)
-        QWidget.setTabOrder(self.comboBox_volumes_interface_behavior1, self.tabWidget_main)
+        QWidget.setTabOrder(self.comboBox_shape_function, self.comboBox_mesh_quality_metrics)
+        QWidget.setTabOrder(self.comboBox_mesh_quality_metrics, self.comboBox_volumes_interface_behavior)
+        QWidget.setTabOrder(self.comboBox_volumes_interface_behavior, self.tabWidget_main)
         QWidget.setTabOrder(self.tabWidget_main, self.tabWidget_global_settings)
         QWidget.setTabOrder(self.tabWidget_global_settings, self.doubleSpinBox_maximum_element_size)
         QWidget.setTabOrder(self.doubleSpinBox_maximum_element_size, self.doubleSpinBox_minimum_element_size)
@@ -773,8 +773,8 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.pushButton_add, self.tableWidget_mesh_quality)
         QWidget.setTabOrder(self.tableWidget_mesh_quality, self.pushButton_plot_histogram)
         QWidget.setTabOrder(self.pushButton_plot_histogram, self.pushButton_show_bad_elements)
-        QWidget.setTabOrder(self.pushButton_show_bad_elements, self.comboBox_mesh_quality_metrics1)
-        QWidget.setTabOrder(self.comboBox_mesh_quality_metrics1, self.comboBox_volumes_interface_behavior1)
+        QWidget.setTabOrder(self.pushButton_show_bad_elements, self.comboBox_mesh_quality_metrics)
+        QWidget.setTabOrder(self.comboBox_mesh_quality_metrics, self.comboBox_volumes_interface_behavior)
 
         self.retranslateUi(Dialog)
 
