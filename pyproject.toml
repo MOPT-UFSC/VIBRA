@@ -26,6 +26,7 @@ dependencies = [
     "fastexcel>=0.18.0",
     "pandas>=2.3.3",
     "xxhash>=3.6.0",
+    "pint>=0.24.4",
 ]
 
 [dependency-groups]
