@@ -6,7 +6,6 @@ from vibra import app
 from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -125,7 +124,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             width = float(self.lineEdit_width_rectangular.text())
             area = width * height
             self.lineEdit_area_rectangular.setText(f"{round(area, 6)}")
-        except:
+        except Exception:
             self.lineEdit_area_rectangular.setText("--")
 
     def update_circular_duct_area(self):
@@ -134,7 +133,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             area = (np.pi / 4) * (diameter**2)
             self.lineEdit_radius_circular.setText(f"{round(diameter/2, 6)}")
             self.lineEdit_area_circular.setText(f"{round(area, 6)}")
-        except:
+        except Exception:
             self.lineEdit_area_circular.setText("--")
 
     def remove_callback(self):
@@ -331,7 +330,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 item.setText(str(new_parameter_value))
             else:
                 new_parameter_value = float(item.text())
-        except:
+        except Exception:
             value_error = True
 
         if value_error:
@@ -582,13 +581,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             index = self.treeWidget_viscous_thermal_model.indexBelow(index)
         
         return map_id_to_model_index
-
-    def generate_mesh(self):
-        if not app().project.model.generated_mesh:
-            self.mesher = MesherSetupInputs(close_after_generate=True)
-            if not self.mesher.complete:
-                self.mesher = None
-                return True
 
     def get_rectangular_duct_inputs(self) -> RectangularDuctData:
 
