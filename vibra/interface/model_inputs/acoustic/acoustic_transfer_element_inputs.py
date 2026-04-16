@@ -32,7 +32,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -61,8 +60,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.lineEdit_fstep.setValidator(validator)
 
     def _reset_variables(self):
+
         self.analysis_setup = None
         self.keep_window_open = True
+
+        self.surface_ids = list()
         self.element_transfer_data = dict()
 
         self.highlight_style_sheet = """border-color: rgb(32, 207, 255); border-width: 2px;"""
@@ -178,33 +180,28 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def check_typed_ids(self):
 
-        input_selected_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(
-                                                                            input_selected_id, 
-                                                                            selection = "surfaces",
-                                                                            single_id = True,
-                                                                            )
+        line_edits = [
+            self.lineEdit_input_selected_id,
+            self.lineEdit_output_selected_id,
+        ]
 
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_input_selected_id.setFocus()
-            self.lineEdit_input_selected_id.selectAll()
-            PrintMessageInput(error_data)
-            return
+        self.surface_ids.clear()
+        for line_edit in line_edits:
 
-        output_selected_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
-                                                                            output_selected_id, 
-                                                                            selection = "surfaces", 
-                                                                            single_id = True  
-                                                                            )
+            surface_id, error_data = app().project.model.mesh.check_selected_ids(
+                                                                                line_edit.text(), 
+                                                                                selection = "surfaces",
+                                                                                single_id = True,
+                                                                                )
 
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_input_selected_id.setFocus()
-            self.lineEdit_input_selected_id.selectAll()
-            PrintMessageInput(error_data)
-            return
+            if error_data is not None:
+                self.hide()
+                line_edit.setFocus()
+                line_edit.selectAll()
+                PrintMessageInput(error_data)
+                return True
+            
+            self.surface_ids.append(surface_id)
 
     def check_frequency_entries(self):
 
@@ -237,41 +234,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         
         self.analysis_setup = HarmonicAnalysisSetupRange(f_min, f_max, f_step=f_step)
 
-        # self.analysis_setup["f_min"] = input_fmin
-        # self.analysis_setup["f_max"] = input_fmax
-        # self.analysis_setup["f_step"] = input_fstep
-
-        # self.frequencies = np.arange(input_fmin, input_fmax + input_fstep, input_fstep)
-        # self.analysis_setup["frequencies"] = self.frequencies
-
-    # def check_inputs(self, input_value: str, label: str):
-
-    #     message = ""
-    #     title = "Invalid input to the analysis setup"
-    #     if input_value != "":
-    #         try:
-
-    #             _value = input_value.replace(",", ".")
-    #             value = float(_value)
-
-    #             if value <= 0:
-    #                 message = f"Insert a positive value to the {label}."
-    #                 message += "\n\nNote: zero value is not allowed."
-
-    #         except Exception as _err:
-    #             message = "Dear user, you have typed an invalid value at the \n"
-    #             message += f"{label} input field.\n\n"
-    #             message += str(_err)
-
-    #     else:
-    #         message = f"Insert some value at the {label} input field."
-
-    #     if message != "":
-    #         PrintMessageInput([error_title, title, message])
-    #         return True, None
-
-    #     else:
-    #         return False, value
+        self.frequencies = self.analysis_setup.frequencies()
 
     def configure_analysis(self):
         if self.check_frequency_entries():
@@ -296,7 +259,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.configure_analysis():
             return
 
-        print(app().project.model.generated_mesh)
         if not app().project.model.generated_mesh:
             obj = MesherSetupInputs(close_after_generate = True)
             if not obj.complete:
@@ -304,21 +266,27 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
             app().main_window.update_plots()
 
+        # integrate the areas of the selected surfaces
         self.process_areas()
-        print(app().project.model.generated_mesh)
-        print(app().project.model.mesh.surface_area_from_element_integration)
 
         app().main_window.selection.set_geometry_selection()
 
         def compute_model_solution():
-            for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
+            for i, surface_id in enumerate(self.surface_ids):
 
                 logging.info(f"Solving model [{5 + 50 * i}/100]...")
                 sleep(1)
 
+                # remove all model excitations and acoustic impedances
                 self.remove_model_excitations_and_impedances()
+
+                # define the acoustic excitation
                 self.set_surface_velocity(surface_id)
+
+                # compute the model solution for the current excitation
                 app().project.solve_acoustic_harmonic_analysis()
+
+                # export the obtained data for the current excitation
                 self.join_model_data(surface_id)
 
             logging.info("Exporting the admittance matrix data... [20/100]")
@@ -331,6 +299,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             logging.info("Exporting the admittance matrix data... [100/100]")
 
         LoadingWindow(compute_model_solution).run()
+
+        # remove all model excitations and acoustic impedances
+        self.remove_model_excitations_and_impedances()
+
+        # reset model solution data
+        app().main_window.analysis_toolbar.reset_solution(True)
 
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
         self.print_final_message()
@@ -360,7 +334,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         for property in model_impedances:
             for key in self.properties.surface_properties.keys():
-                if key[0] == property and key[1] in [self.input_selection_id, self.output_selection_id]:
+                if key[0] == property and key[1] in self.surface_ids:
                     properties_to_remove[key[0]].append(key[1])
 
         self.remove_table_data(properties_to_remove)
@@ -403,15 +377,14 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def process_areas(self):
 
         def function_callback():
-            surface_ids = [self.input_selection_id, self.output_selection_id]
             logging.info("Processing area... [60/100]")
-            self.mesh.process_face_elements_connected_to_nodes(surface_ids)
+            app().project.model.mesh.process_face_elements_connected_to_nodes(self.surface_ids)
 
         LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 
-        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
+        surface_nodes = app().project.model.mesh.get_nodes_from_surface(surface_id)
 
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id)
         if rho is None:
@@ -459,19 +432,19 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def join_model_data(self, excitation_id: int):
         self.solution = app().project.solver.solution
 
-        for k, response_id in enumerate([self.input_selection_id, self.output_selection_id]):
+        for k, response_id in enumerate(self.surface_ids):
             
             data = self.get_response(excitation_id, response_id)
             if data is None:
                 self.element_transfer_data.clear()
                 return
             
-            if response_id == self.input_selection_id:
+            if response_id == self.surface_ids[0]:
                 resp_id = 1
             else:
                 resp_id = 2
 
-            if excitation_id == self.input_selection_id:
+            if excitation_id == self.surface_ids[0]:
                 excit_id = 1
             else:
                 excit_id = 2
@@ -481,20 +454,20 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             y_label = "Transfer function H(f)"
 
             data_name = f"transfer_function_h{resp_id}{excit_id}"
-            key = (data_name, (self.input_selection_id, self.output_selection_id))
+            key = (data_name, tuple(self.surface_ids))
 
-            self.element_transfer_data[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : data,
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : y_label,
-                                        "title" : "Element transfer data",
-                                        "data_type" : data_type,
-                                        "legend" : "element transfer data",
-                                        "unit" : unit_label,
-                                        "color" :(0,0,1),
-                                        "linestyle" : "-"
-                                        }
+            self.element_transfer_data[key] = {
+                "x_data" : self.frequencies,
+                "y_data" : data,
+                "x_label" : "Frequency [Hz]",
+                "y_label" : y_label,
+                "title" : "Element transfer data",
+                "data_type" : data_type,
+                "legend" : "element transfer data",
+                "unit" : unit_label,
+                "color" :(0,0,1),
+                "linestyle" : "-",
+                }
 
     def export_data_in_spreadsheet_format(self, export_path: str):
 
@@ -557,7 +530,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.export_data_callback()
-        elif event.key() == Qt.Key_Escape:
+
+        if event.key() == Qt.Key_Escape:
             self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
