@@ -1,5 +1,5 @@
 from dataclasses import KW_ONLY, dataclass
-from typing import Literal, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -13,7 +13,8 @@ class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
     _: KW_ONLY
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    modes_number: None | int = None
+    modes_number: int = 40
+    sigma_factor: float = 0.01
 
     def __post_init__(self):
         # cast everything to arrays and fill with ones if needed

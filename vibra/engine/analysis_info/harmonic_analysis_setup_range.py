@@ -2,7 +2,7 @@ from dataclasses import KW_ONLY, dataclass
 
 import numpy as np
 
-from .harmonic_analysis_setup import HarmonicAnalysisSetup, AnalysisMethod
+from .harmonic_analysis_setup import AnalysisMethod, HarmonicAnalysisSetup
 
 
 @dataclass
@@ -13,7 +13,8 @@ class HarmonicAnalysisSetupRange(HarmonicAnalysisSetup):
     _: KW_ONLY
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    modes_number: None | int = None
+    modes_number: int = 40
+    sigma_factor: float = 0.01
 
     @property
     def f_size(self):

@@ -16,7 +16,8 @@ class HarmonicAnalysisSetup(ABC):
     f_size: float
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    modes_number: None | int = None
+    modes_number: int = 40
+    sigma_factor: float = 0.01
 
     def replace(self, **changes) -> Self:
         return replace(self, **changes)
