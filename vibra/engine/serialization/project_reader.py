@@ -157,15 +157,19 @@ class ProjectReader:
         else:
             return None
 
-    def read_mesh_setup(self) -> MeshSetup:
+    def read_mesh_setup(self) -> Optional[MeshSetup]:
         logging.info("Reading MeshSetup.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
-            project_setup = dict()
+            return None
+
+        mesh_setup_dict: dict = project_setup.get("mesh_setup", dict())
+        if not mesh_setup_dict:
+            return None
 
         mesh_setup = MeshSetup()
-        for key, value in project_setup.get("mesh_setup", dict()).items():
+        for key, value in mesh_setup_dict.items():
             setattr(mesh_setup, key, value)
 
         return mesh_setup
