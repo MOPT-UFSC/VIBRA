@@ -1,15 +1,8 @@
 
-from vibra.engine import AnalysisID
+from vibra.engine import HarmonicAnalysisSetup
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
-from vibra.engine.mesher.element_setup import (
-TETRAHEDRON_4,
-TETRAHEDRON_10,
-HEXAHEDRON_8,
-HEXAHEDRON_20,
-DEFAULT_ELEMENT_TYPE,
-)
 
 import logging
 import numpy as np
@@ -54,12 +47,14 @@ class AcousticAssembler:
 
 
     def update_number_of_frequencies(self):
-        self.frequencies = self.model.frequencies
-        if self.frequencies is None:
-            self.number_frequencies = 1
-        else:
-            self.number_frequencies = len(self.frequencies)
+        analysis_setup = self.model.analysis_setup
 
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            self.frequencies = analysis_setup.frequencies()
+            self.number_frequencies = len(self.frequencies)
+        else:
+            self.frequencies = None
+            self.number_frequencies = 1
 
     def is_assembled(self):
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
@@ -194,7 +189,10 @@ class AcousticAssembler:
         if prescribed_values.size == 0:
             return 0.
 
-        frequencies = self.model.frequencies
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+        frequencies = analysis_setup.frequencies()
+
         omega = 2 * np.pi * frequencies[index]
 
         values = prescribed_values[:, index]
@@ -969,10 +967,10 @@ class AcousticAssembler:
 
             if self.integration_data_Qms_1d:
 
-                logging.info(f"Processing the mass source data to assemble matrices (1d elements)... [1/2]")
+                logging.info("Processing the mass source data to assemble matrices (1d elements)... [1/2]")
                 connectivities = self.integration_data_Qms_1d.get("connectivities")
 
-                logging.info(f"Processing the mass source data to assemble matrices (1d elements)... [2/2]")
+                logging.info("Processing the mass source data to assemble matrices (1d elements)... [2/2]")
                 self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d = self.element_1d.generate_ind_rows_cols(connectivities)
                 self.int1d_NtN, self.int1d_BtB = self.element_1d.stacked_matrices_NtN_and_BtB()
 
@@ -984,10 +982,10 @@ class AcousticAssembler:
             self.integration_data_Qms_2d = self.get_mass_source_data_for_2d_element_integration()
             if self.integration_data_Qms_2d:
 
-                logging.info(f"Processing the mass source data to assemble matrices (2d elements)... [1/2]")
+                logging.info("Processing the mass source data to assemble matrices (2d elements)... [1/2]")
                 connectivities = self.integration_data_Qms_2d.get("connectivities")
 
-                logging.info(f"Processing the mass source data to assemble matrices (2d elements)... [2/2]")
+                logging.info("Processing the mass source data to assemble matrices (2d elements)... [2/2]")
                 self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d = self.element_2d.generate_ind_rows_cols(connectivities)
                 self.int2d_NtN, self.int2d_BtB = self.element_2d.stacked_matrices_NtN_and_BtB()
 
@@ -1012,16 +1010,16 @@ class AcousticAssembler:
         # global_matrices shape
         self.gm_shape = (self.total_dof, self.total_dof)
 
-        logging.info(f"Processing the elementary matrices data... [25/100]")
+        logging.info("Processing the elementary matrices data... [25/100]")
         self.int3d_BtB, self.int3d_NtN = self.element_3d.stacked_elementary_matrices_NtN_BtB()
 
         if self.model.stop_processing:
             return True
 
-        logging.info(f"Processing the elementary matrices data... [85/100]")
+        logging.info("Processing the elementary matrices data... [85/100]")
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
 
-        logging.info(f"Processing the elementary matrices data... [95/100]")
+        logging.info("Processing the elementary matrices data... [95/100]")
         self.process_indexes()
 
 
@@ -1298,7 +1296,7 @@ class AcousticAssembler:
         if not self.integration_data_Zsi:
             return
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [1/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [1/10]")
         connectivities = self.integration_data_Zsi.get("connectivities")       
         Z_si = self.integration_data_Zsi.get("surface_data")
 
@@ -1306,7 +1304,7 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zsi[j] = np.zeros((nel, dof, dof), dtype=complex)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [2/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [2/10]")
         self.ind_rows_Zsi, self.ind_cols_Zsi = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
@@ -1328,7 +1326,7 @@ class AcousticAssembler:
         if not self.integration_data_pw:
             return
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [1/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [1/10]")
         _k_wave = self.integration_data_pw.get("k_wave")
         _e_normals = self.integration_data_pw.get("e_normals")
         connectivities = self.integration_data_pw.get("connectivities")
@@ -1341,7 +1339,7 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zpw[j] = np.zeros((nel, dof, dof), dtype=complex)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [2/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [2/10]")
         self.ind_rows_Zpw, self.ind_cols_Zpw = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
@@ -1375,7 +1373,7 @@ class AcousticAssembler:
         if not self.integration_data_Zas:
             return
         
-        logging.info(f"Processing the impedance data to assemble damping matrix... [3/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [3/10]")
         connectivities = self.integration_data_Zas.get("connectivities")       
         Z_as = self.integration_data_Zas.get("surface_data")
 
@@ -1383,7 +1381,7 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zas[j] = np.zeros((nel, dof, dof), dtype=complex)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [4/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [4/10]")
         self.ind_rows_Zas, self.ind_cols_Zas = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
@@ -1412,7 +1410,7 @@ class AcousticAssembler:
         if not self.integration_data_Zti:
             return
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [5/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [5/10]")
         connectivities_A = self.integration_data_Zti.get("connectivities_A")
         connectivities_B = self.integration_data_Zti.get("connectivities_B")
         Zti_A = self.integration_data_Zti.get("surface_data_A")
@@ -1425,14 +1423,14 @@ class AcousticAssembler:
             self.data_Zti_A[j] = np.zeros((nel_A, dof, dof), dtype=complex)
             self.data_Zti_B[j] = np.zeros((nel_B, dof, dof), dtype=complex)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [6/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [6/10]")
         self.ind_rows_Zti_A, self.ind_cols_Zti_A = self.element_2d.generate_ind_rows_cols(connectivities_A)
         int2d_NtN_A = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
             self.data_Zti_A[j] = int2d_NtN_A / Zti_A[:, j].reshape(-1, 1, 1)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [7/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [7/10]")
         self.ind_rows_Zti_B, self.ind_cols_Zti_B = self.element_2d.generate_ind_rows_cols(connectivities_B)
         int2d_NtN_B = self.element_2d.stacked_matrices_NtN()
 
@@ -1465,7 +1463,7 @@ class AcousticAssembler:
         if not self.integration_data_Zpp:
             return
         
-        logging.info(f"Processing the impedance data to assemble damping matrix... [8/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [8/10]")
 
         Zpp_A = self.integration_data_Zpp.get("surface_data_A")
         Zpp_B = self.integration_data_Zpp.get("surface_data_B")
@@ -1480,14 +1478,14 @@ class AcousticAssembler:
             self.data_Zpp_A[j] = np.zeros((nel_A, dof, dof), dtype=complex)
             self.data_Zpp_B[j] = np.zeros((nel_B, dof, dof), dtype=complex)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [9/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [9/10]")
         self.ind_rows_Zpp_A, self.ind_cols_Zpp_A = self.element_2d.generate_ind_rows_cols(connectivities_A)
         int2d_NtN_A = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
             self.data_Zpp_A[j] = int2d_NtN_A / Zpp_A[:, j].reshape(-1, 1, 1)
 
-        logging.info(f"Processing the impedance data to assemble damping matrix... [10/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [10/10]")
         self.ind_rows_Zpp_B, self.ind_cols_Zpp_B = self.element_2d.generate_ind_rows_cols(connectivities_B)
         int2d_NtN_B = self.element_2d.stacked_matrices_NtN()
 
