@@ -1,8 +1,7 @@
-from enum import StrEnum
 
 import numpy as np
 from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QDialog, QLineEdit
+from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine import HarmonicAnalysisSetup
@@ -13,7 +12,9 @@ from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_inpu
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
+
 
 error_title = "Error"
 
@@ -21,7 +22,6 @@ error_title = "Error"
 class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     def __init__(self, analysis_id: AnalysisID):
         super().__init__()
-
 
         self.model = app().project.model
         self.analysis_setup = app().project.model.old_analysis_setup
@@ -517,8 +517,19 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         return False
 
     def run_analysis(self):
+
+        if not app().project.model.generated_mesh:
+            self.hide()
+            obj = MesherSetupInputs(close_after_generate = True)
+            if not obj.complete:
+                app().main_window.set_input_widget(self)
+                return
+
+            app().main_window.update_plots()
+
         if self.enter_setup_callback():
             return
+
         self.solve_analysis = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
 
