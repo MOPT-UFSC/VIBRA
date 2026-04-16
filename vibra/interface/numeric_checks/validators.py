@@ -5,7 +5,6 @@ class StrictDoubleValidator(QDoubleValidator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._last_acceptable = None
-        self.setNotation(QDoubleValidator.Notation.StandardNotation)
 
     def fixup(self, string: str):
         if self._last_acceptable is None:
