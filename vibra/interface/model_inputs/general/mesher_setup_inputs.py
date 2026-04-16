@@ -77,10 +77,10 @@ warning_title = "Warning"
 
 
 class MesherSetupInputs(MesherSetupInputs_UI):
-    def __init__(self, **kwargs):
+    def __init__(self, close_after_generate: bool = False, **kwargs):
         super().__init__()
 
-        self.close_after_generate = kwargs.get("close_after_generate", False)
+        self.close_after_generate = close_after_generate
 
         app().main_window.set_input_widget(self)
 
@@ -296,16 +296,21 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             NotImplementedError()
 
     def generate_mesh_callback(self):
+
         def generate():
             mesh_setup = self._get_mesh_setup()
             app().project.configure_mesh(mesh_setup)
             app().project.generate_mesh()
+
+        self.hide()
 
         LoadingWindow(generate).run()
         LoadingWindow(self.actions_to_finalize).run()
 
         self.update_mesh_refinement_table()
         self.update_mesh_quality_table()
+
+        self.complete = True
 
     def update_mesh_refinement_table(self):
         refinement_parameters = self.tmp_refinement_parameters
