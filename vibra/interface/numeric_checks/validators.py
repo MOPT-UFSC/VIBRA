@@ -11,12 +11,12 @@ class StrictDoubleValidator(QDoubleValidator):
         if string.count(".") > 1:
             return QDoubleValidator.State.Invalid, string, pos
 
-        if is_numeric(string):
-            if float(string) < self.bottom():
-                return QDoubleValidator.State.Invalid, string, pos
+        if not is_numeric(string):
+            return super().validate(string, pos)
 
-            if float(string) > self.top():
-                return QDoubleValidator.State.Invalid, string, pos
+        value = float(string)
+        if value < self.bottom() or value > self.top():
+            return QDoubleValidator.State.Intermediate, string, pos
 
         return super().validate(string, pos)
 
