@@ -75,7 +75,7 @@ class AnalysisChecker:
         if mesh is None:
             raise errors.InvalidMeshSetupError("There is no mesh available")
 
-        if self.model.generated_mesh:
+        if not self.model.generated_mesh:
             raise errors.InvalidMeshSetupError("No mesh was generated")
 
         if mesh.disconnected_nodes_data:
