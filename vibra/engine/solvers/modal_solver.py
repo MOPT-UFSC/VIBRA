@@ -27,8 +27,8 @@ class ModalSolver:
 
         self.reset_variables()
 
-        n_modes = self.assembler.model.old_analysis_setup.get("modes_number", 40)
-        sigma = self.assembler.model.old_analysis_setup.get("sigma_factor", 0.01)
+        n_modes = self.assembler.model.analysis_setup.modes_number
+        sigma = self.assembler.model.analysis_setup.sigma_factor
 
         logging.info("Solving the eigenproblem... [75/100]")
 

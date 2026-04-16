@@ -1,4 +1,5 @@
 
+from vibra.engine import HarmonicAnalysisSetup
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 
@@ -584,7 +585,9 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        alpha, beta, eta = self.model.old_analysis_setup.get("global_damping", (0, 0, 0))
+        alpha, beta, eta = (0, 0, 0)
+        if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+            alpha, beta, eta = self.model.analysis_setup.global_damping
 
         frequencies = self.model.frequencies
         omega = 2 * np.pi * frequencies[index]
@@ -669,8 +672,9 @@ class StructuralAssembler:
     def build_harmonic_system(self, freq, i):
         omega = 2 * np.pi * freq
 
-        global_damping = self.model.old_analysis_setup.get("global_damping", (0, 0, 0))
-        alpha, beta, eta = global_damping
+        alpha, beta, eta = (0, 0, 0)
+        if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+            alpha, beta, eta = self.model.analysis_setup.global_damping
 
         M = self.mass_matrix
         K = self.stiffness_matrix
