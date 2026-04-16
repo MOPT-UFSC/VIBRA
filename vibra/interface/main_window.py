@@ -692,10 +692,15 @@ class MainWindow(MainWindow_UI):
         msg_box.setWindowTitle("Getting geometry")
         msg_box.setText("Would you like to draw or import a geometry file?")
 
+        cancel_button = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
         draw_button = msg_box.addButton("Draw", QMessageBox.ButtonRole.AcceptRole)
-        import_button = msg_box.addButton("Import", QMessageBox.ButtonRole.RejectRole)
+        import_button = msg_box.addButton("Import", QMessageBox.ButtonRole.AcceptRole)
+        import_button.setDefault(True)
 
         msg_box.exec()
+
+        if msg_box.clickedButton() == cancel_button:
+            return
 
         if msg_box.clickedButton() == import_button:
             if self.import_geometry_or_mesh_dialog():
