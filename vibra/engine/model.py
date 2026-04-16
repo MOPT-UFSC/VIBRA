@@ -6,11 +6,11 @@ from typing import Callable, Optional
 import numpy as np
 from PIL.Image import Image
 
-from vibra import SUPPORTED_GEOMETRY_EXTENSIONS
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
+from vibra.engine import HarmonicAnalysisSetup
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra import errors
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -81,10 +81,6 @@ class Model:
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
-        self.f_min = 5
-        self.f_max = 600
-        self.f_step = 5
-        self.frequencies = None
         self.list_frequencies = list()
         self.solution_steps_mask = list()
 
@@ -106,6 +102,15 @@ class Model:
         self.properties = ModelProperties(self.disable_resume_callback)
 
         self.reset_dissipation_model_properties()
+
+    @property
+    def frequencies(self) -> Optional[np.ndarray]:
+        """
+        This property was created for retro compatibility.
+        """
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            return self.analysis_setup.frequencies()
+        return None
 
     def reset_dissipation_model_properties(self):
         self.perforated_plate_impedance_data = dict()
@@ -236,35 +241,37 @@ class Model:
 
             warnings.warn("This method is deprecated, use set_analysis_setup", DeprecationWarning)
 
-        self.frequencies = None
+        # self.frequencies = None
         self.old_analysis_setup = analysis_setup
 
-        self.f_min = analysis_setup.get("f_min")
-        self.f_max = analysis_setup.get("f_max")
-        self.f_step = analysis_setup.get("f_step")
+        f_min = analysis_setup.get("f_min")
+        f_max = analysis_setup.get("f_max")
+        f_step = analysis_setup.get("f_step")
         frequencies = analysis_setup.get("frequencies")
 
         if isinstance(frequencies, list):
-            self.frequencies = np.round(np.array(frequencies, dtype=float), 14)
+            # self.frequencies = np.round(np.array(frequencies, dtype=float), 14)
+            pass
 
         elif isinstance(frequencies, np.ndarray):
-            self.frequencies = frequencies
+            # self.frequencies = frequencies
+            pass
 
-        elif (self.f_min, self.f_max, self.f_step).count(None) == 0:
+        elif (f_min, f_max, f_step).count(None) == 0:
             try:
-                frequencies = np.arange(self.f_min, self.f_max + self.f_step, self.f_step, dtype=float)
+                frequencies = np.arange(f_min, f_max + f_step, f_step, dtype=float)
                 frequencies = np.round(frequencies, 14)
 
                 # filters the frequencies vector to mitigate the already identified rounding errors
-                mask = frequencies <= self.f_max
+                mask = frequencies <= f_max
                 _frequencies = frequencies[mask]
 
             except Exception as error_log:
-                self.frequencies = None
+                # self.frequencies = None
                 print(str(error_log))
                 return
 
-            self.frequencies = _frequencies
+            # self.frequencies = _frequencies
             self.old_analysis_setup["frequencies"] = list(_frequencies)
 
         solution_steps_mask = self.get_solution_steps_mask()
