@@ -116,18 +116,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return
 
         faces = app().main_window.selection.geometry_surfaces
-
-        if faces:
-
-            if len(faces) > 1:
-                return
-
-            else:
-                _faces = [str(i) for i in faces]
-                self.current_lineEdit.setText(_faces[0])
-
-        else:
+        if len(faces) != 1:
             return
+
+        _faces = [str(i) for i in faces]
+        self.current_lineEdit.setText(_faces[0])
+
 
     def load_input_surface_id(self):
 

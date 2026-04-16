@@ -1,15 +1,17 @@
 from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QFileDialog, QLineEdit
 from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+
+from vibra.interface.numeric_checks.validators import StrictDoubleValidator
 
 import logging
 import numpy as np
@@ -18,8 +20,8 @@ from collections import defaultdict
 from pathlib import Path
 from time import sleep
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+
+error_title = "Error"
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
@@ -34,6 +36,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.properties = app().project.model.properties
 
         self._config_window()
+        self._configure_validators()
         self._reset_variables()
         self._configure_qt_variables()
         self._create_connections()
@@ -51,9 +54,18 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
+    def _configure_validators(self):
+        validator = StrictDoubleValidator(0, 1e5, 8)
+        self.lineEdit_fmin.setValidator(validator)
+        self.lineEdit_fmax.setValidator(validator)
+        self.lineEdit_fstep.setValidator(validator)
+
     def _reset_variables(self):
+        self.analysis_setup = None
         self.keep_window_open = True
         self.element_transfer_data = dict()
+
+        self.highlight_style_sheet = """border-color: rgb(32, 207, 255); border-width: 2px;"""
 
     def _configure_qt_variables(self):
         self.current_line_edit = self.lineEdit_output_selected_id
@@ -75,11 +87,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def geometry_selection_callback(self):
 
         selected_faces = app().main_window.selection.geometry_surfaces
+        if len(selected_faces) != 1:
+            return
 
-        if len(selected_faces) == 1:
-            if isinstance(self.current_line_edit, QLineEdit):
-                _selected_faces = [str(i) for i in selected_faces]
-                self.current_line_edit.setText(_selected_faces[0])
+        if isinstance(self.current_line_edit, QLineEdit):
+            _selected_faces = [str(i) for i in selected_faces]
+            self.current_line_edit.setText(_selected_faces[0])
 
     def invert_selection_callback(self):
 
@@ -116,7 +129,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.highlight_line_edit()
 
     def highlight_line_edit(self):
-        self.current_line_edit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+        self.current_line_edit.setStyleSheet(self.highlight_style_sheet)
         if self.current_line_edit == self.lineEdit_input_selected_id:
             self.lineEdit_output_selected_id.setStyleSheet("")
         elif self.current_line_edit == self.lineEdit_output_selected_id:
@@ -195,77 +208,78 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def check_frequency_entries(self):
 
-        str_fmin = self.lineEdit_fmin.text()
-        stop, input_fmin = self.check_inputs(str_fmin, "'minimum frequency'")
-        if stop:
-            self.lineEdit_fmin.setFocus()
-            self.lineEdit_fmin.selectAll()
-            return True
+        line_edits = [
+            self.lineEdit_fmin,
+            self.lineEdit_fmax,
+            self.lineEdit_fstep,
+        ]
 
-        str_fmax = self.lineEdit_fmax.text()
-        stop, input_fmax = self.check_inputs(str_fmax, "'maximum frequency'")
-        if stop:
-            self.lineEdit_fmax.setFocus()
-            self.lineEdit_fmax.selectAll()
-            return True
+        freq_data = list()
 
-        str_fstep = self.lineEdit_fstep.text()
-        stop, input_fstep = self.check_inputs(str_fstep, "'frequency resolution (df)'")
-        if stop:
-            self.lineEdit_fstep.setFocus()
-            self.lineEdit_fstep.selectAll()
-            return True
+        for line_edit in line_edits:
+            if line_edit.text() == "":
+                line_edit.setFocus()
+                line_edit.setStyleSheet(self.highlight_style_sheet)
+                return True
 
-        if input_fmax < input_fmin + input_fstep:
+            line_edit.setStyleSheet("")
+            freq_data.append(float(line_edit.text()))
+       
+        [f_min, f_max, f_step] = freq_data
+
+        if f_max < f_min + f_step:
             title = "Invalid frequency setup"
             message = "The maximum frequency (fmax) must be greater than \n"
             message += "the sum between minimum frequency (fmin) and \n"
             message += "frequency resolution (df)."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
+        
+        self.analysis_setup = HarmonicAnalysisSetupRange(f_min, f_max, f_step=f_step)
 
-        self.frequencies = np.arange(input_fmin, input_fmax + input_fstep, input_fstep)
+        # self.analysis_setup["f_min"] = input_fmin
+        # self.analysis_setup["f_max"] = input_fmax
+        # self.analysis_setup["f_step"] = input_fstep
 
-        self.analysis_setup["f_min"] = input_fmin
-        self.analysis_setup["f_max"] = input_fmax
-        self.analysis_setup["f_step"] = input_fstep
-        self.analysis_setup["frequencies"] = self.frequencies
+        # self.frequencies = np.arange(input_fmin, input_fmax + input_fstep, input_fstep)
+        # self.analysis_setup["frequencies"] = self.frequencies
 
-    def check_inputs(self, input_value: str, label: str):
+    # def check_inputs(self, input_value: str, label: str):
 
-        message = ""
-        title = "Invalid input to the analysis setup"
-        if input_value != "":
-            try:
+    #     message = ""
+    #     title = "Invalid input to the analysis setup"
+    #     if input_value != "":
+    #         try:
 
-                _value = input_value.replace(",", ".")
-                value = float(_value)
+    #             _value = input_value.replace(",", ".")
+    #             value = float(_value)
 
-                if value <= 0:
-                    message = f"Insert a positive value to the {label}."
-                    message += "\n\nNote: zero value is not allowed."
+    #             if value <= 0:
+    #                 message = f"Insert a positive value to the {label}."
+    #                 message += "\n\nNote: zero value is not allowed."
 
-            except Exception as _err:
-                message = "Dear user, you have typed an invalid value at the \n"
-                message += f"{label} input field.\n\n"
-                message += str(_err)
+    #         except Exception as _err:
+    #             message = "Dear user, you have typed an invalid value at the \n"
+    #             message += f"{label} input field.\n\n"
+    #             message += str(_err)
 
-        else:
-            message = f"Insert some value at the {label} input field."
+    #     else:
+    #         message = f"Insert some value at the {label} input field."
 
-        if message != "":
-            PrintMessageInput([window_title_1, title, message])
-            return True, None
+    #     if message != "":
+    #         PrintMessageInput([error_title, title, message])
+    #         return True, None
 
-        else:
-            return False, value
+    #     else:
+    #         return False, value
 
     def configure_analysis(self):
         if self.check_frequency_entries():
             return True
 
         app().project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC
+            AnalysisID.ACOUSTIC_HARMONIC,
+            self.analysis_setup,
         )
 
     def process_data_callback(self):
@@ -279,23 +293,27 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_typed_ids():
             return
 
-        self.process_areas()
         if self.configure_analysis():
-            return   
+            return
 
+        print(app().project.model.generated_mesh)
         if not app().project.model.generated_mesh:
-            obj = MesherSetupInputs()
-            if obj.complete:
-                app().main_window.update_plots()
-            else:
+            obj = MesherSetupInputs(close_after_generate = True)
+            if not obj.complete:
                 return
-        
+
+            app().main_window.update_plots()
+
+        self.process_areas()
+        print(app().project.model.generated_mesh)
+        print(app().project.model.mesh.surface_area_from_element_integration)
+
         app().main_window.selection.set_geometry_selection()
 
         def compute_model_solution():
             for i, surface_id in enumerate([self.input_selection_id, self.output_selection_id]):
 
-                logging.info(f"Solving model [{5+50*i}/100]...")
+                logging.info(f"Solving model [{5 + 50 * i}/100]...")
                 sleep(1)
 
                 self.remove_model_excitations_and_impedances()
@@ -320,19 +338,19 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def remove_model_excitations_and_impedances(self):
 
         model_excitations = [
-                             "acoustic_pressure", 
-                             "surface_velocity", 
-                             "reciprocating_compressor_excitation",
-                             "compressor_excitation_spectrum",
-                             "compressor_excitation_waveform",
-                             "incident_plane_wave",
-                             "mass_source",
-                             ]
+            "acoustic_pressure",
+            "surface_velocity",
+            "reciprocating_compressor_excitation",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "incident_plane_wave",
+            "mass_source",
+            ]
 
         model_impedances = [
-                            "specific_impedance",
-                            "absorption_surface",
-                             ]
+            "specific_impedance",
+            "absorption_surface",
+            ]
 
         properties_to_remove = defaultdict(list)
         for property in model_excitations:
@@ -371,11 +389,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def set_surface_velocity(self, surface_id: int):
 
         data = {
-                "real_values" : [1.0],
-                "imag_values" : [0.0],
-                "nodal_attribution" : False,
-                "averaged" : False,
-                }
+            "real_values" : [1.0],
+            "imag_values" : [0.0],
+            "nodal_attribution" : False,
+            "averaged" : False,
+            }
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
 
@@ -407,7 +425,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "
             message += "surface ID to proceed with the transfer function data exportation."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             app().main_window.set_input_widget(self)
             return None
 
@@ -422,12 +440,20 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
     def get_area_and_surface_velocity(self, surface_id: int):
         for key, data in self.properties.surface_properties.items():
-            if key[0] == "surface_velocity" and key[1] == surface_id:
-                real_values = np.array(data["real_values"])
-                imag_values = np.array(data["imag_values"])
-                surface_velocity = real_values + 1j * imag_values
-                area = self.model.mesh.surface_area_from_element_integration[surface_id]
-                return area, surface_velocity
+            if key[0] != "surface_velocity":
+                continue
+
+            if key[1] != surface_id:
+                continue
+
+            real_values = np.array(data["real_values"])
+            imag_values = np.array(data["imag_values"])
+            surface_velocity = real_values + 1j * imag_values
+
+            area = self.model.mesh.surface_area_from_element_integration[surface_id]
+
+            return area, surface_velocity
+
         return None, None
 
     def join_model_data(self, excitation_id: int):
