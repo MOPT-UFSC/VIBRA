@@ -4,6 +4,8 @@ import platform
 import sys
 from traceback import print_exception
 
+from PySide6.QtCore import QLocale
+
 from vibra import APP_ID, USER_PATH
 from vibra.errors import VibraException
 
@@ -104,6 +106,8 @@ def main():
 
         # This forces the Vibra icon to appear in the taskbar
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+
+    QLocale.setDefault(QLocale.c())
 
     app = Application(sys.argv)
     sys.exit(app.exec_())
