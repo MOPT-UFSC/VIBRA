@@ -1,16 +1,17 @@
 
 from vibra.engine import ModalAnalysisSetup
-from PySide6.QtCore import Qt
+from PySide6.QtGui import Qt
 
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import ModalAnalysisInput_UI
 
 error_title = "Error"
 
 
-class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
+class ModalAnalysisInput(ModalAnalysisInput_UI):
     def __init__(self, analysis_id: AnalysisID):
         super().__init__()
 
@@ -21,12 +22,16 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
 
         self._initialize()
         self._config_window()
+        self._update_modal_analysis_title()
         self._create_connections()
         self._load_analysis_setup()
         self.check_mesh_related_issues()
-        self.exec()
+
+        while self.keep_window_open:
+            self.exec()
 
     def _initialize(self):
+        self.keep_window_open = True
         self.modes_number = None
         self.setup_defined = False
         self.proceed_solution = False
@@ -36,6 +41,13 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
+
+    def _update_modal_analysis_title(self):
+        if self.analysis_id == AnalysisID.ACOUSTIC_MODAL:
+            self.label_title.setText("Acoustic modal analysis setup")
+
+        elif self.analysis_id == AnalysisID.STRUCTURAL_MODAL:
+            self.label_title.setText("Structural modal analysis setup")
 
     def _create_connections(self):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
@@ -59,7 +71,7 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
         # disable run_analysis button if there are disconnected nodes or collapsed elements
         mesh = app().project.model.mesh
         disconnected_nodes = bool(mesh.disconnected_nodes_data)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        collapsed_elements = bool(mesh.collapsed_elements_data)
 
         text = ""
         if collapsed_elements:
@@ -116,17 +128,23 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 
-    def confirm(self):
-        self.proceed_solution = True
-        app().main_window.analysis_toolbar.enable_pushbutons.emit()
-        self.close()
-
     def run_analysis(self):
+
+        if not app().project.model.generated_mesh:
+            self.hide()
+            obj = MesherSetupInputs(close_after_generate = True)
+            if not obj.complete:
+                app().main_window.set_input_widget(self)
+                return
+
+            app().main_window.update_plots()
 
         if self.enter_setup_callback():
             return
 
-        self.confirm()
+        self.proceed_solution = True
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
+        self.close()
 
     def button_clicked(self):
         self.check_analysis_inputs()
@@ -136,3 +154,7 @@ class AcousticModalAnalysisInput(ModalAnalysisInput_UI):
             self.run_analysis()
         elif event.key() == Qt.Key_Escape:
             self.close()
+
+    def closeEvent(self, a0):
+        self.keep_window_open = False
+        return super().closeEvent(a0)

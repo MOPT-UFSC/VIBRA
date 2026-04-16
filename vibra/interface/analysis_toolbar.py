@@ -7,9 +7,8 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
-from vibra.interface.analysis.acoustic_modal_analysis_input import AcousticModalAnalysisInput
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
-from vibra.interface.analysis.structural_modal_analysis_input import StructuralModalAnalysisInput
+from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -362,7 +361,7 @@ class AnalysisToolbar(QToolBar):
 
     def modal_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_MODAL
-        modal = StructuralModalAnalysisInput(analysis_id)
+        modal = ModalAnalysisInput(analysis_id)
 
         if modal.setup_defined:
             app().project.configure_analysis(
@@ -376,10 +375,7 @@ class AnalysisToolbar(QToolBar):
 
     def modal_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_MODAL
-        modal = AcousticModalAnalysisInput(analysis_id)
-
-        if modal.modes_number is None:
-            return
+        modal = ModalAnalysisInput(analysis_id)
 
         if modal.setup_defined:
             app().project.configure_analysis(
