@@ -1695,7 +1695,7 @@ class AcousticAssembler:
             "compressor_excitation_spectrum",
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
-            ]
+        ]
 
         for prop_label in prop_labels:
             integration_data_sv = self.get_excitation_data_for_element_integration(prop_label)
