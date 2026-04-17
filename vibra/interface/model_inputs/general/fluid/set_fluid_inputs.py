@@ -53,7 +53,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self._config_widgets()
 
         if self.state_properties:
-            self.load_compressor_info()
+            self.fluid_widget.load_state_properties_info()
 
         self.load_model_info()
 
@@ -88,7 +88,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.tableWidget_model_fluids : QTableWidget
 
     def _add_fluid_widget(self):
-        self.fluid_widget = FluidWidget(dialog=self, state_properties=self.state_properties)
+        self.fluid_widget = FluidWidget(state_properties=self.state_properties)
         self.grid_layout.addWidget(self.fluid_widget)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 
@@ -367,12 +367,14 @@ class SetFluidInputs(SetFluidInputs_UI):
         for selection, _property in properties.items():
             for key, data in _property.items():
                 property, surface_id = key
-                if property == "fluid":
-                    if not isinstance(data, Fluid):
-                        continue
+                if property != "fluid":
+                    continue
 
-                    selection_id = f"{selection}-{surface_id}"
-                    self.model_fluids[(data.identifier, selection_id)] = data
+                if not isinstance(data, Fluid):
+                    continue
+
+                selection_id = f"{selection}-{surface_id}"
+                self.model_fluids[(data.identifier, selection_id)] = data
 
         self.load_table_info()
         self.update_tabs_visibility()

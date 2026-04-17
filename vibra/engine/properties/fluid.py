@@ -5,10 +5,9 @@ from typing import Optional
 @dataclass
 class Fluid:
     name: Optional[str] = None
+    identifier: int = 0
     fluid_density: float = 0.0
     speed_of_sound: float = 0.0
-    color: tuple = (0, 0, 0)
-    identifier: int = 0
     isentropic_exponent: float = 0.0
     thermal_conductivity: float = 0.0
     specific_heat_Cp: float = 0.0
@@ -18,6 +17,7 @@ class Fluid:
     molar_mass: float = 0.0
     key_mixture: str | None = None
     molar_fractions: list | None = None
+    color: tuple = (0, 0, 0)
 
     @property
     def impedance(self):
