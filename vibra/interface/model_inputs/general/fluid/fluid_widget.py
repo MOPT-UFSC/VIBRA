@@ -225,7 +225,6 @@ class FluidWidget(FluidWidget_UI):
 
         # update the fluid property after editing the fluid data
         self.fluid_property_update(selected_fluid.identifier)
-        app().main_window.update_info_text()
 
     def item_changed_callback(self, item: QTableWidgetItem):
         with block_signals(self.tableWidget_fluid_data):
@@ -236,12 +235,16 @@ class FluidWidget(FluidWidget_UI):
 
             try:
                 self._update_library_with_column(item.column())
+                app().project.update_model_properties_file()
+                self.reload_table_of_fluids()
+
             except Exception as e:
                 msg = f"Column {item.column()} contains unnexpected errors."
                 item.setText("")
                 raise InvalidFluidError(msg) from e
 
         self.modified.emit()
+        app().main_window.update_info_text()
 
     def cell_editor_closed_callback(self, _widget, _hint: QAbstractItemDelegate.EndEditHint):
         n_columns = self.tableWidget_fluid_data.columnCount()

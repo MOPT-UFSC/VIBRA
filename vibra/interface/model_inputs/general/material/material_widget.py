@@ -180,7 +180,6 @@ class MaterialWidget(MaterialWidget_UI):
        
         # update the material property after editing the material data
         self.material_property_update(selected_material.identifier)
-        app().main_window.update_info_text()
 
     def item_changed_callback(self, item: QTableWidgetItem):
         material_library = self.properties.material_library
@@ -231,6 +230,8 @@ class MaterialWidget(MaterialWidget_UI):
                 msg = f"Column {item.column()} contains unnexpected errors."
                 item.setText("")
                 raise InvalidMaterialError(msg) from e
+
+        app().main_window.update_info_text()
 
     def cell_editor_closed_callback(self, _widget: QWidget, _hint: QAbstractItemDelegate.EndEditHint):
         n_columns = self.tableWidget_material_data.columnCount()
