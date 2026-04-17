@@ -1,7 +1,6 @@
 
 import numpy as np
-from PySide6.QtGui import Qt
-from PySide6.QtWidgets import QLineEdit
+from PySide6.QtGui import Qt, QIntValidator
 
 from vibra import app
 from vibra.engine import HarmonicAnalysisSetup
@@ -13,6 +12,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
 
 
@@ -32,6 +32,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         app().main_window.set_input_widget(self)
 
         self._initialize()
+        self._configure_validators()
         self._config_window()
         self._config_widgets()
         self._create_connections()
@@ -54,6 +55,22 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.keep_window_open_after_enter_setup = False
         self.user_defined_solution_steps = list()
 
+    def _configure_validators(self):
+
+        # modes to expand validator
+        self.lineEdit_modes_to_expand.setValidator(QIntValidator(0, 1e5))
+
+        # frequency inputs validators
+        fmin_lowest_value = 0 if AnalysisID.is_structural(self.analysis_id) else 1e-6
+        self.lineEdit_fmin.setValidator(StrictDoubleValidator(fmin_lowest_value, 1e8, 8))
+        self.lineEdit_fmax.setValidator(StrictDoubleValidator(1e-3, 1e8, 8))
+        self.lineEdit_fstep.setValidator(StrictDoubleValidator(1e-8, 1e8, 8))
+
+        # damping inputs validators
+        self.lineEdit_mass_multiplier.setValidator(StrictDoubleValidator(0, 1e8, 8))
+        self.lineEdit_stiffness_multiplier.setValidator(StrictDoubleValidator(0, 1e8, 8))
+        self.lineEdit_constant_structural_coefficient.setValidator(StrictDoubleValidator(0, 1, 8))
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -65,7 +82,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         # get the QLineEdit font
         font = self.lineEdit_fmax.font()
 
-        # use same QLineEdit's font in the frequency step QCosmboBox
+        # use same QLineEdit's font in the frequency step QComboBox
         self.comboBox_fstep.setFont(font)
         self.comboBox_fstep.setEditable(True)
         self.comboBox_fstep.lineEdit().setFont(font)
@@ -315,6 +332,70 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         elif self.analysis_id == AnalysisID.COUPLED_HARMONIC:
             self.label_title.setText("Coupled harmonic analysis setup")
 
+    def check_frequencies_inputs(self):
+
+        line_edits = [
+            self.lineEdit_fmin,
+            self.lineEdit_fmax,
+            self.lineEdit_fstep,
+        ]
+
+        for line_edit in line_edits:
+            if line_edit.text() == "":
+                line_edit.setFocus()
+                return None
+            
+        f_min = float(self.lineEdit_fmin.text())
+        f_max = float(self.lineEdit_fmax.text())
+
+        if self.lineEdit_fstep.isVisible():
+            f_step = float(self.lineEdit_fstep.text())
+        else:
+            f_step = float(self.comboBox_fstep.currentText())
+
+        condition_1 = f_max < f_min + f_step
+
+        if self.tabular_frequency_setup is None:
+            condition_2 = True
+        else:
+            (_, f_max_tab, _, _) = self.tabular_frequency_setup
+            condition_2 = not f_max_tab >= f_max
+
+        if condition_1:
+            if condition_2:
+                self.hide()
+                title = "Invalid frequency setup"
+                message = "The maximum frequency (fmax) must be greater than the sum of "
+                message += "minimum frequency (fmin) and frequency resolution (df)."
+                PrintMessageInput([error_title, title, message])
+                return None
+        
+        if self.check_tabular_frequencies_compatibility(f_min, f_max):
+            return None
+        
+        return {
+            "f_min" : f_min,
+            "f_max" : f_max,
+            "f_step" : f_step,
+            }
+    
+    def check_damping_inputs(self):
+
+        line_edits = [
+            self.lineEdit_mass_multiplier,
+            self.lineEdit_stiffness_multiplier,
+            self.lineEdit_constant_structural_coefficient,
+        ]
+
+        global_damping = list()
+        for line_edit in line_edits:
+            if line_edit.text() == "":
+                global_damping.append(0.0)
+            else:
+                global_damping.append(float(line_edit.text()))
+
+        return global_damping
+
     def check_mesh_related_issues(self):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
@@ -362,17 +443,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         }
 
         if analysis_method == "mode_superposition":
-            modes_number = self.check_inputs(
-                self.lineEdit_modes_to_expand, 
-                "modes to expand",
-                int_value = True,
-                )
-
-            if modes_number is None:
+            if self.lineEdit_modes_to_expand.text() == "":
                 self.lineEdit_modes_to_expand.setFocus()
                 return True
 
-            analysis_setup["modes_number"] = modes_number
+            analysis_setup["modes_number"] = int(self.lineEdit_modes_to_expand.text())
 
         if AnalysisID.is_harmonic(analysis_id):
 
@@ -384,104 +459,16 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 analysis_setup.update({"frequencies" : self.user_defined_solution_steps})
 
             user_defined_manually = not self.table_exists and len(self.user_defined_solution_steps) > 0
+
             if not user_defined_manually:
-                zero_allowed = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText() == "Structural"
-
-                f_min = self.check_inputs(
-                    self.lineEdit_fmin, 
-                    "minimum frequency (Freq. min)", 
-                    zero_included = zero_allowed, 
-                    )
-
-                if f_min is None:
-                    self.lineEdit_fmin.setFocus()
+                freq_data = self.check_frequencies_inputs()
+                if not isinstance(freq_data, dict):
                     return True
 
-                f_max = self.check_inputs(
-                    self.lineEdit_fmax, 
-                    "maximum frequency (Freq. max)"
-                    )
-
-                if f_max is None:
-                    self.lineEdit_fmax.setFocus()
-                    return True
-
-                if self.lineEdit_fstep.isVisible():
-                    f_step = self.check_inputs(
-                        self.lineEdit_fstep, 
-                        "frequency resolution (Freq. step)"
-                        )
-
-                    if f_step is None:
-                        self.lineEdit_fstep.setFocus()
-                        return True
-
-                else:
-                    f_step = float(self.comboBox_fstep.currentText())
-
-                condition_1 = f_max < f_min + f_step
-
-                if self.tabular_frequency_setup is None:
-                    condition_2 = True
-                else:
-                    (_, f_max_tab, _, _) = self.tabular_frequency_setup
-                    condition_2 = not f_max_tab >= f_max
-
-                if condition_1:
-                    if condition_2:
-                        self.hide()
-                        title = "Invalid frequency setup"
-                        message = "The maximum frequency (fmax) must be greater than the sum of "
-                        message += "minimum frequency (fmin) and frequency resolution (df)."
-                        PrintMessageInput([error_title, title, message])
-                        return True
-                
-                if self.check_tabular_frequencies_compatibility(f_min, f_max):
-                    return True
-            
-                analysis_setup.update(
-                    {
-                    "f_min" : f_min,
-                    "f_max" : f_max,
-                    "f_step" : f_step,
-                    }
-                )
-
-        alpha = beta = eta = 0.0
+                analysis_setup.update(freq_data)
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-
-            alpha = self.check_inputs(
-                self.lineEdit_mass_multiplier, 
-                "mass matrix multiplier (α)", 
-                zero_included = True
-                )
-
-            if alpha is None:
-                self.lineEdit_mass_multiplier.setFocus()
-                return True
-
-            beta = self.check_inputs(
-                self.lineEdit_stiffness_multiplier, 
-                "stiffness matrix multiplier (β)", 
-                zero_included = True
-                )
-
-            if beta is None:
-                self.lineEdit_stiffness_multiplier.setFocus()
-                return True
-
-            eta = self.check_inputs(
-                self.lineEdit_constant_structural_coefficient, 
-                "proportional hysteretic damping (η)", 
-                zero_included = True
-                )
-
-            if eta is None:
-                self.lineEdit_constant_structural_coefficient.setFocus()
-                return True
-
-            analysis_setup["global_damping"] = [alpha, beta, eta]
+            analysis_setup["global_damping"] = self.check_damping_inputs()
 
         match frequency_spacing:
             case FrequencySpacing.EQUALLY_DISTRIBUTED:
@@ -543,41 +530,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.run_analysis()
         elif event.key() == Qt.Key_Escape:
             self.close()
-
-    def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = False, int_value: bool = False):
-        message = ""
-        if lineEdit.text() != "":
-            try:
-                if int_value:
-                    value = int(lineEdit.text())
-                else:
-                    value = float(lineEdit.text())
-
-                if zero_included:
-                    if value < 0:
-                        message = f"Enter a positive value in the {label} input field. "
-                else:
-                    if value <= 0:
-                        message = f"Enter a positive value in the {label} input field. "
-                        message += "The zero value is not allowed."
-
-            except Exception as _err:
-                message = f"The value entered in the {label} input field is invalid.\n\n"
-                message += str(_err)
-
-        else:
-            if zero_included:
-                return float(0)
-            else:
-                message = f"Enter a positive value in the '{label}' input field."
-
-        if message != "":
-            self.hide()
-            title = "Invalid input to the analysis setup"
-            PrintMessageInput([error_title, title, message])
-            return None
-
-        return value
 
     def check_analysis_setup_update(self):
 
