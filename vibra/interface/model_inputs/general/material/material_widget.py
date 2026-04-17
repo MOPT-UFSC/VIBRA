@@ -230,7 +230,6 @@ class MaterialWidget(MaterialWidget_UI):
             try:
                 self._update_library_with_column(item.column())
                 app().project.update_model_properties_file()
-                self.reload_table_of_materials()
 
             except Exception as e:
                 msg = f"Column {item.column()} contains unnexpected errors."
@@ -358,6 +357,8 @@ class MaterialWidget(MaterialWidget_UI):
                     material.poisson_ratio = to_num(text)
                 case RowsEnum.THERMAL_EXPANSION_COEFFICIENT:
                     material.thermal_expansion_coefficient = to_num(text)
+        
+        self._set_column_values(col, material)
 
     def _column_has_empty_items(self, col: int):
         for row in RowsEnum:

@@ -236,7 +236,6 @@ class FluidWidget(FluidWidget_UI):
             try:
                 self._update_library_with_column(item.column())
                 app().project.update_model_properties_file()
-                self.reload_table_of_fluids()
 
             except Exception as e:
                 msg = f"Column {item.column()} contains unnexpected errors."
@@ -372,6 +371,8 @@ class FluidWidget(FluidWidget_UI):
                     fluid.dynamic_viscosity = to_num(text)
                 case RowsEnum.MOLAR_MASS:
                     fluid.molar_mass = to_num(text)
+        
+        self._set_column_values(col, fluid)
 
     def _column_has_empty_items(self, col: int):
         for row in RowsEnum:
