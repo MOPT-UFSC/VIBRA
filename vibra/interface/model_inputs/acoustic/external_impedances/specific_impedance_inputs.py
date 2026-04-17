@@ -1,8 +1,7 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
@@ -10,9 +9,9 @@ from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-import numpy as np
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
+from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
 
 error_title = "Error"
 
@@ -32,6 +31,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self._initialize()
         self._configure_qt_variables()
         self._create_connections()
+        self._configure_validators()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -70,6 +70,10 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+    
+    def _configure_validators(self):
+        validator = IntListValidator()
+        self.lineEdit_selection_id.setValidator(validator)
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()

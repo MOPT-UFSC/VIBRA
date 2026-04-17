@@ -11,7 +11,7 @@ from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetup
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
-from vibra.interface.numeric_checks.validators import StrictDoubleValidator
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 
 import logging
 import numpy as np
