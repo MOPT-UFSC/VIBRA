@@ -1,4 +1,6 @@
+from copy import deepcopy
 from enum import IntEnum
+from itertools import count
 from random import randint
 from typing import Optional
 
@@ -40,12 +42,17 @@ class MaterialWidget(MaterialWidget_UI):
         self._paint_icons()
         self.reload_table_of_materials()
 
+    @ property
+    def properties(self):
+        return app().project.model.properties
+
     def _create_connections(self):
         self.pushButton_add_column.clicked.connect(self.add_buffer_column)
         self.pushButton_duplicate.clicked.connect(self.duplicate_selected_material)
         self.pushButton_remove_column.clicked.connect(self.remove_selected_material)
 
         self.tableWidget_material_data.cellClicked.connect(self.cell_clicked_callback)
+        self.tableWidget_material_data.cellDoubleClicked.connect(self.cell_double_clicked_callback)
         self.tableWidget_material_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_material_data.itemDelegate().closeEditor.connect(self.cell_editor_closed_callback)
 
@@ -54,17 +61,29 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectColumns)
         self.tableWidget_material_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
+    def _paint_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
+
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        widgets = [self.pushButton_duplicate]
+        change_icon_color_for_widgets(widgets, icon_color)
+
     def reload_table_of_materials(self):
-        properties = app().project.model.properties
         number_of_rows = len(RowsEnum)
-        number_of_cols = len(properties.material_library)
+        number_of_cols = len(self.properties.material_library)
 
         with block_signals(self.tableWidget_material_data):
             self.tableWidget_material_data.clearContents()
             self.tableWidget_material_data.setRowCount(number_of_rows)
             self.tableWidget_material_data.setColumnCount(number_of_cols)
 
-            for i, material in enumerate(properties.material_library.values()):
+            for i, material in enumerate(self.properties.material_library.values()):
                 self._set_column_values(i, material)
 
             self._update_size_policy()
@@ -81,6 +100,7 @@ class MaterialWidget(MaterialWidget_UI):
             color = Color.from_hsv(randint(0, 360), 100, 70)
             color_item = self.tableWidget_material_data.item(RowsEnum.COLOR, column_index)
             name_item = self.tableWidget_material_data.item(RowsEnum.NAME, column_index)
+            identifier_item = self.tableWidget_material_data.item(RowsEnum.IDENTIFIER, column_index)
 
             if color_item is not None:
                 color_item.setBackground(color.to_qt())
@@ -90,6 +110,10 @@ class MaterialWidget(MaterialWidget_UI):
                 self.tableWidget_material_data.setCurrentItem(name_item)
                 self.tableWidget_material_data.editItem(name_item)
 
+            if identifier_item is not None:
+                new_id = self.new_identifier()
+                identifier_item.setText(str(new_id))
+
             self._update_size_policy()
 
     def duplicate_selected_material(self):
@@ -97,10 +121,9 @@ class MaterialWidget(MaterialWidget_UI):
         if material is None:
             return
 
-        properties = app().project.model.properties
         new_material = material.copy()
-        new_material.name = properties.fluid_library.get_duplicated_name(material.name)
-        properties.material_library.add(new_material)
+        new_material.name = self.properties.material_library.get_duplicated_name(material.name)
+        self.properties.material_library.add(new_material)
 
         self.reload_table_of_materials()
         self.scroll_to_end()
@@ -110,10 +133,10 @@ class MaterialWidget(MaterialWidget_UI):
         if selected_column < 0:
             return
 
-        properties = app().project.model.properties
-        material = properties.material_library.get_from_ordered_index(selected_column)
-        if material is not None:
-            properties.remove_material(material)
+        material = self.properties.material_library.get_from_ordered_index(selected_column)
+        if isinstance(material, Material):
+            self.properties.remove_material(material)
+            self.update_properties_after_material_removal([material.identifier])
 
         with block_signals(self.tableWidget_material_data):
             self.tableWidget_material_data.removeColumn(selected_column)
@@ -128,20 +151,39 @@ class MaterialWidget(MaterialWidget_UI):
         if not self._get_reset_library_confirmation():
             return
 
-        properties = app().project.model.properties
-        materials_to_remove = list(properties.material_library.values())
+        materials_to_remove = list(self.properties.material_library.values())
         for material in materials_to_remove:
-            properties.remove_material(material)
-        properties.material_library = MaterialLibrary.default()
+            self.properties.remove_material(material)
+
+        self.update_properties_after_material_removal(materials_to_remove)
+
+        self.properties.material_library = MaterialLibrary.default()
         self.reload_table_of_materials()
+
         app().main_window.selection.clear_selection()
 
     def cell_clicked_callback(self, row, col):
         if row == RowsEnum.COLOR:
             self._pick_color(row, col)
 
+    def cell_double_clicked_callback(self, row: int, col: int):
+
+        try:
+            id_item = self.tableWidget_material_data.item(RowsEnum.IDENTIFIER, col)
+            identifier = int(id_item.text())
+        except Exception:
+            return
+
+        selected_material = self.properties.material_library.get(identifier)
+        if not isinstance(selected_material, Material):
+            return
+       
+        # update the material property after editing the material data
+        self.material_property_update(selected_material.identifier)
+        app().main_window.update_info_text()
+
     def item_changed_callback(self, item: QTableWidgetItem):
-        material_library = app().project.model.properties.material_library
+        material_library = self.properties.material_library
 
         with block_signals(self.tableWidget_material_data):
             match item.row():
@@ -155,8 +197,16 @@ class MaterialWidget(MaterialWidget_UI):
                     if name_already_exists:
                         item.setText("New material")
                         raise InvalidMaterialError(f'A material named "{name}" alredy exists')
+                    
+                case RowsEnum.IDENTIFIER:
+                    if item.text() == "":
+                        raise InvalidMaterialError("Every material needs a valid identifier")
 
-                case RowsEnum.COLOR | RowsEnum.IDENTIFIER:
+                    identifier = int(item.text())
+                    if identifier in self.properties.material_library.keys():
+                        raise InvalidMaterialError(f'The material identifier "{identifier}" alredy exists')
+
+                case RowsEnum.COLOR:
                     pass  # ignore
 
                 case _:
@@ -174,6 +224,9 @@ class MaterialWidget(MaterialWidget_UI):
 
             try:
                 self._update_library_with_column(item.column())
+                app().project.update_model_properties_file()
+                self.reload_table_of_materials()
+
             except Exception as e:
                 msg = f"Column {item.column()} contains unnexpected errors."
                 item.setText("")
@@ -233,8 +286,7 @@ class MaterialWidget(MaterialWidget_UI):
         if selected_column < 0:
             return
 
-        properties = app().project.model.properties
-        return properties.material_library.get_from_ordered_index(selected_column)
+        return self.properties.material_library.get_from_ordered_index(selected_column)
 
     def keyPressEvent(self, event: QKeyEvent):
         match event.key():
@@ -266,7 +318,7 @@ class MaterialWidget(MaterialWidget_UI):
             return True
 
     def _update_library_with_column(self, col: int):
-        material_library = app().project.model.properties.material_library
+        material_library = self.properties.material_library
         material = material_library.get_from_ordered_index(col)
         if material is None:
             # Create a temporary material to be updated
@@ -338,16 +390,15 @@ class MaterialWidget(MaterialWidget_UI):
         return selected_items[-1].column()
 
     def _has_buffer_column(self):
-        properties = app().project.model.properties
-        return self.tableWidget_material_data.columnCount() > len(properties.material_library)
+        return self.tableWidget_material_data.columnCount() > len(self.properties.material_library)
 
     def _add_empty_column(self):
-        properties = app().project.model.properties
-        column_index = len(properties.material_library)
+        column_index = len(self.properties.material_library)
         self.tableWidget_material_data.setColumnCount(column_index + 1)
 
         for i in range(self.tableWidget_material_data.rowCount()):
             item = QTableWidgetItem()
+            item.setTextAlignment(Qt.AlignCenter)
             item.setBackground(color_names.GRAY_5.to_qt())
             self.tableWidget_material_data.setItem(i, column_index, item)
 
@@ -382,22 +433,76 @@ class MaterialWidget(MaterialWidget_UI):
                 item.setText(str(value))
 
     def _update_size_policy(self):
-        properties = app().project.model.properties
-
-        if len(properties.material_library) > 6:
+        if len(self.properties.material_library) > 6:
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         else:
             self.tableWidget_material_data.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
 
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
 
-        widgets = [self.pushButton_duplicate]
-        change_icon_color_for_widgets(widgets, icon_color)
+
+    ##TODO: the lines above have been added recently, Please, review them.
+
+    def new_identifier(self):
+
+        already_used_ids = set()
+        for material in self.properties.material_library.values():
+            material: Material
+            already_used_ids.add(material.identifier)
+
+        for i in count(1):
+            if i not in already_used_ids:
+                return i
+
+    def material_property_update(self, material_id: int):
+
+        was_updated = False
+        material_to_update = self.properties.material_library.get(material_id)
+    
+        for (prop, vol_id), data in deepcopy(self.properties.volume_properties).items():
+            if prop != "material":
+                continue
+
+            if not isinstance(data, Material):
+                continue
+
+            if not data.identifier == material_to_update.identifier:
+                continue
+    
+            was_updated = True
+            self.properties._set_property("material", material_to_update, volume=vol_id)
+
+            for surf_id in app().project.model.mesh.surfaces_from_volume.get(vol_id):
+                self.properties._set_property("material", material_to_update, surface=surf_id)
+
+        if was_updated:
+            app().project.update_model_properties_file()
+
+    def update_properties_after_material_removal(self, material_identifiers : list):
+
+        surfaces_to_remove_material = list()
+        volumes_to_remove_material = list()
+
+        for key, data in self.properties.volume_properties.items():
+            property, volume_id = key
+            if property != "material":
+                continue
+
+            if not isinstance(data, Material):
+                continue
+
+            if data.identifier not in material_identifiers:
+                continue
+
+            volumes_to_remove_material.append(volume_id)
+            surface_ids = app().project.model.mesh.surfaces_from_volume[volume_id]
+            for surface_id in surface_ids:
+                surfaces_to_remove_material.append(surface_id)
+
+        for vol_id in volumes_to_remove_material:
+            self.properties._remove_volume_property("material", volume_id=vol_id)
+
+        for surf_id in surfaces_to_remove_material:
+            self.properties._remove_surface_property("material", surface_id=surf_id)
+
+        app().project.update_model_properties_file()
