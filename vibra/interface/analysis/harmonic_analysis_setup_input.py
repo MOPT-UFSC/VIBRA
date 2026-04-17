@@ -345,7 +345,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
             if not self.user_defined_solution_steps:
-                if not existing_frequencies:
+                if not list(existing_frequencies):
                     self.hide()
                     title = "No solution steps found"
                     message = "Enter the solution steps before confirming the analysis "

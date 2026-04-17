@@ -34,7 +34,7 @@ T = TypeVar("T", bound=HasIdentifier)
 class PropertyLibrary(Generic[T]):
     def __init__(self):
         self._data: dict[int, T] = dict()
-        self._max_id: int = -1
+        self._max_id: int = 0
 
     def add(self, obj: T) -> int:
         if not isinstance(obj, HasIdentifier):

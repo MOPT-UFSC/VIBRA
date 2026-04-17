@@ -24,8 +24,6 @@ from vibra.utils.interface_utils import block_signals, qt_run_delayed
 error_title = "Error"
 warning_title = "Warning"
 
-COLOR_ROW = 11
-
 
 class RowsEnum(IntEnum):
     NAME = 0
@@ -80,8 +78,8 @@ class FluidWidget(FluidWidget_UI):
         self.pushButton_refprop.clicked.connect(self.refprop_interface_callback)
         #
         self.tableWidget_fluid_data.cellClicked.connect(self.cell_clicked_callback)
-        self.tableWidget_fluid_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_fluid_data.cellDoubleClicked.connect(self.cell_double_clicked_callback)
+        self.tableWidget_fluid_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_fluid_data.itemDelegate().closeEditor.connect(self.cell_editor_closed_callback)
 
     def _paint_icons(self):
@@ -207,22 +205,6 @@ class FluidWidget(FluidWidget_UI):
         if row == RowsEnum.COLOR:
             self._pick_color(row, col)
 
-    def item_changed_callback(self, item: QTableWidgetItem):
-        with block_signals(self.tableWidget_fluid_data):
-            ...  # more validation stuff
-
-            if self._column_has_empty_items(item.column()):
-                return
-
-            try:
-                self._update_library_with_column(item.column())
-            except Exception as e:
-                msg = f"Column {item.column()} contains unnexpected errors."
-                item.setText("")
-                raise InvalidFluidError(msg) from e
-
-        self.modified.emit()
-
     def cell_double_clicked_callback(self, row: int, col: int):
 
         try:
@@ -240,11 +222,26 @@ class FluidWidget(FluidWidget_UI):
 
         if self.refprop_interface_callback(selected_fluid = selected_fluid):
             return
-        
+
         # update the fluid property after editing the fluid data
         self.fluid_property_update(selected_fluid.identifier)
+        app().main_window.update_info_text()
 
-        self.tableWidget_fluid_data.selectColumn(col)
+    def item_changed_callback(self, item: QTableWidgetItem):
+        with block_signals(self.tableWidget_fluid_data):
+            ...  # more validation stuff
+
+            if self._column_has_empty_items(item.column()):
+                return
+
+            try:
+                self._update_library_with_column(item.column())
+            except Exception as e:
+                msg = f"Column {item.column()} contains unnexpected errors."
+                item.setText("")
+                raise InvalidFluidError(msg) from e
+
+        self.modified.emit()
 
     def cell_editor_closed_callback(self, _widget, _hint: QAbstractItemDelegate.EndEditHint):
         n_columns = self.tableWidget_fluid_data.columnCount()
@@ -425,6 +422,7 @@ class FluidWidget(FluidWidget_UI):
 
         for i in range(self.tableWidget_fluid_data.rowCount()):
             item = QTableWidgetItem()
+            item.setTextAlignment(Qt.AlignCenter)
             item.setBackground(color_names.GRAY_5.to_qt())
             self.tableWidget_fluid_data.setItem(i, column_index, item)
 
@@ -471,7 +469,10 @@ class FluidWidget(FluidWidget_UI):
 
 
 
-    ##TODO:
+
+
+    ##TODO: the lines above have been added recently, Please, review them.
+
     def fluid_property_update(self, fluid_id: int):
 
         was_updated = False
