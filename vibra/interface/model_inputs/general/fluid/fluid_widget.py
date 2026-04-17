@@ -137,6 +137,7 @@ class FluidWidget(FluidWidget_UI):
             color = Color.from_hsv(randint(0, 360), 100, 70)
             color_item = self.tableWidget_fluid_data.item(RowsEnum.COLOR, column_index)
             name_item = self.tableWidget_fluid_data.item(RowsEnum.NAME, column_index)
+            identifier_item = self.tableWidget_fluid_data.item(RowsEnum.IDENTIFIER, column_index)
 
             if color_item is not None:
                 color_item.setBackground(color.to_qt())
@@ -145,6 +146,10 @@ class FluidWidget(FluidWidget_UI):
                 name_item.setText("New fluid")
                 self.tableWidget_fluid_data.setCurrentItem(name_item)
                 self.tableWidget_fluid_data.editItem(name_item)
+
+            if identifier_item is not None:
+                new_id = self.properties.fluid_library.get_new_id()
+                identifier_item.setText(str(new_id))
 
             self._update_size_policy()
         self.modified.emit()
