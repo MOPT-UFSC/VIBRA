@@ -344,8 +344,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         existing_frequencies = self.model.old_analysis_setup.get("frequencies", list())
 
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
-            if not self.user_defined_solution_steps:
-                if not list(existing_frequencies):
+
+            if len(self.user_defined_solution_steps) == 0:
+                if len(existing_frequencies) == 0:
                     self.hide()
                     title = "No solution steps found"
                     message = "Enter the solution steps before confirming the analysis "
@@ -373,16 +374,16 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             analysis_setup["modes_number"] = modes_number
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+        if AnalysisID.is_harmonic(analysis_id):
 
             if frequency_spacing == FrequencySpacing.USER_DEFINED:
-                if not self.user_defined_solution_steps:
+                if len(self.user_defined_solution_steps) == 0:
                     if self.model.old_analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
                         self.user_defined_solution_steps = existing_frequencies
 
                 analysis_setup.update({"frequencies" : self.user_defined_solution_steps})
 
-            user_defined_manually = not self.table_exists and self.user_defined_solution_steps
+            user_defined_manually = not self.table_exists and len(self.user_defined_solution_steps) > 0
             if not user_defined_manually:
                 zero_allowed = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText() == "Structural"
 

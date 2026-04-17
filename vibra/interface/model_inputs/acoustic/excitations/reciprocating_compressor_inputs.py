@@ -12,7 +12,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import *
 
@@ -332,7 +332,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if state_properties:
             self.hide()
-            self.fluid_dialog = SimplifiedFluidInputs(state_properties = state_properties)
+            self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
             self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
             self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
             self.fluid_dialog.exec_and_keep_window_open()
