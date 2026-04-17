@@ -6,7 +6,7 @@ from typing import Optional
 
 from molde import Color
 from molde.colors import color_names
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QHeaderView, QTableWidgetItem, QWidget
 
@@ -32,6 +32,8 @@ class RowsEnum(IntEnum):
 
 
 class MaterialWidget(MaterialWidget_UI):
+    modified = Signal()
+
     def __init__(self, *args, **kwargs):
         super().__init__()
 
@@ -115,6 +117,7 @@ class MaterialWidget(MaterialWidget_UI):
                 identifier_item.setText(str(new_id))
 
             self._update_size_policy()
+        self.modified.emit()
 
     def duplicate_selected_material(self):
         material = self.get_selected_material()
@@ -127,6 +130,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         self.reload_table_of_materials()
         self.scroll_to_end()
+        self.modified.emit()
 
     def remove_selected_material(self):
         selected_column = self._get_selected_column()
@@ -140,9 +144,10 @@ class MaterialWidget(MaterialWidget_UI):
 
         with block_signals(self.tableWidget_material_data):
             self.tableWidget_material_data.removeColumn(selected_column)
-            self._update_size_policy()
 
+        self._update_size_policy()
         app().main_window.selection.clear_selection()
+        self.modified.emit()
 
     def reset_library_callback(self):
         """
@@ -161,6 +166,7 @@ class MaterialWidget(MaterialWidget_UI):
         self.reload_table_of_materials()
 
         app().main_window.selection.clear_selection()
+        self.modified.emit()
 
     def cell_clicked_callback(self, row, col):
         if row == RowsEnum.COLOR:
@@ -231,6 +237,7 @@ class MaterialWidget(MaterialWidget_UI):
                 item.setText("")
                 raise InvalidMaterialError(msg) from e
 
+        self.modified.emit()
         app().main_window.update_info_text()
 
     def cell_editor_closed_callback(self, _widget: QWidget, _hint: QAbstractItemDelegate.EndEditHint):

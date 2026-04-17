@@ -3,7 +3,13 @@ from enum import IntEnum
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidget, QTableWidgetItem
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QGridLayout,
+    QHeaderView,
+    QTableWidget,
+    QTableWidgetItem,
+)
 
 from vibra import app
 from vibra.engine.properties.material import Material
@@ -12,30 +18,24 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.material.material_widget import MaterialWidget
 from vibra.interface.ui_generated.model.material.set_material_ui import SetMaterial_UI
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
-
 
 class TabType(IntEnum):
     SETUP = 0
     LIST = 1
 
 
+error_title = "Error"
+
+
 class MaterialInputs(SetMaterial_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
-
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
-        self._config_window()
         self._initialize()
+        self._config_window()
         self._configure_qt_variables()
         self._create_connections()
         self._config_widgets()
@@ -46,24 +46,28 @@ class MaterialInputs(SetMaterial_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    def _initialize(self):
+        self.keep_window_open = True
+        self.material = None
+        self.selected_items = defaultdict(list)
+        self.table_model_materials_cell_clicked = False
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Set material")
 
-    def _initialize(self):
-        self.keep_window_open = True
-        self.material = None
-        self.selected_column = None
-        self.selected_items = defaultdict(list)
-        self.table_model_materials_cell_clicked = False
-
     def _configure_qt_variables(self):
-        self.grid_layout = QGridLayout()
-        self.grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.scrollArea_table_of_materials.setLayout(self.grid_layout)
         self._add_material_widget()
         self.scrollArea_table_of_materials.adjustSize()
 
@@ -74,9 +78,14 @@ class MaterialInputs(SetMaterial_UI):
         self.tableWidget_model_materials: QTableWidget
 
     def _add_material_widget(self):
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.scrollArea_table_of_materials.setLayout(self.grid_layout)
+
         self.material_widget = MaterialWidget(dialog=self)
         self.grid_layout.addWidget(self.material_widget)
-        self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
+        self.scrollArea_table_of_materials.adjustSize()
 
     def reset_selected_material_lineEdit(self):
         self.lineEdit_selected_material_name.clear()
@@ -85,11 +94,13 @@ class MaterialInputs(SetMaterial_UI):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.material_widget.modified.connect(self.load_model_info)
+        self.material_widget.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.material_widget.pushButton_exit.clicked.connect(self.close)
+        self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
+        self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
         #
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_materials.cellClicked.connect(self.cell_clicked_callback)
@@ -102,8 +113,7 @@ class MaterialInputs(SetMaterial_UI):
         self.update_selection_combo_box_texts()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
-        self.selected_column = current_col
-        self.update_material_selection()
+        self.update_material_selection(current_col)
 
     def cell_clicked_callback(self, row, col):
         selection_text = self.set_selected_items_and_get_selection_text()
@@ -256,17 +266,18 @@ class MaterialInputs(SetMaterial_UI):
         self.tableWidget_model_materials.setEditTriggers(QAbstractItemView.EditTrigger(0))
         self.tableWidget_model_materials.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-    def update_material_selection(self):
+    def update_material_selection(self, selected_column: int):
 
-        if self.selected_column is None:
+        if not isinstance(selected_column, int):
             return
 
-        item = self.tableWidget_material_data.item(0, self.selected_column)
+        item = self.material_widget.tableWidget_material_data.item(0, selected_column)
         if item is None:
             return
 
         material_name = item.text()
         self.lineEdit_selected_material_name.clear()
+
         if material_name != "":
             self.lineEdit_selected_material_name.setText(material_name)
 
@@ -300,7 +311,7 @@ class MaterialInputs(SetMaterial_UI):
             self.hide()
             self.title = "No materials selected"
             self.message = "Select a material in the list before confirming the material attribution."
-            PrintMessageInput([window_title_1, self.title, self.message])
+            PrintMessageInput([error_title, self.title, self.message])
             return
 
         current_text = self.comboBox_attribution_type.currentText()
