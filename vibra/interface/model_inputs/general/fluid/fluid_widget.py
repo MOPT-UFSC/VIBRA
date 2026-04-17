@@ -573,7 +573,7 @@ class FluidWidget(FluidWidget_UI):
         window = self.nativeParentWidget()
         if isinstance(window, QDialog):
             last_col = self.tableWidget_fluid_data.columnCount()
-            window.tableWidget_fluid_data.selectColumn(last_col - 1)
+            self.tableWidget_fluid_data.selectColumn(last_col - 1)
 
     def new_identifier(self):
 

@@ -4,7 +4,6 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.engine import HarmonicAnalysisSetup
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter

@@ -12,7 +12,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import PerforatedPlateData
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
@@ -1066,7 +1066,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SimplifiedFluidInputs()
+        self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()

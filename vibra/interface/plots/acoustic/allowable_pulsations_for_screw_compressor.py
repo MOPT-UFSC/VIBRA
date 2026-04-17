@@ -8,7 +8,7 @@ from vibra.engine.properties.fluid import Fluid
 
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import AllowablePulsationsForScrewCompressorInputs_UI
 
@@ -386,7 +386,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
             return tuple(np.random.randint(0, 255, size=3) / 255)
 
     def get_fluid_callback(self):
-        self.fluid_dialog = SimplifiedFluidInputs(update_workspace = False)
+        self.fluid_dialog = SetFluidInputsSimplified(update_workspace = False)
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()

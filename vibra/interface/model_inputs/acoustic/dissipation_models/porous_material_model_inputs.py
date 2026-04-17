@@ -6,7 +6,7 @@ from vibra import app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import DelanyBazleyData
 from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JCAData
@@ -764,7 +764,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SimplifiedFluidInputs()
+        self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()

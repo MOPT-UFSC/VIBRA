@@ -1,56 +1,53 @@
-from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidget, QTableWidgetItem
-from PySide6.QtGui import QCloseEvent
-from PySide6.QtCore import Qt
-
-from vibra import app
-from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
-from vibra.engine.properties.fluid import Fluid
-from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-
 from collections import defaultdict
 from enum import IntEnum
 
-error_title = "Error"
-warning_title = "Warning"
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QGridLayout,
+    QHeaderView,
+    QTableWidgetItem,
+)
 
-def getColorRGB(color):
-    color = color.replace(" ", "")
-    if ("[" or "(") in color:
-        color = color[1:-1]
-    tokens = color.split(',')
-    return list(map(int, tokens))
+from vibra import app
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
+from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import (
+    SetFluidInputs_UI,
+)
+
 
 class TabType(IntEnum):
     SETUP = 0
     LIST = 1
+
 
 class AttributionType(IntEnum):
     ALL_BODIES = 0
     SELECTED_BODIES = 1
 
 
+error_title = "Error"
+
+
 class SetFluidInputs(SetFluidInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        self.cache_selected_lines = kwargs.get("cache_selected_lines", list())
         self.state_properties = kwargs.get("state_properties", dict())
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
-        self._config_window()
         self._initialize()
-        self._configure_qt_variables()
-        self._create_connections()
+        self._config_window()
         self._config_widgets()
+        self._add_fluid_widget()
+        self._create_connections()
 
         if self.state_properties:
             self.fluid_widget.load_state_properties_info()
@@ -60,56 +57,58 @@ class SetFluidInputs(SetFluidInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    def _initialize(self):
+        self.fluid = None
+        self.keep_window_open = True
+        self.complete = False
+        self.table_model_fluids_cell_clicked = False
+        self.selected_items = defaultdict(list)
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
-    def _initialize(self):
-        self.keep_window_open = True
-        self.complete = False
-        self.fluid = None
-        self.selected_column = None
-        self.selected_items = defaultdict(list)
-        self.table_model_fluids_cell_clicked = False
+    def _add_fluid_widget(self):
 
-    def _configure_qt_variables(self):
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
-
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
-        self._add_fluid_widget()
 
-        self.pushButton_attribute = self.fluid_widget.pushButton_attribute
-        self.pushButton_exit = self.fluid_widget.pushButton_exit
-
-        self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
-        self.tableWidget_model_fluids : QTableWidget
-
-    def _add_fluid_widget(self):
         self.fluid_widget = FluidWidget(state_properties=self.state_properties)
         self.grid_layout.addWidget(self.fluid_widget)
-        self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 
     def reset_selected_fluid_lineEdit(self):
         self.lineEdit_selected_fluid_name.clear()
 
-    def load_compressor_info(self):
-        self.fluid_widget.load_compressor_info()
+    def _config_widgets(self):
+        self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+        self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.tableWidget_model_fluids.setEditTriggers(QAbstractItemView.EditTrigger(0))
+        self.tableWidget_model_fluids.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def _create_connections(self):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.fluid_widget.modified.connect(self.load_model_info)
+        self.fluid_widget.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.fluid_widget.pushButton_exit.clicked.connect(self.close)
+        self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
+        self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
-        self.fluid_widget.modified.connect(self.load_model_info)
         #
-        self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
+        self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_fluids.cellClicked.connect(self.cell_clicked_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -120,8 +119,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.geometry_selection_callback()
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
-        self.selected_column = current_col
-        self.update_fluid_selection()
+        self.update_fluid_selection(current_col)
 
     def cell_clicked_callback(self, row, col):
         self.table_model_fluids_cell_clicked = True
@@ -221,23 +219,18 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
 
-    def _config_widgets(self):
-        self.tableWidget_model_fluids.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
-        self.tableWidget_model_fluids.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.tableWidget_model_fluids.setEditTriggers(QAbstractItemView.EditTrigger(0))
-        self.tableWidget_model_fluids.setSelectionBehavior(QAbstractItemView.SelectRows)
+    def update_fluid_selection(self, selected_column: int):
 
-    def update_fluid_selection(self):
-
-        if self.selected_column is None:
+        if not isinstance(selected_column, int):
             return
 
-        item = self.tableWidget_fluid_data.item(0, self.selected_column)
+        item = self.fluid_widget.tableWidget_fluid_data.item(0, selected_column)
         if item is None:
             return
 
         fluid_name = item.text()
         self.lineEdit_selected_fluid_name.clear()
+
         if fluid_name != "":
             self.lineEdit_selected_fluid_name.setText(fluid_name)
 
@@ -335,7 +328,6 @@ class SetFluidInputs(SetFluidInputs_UI):
             return
 
         if obj._continue:
-
             self.properties._reset_property("fluid")
             self.properties._reset_property("fluid_id")
             self.actions_to_finalize()
@@ -347,7 +339,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
 
-        self.load_model_info()
+        self.fluid_widget.reload_table_of_fluids()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
@@ -358,9 +350,9 @@ class SetFluidInputs(SetFluidInputs_UI):
     def load_model_info(self):
 
         properties = {
-                    #   "Surface" : self.properties.surface_properties,
-                      "Volume" : self.properties.volume_properties
-                      }
+            #"Surface" : self.properties.surface_properties,
+            "Volume" : self.properties.volume_properties,
+            }
 
         self.model_fluids = dict()
 

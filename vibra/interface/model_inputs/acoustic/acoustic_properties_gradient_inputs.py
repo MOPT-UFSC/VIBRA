@@ -4,7 +4,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.interface.ui_generated.model.acoustic.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.engine.properties.fluid import Fluid
 
 import warnings
@@ -195,7 +195,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SimplifiedFluidInputs()
+        self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
         self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
