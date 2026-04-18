@@ -479,6 +479,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                     analysis_method=analysis_setup["analysis_method"],
                     global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
                     modes_number=analysis_setup.get("modes_number", None),
+                    mask_frequencies=None,
                 )
             case FrequencySpacing.USER_DEFINED:
                 self.analysis_setup = HarmonicAnalysisSetupList(

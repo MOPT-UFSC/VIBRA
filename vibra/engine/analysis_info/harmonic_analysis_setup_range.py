@@ -1,4 +1,5 @@
 from dataclasses import KW_ONLY, dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -11,6 +12,7 @@ class HarmonicAnalysisSetupRange(HarmonicAnalysisSetup):
     f_max: float
     f_step: float = 1
     _: KW_ONLY
+    mask_frequencies: Optional[np.ndarray[tuple[int], bool]] = None
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     modes_number: int = 40
     sigma_factor: float = 0.01
@@ -20,6 +22,11 @@ class HarmonicAnalysisSetupRange(HarmonicAnalysisSetup):
     def f_size(self):
         # TODO: Find an analytic expression to calculate this more efficiently
         return len(self.frequencies())
+
+    def get_mask(self):
+        if self.mask_frequencies is None:
+            return np.ones(self.f_size, dtype=bool)
+        return self.mask_frequencies
 
     def frequencies(self):
         frequencies = np.arange(
