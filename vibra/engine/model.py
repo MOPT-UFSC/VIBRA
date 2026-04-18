@@ -82,7 +82,6 @@ class Model:
         self.geometry_qf = 1.0
 
         self.list_frequencies = list()
-        self.solution_steps_mask = list()
 
         self.old_analysis_setup = dict()
         self.decouple_info = dict()
@@ -111,6 +110,12 @@ class Model:
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.frequencies()
         return None
+
+    @property
+    def solution_steps_mask(self):
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            return self.analysis_setup.mask_frequencies
+        return list()
 
     def reset_dissipation_model_properties(self):
         self.perforated_plate_impedance_data = dict()
@@ -274,10 +279,7 @@ class Model:
             # self.frequencies = _frequencies
             self.old_analysis_setup["frequencies"] = list(_frequencies)
 
-        solution_steps_mask = self.get_solution_steps_mask()
-        self.solution_steps_mask = solution_steps_mask
-
-        self.old_analysis_setup["solution_steps_mask"] = solution_steps_mask
+        self.old_analysis_setup["solution_steps_mask"] = self.get_solution_steps_mask()
 
     def set_analysis_id(self, analysis_id: AnalysisID):
         self.analysis_id = analysis_id
@@ -294,11 +296,15 @@ class Model:
         else:
             self.old_set_analysis_setup(analysis_setup.as_dict(), supress_warning=True)
 
-    def get_solution_steps_mask(self, tol: float = 1e-10):
-        if self.frequencies is None:
+    def get_solution_steps_mask(self, frequencies: np.ndarray | None = None, tol: float = 1e-10):
+
+        if frequencies is None:
+            frequencies = deepcopy(self.frequencies)
+
+        if frequencies is None:
             return list()
 
-        all_true = [True for _ in range(self.frequencies.size)]
+        all_true = [True for _ in range(frequencies.size)]
         table_frequencies = self.properties.process_all_tables_frequencies_vectors()
 
         if not table_frequencies:
@@ -311,7 +317,7 @@ class Model:
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
-            diff_abs = np.min(np.abs(self.frequencies - freq)) < tol
+            diff_abs = np.min(np.abs(frequencies - freq)) < tol
             mask.append(bool(diff_abs))
 
         return mask

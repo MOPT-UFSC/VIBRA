@@ -46,7 +46,7 @@ class HarmonicAnalysisSetupRange(HarmonicAnalysisSetup):
             "f_max": self.f_max,
             "f_step": self.f_step,
             "frequencies": self.frequencies(),
-            "solution_steps_mask": np.ones(self.f_size, dtype=bool),
+            "solution_steps_mask" : self.get_mask(),
             "global_damping": self.global_damping,
         }
 

@@ -14,6 +14,7 @@ class HarmonicAnalysisSetup(ABC):
     f_min: float
     f_max: float
     f_size: float
+    mask_frequencies: np.ndarray[tuple[int], bool] | None
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: int = 40

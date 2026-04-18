@@ -139,6 +139,7 @@ class ProjectReader:
                         analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
                         global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
                         modes_number=analysis_setup_dict.get("modes_number", None),
+                        mask_frequencies=analysis_setup_dict.get("solution_steps_mask", list()),
                     )
                 case FrequencySpacing.USER_DEFINED:
                     return HarmonicAnalysisSetupList(
@@ -147,6 +148,7 @@ class ProjectReader:
                         analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
                         global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
                         modes_number=analysis_setup_dict.get("modes_number", None),
+                        mask_frequencies=analysis_setup_dict.get("solution_steps_mask", list()),
                     )
 
         elif analysis_id.is_modal():

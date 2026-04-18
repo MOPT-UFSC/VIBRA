@@ -211,12 +211,13 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
     
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
+        self.pushButton_show_solution_steps_table.setDisabled(True)
 
     def update_reset_settings_button_visibility(self):
         self.pushButton_reset_frequency_settings.setVisible(self.table_exists)
         if not self.table_exists:
             return
-
+        
         misaligned_fsetup = self.model.has_spectral_content_been_modified()
         self.pushButton_reset_frequency_settings.setEnabled(misaligned_fsetup)
 
@@ -224,7 +225,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.tabular_frequency_setup = self.model.get_tabular_frequency_setup()
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
 
-    def set_default_values(self):       
+    def set_default_values(self):
         f_min = 5
         f_max = 600
         f_step = 5
@@ -479,8 +480,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                     analysis_method=analysis_setup["analysis_method"],
                     global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
                     modes_number=analysis_setup.get("modes_number", None),
-                    mask_frequencies=None,
                 )
+
+                _frequencies = self.analysis_setup.frequencies()
+                self.analysis_setup.mask_frequencies = app().project.model.get_solution_steps_mask(frequencies=_frequencies)
+
             case FrequencySpacing.USER_DEFINED:
                 self.analysis_setup = HarmonicAnalysisSetupList(
                     analysis_setup["frequencies"],
