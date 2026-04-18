@@ -113,7 +113,7 @@ class MaterialWidget(MaterialWidget_UI):
                 self.tableWidget_material_data.editItem(name_item)
 
             if identifier_item is not None:
-                new_id = self.new_identifier()
+                new_id = self.properties.material_library.get_new_id()
                 identifier_item.setText(str(new_id))
 
             self._update_size_policy()
@@ -230,7 +230,6 @@ class MaterialWidget(MaterialWidget_UI):
             try:
                 self._update_library_with_column(item.column())
                 app().project.update_model_properties_file()
-                self.reload_table_of_materials()
 
             except Exception as e:
                 msg = f"Column {item.column()} contains unnexpected errors."
@@ -358,6 +357,8 @@ class MaterialWidget(MaterialWidget_UI):
                     material.poisson_ratio = to_num(text)
                 case RowsEnum.THERMAL_EXPANSION_COEFFICIENT:
                     material.thermal_expansion_coefficient = to_num(text)
+        
+        self._set_column_values(col, material)
 
     def _column_has_empty_items(self, col: int):
         for row in RowsEnum:
@@ -450,18 +451,6 @@ class MaterialWidget(MaterialWidget_UI):
 
 
     ##TODO: the lines above have been added recently, Please, review them.
-
-    def new_identifier(self):
-
-        already_used_ids = set()
-        for material in self.properties.material_library.values():
-            material: Material
-            already_used_ids.add(material.identifier)
-
-        for i in count(1):
-            if i not in already_used_ids:
-                return i
-
     def material_property_update(self, material_id: int):
 
         was_updated = False

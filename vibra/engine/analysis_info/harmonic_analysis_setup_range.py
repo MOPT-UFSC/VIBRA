@@ -18,17 +18,19 @@ class HarmonicAnalysisSetupRange(HarmonicAnalysisSetup):
 
     @property
     def f_size(self):
-        from math import ceil
-
-        return ceil((self.f_max + self.f_step - self.f_min) / self.f_step)
+        # TODO: Find an analytic expression to calculate this more efficiently
+        return len(self.frequencies())
 
     def frequencies(self):
-        return np.arange(
+        frequencies = np.arange(
             self.f_min,
             self.f_max + self.f_step,
             self.f_step,
             dtype=float,
         )
+        # TODO: This is unecessarily expensive, simplify it
+        mask = frequencies <= self.f_max
+        return frequencies[mask]
 
     def as_dict(self):
         data = {

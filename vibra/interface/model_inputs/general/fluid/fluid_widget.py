@@ -137,6 +137,7 @@ class FluidWidget(FluidWidget_UI):
             color = Color.from_hsv(randint(0, 360), 100, 70)
             color_item = self.tableWidget_fluid_data.item(RowsEnum.COLOR, column_index)
             name_item = self.tableWidget_fluid_data.item(RowsEnum.NAME, column_index)
+            identifier_item = self.tableWidget_fluid_data.item(RowsEnum.IDENTIFIER, column_index)
 
             if color_item is not None:
                 color_item.setBackground(color.to_qt())
@@ -145,6 +146,10 @@ class FluidWidget(FluidWidget_UI):
                 name_item.setText("New fluid")
                 self.tableWidget_fluid_data.setCurrentItem(name_item)
                 self.tableWidget_fluid_data.editItem(name_item)
+
+            if identifier_item is not None:
+                new_id = self.properties.fluid_library.get_new_id()
+                identifier_item.setText(str(new_id))
 
             self._update_size_policy()
         self.modified.emit()
@@ -236,7 +241,6 @@ class FluidWidget(FluidWidget_UI):
             try:
                 self._update_library_with_column(item.column())
                 app().project.update_model_properties_file()
-                self.reload_table_of_fluids()
 
             except Exception as e:
                 msg = f"Column {item.column()} contains unnexpected errors."
@@ -372,6 +376,8 @@ class FluidWidget(FluidWidget_UI):
                     fluid.dynamic_viscosity = to_num(text)
                 case RowsEnum.MOLAR_MASS:
                     fluid.molar_mass = to_num(text)
+        
+        self._set_column_values(col, fluid)
 
     def _column_has_empty_items(self, col: int):
         for row in RowsEnum:

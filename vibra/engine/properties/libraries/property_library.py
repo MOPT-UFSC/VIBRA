@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from itertools import count
 from operator import eq
 from typing import (
     Any,
@@ -8,9 +9,9 @@ from typing import (
     Generic,
     Optional,
     Protocol,
+    Self,
     Sequence,
     TypeVar,
-    Self,
     runtime_checkable,
 )
 
@@ -82,6 +83,12 @@ class PropertyLibrary(Generic[T]):
 
     def contains_id(self, identifier: int) -> bool:
         return identifier in self._data.keys()
+
+    def get_new_id(self) -> int:
+        already_used_ids = set(i.identifier for i in self.values())
+        for i in count(1):
+            if i not in already_used_ids:
+                return i
 
     def contains(self, obj: T) -> bool:
         return obj in self._data.values()
