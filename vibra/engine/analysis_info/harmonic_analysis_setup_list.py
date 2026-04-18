@@ -12,9 +12,9 @@ class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
     mask_frequencies: Optional[np.ndarray[tuple[int], bool]] = None
     _: KW_ONLY
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
-    global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: int = 40
     sigma_factor: float = 0.01
+    global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     def __post_init__(self):
         # cast everything to arrays and fill with ones if needed

@@ -4,8 +4,20 @@ import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QWidget
 
 from vibra import app
-from vibra.engine.analysis_info import HarmonicAnalysisSetup, HarmonicAnalysisSetupList
+from vibra.engine.analysis_info import HarmonicAnalysisSetup, HarmonicAnalysisSetupList, HarmonicAnalysisSetupRange
 
+from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
+
+
+def get_proper_analysis_setup_for_tabular_data(frequencies: np.ndarray):
+    equally_distributed = is_frequencies_vector_equally_distributed(frequencies)
+    if equally_distributed:
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0]
+        return HarmonicAnalysisSetupRange(f_min, f_max, f_step)
+    
+    return HarmonicAnalysisSetupList(frequencies)
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
     analysis_setup = app().project.model.analysis_setup
@@ -19,7 +31,10 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
             all_frequencies=frequencies,
         )
     else:
-        new_analysis_setup = HarmonicAnalysisSetupList(frequencies)
+        # new_analysis_setup = HarmonicAnalysisSetupList(frequencies)
+        new_analysis_setup = get_proper_analysis_setup_for_tabular_data(frequencies)
+
+    print(new_analysis_setup)
 
     app().project.configure_analysis(
         app().project.model.analysis_id,
