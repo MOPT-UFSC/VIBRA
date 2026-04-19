@@ -423,10 +423,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         analysis_method = "direct" if self.comboBox_method.currentIndex() == 0 else "mode_superposition"
         frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
 
-        existing_frequencies = self.model.old_analysis_setup.get("frequencies", list())
+        existing_frequencies = self.model.frequencies
 
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
-
             if len(self.user_defined_solution_steps) == 0:
                 if len(existing_frequencies) == 0:
                     self.hide()
@@ -486,9 +485,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 self.analysis_setup.mask_frequencies = app().project.model.get_solution_steps_mask(frequencies=_frequencies)
 
             case FrequencySpacing.USER_DEFINED:
+                _frequencies = np.array(analysis_setup["frequencies"], dtype=float)
                 self.analysis_setup = HarmonicAnalysisSetupList(
-                    analysis_setup["frequencies"],
-                    analysis_setup.get("solution_steps_mask", None),
+                    _frequencies,
+                    app().project.model.get_solution_steps_mask(frequencies=_frequencies),
                     analysis_method=analysis_setup["analysis_method"],
                     global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
                     modes_number=analysis_setup.get("modes_number", None),

@@ -296,7 +296,7 @@ class Model:
         else:
             self.old_set_analysis_setup(analysis_setup.as_dict(), supress_warning=True)
 
-    def get_solution_steps_mask(self, frequencies: np.ndarray | None = None, tol: float = 1e-10):
+    def get_solution_steps_mask(self, frequencies: np.ndarray | list | None = None, tol: float = 1e-10):
 
         if frequencies is None:
             frequencies = deepcopy(self.frequencies)
@@ -304,7 +304,7 @@ class Model:
         if frequencies is None:
             return list()
 
-        all_true = [True for _ in range(frequencies.size)]
+        all_true = [True for _ in range(len(frequencies))]
         table_frequencies = self.properties.process_all_tables_frequencies_vectors()
 
         if not table_frequencies:

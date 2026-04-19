@@ -16,13 +16,13 @@ class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
     sigma_factor: float = 0.01
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
-    def __post_init__(self):
-        # cast everything to arrays and fill with ones if needed
-        self.all_frequencies = np.array(self.all_frequencies)
-        if self.mask_frequencies is not None:
-            self.mask_frequencies = np.array(self.mask_frequencies, dtype=bool)
-            assert self.all_frequencies.shape == self.mask_frequencies.shape
-        assert self.all_frequencies.size > 0
+    # def __post_init__(self):
+    #     # cast everything to arrays and fill with ones if needed
+    #     self.all_frequencies = np.array(self.all_frequencies)
+    #     if self.mask_frequencies is not None:
+    #         self.mask_frequencies = np.array(self.mask_frequencies, dtype=bool)
+    #         assert self.all_frequencies.shape == self.mask_frequencies.shape
+    #     assert self.all_frequencies.size > 0
 
     def get_mask(self):
         if self.mask_frequencies is None:
@@ -32,6 +32,7 @@ class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
     def frequencies(self):
         if self.mask_frequencies is None:
             return self.all_frequencies.copy()
+        return self.all_frequencies.copy()
         return self.all_frequencies[self.mask_frequencies].copy()
 
     @property

@@ -133,28 +133,28 @@ class ProjectReader:
             match frequency_spacing:
                 case FrequencySpacing.EQUALLY_DISTRIBUTED:
                     return HarmonicAnalysisSetupRange(
-                        f_min=analysis_setup_dict.get("f_min", 0),
-                        f_max=analysis_setup_dict.get("f_max", 0),
-                        f_step=analysis_setup_dict.get("f_step", 0),
-                        analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number=analysis_setup_dict.get("modes_number", None),
-                        mask_frequencies=analysis_setup_dict.get("solution_steps_mask", list()),
+                        f_min = analysis_setup_dict.get("f_min", 0),
+                        f_max = analysis_setup_dict.get("f_max", 0),
+                        f_step = analysis_setup_dict.get("f_step", 0),
+                        analysis_method = analysis_setup_dict.get("analysis_method", "direct"),
+                        global_damping = analysis_setup_dict.get("global_damping", (0, 0, 0)),
+                        modes_number = analysis_setup_dict.get("modes_number", None),
+                        mask_frequencies = analysis_setup_dict.get("solution_steps_mask", list()),
                     )
+
                 case FrequencySpacing.USER_DEFINED:
                     return HarmonicAnalysisSetupList(
-                        analysis_setup_dict.get("frequencies", []),
+                        np.array(analysis_setup_dict.get("frequencies", list()), dtype=float),
                         analysis_setup_dict.get("solution_steps_mask"),
-                        analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number=analysis_setup_dict.get("modes_number", None),
-                        mask_frequencies=analysis_setup_dict.get("solution_steps_mask", list()),
+                        analysis_method = analysis_setup_dict.get("analysis_method", "direct"),
+                        global_damping = analysis_setup_dict.get("global_damping", (0, 0, 0)),
+                        modes_number = analysis_setup_dict.get("modes_number", None),
                     )
 
         elif analysis_id.is_modal():
             return ModalAnalysisSetup(
-                modes_number=analysis_setup_dict.get("modes_number", 0),
-                sigma_factor=analysis_setup_dict.get("sigma_factor", 0),
+                modes_number=analysis_setup_dict.get("modes_number", 40),
+                sigma_factor=analysis_setup_dict.get("sigma_factor", 0.01),
             )
 
         else:
