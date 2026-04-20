@@ -13,9 +13,7 @@ from PIL.Image import Image
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisSetup,
-    FrequencySpacing,
-    HarmonicAnalysisSetupList,
-    HarmonicAnalysisSetupRange,
+    HarmonicAnalysisSetupNew,
     ModalAnalysisSetup,
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -125,37 +123,10 @@ class ProjectReader:
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
 
         if analysis_id.is_harmonic():
-            frequency_spacing = analysis_setup_dict.get(
-                "frequency_spacing",
-                FrequencySpacing.EQUALLY_DISTRIBUTED,
-            )
-
-            match frequency_spacing:
-                case FrequencySpacing.EQUALLY_DISTRIBUTED:
-                    return HarmonicAnalysisSetupRange(
-                        f_min = analysis_setup_dict.get("f_min", 0),
-                        f_max = analysis_setup_dict.get("f_max", 0),
-                        f_step = analysis_setup_dict.get("f_step", 0),
-                        analysis_method = analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping = analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number = analysis_setup_dict.get("modes_number", None),
-                        mask_frequencies = analysis_setup_dict.get("solution_steps_mask", list()),
-                    )
-
-                case FrequencySpacing.USER_DEFINED:
-                    return HarmonicAnalysisSetupList(
-                        np.array(analysis_setup_dict.get("frequencies", list()), dtype=float),
-                        analysis_setup_dict.get("solution_steps_mask"),
-                        analysis_method = analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping = analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number = analysis_setup_dict.get("modes_number", None),
-                    )
+            return HarmonicAnalysisSetupNew(**analysis_setup_dict)
 
         elif analysis_id.is_modal():
-            return ModalAnalysisSetup(
-                modes_number=analysis_setup_dict.get("modes_number", 40),
-                sigma_factor=analysis_setup_dict.get("sigma_factor", 0.01),
-            )
+            return ModalAnalysisSetup(**analysis_setup_dict)
 
         else:
             return None
@@ -421,11 +392,12 @@ class ProjectReader:
             file: h5py.File
 
             return ModalSolution(
-                analysis_id=analysis_id,
-                natural_frequencies=file["frequencies"],
-                modal_shape=file["solution"],
-                displacement_dof=file.get("displacement_dof"),
-            )
+                analysis_id = analysis_id,
+                natural_frequencies = file["frequencies"],
+                modal_shape = file["solution"],
+                displacement_dof = file.get("displacement_dof"),
+                complex_natural_frequencies = file.get("complex_natural_frequencies"),
+                )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
