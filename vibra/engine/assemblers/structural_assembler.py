@@ -46,7 +46,7 @@ class StructuralAssembler:
         analysis_setup = self.model.analysis_setup
 
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            self.frequencies = analysis_setup.frequencies()
+            self.frequencies = analysis_setup.get_frequencies()
             self.number_frequencies = len(self.frequencies)
         else:
             self.frequencies = None
@@ -591,7 +591,7 @@ class StructuralAssembler:
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
         alpha, beta, eta = self.model.analysis_setup.global_damping
-        frequencies = analysis_setup.frequencies()
+        frequencies = analysis_setup.get_frequencies()
 
         omega = 2 * np.pi * frequencies[index]
 
@@ -628,7 +628,7 @@ class StructuralAssembler:
 
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-        frequencies = analysis_setup.frequencies()
+        frequencies = analysis_setup.get_frequencies()
 
         unprescribed_indexes = self.unprescribed_dof_indexes
 

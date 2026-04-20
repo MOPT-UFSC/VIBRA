@@ -1,5 +1,5 @@
 
-from vibra.engine import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import HarmonicAnalysisSetupNew
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
@@ -48,10 +48,10 @@ class AcousticAssembler:
 
     def update_number_of_frequencies(self):
         analysis_setup = self.model.analysis_setup
-
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            self.frequencies = analysis_setup.frequencies()
+        if isinstance(analysis_setup, HarmonicAnalysisSetupNew):
+            self.frequencies = analysis_setup.get_frequencies()
             self.number_frequencies = len(self.frequencies)
+
         else:
             self.frequencies = None
             self.number_frequencies = 1
@@ -190,8 +190,8 @@ class AcousticAssembler:
             return 0.
 
         analysis_setup = self.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-        frequencies = analysis_setup.frequencies()
+        assert isinstance(analysis_setup, HarmonicAnalysisSetupNew)
+        frequencies = analysis_setup.get_frequencies()
 
         omega = 2 * np.pi * frequencies[index]
 
@@ -327,6 +327,7 @@ class AcousticAssembler:
 
             # normalize data type to array
             complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+            print(complex_values_array)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
