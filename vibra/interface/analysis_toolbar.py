@@ -336,12 +336,6 @@ class AnalysisToolbar(QToolBar):
         analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
 
-        if harmonic.setup_defined:
-            app().project.configure_analysis(
-                analysis_id,
-                harmonic.analysis_setup,
-            )
-
         if harmonic.solve_analysis:
             self.run_analysis()
             app().main_window.update_symbols()
@@ -349,12 +343,6 @@ class AnalysisToolbar(QToolBar):
     def harmonic_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
-
-        if harmonic.setup_defined:
-            app().project.configure_analysis(
-                analysis_id,
-                harmonic.analysis_setup,
-            )
 
         if harmonic.solve_analysis:
             self.run_analysis()

@@ -234,7 +234,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         
         self.analysis_setup = HarmonicAnalysisSetupRange(f_min, f_max, f_step=f_step)
 
-        self.frequencies = self.analysis_setup.frequencies()
+        self.frequencies = self.analysis_setup.get_frequencies()
 
     def configure_analysis(self):
         if self.check_frequency_entries():

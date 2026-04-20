@@ -55,7 +55,7 @@ class HarmonicSolver:
 
         return HarmonicSolution(
             analysis_id=analysis_id,
-            frequencies=analysis_setup.frequencies(),
+            frequencies=analysis_setup.get_frequencies(),
             results=self.solution,
             displacement_dof=self.displacement_dof,
         )
@@ -176,7 +176,7 @@ class HarmonicSolver:
 
         return HarmonicSolution(
             analysis_id=analysis_id,
-            frequencies=analysis_setup.frequencies(),
+            frequencies=analysis_setup.get_frequencies(),
             results=self.solution,
             displacement_dof=self.displacement_dof,
         )
