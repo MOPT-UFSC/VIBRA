@@ -317,6 +317,9 @@ class ProjectWriter:
             if solver.displacement_dof is not None:
                 file["displacement_dof"] = solver.displacement_dof
 
+            if isinstance(solver.complex_natural_frequencies, np.ndarray):
+                file["complex_natural_frequencies"] = solver.complex_natural_frequencies
+
         self._write_hash(HashEnum.MODAL_SOLUTION, current_hash)
 
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
