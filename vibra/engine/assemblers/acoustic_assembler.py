@@ -327,7 +327,6 @@ class AcousticAssembler:
 
             # normalize data type to array
             complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
-            print(complex_values_array)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)

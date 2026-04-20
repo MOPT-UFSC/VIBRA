@@ -235,7 +235,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
 
     def reset_frequency_setup_based_on_tabular_data(self):
-        print("reset_frequency_setup_based_on_tabular_data")
         if not self.model.properties.check_if_there_are_tables_at_the_model():
             return
         
