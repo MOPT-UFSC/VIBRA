@@ -7,10 +7,18 @@ import numpy as np
 from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
-from vibra.engine import HarmonicAnalysisSetup
-from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
+
+# from vibra.engine import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    AnalysisSetup,
+    FrequencySpacing,
+    HarmonicAnalysisSetupNew,
+)
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import (
+    ViscousThermalLossModels,
+)
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -36,7 +44,9 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import (
+    DegreesOfFreedomDecoupling,
+)
 from vibra.engine.mesher.element_setup import (
     DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
@@ -49,7 +59,9 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import Solution
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
+from vibra.engine.transfer_impedances.perforated_plate_models import (
+    PerforatedPlateModels,
+)
 from vibra.errors import IncompleteSetupError
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -107,14 +119,14 @@ class Model:
         """
         This property was created for retro compatibility.
         """
-        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
-            return self.analysis_setup.frequencies()
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetupNew):
+            return self.analysis_setup.get_frequencies()
         return None
 
     @property
     def solution_steps_mask(self):
-        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
-            return self.analysis_setup.mask_frequencies
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetupNew):
+            return self.analysis_setup.solution_steps_mask
         return list()
 
     def reset_dissipation_model_properties(self):
@@ -323,7 +335,7 @@ class Model:
         return mask
 
     def has_spectral_content_been_modified(self):
-        cond_A = self.old_analysis_setup.get("frequency_spacing", "") == "user-defined"
+        cond_A = self.old_analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
 

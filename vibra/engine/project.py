@@ -315,7 +315,7 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.postprocessing = StructuralPostprocessing(self)
 
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices()
 
         t0 = perf_counter()
         solution = self.solver.solve()
@@ -365,7 +365,7 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.postprocessing = AcousticPostprocessing(self)
 
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices()
 
         t0 = perf_counter()
         solution = self.solver.solve()
@@ -410,6 +410,23 @@ class Project:
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
 
         return solution
+
+    def update_post_processing(self):
+        self.postprocessing = None
+        if AnalysisID(self.analysis_id).is_acoustic():
+            self.postprocessing = AcousticPostprocessing(self)
+        elif AnalysisID(self.analysis_id).is_structural():
+            self.postprocessing = StructuralPostprocessing(self)
+
+    def get_acoustic_postprocessing(self):
+        if not isinstance(self.postprocessing, AcousticPostprocessing):
+            self.update_post_processing()
+        return self.postprocessing
+
+    def get_structural_postprocessing(self):
+        if not isinstance(self.postprocessing, StructuralPostprocessing):
+            self.update_post_processing()
+        return self.postprocessing
 
     def is_analysis_id_valid(self, analysis_id: AnalysisID) -> bool:
         """
