@@ -15,7 +15,6 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
-        # app().main_window.close_dialogs()
         # app().main_window.set_input_widget(self)
 
         self._initialize()

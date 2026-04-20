@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QTableWidgetItem, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QPushButton, QTableWidgetItem, QWidget
 from PySide6.QtGui import Qt, QIcon
 
 from vibra import app, ICON_DIR
@@ -17,7 +17,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
-        # app().main_window.close_dialogs()
         # app().main_window.set_input_widget(self)
 
         self._initialize()
