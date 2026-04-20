@@ -22,6 +22,7 @@ class ModalSolution(CommonSolution):
         self.modal_shape = self._immutable_array(modal_shape)
         self.complex_natural_frequencies = self._optional_immutable_array(complex_natural_frequencies)
         self.displacement_dof = self._optional_immutable_array(displacement_dof)
+
         super().__init__()
 
     @cached_property
