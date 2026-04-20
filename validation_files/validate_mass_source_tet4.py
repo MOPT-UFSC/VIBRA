@@ -163,7 +163,7 @@ def load_external_mesh_and_solve(assignment_type: str):
         f_max=1400,
         f_step=5,
     )
-    frequencies = analysis_setup.frequencies()
+    frequencies = analysis_setup.get_frequencies()
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)

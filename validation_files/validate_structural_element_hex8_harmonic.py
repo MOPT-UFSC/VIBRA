@@ -143,7 +143,7 @@ def load_external_mesh_and_solve():
         f_step=20,
         global_damping=(0.0, 0.0, 0e-2),
     )
-    frequencies = analysis_setup.frequencies()
+    frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)

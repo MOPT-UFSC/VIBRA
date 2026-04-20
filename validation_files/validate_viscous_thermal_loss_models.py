@@ -119,7 +119,7 @@ def load_external_mesh_and_solve():
         f_max=1600,
         f_step=5,
     )
-    frequencies = analysis_setup.frequencies()
+    frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
