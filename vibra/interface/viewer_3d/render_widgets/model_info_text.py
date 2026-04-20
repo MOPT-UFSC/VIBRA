@@ -859,8 +859,8 @@ def analysis_info_text(frequency_index: int):
     if not project.is_there_a_valid_solution():
         return ""
 
-    analysis_setup = project.model.old_analysis_setup
-    analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+    analysis_setup = project.model.analysis_setup
+    analysis_id = analysis_setup.analysis_id
 
     if analysis_id == AnalysisID.NO_ANALYSIS:
         return ""
@@ -873,21 +873,25 @@ def analysis_info_text(frequency_index: int):
         AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
         }
 
-    tree = TreeInfo(display_name[analysis_id])
+    tree = TreeInfo(display_name.get(analysis_id))
 
-    if project.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
+    if AnalysisID(analysis_id).is_modal():
 
         ## modal analysis info texts
 
+        solution = project.model.solution
+        if solution is None:
+            return ""
+
         frequencies = None
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
-            frequencies = project.structural_modal_solver.natural_frequencies
+            frequencies = solution.natural_frequencies
 
         if analysis_id == AnalysisID.ACOUSTIC_MODAL:
-            if len(project.acoustic_modal_solver.complex_natural_frequencies):
-                frequencies = list(project.acoustic_modal_solver.complex_natural_frequencies)
+            if len(solution.complex_natural_frequencies):
+                frequencies = list(solution.complex_natural_frequencies)
             else:
-                frequencies = list(project.acoustic_modal_solver.natural_frequencies)
+                frequencies = list(solution.natural_frequencies)
 
         if frequencies is None:
             return ""
@@ -915,15 +919,15 @@ def analysis_info_text(frequency_index: int):
 
         ## harmonic analysis info texts
 
-        frequencies = project.model.frequencies
+        frequencies = project.model.solution.frequencies
         if frequencies is None:
             return ""
 
         if frequency_index-1 >= len(frequencies):
             return ""
 
-        method = analysis_setup.get("analysis_method", "none").replace("_", " ")
-        tree.add_item("Method", method)
+        analysis_method = analysis_setup.analysis_method.replace("_", " ")
+        tree.add_item("Method", analysis_method)
 
         frequency = frequencies[frequency_index - 1]
         tree.add_item("Frequency", f"{frequency:.4f}", "Hz")
