@@ -14,11 +14,9 @@ error_title = "Error"
 class ModalAnalysisInput(ModalAnalysisInput_UI):
     def __init__(self, analysis_id: AnalysisID):
         super().__init__()
+        app().main_window.set_input_widget(self)
 
         self.analysis_id = AnalysisID(analysis_id)
-
-        app().main_window.close_dialogs()
-        app().main_window.set_input_widget(self)
 
         self._initialize()
         self._config_window()
@@ -120,6 +118,7 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
             return True
 
         self.analysis_setup = ModalAnalysisSetup(
+            self.analysis_id,
             self.modes_number,
             self.sigma_factor,
         )

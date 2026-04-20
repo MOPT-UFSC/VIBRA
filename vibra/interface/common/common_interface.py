@@ -4,20 +4,40 @@ import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QWidget
 
 from vibra import app
-from vibra.engine.analysis_info import HarmonicAnalysisSetup, HarmonicAnalysisSetupList, HarmonicAnalysisSetupRange
-
+from vibra.engine.analysis_info import (
+    FrequencySpacing,
+    HarmonicAnalysisSetup,
+    HarmonicAnalysisSetupNew,
+)
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 
 
-def get_proper_analysis_setup_for_tabular_data(frequencies: np.ndarray):
+def get_analysis_setup_for_tabular_data(frequencies: np.ndarray):
     equally_distributed = is_frequencies_vector_equally_distributed(frequencies)
+
     if equally_distributed:
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED
         f_min = frequencies[0]
         f_max = frequencies[-1]
         f_step = frequencies[1] - frequencies[0]
-        return HarmonicAnalysisSetupRange(f_min, f_max, f_step)
+        frequencies = None
+
+    else:
+        f_min = f_max = f_step = None
+        frequency_spacing = FrequencySpacing.USER_DEFINED
+        frequencies = frequencies
+
+    analysis_setup = HarmonicAnalysisSetupNew(
+        frequency_spacing = frequency_spacing,
+        f_min = f_min,
+        f_max = f_max,
+        f_step = f_step,
+        frequencies = frequencies,
+        )
     
-    return HarmonicAnalysisSetupList(frequencies)
+    analysis_setup.solution_steps_mask = app().project.model.get_solution_steps_mask(
+        frequencies = analysis_setup.get_frequencies()
+        )
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
     analysis_setup = app().project.model.analysis_setup
@@ -27,20 +47,16 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
     # If I am wrong please let me know.
     if isinstance(analysis_setup, HarmonicAnalysisSetup):
         new_analysis_setup = analysis_setup.convert_to(
-            HarmonicAnalysisSetupList,
-            all_frequencies=frequencies,
+            HarmonicAnalysisSetupNew,
+            frequencies=frequencies,
         )
     else:
-        # new_analysis_setup = HarmonicAnalysisSetupList(frequencies)
-        new_analysis_setup = get_proper_analysis_setup_for_tabular_data(frequencies)
-
-    print(new_analysis_setup)
+        new_analysis_setup = get_analysis_setup_for_tabular_data(frequencies)
 
     app().project.configure_analysis(
         app().project.model.analysis_id,
         new_analysis_setup,
     )
-
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
