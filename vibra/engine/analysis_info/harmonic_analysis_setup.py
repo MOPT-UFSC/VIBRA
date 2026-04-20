@@ -1,24 +1,29 @@
 from abc import ABC, abstractmethod
-from dataclasses import replace
-from typing import Callable, ParamSpec, Self, TypeVar
+from dataclasses import field, replace
+from typing import Callable, List, Optional, ParamSpec, Self, TypeVar
 
 import numpy as np
 
 from .analysis_enums import AnalysisMethod
+from vibra.engine.analysis_info import AnalysisID
 
 P = ParamSpec("P")
 T = TypeVar("T")
 
 
 class HarmonicAnalysisSetup(ABC):
-    f_min: float
-    f_max: float
-    f_size: float
-    mask_frequencies: np.ndarray[tuple[int], bool] | None
+    analysis_id: int = AnalysisID.NO_ANALYSIS
+    frequency_spacing: str = "user-defined"
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
+    f_min: float | None = None
+    f_max: float | None = None
+    f_size: float | None = None
+    frequencies: Optional[np.ndarray[tuple[int], float]] = None
+    solution_steps_mask: List[bool] = field(default_factory=list)
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
     modes_number: int = 40
     sigma_factor: float = 0.01
+    # mask_frequencies: np.ndarray[tuple[int], bool] | None
 
     def replace(self, **changes) -> Self:
         return replace(self, **changes)
@@ -41,7 +46,7 @@ class HarmonicAnalysisSetup(ABC):
         return self.f_size
 
     @abstractmethod
-    def frequencies(self) -> np.ndarray: ...
+    def get_frequencies(self) -> np.ndarray: ...
 
     @abstractmethod
     def as_dict(self) -> dict: ...

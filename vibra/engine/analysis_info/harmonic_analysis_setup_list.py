@@ -33,7 +33,7 @@ class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
         if self.mask_frequencies is None:
             return self.all_frequencies.copy()
         return self.all_frequencies.copy()
-        return self.all_frequencies[self.mask_frequencies].copy()
+        # return self.all_frequencies[self.mask_frequencies].copy()
 
     @property
     def f_min(self):
@@ -56,9 +56,9 @@ class HarmonicAnalysisSetupList(HarmonicAnalysisSetup):
     def as_dict(self):
         data = {
             "frequency_spacing": "user-defined",
-            "f_min": self.f_min,
-            "f_max": self.f_max,
-            "f_step": self.all_frequencies[1] - self.all_frequencies[0],
+            # "f_min": self.f_min,
+            # "f_max": self.f_max,
+            # "f_step": self.all_frequencies[1] - self.all_frequencies[0],
             "frequencies": self.all_frequencies,
             "solution_steps_mask": self.get_mask(),
             "global_damping": self.global_damping,
