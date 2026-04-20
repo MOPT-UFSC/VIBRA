@@ -257,7 +257,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().project.postprocessing
+            postprocessing = app().project.get_structural_postprocessing()
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
@@ -280,7 +280,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().project.postprocessing
+            postprocessing = app().project.get_structural_postprocessing()
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
@@ -302,7 +302,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().project.postprocessing
+            postprocessing = app().project.get_acoustic_postprocessing()
             if not isinstance(postprocessing, AcousticPostprocessing):
                 return
 
@@ -325,7 +325,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
-            postprocessing = app().project.postprocessing
+            postprocessing = app().project.get_acoustic_postprocessing()
             if not isinstance(postprocessing, AcousticPostprocessing):
                 return
 
@@ -527,13 +527,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.frequency_index is None and self.mode_index is None:
             return
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.ACOUSTIC_HARMONIC]:
+        if AnalysisID(analysis_id).is_harmonic():
             text += analysis_info_text(self.frequency_index + 1)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.ACOUSTIC_MODAL,
-        ]:
+        if AnalysisID(analysis_id).is_modal():
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)
