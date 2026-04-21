@@ -20,7 +20,13 @@ class SetFluidInputsSimplified(SimplifiedFluidInputs_UI):
 
         self._initialize()
         self._config_window()
+        self._add_fluid_widget()
         self._create_connections()
+
+    def _initialize(self):
+        self.fluid = None
+        self.complete = False
+        self.keep_window_open = True
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -28,20 +34,11 @@ class SetFluidInputsSimplified(SimplifiedFluidInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
-    def _initialize(self):
-        self.fluid = None
-        self.complete = False
-        self.keep_window_open = True
-
-    def _configure_qt_variables(self):
-        self.pushButton_attribute = self.fluid_widget.pushButton_attribute
-
     def _create_connections(self):
         self.fluid_widget.pushButton_exit.clicked.connect(self.close)
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
 
     def _add_fluid_widget(self):
-
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0,0,0,0)
         self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
