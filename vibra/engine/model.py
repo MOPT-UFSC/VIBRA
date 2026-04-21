@@ -4,16 +4,17 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
+from numbers import Number
 from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
 
-# from vibra.engine import HarmonicAnalysisSetup
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisSetup,
     FrequencySpacing,
-    HarmonicAnalysisSetupNew,
+    HarmonicAnalysisSetup,
+    ModalAnalysisSetup,
 )
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import (
@@ -95,7 +96,6 @@ class Model:
 
         self.list_frequencies = list()
 
-        self.old_analysis_setup = dict()
         self.decouple_info = dict()
         self.nodes_mapping = dict()
 
@@ -119,15 +119,31 @@ class Model:
         """
         This property was created for retro compatibility.
         """
-        if isinstance(self.analysis_setup, HarmonicAnalysisSetupNew):
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.get_frequencies()
         return None
 
     @property
     def solution_steps_mask(self):
-        if isinstance(self.analysis_setup, HarmonicAnalysisSetupNew):
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.solution_steps_mask
         return list()
+
+    @property
+    def global_damping(self) -> Optional[np.ndarray]:
+        """
+        This property was created for retro compatibility.
+        """
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            return self.analysis_setup.global_damping
+        return (None, None, None)
+
+    def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
+        analysis_setup = HarmonicAnalysisSetup(**kwargs)
+        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(
+            frequencies=analysis_setup.get_frequencies()
+        )
+        return analysis_setup
 
     def reset_dissipation_model_properties(self):
         self.perforated_plate_impedance_data = dict()
@@ -252,47 +268,6 @@ class Model:
         self.mesh = mesh
         self.generated_mesh = True
 
-    def old_set_analysis_setup(self, analysis_setup: dict, supress_warning: bool = False):
-        if not supress_warning:
-            import warnings
-
-            warnings.warn("This method is deprecated, use set_analysis_setup", DeprecationWarning)
-
-        # self.frequencies = None
-        self.old_analysis_setup = analysis_setup
-
-        f_min = analysis_setup.get("f_min")
-        f_max = analysis_setup.get("f_max")
-        f_step = analysis_setup.get("f_step")
-        frequencies = analysis_setup.get("frequencies")
-
-        if isinstance(frequencies, list):
-            # self.frequencies = np.round(np.array(frequencies, dtype=float), 14)
-            pass
-
-        elif isinstance(frequencies, np.ndarray):
-            # self.frequencies = frequencies
-            pass
-
-        elif (f_min, f_max, f_step).count(None) == 0:
-            try:
-                frequencies = np.arange(f_min, f_max + f_step, f_step, dtype=float)
-                frequencies = np.round(frequencies, 14)
-
-                # filters the frequencies vector to mitigate the already identified rounding errors
-                mask = frequencies <= f_max
-                _frequencies = frequencies[mask]
-
-            except Exception as error_log:
-                # self.frequencies = None
-                print(str(error_log))
-                return
-
-            # self.frequencies = _frequencies
-            self.old_analysis_setup["frequencies"] = list(_frequencies)
-
-        self.old_analysis_setup["solution_steps_mask"] = self.get_solution_steps_mask()
-
     def set_analysis_id(self, analysis_id: AnalysisID):
         self.analysis_id = analysis_id
 
@@ -301,12 +276,6 @@ class Model:
             raise ValueError("Invalid analysis setup")
 
         self.analysis_setup = analysis_setup
-
-        # Keeping retro compatibility. It will be removed soon.
-        if analysis_setup is None:
-            self.old_set_analysis_setup({}, supress_warning=True)
-        else:
-            self.old_set_analysis_setup(analysis_setup.as_dict(), supress_warning=True)
 
     def get_solution_steps_mask(self, frequencies: np.ndarray | list | None = None, tol: float = 1e-10):
 
@@ -335,7 +304,7 @@ class Model:
         return mask
 
     def has_spectral_content_been_modified(self):
-        cond_A = self.old_analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED
+        cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
 
@@ -354,7 +323,7 @@ class Model:
 
     def is_there_a_valid_analysis_setup(self, **kwargs):
         current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
-        if not isinstance(self.old_analysis_setup, dict):
+        if not isinstance(self.analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
             return False
 
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
@@ -364,23 +333,25 @@ class Model:
             if self.analysis_id != current_analysis_id:
                 return False
 
-        if self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            frequencies = self.old_analysis_setup.get("frequencies")
-            solution_steps_mask = self.old_analysis_setup.get("solution_steps_mask")
+        if AnalysisID(self.analysis_id).is_harmonic():
+            frequencies = self.analysis_setup.frequencies
+            solution_steps_mask = self.analysis_setup.solution_steps_mask
 
             if isinstance(frequencies, np.ndarray | list):
                 if isinstance(solution_steps_mask, np.ndarray | list):
                     return True
 
             for key in ["f_min", "f_max", "f_step"]:
-                if not isinstance(self.old_analysis_setup.get(key), int | float):
+                f_data = getattr(self.analysis_setup, key)
+                if not isinstance(f_data, Number):
                     return False
 
             return True
 
-        elif self.analysis_id in [AnalysisID.ACOUSTIC_MODAL, AnalysisID.STRUCTURAL_MODAL]:
+        elif AnalysisID(self.analysis_id).is_modal():
             for key in ["modes_number", "sigma_factor"]:
-                if not isinstance(self.old_analysis_setup.get(key), int | float):
+                f_data = getattr(self.analysis_setup, key)
+                if not isinstance(f_data, Number):
                     return False
 
             return True
