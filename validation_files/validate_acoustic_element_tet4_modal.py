@@ -123,25 +123,18 @@ def load_external_mesh_and_solve():
     for _surf_id in [1, 2]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
-    ## normal surface velocity data
-    data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
-
-    ## mass source data
-    data_ms = {
-        "real_values": [1],
-        "imag_values": [0],
-        "volume_id": 1,
-    }
+    # ## normal surface velocity data
+    # data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
 
     # model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
-    ## boundary impedance setup
-    Zo = fluid.impedance
+    # ## boundary impedance setup
+    # Zo = fluid.impedance
 
-    data_Z = {
-        "real_values": [Zo],
-        "imag_values": [0],
-    }
+    # data_Z = {
+    #     "real_values": [Zo],
+    #     "imag_values": [0],
+    # }
 
     # model.properties._set_property("specific_impedance", data_Z, surface=1)
     # model.properties._set_property("specific_impedance", data_Z, surface=2)

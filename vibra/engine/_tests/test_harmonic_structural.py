@@ -1,10 +1,12 @@
-from pathlib import Path
 
 import pytest
 
 from vibra import PROJECT_DIR, errors
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+    ModalAnalysisSetup,
+)
 from vibra.engine.project import Project
 
 
@@ -23,14 +25,19 @@ def test_harmonic_structural():
         project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, ModalAnalysisSetup(10, 0.01))
         project.run_analysis()
 
+    # Define the analysis frequency setup
+    analysis_setup = project.model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 100,
+        f_max = 50000,
+        f_step = 5000,
+    )
+
     project.configure_analysis(
         AnalysisID.STRUCTURAL_HARMONIC,
-        HarmonicAnalysisSetupRange(
-            f_min=100,
-            f_max=50_000,
-            f_step=5_000,
+        analysis_setup
         ),
-    )
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Material not configured

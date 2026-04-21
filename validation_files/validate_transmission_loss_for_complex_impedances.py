@@ -1,7 +1,10 @@
 from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupNew
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -150,15 +153,15 @@ def load_external_mesh_and_solve():
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     # Define the analysis frequency setup
-
-    analysis_setup = HarmonicAnalysisSetupNew(
-        frequency_spacing = "equally distributed",
+    analysis_setup = model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
         analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
         analysis_method = "direct",
         f_min = 5,
         f_max = 1400,
         f_step = 5,
     )
+
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from vibra import PROJECT_DIR, errors
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
+from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.project import Project
 
 
@@ -18,7 +18,7 @@ def test_modal_acoustic():
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Incompatible AnalysisID and AnalysisSetup
-        project.configure_analysis(AnalysisID.ACOUSTIC_MODAL, HarmonicAnalysisSetupRange(1, 10))
+        project.configure_analysis(AnalysisID.ACOUSTIC_MODAL, HarmonicAnalysisSetup)
         project.run_analysis()
 
     project.configure_analysis(

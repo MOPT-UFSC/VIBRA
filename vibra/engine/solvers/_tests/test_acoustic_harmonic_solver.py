@@ -1,6 +1,9 @@
 import numpy as np
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
@@ -32,7 +35,16 @@ def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_a
 
 
 def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
-    analysis_setup = HarmonicAnalysisSetupRange(f_min=200, f_max=500, f_step=100)
+
+    ## Define the analysis frequency setup
+    analysis_setup = acoustic_model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        f_min = 200,
+        f_max = 500,
+        f_step = 100,
+    )
+
     acoustic_model.set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 

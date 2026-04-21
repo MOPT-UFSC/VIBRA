@@ -4,7 +4,10 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -115,12 +118,16 @@ def load_external_mesh_and_solve():
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     # Define the analysis frequency setup
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=5,
-        f_max=1400,
-        f_step=5,
+    analysis_setup = model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 5,
+        f_max = 1400,
+        f_step = 5,
     )
+
     frequencies = analysis_setup.get_frequencies()
+
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 

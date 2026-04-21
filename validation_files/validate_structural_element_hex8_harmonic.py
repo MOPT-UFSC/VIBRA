@@ -1,7 +1,10 @@
 from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
@@ -135,35 +138,19 @@ def load_external_mesh_and_solve():
 
     model.properties._set_property("nodal_loads", nodal_load_data, surface=2)
 
-    ## Define the analysis frequency setup
-
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=20,
-        f_max=2_000,
-        f_step=20,
-        global_damping=(0.0, 0.0, 0e-2),
+    # Define the analysis frequency setup
+    analysis_setup = model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 20,
+        f_max = 2000,
+        f_step = 20,
     )
+
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
-
-    # df = 20
-    # f_min = 20
-    # f_max = 2000
-    # frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    # analysis_setup = {
-    #     "analisys_id" : AnalysisID.STRUCTURAL_HARMONIC,
-    #     "f_min" : f_min,
-    #     "f_max" : f_max,
-    #     "f_step" : df,
-    #     "frequencies" : frequencies,
-    #     "global_damping" : (0., 0., 0e-2),
-    #     }
-
-    # # Set the analysis setup
-    # model.old_set_analysis_setup(analysis_setup)
 
     assembler = StructuralAssembler(model)
 

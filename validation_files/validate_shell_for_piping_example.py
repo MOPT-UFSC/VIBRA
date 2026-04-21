@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
@@ -135,28 +138,20 @@ def load_external_mesh_and_solve():
     ## Create an object of the Structural Assembler class
     assembler = StructuralAssembler(model)
 
-    ## Define the analysis type and frequency setup
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=2,
-        f_max=300,
-        f_step=2,
-        global_damping=(1e-3, 1e-7, 0),
+    # Define the analysis frequency setup
+    analysis_setup = model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 2,
+        f_max = 300,
+        f_step = 2,
+        global_damping = (1e-3, 1e-7, 0),
     )
+
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
-
-    # harmonic_solver = HarmonicSolver(assembler)
-    # # Define the analysis setup
-    # analysis_setup = {
-    #                   "analysis_id" : 2,
-    #                   "modes_number" : 40,
-    #                   "sigma_factor" : 1e-2
-    #                   }
-
-    # # Set the analysis setup
-    # model.old_set_analysis_setup(analysis_setup)
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)

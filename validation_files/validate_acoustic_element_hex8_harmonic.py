@@ -2,7 +2,10 @@ from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
@@ -137,20 +140,14 @@ def load_external_mesh_and_solve():
         "averaged": False,
     }
 
-    ## normal surface velocity data
-    data_Pa = {
-        "real_values": [1],
-        "imag_values": [0],
-    }
-
-    ## mass source data
-    data_ms = {
-        "real_values": [1],
-        "imag_values": [0],
-        "volume_id": 1,
-    }
-
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
+
+    # ## acoustic pressure data
+    # data_Pa = {
+    #     "real_values": [1],
+    #     "imag_values": [0],
+    # }
+
     # model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
 
     ## boundary impedance setup
@@ -165,11 +162,14 @@ def load_external_mesh_and_solve():
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis frequency setup
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=5,
-        f_max=1400,
-        f_step=5,
+    analysis_setup = model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        f_min = 5,
+        f_max = 1400,
+        f_step = 5,
     )
+
     frequencies = analysis_setup.get_frequencies()
 
     # Set the analysis setup

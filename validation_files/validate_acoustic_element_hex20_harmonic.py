@@ -2,7 +2,10 @@ from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_20
 from vibra.engine.mesher.mesh import Mesh
@@ -134,20 +137,14 @@ def load_external_mesh_and_solve():
         "averaged": False,
     }
 
-    ## normal surface velocity data
-    data_Pa = {
-        "real_values": [1],
-        "imag_values": [0],
-    }
-
-    ## mass source data
-    data_ms = {
-        "real_values": [1],
-        "imag_values": [0],
-        "volume_id": 1,
-    }
-
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
+
+    # ## acoustic pressure data
+    # data_Pa = {
+    #     "real_values": [1],
+    #     "imag_values": [0],
+    # }
+
     # model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
 
     ## boundary impedance setup
@@ -162,11 +159,14 @@ def load_external_mesh_and_solve():
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis frequency setup
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=5,
-        f_max=1400,
-        f_step=5,
+    analysis_setup = model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        f_min = 5,
+        f_max = 1400,
+        f_step = 5,
     )
+
     frequencies = analysis_setup.get_frequencies()
 
     # Set the analysis setup
@@ -202,11 +202,11 @@ def load_external_mesh_and_solve():
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, volume_id=1)
     output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=2)
 
-    input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
+    # input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
+    # output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
 
-    input_Vx = np.average(input_velocities, axis=0)
-    output_Vx = np.average(output_velocities, axis=0)
+    # input_Vx = np.average(input_velocities, axis=0)
+    # output_Vx = np.average(output_velocities, axis=0)
 
     # # nodal area calculation
     # mesh.process_face_elements_connected_to_nodes([1, 2])
@@ -227,13 +227,13 @@ def load_external_mesh_and_solve():
         WB_particle_velocities_data = ext_data.load_particle_velocities()
 
         freq_WB, _, input_velocities_WB = WB_particle_velocities_data["Vx", "input_face"]
-        input_Vx_WB = np.average(list(input_velocities_WB.values()), axis=0)
+        # input_Vx_WB = np.average(list(input_velocities_WB.values()), axis=0)
 
         freq_WB, _, input_pressures_WB = WB_pressure_data["input_face"]
         input_pressure_WB = np.average(list(input_pressures_WB.values()), axis=0)
 
         freq_WB, _, output_velocities_WB = WB_particle_velocities_data["Vx", "output_face"]
-        output_Vx_WB = np.average(list(output_velocities_WB.values()), axis=0)
+        # output_Vx_WB = np.average(list(output_velocities_WB.values()), axis=0)
 
         freq_WB, _, output_pressures_WB = WB_pressure_data["output_face"]
         output_pressure_WB = np.average(list(output_pressures_WB.values()), axis=0)

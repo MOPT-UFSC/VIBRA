@@ -3,13 +3,12 @@ import pytest
 
 from vibra.engine.analysis_info import (
     AnalysisMethod,
-    HarmonicAnalysisSetupList,
-    HarmonicAnalysisSetupRange,
+    HarmonicAnalysisSetup,
 )
 
 
 def test_convert_to_preserves_shared_fields():
-    range_setup = HarmonicAnalysisSetupRange(
+    range_setup = HarmonicAnalysisSetup(
         f_min=10,
         f_max=20,
         f_step=2,
@@ -19,7 +18,7 @@ def test_convert_to_preserves_shared_fields():
         sigma_factor=0.05,
     )
 
-    list_setup = range_setup.convert_to(HarmonicAnalysisSetupList, all_frequencies=range_setup.frequencies())
+    list_setup = range_setup.convert_to(HarmonicAnalysisSetup, all_frequencies=range_setup.frequencies())
 
     assert list_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION
     assert list_setup.global_damping == (0.1, 0.2, 0.3)
@@ -32,7 +31,7 @@ def test_convert_to_preserves_shared_fields():
 
 
 def test_convert_to_roundtrip_range_to_list_to_range():
-    range_setup = HarmonicAnalysisSetupRange(
+    range_setup = HarmonicAnalysisSetup(
         f_min=10,
         f_max=20,
         f_step=2,
@@ -42,10 +41,10 @@ def test_convert_to_roundtrip_range_to_list_to_range():
         sigma_factor=0.05,
     )
 
-    list_setup = range_setup.convert_to(HarmonicAnalysisSetupList, all_frequencies=range_setup.frequencies())
+    list_setup = range_setup.convert_to(HarmonicAnalysisSetup, all_frequencies=range_setup.frequencies())
 
     range_back = list_setup.convert_to(
-        HarmonicAnalysisSetupRange,
+        HarmonicAnalysisSetup,
         f_min=list_setup.f_min,
         f_max=list_setup.f_max,
         f_step=2,

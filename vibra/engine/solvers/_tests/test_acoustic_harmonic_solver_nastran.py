@@ -33,13 +33,13 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
         for surf_id in model.mesh.surfaces_from_volume.get(vol_id):
             model.properties._set_property("fluid", fluid, surface=surf_id)
 
-    # Normal surface velocity data
-    data_Vn = {
-        "real_values": [1],
-        "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
-    }
+    # # Normal surface velocity data
+    # data_Vn = {
+    #     "real_values": [1],
+    #     "imag_values": [0],
+    #     "nodal_attribution": False,
+    #     "averaged": False,
+    # }
 
     ## normal surface velocity data
     data_Pa = { 

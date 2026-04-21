@@ -3,7 +3,11 @@ from pathlib import Path
 import numpy as np
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+    ModalAnalysisSetup,
+)
 from vibra.engine.project import Project
 
 
@@ -63,14 +67,18 @@ def test_compare_interface_based_mesh_project():
     project_cli.mesh.cache_mesh_information()
     project_cli.model.process_degrees_of_freedom_decoupling()
 
+    ## Define the analysis frequency setup
+    analysis_setup = project_cli.model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        f_min = 200,
+        f_max = 500,
+        f_step = 100,
+    )
+
     project_cli.configure_analysis(
         AnalysisID.ACOUSTIC_HARMONIC,
-        HarmonicAnalysisSetupRange(
-            f_min=200,
-            f_max=500,
-            f_step=100,
-            analysis_method="direct",
-        ),
+        analysis_setup
     )
     project_cli.run_analysis()
 
