@@ -158,8 +158,8 @@ def load_external_mesh_and_solve():
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    modal_solver.solve()
-    natural_frequencies = modal_solver.natural_frequencies
+    solution = modal_solver.solve()
+    natural_frequencies = solution.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 

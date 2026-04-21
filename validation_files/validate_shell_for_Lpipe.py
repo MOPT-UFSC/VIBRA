@@ -9,6 +9,7 @@ from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
+from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -169,9 +170,12 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # solution = modal_solver.solve()
-    harmonic_solver.solve_direct(print_log=True)
+    solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
+
+    if not isinstance(solution, HarmonicSolution):
+        return
 
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
     # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
@@ -190,56 +194,54 @@ def load_external_mesh_and_solve():
 
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
-    solution = harmonic_solver.solution
 
-    response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
-    response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
+    response_ux = np.average(solution.nodal_solution[ux_rows, :], axis=0).flatten()
+    response_uy = np.average(solution.nodal_solution[uy_rows, :], axis=0).flatten()
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
-    if solution is not None:
-        ## load external results data
-        results_path = "validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
-        imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    ## load external results data
+    results_path = "validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
+    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
 
-        output_face_ux_lin = imported_results["output_face_ux_lin"]
-        output_face_ux_quad = imported_results["output_face_ux_quad"]
+    output_face_ux_lin = imported_results["output_face_ux_lin"]
+    output_face_ux_quad = imported_results["output_face_ux_quad"]
 
-        output_face_uy_lin = imported_results["output_face_uy_lin"]
-        output_face_uy_quad = imported_results["output_face_uy_quad"]
+    output_face_uy_lin = imported_results["output_face_uy_lin"]
+    output_face_uy_quad = imported_results["output_face_uy_quad"]
 
-        freq_WB = output_face_ux_lin[:, 0]
-        output_face_ux_lin_WB = output_face_ux_lin[:, 1] + 1j * output_face_ux_lin[:, 2]
+    freq_WB = output_face_ux_lin[:, 0]
+    output_face_ux_lin_WB = output_face_ux_lin[:, 1] + 1j * output_face_ux_lin[:, 2]
 
-        freq_WB = output_face_ux_quad[:, 0]
-        output_face_ux_quad_WB = output_face_ux_quad[:, 1] + 1j * output_face_ux_quad[:, 2]
+    freq_WB = output_face_ux_quad[:, 0]
+    output_face_ux_quad_WB = output_face_ux_quad[:, 1] + 1j * output_face_ux_quad[:, 2]
 
-        freq_WB = output_face_uy_lin[:, 0]
-        output_face_uy_lin_WB = output_face_uy_lin[:, 1] + 1j * output_face_uy_lin[:, 2]
+    freq_WB = output_face_uy_lin[:, 0]
+    output_face_uy_lin_WB = output_face_uy_lin[:, 1] + 1j * output_face_uy_lin[:, 2]
 
-        freq_WB = output_face_uy_quad[:, 0]
-        output_face_uy_quad_WB = output_face_uy_quad[:, 1] + 1j * output_face_uy_quad[:, 2]
+    freq_WB = output_face_uy_quad[:, 0]
+    output_face_uy_quad_WB = output_face_uy_quad[:, 1] + 1j * output_face_uy_quad[:, 2]
 
-        title = "Harmonic response at output face"
+    title = "Harmonic response at output face"
 
-        fig1, ax1 = plt.subplots()
-        ax1.semilogy(frequencies, np.abs(response_ux), "r", label="VIBRA")
-        ax1.semilogy(freq_WB, np.abs(output_face_ux_lin_WB), "k--", label="ANSYS (lin.)")
-        ax1.semilogy(freq_WB, np.abs(output_face_ux_quad_WB), "b--", label="ANSYS (quad.)")
-        ax1.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
-        ax1.grid()
-        ax1.legend()
+    fig1, ax1 = plt.subplots()
+    ax1.semilogy(frequencies, np.abs(response_ux), "r", label="VIBRA")
+    ax1.semilogy(freq_WB, np.abs(output_face_ux_lin_WB), "k--", label="ANSYS (lin.)")
+    ax1.semilogy(freq_WB, np.abs(output_face_ux_quad_WB), "b--", label="ANSYS (quad.)")
+    ax1.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
+    ax1.grid()
+    ax1.legend()
 
-        fig2, ax2 = plt.subplots()
-        ax2.semilogy(frequencies, np.abs(response_uy), "r", label="VIBRA")
-        ax2.semilogy(freq_WB, np.abs(output_face_uy_lin_WB), "k--", label="ANSYS (lin.)")
-        ax2.semilogy(freq_WB, np.abs(output_face_uy_quad_WB), "b--", label="ANSYS (quad.)")
-        ax2.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Uy [m]", title=title)
-        ax2.grid()
-        ax2.legend()
+    fig2, ax2 = plt.subplots()
+    ax2.semilogy(frequencies, np.abs(response_uy), "r", label="VIBRA")
+    ax2.semilogy(freq_WB, np.abs(output_face_uy_lin_WB), "k--", label="ANSYS (lin.)")
+    ax2.semilogy(freq_WB, np.abs(output_face_uy_quad_WB), "b--", label="ANSYS (quad.)")
+    ax2.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Uy [m]", title=title)
+    ax2.grid()
+    ax2.legend()
 
-        plt.show()
+    plt.show()
 
 
 if __name__ == "__main__":

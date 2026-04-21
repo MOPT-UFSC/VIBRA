@@ -177,16 +177,6 @@ def load_external_mesh_and_solve():
     # Set the analysis frequency setup
     assembler.assemble_global_matrices_and_excitations()
 
-    # t0 = time()
-    ## Run modal analysis
-    # modal_solver = ModalSolver(assembler)
-    # modal_solver.solve()
-    # natural_frequencies = modal_solver.natural_frequencies
-    # modal_shape = modal_solver.solution
-    # dt = time() - t0
-    # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
-    # return
-
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)
 
@@ -481,10 +471,10 @@ def get_porous_material_data(model="DB"):
 def process_external_TL(model: "Model", ext_data: LoadExternalData):
 
     input_surface_id = 1
-    output_surface_id = 2
+    # output_surface_id = 2
 
-    A_in = model.mesh.surface_area_from_element_integration[input_surface_id]
-    A_out = model.mesh.surface_area_from_element_integration[output_surface_id]
+    # A_in = model.mesh.surface_area_from_element_integration[input_surface_id]
+    # A_out = model.mesh.surface_area_from_element_integration[output_surface_id]
 
     WB_nodal_area_data = ext_data.load_nodal_area()
     WB_pressure_data = ext_data.load_nodal_pressures()

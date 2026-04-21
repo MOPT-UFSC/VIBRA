@@ -4,12 +4,16 @@ from vibra.engine.analysis_info import (
     AnalysisID,
     FrequencySpacing,
 )
+from typing_extensions import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
 
 
-def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model):
+def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model: "Model"):
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
     assembler.assemble_global_matrices_and_excitations()
     project_file = ProjectFile(str(datadir))
@@ -18,23 +22,23 @@ def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_a
     frequencies = viscous_thermal_acoustic_model.frequencies
 
     # Solve and store solutions into hdf5 files
-    harmonic_solver.solve_direct()
+    solution = harmonic_solver.solve_direct()
 
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
     assembler.assemble_global_matrices_and_excitations()
     in_memory_harmonic_solver = HarmonicSolver(assembler)
 
     # Solve and store solution in memory
-    in_memory_harmonic_solver.solve_direct()
+    in_memory_solution = in_memory_harmonic_solver.solve_direct()
 
     for i, _ in enumerate(frequencies):
         assert np.allclose(
-            harmonic_solver.solution[:, i],
-            in_memory_harmonic_solver.solution[:, i],
+            solution.nodal_solution[:, i],
+            in_memory_solution.nodal_solution[:, i],
         )
 
 
-def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
+def test_acoustic_harmonic_modal_solver_solution(acoustic_model: "Model"):
 
     ## Define the analysis frequency setup
     analysis_setup = acoustic_model.get_harmonic_analysis_setup(

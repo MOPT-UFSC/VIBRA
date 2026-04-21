@@ -4,8 +4,12 @@ from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
 
+from typing_extensions import TYPE_CHECKING
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
-def test_regression_structural_harmonic_solver_solution(datadir, structural_harmonic_analysis):
+
+def test_regression_structural_harmonic_solver_solution(datadir, structural_harmonic_analysis: Model):
     assembler = StructuralAssembler(structural_harmonic_analysis)
     assembler.assemble_global_matrices_and_excitations()
     project_file = ProjectFile(str(datadir))
@@ -14,23 +18,23 @@ def test_regression_structural_harmonic_solver_solution(datadir, structural_harm
     frequencies = structural_harmonic_analysis.frequencies
 
     # Solve and store solutions into hdf5 files
-    harmonic_solver.solve_direct()
+    solution = harmonic_solver.solve_direct()
 
     assembler = StructuralAssembler(structural_harmonic_analysis)
     assembler.assemble_global_matrices_and_excitations()
     in_memory_harmonic_solver = HarmonicSolver(assembler)
 
     # # Solve and store solution in memory
-    in_memory_harmonic_solver.solve_direct()
+    in_memory_solution = in_memory_harmonic_solver.solve_direct()
 
     for i, _ in enumerate(frequencies):
         assert np.allclose(
-            harmonic_solver.solution[:, i],
-            in_memory_harmonic_solver.solution[:, i],
+            solution.nodal_solution[:, i],
+            in_memory_solution.nodal_solution[:, i],
         )
 
 
-def test_structural_harmonic_modal_solver_solution(structural_harmonic_analysis):
+def test_structural_harmonic_modal_solver_solution(structural_harmonic_analysis: Model):
     frequencies = structural_harmonic_analysis.frequencies
 
     # Direct solver setup and solve
