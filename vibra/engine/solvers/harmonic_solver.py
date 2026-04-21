@@ -25,8 +25,9 @@ class HarmonicSolver:
         return self.assembler.model.frequencies
 
     def reset_variables(self):
-        self.solution = None
-        self.displacement_dof = None
+        self.solution: HarmonicSolution | None = None
+        self.nodal_solution: np.ndarray | None = None
+        self.displacement_dof: np.ndarray | None = None
         self._linear_solver = None
 
     def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
@@ -51,12 +52,14 @@ class HarmonicSolver:
 
         analysis_id = self.assembler.model.analysis_id
 
-        return HarmonicSolution(
+        self.solution = HarmonicSolution(
             analysis_id = analysis_id,
             frequencies = self.assembler.model.frequencies,
-            nodal_solution = self.solution,
+            nodal_solution = self.nodal_solution,
             displacement_dof = self.displacement_dof,
-        )
+            )
+
+        return self.solution
 
     def _get_solution_handler(self, is_resume):
         if isinstance(self.assembler, StructuralAssembler):
@@ -86,10 +89,10 @@ class HarmonicSolver:
             if self.assembler.model.stop_processing:
                 self.reset_variables()
             else:
-                self.solution = self.project_file.get_solution_loader()
+                self.nodal_solution = self.project_file.get_solution_loader()
         else:
             # reinsert the prescribed degrees of freedom into the solution vector
-            self.solution = self.assembler.reinsert_the_prescribed_dof(solution)
+            self.nodal_solution = self.assembler.reinsert_the_prescribed_dof(solution)
 
     def compute_frequency_sweep(self, solution, print_log, is_resume, eigenvectors=None):
 
@@ -176,12 +179,14 @@ class HarmonicSolver:
         self._closing_solution_handler(solution)
         analysis_id = self.assembler.model.analysis_id
 
-        return HarmonicSolution(
+        self.solution = HarmonicSolution(
             analysis_id = analysis_id,
             frequencies = self.assembler.model.frequencies,
-            nodal_solution = self.solution,
+            nodal_solution = self.nodal_solution,
             displacement_dof = self.displacement_dof,
         )
+
+        return self.solution
 
     def compute_proportionally_damped_frequency_sweep(self, solution, modes, natural_frequencies, print_log, is_resume):
         # frequencies vector [in hertz]

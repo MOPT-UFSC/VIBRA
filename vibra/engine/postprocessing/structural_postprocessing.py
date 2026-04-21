@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 
 if TYPE_CHECKING:
-    from vibra.engine.new_project import NewProject
+    from vibra.engine.project import Project
 
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
@@ -16,7 +16,7 @@ DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 class StructuralPostprocessing:
     def __init__(
         self,
-        project: NewProject = None,
+        project: Project = None,
         structural_modal_solver: ModalSolver = None,
         structural_harmonic_solver: HarmonicSolver = None,
     ):
@@ -38,6 +38,39 @@ class StructuralPostprocessing:
             return self.project.solver
         return self.structural_modal_solver
 
+    @property
+    def current_solver(self):
+        if isinstance(self.structural_modal_solver, ModalSolver):
+            return self.structural_modal_solver
+
+        if isinstance(self.structural_harmonic_solver, HarmonicSolver):
+            return self.structural_harmonic_solver
+
+    @property
+    def model(self):
+        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
+            return self.project.model
+        else:
+            solver = self.current_solver
+            return solver.assembler.model
+
+    @property
+    def mesh(self):
+        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
+            return self.project.model.mesh
+        else:
+            solver = self.current_solver
+            return solver.assembler.model.mesh
+
+    @property
+    def solution(self):
+        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
+            return self.project.model.solution
+        else:
+            solver = self.current_solver
+            return solver.solution
+
+
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str, is_modal: bool = False):
         """This method returns the minimum and maximum displacement values
@@ -54,9 +87,16 @@ class StructuralPostprocessing:
         """
 
         if is_modal:
-            data = self.modal_solver.solution[self.modal_solver.displacement_dof, column]
+            solver = self.modal_solver
+            nodal_solution = self.solution.modal_shape
         else:
-            data = self.harmonic_solver.solution[self.harmonic_solver.displacement_dof, column]
+            solver = self.harmonic_solver
+            nodal_solution = self.solution.nodal_solution
+
+        if not nodal_solution.any():
+            return
+
+        data = nodal_solution[solver.displacement_dof, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -99,20 +139,23 @@ class StructuralPostprocessing:
         return r_min, r_max
 
     def compute_structural_displacement_field(self, index: int, phase_rad: float, displacement_type: DisplacementTypes, is_modal: bool = False):
+
         if is_modal:
             solver = self.modal_solver
+            nodal_solution = self.solution.modal_shape
         else:
             solver = self.harmonic_solver
+            nodal_solution = self.solution.nodal_solution
 
-        if solver.solution is None:
+        if not nodal_solution.any():
             return
 
-        disp_dof = solver.displacement_dof
-        results_complex: np.ndarray = solver.solution[disp_dof, index]
+        results_complex: np.ndarray = solver.solution[solver.displacement_dof, index]
 
         amplitudes = np.abs(results_complex)
         phases = np.angle(results_complex)
         delta = -phases[np.argmax(amplitudes)]
+
         results_real = amplitudes * np.cos(phases + phase_rad + delta)
 
         current_solution = results_real.reshape(-1, 3).copy()
