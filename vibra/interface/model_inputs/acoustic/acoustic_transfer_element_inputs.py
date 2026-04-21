@@ -57,6 +57,10 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def properties(self):
         return app().project.model.properties
 
+    @property
+    def solution(self):
+        return app().project.model.solution
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -424,7 +428,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         volume_velocity = -surface_velocity * area
 
         node_ids = np.sort(surface_nodes)
-        pressures = self.solution[node_ids, :]
+        pressures = self.solution.nodal_solution[node_ids, :]
         avg_pressure = np.average(pressures, axis=0)
 
         return avg_pressure / volume_velocity
@@ -448,7 +452,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         return None, None
 
     def join_model_data(self, excitation_id: int):
-        self.solution = app().project.solver.solution
 
         for k, response_id in enumerate(self.surface_ids):
             

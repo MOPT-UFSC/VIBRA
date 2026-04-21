@@ -24,8 +24,8 @@ def test_write_and_read_mesh_project(fluid, datadir: Path):
     project_a.configure_analysis(
         AnalysisID.ACOUSTIC_MODAL,
         ModalAnalysisSetup(
-            modes_number=5,
-            sigma_factor=0.01,
+            modes_number = 5,
+            sigma_factor = 0.01,
         ),
     )
     solution_a = project_a.run_analysis()

@@ -51,7 +51,6 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

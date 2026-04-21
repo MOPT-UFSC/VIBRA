@@ -1,4 +1,4 @@
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, KW_ONLY 
 from functools import wraps
 from vibra.engine.analysis_info import AnalysisID
 
@@ -23,8 +23,9 @@ def ignore_extra_kwargs(cls):
 @ignore_extra_kwargs
 @dataclass
 class ModalAnalysisSetup:
-    modes_number: int
-    sigma_factor: float
+    _: KW_ONLY
+    modes_number: int = 50
+    sigma_factor: float = 1e-2
     analysis_id: int = AnalysisID.NO_ANALYSIS
 
     def as_dict(self):

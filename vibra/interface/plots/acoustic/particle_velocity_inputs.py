@@ -79,7 +79,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solver.solution
 
     def convert_to_volume_velocity_callback(self):
         volume_velocity = False
