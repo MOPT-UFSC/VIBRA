@@ -24,14 +24,26 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.acoustic_post = app().project.postprocessing
-
         self._config_window()
         self._reset_variables()
         self._create_connections()
         self._load_analysis_setup_and_solution()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""

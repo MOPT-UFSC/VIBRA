@@ -413,12 +413,12 @@ class Project:
         elif AnalysisID(self.analysis_id).is_structural():
             self.postprocessing = StructuralPostprocessing(self)
 
-    def get_acoustic_postprocessing(self):
+    def get_acoustic_postprocessing(self) -> AcousticPostprocessing:
         if not isinstance(self.postprocessing, AcousticPostprocessing):
             self.update_post_processing()
         return self.postprocessing
 
-    def get_structural_postprocessing(self):
+    def get_structural_postprocessing(self) -> StructuralPostprocessing:
         if not isinstance(self.postprocessing, StructuralPostprocessing):
             self.update_post_processing()
         return self.postprocessing

@@ -5,11 +5,12 @@ from functools import cache
 from typing import TYPE_CHECKING, Literal, Optional
 
 import numpy as np
+from time import perf_counter
 
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 if TYPE_CHECKING:
-    from vibra.engine.new_project import NewProject
+    from vibra.engine.project import Project
 
 AcousticPlotTypes = Literal[
     "absolute_animation",
@@ -23,7 +24,7 @@ AcousticPlotTypes = Literal[
 class AcousticPostprocessing:
     def __init__(
         self,
-        project: NewProject = None,
+        project: Project = None,
         acoustic_modal_solver: ModalSolver = None,
         acoustic_harmonic_solver: HarmonicSolver = None,
     ):
@@ -388,11 +389,18 @@ class AcousticPostprocessing:
         model = self.harmonic_solver.assembler.model
         frequencies = self.harmonic_solver.assembler.model.frequencies
 
+        logging.info("Processing the transmission loss... [10/100]")
         nodes_input = np.sort(model.mesh.get_nodes_from_surface(input_surface_id))
         nodes_output = np.sort(model.mesh.get_nodes_from_surface(output_surface_id))
 
+        logging.info("Processing the transmission loss... [20/100]")
+        t0 = perf_counter()
         P_in = self.harmonic_solver.solution[nodes_input, :]
         P_out = self.harmonic_solver.solution[nodes_output, :]
+        dt = perf_counter() - t0
+
+        # TODO: remove this printout when possible
+        print(f"Time to load solution data for TL calculation: {dt} s")
 
         logging.info("Processing the transmission loss... [40/100]")
 

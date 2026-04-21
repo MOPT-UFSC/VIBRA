@@ -24,35 +24,39 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.acoustic_post = app().project.postprocessing
-
         self._config_window()
-        self._reset_variables()
+        self._initialize()
         self._create_connections()
         self._load_analysis_setup_and_solution()
 
-    def _load_analysis_setup_and_solution(self):
-        self.analysis_method = ""
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            self.analysis_method = "Direct method"
+    @property
+    def model(self):
+        return app().project.model
 
-        self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solver.solution
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
+    def _initialize(self):
+        self.keep_window_open = True
+        self.exporter = None
+        self.plotter = None
+
+        self.model_results = dict()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
-
-    def _reset_variables(self):
-        self.keep_window_open = True
-        self.exporter = None
-        self.plotter = None
-
-        self.model_results = dict()
 
     def _create_connections(self):
         #
@@ -68,6 +72,14 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
+
+    def _load_analysis_setup_and_solution(self):
+        self.analysis_method = ""
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
+
+        self.frequencies = app().project.model.frequencies
+        self.solution = app().project.solver.solution
 
     def convert_to_volume_velocity_callback(self):
         volume_velocity = False

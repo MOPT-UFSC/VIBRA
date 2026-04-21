@@ -1,4 +1,6 @@
 import logging
+from enum import IntEnum
+from time import perf_counter
 
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
@@ -16,6 +18,15 @@ from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui imp
     TransmissionLossInputs_UI,
 )
 
+class DataType(IntEnum):
+    TRANSMISSION_LOSS = 0
+    NOISE_REDUCTION = 1
+
+
+class TLCalculation(IntEnum):
+    NODAL_AREAS = 0
+    SURFACE_INTEGRATION = 1
+
 
 class TransmissionLossInputs(TransmissionLossInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -23,22 +34,37 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-        self.acoustic_post = app().project.postprocessing
-
         self._initialize()
-        self._create_connections()
-
         self._config_widgets()
+        self._create_connections()
         self._load_analysis_setup()
 
         if self.load_input_surface_id():
             return
 
         self.geometry_selection_callback()
-    
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
+    def _initialize(self):
+        self.exporter = None
+        self.plotter = None
+        self.unit_label = "dB"
+
+    def _config_widgets(self):
+        self.current_lineEdit = self.lineEdit_output_surface_id
+        self.lineEdit_input_surface_id.setFocus()
+
     def showEvent(self, event):
         super().showEvent(event)
         app().main_window.show_geometry_render_widget()
@@ -47,11 +73,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.analysis_method = ""
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
-
-    def _initialize(self):
-        self.exporter = None
-        self.plotter = None
-        self.unit_label = "dB"
 
     def _create_connections(self):
         #
@@ -67,10 +88,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
         #
         self.lineEdit_output_clicked()
-
-    def _config_widgets(self):
-        self.current_lineEdit = self.lineEdit_output_surface_id
-        self.lineEdit_input_surface_id.setFocus()
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -173,9 +190,9 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.lineEdit_output_surface_id.setText(temp_text_input)
 
     def processing_selector_callback(self):
-        index = self.comboBox_processing_selector.currentIndex()
-        self.label_integration_method.setDisabled(bool(index))
-        self.comboBox_integration_method.setDisabled(bool(index))
+        transmission_loss = self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS
+        self.label_integration_method.setEnabled(transmission_loss)
+        self.comboBox_integration_method.setEnabled(transmission_loss)
 
     def plot_data_callback(self):
 
@@ -241,16 +258,20 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         self.model_results = dict()
 
-        if self.comboBox_processing_selector.currentIndex() == 0:
+        if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
 
             plot_type = "Transmission loss"
 
             def transmission_loss_callback():
 
-                surface_ids = [self.input_surface_id, self.output_surface_id]
-                integration_method = self.comboBox_integration_method.currentIndex()
+                surface_ids = [
+                    self.input_surface_id, 
+                    self.output_surface_id,
+                    ]
 
-                if not integration_method:
+                surface_integration = self.comboBox_integration_method.currentIndex() == TLCalculation.SURFACE_INTEGRATION
+
+                if not surface_integration:
 
                     logging.info("Processing the transmission loss... [10/100]")
                     self.mesh.process_face_elements_connected_to_nodes(surface_ids)
@@ -258,17 +279,22 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
 
+                t0 = perf_counter()
+
                 x_data, y_data = self.acoustic_post.compute_transmission_loss(
                     self.input_surface_id,
                     self.output_surface_id,
-                    surface_integration = bool(integration_method),
+                    surface_integration = surface_integration,
                     )
+
+                dt = perf_counter() - t0
+                print(f"Time to process TL: {dt}s")
 
                 return x_data, y_data
 
             x_data, y_data = LoadingWindow(transmission_loss_callback).run()
 
-        else:
+        elif self.comboBox_processing_selector.currentIndex() == DataType.NOISE_REDUCTION:
 
             plot_type = "Noise reduction"
     
@@ -290,17 +316,17 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         key = ("surface", (self.input_surface_id, self.output_surface_id))
 
         self.model_results[key] = { 
-                                    "x_data" : x_data,
-                                    "y_data" : y_data,
-                                    "x_label" : "Frequency [Hz]",
-                                    "y_label" : plot_type,
-                                    "title" : self.title,
-                                    "data_type" : plot_type.lower(),
-                                    "legend" : legend_label,
-                                    "unit" : self.unit_label,
-                                    "color" : [0,0,1],
-                                    "linestyle" : "-"  
-                                    }
+            "x_data" : x_data,
+            "y_data" : y_data,
+            "x_label" : "Frequency [Hz]",
+            "y_label" : plot_type,
+            "title" : self.title,
+            "data_type" : plot_type.lower(),
+            "legend" : legend_label,
+            "unit" : self.unit_label,
+            "color" : [0,0,1],
+            "linestyle" : "-"  
+            }
 
     def plot_nodal_normals(self, normals_data: dict):
         app().main_window.update_symbols()
