@@ -1,5 +1,4 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
+
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -218,7 +217,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             except Exception:
                 self.hide()
                 line_edit_real.setFocus()
-                title = f"Invalid value detected"
+                title = "Invalid value detected"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([error_title, title, message])
                 return True
@@ -233,7 +232,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             except Exception:
                 self.hide()
                 line_edit_imag.setFocus()
-                title = f"Invalid value detected"
+                title = "Invalid value detected"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([error_title, title, message])
                 return True
@@ -242,7 +241,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             if real_value <= 0:
                 self.hide()
                 line_edit_real.setFocus()
-                title = f"Invalid value detected"
+                title = "Invalid value detected"
                 message = "Enter a positive value for the normal "
                 message += "incident wave amplitude."
                 PrintMessageInput([error_title, title, message])

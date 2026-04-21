@@ -1,5 +1,3 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
@@ -13,7 +11,6 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 
-import os
 import numpy as np
 
 error_title = "Error"

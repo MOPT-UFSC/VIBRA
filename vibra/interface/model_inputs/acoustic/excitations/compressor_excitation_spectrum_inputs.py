@@ -1,5 +1,3 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent

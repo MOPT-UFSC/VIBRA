@@ -1,7 +1,5 @@
 
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -14,7 +12,6 @@ from vibra.interface.ui_generated.model.structural.distributed_loads_inputs_ui i
 
 import numpy as np
 from os.path import basename
-from pathlib import Path
 
 window_title_1 = "Error"
 window_title_2 = "Warning"

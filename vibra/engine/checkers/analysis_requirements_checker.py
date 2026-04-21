@@ -1,9 +1,10 @@
 
 from vibra import app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
+# from vibra.engine.properties.fluid import Fluid
+# from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
 
 import numpy as np
 
@@ -63,7 +64,7 @@ class AnalysisRequirementsChecker:
 
         if not self.volume_ids:
             title = "Invalid geometry for acoustic analysis"
-            message = f"The selected geometry file does not contain "
+            message = "The selected geometry file does not contain "
             message += "volumes, therefore, it is invalid for acoustic analysis."
             PrintMessageInput([error_title, title, message])
             return True
@@ -205,7 +206,10 @@ class AnalysisRequirementsChecker:
         if self.check_structural_harmonic_excitations():
             return True
 
-        if self.model.old_analysis_setup.get("analysis_method") == "mode_superposition":
+        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+            return True
+
+        if self.model.analysis_setup.analysis_method == "mode_superposition":
             if self.check_mode_superposition_prescribed_dof_criterion():
                 return True
 

@@ -1,25 +1,25 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import logging
+import warnings
+from copy import deepcopy
+
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.utils.bidict import bidict
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-
-from copy import deepcopy
-
-import logging, os, warnings
-import numpy as np
+from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import (
+    TransferImpedanceInputs_UI,
+)
+from vibra.utils.bidict import bidict
 
 error_title = "Error"
 warning_title = "Warning"
@@ -89,7 +89,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:

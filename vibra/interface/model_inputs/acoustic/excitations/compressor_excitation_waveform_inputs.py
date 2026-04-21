@@ -1,5 +1,3 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -10,14 +8,14 @@ from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 
 from vibra.utils.signal_processing import extend_signal, process_one_sided_spectrum, get_window_and_correction_factor
 
 from copy import deepcopy
 from pathlib import Path
-from scipy.io import wavfile
+# from scipy.io import wavfile
 from scipy.signal.windows import hann
 
 import numpy as np
@@ -871,7 +869,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         mask = self.frequencies_vector < f_max
 
         key = ("compressor", "excitation")
-        legend_label = f"compressor excitation signal"
+        legend_label = "compressor excitation signal"
         title = f"{excitation_type} spectrum".capitalize()
 
         self.model_results[key] = { 
@@ -895,7 +893,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         plot_type = excitation_type.capitalize()
 
         key = ("compressor", "excitation")
-        legend_label = f"compressor excitation signal"
+        legend_label = "compressor excitation signal"
         title = f"{excitation_type} waveform".capitalize()
 
         self.model_results[key] = { 

@@ -1,6 +1,4 @@
 
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -10,7 +8,7 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.utils import are_there_values_different_from_zero
+# from vibra.utils.utils import are_there_values_different_from_zero
 from vibra.interface.ui_generated.model.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 
 import numpy as np
@@ -448,8 +446,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if (_real, _imag).count(None) == 2:
             if line_edit_real.isEnabled() and line_edit_imag.isEnabled():
                 self.hide()
-                title = f"Empty fields detected"
-                message = f"Enter a value in the real and/or imaginary "
+                title = "Empty fields detected"
+                message = "Enter a value in the real and/or imaginary "
                 message += "part input field to proceed."
                 PrintMessageInput([error_title, title, message])
                 return True, None
@@ -653,7 +651,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"

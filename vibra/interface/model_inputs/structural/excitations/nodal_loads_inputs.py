@@ -1,7 +1,5 @@
 
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
@@ -469,24 +467,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.lineEdit_reset(lineEdit)
 
                 title = "Project frequency setup cannot be modified"
-                message = f"The following imported table of values has a frequency setup\n"
-                message += "different from the others already imported ones. The current\n"
+                message = "The following imported table of values has a frequency setup "
+                message += "different from the others already imported ones. The current "
                 message += "project frequency setup is not going to be modified."
                 message += f"\n\n{imported_filename}"
                 PrintMessageInput([error_title, title, message])
                 return None, None
-
-            # else:
-
-            #     f_min = self.frequencies[0]
-            #     f_max = self.frequencies[-1]
-            #     f_step = self.frequencies[1] - self.frequencies[0] 
-
-            #     frequency_setup = { "f_min" : f_min,
-            #                         "f_max" : f_max,
-            #                         "f_step" : f_step }
-
-            #     app().new_project.model.old_set_analysis_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -545,7 +531,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
