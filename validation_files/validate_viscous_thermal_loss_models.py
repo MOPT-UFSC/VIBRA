@@ -120,7 +120,7 @@ def load_external_mesh_and_solve():
         frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
         analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
         f_min = 5,
-        f_max = 1400,
+        f_max = 1600,
         f_step = 5,
     )
 

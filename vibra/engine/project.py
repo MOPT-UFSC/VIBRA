@@ -163,7 +163,7 @@ class Project:
         """
         self.project_writer.write_model(self.model)
         if isinstance(self.solver, ModalSolver) and (self.solver.solution is not None):
-            self.write_modal_solution(self.solver)
+            self.project_writer.write_modal_solution(self.solver)
         self.mark_project_as_modified()
 
     # TODO: use only "write_to_working_dir"
@@ -468,7 +468,7 @@ class Project:
         if self.solver is None:
             return False
 
-        return isinstance(self.solver.solution, ModalSolution | HarmonicSolution)
+        return isinstance(self.model.solution, ModalSolution | HarmonicSolution)
 
     def get_analysis_type(self) -> AnalysisType:
         """

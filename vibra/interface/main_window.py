@@ -490,10 +490,8 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().project.is_there_a_valid_solution():
-            self.action_results_workspace.setEnabled(True)
-        else:
-            self.action_results_workspace.setEnabled(False)
+        valid_solution = app().project.is_there_a_valid_solution()
+        self.action_results_workspace.setEnabled(valid_solution)
 
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -515,10 +513,8 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().project.is_there_a_valid_solution():
-            self.action_results_workspace.setEnabled(True)
-        else:
-            self.action_results_workspace.setEnabled(False)
+        valid_solution = app().project.is_there_a_valid_solution()
+        self.action_results_workspace.setEnabled(valid_solution)
 
         self.update_mesh_information()
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
