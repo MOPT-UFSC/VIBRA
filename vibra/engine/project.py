@@ -423,6 +423,12 @@ class Project:
             self.update_post_processing()
         return self.postprocessing
 
+    def is_mesh_configured(self) -> bool:
+        """
+        Checks if the mesh is configured.
+        """
+        return isinstance(self.model.mesh_setup, MeshSetup)
+
     def is_analysis_id_valid(self, analysis_id: AnalysisID) -> bool:
         """
         Checks if the provided AnalysisID corresponds to the current model AnalysisSetup.

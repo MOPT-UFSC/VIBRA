@@ -88,8 +88,8 @@ class ProjectReader:
         model.geometry_path = self.read_geometry_path()
 
         if self.project_paths.mesh_data_filepath.exists():
-            mesh = self.read_mesh()
-            model.set_mesh(mesh)
+            model.mesh = self.read_mesh()
+            model.generated_mesh = isinstance(model.mesh_setup, MeshSetup)
 
         model.solution = self.read_solution(model)
 

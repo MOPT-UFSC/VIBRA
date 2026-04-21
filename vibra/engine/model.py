@@ -262,10 +262,6 @@ class Model:
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
-    def set_mesh(self, mesh: Mesh):
-        self.mesh = mesh
-        self.generated_mesh = True
-
     def set_analysis_id(self, analysis_id: AnalysisID):
         self.analysis_id = analysis_id
 
