@@ -1049,35 +1049,34 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def load_fluid_composition_callback(self):
 
         self.hide()
-        self.label_selected_fluid.setText("")
-
-        self.fluid_data = dict()
-        self.fluid_to_composition = dict()
+        self.fluid_data.clear()
+        self.fluid_to_composition.clear()
+        self.label_selected_fluid.clear()
 
         read = LoadFluidCompositionInputs(file_path = self.composition_file_path)
 
-        if read.complete:
+        if not read.complete:
+            app().main_window.set_input_widget(self)
 
-            self.composition_file_path = read.file_path
-            composition_data = read.fluid_composition_data
+        self.composition_file_path = read.file_path
 
-            comp = 0
-            for (i, label, refprop_fluid_name, molar_fraction) in composition_data:
+        comp = 0
+        for (i, label, refprop_fluid_name, molar_fraction) in read.fluid_composition_data:
 
-                self.fluid_data[i] = [label, refprop_fluid_name, molar_fraction]
+            self.fluid_data[i] = [label, refprop_fluid_name, molar_fraction]
 
-                if refprop_fluid_name not in self.refprop_fluids.keys():
-                    pass
+            if refprop_fluid_name not in self.refprop_fluids.keys():
+                continue
+        
+            if not molar_fraction:
+                continue
 
-                if refprop_fluid_name in self.refprop_fluids.keys():
-                    if molar_fraction:
+            [fluid_file, _, _] = self.refprop_fluids[refprop_fluid_name]
+            self.fluid_to_composition[refprop_fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
+            comp += molar_fraction
 
-                        [fluid_file, _, _] = self.refprop_fluids[refprop_fluid_name]
-                        self.fluid_to_composition[refprop_fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
-                        comp += molar_fraction
-
-            self.load_fluid_composition_info()
-            self.update_remainig_composition()
+        self.load_fluid_composition_info()
+        self.update_remainig_composition()
 
         app().main_window.set_input_widget(self)
 
