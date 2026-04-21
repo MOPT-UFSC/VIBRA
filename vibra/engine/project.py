@@ -27,7 +27,7 @@ from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
-from vibra.engine.solution import HarmonicSolution
+from vibra.engine.solution import ModalSolution, HarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
@@ -468,10 +468,7 @@ class Project:
         if self.solver is None:
             return False
 
-        if self.solver.solution is None:
-            return False
-
-        return self.solver.solution.size > 0
+        return isinstance(self.solver.solution, ModalSolution | HarmonicSolution)
 
     def get_analysis_type(self) -> AnalysisType:
         """
