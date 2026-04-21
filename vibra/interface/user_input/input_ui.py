@@ -1,4 +1,3 @@
-import logging
 
 from vibra import app
 from vibra.engine import AnalysisID
@@ -57,9 +56,6 @@ from vibra.interface.plots.structural.displacement_field_inputs import PlotDispl
 #
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class InputUi:

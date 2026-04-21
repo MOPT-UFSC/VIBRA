@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
@@ -19,7 +20,6 @@ import numpy as np
 from enum import IntEnum
 from collections import defaultdict
 
-error_title = "Error"
 
 class TabType(IntEnum):
     RECTANGULAR = 0
@@ -27,14 +27,17 @@ class TabType(IntEnum):
     EDIT = 2
     LIST = 3
 
+
 class SectionType(IntEnum):
     RECTANGULAR = 0
     QUADRANGULAR = 1
     NARROW_SLIT = 2
 
+
 class FormulationModelTab(IntEnum):
     STINSON_MODEL = 0
     LRF_MODEL = 1
+
 
 class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def __init__(self, *args, **kwargs):

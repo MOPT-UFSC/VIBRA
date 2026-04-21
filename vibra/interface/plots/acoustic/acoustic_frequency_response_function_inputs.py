@@ -1,17 +1,17 @@
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import AcousticPressureFrequencyResponseFunctionInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.engine import AnalysisID
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-
-import numpy as np
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import (
+    AcousticPressureFrequencyResponseFunctionInputs_UI,
+)
 
 
 class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyResponseFunctionInputs_UI):

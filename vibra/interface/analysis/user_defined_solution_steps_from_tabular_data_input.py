@@ -2,13 +2,12 @@ from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QHeaderView, QTableWidgetI
 from PySide6.QtGui import Qt, QIcon
 
 from vibra import app, ICON_DIR
+from vibra.interface import error_title
 from vibra.interface.formatters.icons import change_icon_color
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_from_tabular_data_input_ui import UserDefinedSolutionStepsFromTabularDataInput_UI
 
 import numpy as np
-
-error_title = "Warning"
 
 
 class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromTabularDataInput_UI):

@@ -1,19 +1,20 @@
-from PySide6.QtWidgets import QFileDialog
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent
-
-from vibra.engine import AnalysisID
-from vibra import app
-from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import ExportElementTransferDataInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.loading_window import LoadingWindow
-
 import logging
-import numpy as np
 from pathlib import Path
 
-error_title = "Error"
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QFileDialog
+
+from vibra import app
+from vibra.engine import AnalysisID
+from vibra.interface import error_title
+from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import (
+    ExportElementTransferDataInputs_UI,
+)
 
 
 class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):

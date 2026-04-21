@@ -1,17 +1,10 @@
-from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
 
 from vibra import app
-from vibra.interface.ui_generated.model.acoustic.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
-import numpy as np
-from pathlib import Path
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.ui_generated.model.acoustic.get_sphere_selection_information_ui import (
+    GetSphereSelectionInformation_UI,
+)
 
 
 class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):

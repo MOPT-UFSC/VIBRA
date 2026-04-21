@@ -1,20 +1,20 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from os.path import basename
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.structural.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
-
-import numpy as np
-from os.path import basename
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.ui_generated.model.structural.distributed_loads_inputs_ui import (
+    DistributedLoadsInputs_UI,
+)
 
 
 class DistributedLoadsInputs(DistributedLoadsInputs_UI):
@@ -231,7 +231,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True, None
 
         _imag = None
@@ -244,7 +244,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True, None
 
         if _real is None and _imag is None:
@@ -313,7 +313,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return
 
         real_values = [value if value is None else np.real(value) for value in distributed_loads]
@@ -363,7 +363,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
 
@@ -374,7 +374,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -417,7 +417,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
 
             return None, None
 
@@ -502,7 +502,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one distributed load "
                 message += "before confirming the property assignment."
-                PrintMessageInput([window_title_1, title, message]) 
+                PrintMessageInput([error_title, title, message]) 
                 return
 
             data = {

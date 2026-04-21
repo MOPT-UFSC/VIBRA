@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -15,10 +16,6 @@ import numpy as np
 from enum import IntEnum
 from os.path import basename
 from collections import defaultdict
-
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class ElementFormulation(IntEnum):

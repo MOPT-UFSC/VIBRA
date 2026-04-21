@@ -8,6 +8,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -20,9 +21,6 @@ from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui im
     TransferImpedanceInputs_UI,
 )
 from vibra.utils.bidict import bidict
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class TransferImpedanceInputs(TransferImpedanceInputs_UI):

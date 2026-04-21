@@ -6,6 +6,7 @@ from vibra.engine import AnalysisID
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 
+from vibra.interface import error_title
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_reciprocating_compressor_inputs_ui import AllowablePulsationsForReciprocatingCompressorInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -13,9 +14,6 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 
 import numpy as np
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsForReciprocatingCompressorInputs_UI):
@@ -133,7 +131,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             pressure_ratio = float(str_pressure_ratio)     
             unfiltered_criteria = min(3*pressure_ratio, 7)
 
-        except:
+        except Exception:
             self.lineEdit_unfiltered_criteria.setFocus()
             self.lineEdit_unfiltered_criteria.selectAll()
             return
@@ -248,7 +246,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         if message != "":
             line_edit.setFocus()
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
         else:
             return out

@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -11,8 +12,6 @@ from vibra.interface.ui_generated.plots.acoustic.surface_absorption_coefficient_
 
 import logging
 import numpy as np
-
-error_title = "Error"
 
 
 class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):

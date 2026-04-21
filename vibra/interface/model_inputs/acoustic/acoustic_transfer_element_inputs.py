@@ -14,6 +14,7 @@ from vibra.engine.analysis_info import (
     FrequencySpacing,
     HarmonicAnalysisSetup,
 )
+from vibra.interface import error_title
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -22,8 +23,6 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import (
     AcousticTransferElementInputs_UI,
 )
-
-error_title = "Error"
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):

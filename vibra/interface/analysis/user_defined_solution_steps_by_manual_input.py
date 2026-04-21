@@ -1,16 +1,24 @@
-from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QPushButton, QTableWidgetItem, QWidget
-from PySide6.QtGui import Qt, QIcon
+import numpy as np
+from PySide6.QtGui import QIcon, Qt
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QHeaderView,
+    QPushButton,
+    QTableWidgetItem,
+    QWidget,
+)
 
-from vibra import app, ICON_DIR
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, change_icon_color
+from vibra import ICON_DIR, app
+from vibra.interface import error_title, warning_title
+from vibra.interface.formatters.icons import (
+    change_icon_color,
+    change_icon_color_for_widgets,
+)
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import UserDefinedSolutionStepsByManualInput_UI
-
-import numpy as np
-
-error_title = "Error"
-warning_title = "Warning"
+from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import (
+    UserDefinedSolutionStepsByManualInput_UI,
+)
 
 
 class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInput_UI):
@@ -56,7 +64,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         icon_color = None
         theme = app().config.user_preferences.interface_theme
         
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:

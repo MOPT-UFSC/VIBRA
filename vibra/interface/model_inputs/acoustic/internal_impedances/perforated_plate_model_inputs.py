@@ -22,6 +22,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -44,8 +45,6 @@ from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_u
 )
 from vibra.utils.bidict import bidict
 
-error_title = "Error"
-warning_title = "Warning"
 
 class PPMMainTabType(IntEnum):
     SETUP = SetupTabType.SETUP

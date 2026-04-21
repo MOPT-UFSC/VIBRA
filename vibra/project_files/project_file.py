@@ -6,20 +6,18 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-import os
 import h5py
 import numpy as np
 
 from copy import deepcopy
 from pathlib import Path
 
+from vibra.interface import error_title
 from vibra.engine.serialization.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
 
 from vibra.utils.utils import get_color_rgb, get_list_of_values_from_string
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class ProjectFile:
@@ -190,7 +188,7 @@ class ProjectFile:
                         try:
                             geometry_data[key] = np.array(values)
 
-                        except:
+                        except Exception:
                             geometry_data[key] = int(values)
 
         except Exception as error_log:
@@ -327,7 +325,7 @@ class ProjectFile:
                         try:
                             mesh_data[key] = np.array(values)
 
-                        except:
+                        except Exception:
                             mesh_data[key] = int(values)
 
         except Exception as error_log:
@@ -460,7 +458,7 @@ class ProjectFile:
 
             title = "Error while exporting model properties"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
 
     def read_model_properties_from_file(self):
 
@@ -548,13 +546,13 @@ class ProjectFile:
 
                         try:
                             aux[key] = np.array(values)
-                        except:
+                        except Exception:
                             continue
 
                     if aux:
                         tables_data[group] = aux
 
-        except:
+        except Exception:
             return dict()
 
         return tables_data
@@ -681,13 +679,13 @@ class ProjectFile:
 
                         try:
                             aux[key] = np.array(values)
-                        except:
+                        except Exception:
                             continue
 
                     if aux:
                         results_data[group] = aux
 
-        except:
+        except Exception:
             return dict()
 
         return results_data

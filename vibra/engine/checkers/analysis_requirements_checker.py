@@ -3,13 +3,11 @@ from vibra import app
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 # from vibra.engine.properties.fluid import Fluid
 # from vibra.engine.properties.material import Material
+from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 
 import numpy as np
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class AnalysisRequirementsChecker:

@@ -1,18 +1,20 @@
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
+import logging
+
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import TransmissionLossInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
-import logging
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import (
+    TransmissionLossInputs_UI,
+)
 
 
 class TransmissionLossInputs(TransmissionLossInputs_UI):
@@ -161,7 +163,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         message += "a surface velocity, combined with specific impedances in both input and output "
         message += "surfaces, is adopted. Any mismatch in these requirements will make the transmission "
         message += "loss calculation unfeasible."
-        PrintMessageInput([window_title_1, title, message])
+        PrintMessageInput([error_title, title, message])
         return True
 
     def invert_selection(self):
@@ -232,7 +234,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             message = "The same surface has been selected in both input and output "
             message += "selection fields. You must selecting different sufaces to "
             message += "proceed with the transmission loss or noise reduction calculation."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
     def join_model_data(self):
@@ -279,7 +281,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             title = "Invalid input surface id"
             message = "An invalid surface id has been selected at Input ID field. "
             message += "Check if the Input ID has a surface velocity excitation to proceed."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         self.title = f"{plot_type}"

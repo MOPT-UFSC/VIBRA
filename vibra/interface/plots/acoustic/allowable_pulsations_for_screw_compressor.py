@@ -1,22 +1,25 @@
-from PySide6.QtWidgets import QDialog, QLineEdit
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QDialog, QLineEdit
 
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
-
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
-from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import AllowablePulsationsForScrewCompressorInputs_UI
-
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
+    SetFluidInputsSimplified,
+)
+from vibra.interface.plots.general.frequency_response_plotter import (
+    DataFormat,
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import (
+    AllowablePulsationsForScrewCompressorInputs_UI,
+)
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
-
-import numpy as np
-
-error_title = "Error"
 
 
 class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCompressorInputs_UI):

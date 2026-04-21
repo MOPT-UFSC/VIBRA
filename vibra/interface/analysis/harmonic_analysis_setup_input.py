@@ -11,6 +11,7 @@ from vibra.engine.analysis_info import (
     FrequencySpacing,
     HarmonicAnalysisSetup,
 )
+from vibra.interface import error_title
 from vibra.interface.analysis.solutions_step_display_input import (
     SolutionStepsDisplayInput,
 )
@@ -30,7 +31,7 @@ from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui impo
 )
 
 
-class TabIndex(IntEnum):
+class TabType(IntEnum):
     FREQUENCY_SETUP = 0
     DAMPING_SETUP = 1
 
@@ -38,9 +39,6 @@ class TabIndex(IntEnum):
 class AnalysisMethod(IntEnum):
     DIRECT = 0
     MODE_SUPERPOSITION = 1
-
-
-error_title = "Error"
 
 
 class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
@@ -317,7 +315,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.comboBox_method.removeItem(AnalysisMethod.MODE_SUPERPOSITION)
-            self.tabWidget_main.setTabVisible(TabIndex.DAMPING_SETUP, False)
+            self.tabWidget_main.setTabVisible(TabType.DAMPING_SETUP, False)
 
         elif self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if isinstance(analysis_setup, HarmonicAnalysisSetup):

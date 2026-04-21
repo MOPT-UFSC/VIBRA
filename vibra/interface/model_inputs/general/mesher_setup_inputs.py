@@ -21,6 +21,7 @@ from vibra.engine.mesher.element_setup import (
     ElementSetup,
 )
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+# from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
@@ -70,10 +71,6 @@ class RefinementTableColumns(IntEnum):
     ELEMENT_SIZE = 0
     SELECTION_TYPE = 1
     SELECTION_IDS = 2
-
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class MesherSetupInputs(MesherSetupInputs_UI):

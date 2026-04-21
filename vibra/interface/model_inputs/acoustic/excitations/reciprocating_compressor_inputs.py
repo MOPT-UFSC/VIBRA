@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
@@ -20,9 +21,6 @@ from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCom
 import numpy as np
 from os.path import dirname
 from pathlib import Path
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 psi_to_Pa = (0.45359237 * 9.80665) / ((0.0254)**2)
 kgf_cm2_to_Pa = 9.80665e4
@@ -515,7 +513,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message = "The selected surface does not correspond to the piping endings. "
             message += "It is necessary to change the selection to proceed with the "
             message += "compressor excitation attribution."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.clear_line_edit_selection_id()
             return None
 
@@ -539,18 +537,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
                 if value < 0:
                     message = f"You cannot input a negative value to the {label}."
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
                     return True
                 else:
                     self.value = value
 
             except Exception:
                 message = f"You have typed an invalid value to the {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
         else:
             message = f"None value has been typed to the {label}."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
         return False
 
@@ -718,7 +716,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         update_analysis_setup_in_file(frequencies)
@@ -749,7 +747,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             else:
                 self.lineEdit_pressure_at_discharge.setText(f"{discharge_pressure : .6f}")
 
-        except:
+        except Exception:
             return
 
         try:
@@ -764,7 +762,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
             self.lineEdit_temperature_at_discharge.setText(f"{discharge_temperature : .6f}")
 
-        except:
+        except Exception:
             return
 
     def attribute_callback(self):

@@ -21,8 +21,6 @@ from vibra.interface.model_inputs.general.fluid.set_fluid_composition_inputs imp
 from vibra.interface.ui_generated.model.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
-error_title = "Error"
-warning_title = "Warning"
 
 
 class RowsEnum(IntEnum):
