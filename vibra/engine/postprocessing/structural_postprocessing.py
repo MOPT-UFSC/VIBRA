@@ -138,7 +138,7 @@ class StructuralPostprocessing:
 
         return r_min, r_max
 
-    def compute_structural_displacement_field(self, index: int, phase_rad: float, displacement_type: DisplacementTypes, is_modal: bool = False):
+    def compute_structural_displacement_field(self, column: int, phase_rad: float, displacement_type: DisplacementTypes, is_modal: bool = False):
 
         if is_modal:
             solver = self.modal_solver
@@ -150,15 +150,15 @@ class StructuralPostprocessing:
         if not nodal_solution.any():
             return
 
-        results_complex: np.ndarray = solver.solution[solver.displacement_dof, index]
+        displacements_complex: np.ndarray = nodal_solution[solver.displacement_dof, column]
 
-        amplitudes = np.abs(results_complex)
-        phases = np.angle(results_complex)
+        amplitudes = np.abs(displacements_complex)
+        phases = np.angle(displacements_complex)
         delta = -phases[np.argmax(amplitudes)]
 
-        results_real = amplitudes * np.cos(phases + phase_rad + delta)
+        displacements = amplitudes * np.cos(phases + phase_rad + delta)
+        current_solution = displacements.reshape(-1, 3).copy()
 
-        current_solution = results_real.reshape(-1, 3).copy()
         if displacement_type == "u_sum":
             color_scalars = np.linalg.norm(current_solution, axis=1)
             displacements = current_solution.copy()
@@ -175,6 +175,6 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             displacements = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_displacements(index, displacement_type, is_modal)
+        min_value, max_value = self.get_max_min_values_of_displacements(column, displacement_type, is_modal)
 
         return displacements, color_scalars, min_value, max_value, np.imag(displacements).any()
