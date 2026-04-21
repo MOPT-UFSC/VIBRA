@@ -110,7 +110,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             if len(volumes) == 1:
                 try:
                     self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
-                except:
+                except Exception:
                     pass
             return
 

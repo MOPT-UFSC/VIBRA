@@ -220,8 +220,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.lineEdit_temperature_right.setDisabled(True)
 
             self.connection_type = state_properties['connection_type']
-            self.T_suction = state_properties[f'temperature_at_suction']
-            self.P_suction = state_properties[f'suction_pressure']
+            self.T_suction = state_properties['temperature_at_suction']
+            self.P_suction = state_properties['suction_pressure']
 
             if self.connection_type == "suction":
                 self.lineEdit_pressure_right.setVisible(False)
@@ -242,8 +242,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.lineEdit_pressure_right.setText(f"{self.P_discharge : .8e}")
 
             if 'temperature_at_discharge' in state_properties.keys():
-                self.T_discharge = state_properties[f'temperature_at_discharge']
-                self.lineEdit_temperature_right.setText(f"{self.T_discharge : .4f}")
+                self.T_discharge = state_properties['temperature_at_discharge']
+                self.lineEdit_temperature_right.setText("{self.T_discharge : .4f}")
 
             else:
 
@@ -388,7 +388,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         self.hide()
 
-        title = f"Fluid composition reset"
+        title = "Fluid composition reset"
         message = "Would you like to reset the current fluid composition?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -518,7 +518,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.tableWidget_new_fluid.setItem(row, 1, QTableWidgetItem(molar_fraction))
             self.tableWidget_new_fluid.item(row, 1).setTextAlignment(Qt.AlignCenter)
 
-        except:
+        except Exception:
             return True
 
     def check_remaining_molar_fraction(self):
@@ -1066,7 +1066,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
                 self.fluid_data[i] = [label, refprop_fluid_name, molar_fraction]
 
-                if not refprop_fluid_name in self.refprop_fluids.keys():
+                if refprop_fluid_name not in self.refprop_fluids.keys():
                     pass
 
                 if refprop_fluid_name in self.refprop_fluids.keys():
