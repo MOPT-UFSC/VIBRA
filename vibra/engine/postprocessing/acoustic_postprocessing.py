@@ -148,7 +148,7 @@ class AcousticPostprocessing:
         surface_id: int | None = None,
         volume_id: int | None = None,
     ):
-        frequencies = self.harmonic_solver.assembler.model.old_analysis_setup.get("frequencies")
+        frequencies = self.harmonic_solver.assembler.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
@@ -268,7 +268,7 @@ class AcousticPostprocessing:
             the x, y, and z directions, computed in the selected surface.
         """
 
-        frequencies = self.harmonic_solver.assembler.model.old_analysis_setup.get("frequencies")
+        frequencies = self.harmonic_solver.assembler.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         rho, _ = self.harmonic_solver.assembler.model.get_fluid_properties_from_volume(volume_id, frequencies)

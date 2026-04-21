@@ -4,15 +4,12 @@ import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QWidget
 
 from vibra import app
-from vibra.engine.analysis_info import (
-    FrequencySpacing,
-    HarmonicAnalysisSetup,
-    HarmonicAnalysisSetupNew,
-)
+from vibra.engine.analysis_info import FrequencySpacing
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 
 
-def get_analysis_setup_for_tabular_data(frequencies: np.ndarray):
+def update_analysis_setup_in_file(frequencies: np.ndarray):
+
     equally_distributed = is_frequencies_vector_equally_distributed(frequencies)
 
     if equally_distributed:
@@ -27,35 +24,17 @@ def get_analysis_setup_for_tabular_data(frequencies: np.ndarray):
         frequency_spacing = FrequencySpacing.USER_DEFINED
         frequencies = frequencies
 
-    analysis_setup = HarmonicAnalysisSetupNew(
+    analysis_setup = app().project.model.get_harmonic_analysis_setup(
         frequency_spacing = frequency_spacing,
         f_min = f_min,
         f_max = f_max,
         f_step = f_step,
         frequencies = frequencies,
         )
-    
-    analysis_setup.solution_steps_mask = app().project.model.get_solution_steps_mask(
-        frequencies = analysis_setup.get_frequencies()
-        )
-
-def update_analysis_setup_in_file(frequencies: np.ndarray):
-    analysis_setup = app().project.model.analysis_setup
-
-    # The previous version looks like an HarmonicAnalysisSetupRange,
-    # but I think that the HarmonicAnalysisSetupList is more suitable.
-    # If I am wrong please let me know.
-    if isinstance(analysis_setup, HarmonicAnalysisSetup):
-        new_analysis_setup = analysis_setup.convert_to(
-            HarmonicAnalysisSetupNew,
-            frequencies=frequencies,
-        )
-    else:
-        new_analysis_setup = get_analysis_setup_for_tabular_data(frequencies)
 
     app().project.configure_analysis(
         app().project.model.analysis_id,
-        new_analysis_setup,
+        analysis_setup,
     )
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):

@@ -3,13 +3,10 @@ import numpy as np
 from PySide6.QtGui import QIntValidator, Qt
 
 from vibra import app
-from vibra.engine import HarmonicAnalysisSetup
 from vibra.engine.analysis_info import (
     AnalysisID,
     FrequencySpacing,
-    HarmonicAnalysisSetupNew,
-    # HarmonicAnalysisSetupList,
-    # HarmonicAnalysisSetupRange,
+    HarmonicAnalysisSetup,
 )
 from vibra.interface.analysis.solutions_step_display_input import (
     SolutionStepsDisplayInput,
@@ -262,19 +259,20 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
 
     def set_default_values(self):
-        global_damping = (0.0, 0.0, 0.0)
-        analysis_setup = self.model.analysis_setup
-
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            global_damping = analysis_setup.global_damping
+        global_damping = self.model.global_damping
 
         self.load_analysis_type()
         self.load_damping_inputs(self.analysis_id, global_damping)
         self.reset_frequency_inputs()
 
-        analysis_setup = app().project.model.old_analysis_setup
-        if analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
-            self.comboBox_frequency_spacing.setCurrentText("User-defined")
+        if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+            frequency_spacing = self.model.analysis_setup.frequency_spacing
+
+            if frequency_spacing == FrequencySpacing.USER_DEFINED:
+                self.comboBox_frequency_spacing.setCurrentText("User-defined")
+
+            elif frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
+                self.comboBox_frequency_spacing.setCurrentText("Equally distributed")
 
     def reset_frequency_inputs(self):
         self.update_solution_steps_controls_visibility()
@@ -284,7 +282,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         f_step = 5
 
         analysis_setup = self.model.analysis_setup
-        if isinstance(analysis_setup, HarmonicAnalysisSetupNew):
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
             f_min = analysis_setup.f_min
             f_max = analysis_setup.f_max
             f_step = analysis_setup.f_step
@@ -306,8 +304,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         elif self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if isinstance(analysis_setup, HarmonicAnalysisSetup):
-                mode_sup = analysis_setup.analysis_method == "mode_superposition"
-                self.comboBox_method.setCurrentIndex(int(mode_sup))
+                method = analysis_setup.analysis_method.capitalize().replace("_", " ")
+                self.comboBox_method.setCurrentText(method)
 
         self.comboBox_method.blockSignals(False)
         self.analysis_method_callback()
@@ -505,14 +503,14 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             if frequency_spacing == FrequencySpacing.USER_DEFINED:
                 if len(self.user_defined_solution_steps) == 0:
-                    if self.model.old_analysis_setup.get("frequency_spacing") == FrequencySpacing.USER_DEFINED:
-                        self.user_defined_solution_steps = self.model.frequencies
+                    if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+                        if self.model.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED:
+                            self.user_defined_solution_steps = self.model.analysis_setup.frequencies
 
                 analysis_setup_data.update(
                     {"frequencies" : np.array(self.user_defined_solution_steps, dtype=float)}
                     )
 
-            # user_defined_manually = not self.table_exists or self.user_defined_solution_stepsWW
             if not self.user_defined_solution_steps:
                 freq_data = self.check_frequencies_inputs()
                 if not isinstance(freq_data, dict):
@@ -523,37 +521,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
 
-        analysis_setup = HarmonicAnalysisSetupNew(**analysis_setup_data)
-
-        analysis_setup.solution_steps_mask = self.model.get_solution_steps_mask(
-            frequencies = analysis_setup.get_frequencies()
-            )
-
-        # match frequency_spacing:
-        #     case FrequencySpacing.EQUALLY_DISTRIBUTED:
-        #         analysis_setup = HarmonicAnalysisSetupRange(
-        #             analysis_setup["f_min"],
-        #             analysis_setup["f_max"],
-        #             analysis_setup["f_step"],
-        #             analysis_method=analysis_setup["analysis_method"],
-        #             global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
-        #             modes_number=analysis_setup.get("modes_number", None),
-        #         )
-
-        #         _frequencies = analysis_setup.frequencies()
-        #         analysis_setup.mask_frequencies = self.model.get_solution_steps_mask(frequencies=_frequencies)
-
-        #     case FrequencySpacing.USER_DEFINED:
-        #         _frequencies = np.array(analysis_setup["frequencies"], dtype=float)
-        #         analysis_setup = HarmonicAnalysisSetupList(
-        #             _frequencies,
-        #             self.model.get_solution_steps_mask(frequencies=_frequencies),
-        #             analysis_method=analysis_setup["analysis_method"],
-        #             global_damping=analysis_setup.get("global_damping", (0, 0, 0)),
-        #             modes_number=analysis_setup.get("modes_number", None),
-        #         )
-        #     case _:
-        #         raise TypeError(f'Invalid frequency spacing "{frequency_spacing}"')
+        analysis_setup = self.model.get_harmonic_analysis_setup(**analysis_setup_data)
 
         app().project.configure_analysis(
             self.analysis_id,

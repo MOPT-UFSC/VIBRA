@@ -1,52 +1,88 @@
-from abc import ABC, abstractmethod
-from dataclasses import field, replace
-from typing import Callable, List, Optional, ParamSpec, Self, TypeVar
+from dataclasses import KW_ONLY, dataclass, field, fields
+from functools import wraps
+from typing import List, Optional
 
 import numpy as np
 
-from .analysis_enums import AnalysisMethod
-from vibra.engine.analysis_info import AnalysisID
-
-P = ParamSpec("P")
-T = TypeVar("T")
+from vibra.engine.analysis_info import AnalysisID, AnalysisMethod, FrequencySpacing
 
 
-class HarmonicAnalysisSetup(ABC):
+def ignore_extra_kwargs(cls):
+    original_init = cls.__init__
+
+    @wraps(original_init)
+    def new_init(self, *args, **kwargs):
+        
+        # expected fields of original dataclass
+        expected_fields = {f.name for f in fields(cls)}
+
+        # filter the unnecessary kwargs
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in expected_fields}
+
+        original_init(self, *args, **filtered_kwargs)
+
+    cls.__init__ = new_init
+    return cls
+
+
+@ignore_extra_kwargs
+@dataclass
+class HarmonicAnalysisSetup:
+    _: KW_ONLY
     analysis_id: int = AnalysisID.NO_ANALYSIS
-    frequency_spacing: str = "user-defined"
-    analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
+    frequency_spacing: str = FrequencySpacing.USER_DEFINED
     f_min: float | None = None
     f_max: float | None = None
-    f_size: float | None = None
+    f_step: float | None = None
     frequencies: Optional[np.ndarray[tuple[int], float]] = None
     solution_steps_mask: List[bool] = field(default_factory=list)
-    global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     modes_number: int = 40
     sigma_factor: float = 0.01
-    # mask_frequencies: np.ndarray[tuple[int], bool] | None
+    global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
-    def replace(self, **changes) -> Self:
-        return replace(self, **changes)
+    @property
+    def f_size(self):
+        # TODO: Find an analytic expression to calculate this more efficiently
+        return len(self.get_frequencies())
 
-    def convert_to(self, cls: Callable[P, T], **kwargs: P.kwargs) -> T:
-        # TODO: this type hints are not working very well, fix them manually
-        if not issubclass(cls, HarmonicAnalysisSetup):
-            raise ValueError('You can only convert to another subclass of "HarmonicAnalysisSetup"')
+    def get_mask(self):
+        if self.solution_steps_mask:
+            return np.array(self.solution_steps_mask, dtype=bool)
+        return np.ones(self.f_size, dtype=bool)
 
-        kwargs.setdefault("analysis_method", self.analysis_method)
-        kwargs.setdefault("global_damping", self.global_damping)
-        kwargs.setdefault("modes_number", self.modes_number)
-        kwargs.setdefault("sigma_factor", self.sigma_factor)
-        return cls(**kwargs)
+    def get_frequencies(self):
+        if self.frequency_spacing == FrequencySpacing.USER_DEFINED:
+            return self.frequencies
 
-    def __iter__(self):
-        yield from self.frequencies()
+        frequencies = np.arange(
+        self.f_min,
+        self.f_max + self.f_step,
+        self.f_step,
+        dtype=float,
+        )
+        # TODO: This is unecessarily expensive, simplify it
+        mask = frequencies <= self.f_max
 
-    def __len__(self):
-        return self.f_size
+        return frequencies[mask]
 
-    @abstractmethod
-    def get_frequencies(self) -> np.ndarray: ...
+    def as_dict(self):
 
-    @abstractmethod
-    def as_dict(self) -> dict: ...
+        data = {
+            "frequency_spacing": self.frequency_spacing,
+            "frequencies": self.get_frequencies(),
+            "solution_steps_mask" : self.get_mask(),
+            "global_damping": self.global_damping,
+        }
+
+        if self.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
+            data.update({
+                "f_min": self.f_min,
+                "f_max": self.f_max,
+                "f_step": self.f_step,
+                })
+
+        if self.modes_number is not None:
+            data["modes_number"] = self.modes_number
+
+        return data

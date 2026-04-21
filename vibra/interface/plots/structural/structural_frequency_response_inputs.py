@@ -1,14 +1,16 @@
-from vibra.engine import HarmonicAnalysisSetup
+import numpy as np
 from PySide6.QtCore import Qt
 
-from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.structural.structural_frequency_response_inputs_ui import StructuralFrequencyResponseInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-
-import numpy as np
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.structural.structural_frequency_response_inputs_ui import (
+    StructuralFrequencyResponseInputs_UI,
+)
 
 window_title1 = "Error"
 window_title2 = "Warning"

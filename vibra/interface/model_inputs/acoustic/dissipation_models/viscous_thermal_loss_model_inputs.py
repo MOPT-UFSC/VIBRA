@@ -740,11 +740,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
         warnings.filterwarnings('ignore')
 
-        frequencies = None
-        analysis_setup = app().project.model.old_analysis_setup
-        if isinstance(analysis_setup, dict):
-            frequencies = analysis_setup.get("frequencies", None)
-
+        frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5
@@ -756,9 +752,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         else:
             freq = frequencies
 
+        # frequencies vector in radians
         omega = 2 * np.pi * freq
-
-        model = ViscousThermalLossModels(self)
 
         tab_index = self.tabWidget_main.currentIndex()
 
@@ -769,6 +764,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             tv_data = self.get_circular_duct_inputs()
 
         if tv_data:
+            model = ViscousThermalLossModels(self)
+
             if tab_index == TabType.RECTANGULAR:
                 if self.comboBox_section_type.currentIndex() in [AttributionBodiesType.ALL_BODIES, AttributionBodiesType.SELECTED_BODIES]:
                     rho_eff, C_eff = model.get_rectangular_section_effective_properties(omega, fluid, tv_data)

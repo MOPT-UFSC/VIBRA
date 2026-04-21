@@ -13,7 +13,7 @@ from PIL.Image import Image
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisSetup,
-    HarmonicAnalysisSetupNew,
+    HarmonicAnalysisSetup,
     ModalAnalysisSetup,
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -123,7 +123,7 @@ class ProjectReader:
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
 
         if analysis_id.is_harmonic():
-            return HarmonicAnalysisSetupNew(**analysis_setup_dict)
+            return HarmonicAnalysisSetup(**analysis_setup_dict)
 
         elif analysis_id.is_modal():
             return ModalAnalysisSetup(**analysis_setup_dict)
