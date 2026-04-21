@@ -4,7 +4,7 @@ import numpy as np
 import xxhash
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.solvers import HarmonicSolver
+from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
 class HashEnum(StrEnum):
@@ -40,14 +40,14 @@ class ProjectHasher:
     def hash_harmonic_solution(solver: HarmonicSolver) -> str:
         hasher = xxhash.xxh128()
         hasher.update(solver.frequencies.flatten())
-        hasher.update(solver.solution.flatten())
+        hasher.update(solver.nodal_solution.flatten())
         return hasher.hexdigest()
 
     @staticmethod
-    def hash_modal_solution(solver: HarmonicSolver) -> str:
+    def hash_modal_solution(solver: ModalSolver) -> str:
         hasher = xxhash.xxh128()
         hasher.update(solver.natural_frequencies.flatten())
-        hasher.update(solver.solution.flatten())
+        hasher.update(solver.nodal_solution.flatten())
         return hasher.hexdigest()
 
     @staticmethod

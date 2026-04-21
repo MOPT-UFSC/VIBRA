@@ -414,12 +414,12 @@ class ProjectReader:
         if model.analysis_id.is_harmonic():
             solver = HarmonicSolver(assembler)
             if self.project_paths.harmonic_solution_filepath.exists():
-                solver.solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
+                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
 
         elif model.analysis_id.is_modal():
             solver = ModalSolver(assembler)
             if self.project_paths.modal_solution_filepath.exists():
-                solver.solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)
+                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)
 
         else:
             return None, None

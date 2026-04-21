@@ -271,7 +271,7 @@ class ProjectWriter:
 
     def write_harmonic_solution(self, solver: HarmonicSolver):
         # In this case the solution was already saved
-        if isinstance(solver.solution, LazyHDF5MatrixLoader):
+        if isinstance(solver.nodal_solution, LazyHDF5MatrixLoader):
             return
 
         logging.info("Writing harmonic solution")
@@ -286,7 +286,7 @@ class ProjectWriter:
 
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
             file["frequencies"] = solver.frequencies
-            file["solution"] = solver.solution
+            file["solution"] = solver.nodal_solution
             file["solution_status"] = np.ones_like(solver.frequencies, dtype=bool)
 
             if solver.displacement_dof is not None:
@@ -296,7 +296,7 @@ class ProjectWriter:
 
     def write_modal_solution(self, solver: ModalSolver):
         # In this case the solution was already saved
-        if isinstance(solver.solution, LazyHDF5MatrixLoader):
+        if isinstance(solver.nodal_solution, LazyHDF5MatrixLoader):
             return
 
         logging.info("Writing modal solution")
@@ -311,7 +311,7 @@ class ProjectWriter:
 
         with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
             file["frequencies"] = solver.natural_frequencies
-            file["solution"] = solver.solution
+            file["solution"] = solver.nodal_solution
             file["solution_status"] = np.ones_like(solver.natural_frequencies, dtype=bool)
 
             if solver.displacement_dof is not None:
