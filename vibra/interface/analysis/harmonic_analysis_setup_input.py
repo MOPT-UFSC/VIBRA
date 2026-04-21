@@ -1,5 +1,6 @@
 
 from enum import IntEnum
+from numbers import Number
 
 import numpy as np
 from PySide6.QtGui import QIntValidator, Qt
@@ -272,20 +273,21 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.table_exists = self.model.properties.check_if_there_are_tables_at_the_model()
 
     def set_default_values(self):
-        global_damping = self.model.global_damping
 
         self.load_analysis_type()
-        self.load_damping_inputs(self.analysis_id, global_damping)
+        self.load_damping_inputs()
         self.reset_frequency_inputs()
 
-        if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
-            frequency_spacing = self.model.analysis_setup.frequency_spacing
+        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+            return
+    
+        frequency_spacing = self.model.analysis_setup.frequency_spacing
 
-            if frequency_spacing == FrequencySpacing.USER_DEFINED:
-                self.comboBox_frequency_spacing.setCurrentText("User-defined")
+        if frequency_spacing == FrequencySpacing.USER_DEFINED:
+            self.comboBox_frequency_spacing.setCurrentText("User-defined")
 
-            elif frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
-                self.comboBox_frequency_spacing.setCurrentText("Equally distributed")
+        elif frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
+            self.comboBox_frequency_spacing.setCurrentText("Equally distributed")
 
     def reset_frequency_inputs(self):
         self.update_solution_steps_controls_visibility()
@@ -326,20 +328,20 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.analysis_method_callback()
         self.update_harmonic_analysis_title()
 
-    def load_damping_inputs(self, analysis_id: int, global_damping: tuple | list):
-        if sum(global_damping) and analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC, 
-            AnalysisID.COUPLED_HARMONIC,          
-        ]:
+    def load_damping_inputs(self):
 
-            if global_damping[0]:
-                self.lineEdit_mass_multiplier.setText(str(global_damping[0]))
+        if AnalysisID(self.analysis_id).is_harmonic_structural():
 
-            if global_damping[1]:
-                self.lineEdit_stiffness_multiplier.setText(str(global_damping[1]))
+            alpha, beta, eta = self.model.global_damping
 
-            if global_damping[2]:
-                self.lineEdit_constant_structural_coefficient.setText(str(global_damping[2]))
+            if isinstance(alpha, Number):
+                self.lineEdit_mass_multiplier.setText(str(alpha))
+
+            if isinstance(beta, Number):
+                self.lineEdit_stiffness_multiplier.setText(str(beta))
+
+            if isinstance(eta, Number):
+                self.lineEdit_constant_structural_coefficient.setText(str(eta))
 
     def load_frequency_setup_inputs(self, f_min: float, f_max: float, f_step: float):
         self.lineEdit_fmin.setText("{}".format(round(f_min, 14)))
