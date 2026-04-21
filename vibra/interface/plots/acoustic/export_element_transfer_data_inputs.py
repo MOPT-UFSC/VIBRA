@@ -24,10 +24,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._config_window()
         self._reset_variables()
         self._configure_qt_variables()
@@ -39,13 +35,28 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -226,7 +237,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         volume_velocity = -surface_velocity * area
 
         node_ids = np.sort(surface_nodes)
-        pressures = self.solution[node_ids, :]
+        pressures = self.nodal_solution[node_ids, :]
         avg_pressure = np.average(pressures, axis=0)
 
         return avg_pressure / volume_velocity
