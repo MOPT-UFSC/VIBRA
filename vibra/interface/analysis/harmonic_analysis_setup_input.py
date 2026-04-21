@@ -1,4 +1,6 @@
 
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtGui import QIntValidator, Qt
 
@@ -25,6 +27,17 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import (
     HarmonicAnalysisSetupInput_UI,
 )
+
+
+class TabIndex(IntEnum):
+    FREQUENCY_SETUP = 0
+    DAMPING_SETUP = 1
+
+
+class AnalysisMethod(IntEnum):
+    DIRECT = 0
+    MODE_SUPERPOSITION = 1
+
 
 error_title = "Error"
 
@@ -177,14 +190,14 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.comboBox_fstep.addItem(f"{round(_f_step, 14)}")
 
     def analysis_method_callback(self):
-        direct_method = self.comboBox_method.currentText() == "Direct"
+        direct_method = self.comboBox_method.currentIndex() == AnalysisMethod.DIRECT
         self.label_modes_to_expand.setVisible(not direct_method)
         self.lineEdit_modes_to_expand.setVisible(not direct_method)
 
         if direct_method:
             self.lineEdit_modes_to_expand.clear()
             return
-        
+
         analysis_setup = self.model.analysis_setup
         if self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if analysis_setup.analysis_method == "mode_superposition":
@@ -282,10 +295,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         f_step = 5
 
         analysis_setup = self.model.analysis_setup
+
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            f_min = analysis_setup.f_min
-            f_max = analysis_setup.f_max
-            f_step = analysis_setup.f_step
+            if analysis_setup.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
+                f_min = analysis_setup.f_min
+                f_max = analysis_setup.f_max
+                f_step = analysis_setup.f_step
 
         else:
             if self.table_exists:
@@ -299,8 +314,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.comboBox_method.blockSignals(True)
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            self.comboBox_method.removeItem(1)
-            self.tabWidget_main.setTabVisible(1, False)
+            self.comboBox_method.removeItem(AnalysisMethod.MODE_SUPERPOSITION)
+            self.tabWidget_main.setTabVisible(TabIndex.DAMPING_SETUP, False)
 
         elif self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if isinstance(analysis_setup, HarmonicAnalysisSetup):
@@ -471,9 +486,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def enter_setup_callback(self):
-        analysis_id = app().main_window.analysis_toolbar.get_current_analysis_id()
-        analysis_method = "direct" if self.comboBox_method.currentIndex() == 0 else "mode_superposition"
+        method_id = self.comboBox_method.currentIndex()
+        analysis_method = "direct" if method_id == AnalysisMethod.DIRECT else "mode_superposition"
+
         frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
+        analysis_id = app().main_window.analysis_toolbar.get_current_analysis_id()
 
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
             if len(self.user_defined_solution_steps) == 0:
