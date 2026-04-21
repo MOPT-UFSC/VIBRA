@@ -161,7 +161,7 @@ def load_external_mesh_and_solve():
     # Run modal analysis
     harmonic_solver = HarmonicSolver(assembler)
     s = harmonic_solver.solve_direct(print_log=True)
-    solution = s.results
+    solution = s.nodal_solution
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 

@@ -140,7 +140,11 @@ def load_external_mesh_and_solve():
     # model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis setup
-    analysis_setup = ModalAnalysisSetup(100, 0.01)
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.ACOUSTIC_MODAL,
+        modes_number = 100,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)

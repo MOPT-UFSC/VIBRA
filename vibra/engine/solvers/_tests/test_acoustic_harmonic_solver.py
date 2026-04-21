@@ -61,4 +61,4 @@ def test_acoustic_harmonic_modal_solver_solution(acoustic_model):
     modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 
     for i in range(analysis_setup.f_size):
-        assert np.allclose(direct_solutions.results[:, i], modal_solutions.results[:, i])
+        assert np.allclose(direct_solutions.nodal_solution[:, i], modal_solutions.nodal_solution[:, i])

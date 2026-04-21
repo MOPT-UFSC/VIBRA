@@ -21,7 +21,14 @@ def test_harmonic_acoustic():
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Incompatible AnalysisID and AnalysisSetup
-        project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, ModalAnalysisSetup(10, 0.01))
+
+        analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.ACOUSTIC_MODAL,
+        modes_number = 10,
+        sigma_factor = 0.01,
+        )
+
+        project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
         project.run_analysis()
 
     ## Define the analysis frequency setup

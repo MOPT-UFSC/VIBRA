@@ -22,7 +22,14 @@ def test_harmonic_structural():
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Incompatible AnalysisID and AnalysisSetup
-        project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, ModalAnalysisSetup(10, 0.01))
+
+        analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.STRUCTURAL_MODAL,
+        modes_number = 10,
+        sigma_factor = 0.01,
+        )
+
+        project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, analysis_setup)
         project.run_analysis()
 
     # Define the analysis frequency setup

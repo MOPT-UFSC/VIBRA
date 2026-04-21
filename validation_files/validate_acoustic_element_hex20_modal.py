@@ -123,19 +123,23 @@ def load_external_mesh_and_solve():
     for _surf_id in [1, 2]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
-    ## boundary impedance setup
-    Zo = fluid.impedance
+    # ## boundary impedance setup
+    # Zo = fluid.impedance
 
-    data_Z = {
-        "real_values": [Zo],
-        "imag_values": [0],
-    }
+    # data_Z = {
+    #     "real_values": [Zo],
+    #     "imag_values": [0],
+    # }
 
     # model.properties._set_property("specific_impedance", data_Z, surface=1)
     # model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis setup
-    analysis_setup = ModalAnalysisSetup(100, 0.01)
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.ACOUSTIC_MODAL,
+        modes_number = 100,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)

@@ -90,7 +90,7 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
 
     # Solve and store solutions into hdf5 files
     s = harmonic_solver.solve_direct(print_log=True)
-    solution = s.results
+    solution = s.nodal_solution
 
     output_surface_nodes = model.mesh.get_nodes_from_surface(11)
     average_solution = np.average(solution[output_surface_nodes, :], axis=0)

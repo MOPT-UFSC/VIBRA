@@ -47,6 +47,6 @@ def test_structural_harmonic_modal_solver_solution(structural_harmonic_analysis)
 
     for i, _ in enumerate(frequencies):
         assert np.allclose(
-            direct_solutions.results[:, i],
-            modal_solutions.results[:, i],
+            direct_solutions.nodal_solution[:, i],
+            modal_solutions.nodal_solution[:, i],
         )

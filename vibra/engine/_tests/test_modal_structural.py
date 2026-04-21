@@ -21,9 +21,15 @@ def test_modal_structural():
         project.configure_analysis(AnalysisID.STRUCTURAL_MODAL, HarmonicAnalysisSetup)
         project.run_analysis()
 
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.STRUCTURAL_MODAL,
+        modes_number = 10, 
+        sigma_factor = 0.01
+        )
+
     project.configure_analysis(
         AnalysisID.STRUCTURAL_MODAL,
-        ModalAnalysisSetup(10, 0.01),
+        analysis_setup,
     )
 
     with pytest.raises(errors.InvalidModelSetupError):
