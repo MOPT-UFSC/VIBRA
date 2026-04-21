@@ -69,11 +69,12 @@ class HarmonicAnalysisSetup:
     def as_dict(self):
 
         data = {
+            "analysis_method" : self.analysis_method,
             "frequency_spacing": self.frequency_spacing,
             "frequencies": self.get_frequencies(),
             "solution_steps_mask" : self.get_mask(),
             "global_damping": self.global_damping,
-        }
+            }
 
         if self.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
             data.update({
@@ -82,7 +83,10 @@ class HarmonicAnalysisSetup:
                 "f_step": self.f_step,
                 })
 
-        if self.modes_number is not None:
-            data["modes_number"] = self.modes_number
+        elif self.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
+            data.update({
+                "modes_number" : self.modes_number,
+                "sigma_factor" : self.sigma_factor,
+                })
 
         return data
