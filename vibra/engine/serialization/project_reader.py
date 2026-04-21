@@ -377,7 +377,7 @@ class ProjectReader:
             return HarmonicSolution(
                 analysis_id=analysis_id,
                 frequencies=file["frequencies"],
-                results=file["solution"],
+                nodal_solution=file["solution"],
                 status=file["solution_status"],
                 displacement_dof=file.get("displacement_dof"),
             )

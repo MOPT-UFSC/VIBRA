@@ -54,7 +54,7 @@ class HarmonicSolver:
         return HarmonicSolution(
             analysis_id = analysis_id,
             frequencies = self.assembler.model.frequencies,
-            results = self.solution,
+            nodal_solution = self.solution,
             displacement_dof = self.displacement_dof,
         )
 
@@ -179,7 +179,7 @@ class HarmonicSolver:
         return HarmonicSolution(
             analysis_id = analysis_id,
             frequencies = self.assembler.model.frequencies,
-            results = self.solution,
+            nodal_solution = self.solution,
             displacement_dof = self.displacement_dof,
         )
 

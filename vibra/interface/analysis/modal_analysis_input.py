@@ -117,9 +117,9 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
             return True
 
         self.analysis_setup = ModalAnalysisSetup(
-            self.analysis_id,
-            self.modes_number,
-            self.sigma_factor,
+            analysis_id = self.analysis_id,
+            modes_number = self.modes_number,
+            sigma_factor = self.sigma_factor,
         )
 
         self.setup_defined = True
