@@ -2,15 +2,12 @@ from __future__ import annotations
 
 import logging
 from functools import cache
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import Literal
 
 import numpy as np
 from time import perf_counter
 
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
-
-if TYPE_CHECKING:
-    from vibra.engine.project import Project
+from vibra.engine.model import Model
 
 AcousticPlotTypes = Literal[
     "absolute_animation",
@@ -22,61 +19,32 @@ AcousticPlotTypes = Literal[
 
 
 class AcousticPostprocessing:
-    def __init__(
-        self,
-        project: Project = None,
-        acoustic_modal_solver: ModalSolver = None,
-        acoustic_harmonic_solver: HarmonicSolver = None,
-    ):
-        if all(v is None for v in [project, acoustic_modal_solver, acoustic_harmonic_solver]):
-            raise ValueError("At least one of 'project', 'acoustic_modal_solver', or 'acoustic_harmonic_solver' must be provided.")
-        self.project = project
-        self.acoustic_modal_solver = acoustic_modal_solver
-        self.acoustic_harmonic_solver = acoustic_harmonic_solver
+    def __init__(self, model: Model):
+        if not isinstance(model, Model):
+            raise ValueError("The model argument must be of type Model.")
 
-    @property
-    def harmonic_solver(self) -> Optional[HarmonicSolver]:
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver):
-            return self.project.solver
-        return self.acoustic_harmonic_solver
-
-    @property
-    def modal_solver(self) -> Optional[ModalSolver]:
-        if (self.project is not None) and isinstance(self.project.solver, ModalSolver):
-            return self.project.solver
-        return self.acoustic_modal_solver
-
-    @property
-    def current_solver(self):
-        if isinstance(self.acoustic_modal_solver, ModalSolver):
-            return self.acoustic_modal_solver
-
-        if isinstance(self.acoustic_harmonic_solver, HarmonicSolver):
-            return self.acoustic_harmonic_solver
-
-    @property
-    def model(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
-            return self.project.model
-        else:
-            solver = self.current_solver
-            return solver.assembler.model
+        self.model = model
 
     @property
     def mesh(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
-            return self.project.model.mesh
-        else:
-            solver = self.current_solver
-            return solver.assembler.model.mesh
+        return self.model.mesh
 
     @property
     def solution(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
-            return self.project.model.solution
-        else:
-            solver = self.current_solver
-            return solver.solution
+        return self.model.solution
+    
+    @property
+    def acoustic_element_2d(self):
+        if self.model.acoustic_element_2d is None:
+            self.model.set_acoustic_elements()
+        return self.model.acoustic_element_2d
+
+    @property
+    def acoustic_element_3d(self):
+        if self.model.acoustic_element_3d is None:
+            self.model.set_acoustic_elements()
+        return self.model.acoustic_element_3d
+
 
     @cache
     def get_min_max_values_of_pressures(self, column: int, plot_type: str, is_modal: bool = False):
@@ -141,6 +109,7 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
+
     def compute_acoustic_pressure_field(
         self,
         index: int,
@@ -178,6 +147,7 @@ class AcousticPostprocessing:
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
 
+
     def compute_particle_velocity(
         self,
         component_label: str,
@@ -210,6 +180,7 @@ class AcousticPostprocessing:
         else:
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             return np.average(array_particle_velocities_Vj, axis=0)
+
 
     def compute_acoustic_impedance(
         self,
@@ -255,6 +226,7 @@ class AcousticPostprocessing:
             surface_impedance = pressures / array_particle_velocities_Vj
             return np.average(surface_impedance, axis=0)
 
+
     def compute_surface_absorption_coefficient(
         self,
         surface_id: int | None = None,
@@ -282,6 +254,7 @@ class AcousticPostprocessing:
         alpha = 1 - (np.abs(R)) ** 2
 
         return alpha
+
 
     def get_particle_velocity_from_surface(
         self,
@@ -314,11 +287,7 @@ class AcousticPostprocessing:
         if rho is None:
             return zeros, None
 
-        element_3d = self.model.acoustic_element_3d
-
-        if element_3d is None:
-            self.harmonic_solver.assembler.define_acoustic_elements()
-            element_3d = self.harmonic_solver.assembler.element_3d
+        element_3d = self.acoustic_element_3d
 
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
@@ -391,6 +360,7 @@ class AcousticPostprocessing:
         # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
         return particle_velocities
+
 
     def compute_transmission_loss(
         self,
@@ -543,6 +513,7 @@ class AcousticPostprocessing:
 
         return frequencies, transmission_loss
 
+
     def integrate_surface_sound_power(
         self, surface_id: int, pressures: np.ndarray, particle_velocities: np.ndarray, dB_scale: bool = True
     ) -> np.ndarray:
@@ -566,10 +537,8 @@ class AcousticPostprocessing:
             The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
         """
 
-        assembler = self.harmonic_solver.assembler
-
-        nodes = np.sort(assembler.model.mesh.get_nodes_from_surface(surface_id))
-        surface_connectivities = assembler.model.mesh.get_connectivity_from_surface(surface_id)
+        nodes = np.sort(self.mesh.get_nodes_from_surface(surface_id))
+        surface_connectivities = self.mesh.get_connectivity_from_surface(surface_id)
 
         number_nodes = len(nodes)
         map_nodes = dict(zip(nodes, np.arange(number_nodes)))
@@ -580,10 +549,7 @@ class AcousticPostprocessing:
         if len(particle_velocities.shape) == 1:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
-        element_2d = self.harmonic_solver.assembler.element_2d
-        if element_2d is None:
-            assembler.define_acoustic_elements()
-            element_2d = assembler.element_2d
+        element_2d = self.acoustic_element_2d
 
         sound_power = 0.0
         for i, e_connect in enumerate(surface_connectivities):
@@ -598,6 +564,7 @@ class AcousticPostprocessing:
             return 10 * np.log10(sound_power / 1e-12)
 
         return sound_power
+
 
     def compute_noise_reduction(self, input_surface_id: int, output_surface_id: int):
         """

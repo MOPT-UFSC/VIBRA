@@ -1467,7 +1467,7 @@ class AcousticAssembler:
 
         Zpp_A = self.integration_data_Zpp.get("surface_data_A")
         Zpp_B = self.integration_data_Zpp.get("surface_data_B")
-        non_linear = self.integration_data_Zpp.get("non_linear")
+        # non_linear = self.integration_data_Zpp.get("non_linear")
         connectivities_A = self.integration_data_Zpp.get("connectivities_A")
         connectivities_B = self.integration_data_Zpp.get("connectivities_B")
 

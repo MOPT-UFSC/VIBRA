@@ -168,7 +168,7 @@ def load_external_mesh_and_solve():
         return
 
     t0 = time()
-    acoustic_post = AcousticPostprocessing(acoustic_harmonic_solver=harmonic_solver)
+    acoustic_post = AcousticPostprocessing(model)
 
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, 1)
     output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 1)

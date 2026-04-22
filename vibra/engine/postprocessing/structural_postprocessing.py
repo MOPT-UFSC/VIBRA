@@ -1,74 +1,41 @@
 from __future__ import annotations
 
 from functools import cache
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from vibra.engine.project import Project
-
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.engine.model import Model
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
 
 class StructuralPostprocessing:
-    def __init__(
-        self,
-        project: Project = None,
-        structural_modal_solver: ModalSolver = None,
-        structural_harmonic_solver: HarmonicSolver = None,
-    ):
-        if all(v is None for v in [project, structural_modal_solver, structural_harmonic_solver]):
-            raise ValueError("At least one of 'project', 'structural_modal_solver', or 'structural_harmonic_solver' must be provided.")
-        self.project = project
-        self.structural_harmonic_solver = structural_harmonic_solver
-        self.structural_modal_solver = structural_modal_solver
+    def __init__(self, model: Model):
+        if not isinstance(model, Model):
+            raise ValueError("The model argument must be of type Model.")
 
-    @property
-    def harmonic_solver(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver):
-            return self.project.solver
-        return self.structural_harmonic_solver
-
-    @property
-    def modal_solver(self):
-        if (self.project is not None) and isinstance(self.project.solver, ModalSolver):
-            return self.project.solver
-        return self.structural_modal_solver
-
-    @property
-    def current_solver(self):
-        if isinstance(self.structural_modal_solver, ModalSolver):
-            return self.structural_modal_solver
-
-        if isinstance(self.structural_harmonic_solver, HarmonicSolver):
-            return self.structural_harmonic_solver
-
-    @property
-    def model(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
-            return self.project.model
-        else:
-            solver = self.current_solver
-            return solver.assembler.model
+        self.model = model
 
     @property
     def mesh(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
-            return self.project.model.mesh
-        else:
-            solver = self.current_solver
-            return solver.assembler.model.mesh
+        return self.model.mesh
 
     @property
     def solution(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver | ModalSolver):
-            return self.project.model.solution
-        else:
-            solver = self.current_solver
-            return solver.solution
+        return self.model.solution
+    
+    @property
+    def acoustic_element_2d(self):
+        if self.model.acoustic_element_2d is None:
+            self.model.set_acoustic_elements()
+        return self.model.acoustic_element_2d
+
+    @property
+    def acoustic_element_3d(self):
+        if self.model.acoustic_element_3d is None:
+            self.model.set_acoustic_elements()
+        return self.model.acoustic_element_3d
 
 
     @cache
@@ -135,6 +102,7 @@ class StructuralPostprocessing:
                 r_max = max_abs
 
         return r_min, r_max
+
 
     def compute_structural_displacement_field(
             self, 

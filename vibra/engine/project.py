@@ -316,7 +316,7 @@ class Project:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = StructuralPostprocessing(self)
+        self.postprocessing = StructuralPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices()
 
@@ -336,7 +336,7 @@ class Project:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, project=self)
-        self.postprocessing = StructuralPostprocessing(self)
+        self.postprocessing = StructuralPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices_and_excitations()
 
@@ -362,7 +362,7 @@ class Project:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = AcousticPostprocessing(self)
+        self.postprocessing = AcousticPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices()
 
@@ -382,7 +382,7 @@ class Project:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, project=self)
-        self.postprocessing = AcousticPostprocessing(self)
+        self.postprocessing = AcousticPostprocessing(self.model)
 
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties()
@@ -409,9 +409,9 @@ class Project:
     def update_post_processing(self):
         self.postprocessing = None
         if AnalysisID(self.analysis_id).is_acoustic():
-            self.postprocessing = AcousticPostprocessing(self)
+            self.postprocessing = AcousticPostprocessing(self.model)
         elif AnalysisID(self.analysis_id).is_structural():
-            self.postprocessing = StructuralPostprocessing(self)
+            self.postprocessing = StructuralPostprocessing(self.model)
 
     def get_acoustic_postprocessing(self) -> AcousticPostprocessing:
         if not isinstance(self.postprocessing, AcousticPostprocessing):
