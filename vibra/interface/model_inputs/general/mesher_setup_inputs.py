@@ -493,6 +493,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.action_mesh_workspace_callback()
         app().main_window.update_plots()
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+        app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
         app().main_window.update_symbols()
 
