@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+# from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -234,6 +234,7 @@ class AnalysisToolbar(QToolBar):
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
+        return
 
         # disable the run analysis button if the mesh has not been configured
         if not app().project.is_mesh_configured():
@@ -246,12 +247,12 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis(self, is_resume: bool = False):
 
-        if not self.model.generated_mesh:
-            obj = MesherSetupInputs(close_after_generate = True)
-            if not obj.complete:
-                return
+        # if not self.model.generated_mesh:
+        #     obj = MesherSetupInputs(close_after_generate = True)
+        #     if not obj.complete:
+        #         return
 
-            app().main_window.update_plots()
+        #     app().main_window.update_plots()
 
         if self.model.analysis_setup is None:
             self.configure_analysis()
@@ -331,7 +332,11 @@ class AnalysisToolbar(QToolBar):
 
         # disable run_analysis button if there are disconnected nodes or collapsed elements
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(self.mesh.collapsed_3d_elements or self.mesh.collapsed_2d_elements or self.mesh.collapsed_1d_elements)
+        collapsed_elements = bool(
+            self.mesh.collapsed_3d_elements or 
+            self.mesh.collapsed_2d_elements or 
+            self.mesh.collapsed_1d_elements
+            )
 
         match self.get_current_analysis_id():
             case AnalysisID.STRUCTURAL_HARMONIC:

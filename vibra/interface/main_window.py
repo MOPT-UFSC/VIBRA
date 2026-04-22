@@ -991,7 +991,7 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.renderer_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
-        self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+        # self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
         self.action_model_workspace_callback()
 
     def import_mesh(self, path: Path | str):
@@ -1010,7 +1010,7 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.renderer_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
-        self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
+        # self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
         self.action_mesh_workspace_callback()
 
     def open_project(self, project_path: str | Path | None = None):
