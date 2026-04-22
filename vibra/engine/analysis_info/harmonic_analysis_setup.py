@@ -1,4 +1,4 @@
-from dataclasses import KW_ONLY, dataclass, field, fields
+from dataclasses import KW_ONLY, dataclass, field
 from typing import List, Optional
 
 import numpy as np
@@ -43,9 +43,7 @@ class HarmonicAnalysisSetup:
             self.f_step,
             dtype=float,
         )
-        # TODO: This is unecessarily expensive, simplify it
         mask = frequencies <= self.f_max
-
         return frequencies[mask]
 
     def as_dict(self):
