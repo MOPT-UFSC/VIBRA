@@ -855,17 +855,19 @@ class MainWindow(MainWindow_UI):
 
     def save_project_as(self, path: str):
         def save_data(path):
+            project = app().project
+
             path = Path(path)
             app().config.add_recent_file(path)
             app().config.write_last_folder_path_in_file("project_folder", path)
             logging.info("Saving project data... [30/100]")
 
-            app().project.save_project(path, name=path.stem)
+            project.save_project(path, name=path.stem)
             logging.info("Saving project data... [75/100]")
 
             # Update interface
             self.update_recents_menu()
-            self.update_window_title(path)
+            self.setWindowTitle(project.model.name)
             self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
 
@@ -968,12 +970,6 @@ class MainWindow(MainWindow_UI):
     #     self.render_tools_toolbar.setVisible(True)
 
     #     return False
-
-    def update_window_title(self, project_path: str | Path):
-        if isinstance(project_path, str):
-            project_path = Path(project_path)
-        project_name = project_path.stem
-        self.setWindowTitle(f"{project_name}")
 
     def import_geometry(self, path: Path | str):
         app().config.write_last_folder_path_in_file(

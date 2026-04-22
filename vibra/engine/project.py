@@ -27,7 +27,7 @@ from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
-from vibra.engine.solution import ModalSolution, HarmonicSolution
+from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
@@ -142,11 +142,13 @@ class Project:
         """
         Unpacks the vibra file into the working directory and reads data from it.
         """
+        path = Path(path)
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
+        self.model.name = path.stem
         self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
-        self.save_path = Path(path)
+        self.save_path = path
         self.needs_saving = False
         return self
 
