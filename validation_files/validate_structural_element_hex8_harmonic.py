@@ -10,6 +10,7 @@ from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
+from vibra.engine.solution.harmonic_solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
@@ -157,24 +158,28 @@ def load_external_mesh_and_solve():
     # Set the analysis frequency setup
     assembler.assemble_global_matrices_and_excitations(reorder=False)
 
-    t0 = time()
     # Run modal analysis
+    t0 = time()
     harmonic_solver = HarmonicSolver(assembler)
-    s = harmonic_solver.solve_direct(print_log=True)
-    solution = s.nodal_solution
+    model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+
+    if not isinstance(model.solution, HarmonicSolution):
+        return
 
     # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
     plot_type = "absolute"
 
-    compare_results(4882, dofs_per_node, "uz", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(4882, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(5522, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(6210, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(6269, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    nodal_solution = model.solution.nodal_solution
+
+    compare_results(4882, dofs_per_node, "uz", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(4882, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(5522, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(6210, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(6269, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
     plt.show()
 
 
@@ -183,12 +188,12 @@ def compare_results(
     dofs_per_node: int,
     dof_label: str,
     frequencies: np.ndarray,
-    solution: np.ndarray,
+    nodal_solution: np.ndarray,
     esf: bool,
     plot_type: str = "absolute",
 ):
 
-    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
+    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, nodal_solution)
     freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label, esf)
 
     title = f"Harmonic response at node {node_id} - {'(ESF included)' if esf else '(ESF excluded)'}"
@@ -237,14 +242,14 @@ def get_apdl_reference_results(
     return freq_apdl, response_apdl
 
 
-def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, solution: np.ndarray) -> np.ndarray:
+def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, nodal_solution: np.ndarray) -> np.ndarray:
 
     dof_labels = ["ux", "uy", "uz"]
     local_dof = dof_labels.index(dof_label)
 
     index = int((apdl_node_id - 1) * dofs_per_node) + local_dof
 
-    return solution[index, :]
+    return nodal_solution[index, :]
 
 
 if __name__ == "__main__":

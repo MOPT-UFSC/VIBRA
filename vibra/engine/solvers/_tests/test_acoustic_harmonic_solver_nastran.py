@@ -89,11 +89,11 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     frequencies = model.frequencies
 
     # Solve and store solutions into hdf5 files
-    s = harmonic_solver.solve_direct(print_log=True)
-    solution = s.nodal_solution
+    model.solution = harmonic_solver.solve_direct(print_log=True)
+    nodal_solution = model.solution.nodal_solution
 
     output_surface_nodes = model.mesh.get_nodes_from_surface(11)
-    average_solution = np.average(solution[output_surface_nodes, :], axis=0)
+    average_solution = np.average(nodal_solution[output_surface_nodes, :], axis=0)
 
     results_path = dirname(path) + "/acoustic_pressures_reference.xlsx"
     external_data = DataImporter.load_spreadsheet_data_for_validation(results_path)

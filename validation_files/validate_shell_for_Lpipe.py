@@ -170,11 +170,11 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # solution = modal_solver.solve()
-    solution = harmonic_solver.solve_direct(print_log=True)
+    model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
 
-    if not isinstance(solution, HarmonicSolution):
+    if not isinstance(model.solution, HarmonicSolution):
         return
 
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
@@ -195,8 +195,10 @@ def load_external_mesh_and_solve():
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
 
-    response_ux = np.average(solution.nodal_solution[ux_rows, :], axis=0).flatten()
-    response_uy = np.average(solution.nodal_solution[uy_rows, :], axis=0).flatten()
+    nodal_solution = model.solution.nodal_solution
+
+    response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
+    response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")

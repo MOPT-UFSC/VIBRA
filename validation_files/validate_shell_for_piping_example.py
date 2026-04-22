@@ -176,11 +176,11 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # solution = modal_solver.solve()
-    solution = harmonic_solver.solve_direct(print_log=True)
+    model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
 
-    if not isinstance(solution, HarmonicSolution):
+    if not isinstance(model.solution, HarmonicSolution):
         return
 
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
@@ -199,16 +199,18 @@ def load_external_mesh_and_solve():
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
 
-    top_right_face_response_ux = np.average(solution.nodal_solution[ux_rows, :], axis=0).flatten()
-    top_right_face_response_uy = np.average(solution.nodal_solution[uy_rows, :], axis=0).flatten()
+    nodal_solution = model.solution.nodal_solution
+
+    top_right_face_response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
+    top_right_face_response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
 
     gdof = dof_per_node * branch2_top_face_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
 
-    branch2_top_face_response_ux = np.average(solution.nodal_solution[ux_rows, :], axis=0).flatten()
-    branch2_top_face_response_uy = np.average(solution.nodal_solution[uy_rows, :], axis=0).flatten()
+    branch2_top_face_response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
+    branch2_top_face_response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
