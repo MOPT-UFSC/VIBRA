@@ -1,4 +1,4 @@
-from dataclasses import KW_ONLY, dataclass, field
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 import numpy as np
@@ -8,9 +8,8 @@ from vibra.utils.dataclass_utils import ignore_extra_kwargs
 
 
 @ignore_extra_kwargs
-@dataclass
+@dataclass(kw_only=True)
 class HarmonicAnalysisSetup:
-    _: KW_ONLY
     analysis_id: int = AnalysisID.NO_ANALYSIS
     frequency_spacing: str = FrequencySpacing.EQUALLY_DISTRIBUTED
     f_min: float | None = None
