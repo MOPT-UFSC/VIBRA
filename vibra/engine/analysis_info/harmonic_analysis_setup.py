@@ -31,7 +31,7 @@ class HarmonicAnalysisSetup:
             return np.array(self.solution_steps_mask, dtype=bool)
         return np.ones(self.f_size, dtype=bool)
 
-    def get_frequencies(self):
+    def get_frequencies(self) -> np.ndarray:
         if self.frequency_spacing == FrequencySpacing.USER_DEFINED:
             return self.frequencies
 
@@ -72,3 +72,9 @@ class HarmonicAnalysisSetup:
             )
 
         return data
+
+    def __iter__(self):
+        yield from self.get_frequencies()
+
+    def __len__(self):
+        return self.f_size
