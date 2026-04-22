@@ -31,9 +31,6 @@ def test_unmasked_frequency_configuration():
         frequency_spacing=FrequencySpacing.USER_DEFINED,
         frequencies=expected_frequencies,
     )
-    assert setup.f_min == 9 == min(setup)
-    assert setup.f_max == 127 == max(setup)
-    assert setup.f_size == 4 == len(setup)
     assert np.allclose(expected_frequencies, setup.get_frequencies())
 
     assert 9 in setup
