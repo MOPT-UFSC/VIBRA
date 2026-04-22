@@ -168,7 +168,7 @@ class HarmonicSolver:
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(
                 solution,
-                modal_solution.modal_shape,
+                modal_solution.modal_shapes,
                 modal_solution.natural_frequencies,
                 print_log,
                 is_resume,

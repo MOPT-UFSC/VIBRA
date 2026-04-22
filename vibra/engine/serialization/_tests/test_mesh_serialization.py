@@ -36,7 +36,7 @@ def test_write_and_read_mesh_project(fluid, datadir: Path):
     project_b.load_project(project_path)
 
     project_path.unlink()
-    assert np.allclose(solution_a.modal_shape, project_b.model.solution.nodal_solution[:])
+    assert np.allclose(solution_a.modal_shapes, project_b.model.solution.nodal_solution[:])
 
 
 def test_compare_interface_based_mesh_project():
