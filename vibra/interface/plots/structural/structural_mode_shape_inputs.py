@@ -1,4 +1,4 @@
-from vibra.engine.solvers import ModalSolver
+from vibra.engine.solution import ModalSolution
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QTreeWidgetItem
@@ -154,13 +154,13 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         return plot_types[index]
 
     def load_natural_frequencies(self):
-        solver = app().project.solver
-        if not isinstance(solver, ModalSolver):
+        solution = app().project.model.solution
+        if not isinstance(solution, ModalSolution):
             return
-        
+
         self._configure_qt_variables()
 
-        self.natural_frequencies = list(solver.natural_frequencies)
+        self.natural_frequencies = list(solution.natural_frequencies)
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
 

@@ -394,7 +394,7 @@ class ProjectReader:
             return ModalSolution(
                 analysis_id = analysis_id,
                 natural_frequencies = file["frequencies"],
-                modal_shape = file["solution"],
+                modal_shapes = file["solution"],
                 displacement_dof = file.get("displacement_dof"),
                 complex_natural_frequencies = file.get("complex_natural_frequencies"),
                 )

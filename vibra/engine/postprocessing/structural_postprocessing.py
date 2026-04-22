@@ -87,16 +87,14 @@ class StructuralPostprocessing:
         """
 
         if is_modal:
-            solver = self.modal_solver
-            nodal_solution = self.solution.modal_shape
+            nodal_solution = self.solution.nodal_displacements
         else:
-            solver = self.harmonic_solver
-            nodal_solution = self.solution.nodal_solution
+            nodal_solution = self.solution.nodal_displacements
 
         if not nodal_solution.any():
             return
 
-        data = nodal_solution[solver.displacement_dof, column]
+        data = nodal_solution[:, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -138,19 +136,23 @@ class StructuralPostprocessing:
 
         return r_min, r_max
 
-    def compute_structural_displacement_field(self, column: int, phase_rad: float, displacement_type: DisplacementTypes, is_modal: bool = False):
+    def compute_structural_displacement_field(
+            self, 
+            column: int,
+            phase_rad: float, 
+            displacement_type: DisplacementTypes, 
+            is_modal: bool = False,
+            ):
 
         if is_modal:
-            solver = self.modal_solver
-            nodal_solution = self.solution.modal_shape
+            nodal_solution = self.solution.nodal_displacements
         else:
-            solver = self.harmonic_solver
-            nodal_solution = self.solution.nodal_solution
+            nodal_solution = self.solution.nodal_displacements
 
         if not nodal_solution.any():
             return
 
-        displacements_complex: np.ndarray = nodal_solution[solver.displacement_dof, column]
+        displacements_complex: np.ndarray = nodal_solution[:, column]
 
         amplitudes = np.abs(displacements_complex)
         phases = np.angle(displacements_complex)

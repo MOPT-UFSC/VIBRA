@@ -37,9 +37,9 @@ class HarmonicSolution(CommonSolution):
         return not all(self.status)
 
     @cached_property
-    def nodal_solution_reordered(self) -> Array2D:
-        reordered = self.modal_shape[self.displacement_dof, :]
-        return self._immutable_array(reordered)
+    def nodal_displacements(self) -> Array2D:
+        _nodal_displacements = self.nodal_solution[self.displacement_dof, :]
+        return self._immutable_array(_nodal_displacements)
 
     def get_row(self, row_index: int) -> Array1D:
         return self.nodal_solution[row_index, :]

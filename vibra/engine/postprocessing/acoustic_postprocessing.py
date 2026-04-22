@@ -95,7 +95,7 @@ class AcousticPostprocessing:
         """
 
         if is_modal:
-            data = self.solution.modal_shape[:, column]
+            data = self.solution.modal_shapes[:, column]
         else:
             data = self.solution.nodal_solution[:, column]
 
@@ -149,7 +149,7 @@ class AcousticPostprocessing:
         is_modal: bool = False,
     ):
         if is_modal:
-            nodal_solution = self.solution.modal_shape
+            nodal_solution = self.solution.modal_shapes
         else:
             nodal_solution = self.solution.nodal_solution
 
