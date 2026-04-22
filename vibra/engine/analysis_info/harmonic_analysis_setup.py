@@ -1,28 +1,10 @@
-from dataclasses import KW_ONLY, dataclass, field, fields
-from functools import wraps
+from dataclasses import KW_ONLY, dataclass, field
 from typing import List, Optional
 
 import numpy as np
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisMethod, FrequencySpacing
-
-
-def ignore_extra_kwargs(cls):
-    original_init = cls.__init__
-
-    @wraps(original_init)
-    def new_init(self, *args, **kwargs):
-        
-        # expected fields of original dataclass
-        expected_fields = {f.name for f in fields(cls)}
-
-        # filter the unnecessary kwargs
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in expected_fields}
-
-        original_init(self, *args, **filtered_kwargs)
-
-    cls.__init__ = new_init
-    return cls
+from vibra.utils.dataclass_utils import ignore_extra_kwargs
 
 
 @ignore_extra_kwargs
@@ -56,37 +38,39 @@ class HarmonicAnalysisSetup:
             return self.frequencies
 
         frequencies = np.arange(
-        self.f_min,
-        self.f_max + self.f_step,
-        self.f_step,
-        dtype=float,
+            self.f_min,
+            self.f_max + self.f_step,
+            self.f_step,
+            dtype=float,
         )
-        # TODO: This is unecessarily expensive, simplify it
         mask = frequencies <= self.f_max
-
         return frequencies[mask]
 
     def as_dict(self):
 
         data = {
-            "analysis_method" : self.analysis_method,
+            "analysis_method": self.analysis_method,
             "frequency_spacing": self.frequency_spacing,
             "frequencies": self.get_frequencies(),
-            "solution_steps_mask" : self.get_mask(),
+            "solution_steps_mask": self.get_mask(),
             "global_damping": self.global_damping,
-            }
+        }
 
         if self.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
-            data.update({
-                "f_min": self.f_min,
-                "f_max": self.f_max,
-                "f_step": self.f_step,
-                })
+            data.update(
+                {
+                    "f_min": self.f_min,
+                    "f_max": self.f_max,
+                    "f_step": self.f_step,
+                }
+            )
 
         if self.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
-            data.update({
-                "modes_number" : self.modes_number,
-                "sigma_factor" : self.sigma_factor,
-                })
+            data.update(
+                {
+                    "modes_number": self.modes_number,
+                    "sigma_factor": self.sigma_factor,
+                }
+            )
 
         return data
