@@ -55,12 +55,14 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
     def _configure_qt_variables(self):
         #
         self.frame_transparency.setVisible(False)
-        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-        #
+
         solution = app().project.model.solution
-        if isinstance(solution, ModalSolution) and solution.complex_natural_frequencies.size:
+        if not isinstance(solution, ModalSolution):
+            return
+
+        if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
             widths = [60, 160]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -160,7 +162,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         self._configure_qt_variables()
 
-        if len(solution.complex_natural_frequencies):
+        if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
             self.natural_frequencies = list(solution.complex_natural_frequencies)
         else:
             self.natural_frequencies = list(solution.natural_frequencies)

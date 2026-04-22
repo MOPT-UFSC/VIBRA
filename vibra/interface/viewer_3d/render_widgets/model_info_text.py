@@ -888,7 +888,7 @@ def analysis_info_text(frequency_index: int):
             frequencies = solution.natural_frequencies
 
         if analysis_id == AnalysisID.ACOUSTIC_MODAL:
-            if len(solution.complex_natural_frequencies):
+            if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
                 frequencies = list(solution.complex_natural_frequencies)
             else:
                 frequencies = list(solution.natural_frequencies)

@@ -11,6 +11,8 @@ from vibra.engine.analysis_info import (
     FrequencySpacing,
     HarmonicAnalysisSetup,
 )
+from vibra.engine.analysis_info.analysis_enums import AnalysisMethod
+
 from vibra.interface import error_title
 from vibra.interface.analysis.solutions_step_display_input import (
     SolutionStepsDisplayInput,
@@ -36,7 +38,7 @@ class TabType(IntEnum):
     DAMPING_SETUP = 1
 
 
-class AnalysisMethod(IntEnum):
+class AnalysisMethodIndex(IntEnum):
     DIRECT = 0
     MODE_SUPERPOSITION = 1
 
@@ -189,7 +191,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.comboBox_fstep.addItem(f"{round(_f_step, 14)}")
 
     def analysis_method_callback(self):
-        direct_method = self.comboBox_method.currentIndex() == AnalysisMethod.DIRECT
+        direct_method = self.comboBox_method.currentIndex() == AnalysisMethodIndex.DIRECT
         self.label_modes_to_expand.setVisible(not direct_method)
         self.lineEdit_modes_to_expand.setVisible(not direct_method)
 
@@ -198,8 +200,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
 
         analysis_setup = self.model.analysis_setup
-        if self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            if analysis_setup.analysis_method == "mode_superposition":
+        if AnalysisID(self.analysis_id).is_harmonic_structural():
+            if analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
                 modes_to_expand = analysis_setup.modes_number
                 self.lineEdit_modes_to_expand.setText(f"{modes_to_expand}")
         else:
@@ -314,13 +316,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.comboBox_method.blockSignals(True)
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            self.comboBox_method.removeItem(AnalysisMethod.MODE_SUPERPOSITION)
+            self.comboBox_method.removeItem(AnalysisMethodIndex.MODE_SUPERPOSITION)
             self.tabWidget_main.setTabVisible(TabType.DAMPING_SETUP, False)
 
-        elif self.analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+        elif AnalysisID(self.analysis_id).is_harmonic_structural():
             if isinstance(analysis_setup, HarmonicAnalysisSetup):
-                method = analysis_setup.analysis_method.capitalize().replace("_", " ")
-                self.comboBox_method.setCurrentText(method)
+                if analysis_setup.analysis_method == AnalysisMethod.DIRECT:
+                    self.comboBox_method.setCurrentIndex(AnalysisMethodIndex.DIRECT)
+                else:
+                    self.comboBox_method.setCurrentIndex(AnalysisMethodIndex.MODE_SUPERPOSITION)
 
         self.comboBox_method.blockSignals(False)
         self.analysis_method_callback()
@@ -486,8 +490,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
 
     def enter_setup_callback(self):
-        method_id = self.comboBox_method.currentIndex()
-        analysis_method = "direct" if method_id == AnalysisMethod.DIRECT else "mode_superposition"
+        if self.comboBox_method.currentIndex() == AnalysisMethodIndex.DIRECT:
+            analysis_method = AnalysisMethod.DIRECT
+        else:
+            analysis_method = AnalysisMethod.MODE_SUPERPOSITION
 
         frequency_spacing = self.comboBox_frequency_spacing.currentText().lower()
         analysis_id = app().main_window.analysis_toolbar.get_current_analysis_id()
@@ -509,7 +515,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             "frequency_spacing" : frequency_spacing,
         }
 
-        if analysis_method == "mode_superposition":
+        if analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             if self.lineEdit_modes_to_expand.text() == "":
                 self.lineEdit_modes_to_expand.setFocus()
                 return True
@@ -535,7 +541,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
                 analysis_setup_data.update(freq_data)
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
+        if AnalysisID(analysis_id).is_harmonic_structural():
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
 
         analysis_setup = self.model.get_harmonic_analysis_setup(**analysis_setup_data)

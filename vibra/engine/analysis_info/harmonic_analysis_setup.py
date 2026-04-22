@@ -83,7 +83,7 @@ class HarmonicAnalysisSetup:
                 "f_step": self.f_step,
                 })
 
-        elif self.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
+        if self.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             data.update({
                 "modes_number" : self.modes_number,
                 "sigma_factor" : self.sigma_factor,
