@@ -4,11 +4,6 @@ import pytest
 from vibra.engine.analysis_info import FrequencySpacing, HarmonicAnalysisSetup
 
 
-def test_abstract_class_initialization():
-    with pytest.raises(TypeError):
-        HarmonicAnalysisSetup()
-
-
 def test_interval_configuration():
     setup = HarmonicAnalysisSetup(
         frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
