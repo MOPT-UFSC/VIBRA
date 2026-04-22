@@ -25,7 +25,6 @@ class HarmonicAnalysisSetup:
 
     @property
     def f_size(self):
-        # TODO: Find an analytic expression to calculate this more efficiently
         return len(self.get_frequencies())
 
     def get_mask(self):
