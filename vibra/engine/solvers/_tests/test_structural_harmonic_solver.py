@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import numpy as np
+from typing_extensions import TYPE_CHECKING
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
 
-from typing_extensions import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 

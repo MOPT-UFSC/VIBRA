@@ -23,9 +23,9 @@ def test_harmonic_acoustic():
         # Incompatible AnalysisID and AnalysisSetup
 
         analysis_setup = ModalAnalysisSetup(
-        analysis_id = AnalysisID.ACOUSTIC_MODAL,
-        modes_number = 10,
-        sigma_factor = 0.01,
+            analysis_id=AnalysisID.ACOUSTIC_MODAL,
+            modes_number=10,
+            sigma_factor=0.01,
         )
 
         project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
@@ -33,17 +33,14 @@ def test_harmonic_acoustic():
 
     ## Define the analysis frequency setup
     analysis_setup = project.model.get_harmonic_analysis_setup(
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
-        f_min = 1000,
-        f_max = 10000,
-        f_step = 1000,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
+        f_min=1000,
+        f_max=10000,
+        f_step=1000,
     )
 
-    project.configure_analysis(
-        AnalysisID.ACOUSTIC_HARMONIC,
-        analysis_setup
-    )
+    project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Fluid not configured
