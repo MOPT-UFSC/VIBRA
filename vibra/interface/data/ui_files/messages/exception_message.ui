@@ -9,14 +9,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>320</height>
+    <width>320</width>
+    <height>240</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>400</width>
-    <height>320</height>
+    <width>240</width>
+    <height>240</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -178,6 +178,9 @@
         </property>
         <property name="wordWrap">
          <bool>true</bool>
+        </property>
+        <property name="margin">
+         <number>10</number>
         </property>
        </widget>
       </item>

@@ -22,7 +22,6 @@ class ExceptionMessage(ExceptionMessage_UI):
             self.setWindowIcon(get_error_icon(QColor(255, 0, 0, 200)))
             self.setWindowTitle("Error")
 
-
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
         else:
@@ -41,6 +40,7 @@ class ExceptionMessage(ExceptionMessage_UI):
         self.error_message.setText(message)
         
         self.ok_button.clicked.connect(self.close)
+        self.adjustSize()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

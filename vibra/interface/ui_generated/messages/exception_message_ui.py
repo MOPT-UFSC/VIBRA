@@ -24,8 +24,8 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-        Dialog.resize(400, 320)
-        Dialog.setMinimumSize(QSize(400, 320))
+        Dialog.resize(320, 300)
+        Dialog.setMinimumSize(QSize(200, 200))
         Dialog.setMaximumSize(QSize(600, 600))
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
@@ -83,6 +83,7 @@ class Ui_Dialog(object):
         self.error_message.setTextFormat(Qt.TextFormat.PlainText)
         self.error_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.error_message.setWordWrap(True)
+        self.error_message.setMargin(10)
 
         self.verticalLayout_2.addWidget(self.error_message)
 
