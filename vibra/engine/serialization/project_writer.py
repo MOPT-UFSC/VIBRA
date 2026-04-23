@@ -20,6 +20,7 @@ from vibra.engine.properties.libraries.material_library import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_json, update_json, write_image, write_json
+from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
 
@@ -272,6 +273,9 @@ class ProjectWriter:
     def write_harmonic_solution(self, solver: HarmonicSolver):
         # In this case the solution was already saved
         if isinstance(solver.nodal_solution, LazyHDF5MatrixLoader):
+            return
+
+        if isinstance(solver.solution, LazyHarmonicSolution):
             return
 
         logging.info("Writing harmonic solution")

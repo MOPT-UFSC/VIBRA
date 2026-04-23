@@ -21,7 +21,6 @@ class LazyHarmonicSolution(HarmonicSolution):
         self.frequencies = LazyArray(hs, "frequencies")
         self.nodal_solution = LazyArray(hs, "solution")
         self.status = LazyArray(hs, "solution_status")
-        self.displacement_dof = LazyArray(hs, "displacement_dof")
 
     @property
     def analysis_id(self) -> AnalysisID:
