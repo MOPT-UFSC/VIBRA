@@ -181,16 +181,7 @@ class HarmonicSolver:
         else:
             self.compute_frequency_sweep(solution, print_log, is_resume)
 
-        self._close_solution_handler(solution)
-        analysis_id = self.assembler.model.analysis_id
-
-        self.solution = HarmonicSolution(
-            analysis_id=analysis_id,
-            frequencies=self.assembler.model.frequencies,
-            nodal_solution=self.nodal_solution,
-            displacement_dof=self.displacement_dof,
-        )
-
+        self.solution = self._close_solution_handler(solution)
         return self.solution
 
     def compute_proportionally_damped_frequency_sweep(self, solution, modes, natural_frequencies, print_log, is_resume):
