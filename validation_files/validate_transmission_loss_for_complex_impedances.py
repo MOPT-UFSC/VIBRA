@@ -539,8 +539,29 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
             else:
                 Zo_in = specific_impedance["values"]
 
+        anechoic_termination = model.properties._get_property("anechoic_termination", surface=input_surface_id)
+        if isinstance(anechoic_termination, dict):
+
+            rho_eff_pm, C_eff_pm = model.get_porous_material_model_effective_properties(input_surface_id)
+            rho_eff_tv, C_eff_tv = model.get_viscous_thermal_model_effective_properties(input_surface_id)
+
+            if isinstance(rho_eff_pm, np.ndarray):
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
+
+            elif isinstance(rho_eff_tv, np.ndarray):
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
+
+            else:
+                fluid: Fluid = model.properties._get_property("fluid", surface=input_surface_id)
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
+
+            Zo_in = density * speed_of_sound
+
         else:
-            return None, None
+            return 0, 0
 
         P_downstream = V_in * Zo_in / 2
         V_downstream = P_downstream / Zo_in
