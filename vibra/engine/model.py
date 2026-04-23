@@ -302,8 +302,7 @@ class Model:
     def is_there_a_valid_mesh(self):
 
         if isinstance(self.geometry_path, str | Path):
-            suffix = Path(self.geometry_path).suffix.strip(".").lower()
-            if suffix in SUPPORTED_GEOMETRY_EXTENSIONS:
+            if self.is_there_a_geometry_imported():
                 if not isinstance(self.mesh_setup, MeshSetup):
                     return False
 
