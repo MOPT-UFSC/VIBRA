@@ -152,6 +152,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         data = self.properties._get_property("specific_impedance", surface=surface_id)
         if not isinstance(data, dict):
             return
+        
+        if "anechoic_termination" in data.keys():
+            return
 
         if "table_paths" in data.keys():
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)

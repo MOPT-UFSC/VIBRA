@@ -9,7 +9,7 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
@@ -485,10 +485,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.spinBox_capacity.setValue(100)
 
     def generate_mesh(self):
-        if not app().project.model.generated_mesh:
-            mesher = MesherSetupInputs(close_after_generate=True)
-            if not mesher.complete:
-                return True
+        if not app().project.model.is_there_a_valid_mesh():
+            return mesher_interface_callback(self, close_after_generate=True)
 
     def check_input_surfaces(self):
 

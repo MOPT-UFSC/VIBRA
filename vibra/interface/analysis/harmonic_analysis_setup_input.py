@@ -12,7 +12,6 @@ from vibra.engine.analysis_info import (
     HarmonicAnalysisSetup,
 )
 from vibra.engine.analysis_info.analysis_enums import AnalysisMethod
-
 from vibra.interface import error_title
 from vibra.interface.analysis.solutions_step_display_input import (
     SolutionStepsDisplayInput,
@@ -23,10 +22,10 @@ from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import (
     UserDefinedSolutionStepsFromTabularDataInput,
 )
+from vibra.interface.common.common_interface import check_mesh_related_issues, mesher_interface_callback
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import (
     HarmonicAnalysisSetupInput_UI,
@@ -62,7 +61,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.frequency_spacing_callback()
         self.update_harmonic_analysis_title()
 
-        self.check_mesh_related_issues()
+        check_mesh_related_issues(self.pushButton_run_analysis)
         self.update_display_table_visibility()
 
         while self.keep_window_open:
@@ -468,27 +467,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         return global_damping
 
-    def check_mesh_related_issues(self):
-
-        # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = self.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes_data)
-        collapsed_elements = bool(mesh.collapsed_elements_data)
-
-        text = ""
-        if collapsed_elements:
-            text = "Collapsed elements have been detected during the mesh post-processing. \n"
-            text += "The model solution will stay deactivated until the collapsed-related \n"
-            text += "issues have been addressed."
-
-        if disconnected_nodes:
-            text += "Disconnected nodes have been detected during the mesh post-processing. \n"
-            text += "The model solution will stay deactivated until the meshing-related issues \n"
-            text += "have been addressed."
-
-        self.pushButton_run_analysis.setToolTip(text)
-        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
-
     def enter_setup_callback(self):
         if self.comboBox_method.currentIndex() == AnalysisMethodIndex.DIRECT:
             analysis_method = AnalysisMethod.DIRECT
@@ -561,14 +539,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
     def run_analysis(self):
 
-        if not self.model.generated_mesh:
-            self.hide()
-            obj = MesherSetupInputs(close_after_generate = True)
-            if not obj.complete:
-                app().main_window.set_input_widget(self)
-                return
-
-            app().main_window.update_plots()
+        # if not self.model.is_there_a_valid_mesh():
+        #     if mesher_interface_callback(self, close_after_generate=True):
+        #         return
 
         if self.enter_setup_callback():
             return

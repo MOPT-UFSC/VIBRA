@@ -1203,7 +1203,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
-        if not app().project.model.generated_mesh:
+        if not app().project.model.is_there_a_valid_mesh():
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)

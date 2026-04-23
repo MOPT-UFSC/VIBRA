@@ -18,7 +18,7 @@ from vibra.interface import error_title
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import (
     AcousticTransferElementInputs_UI,
@@ -281,12 +281,9 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.configure_analysis():
             return
 
-        if not app().project.model.generated_mesh:
-            obj = MesherSetupInputs(close_after_generate = True)
-            if not obj.complete:
+        if not app().project.model.is_there_a_valid_mesh():
+            if mesher_interface_callback(self, close_after_generate=True):
                 return
-
-            app().main_window.update_plots()
 
         # integrate the areas of the selected surfaces
         self.process_areas()
