@@ -4,6 +4,7 @@ import numpy as np
 from typing_extensions import TYPE_CHECKING
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.project_files.project_file import ProjectFile
 
@@ -28,6 +29,9 @@ def test_regression_structural_harmonic_solver_solution(datadir, structural_harm
 
     # # Solve and store solution in memory
     in_memory_solution = in_memory_harmonic_solver.solve_direct()
+
+    assert isinstance(solution, LazyHarmonicSolution)
+    assert isinstance(in_memory_solution, HarmonicSolution)
 
     for i, _ in enumerate(frequencies):
         assert np.allclose(
