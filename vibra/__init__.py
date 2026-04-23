@@ -34,19 +34,12 @@ SUPPORTED_GEOMETRY_EXTENSIONS = [
     "igs",
     "step",
     "stp",
-    "IGES",
-    "STEP",
-    "IGS",
-    "STP",
 ]
 
 SUPPORTED_MESH_EXTENSIONS = [
     "msh",
     "bdf",
     "nas",
-    "MSH",
-    "BDF",
-    "NAS",
 ]
 
 SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
@@ -55,11 +48,6 @@ SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
     "csv",
     "xls",
     "xlsx",
-    "DAT",
-    "TXT",
-    "CSV",
-    "XLS",
-    "XLSX",
 ]
 
 LIGHT_ICON_COLOR = Color("#1a73e8")
