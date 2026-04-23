@@ -16,8 +16,10 @@ class LazyHDF5MatrixWriter:
     def __init__(self, filepath: Path, num_rows: int, cols: list, dtype, is_resume: bool = False):
         if len(cols) == 0:
             raise ValueError(COLS_EMPTY_ERROR_MESSAGE)
+
         if num_rows == 0:
             raise ValueError(NUM_ROWS_ZERO_ERROR_MESSAGE)
+
         num_cols = len(cols)
         self.filepath = filepath
         file_mode = "a" if is_resume else "w"
@@ -35,8 +37,17 @@ class LazyHDF5MatrixWriter:
                 chunks=(num_rows, 1),  # This is important for efficient read/load large matrices.
                 dtype=dtype,
             )
-            self.frequencies = self.file.create_dataset(HDF5_FREQ_KEY, shape=(num_cols,), dtype=type(cols[0]), data=cols,)
-            self.status = self.file.create_dataset(HDF5_SOLUTION_STATUS_KEY, shape=(num_cols,), dtype=bool,)
+            self.frequencies = self.file.create_dataset(
+                HDF5_FREQ_KEY,
+                shape=(num_cols,),
+                dtype=type(cols[0]),
+                data=cols,
+            )
+            self.status = self.file.create_dataset(
+                HDF5_SOLUTION_STATUS_KEY,
+                shape=(num_cols,),
+                dtype=bool,
+            )
             self.status[:] = False
 
     def has_column(self, index):
