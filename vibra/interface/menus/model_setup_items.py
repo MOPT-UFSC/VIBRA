@@ -309,9 +309,7 @@ class ModelSetupItems(CommonMenuItems):
                 toolbar.combo_box_physical_domain.setCurrentIndex(0)
                 return
 
-        physical_domain = app().project.get_physical_domain()
-
-        if physical_domain == "":
+        if app().project.get_physical_domain() == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
         else:
             toolbar.update_analysis_combo_boxes(block_signals=True)
@@ -331,17 +329,17 @@ class ModelSetupItems(CommonMenuItems):
 
         self.item_top_general_settings.setHidden(False)
 
-        if physical_domain == "structural":
-            self.item_child_fluid.setHidden(True)
-            self.item_child_material.setHidden(False)
-            self.item_top_acoustic_model_setup.setHidden(True)
-            self.item_top_structural_model_setup.setHidden(False)
-
-        elif physical_domain == "acoustic":
+        if physical_domain == "acoustic":
             self.item_child_fluid.setHidden(False)
             self.item_child_material.setHidden(True)
             self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(True)
+
+        else:
+            self.item_child_fluid.setHidden(True)
+            self.item_child_material.setHidden(False)
+            self.item_top_acoustic_model_setup.setHidden(True)
+            self.item_top_structural_model_setup.setHidden(False)
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
