@@ -307,7 +307,7 @@ class Project:
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self):
+    def solve_structural_modal_analysis(self) -> ModalSolution:
         self.model.analysis_id = AnalysisID.STRUCTURAL_MODAL
         self.update_project_setup_file()
 
@@ -327,7 +327,9 @@ class Project:
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
-    def solve_structural_harmonic_analysis(self):
+        return self.model.solution
+
+    def solve_structural_harmonic_analysis(self) -> HarmonicSolution:
         self.model.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         self.update_project_setup_file()
 
@@ -353,7 +355,9 @@ class Project:
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
 
-    def solve_acoustic_modal_analysis(self):
+        return self.model.solution
+
+    def solve_acoustic_modal_analysis(self) -> ModalSolution:
         self.model.analysis_id = AnalysisID.ACOUSTIC_MODAL
         self.update_project_setup_file()
 
@@ -373,7 +377,9 @@ class Project:
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
-    def solve_acoustic_harmonic_analysis(self):
+        return self.model.solution
+
+    def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
         self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 
@@ -405,6 +411,8 @@ class Project:
 
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
+
+        return self.model.solution
 
     def update_post_processing(self):
         self.postprocessing = None
