@@ -337,7 +337,8 @@ class Project:
         checker.check_analysis_requirements(AnalysisID.STRUCTURAL_HARMONIC)
 
         self.assembler = StructuralAssembler(self.model)
-        self.solver = HarmonicSolver(self.assembler, self.project_paths)
+        self.solver = HarmonicSolver(self.assembler)
+        # self.solver = HarmonicSolver(self.assembler, self.project_paths)
         self.postprocessing = StructuralPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices_and_excitations()
@@ -387,7 +388,8 @@ class Project:
         checker.check_analysis_requirements(AnalysisID.ACOUSTIC_HARMONIC)
 
         self.assembler = AcousticAssembler(self.model)
-        self.solver = HarmonicSolver(self.assembler, self.project_paths)
+        self.solver = HarmonicSolver(self.assembler)
+        # self.solver = HarmonicSolver(self.assembler, self.project_paths)
         self.postprocessing = AcousticPostprocessing(self.model)
 
         self.model.reset_dissipation_model_properties()

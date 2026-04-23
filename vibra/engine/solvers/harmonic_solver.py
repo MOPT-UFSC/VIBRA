@@ -96,7 +96,7 @@ class HarmonicSolver:
                 analysis_id=self.assembler.model.analysis_id,
                 frequencies=self.assembler.model.frequencies,
                 nodal_solution=self.assembler.reinsert_the_prescribed_dof(solution),
-                displacement_dof=self.assembler.displacement_dof,
+                displacement_dof=self.displacement_dof,
             )
 
     def compute_frequency_sweep(self, solution, print_log, is_resume, eigenvectors=None):
