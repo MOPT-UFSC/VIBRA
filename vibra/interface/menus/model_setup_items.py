@@ -311,6 +311,7 @@ class ModelSetupItems(CommonMenuItems):
 
         if app().project.get_physical_domain() == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
+            toolbar.check_analysis_setup_callback()
         else:
             toolbar.update_analysis_combo_boxes(block_signals=True)
 
