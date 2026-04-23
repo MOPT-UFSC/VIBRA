@@ -300,7 +300,7 @@ class Model:
 
     def is_there_a_valid_mesh(self):
 
-        if isinstance(self.geometry_path, str):
+        if isinstance(self.geometry_path, str | Path):
             if Path(self.geometry_path).suffix in SUPPORTED_GEOMETRY_EXTENSIONS:
                 if not isinstance(self.mesh_setup, MeshSetup):
                     return False
