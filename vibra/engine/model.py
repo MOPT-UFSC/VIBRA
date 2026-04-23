@@ -87,7 +87,6 @@ class Model:
         self.mesh: Optional[Mesh] = None
         self.mesh_setup_old = None
         self.stop_processing = False
-        self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
         self.geometry_qf = 1.0
@@ -208,7 +207,6 @@ class Model:
                     ElementType=DEFAULT_ELEMENT_TYPE,
                 )
 
-            self.generated_mesh = False
             self.initial_element_size = element_size
 
         except Exception as error_log:
@@ -228,7 +226,6 @@ class Model:
 
             self.mesh.geometry_imported = False
             self.mesh.load_mesh(path)
-            self.generated_mesh = True
 
         except Exception as error_log:
             from traceback import print_exception
@@ -258,7 +255,6 @@ class Model:
         logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup_old)
 
-        self.generated_mesh = True
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
@@ -301,6 +297,35 @@ class Model:
         cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
+
+    def is_there_a_valid_mesh(self):
+
+        if not isinstance(self.mesh_setup, MeshSetup):
+            return False
+
+        disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
+        collapsed_elements = bool(
+            self.mesh.collapsed_3d_elements or 
+            self.mesh.collapsed_2d_elements or 
+            self.mesh.collapsed_1d_elements
+            )
+
+        if disconnected_nodes or collapsed_elements:
+            return False
+
+        if self.mesh.surfaces_from_volume:
+            if self.mesh.solids_connectivity.any():
+                return True
+            else:
+                return False
+
+        if self.mesh.lines_from_surface:
+            if self.mesh.faces_connectivity.any():
+                return True
+            else:
+                return False
+
+        return False
 
     def is_there_a_compressor_excitation_in_model(self):
         compressor_properties = [
