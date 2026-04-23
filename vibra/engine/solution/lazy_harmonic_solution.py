@@ -4,7 +4,6 @@ import h5py
 
 from vibra.engine import AnalysisID
 from vibra.engine.serialization.project_paths import ProjectPaths
-from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.utils.lazy_array import LazyArray
 
 from .harmonic_solution import HarmonicSolution
@@ -26,6 +25,7 @@ class LazyHarmonicSolution(HarmonicSolution):
 
     @property
     def analysis_id(self) -> AnalysisID:
+        from vibra.engine.serialization.project_reader import ProjectReader
         reader = ProjectReader(self.project_paths)
         return reader.read_current_analysis_id()
 
