@@ -300,8 +300,10 @@ class Model:
 
     def is_there_a_valid_mesh(self):
 
-        if not isinstance(self.mesh_setup, MeshSetup):
-            return False
+        if isinstance(self.geometry_path, str):
+            if Path(self.geometry_path).suffix in SUPPORTED_GEOMETRY_EXTENSIONS:
+                if not isinstance(self.mesh_setup, MeshSetup):
+                    return False
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
         collapsed_elements = bool(
