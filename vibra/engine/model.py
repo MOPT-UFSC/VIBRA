@@ -302,7 +302,8 @@ class Model:
     def is_there_a_valid_mesh(self):
 
         if isinstance(self.geometry_path, str | Path):
-            if Path(self.geometry_path).suffix in SUPPORTED_GEOMETRY_EXTENSIONS:
+            suffix = Path(self.geometry_path).suffix.replace(".", "")
+            if suffix in SUPPORTED_GEOMETRY_EXTENSIONS:
                 if not isinstance(self.mesh_setup, MeshSetup):
                     return False
 
@@ -329,6 +330,10 @@ class Model:
                 return False
 
         return False
+
+    def is_there_a_geometry_imported(self):
+        suffix = Path(self.geometry_path).suffix.replace(".", "")
+        return suffix in SUPPORTED_GEOMETRY_EXTENSIONS
 
     def is_there_a_compressor_excitation_in_model(self):
         compressor_properties = [

@@ -526,7 +526,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
 
     def modify_general_settings_items_access(self, key: bool):
-        imported_geometry = app().project.model.mesh.geometry_imported
+        imported_geometry = app().project.model.is_there_a_geometry_imported()
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_material.setDisabled(key)
