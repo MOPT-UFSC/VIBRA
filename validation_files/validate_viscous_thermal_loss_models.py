@@ -89,7 +89,6 @@ def load_external_mesh_and_solve():
     # Set the defined fluid
     model = Model()
     model.mesh = mesh
-    model.generated_mesh = True
 
     for vol_id in [1, 2, 3, 4, 5]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
