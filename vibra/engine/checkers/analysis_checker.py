@@ -1,7 +1,13 @@
 import numpy as np
+from numbers import Number
 
 from vibra import errors
-from vibra.engine import AnalysisID, HarmonicAnalysisSetup, ModalAnalysisSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    AnalysisMethod,
+    HarmonicAnalysisSetup,
+    ModalAnalysisSetup,
+)
 from vibra.engine.model import Model
 
 
@@ -9,8 +15,10 @@ class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
 
-    def check_analysis_id(self, analysis_id: AnalysisID):
-        match analysis_id:
+    def check_analysis_requirements(self, analysis_id_to_check: AnalysisID):
+        self.check_analysis_setup(analysis_id_to_check)
+
+        match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 self.check_structural_modal_analysis()
             case AnalysisID.STRUCTURAL_HARMONIC:
@@ -20,22 +28,35 @@ class AnalysisChecker:
             case AnalysisID.ACOUSTIC_HARMONIC:
                 self.check_acoustic_harmonic_analysis()
             case _:
-                raise NotImplementedError(f'Analysis type "{analysis_id.name}" is not implemented.')
+                raise NotImplementedError(f'Analysis type "{self.model.analysis_id.name}" is not implemented.')
+
+    def check_analysis_setup(self, analysis_id_to_check: AnalysisID):
+
+        if AnalysisID(self.model.analysis_id).is_harmonic():
+            if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+                raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
+
+        if AnalysisID(self.model.analysis_id).is_modal():
+            if not isinstance(self.model.analysis_setup,ModalAnalysisSetup):               
+                raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
+
+        analysis_id = self.model.analysis_id
+        if analysis_id_to_check != analysis_id:
+            raise errors.InvalidAnalysisSetupError(
+                f"The solver expects an '{analysis_id_to_check.name}' analysis type \
+                 but received the '{analysis_id.name}' analysis type instead."
+            )
+
+        if not self.model.is_there_a_valid_analysis_setup():
+            raise errors.InvalidAnalysisSetupError("An invalid analysis setup has been configured.")
 
     def check_acoustic_harmonic_analysis(self):
-        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
-            raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
-
         self.check_mesh()
-
         self.check_contains_volumes()
         self.check_fluids_volumes()
         self.check_acoustic_harmonic_excitations()
 
     def check_structural_harmonic_analysis(self):
-        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
-            raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
-
         self.check_mesh()
 
         if self.model.mesh.are_there_volumes_in_geometry():
@@ -45,23 +66,16 @@ class AnalysisChecker:
 
         self.check_structural_harmonic_excitations()
 
-        if self.model.analysis_setup.analysis_method == "mode_superposition":
+        if self.model.analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             self.check_mode_superposition_prescribed_dof_criterion()
 
     def check_acoustic_modal_analysis(self):
-        if not isinstance(self.model.analysis_setup, ModalAnalysisSetup):
-            raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
-
         self.check_mesh()
-
         self.check_contains_volumes()
         self.check_fluids_volumes()
         self.check_frequency_varying_fluid_properties_for_modal_analysis()
 
     def check_structural_modal_analysis(self):
-        if not isinstance(self.model.analysis_setup, ModalAnalysisSetup):
-            raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
-
         self.check_mesh()
 
         if self.model.mesh.are_there_volumes_in_geometry():
@@ -188,7 +202,6 @@ class AnalysisChecker:
             "mass_flow_rate",
             "incident_plane_wave",
             "mass_source",
-            allows_zero=True,
         ):
             return
 
@@ -203,7 +216,6 @@ class AnalysisChecker:
             "nodal_loads",
             "distributed_loads",
             "normal_pressure_load",
-            allows_zero=True,
         ):
             return
 
@@ -213,7 +225,7 @@ class AnalysisChecker:
         )  # fmt: skip
 
     def check_mode_superposition_prescribed_dof_criterion(self):
-        if self._any_true_property_attributed("prescribed_dof", allows_zero=True):
+        if self._any_true_property_attributed("prescribed_dof"):
             return
 
         raise errors.InvalidModelExcitationError(
@@ -227,15 +239,12 @@ class AnalysisChecker:
                 return True
         return False
 
-    def _any_true_property_attributed(self, *property_names: str, allows_zero: bool = False):
+    def _any_true_property_attributed(self, *property_names: str):
         for _, prop_label, _, data in self.model.properties.iterate_properties():
             if prop_label not in property_names:
                 continue
 
-            if allows_zero:
-                values = [value is not None for value in data["values"]]
-            else:
-                values = [value != 0 for value in data["values"]]
+            values = [isinstance(value, Number) and value != 0 for value in data["values"]]
 
             if np.sum(values):
                 return True

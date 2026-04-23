@@ -11,6 +11,7 @@ from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
 
 from vibra.engine.analysis_info import (
     AnalysisID,
+    AnalysisMethod,
     AnalysisSetup,
     FrequencySpacing,
     HarmonicAnalysisSetup,
@@ -342,21 +343,29 @@ class Model:
 
         return False
 
-    def is_there_a_valid_analysis_setup(self, **kwargs):
-        current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
+    def is_there_a_valid_analysis_setup(self):
+        # current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
         if not isinstance(self.analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
             return False
 
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             return False
 
-        if isinstance(current_analysis_id, int):
-            if self.analysis_id != current_analysis_id:
-                return False
+        # if isinstance(current_analysis_id, int):
+        #     if self.analysis_id != current_analysis_id:
+        #         return False
+
+        def check_modal_setup():
+            for key in ["modes_number", "sigma_factor"]:
+                f_data = getattr(self.analysis_setup, key)
+                if not isinstance(f_data, Number):
+                    return False
+            return True
 
         if AnalysisID(self.analysis_id).is_harmonic():
             frequencies = self.analysis_setup.frequencies
             solution_steps_mask = self.analysis_setup.solution_steps_mask
+            analysis_method = self.analysis_setup.analysis_method
 
             if isinstance(frequencies, np.ndarray | list):
                 if isinstance(solution_steps_mask, np.ndarray | list):
@@ -367,15 +376,13 @@ class Model:
                 if not isinstance(f_data, Number):
                     return False
 
+            if analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
+                return check_modal_setup()
+
             return True
 
         elif AnalysisID(self.analysis_id).is_modal():
-            for key in ["modes_number", "sigma_factor"]:
-                f_data = getattr(self.analysis_setup, key)
-                if not isinstance(f_data, Number):
-                    return False
-
-            return True
+            return check_modal_setup()
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
         if frequencies is None:
@@ -700,10 +707,33 @@ class Model:
 
         impedance = None
 
+        at_data = self.properties._get_property("anechoic_termination", surface=surface_id)
         si_data = self.properties._get_property("specific_impedance", surface=surface_id)
         pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
 
-        if isinstance(si_data, dict):
+        if isinstance(at_data, dict):
+            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+            if isinstance(rho_eff_pm, np.ndarray):
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
+
+            elif isinstance(rho_eff_tv, np.ndarray):
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
+
+            else:
+                fluid = self.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    return None
+
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
+
+            impedance = density * speed_of_sound
+
+        elif isinstance(si_data, dict):
             if "real_values" in si_data.keys():
                 real_values = np.array(si_data["real_values"])
                 imag_values = np.array(si_data["imag_values"])

@@ -51,6 +51,10 @@ class InvalidModelSetupError(ModelException):
     pass
 
 
+class InvalidAnalysisSetupError(ModelException):
+    pass
+
+
 class InvalidModelExcitationError(ModelException):
     pass
 

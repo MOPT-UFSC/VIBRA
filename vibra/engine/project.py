@@ -312,7 +312,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_structural_modal_analysis()
+        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_MODAL)
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
@@ -334,7 +334,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_structural_harmonic_analysis()
+        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_HARMONIC)
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, project=self)
@@ -362,7 +362,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_acoustic_modal_analysis()
+        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_MODAL)
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
@@ -384,7 +384,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_acoustic_harmonic_analysis()
+        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_HARMONIC)
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, project=self)
@@ -416,9 +416,9 @@ class Project:
 
     def update_post_processing(self):
         self.postprocessing = None
-        if AnalysisID(self.analysis_id).is_acoustic():
+        if AnalysisID(self.model.analysis_id).is_acoustic():
             self.postprocessing = AcousticPostprocessing(self.model)
-        elif AnalysisID(self.analysis_id).is_structural():
+        elif AnalysisID(self.model.analysis_id).is_structural():
             self.postprocessing = StructuralPostprocessing(self.model)
 
     def get_acoustic_postprocessing(self) -> AcousticPostprocessing:
@@ -456,7 +456,7 @@ class Project:
         """
 
         try:
-            AnalysisChecker(self.model).check_analysis_id(self.model.analysis_id)
+            AnalysisChecker(self.model).check_analysis_requirements(self.model.analysis_id)
         except Exception:
             return False
         else:
