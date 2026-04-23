@@ -276,7 +276,7 @@ class ProjectWriter:
 
         logging.info("Writing harmonic solution")
 
-        current_hash = ProjectHasher.hash_harmonic_solution(solver)
+        current_hash = ProjectHasher.hash_harmonic_solution(solver.solution)
         previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
@@ -301,7 +301,7 @@ class ProjectWriter:
 
         logging.info("Writing modal solution")
 
-        current_hash = ProjectHasher.hash_modal_solution(solver)
+        current_hash = ProjectHasher.hash_modal_solution(solver.solution)
         previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
