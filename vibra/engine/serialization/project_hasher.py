@@ -4,7 +4,7 @@ import numpy as np
 import xxhash
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.engine.solution import HarmonicSolution, ModalSolution
 
 
 class HashEnum(StrEnum):
@@ -37,17 +37,31 @@ class ProjectHasher:
         return hasher.hexdigest()
 
     @staticmethod
-    def hash_harmonic_solution(solver: HarmonicSolver) -> str:
+    def hash_harmonic_solution(solution: HarmonicSolution) -> str:
         hasher = xxhash.xxh128()
-        hasher.update(solver.frequencies.flatten())
-        hasher.update(solver.nodal_solution.flatten())
+        hasher.update(solution.analysis_id.to_bytes())
+        hasher.update(solution.frequencies.flatten())
+        hasher.update(solution.nodal_solution.flatten())
+        hasher.update(solution.status.flatten())
+
+        if solution.displacement_dof is not None:
+            hasher.update(solution.displacement_dof.flatten())
+
         return hasher.hexdigest()
 
     @staticmethod
-    def hash_modal_solution(solver: ModalSolver) -> str:
+    def hash_modal_solution(solution: ModalSolution) -> str:
         hasher = xxhash.xxh128()
-        hasher.update(solver.natural_frequencies.flatten())
-        hasher.update(solver.nodal_solution.flatten())
+        hasher.update(solution.analysis_id.to_bytes())
+        hasher.update(solution.natural_frequencies.flatten())
+        hasher.update(solution.modal_shapes.flatten())
+
+        if solution.complex_natural_frequencies is not None:
+            hasher.update(solution.complex_natural_frequencies.flatten())
+
+        if solution.displacement_dof is not None:
+            hasher.update(solution.displacement_dof.flatten())
+
         return hasher.hexdigest()
 
     @staticmethod
