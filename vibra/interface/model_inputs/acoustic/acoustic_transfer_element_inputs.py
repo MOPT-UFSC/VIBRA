@@ -292,12 +292,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             return   
 
         if not app().project.model.generated_mesh:
-            obj = MesherSetupInputs()
+            obj = MesherSetupInputs(close_after_generate=True)
             if obj.complete:
                 app().main_window.update_plots()
             else:
                 return
-        
+
         app().main_window.selection.set_geometry_selection()
 
         def compute_model_solution():
@@ -306,9 +306,16 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 logging.info(f"Solving model [{5+50*i}/100]...")
                 sleep(1)
 
+                # remove all model excitations and acoustic impedances
                 self.remove_model_excitations_and_impedances()
+
+                # define the acoustic excitation
                 self.set_surface_velocity(surface_id)
+
+                # compute the model solution for the current excitation
                 self.project.solve_acoustic_harmonic_analysis()
+
+                # export the obtained data for the current excitation
                 self.join_model_data(surface_id)
 
             logging.info("Exporting the admittance matrix data... [20/100]")
@@ -321,6 +328,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             logging.info("Exporting the admittance matrix data... [100/100]")
 
         LoadingWindow(compute_model_solution).run()
+
+        # remove all model excitations and acoustic impedances
+        self.remove_model_excitations_and_impedances()
+
+        # reset model solution data
+        app().main_window.analysis_toolbar.reset_solution(True)
 
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
         self.print_final_message()
@@ -467,17 +480,17 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             key = (data_name, (self.input_selection_id, self.output_selection_id))
 
             self.element_transfer_data[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : data,
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : y_label,
-                                        "title" : "Element transfer data",
-                                        "data_type" : data_type,
-                                        "legend" : "element transfer data",
-                                        "unit" : unit_label,
-                                        "color" :(0,0,1),
-                                        "linestyle" : "-"
-                                        }
+                "x_data" : self.frequencies,
+                "y_data" : data,
+                "x_label" : "Frequency [Hz]",
+                "y_label" : y_label,
+                "title" : "Element transfer data",
+                "data_type" : data_type,
+                "legend" : "element transfer data",
+                "unit" : unit_label,
+                "color" : (0,0,1),
+                "linestyle" : "-",
+                }
 
     def export_data_in_spreadsheet_format(self, export_path: str):
 

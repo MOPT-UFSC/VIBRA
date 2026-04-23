@@ -328,11 +328,16 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data
-        self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
+
         self.comboBox_plot_type.setDisabled(True)
-        self.comboBox_data_format.setCurrentIndex(DataFormat.DECIBEL_SCALE)
         self.comboBox_data_format.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
+
+        self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
+        if decibel_data:
+            self.comboBox_data_format.setCurrentIndex(DataFormat.DECIBEL_SCALE)
+        else:
+            self.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
 
     def load_data_to_plot(self, data: dict):
 
