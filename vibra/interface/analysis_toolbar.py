@@ -234,11 +234,6 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_info_text()
 
     def run_analysis(self, is_resume: bool = False):
-
-        # if not self.model.is_there_a_valid_mesh():
-        #     if mesher_interface_callback(self, close_after_generate=True):
-        #         return
-
         if self.model.analysis_setup is None:
             self.configure_analysis()
             if not self.solve_analysis:
@@ -258,9 +253,6 @@ class AnalysisToolbar(QToolBar):
             interrupt_function,
         ).run()
 
-        app().main_window.configure_results_render_widget()
-        app().main_window.results_viewer_widget.results_viewer_items.update_items()
-
         self.solve_analysis = False
 
         if self.model.stop_processing:
@@ -268,8 +260,11 @@ class AnalysisToolbar(QToolBar):
             app().project.project_writer.delete_results_data()
             return
 
-        # if is_resume:
-        #     app().project.can_resume_solution = False
+        app().main_window.configure_results_render_widget()
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
+
+        if is_resume:
+            app().project.can_resume_solution = False
 
         LoadingWindow(self.post_processing_analysis).run()
 
