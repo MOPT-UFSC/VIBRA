@@ -263,9 +263,6 @@ class AnalysisToolbar(QToolBar):
         app().main_window.configure_results_render_widget()
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
-        if is_resume:
-            app().project.can_resume_solution = False
-
         LoadingWindow(self.post_processing_analysis).run()
 
     def post_processing_analysis(self):
