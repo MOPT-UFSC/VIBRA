@@ -168,7 +168,7 @@ class Project:
         """
         self.project_writer.write_model(self.model)
         if isinstance(self.solver, ModalSolver) and (self.solver.solution is not None):
-            self.project_writer.write_modal_solution(self.solver)
+            self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
 
     # TODO: use only "write_to_working_dir"
@@ -325,7 +325,7 @@ class Project:
 
         t0 = perf_counter()
         self.model.solution = self.solver.solve()
-        self.project_writer.write_modal_solution(self.solver)
+        self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
@@ -378,7 +378,7 @@ class Project:
 
         t0 = perf_counter()
         self.model.solution = self.solver.solve()
-        self.project_writer.write_modal_solution(self.solver)
+        self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")

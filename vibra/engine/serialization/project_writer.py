@@ -20,6 +20,7 @@ from vibra.engine.properties.libraries.material_library import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_json, update_json, write_image, write_json
+from vibra.engine.solution import ModalSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
@@ -318,14 +319,10 @@ class ProjectWriter:
 
         self._write_hash(HashEnum.HARMONIC_SOLUTION, current_hash)
 
-    def write_modal_solution(self, solver: ModalSolver):
-        # In this case the solution was already saved
-        if isinstance(solver.nodal_solution, LazyHDF5MatrixLoader):
-            return
-
+    def write_modal_solution(self, solution: ModalSolution):
         logging.info("Writing modal solution")
 
-        current_hash = ProjectHasher.hash_modal_solution(solver.solution)
+        current_hash = ProjectHasher.hash_modal_solution(solution)
         previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
@@ -334,15 +331,14 @@ class ProjectWriter:
                 return
 
         with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
-            file["frequencies"] = solver.natural_frequencies
-            file["solution"] = solver.nodal_solution
-            file["solution_status"] = np.ones_like(solver.natural_frequencies, dtype=bool)
+            file["frequencies"] = solution.natural_frequencies
+            file["solution"] = solution.modal_shapes
 
-            if solver.displacement_dof is not None:
-                file["displacement_dof"] = solver.displacement_dof
+            if solution.displacement_dof is not None:
+                file["displacement_dof"] = solution.displacement_dof
 
-            if isinstance(solver.complex_natural_frequencies, np.ndarray):
-                file["complex_natural_frequencies"] = solver.complex_natural_frequencies
+            if isinstance(solution.complex_natural_frequencies, np.ndarray):
+                file["complex_natural_frequencies"] = solution.complex_natural_frequencies
 
         self._write_hash(HashEnum.MODAL_SOLUTION, current_hash)
 
