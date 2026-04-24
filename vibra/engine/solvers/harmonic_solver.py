@@ -55,6 +55,10 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
         self.solution = self._close_solution_handler(solution_handler)
 
+        if self.assembler.model.stop_processing:
+            self.solution = None
+            return self.solution
+
         # TODO: remove this variable since it is redundant
         self.nodal_solution = self.solution.nodal_solution
 

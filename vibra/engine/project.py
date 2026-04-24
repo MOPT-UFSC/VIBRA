@@ -88,7 +88,10 @@ class Project:
         if not isinstance(solution, HarmonicSolution):
             return False
 
-        return not np.all(solution.status)
+        try:
+            return not np.all(solution.status)
+        except Exception:
+            return False
 
     @property
     def working_directory(self) -> Path:
