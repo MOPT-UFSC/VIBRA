@@ -97,7 +97,6 @@ def load_external_mesh_and_solve():
     ## assign the created fluid
     model = Model()
     model.mesh = mesh
-    model.generated_mesh = True
 
     model.properties._set_property("material", material, volume=1)
 
@@ -124,7 +123,11 @@ def load_external_mesh_and_solve():
     model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=1)
 
     ## Define the analysis setup
-    analysis_setup = ModalAnalysisSetup(40, 0.01)
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.STRUCTURAL_MODAL,
+        modes_number = 40,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
@@ -138,12 +141,12 @@ def load_external_mesh_and_solve():
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    modal_solver.solve()
-    natural_frequencies = modal_solver.natural_frequencies
+    solution = modal_solver.solve()
+    natural_frequencies = solution.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
-    modes_indexes = np.arange(natural_frequencies.size)
+    # modes_indexes = np.arange(natural_frequencies.size)
 
     folder = "with_esf" if esf else "without_esf"
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"

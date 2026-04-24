@@ -5,13 +5,11 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import warning_title
 from vibra.interface.ui_generated.model.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
@@ -210,7 +208,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                 message = "The multiple selection of faces related to more than one volume is not allowed. "
                 message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
                 message += "to proceed."
-                PrintMessageInput([window_title_2, title, message])
+                PrintMessageInput([warning_title, title, message])
 
                 return
 

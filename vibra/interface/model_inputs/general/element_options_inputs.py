@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 
-from vibra import app, ICON_DIR
+from vibra import app
 from vibra.engine.mesher.element_setup import (
     TETRAHEDRON_4,
     TETRAHEDRON_10,
@@ -9,14 +9,15 @@ from vibra.engine.mesher.element_setup import (
 )
 
 from vibra.engine.elements.element_options import HEX8_structural
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+# from vibra.interface import error_title, warning_title
+# from vibra.interface.general.print_message_input import PrintMessageInput
+# from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.ui_generated.model.general.element_options_input_ui import ElementOptionsInput_UI
 
 from enum import IntEnum, StrEnum
 
 
-class TabIndex(IntEnum):
+class TabType(IntEnum):
     HEX8 = 0
     HEX20 = 1
     TET4 = 2
@@ -31,10 +32,6 @@ class ElementType(StrEnum):
 class ShapeFunction(StrEnum):
     LINEAR = "linear"
     QUADRATIC = "quadratic"
-
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class ElementOptionsInputs(ElementOptionsInput_UI):
@@ -80,7 +77,7 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
         if not isinstance(advanced_element_options, dict):
             return
 
-        if self.tabWidget_main.currentIndex() == TabIndex.HEX8:
+        if self.tabWidget_main.currentIndex() == TabType.HEX8:
             hex8_options = advanced_element_options.get("hex8", dict)
             if not isinstance(hex8_options, dict):
                 return
@@ -103,16 +100,16 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
             self.tabWidget_main.setTabVisible(i, False)
 
         if _element_type == TETRAHEDRON_4:
-            self.tabWidget_main.setTabVisible(TabIndex.TET4, True)
+            self.tabWidget_main.setTabVisible(TabType.TET4, True)
 
         elif _element_type == TETRAHEDRON_10:
-            self.tabWidget_main.setTabVisible(TabIndex.TET10, True)
+            self.tabWidget_main.setTabVisible(TabType.TET10, True)
 
         elif _element_type == HEXAHEDRON_8:
-            self.tabWidget_main.setTabVisible(TabIndex.HEX8, True)
+            self.tabWidget_main.setTabVisible(TabType.HEX8, True)
 
         elif _element_type == HEXAHEDRON_20:
-            self.tabWidget_main.setTabVisible(TabIndex.HEX20, True)
+            self.tabWidget_main.setTabVisible(TabType.HEX20, True)
 
         else:
             NotImplementedError("Invalid ElementType")
@@ -122,7 +119,7 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
 
     def set_element_options_callback(self):
         advanced_options = dict()
-        if self.tabWidget_main.currentIndex() == TabIndex.HEX8:
+        if self.tabWidget_main.currentIndex() == TabType.HEX8:
             hex8_options = HEX8_structural()
             hex8_options.extra_shape_functions = self.comboBox_extra_shape_functions.currentText() == "enabled"
             advanced_options["hex8"] = hex8_options.get_data()

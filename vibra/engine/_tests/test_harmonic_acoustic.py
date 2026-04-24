@@ -1,7 +1,11 @@
 import pytest
 
 from vibra import PROJECT_DIR, errors
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+    ModalAnalysisSetup,
+)
 from vibra.engine.project import Project
 
 
@@ -17,17 +21,26 @@ def test_harmonic_acoustic():
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Incompatible AnalysisID and AnalysisSetup
-        project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, ModalAnalysisSetup(10, 0.01))
+
+        analysis_setup = ModalAnalysisSetup(
+            analysis_id=AnalysisID.ACOUSTIC_MODAL,
+            modes_number=10,
+            sigma_factor=0.01,
+        )
+
+        project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
         project.run_analysis()
 
-    project.configure_analysis(
-        AnalysisID.ACOUSTIC_HARMONIC,
-        HarmonicAnalysisSetupRange(
-            f_min=1_000,
-            f_max=10_000,
-            f_step=1_000,
-        ),
+    ## Define the analysis frequency setup
+    analysis_setup = project.model.get_harmonic_analysis_setup(
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
+        f_min=1000,
+        f_max=10000,
+        f_step=1000,
     )
+
+    project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Fluid not configured

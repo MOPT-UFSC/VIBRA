@@ -1,11 +1,15 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
+from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -84,7 +88,6 @@ def load_external_mesh_and_solve():
     # assign the created fluid
     model = Model()
     model.mesh = mesh
-    model.generated_mesh = True
 
     data_thick = {
         "surface_thickness": 0.008,
@@ -135,28 +138,20 @@ def load_external_mesh_and_solve():
     ## Create an object of the Structural Assembler class
     assembler = StructuralAssembler(model)
 
-    ## Define the analysis type and frequency setup
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=2,
-        f_max=300,
-        f_step=2,
-        global_damping=(1e-3, 1e-7, 0),
+    # Define the analysis frequency setup
+    analysis_setup = model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 2,
+        f_max = 300,
+        f_step = 2,
+        global_damping = (1e-3, 1e-7, 0),
     )
-    frequencies = analysis_setup.frequencies()
+
+    frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
-
-    # harmonic_solver = HarmonicSolver(assembler)
-    # # Define the analysis setup
-    # analysis_setup = {
-    #                   "analysis_id" : 2,
-    #                   "modes_number" : 40,
-    #                   "sigma_factor" : 1e-2
-    #                   }
-
-    # # Set the analysis setup
-    # model.old_set_analysis_setup(analysis_setup)
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)
@@ -180,15 +175,16 @@ def load_external_mesh_and_solve():
 
     t0 = time()
     # solution = modal_solver.solve()
-    harmonic_solver.solve_direct(print_log=True)
+    model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve the analysis: {round(dt, 4)}")
+
+    if not isinstance(model.solution, HarmonicSolution):
+        return
 
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::")
     # print(":: PLOTTING THE OBTAINED RESULTS FOR HARMONIC ANALYSIS ::")
     # print(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n")
-
-    solution = harmonic_solver.solution
 
     top_right_face_nodes = mesh.external_nodes_from_surfaces[5]
     branch2_top_face_nodes = mesh.external_nodes_from_surfaces[7]
@@ -202,99 +198,99 @@ def load_external_mesh_and_solve():
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
 
-    top_right_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
-    top_right_face_response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
+    nodal_solution = model.solution.nodal_solution
+
+    top_right_face_response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
+    top_right_face_response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
 
     gdof = dof_per_node * branch2_top_face_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
-    solution = harmonic_solver.solution
 
-    branch2_top_face_response_ux = np.average(solution[ux_rows, :], axis=0).flatten()
-    branch2_top_face_response_uy = np.average(solution[uy_rows, :], axis=0).flatten()
+    branch2_top_face_response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
+    branch2_top_face_response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
-    if solution is not None:
-        ## load external results data
-        results_path = "validation_files/data/WB/structural/shell/piping_example/results/results_for_piping_example.xlsx"
-        imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    ## load external results data
+    results_path = "validation_files/data/WB/structural/shell/piping_example/results/results_for_piping_example.xlsx"
+    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
 
-        top_right_face_ux_lin = imported_results["top_right_face_ux_lin"]
-        top_right_face_ux_quad = imported_results["top_right_face_ux_quad"]
+    top_right_face_ux_lin = imported_results["top_right_face_ux_lin"]
+    top_right_face_ux_quad = imported_results["top_right_face_ux_quad"]
 
-        top_right_face_uy_lin = imported_results["top_right_face_uy_lin"]
-        top_right_face_uy_quad = imported_results["top_right_face_uy_quad"]
+    top_right_face_uy_lin = imported_results["top_right_face_uy_lin"]
+    top_right_face_uy_quad = imported_results["top_right_face_uy_quad"]
 
-        branch2_top_face_ux_lin = imported_results["branch2_top_face_ux_lin"]
-        branch2_top_face_ux_quad = imported_results["branch2_top_face_ux_quad"]
+    branch2_top_face_ux_lin = imported_results["branch2_top_face_ux_lin"]
+    branch2_top_face_ux_quad = imported_results["branch2_top_face_ux_quad"]
 
-        branch2_top_face_uy_lin = imported_results["branch2_top_face_uy_lin"]
-        branch2_top_face_uy_quad = imported_results["branch2_top_face_uy_quad"]
+    branch2_top_face_uy_lin = imported_results["branch2_top_face_uy_lin"]
+    branch2_top_face_uy_quad = imported_results["branch2_top_face_uy_quad"]
 
-        freq_WB = top_right_face_ux_lin[:, 0]
-        top_right_face_ux_lin_WB = top_right_face_ux_lin[:, 1] + 1j * top_right_face_ux_lin[:, 2]
+    freq_WB = top_right_face_ux_lin[:, 0]
+    top_right_face_ux_lin_WB = top_right_face_ux_lin[:, 1] + 1j * top_right_face_ux_lin[:, 2]
 
-        freq_WB = top_right_face_ux_quad[:, 0]
-        top_right_face_ux_quad_WB = top_right_face_ux_quad[:, 1] + 1j * top_right_face_ux_quad[:, 2]
+    freq_WB = top_right_face_ux_quad[:, 0]
+    top_right_face_ux_quad_WB = top_right_face_ux_quad[:, 1] + 1j * top_right_face_ux_quad[:, 2]
 
-        freq_WB = top_right_face_uy_lin[:, 0]
-        top_right_face_uy_lin_WB = top_right_face_uy_lin[:, 1] + 1j * top_right_face_uy_lin[:, 2]
+    freq_WB = top_right_face_uy_lin[:, 0]
+    top_right_face_uy_lin_WB = top_right_face_uy_lin[:, 1] + 1j * top_right_face_uy_lin[:, 2]
 
-        freq_WB = top_right_face_uy_quad[:, 0]
-        top_right_face_uy_quad_WB = top_right_face_uy_quad[:, 1] + 1j * top_right_face_uy_quad[:, 2]
+    freq_WB = top_right_face_uy_quad[:, 0]
+    top_right_face_uy_quad_WB = top_right_face_uy_quad[:, 1] + 1j * top_right_face_uy_quad[:, 2]
 
-        freq_WB = branch2_top_face_ux_lin[:, 0]
-        branch2_top_face_ux_lin_WB = branch2_top_face_ux_lin[:, 1] + 1j * branch2_top_face_ux_lin[:, 2]
+    freq_WB = branch2_top_face_ux_lin[:, 0]
+    branch2_top_face_ux_lin_WB = branch2_top_face_ux_lin[:, 1] + 1j * branch2_top_face_ux_lin[:, 2]
 
-        freq_WB = branch2_top_face_ux_quad[:, 0]
-        branch2_top_face_ux_quad_WB = branch2_top_face_ux_quad[:, 1] + 1j * branch2_top_face_ux_quad[:, 2]
+    freq_WB = branch2_top_face_ux_quad[:, 0]
+    branch2_top_face_ux_quad_WB = branch2_top_face_ux_quad[:, 1] + 1j * branch2_top_face_ux_quad[:, 2]
 
-        freq_WB = branch2_top_face_uy_lin[:, 0]
-        branch2_top_face_uy_lin_WB = branch2_top_face_uy_lin[:, 1] + 1j * branch2_top_face_uy_lin[:, 2]
+    freq_WB = branch2_top_face_uy_lin[:, 0]
+    branch2_top_face_uy_lin_WB = branch2_top_face_uy_lin[:, 1] + 1j * branch2_top_face_uy_lin[:, 2]
 
-        freq_WB = branch2_top_face_uy_quad[:, 0]
-        branch2_top_face_uy_quad_WB = branch2_top_face_uy_quad[:, 1] + 1j * branch2_top_face_uy_quad[:, 2]
+    freq_WB = branch2_top_face_uy_quad[:, 0]
+    branch2_top_face_uy_quad_WB = branch2_top_face_uy_quad[:, 1] + 1j * branch2_top_face_uy_quad[:, 2]
 
-        title = "Harmonic response (right top face)"
+    title = "Harmonic response (right top face)"
 
-        fig1, ax1 = plt.subplots()
-        ax1.semilogy(frequencies, np.abs(top_right_face_response_ux), "r", label="VIBRA")
-        ax1.semilogy(freq_WB, np.abs(top_right_face_ux_lin_WB), "k--", label="ANSYS (lin.)")
-        ax1.semilogy(freq_WB, np.abs(top_right_face_ux_quad_WB), "b--", label="ANSYS (quad.)")
-        ax1.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
-        ax1.grid()
-        ax1.legend()
+    fig1, ax1 = plt.subplots()
+    ax1.semilogy(frequencies, np.abs(top_right_face_response_ux), "r", label="VIBRA")
+    ax1.semilogy(freq_WB, np.abs(top_right_face_ux_lin_WB), "k--", label="ANSYS (lin.)")
+    ax1.semilogy(freq_WB, np.abs(top_right_face_ux_quad_WB), "b--", label="ANSYS (quad.)")
+    ax1.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
+    ax1.grid()
+    ax1.legend()
 
-        fig2, ax2 = plt.subplots()
-        ax2.semilogy(frequencies, np.abs(top_right_face_response_uy), "r", label="VIBRA")
-        ax2.semilogy(freq_WB, np.abs(top_right_face_uy_lin_WB), "k--", label="ANSYS (lin.)")
-        ax2.semilogy(freq_WB, np.abs(top_right_face_uy_quad_WB), "b--", label="ANSYS (quad.)")
-        ax2.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
-        ax2.grid()
-        ax2.legend()
+    fig2, ax2 = plt.subplots()
+    ax2.semilogy(frequencies, np.abs(top_right_face_response_uy), "r", label="VIBRA")
+    ax2.semilogy(freq_WB, np.abs(top_right_face_uy_lin_WB), "k--", label="ANSYS (lin.)")
+    ax2.semilogy(freq_WB, np.abs(top_right_face_uy_quad_WB), "b--", label="ANSYS (quad.)")
+    ax2.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
+    ax2.grid()
+    ax2.legend()
 
-        title = "Harmonic response (branch2 top face)"
+    title = "Harmonic response (branch2 top face)"
 
-        fig3, ax3 = plt.subplots()
-        ax3.semilogy(frequencies, np.abs(branch2_top_face_response_ux), "r", label="VIBRA")
-        ax3.semilogy(freq_WB, np.abs(branch2_top_face_ux_lin_WB), "k--", label="ANSYS (lin.)")
-        ax3.semilogy(freq_WB, np.abs(branch2_top_face_ux_quad_WB), "b--", label="ANSYS (quad.)")
-        ax3.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
-        ax3.grid()
-        ax3.legend()
+    fig3, ax3 = plt.subplots()
+    ax3.semilogy(frequencies, np.abs(branch2_top_face_response_ux), "r", label="VIBRA")
+    ax3.semilogy(freq_WB, np.abs(branch2_top_face_ux_lin_WB), "k--", label="ANSYS (lin.)")
+    ax3.semilogy(freq_WB, np.abs(branch2_top_face_ux_quad_WB), "b--", label="ANSYS (quad.)")
+    ax3.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Ux [m]", title=title)
+    ax3.grid()
+    ax3.legend()
 
-        fig4, ax4 = plt.subplots()
-        ax4.semilogy(frequencies, np.abs(branch2_top_face_response_uy), "r", label="VIBRA")
-        ax4.semilogy(freq_WB, np.abs(branch2_top_face_uy_lin_WB), "k--", label="ANSYS (lin.)")
-        ax4.semilogy(freq_WB, np.abs(branch2_top_face_uy_quad_WB), "b--", label="ANSYS (quad.)")
-        ax4.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Uy [m]", title=title)
-        ax4.grid()
-        ax4.legend()
+    fig4, ax4 = plt.subplots()
+    ax4.semilogy(frequencies, np.abs(branch2_top_face_response_uy), "r", label="VIBRA")
+    ax4.semilogy(freq_WB, np.abs(branch2_top_face_uy_lin_WB), "k--", label="ANSYS (lin.)")
+    ax4.semilogy(freq_WB, np.abs(branch2_top_face_uy_quad_WB), "b--", label="ANSYS (quad.)")
+    ax4.set(xlabel="Frequency [Hz]", ylabel="Magnitude of displacement Uy [m]", title=title)
+    ax4.grid()
+    ax4.legend()
 
-        plt.show()
+    plt.show()
 
 
 if __name__ == "__main__":

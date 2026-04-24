@@ -1,11 +1,9 @@
-import logging
 
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 #
-from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.acoustic_properties_gradient_inputs import AcousticPropertiesGradientInputs
 from vibra.interface.model_inputs.acoustic.acoustic_transfer_element_inputs import AcousticTransferElementInputs
 from vibra.interface.model_inputs.acoustic.dissipation_models.porous_material_model_inputs import PorousMaterialModelInputs
@@ -58,9 +56,6 @@ from vibra.interface.plots.structural.displacement_field_inputs import PlotDispl
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
-
 
 class InputUi:
     def __init__(self, parent=None):
@@ -78,16 +73,13 @@ class InputUi:
         return read
 
     def mesh_setup(self):
-        if not self.model_setup_items.item_child_mesh_setup.isDisabled():
-            app().main_window.action_model_workspace_callback()
-            obj = self.process_input(MesherSetupInputs)
-            if obj.complete:
-                self.model_setup_items.enable_and_expand_menu_items()
+        if self.model_setup_items.item_child_mesh_setup.isDisabled():
+            return
 
-    def generate_mesh(self):
-        LoadingWindow(app().project.generate_mesh).run()
-        app().main_window.action_mesh_workspace_callback()
-        self.model_setup_items.item_child_generate_mesh.setDisabled(True)
+        app().main_window.action_model_workspace_callback()
+        obj = self.process_input(MesherSetupInputs)
+        if obj.complete:
+            self.model_setup_items.enable_and_expand_menu_items()
 
     def advanced_element_options(self):
         if not self.model_setup_items.item_child_element_options.isDisabled():

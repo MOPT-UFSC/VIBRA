@@ -9,7 +9,14 @@ import numpy as np
 from PIL.Image import Image
 
 from vibra import errors
-from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, AnalysisType, HarmonicAnalysisSetup, ModalAnalysisSetup, PhysicalDomain
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    AnalysisSetup,
+    AnalysisType,
+    HarmonicAnalysisSetup,
+    ModalAnalysisSetup,
+    PhysicalDomain,
+)
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.engine.mesher.mesh import Mesh
@@ -20,11 +27,7 @@ from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
-from vibra.engine.solution import (
-    HarmonicSolution,
-    ModalSolution,
-    Solution,
-)
+from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
@@ -113,9 +116,9 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
-    def run_analysis(self) -> Solution:
+    def run_analysis(self):
         """
-        Executes the solution currently configured in the model.
+        It performs the solution of the currently configured model.
         It might raise errors if the analysis is not propperly configured.
         """
         match self.model.analysis_id:
@@ -139,11 +142,13 @@ class Project:
         """
         Unpacks the vibra file into the working directory and reads data from it.
         """
+        path = Path(path)
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
+        self.model.name = path.stem
         self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
-        self.save_path = Path(path)
+        self.save_path = path
         self.needs_saving = False
         return self
 
@@ -160,7 +165,7 @@ class Project:
         """
         self.project_writer.write_model(self.model)
         if isinstance(self.solver, ModalSolver) and (self.solver.solution is not None):
-            self.write_modal_solution(self.solver)
+            self.project_writer.write_modal_solution(self.solver)
         self.mark_project_as_modified()
 
     # TODO: use only "write_to_working_dir"
@@ -199,7 +204,6 @@ class Project:
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
         self.model.geometry_path = path  # keeping previous file organization
-        self.model.generated_mesh = True
         self.write_to_working_dir()
         return mesh
 
@@ -259,7 +263,6 @@ class Project:
             )
 
         self.model.mesh = mesh
-        self.model.generated_mesh = True
         self.model.process_degrees_of_freedom_decoupling()
 
         self.reset_solution()
@@ -309,33 +312,34 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_structural_modal_analysis()
+        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_MODAL)
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = StructuralPostprocessing(self)
+        self.postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices()
 
         t0 = perf_counter()
-        solution = self.solver.solve()
+        self.model.solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
-        return solution
+        return self.model.solution
 
     def solve_structural_harmonic_analysis(self) -> HarmonicSolution:
         self.model.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_structural_harmonic_analysis()
+        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_HARMONIC)
 
         self.assembler = StructuralAssembler(self.model)
-        self.solver = HarmonicSolver(self.assembler, project=self)
-        self.postprocessing = StructuralPostprocessing(self)
+        self.solver = HarmonicSolver(self.assembler)
+        # self.solver = HarmonicSolver(self.assembler, self.project_paths)
+        self.postprocessing = StructuralPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices_and_excitations()
 
@@ -343,49 +347,50 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            solution = self.solver.solve_direct()
+            self.model.solution = self.solver.solve_direct()
         elif analysis_method == "mode_superposition":
-            solution = self.solver.solve_mode_superposition(is_proportionally_damped=True)
+            self.model.solution = self.solver.solve_mode_superposition(is_proportionally_damped=True)
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
 
-        return solution
+        return self.model.solution
 
     def solve_acoustic_modal_analysis(self) -> ModalSolution:
         self.model.analysis_id = AnalysisID.ACOUSTIC_MODAL
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_acoustic_modal_analysis()
+        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_MODAL)
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = AcousticPostprocessing(self)
+        self.postprocessing = AcousticPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices()
 
         t0 = perf_counter()
-        solution = self.solver.solve()
+        self.model.solution = self.solver.solve()
         self.project_writer.write_modal_solution(self.solver)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
-        return solution
+        return self.model.solution
 
     def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
         self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_acoustic_harmonic_analysis()
+        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_HARMONIC)
 
         self.assembler = AcousticAssembler(self.model)
-        self.solver = HarmonicSolver(self.assembler, project=self)
-        self.postprocessing = AcousticPostprocessing(self)
+        self.solver = HarmonicSolver(self.assembler)
+        # self.solver = HarmonicSolver(self.assembler, self.project_paths)
+        self.postprocessing = AcousticPostprocessing(self.model)
 
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties()
@@ -397,9 +402,9 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            solution = self.solver.solve_direct()
+            self.model.solution = self.solver.solve_direct()
         elif analysis_method == "mode_superposition":
-            solution = self.solver.solve_mode_superposition()
+            self.model.solution = self.solver.solve_mode_superposition()
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
@@ -409,7 +414,30 @@ class Project:
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
 
-        return solution
+        return self.model.solution
+
+    def update_post_processing(self):
+        self.postprocessing = None
+        if AnalysisID(self.model.analysis_id).is_acoustic():
+            self.postprocessing = AcousticPostprocessing(self.model)
+        elif AnalysisID(self.model.analysis_id).is_structural():
+            self.postprocessing = StructuralPostprocessing(self.model)
+
+    def get_acoustic_postprocessing(self) -> AcousticPostprocessing:
+        if not isinstance(self.postprocessing, AcousticPostprocessing):
+            self.update_post_processing()
+        return self.postprocessing
+
+    def get_structural_postprocessing(self) -> StructuralPostprocessing:
+        if not isinstance(self.postprocessing, StructuralPostprocessing):
+            self.update_post_processing()
+        return self.postprocessing
+
+    def is_mesh_configured(self) -> bool:
+        """
+        Checks if the mesh is configured.
+        """
+        return isinstance(self.model.mesh_setup, MeshSetup)
 
     def is_analysis_id_valid(self, analysis_id: AnalysisID) -> bool:
         """
@@ -430,7 +458,7 @@ class Project:
         """
 
         try:
-            AnalysisChecker(self.model).check_analysis_id(self.model.analysis_id)
+            AnalysisChecker(self.model).check_analysis_requirements(self.model.analysis_id)
         except Exception:
             return False
         else:
@@ -456,10 +484,7 @@ class Project:
         if self.solver is None:
             return False
 
-        if self.solver.solution is None:
-            return False
-
-        return self.solver.solution.size > 0
+        return isinstance(self.model.solution, ModalSolution | HarmonicSolution)
 
     def get_analysis_type(self) -> AnalysisType:
         """

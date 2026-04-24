@@ -1,17 +1,17 @@
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import AcousticPressureFrequencyResponseFunctionInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.engine import AnalysisID
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-
-import numpy as np
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import (
+    AcousticPressureFrequencyResponseFunctionInputs_UI,
+)
 
 
 class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyResponseFunctionInputs_UI):
@@ -27,6 +27,22 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
     
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def showEvent(self, event):
         super().showEvent(event)
         self.update_render_according_to_selector()
@@ -106,11 +122,10 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solver.solution
+        self.frequencies = self.model.frequencies
 
     def geometry_selection_callback(self):
 
@@ -193,7 +208,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         selection = self.selection_types[index]
  
         selected_input_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = app().project.model.mesh.check_selected_ids(
+        self.input_selection_id, error_data = self.mesh.check_selected_ids(
             selected_input_id,
             selection=selection,
             single_id=True,
@@ -205,7 +220,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
             return True
 
         selected_output_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = app().project.model.mesh.check_selected_ids(
+        self.output_selection_id, error_data = self.mesh.check_selected_ids(
             selected_output_id,
             selection=selection,
             single_id=True,
@@ -221,25 +236,25 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == 0:
-            rows_num = app().project.model.mesh.get_nodes_from_surface(self.output_selection_id)
-            rows_den = app().project.model.mesh.get_nodes_from_surface(self.input_selection_id)
+            rows_num = self.mesh.get_nodes_from_surface(self.output_selection_id)
+            rows_den = self.mesh.get_nodes_from_surface(self.input_selection_id)
         elif index == 1:
-            rows_num = app().project.model.mesh.get_nodes_from_line(self.output_selection_id)
-            rows_den = app().project.model.mesh.get_nodes_from_line(self.input_selection_id)
+            rows_num = self.mesh.get_nodes_from_line(self.output_selection_id)
+            rows_den = self.mesh.get_nodes_from_line(self.input_selection_id)
         elif index == 2:
-            rows_num = app().project.model.mesh.nodes_from_points.get(self.output_selection_id)
-            rows_den = app().project.model.mesh.nodes_from_points.get(self.input_selection_id)
+            rows_num = self.mesh.nodes_from_points.get(self.output_selection_id)
+            rows_den = self.mesh.nodes_from_points.get(self.input_selection_id)
         else:
             rows_num = self.output_selection_id
             rows_den = self.input_selection_id
 
         if isinstance(rows_num, int) and isinstance(rows_den, int):
-            numerator = self.solution[rows_num,:]
-            denominator = self.solution[rows_den,:]
+            numerator = self.nodal_solution[rows_num,:]
+            denominator = self.nodal_solution[rows_den,:]
 
         else:
-            numerator = np.average(self.solution[rows_num,:], axis=0)
-            denominator = np.average(self.solution[rows_den,:], axis=0)
+            numerator = np.average(self.nodal_solution[rows_num,:], axis=0)
+            denominator = np.average(self.nodal_solution[rows_den,:], axis=0)
 
         if complex(0) in denominator:
             denominator += 1e-12

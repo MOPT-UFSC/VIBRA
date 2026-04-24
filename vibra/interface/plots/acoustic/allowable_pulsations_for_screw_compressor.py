@@ -1,22 +1,25 @@
-from PySide6.QtWidgets import QDialog, QLineEdit
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QDialog, QLineEdit
 
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
-
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
-from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import AllowablePulsationsForScrewCompressorInputs_UI
-
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
+    SetFluidInputsSimplified,
+)
+from vibra.interface.plots.general.frequency_response_plotter import (
+    DataFormat,
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import (
+    AllowablePulsationsForScrewCompressorInputs_UI,
+)
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
-
-import numpy as np
-
-error_title = "Error"
 
 
 class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCompressorInputs_UI):
@@ -25,22 +28,33 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
 
         app().main_window.show_geometry_render_widget()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._reset_variables()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solution
+        self.frequencies = self.frequencies
 
     def _reset_variables(self):
 
@@ -227,18 +241,18 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
     def get_response(self, index, selected_id):
 
         if index == 0:
-            rows = app().project.model.mesh.get_nodes_from_surface(selected_id)
+            rows = self.mesh.get_nodes_from_surface(selected_id)
         elif index == 1:
-            rows = app().project.model.mesh.get_nodes_from_line(selected_id)
+            rows = self.mesh.get_nodes_from_line(selected_id)
         elif index == 2:
-            rows = app().project.model.mesh.nodes_from_points.get(selected_id)
+            rows = self.mesh.nodes_from_points.get(selected_id)
         else:
             rows = selected_id
 
         if isinstance(rows, int):
-            response = self.solution[rows,:]
+            response = self.nodal_solution[rows,:]
         else:
-            response = np.average(self.solution[rows, :], axis=0)
+            response = np.average(self.nodal_solution[rows, :], axis=0)
 
         return response
     

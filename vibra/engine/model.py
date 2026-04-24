@@ -4,13 +4,23 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
+from numbers import Number
 from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
-from vibra.engine import HarmonicAnalysisSetup
-from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
+
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    AnalysisMethod,
+    AnalysisSetup,
+    FrequencySpacing,
+    HarmonicAnalysisSetup,
+    ModalAnalysisSetup,
+)
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import (
+    ViscousThermalLossModels,
+)
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -36,7 +46,9 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import (
+    DegreesOfFreedomDecoupling,
+)
 from vibra.engine.mesher.element_setup import (
     DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
@@ -49,12 +61,12 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import Solution
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
+from vibra.engine.transfer_impedances.perforated_plate_models import (
+    PerforatedPlateModels,
+)
 from vibra.errors import IncompleteSetupError
+from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class Model:
@@ -76,15 +88,12 @@ class Model:
         self.mesh: Optional[Mesh] = None
         self.mesh_setup_old = None
         self.stop_processing = False
-        self.generated_mesh = False
         self.geometry_path = None
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
         self.list_frequencies = list()
-        self.solution_steps_mask = list()
 
-        self.old_analysis_setup = dict()
         self.decouple_info = dict()
         self.nodes_mapping = dict()
 
@@ -109,8 +118,30 @@ class Model:
         This property was created for retro compatibility.
         """
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
-            return self.analysis_setup.frequencies()
+            return self.analysis_setup.get_frequencies()
         return None
+
+    @property
+    def solution_steps_mask(self):
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            return self.analysis_setup.solution_steps_mask
+        return list()
+
+    @property
+    def global_damping(self) -> Optional[np.ndarray]:
+        """
+        This property was created for retro compatibility.
+        """
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            return self.analysis_setup.global_damping
+        return (None, None, None)
+
+    def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
+        analysis_setup = HarmonicAnalysisSetup(**kwargs)
+        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(
+            frequencies=analysis_setup.get_frequencies()
+        )
+        return analysis_setup
 
     def reset_dissipation_model_properties(self):
         self.perforated_plate_impedance_data = dict()
@@ -177,7 +208,6 @@ class Model:
                     ElementType=DEFAULT_ELEMENT_TYPE,
                 )
 
-            self.generated_mesh = False
             self.initial_element_size = element_size
 
         except Exception as error_log:
@@ -197,7 +227,6 @@ class Model:
 
             self.mesh.geometry_imported = False
             self.mesh.load_mesh(path)
-            self.generated_mesh = True
 
         except Exception as error_log:
             from traceback import print_exception
@@ -227,57 +256,8 @@ class Model:
         logging.info("Processing mesh [80/100]")
         self.mesh.load_cad(self.geometry_path, **self.mesh_setup_old)
 
-        self.generated_mesh = True
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
-
-    def set_mesh(self, mesh: Mesh):
-        self.mesh = mesh
-        self.generated_mesh = True
-
-    def old_set_analysis_setup(self, analysis_setup: dict, supress_warning: bool = False):
-        if not supress_warning:
-            import warnings
-
-            warnings.warn("This method is deprecated, use set_analysis_setup", DeprecationWarning)
-
-        # self.frequencies = None
-        self.old_analysis_setup = analysis_setup
-
-        f_min = analysis_setup.get("f_min")
-        f_max = analysis_setup.get("f_max")
-        f_step = analysis_setup.get("f_step")
-        frequencies = analysis_setup.get("frequencies")
-
-        if isinstance(frequencies, list):
-            # self.frequencies = np.round(np.array(frequencies, dtype=float), 14)
-            pass
-
-        elif isinstance(frequencies, np.ndarray):
-            # self.frequencies = frequencies
-            pass
-
-        elif (f_min, f_max, f_step).count(None) == 0:
-            try:
-                frequencies = np.arange(f_min, f_max + f_step, f_step, dtype=float)
-                frequencies = np.round(frequencies, 14)
-
-                # filters the frequencies vector to mitigate the already identified rounding errors
-                mask = frequencies <= f_max
-                _frequencies = frequencies[mask]
-
-            except Exception as error_log:
-                # self.frequencies = None
-                print(str(error_log))
-                return
-
-            # self.frequencies = _frequencies
-            self.old_analysis_setup["frequencies"] = list(_frequencies)
-
-        solution_steps_mask = self.get_solution_steps_mask()
-        self.solution_steps_mask = solution_steps_mask
-
-        self.old_analysis_setup["solution_steps_mask"] = solution_steps_mask
 
     def set_analysis_id(self, analysis_id: AnalysisID):
         self.analysis_id = analysis_id
@@ -288,17 +268,15 @@ class Model:
 
         self.analysis_setup = analysis_setup
 
-        # Keeping retro compatibility. It will be removed soon.
-        if analysis_setup is None:
-            self.old_set_analysis_setup({}, supress_warning=True)
-        else:
-            self.old_set_analysis_setup(analysis_setup.as_dict(), supress_warning=True)
+    def get_solution_steps_mask(self, frequencies: np.ndarray | list | None = None, tol: float = 1e-10):
 
-    def get_solution_steps_mask(self, tol: float = 1e-10):
-        if self.frequencies is None:
+        if frequencies is None:
+            frequencies = deepcopy(self.frequencies)
+
+        if frequencies is None:
             return list()
 
-        all_true = [True for _ in range(self.frequencies.size)]
+        all_true = [True for _ in range(len(frequencies))]
         table_frequencies = self.properties.process_all_tables_frequencies_vectors()
 
         if not table_frequencies:
@@ -311,15 +289,50 @@ class Model:
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
-            diff_abs = np.min(np.abs(self.frequencies - freq)) < tol
+            diff_abs = np.min(np.abs(frequencies - freq)) < tol
             mask.append(bool(diff_abs))
 
         return mask
 
     def has_spectral_content_been_modified(self):
-        cond_A = self.old_analysis_setup.get("frequency_spacing", "") == "user-defined"
+        cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
+
+    def is_there_a_valid_mesh(self):
+
+        if isinstance(self.geometry_path, str | Path):
+            if self.is_there_a_geometry_imported():
+                if not isinstance(self.mesh_setup, MeshSetup):
+                    return False
+
+        disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
+        collapsed_elements = bool(
+            self.mesh.collapsed_3d_elements or 
+            self.mesh.collapsed_2d_elements or 
+            self.mesh.collapsed_1d_elements
+            )
+
+        if disconnected_nodes or collapsed_elements:
+            return False
+
+        if self.mesh.surfaces_from_volume:
+            if self.mesh.solids_connectivity.any():
+                return True
+            else:
+                return False
+
+        if self.mesh.lines_from_surface:
+            if self.mesh.faces_connectivity.any():
+                return True
+            else:
+                return False
+
+        return False
+
+    def is_there_a_geometry_imported(self):
+        suffix = Path(self.geometry_path).suffix.strip(".").lower()
+        return suffix in SUPPORTED_GEOMETRY_EXTENSIONS
 
     def is_there_a_compressor_excitation_in_model(self):
         compressor_properties = [
@@ -334,38 +347,46 @@ class Model:
 
         return False
 
-    def is_there_a_valid_analysis_setup(self, **kwargs):
-        current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
-        if not isinstance(self.old_analysis_setup, dict):
+    def is_there_a_valid_analysis_setup(self):
+        # current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
+        if not isinstance(self.analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
             return False
 
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             return False
 
-        if isinstance(current_analysis_id, int):
-            if self.analysis_id != current_analysis_id:
-                return False
+        # if isinstance(current_analysis_id, int):
+        #     if self.analysis_id != current_analysis_id:
+        #         return False
 
-        if self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            frequencies = self.old_analysis_setup.get("frequencies")
-            solution_steps_mask = self.old_analysis_setup.get("solution_steps_mask")
+        def check_modal_setup():
+            for key in ["modes_number", "sigma_factor"]:
+                f_data = getattr(self.analysis_setup, key)
+                if not isinstance(f_data, Number):
+                    return False
+            return True
+
+        if AnalysisID(self.analysis_id).is_harmonic():
+            frequencies = self.analysis_setup.frequencies
+            solution_steps_mask = self.analysis_setup.solution_steps_mask
+            analysis_method = self.analysis_setup.analysis_method
 
             if isinstance(frequencies, np.ndarray | list):
                 if isinstance(solution_steps_mask, np.ndarray | list):
                     return True
 
             for key in ["f_min", "f_max", "f_step"]:
-                if not isinstance(self.old_analysis_setup.get(key), int | float):
+                f_data = getattr(self.analysis_setup, key)
+                if not isinstance(f_data, Number):
                     return False
+
+            if analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
+                return check_modal_setup()
 
             return True
 
-        elif self.analysis_id in [AnalysisID.ACOUSTIC_MODAL, AnalysisID.STRUCTURAL_MODAL]:
-            for key in ["modes_number", "sigma_factor"]:
-                if not isinstance(self.old_analysis_setup.get(key), int | float):
-                    return False
-
-            return True
+        elif AnalysisID(self.analysis_id).is_modal():
+            return check_modal_setup()
 
     def change_analysis_frequency_setup(self, frequencies: list | np.ndarray | None):
         if frequencies is None:
@@ -690,10 +711,33 @@ class Model:
 
         impedance = None
 
+        at_data = self.properties._get_property("anechoic_termination", surface=surface_id)
         si_data = self.properties._get_property("specific_impedance", surface=surface_id)
         pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
 
-        if isinstance(si_data, dict):
+        if isinstance(at_data, dict):
+            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+            if isinstance(rho_eff_pm, np.ndarray):
+                density = rho_eff_pm
+                speed_of_sound = C_eff_pm
+
+            elif isinstance(rho_eff_tv, np.ndarray):
+                density = rho_eff_tv
+                speed_of_sound = C_eff_tv
+
+            else:
+                fluid = self.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    return None
+
+                density = fluid.fluid_density
+                speed_of_sound = fluid.speed_of_sound
+
+            impedance = density * speed_of_sound
+
+        elif isinstance(si_data, dict):
             if "real_values" in si_data.keys():
                 real_values = np.array(si_data["real_values"])
                 imag_values = np.array(si_data["imag_values"])

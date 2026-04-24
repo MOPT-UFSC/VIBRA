@@ -1,12 +1,16 @@
 from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
+from vibra.engine.solution.harmonic_solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
@@ -98,7 +102,6 @@ def load_external_mesh_and_solve():
     ## assign the created fluid
     model = Model()
     model.mesh = mesh
-    model.generated_mesh = True
 
     model.properties._set_property("material", material, volume=1)
 
@@ -135,59 +138,47 @@ def load_external_mesh_and_solve():
 
     model.properties._set_property("nodal_loads", nodal_load_data, surface=2)
 
-    ## Define the analysis frequency setup
-
-    analysis_setup = HarmonicAnalysisSetupRange(
-        f_min=20,
-        f_max=2_000,
-        f_step=20,
-        global_damping=(0.0, 0.0, 0e-2),
+    # Define the analysis frequency setup
+    analysis_setup = model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 20,
+        f_max = 2000,
+        f_step = 20,
     )
-    frequencies = analysis_setup.frequencies()
+
+    frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
     model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
-
-    # df = 20
-    # f_min = 20
-    # f_max = 2000
-    # frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    # analysis_setup = {
-    #     "analisys_id" : AnalysisID.STRUCTURAL_HARMONIC,
-    #     "f_min" : f_min,
-    #     "f_max" : f_max,
-    #     "f_step" : df,
-    #     "frequencies" : frequencies,
-    #     "global_damping" : (0., 0., 0e-2),
-    #     }
-
-    # # Set the analysis setup
-    # model.old_set_analysis_setup(analysis_setup)
 
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
     assembler.assemble_global_matrices_and_excitations(reorder=False)
 
-    t0 = time()
     # Run modal analysis
+    t0 = time()
     harmonic_solver = HarmonicSolver(assembler)
-    s = harmonic_solver.solve_direct(print_log=True)
-    solution = s.results
+    model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+
+    if not isinstance(model.solution, HarmonicSolution):
+        return
 
     # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
     plot_type = "absolute"
 
-    compare_results(4882, dofs_per_node, "uz", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(4882, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(5522, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(6210, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
-    compare_results(6269, dofs_per_node, "uy", frequencies, solution, esf, plot_type=plot_type)
+    nodal_solution = model.solution.nodal_solution
+
+    compare_results(4882, dofs_per_node, "uz", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(4882, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(5522, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(6210, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    compare_results(6269, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
     plt.show()
 
 
@@ -196,12 +187,12 @@ def compare_results(
     dofs_per_node: int,
     dof_label: str,
     frequencies: np.ndarray,
-    solution: np.ndarray,
+    nodal_solution: np.ndarray,
     esf: bool,
     plot_type: str = "absolute",
 ):
 
-    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, solution)
+    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, nodal_solution)
     freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label, esf)
 
     title = f"Harmonic response at node {node_id} - {'(ESF included)' if esf else '(ESF excluded)'}"
@@ -250,14 +241,14 @@ def get_apdl_reference_results(
     return freq_apdl, response_apdl
 
 
-def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, solution: np.ndarray) -> np.ndarray:
+def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, nodal_solution: np.ndarray) -> np.ndarray:
 
     dof_labels = ["ux", "uy", "uz"]
     local_dof = dof_labels.index(dof_label)
 
     index = int((apdl_node_id - 1) * dofs_per_node) + local_dof
 
-    return solution[index, :]
+    return nodal_solution[index, :]
 
 
 if __name__ == "__main__":

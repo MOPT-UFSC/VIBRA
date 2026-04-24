@@ -50,8 +50,8 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
         if frequencies is None:
             return
                 
-        if isinstance(frequencies, np.ndarray):
-            self.tableWidget_solution_steps.setRowCount(frequencies.size)
+        if isinstance(frequencies, np.ndarray | list):
+            self.tableWidget_solution_steps.setRowCount(len(frequencies))
             frequency_spacing = self.model.old_analysis_setup.get("frequency_spacing", "--")
 
             for index, freq in enumerate(frequencies):

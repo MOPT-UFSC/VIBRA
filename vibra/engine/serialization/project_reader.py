@@ -13,9 +13,7 @@ from PIL.Image import Image
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisSetup,
-    FrequencySpacing,
-    HarmonicAnalysisSetupList,
-    HarmonicAnalysisSetupRange,
+    HarmonicAnalysisSetup,
     ModalAnalysisSetup,
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
@@ -90,8 +88,7 @@ class ProjectReader:
         model.geometry_path = self.read_geometry_path()
 
         if self.project_paths.mesh_data_filepath.exists():
-            mesh = self.read_mesh()
-            model.set_mesh(mesh)
+            model.mesh = self.read_mesh()
 
         model.solution = self.read_solution(model)
 
@@ -125,35 +122,10 @@ class ProjectReader:
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
 
         if analysis_id.is_harmonic():
-            frequency_spacing = analysis_setup_dict.get(
-                "frequency_spacing",
-                FrequencySpacing.EQUALLY_DISTRIBUTED,
-            )
-
-            match frequency_spacing:
-                case FrequencySpacing.EQUALLY_DISTRIBUTED:
-                    return HarmonicAnalysisSetupRange(
-                        f_min=analysis_setup_dict.get("f_min", 0),
-                        f_max=analysis_setup_dict.get("f_max", 0),
-                        f_step=analysis_setup_dict.get("f_step", 0),
-                        analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number=analysis_setup_dict.get("modes_number", None),
-                    )
-                case FrequencySpacing.USER_DEFINED:
-                    return HarmonicAnalysisSetupList(
-                        analysis_setup_dict.get("frequencies", []),
-                        analysis_setup_dict.get("solution_steps_mask"),
-                        analysis_method=analysis_setup_dict.get("analysis_method", "direct"),
-                        global_damping=analysis_setup_dict.get("global_damping", (0, 0, 0)),
-                        modes_number=analysis_setup_dict.get("modes_number", None),
-                    )
+            return HarmonicAnalysisSetup(**analysis_setup_dict)
 
         elif analysis_id.is_modal():
-            return ModalAnalysisSetup(
-                modes_number=analysis_setup_dict.get("modes_number", 0),
-                sigma_factor=analysis_setup_dict.get("sigma_factor", 0),
-            )
+            return ModalAnalysisSetup(**analysis_setup_dict)
 
         else:
             return None
@@ -404,7 +376,7 @@ class ProjectReader:
             return HarmonicSolution(
                 analysis_id=analysis_id,
                 frequencies=file["frequencies"],
-                results=file["solution"],
+                nodal_solution=file["solution"],
                 status=file["solution_status"],
                 displacement_dof=file.get("displacement_dof"),
             )
@@ -419,11 +391,12 @@ class ProjectReader:
             file: h5py.File
 
             return ModalSolution(
-                analysis_id=analysis_id,
-                natural_frequencies=file["frequencies"],
-                modal_shape=file["solution"],
-                displacement_dof=file.get("displacement_dof"),
-            )
+                analysis_id = analysis_id,
+                natural_frequencies = file["frequencies"],
+                modal_shapes = file["solution"],
+                displacement_dof = file.get("displacement_dof"),
+                complex_natural_frequencies = file.get("complex_natural_frequencies"),
+                )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
@@ -440,12 +413,12 @@ class ProjectReader:
         if model.analysis_id.is_harmonic():
             solver = HarmonicSolver(assembler)
             if self.project_paths.harmonic_solution_filepath.exists():
-                solver.solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
+                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
 
         elif model.analysis_id.is_modal():
             solver = ModalSolver(assembler)
             if self.project_paths.modal_solution_filepath.exists():
-                solver.solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)
+                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)
 
         else:
             return None, None

@@ -6,6 +6,7 @@ from vibra.engine import AnalysisID
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 
+from vibra.interface import error_title
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_reciprocating_compressor_inputs_ui import AllowablePulsationsForReciprocatingCompressorInputs_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -14,9 +15,6 @@ from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified impo
 
 import numpy as np
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
-
 
 class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsForReciprocatingCompressorInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -24,22 +22,34 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         app().main_window.show_geometry_render_widget()
 
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._reset_variables()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = app().project.model.frequencies
-        self.solution = app().project.solver.solution
+        self.frequencies = self.frequencies
 
     def _reset_variables(self):
 
@@ -133,7 +143,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             pressure_ratio = float(str_pressure_ratio)     
             unfiltered_criteria = min(3*pressure_ratio, 7)
 
-        except:
+        except Exception:
             self.lineEdit_unfiltered_criteria.setFocus()
             self.lineEdit_unfiltered_criteria.selectAll()
             return
@@ -190,18 +200,18 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
     def get_response(self, index, selected_id):
 
         if index == 0:
-            rows = app().project.model.mesh.get_nodes_from_surface(selected_id)
+            rows = self.mesh.get_nodes_from_surface(selected_id)
         elif index == 1:
-            rows = app().project.model.mesh.get_nodes_from_line(selected_id)
+            rows = self.mesh.get_nodes_from_line(selected_id)
         elif index == 2:
-            rows = app().project.model.mesh.nodes_from_points.get(selected_id)
+            rows = self.mesh.nodes_from_points.get(selected_id)
         else:
             rows = selected_id
 
         if isinstance(rows, int):
-            response = self.solution[rows,:]
+            response = self.nodal_solution[rows,:]
         else:
-            response = np.average(self.solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[rows,:], axis=0)
 
         if complex(0) in response:
             response += 1e-12
@@ -248,7 +258,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         if message != "":
             line_edit.setFocus()
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
         else:
             return out

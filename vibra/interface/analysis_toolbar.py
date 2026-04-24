@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
+# from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -19,6 +20,8 @@ class AnalysisToolbar(QToolBar):
     def __init__(self):
         super().__init__()
 
+        self.solve_analysis = False
+
         self._load_icons()
         self._define_qt_variables()
         self._configure_layout()
@@ -28,6 +31,14 @@ class AnalysisToolbar(QToolBar):
         self._create_connections()
 
         self.setWindowTitle("Analysis toolbar")
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
 
     def _load_icons(self):
         self.settings_icon = QIcon(str(ICON_DIR / "settings.png"))
@@ -134,7 +145,6 @@ class AnalysisToolbar(QToolBar):
         self.pushButton_run_analysis.setIconSize(QSize(20, 20))
         self.pushButton_run_analysis.setCursor(Qt.PointingHandCursor)
         self.pushButton_run_analysis.setToolTip("Run the analysis")
-        self.pushButton_run_analysis.setDisabled(True)
 
         self.pushButton_resume_analysis.setFixedSize(50, 30)
         self.pushButton_resume_analysis.setIcon(self.resume_icon)
@@ -191,9 +201,6 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.blockSignals(False)
             self.combo_box_physical_domain.blockSignals(False)
 
-    def set_pushbutton_run_analysis_enabled(self, enable: bool = True):
-        self.pushButton_run_analysis.setEnabled(enable)
-
     def set_pushbutton_resume_analysis_enabled(self, enable=True):
         self.pushButton_resume_analysis.setEnabled(enable)
 
@@ -225,15 +232,17 @@ class AnalysisToolbar(QToolBar):
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
-        current_analysis_id = self.get_current_analysis_id()
-        setup_is_valid = app().project.is_analysis_id_valid(current_analysis_id)
-        self.set_pushbutton_run_analysis_enabled(setup_is_valid)
 
     def run_analysis(self, is_resume: bool = False):
 
-        if app().project.model.analysis_setup is None:
+        # if not self.model.is_there_a_valid_mesh():
+        #     if mesher_interface_callback(self, close_after_generate=True):
+        #         return
+
+        if self.model.analysis_setup is None:
             self.configure_analysis()
-            return
+            if not self.solve_analysis:
+                return
 
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
@@ -241,16 +250,8 @@ class AnalysisToolbar(QToolBar):
         app().main_window.action_results_workspace.setDisabled(True)
         app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
-        ## Do not solve models if there are disconnected nodes or collapsed elements!
-        mesh = app().project.model.mesh
-        if mesh.disconnected_nodes_data:
-            return
-
-        if mesh.collapsed_elements_data:
-            return
-
         self.update_analysis_combo_boxes()
-        interrupt_function = app().project.model.toggle_processing_callback
+        interrupt_function = self.model.toggle_processing_callback
 
         LoadingWindow(
             app().project.run_analysis,
@@ -260,8 +261,10 @@ class AnalysisToolbar(QToolBar):
         app().main_window.configure_results_render_widget()
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
-        if app().project.model.stop_processing:
-            app().project.model.toggle_processing_callback()
+        self.solve_analysis = False
+
+        if self.model.stop_processing:
+            self.model.toggle_processing_callback()
             app().project.project_writer.delete_results_data()
             return
 
@@ -307,10 +310,7 @@ class AnalysisToolbar(QToolBar):
 
     def configure_analysis(self):
 
-        # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes_data)
-        collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+        self.solve_analysis = False
 
         match self.get_current_analysis_id():
             case AnalysisID.STRUCTURAL_HARMONIC:
@@ -322,67 +322,49 @@ class AnalysisToolbar(QToolBar):
             case AnalysisID.ACOUSTIC_MODAL:
                 self.modal_acoustic()
 
-        setup_is_valid = app().project.is_analysis_setup_complete()
-        broken_mesh = collapsed_elements or disconnected_nodes
-
-        # disables the run analysis button whenever the analysis setup
-        # is incomplete, or there are any mesh-related problems
-        run_analysis_enabled = setup_is_valid and not broken_mesh
-        self.pushButton_run_analysis.setEnabled(run_analysis_enabled)
-
     # TODO: these functions are almost equal.
     # Maybe they can be unified into a single one.
     def harmonic_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_HARMONIC
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
+        self.solve_analysis = harmonic.solve_analysis
 
-        if harmonic.setup_defined:
-            app().project.configure_analysis(
-                analysis_id,
-                harmonic.analysis_setup,
-            )
-
-        if harmonic.solve_analysis:
+        if self.solve_analysis:
             self.run_analysis()
             app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
+        self.solve_analysis = harmonic.solve_analysis
 
-        if harmonic.setup_defined:
-            app().project.configure_analysis(
-                analysis_id,
-                harmonic.analysis_setup,
-            )
-
-        if harmonic.solve_analysis:
+        if self.solve_analysis:
             self.run_analysis()
 
     def modal_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_MODAL
         modal = ModalAnalysisInput(analysis_id)
+        self.solve_analysis = modal.proceed_solution
 
         if modal.setup_defined:
             app().project.configure_analysis(
                 analysis_id,
                 modal.analysis_setup,
             )
-            self.pushButton_run_analysis.setEnabled(True)
 
-        if modal.proceed_solution:
+        if self.solve_analysis:
             self.run_analysis()
 
     def modal_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_MODAL
         modal = ModalAnalysisInput(analysis_id)
+        self.solve_analysis = modal.proceed_solution
 
         if modal.setup_defined:
             app().project.configure_analysis(
                 analysis_id,
                 modal.analysis_setup,
             )
-            self.pushButton_run_analysis.setEnabled(True)
 
-        if modal.proceed_solution:
+        if self.solve_analysis:
             self.run_analysis()

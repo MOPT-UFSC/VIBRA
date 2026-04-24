@@ -1,4 +1,5 @@
 
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.model import Model
 
 import logging
@@ -560,7 +561,10 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        alpha, beta, eta = self.model.old_analysis_setup.get("global_damping", (0, 0, 0))
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
+        alpha, beta, eta = self.model.analysis_setup.global_damping
 
         frequencies = self.model.frequencies
         omega = 2 * np.pi * frequencies[index]
@@ -595,9 +599,10 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        global_damping = self.model.old_analysis_setup.get("global_damping", (0, 0, 0, 0))
-        alpha_v, beta_v, alpha_h, beta_h = global_damping
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
+        alpha, beta, eta = self.model.global_damping
         frequencies = self.model.frequencies
 
         if len(self.active_2d_element_dof):
@@ -629,7 +634,7 @@ class StructuralAssembler:
             omega = 2 * np.pi * freq
             f_Kadd = Kr_add
             f_Madd = -(omega**2) * Mr_add
-            f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
+            f_Cadd = 1j * ((eta + omega * beta) * Kr_add + (omega * alpha) * Mr_add)
             f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
 
         logging.info("Processing prescribed dof model excitation... [100/100]")
@@ -649,8 +654,10 @@ class StructuralAssembler:
     def build_harmonic_system(self, freq, i):
         omega = 2 * np.pi * freq
 
-        global_damping = self.model.old_analysis_setup.get("global_damping", (0, 0, 0))
-        alpha, beta, eta = global_damping
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
+        alpha, beta, eta = self.model.global_damping
 
         M = self.mass_matrix
         K = self.stiffness_matrix

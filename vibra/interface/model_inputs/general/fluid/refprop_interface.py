@@ -6,12 +6,12 @@ import numpy as np
 from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface import error_title, warning_title
+# from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.utils.utils import get_new_path
 
-error_title = "Error"
-warning_title = "Warning"
+
 IS_ERROR_REGEX = re.compile(r"\[\w+\s+error")
 IS_WARNING_REGEX = re.compile(r"\[\w+\s+warning")
 

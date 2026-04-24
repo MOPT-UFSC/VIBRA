@@ -4,6 +4,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -11,9 +12,9 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.numeric_checks.int_list_validator import IntListValidator
-from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
-
-error_title = "Error"
+from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import (
+    SpecificImpedanceInputs_UI,
+)
 
 
 class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
@@ -150,6 +151,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def load_property_data(self, surface_id: int):
         data = self.properties._get_property("specific_impedance", surface=surface_id)
         if not isinstance(data, dict):
+            return
+        
+        if "anechoic_termination" in data.keys():
             return
 
         if "table_paths" in data.keys():

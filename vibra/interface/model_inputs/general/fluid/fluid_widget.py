@@ -21,8 +21,6 @@ from vibra.interface.model_inputs.general.fluid.set_fluid_composition_inputs imp
 from vibra.interface.ui_generated.model.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
-error_title = "Error"
-warning_title = "Warning"
 
 
 class RowsEnum(IntEnum):
@@ -415,6 +413,7 @@ class FluidWidget(FluidWidget_UI):
         item.setBackground(Color(*picked_color).to_qt())
         item.setForeground(Color(*picked_color).to_qt())
         self.tableWidget_fluid_data.setItem(row, col, item)
+        self.tableWidget_fluid_data.clearSelection()
 
     def _get_selected_column(self) -> int:
         selected_items = self.tableWidget_fluid_data.selectedIndexes()

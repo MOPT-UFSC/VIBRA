@@ -53,8 +53,8 @@ class OldProject(QObject):
         self.model = Model(disable_resume_callback)
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
-        self.acoustic_postprocessing = AcousticPostprocessing(self)
-        self.structural_postprocessing = StructuralPostprocessing(self)
+        self.acoustic_postprocessing = AcousticPostprocessing(self.model)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
 
         self.static_solver = None
         self.acoustic_modal_solver = None

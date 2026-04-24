@@ -1,31 +1,45 @@
-from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
-from PySide6.QtGui import QCloseEvent
-
-from vibra import app
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
-
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
-from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
-from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import DelanyBazleyData
-from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JCAData
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
-
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-
 import warnings
-import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QTableWidgetItem,
+    QTreeWidgetItem,
+)
+
+from vibra import app
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface import error_title
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.definitions.enums import (
+    AttributionBodiesType,
+    PlotTypesTab,
+)
+from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import (
+    DelanyBazleyData,
+)
+from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JCAData
+from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import (
+    ShowPorousMaterialModelEquations,
+)
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
+    SetFluidInputsSimplified,
+)
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import (
+    PorousMaterialModelInputs_UI,
+)
 
 
 class TabType(IntEnum):
@@ -36,9 +50,11 @@ class TabType(IntEnum):
     EDIT = 4
     LIST = 5
 
+
 class PMEditModelsTab(IntEnum):
     DB_DBM = 0
     JCA_JCAL = 1
+
 
 class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -118,7 +134,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -406,7 +422,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         
         try:
             new_parameter_value = float(item.text())
-        except:
+        except Exception:
             value_error = True
         
         parameters_position = self.map_model_id_to_model[model_id].get_parameters_position()
@@ -463,11 +479,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 if volume_id not in self.map_model_id_to_volumes[model_id]:
                     self.map_model_id_to_volumes[model_id].append(volume_id)
 
-            except:
+            except Exception:
                     title = "Porous Material Model Error"
                     message = "An error occurred while trying to load the porous material model data "
                     message += "from the project file. The porous material model will be deleted."
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
 
                     self.properties._reset_property("porous_material_model")
                     app().main_window.update_symbols()
@@ -755,7 +771,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.stop = True
             return None
         return out
@@ -766,7 +782,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -783,11 +799,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         warnings.filterwarnings('ignore')
 
-        frequencies = None
-        analysis_setup = app().project.model.old_analysis_setup
-        if isinstance(analysis_setup, dict):
-            frequencies = analysis_setup.get("frequencies", None)
-
+        frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5

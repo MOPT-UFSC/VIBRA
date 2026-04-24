@@ -490,10 +490,8 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().project.is_there_a_valid_solution():
-            self.action_results_workspace.setEnabled(True)
-        else:
-            self.action_results_workspace.setEnabled(False)
+        valid_solution = app().project.is_there_a_valid_solution()
+        self.action_results_workspace.setEnabled(valid_solution)
 
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -515,10 +513,8 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
-        if app().project.is_there_a_valid_solution():
-            self.action_results_workspace.setEnabled(True)
-        else:
-            self.action_results_workspace.setEnabled(False)
+        valid_solution = app().project.is_there_a_valid_solution()
+        self.action_results_workspace.setEnabled(valid_solution)
 
         self.update_mesh_information()
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
@@ -859,17 +855,19 @@ class MainWindow(MainWindow_UI):
 
     def save_project_as(self, path: str):
         def save_data(path):
+            project = app().project
+
             path = Path(path)
             app().config.add_recent_file(path)
             app().config.write_last_folder_path_in_file("project_folder", path)
             logging.info("Saving project data... [30/100]")
 
-            app().project.save_project(path, name=path.stem)
+            project.save_project(path, name=path.stem)
             logging.info("Saving project data... [75/100]")
 
             # Update interface
             self.update_recents_menu()
-            self.update_window_title(path)
+            self.setWindowTitle(project.model.name)
             self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
 
@@ -973,12 +971,6 @@ class MainWindow(MainWindow_UI):
 
     #     return False
 
-    def update_window_title(self, project_path: str | Path):
-        if isinstance(project_path, str):
-            project_path = Path(project_path)
-        project_name = project_path.stem
-        self.setWindowTitle(f"{project_name}")
-
     def import_geometry(self, path: Path | str):
         app().config.write_last_folder_path_in_file(
             "geometry_mesh_folder",
@@ -995,7 +987,6 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.renderer_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
-        self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
         self.action_model_workspace_callback()
 
     def import_mesh(self, path: Path | str):
@@ -1014,7 +1005,6 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.renderer_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
-        self.analysis_toolbar.set_pushbutton_run_analysis_enabled(False)
         self.action_mesh_workspace_callback()
 
     def open_project(self, project_path: str | Path | None = None):

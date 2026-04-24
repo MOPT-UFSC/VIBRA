@@ -15,10 +15,11 @@ class ModalSolver:
         self.reset_variables()
 
     def reset_variables(self):
-        self.solution = None
+        self.solution: ModalSolution | None = None
+        self.nodal_solution: np.ndarray | None = None
         self.natural_frequencies = np.array([])
         self.complex_natural_frequencies = np.array([])
-        self.displacement_dof = None
+        self.displacement_dof: np.ndarray | None = None
 
     def solve(self, which="LM", full_solution: bool = True) -> ModalSolution:
         """
@@ -74,7 +75,7 @@ class ModalSolver:
             mask_dmp = np.round(np.abs(damping_ratio), 6) < 1
             damping_ratio = damping_ratio[mask_dmp]
             self.natural_frequencies = natural_frequencies[mask_dmp]
-            self.solution = eigenvectors[:n_dof, index_order][:, mask_dmp]
+            nodal_solution = eigenvectors[:n_dof, index_order][:, mask_dmp]
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
@@ -86,10 +87,12 @@ class ModalSolver:
             # reordering the eigenvalues and eigenvectors founded
             index_order = np.argsort(natural_frequencies)
             self.natural_frequencies = natural_frequencies[index_order]
-            self.solution = eigenvectors[:, index_order]
+            nodal_solution = eigenvectors[:, index_order]
 
         if full_solution:
-            self.solution = self.assembler.reinsert_the_prescribed_dof(self.solution)
+            self.nodal_solution = self.assembler.reinsert_the_prescribed_dof(nodal_solution)
+        else:
+            self.nodal_solution = nodal_solution
 
         if self.complex_natural_frequencies.size:
             cnf = self.complex_natural_frequencies
@@ -99,10 +102,12 @@ class ModalSolver:
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
 
-        return ModalSolution(
-            analysis_id=self.assembler.model.analysis_id,
-            natural_frequencies=self.natural_frequencies,
-            modal_shape=self.solution,
-            displacement_dof=self.displacement_dof,
-            complex_natural_frequencies=cnf,
+        self.solution = ModalSolution(
+            analysis_id = self.assembler.model.analysis_id,
+            natural_frequencies = self.natural_frequencies,
+            modal_shapes = self.nodal_solution,
+            displacement_dof = self.displacement_dof,
+            complex_natural_frequencies = cnf,
         )
+
+        return self.solution

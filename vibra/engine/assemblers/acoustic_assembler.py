@@ -1,5 +1,5 @@
 
-from vibra.engine import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
@@ -48,10 +48,10 @@ class AcousticAssembler:
 
     def update_number_of_frequencies(self):
         analysis_setup = self.model.analysis_setup
-
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            self.frequencies = analysis_setup.frequencies()
+            self.frequencies = analysis_setup.get_frequencies()
             self.number_frequencies = len(self.frequencies)
+
         else:
             self.frequencies = None
             self.number_frequencies = 1
@@ -191,8 +191,8 @@ class AcousticAssembler:
 
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-        frequencies = analysis_setup.frequencies()
 
+        frequencies = analysis_setup.get_frequencies()
         omega = 2 * np.pi * frequencies[index]
 
         values = prescribed_values[:, index]
@@ -244,7 +244,7 @@ class AcousticAssembler:
             data: dict
             density, speed_of_sound = self.get_fluid_properties_from_surface(surface_id)
 
-            if "anechoic_termination" in data.keys():
+            if property_label ==  "anechoic_termination" or "anechoic_termination" in data.keys():
                 complex_values = density * speed_of_sound
 
             elif property_label ==  "absorption_surface":
@@ -628,7 +628,7 @@ class AcousticAssembler:
         connectivity_surface_B = dict()
         integration_data = dict()
 
-        aux_ones = np.ones(self.number_frequencies, dtype=complex)
+        # aux_ones = np.ones(self.number_frequencies, dtype=complex)
 
         for (property_label, surface_ids), p_data in self.properties.surface_properties.items():
 
@@ -1296,7 +1296,7 @@ class AcousticAssembler:
         if not self.integration_data_Zsi:
             return
 
-        logging.info("Processing the impedance data to assemble damping matrix... [1/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [1/14]")
         connectivities = self.integration_data_Zsi.get("connectivities")       
         Z_si = self.integration_data_Zsi.get("surface_data")
 
@@ -1304,12 +1304,45 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zsi[j] = np.zeros((nel, dof, dof), dtype=complex)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [2/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [2/14]")
         self.ind_rows_Zsi, self.ind_cols_Zsi = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
             self.data_Zsi[j] = int2d_NtN / Z_si[:, j].reshape(-1, 1, 1)
+
+
+    def process_anechoic_termination_data_to_assemble_damping_matrix(self):
+        """ 
+        This method processes the anechoic termination data to assemble
+        the global damping matrix.
+        """
+
+        self.data_Zat = dict()
+        self.ind_rows_Zat = np.array([], dtype=int)
+        self.ind_cols_Zat = np.array([], dtype=int)
+
+        dof = self.element_2d.DOF_PER_ELEMENT
+        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+
+        self.integration_data_Zat = self.get_impedance_data_for_element_integration("anechoic_termination")
+        if not self.integration_data_Zat:
+            return
+
+        logging.info("Processing the impedance data to assemble damping matrix... [3/14]")
+        connectivities = self.integration_data_Zat.get("connectivities")       
+        Z_at = self.integration_data_Zat.get("surface_data")
+
+        nel = connectivities.shape[0]
+        for j in range(self.number_frequencies):
+            self.data_Zat[j] = np.zeros((nel, dof, dof), dtype=complex)
+
+        logging.info("Processinng the impedance data to assemble damping matrix... [4/14]")
+        self.ind_rows_Zat, self.ind_cols_Zat = self.element_2d.generate_ind_rows_cols(connectivities)
+        int2d_NtN = self.element_2d.stacked_matrices_NtN()
+
+        for j in range(self.number_frequencies):
+            self.data_Zat[j] = int2d_NtN / Z_at[:, j].reshape(-1, 1, 1)
 
 
     def process_incident_plane_wave_data_to_assemble_damping_matrix(self):
@@ -1326,7 +1359,7 @@ class AcousticAssembler:
         if not self.integration_data_pw:
             return
 
-        logging.info("Processing the impedance data to assemble damping matrix... [1/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [5/14]")
         _k_wave = self.integration_data_pw.get("k_wave")
         _e_normals = self.integration_data_pw.get("e_normals")
         connectivities = self.integration_data_pw.get("connectivities")
@@ -1339,7 +1372,7 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zpw[j] = np.zeros((nel, dof, dof), dtype=complex)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [2/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [6/14]")
         self.ind_rows_Zpw, self.ind_cols_Zpw = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
@@ -1373,7 +1406,7 @@ class AcousticAssembler:
         if not self.integration_data_Zas:
             return
         
-        logging.info("Processing the impedance data to assemble damping matrix... [3/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [7/14]")
         connectivities = self.integration_data_Zas.get("connectivities")       
         Z_as = self.integration_data_Zas.get("surface_data")
 
@@ -1381,7 +1414,7 @@ class AcousticAssembler:
         for j in range(self.number_frequencies):
             self.data_Zas[j] = np.zeros((nel, dof, dof), dtype=complex)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [4/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [8/14]")
         self.ind_rows_Zas, self.ind_cols_Zas = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
@@ -1410,7 +1443,7 @@ class AcousticAssembler:
         if not self.integration_data_Zti:
             return
 
-        logging.info("Processing the impedance data to assemble damping matrix... [5/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [9/14]")
         connectivities_A = self.integration_data_Zti.get("connectivities_A")
         connectivities_B = self.integration_data_Zti.get("connectivities_B")
         Zti_A = self.integration_data_Zti.get("surface_data_A")
@@ -1423,14 +1456,14 @@ class AcousticAssembler:
             self.data_Zti_A[j] = np.zeros((nel_A, dof, dof), dtype=complex)
             self.data_Zti_B[j] = np.zeros((nel_B, dof, dof), dtype=complex)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [6/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [10/14]")
         self.ind_rows_Zti_A, self.ind_cols_Zti_A = self.element_2d.generate_ind_rows_cols(connectivities_A)
         int2d_NtN_A = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
             self.data_Zti_A[j] = int2d_NtN_A / Zti_A[:, j].reshape(-1, 1, 1)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [7/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [11/14]")
         self.ind_rows_Zti_B, self.ind_cols_Zti_B = self.element_2d.generate_ind_rows_cols(connectivities_B)
         int2d_NtN_B = self.element_2d.stacked_matrices_NtN()
 
@@ -1462,12 +1495,12 @@ class AcousticAssembler:
         self.integration_data_Zpp = self.get_perforated_plate_data_for_element_integration(solution)
         if not self.integration_data_Zpp:
             return
-        
-        logging.info("Processing the impedance data to assemble damping matrix... [8/10]")
+
+        logging.info("Processing the impedance data to assemble damping matrix... [12/14]")
 
         Zpp_A = self.integration_data_Zpp.get("surface_data_A")
         Zpp_B = self.integration_data_Zpp.get("surface_data_B")
-        non_linear = self.integration_data_Zpp.get("non_linear")
+        # non_linear = self.integration_data_Zpp.get("non_linear")
         connectivities_A = self.integration_data_Zpp.get("connectivities_A")
         connectivities_B = self.integration_data_Zpp.get("connectivities_B")
 
@@ -1478,14 +1511,14 @@ class AcousticAssembler:
             self.data_Zpp_A[j] = np.zeros((nel_A, dof, dof), dtype=complex)
             self.data_Zpp_B[j] = np.zeros((nel_B, dof, dof), dtype=complex)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [9/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [13/14]")
         self.ind_rows_Zpp_A, self.ind_cols_Zpp_A = self.element_2d.generate_ind_rows_cols(connectivities_A)
         int2d_NtN_A = self.element_2d.stacked_matrices_NtN()
 
         for j in range(self.number_frequencies):
             self.data_Zpp_A[j] = int2d_NtN_A / Zpp_A[:, j].reshape(-1, 1, 1)
 
-        logging.info("Processing the impedance data to assemble damping matrix... [10/10]")
+        logging.info("Processing the impedance data to assemble damping matrix... [14/14]")
         self.ind_rows_Zpp_B, self.ind_cols_Zpp_B = self.element_2d.generate_ind_rows_cols(connectivities_B)
         int2d_NtN_B = self.element_2d.stacked_matrices_NtN()
 
@@ -1495,6 +1528,7 @@ class AcousticAssembler:
 
     def compute_data_to_assemble_damping_matrix(self):
         self.process_specific_impedance_data_to_assemble_damping_matrix()
+        self.process_anechoic_termination_data_to_assemble_damping_matrix()
         self.process_incident_plane_wave_data_to_assemble_damping_matrix()
         self.process_surface_impedance_data_to_assemble_damping_matrix()
         self.process_transfer_impedance_data_to_assemble_damping_matrix()
@@ -1572,6 +1606,11 @@ class AcousticAssembler:
             rows_Zout = self.ind_rows_Zsi
             cols_Zout = self.ind_cols_Zsi
             data_Zout = self.data_Zsi[index].flatten()
+
+        if self.integration_data_Zat:
+            rows_Zout = np.append(rows_Zout, self.ind_rows_Zat) 
+            cols_Zout = np.append(cols_Zout, self.ind_cols_Zat)
+            data_Zout = np.append(data_Zout, self.data_Zat[index].flatten())
 
         if self.integration_data_pw:
             rows_Zout = np.append(rows_Zout, self.ind_rows_Zpw) 

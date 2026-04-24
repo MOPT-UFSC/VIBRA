@@ -1,5 +1,6 @@
 
-from vibra.engine import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
+
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 
@@ -46,8 +47,9 @@ class StructuralAssembler:
         analysis_setup = self.model.analysis_setup
 
         if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            self.frequencies = analysis_setup.frequencies()
+            self.frequencies = analysis_setup.get_frequencies()
             self.number_frequencies = len(self.frequencies)
+
         else:
             self.frequencies = None
             self.number_frequencies = 1
@@ -590,11 +592,11 @@ class StructuralAssembler:
 
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-        alpha, beta, eta = self.model.analysis_setup.global_damping
-        frequencies = analysis_setup.frequencies()
+
+        alpha, beta, eta = self.model.global_damping
+        frequencies = analysis_setup.get_frequencies()
 
         omega = 2 * np.pi * frequencies[index]
-
         values = self.array_prescribed_values[:, index]
 
         self.Kr = self.stiffness_matrix_r
@@ -623,12 +625,11 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        global_damping = self.model.old_analysis_setup.get("global_damping", (0, 0, 0, 0))
-        alpha_v, beta_v, alpha_h, beta_h = global_damping
-
         analysis_setup = self.model.analysis_setup
         assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-        frequencies = analysis_setup.frequencies()
+
+        alpha, beta, eta = self.model.global_damping
+        frequencies = self.model.frequencies
 
         unprescribed_indexes = self.unprescribed_dof_indexes
 
@@ -656,7 +657,7 @@ class StructuralAssembler:
             omega = 2 * np.pi * freq
             f_Kadd = Kr_add
             f_Madd = -(omega**2) * Mr_add
-            f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
+            f_Cadd = 1j * ((eta + omega * beta) * Kr_add + (omega * alpha) * Mr_add)
             f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
 
         logging.info("Processing prescribed dof model excitation... [100/100]")
@@ -674,17 +675,18 @@ class StructuralAssembler:
         return f
 
 
-    def build_harmonic_system(self, freq, i):
+    def build_harmonic_system(self, freq: float, index: int):
         omega = 2 * np.pi * freq
 
-        alpha, beta, eta = (0, 0, 0)
-        if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
-            alpha, beta, eta = self.model.analysis_setup.global_damping
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
+        alpha, beta, eta = self.model.global_damping
 
         M = self.mass_matrix
         K = self.stiffness_matrix
 
-        f = self.get_combined_nodal_loads_vector(index=i)
+        f = self.get_combined_nodal_loads_vector(index=index)
 
         A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
 

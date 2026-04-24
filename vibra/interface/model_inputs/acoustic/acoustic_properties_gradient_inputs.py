@@ -1,17 +1,18 @@
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
-from vibra.interface.ui_generated.model.acoustic.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.engine.properties.fluid import Fluid
+# from vibra.interface import error_title, warning_title
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
+    SetFluidInputsSimplified,
+)
+from vibra.interface.ui_generated.model.acoustic.acoustic_properties_gradient_inputs_ui import (
+    AcousticPropertiesGradientInputs_UI,
+)
 
-import warnings
-import numpy as np
-
-error_title = "Error"
-warning_title = "Warning"
 
 class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -197,7 +198,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 

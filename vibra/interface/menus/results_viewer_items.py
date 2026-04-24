@@ -1,4 +1,4 @@
-from PySide6.QtGui import QColor, QPen
+from PySide6.QtGui import QPen
 from PySide6.QtCore import Qt
 
 from vibra import app
@@ -107,13 +107,17 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
+        # self.item_child_acoustic_pressure_waveform.setDisabled(key)
 
-        # only allow waveform plots for equally distributed solution steps with a compressor as the main excitation source
-        cond_A = self.project.model.has_spectral_content_been_modified()
-        cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
+        if AnalysisID(app().project.model.analysis_id).is_modal():
+            self.item_child_acoustic_pressure_waveform.setHidden(True)
 
-        self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
-        self.item_child_acoustic_pressure_waveform.setDisabled(key)
+        elif app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            # only allow waveform plots for equally distributed solution steps 
+            # with a compressor as the main excitation source
+            cond_A = self.project.model.has_spectral_content_been_modified()
+            cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
+            self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)

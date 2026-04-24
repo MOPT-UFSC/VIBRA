@@ -1,34 +1,36 @@
 
-from vibra.engine import ModalAnalysisSetup
-from PySide6.QtGui import Qt
+from PySide6.QtGui import QIntValidator, Qt
 
 from vibra import app
-from vibra.engine import AnalysisID
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
-from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import ModalAnalysisInput_UI
-
-error_title = "Error"
+from vibra.engine import AnalysisID, ModalAnalysisSetup
+from vibra.interface.common.common_interface import check_mesh_related_issues, mesher_interface_callback
+from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import (
+    ModalAnalysisInput_UI,
+)
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 
 
 class ModalAnalysisInput(ModalAnalysisInput_UI):
     def __init__(self, analysis_id: AnalysisID):
         super().__init__()
+        app().main_window.set_input_widget(self)
 
         self.analysis_id = AnalysisID(analysis_id)
 
-        app().main_window.close_dialogs()
-        app().main_window.set_input_widget(self)
-
         self._initialize()
         self._config_window()
+        self._configure_validators()
         self._update_modal_analysis_title()
         self._create_connections()
         self._load_analysis_setup()
-        self.check_mesh_related_issues()
+        check_mesh_related_issues(self.pushButton_run_analysis)
 
         while self.keep_window_open:
             self.exec()
+
+    def _configure_validators(self):
+        self.lineEdit_modes_number.setValidator(QIntValidator(0, 1e5))
+        self.lineEdit_sigma_factor.setValidator(StrictDoubleValidator(0, 1e2, 6))
 
     def _initialize(self):
         self.keep_window_open = True
@@ -63,65 +65,28 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
             modes_number = 40
             sigma = 0.01
 
-        self.lineEdit_number_modes.setText(str(modes_number))
+        self.lineEdit_modes_number.setText(str(modes_number))
         self.lineEdit_sigma_factor.setText(str(sigma))
-
-    def check_mesh_related_issues(self):
-
-        # disable run_analysis button if there are disconnected nodes or collapsed elements
-        mesh = app().project.model.mesh
-        disconnected_nodes = bool(mesh.disconnected_nodes_data)
-        collapsed_elements = bool(mesh.collapsed_elements_data)
-
-        text = ""
-        if collapsed_elements:
-            text = "Collapsed elements have been detected during the mesh post-processing. \n"
-            text += "The model solution will stay deactivated until the collapsed-related \n"
-            text += "issues have been addressed."
-
-        if disconnected_nodes:
-            text += "Disconnected nodes have been detected during the mesh post-processing. \n"
-            text += "The model solution will stay deactivated until the meshing-related issues \n"
-            text += "have been addressed."
-
-        self.pushButton_run_analysis.setToolTip(text)
-        self.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
-
-    def check_analysis_inputs(self):
-
-        title = "Invalid input value"
-
-        if self.lineEdit_number_modes.text() == "":
-            message = "Invalid a value to the number of modes."
-            PrintMessageInput([error_title, title, message])
-            return True
-
-        else:
-
-            try:
-                self.modes_number = int(self.lineEdit_number_modes.text())
-            except Exception:
-                message = "Invalid input value for number of modes."
-                PrintMessageInput([error_title, title, message])
-                return True
-
-            try:
-                self.sigma_factor = float(self.lineEdit_sigma_factor.text())
-            except Exception:
-                message = "Invalid input value for sigma factor."
-                PrintMessageInput([error_title, title, message])
-                return True
-
-        return False
 
     def enter_setup_callback(self):
 
-        if self.check_analysis_inputs():
-            return True
+        line_edits = [
+            self.lineEdit_modes_number,
+            self.lineEdit_sigma_factor,
+        ]
+
+        for line_edit in line_edits:
+            if line_edit.text() == "":
+                line_edit.setFocus()
+                return True
+
+        self.modes_number = int(self.lineEdit_modes_number.text())
+        self.sigma_factor = float(self.lineEdit_sigma_factor.text())
 
         self.analysis_setup = ModalAnalysisSetup(
-            self.modes_number,
-            self.sigma_factor,
+            analysis_id = self.analysis_id,
+            modes_number = self.modes_number,
+            sigma_factor = self.sigma_factor,
         )
 
         self.setup_defined = True
@@ -130,14 +95,9 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
 
     def run_analysis(self):
 
-        if not app().project.model.generated_mesh:
-            self.hide()
-            obj = MesherSetupInputs(close_after_generate = True)
-            if not obj.complete:
-                app().main_window.set_input_widget(self)
-                return
-
-            app().main_window.update_plots()
+        # if not app().project.model.is_there_a_valid_mesh():
+        #     if mesher_interface_callback(self, close_after_generate=True):
+        #         return
 
         if self.enter_setup_callback():
             return
@@ -145,9 +105,6 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
         self.proceed_solution = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
-
-    def button_clicked(self):
-        self.check_analysis_inputs()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

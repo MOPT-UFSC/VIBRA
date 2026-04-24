@@ -3,20 +3,25 @@ from time import time
 
 import numpy as np
 
-from vibra.engine import HarmonicAnalysisSetup
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
+from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
-from vibra.project_files.project_file import ProjectFile
 
 
 class HarmonicSolver:
-    def __init__(self, assembler: AcousticAssembler | StructuralAssembler, project_file: ProjectFile | None = None, **kwargs):
+    def __init__(
+        self,
+        assembler: AcousticAssembler | StructuralAssembler,
+        project_paths: ProjectPaths | None = None,
+    ):
         self.assembler = assembler
-        self.project_file = project_file
+        self.project_paths = project_paths
 
         self.reset_variables()
 
@@ -25,8 +30,9 @@ class HarmonicSolver:
         return self.assembler.model.frequencies
 
     def reset_variables(self):
-        self.solution = None
-        self.displacement_dof = None
+        self.solution: HarmonicSolution | None = None
+        self.nodal_solution: np.ndarray | None = None
+        self.displacement_dof: np.ndarray | None = None
         self._linear_solver = None
 
     def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
@@ -42,55 +48,61 @@ class HarmonicSolver:
 
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
-        solution = self._get_solution_handler(is_resume)
+        solution_handler = self._get_solution_handler(is_resume)
 
-        self.compute_frequency_sweep(solution, print_log, is_resume)
+        self.compute_frequency_sweep(solution_handler, print_log, is_resume)
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
-        self._closing_solution_handler(solution)
+        self.solution = self._close_solution_handler(solution_handler)
 
-        analysis_id = self.assembler.model.analysis_id
-        analysis_setup = self.assembler.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+        # TODO: remove this variable since it is redundant
+        self.nodal_solution = self.solution.nodal_solution
 
-        return HarmonicSolution(
-            analysis_id=analysis_id,
-            frequencies=analysis_setup.frequencies(),
-            results=self.solution,
-            displacement_dof=self.displacement_dof,
-        )
+        return self.solution
 
     def _get_solution_handler(self, is_resume):
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
 
-        frequencies = self.assembler.model.frequencies
-
-        if self.project_file:
+        if self.project_paths:
             num_rows = self.assembler.total_dof
-            solution = self.project_file.get_solution_writer(num_rows, frequencies, dtype=complex, is_resume=is_resume)
+            solution = LazyHDF5MatrixWriter(
+                self.project_paths.harmonic_solution_filepath,
+                num_rows,
+                self.frequencies,
+                complex,
+                is_resume,
+            )
+
             if self.displacement_dof is not None:
                 solution.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
+
         else:
             num_rows = self.assembler.stiffness_matrix.shape[0]
-            solution = np.zeros((num_rows, len(frequencies)), dtype=complex)
+            solution = np.zeros((num_rows, len(self.frequencies)), dtype=complex)
+
         return solution
 
-    def _closing_solution_handler(self, solution):
+    def _close_solution_handler(self, solution) -> HarmonicSolution | LazyHarmonicSolution:
         if isinstance(solution, LazyHDF5MatrixWriter):
             solution.close()
             if self.assembler.model.stop_processing:
                 self.reset_variables()
-            else:
-                self.solution = self.project_file.get_solution_loader()
+
+            return LazyHarmonicSolution(self.project_paths)
+
         else:
-            # reinsert the prescribed degrees of freedom into the solution vector
-            self.solution = self.assembler.reinsert_the_prescribed_dof(solution)
+            return HarmonicSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                frequencies=self.assembler.model.frequencies,
+                nodal_solution=self.assembler.reinsert_the_prescribed_dof(solution),
+                displacement_dof=self.displacement_dof,
+            )
 
     def compute_frequency_sweep(self, solution, print_log, is_resume, eigenvectors=None):
 
         # frequencies vector [in hertz]
-        frequencies = self.assembler.model.frequencies
+        frequencies = self.frequencies
 
         # compute the solution for each frequency step
         for i, freq in enumerate(frequencies):
@@ -161,7 +173,7 @@ class HarmonicSolver:
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(
                 solution,
-                modal_solution.modal_shape,
+                modal_solution.modal_shapes,
                 modal_solution.natural_frequencies,
                 print_log,
                 is_resume,
@@ -169,27 +181,22 @@ class HarmonicSolver:
         else:
             self.compute_frequency_sweep(solution, print_log, is_resume)
 
-        self._closing_solution_handler(solution)
-        analysis_id = self.assembler.model.analysis_id
-        analysis_setup = self.assembler.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-
-        return HarmonicSolution(
-            analysis_id=analysis_id,
-            frequencies=analysis_setup.frequencies(),
-            results=self.solution,
-            displacement_dof=self.displacement_dof,
-        )
+        self.solution = self._close_solution_handler(solution)
+        return self.solution
 
     def compute_proportionally_damped_frequency_sweep(self, solution, modes, natural_frequencies, print_log, is_resume):
         # frequencies vector [in hertz]
-        frequencies = self.assembler.model.frequencies
+        frequencies = self.frequencies
 
-        alpha, beta, eta = (0, 0, 0)
-        if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
-            alpha, beta, eta = self.model.analysis_setup.global_damping
+        analysis_setup = self.assembler.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
+        # load the global damping parameters
+        alpha, beta, eta = self.assembler.model.global_damping
+
+        # vector of natural frequencies in rad/s
         omega_n = 2 * np.pi * natural_frequencies
+
         # Phi is the matrix of the eigenvectors
         Phi = modes
         Phi_t = Phi.T

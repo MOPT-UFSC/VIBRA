@@ -1,23 +1,19 @@
+from os.path import basename
 
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QTreeWidgetItem
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
-
-import numpy as np
-from os.path import basename
-from pathlib import Path
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import (
+    NormalPressureLoadInputs_UI,
+)
 
 
 class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
@@ -146,7 +142,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True, None
 
         _imag = None
@@ -158,7 +154,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True, None
 
         if _real is None and _imag is None:
@@ -212,7 +208,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return
 
         real_values = [value if value is None else np.real(value) for value in pressure_load]
@@ -259,7 +255,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
 
@@ -270,7 +266,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -299,11 +295,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
 
             return None, None
 
@@ -359,7 +355,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one normal pressure load "
                 message += "before confirming the property assignment."
-                PrintMessageInput([window_title_1, title, message]) 
+                PrintMessageInput([error_title, title, message]) 
                 return
 
             data = {

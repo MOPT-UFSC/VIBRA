@@ -1,20 +1,19 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.acoustic.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-import numpy as np
-
-error_title = "Error"
+from vibra.interface.ui_generated.model.acoustic.absorption_surface_inputs_ui import (
+    AbsorptionSurfaceInputs_UI,
+)
 
 
 class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):

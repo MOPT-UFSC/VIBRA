@@ -1,42 +1,42 @@
 from __future__ import annotations
 
 from functools import cache
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from vibra.engine.new_project import NewProject
-
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.engine.model import Model
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
 
 class StructuralPostprocessing:
-    def __init__(
-        self,
-        project: NewProject = None,
-        structural_modal_solver: ModalSolver = None,
-        structural_harmonic_solver: HarmonicSolver = None,
-    ):
-        if all(v is None for v in [project, structural_modal_solver, structural_harmonic_solver]):
-            raise ValueError("At least one of 'project', 'structural_modal_solver', or 'structural_harmonic_solver' must be provided.")
-        self.project = project
-        self.structural_harmonic_solver = structural_harmonic_solver
-        self.structural_modal_solver = structural_modal_solver
+    def __init__(self, model: Model):
+        if not isinstance(model, Model):
+            raise ValueError("The model argument must be of type Model.")
+
+        self.model = model
 
     @property
-    def harmonic_solver(self):
-        if (self.project is not None) and isinstance(self.project.solver, HarmonicSolver):
-            return self.project.solver
-        return self.structural_harmonic_solver
+    def mesh(self):
+        return self.model.mesh
 
     @property
-    def modal_solver(self):
-        if (self.project is not None) and isinstance(self.project.solver, ModalSolver):
-            return self.project.solver
-        return self.structural_modal_solver
+    def solution(self):
+        return self.model.solution
+    
+    @property
+    def acoustic_element_2d(self):
+        if self.model.acoustic_element_2d is None:
+            self.model.set_acoustic_elements()
+        return self.model.acoustic_element_2d
+
+    @property
+    def acoustic_element_3d(self):
+        if self.model.acoustic_element_3d is None:
+            self.model.set_acoustic_elements()
+        return self.model.acoustic_element_3d
+
 
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str, is_modal: bool = False):
@@ -54,9 +54,14 @@ class StructuralPostprocessing:
         """
 
         if is_modal:
-            data = self.modal_solver.solution[self.modal_solver.displacement_dof, column]
+            nodal_solution = self.solution.nodal_displacements
         else:
-            data = self.harmonic_solver.solution[self.harmonic_solver.displacement_dof, column]
+            nodal_solution = self.solution.nodal_displacements
+
+        if not nodal_solution.any():
+            return
+
+        data = nodal_solution[:, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -98,24 +103,32 @@ class StructuralPostprocessing:
 
         return r_min, r_max
 
-    def compute_structural_displacement_field(self, index: int, phase_rad: float, displacement_type: DisplacementTypes, is_modal: bool = False):
-        if is_modal:
-            solver = self.modal_solver
-        else:
-            solver = self.harmonic_solver
 
-        if solver.solution is None:
+    def compute_structural_displacement_field(
+            self, 
+            column: int,
+            phase_rad: float, 
+            displacement_type: DisplacementTypes, 
+            is_modal: bool = False,
+            ):
+
+        if is_modal:
+            nodal_solution = self.solution.nodal_displacements
+        else:
+            nodal_solution = self.solution.nodal_displacements
+
+        if not nodal_solution.any():
             return
 
-        disp_dof = solver.displacement_dof
-        results_complex: np.ndarray = solver.solution[disp_dof, index]
+        displacements_complex: np.ndarray = nodal_solution[:, column]
 
-        amplitudes = np.abs(results_complex)
-        phases = np.angle(results_complex)
+        amplitudes = np.abs(displacements_complex)
+        phases = np.angle(displacements_complex)
         delta = -phases[np.argmax(amplitudes)]
-        results_real = amplitudes * np.cos(phases + phase_rad + delta)
 
-        current_solution = results_real.reshape(-1, 3).copy()
+        displacements = amplitudes * np.cos(phases + phase_rad + delta)
+        current_solution = displacements.reshape(-1, 3).copy()
+
         if displacement_type == "u_sum":
             color_scalars = np.linalg.norm(current_solution, axis=1)
             displacements = current_solution.copy()
@@ -132,6 +145,6 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             displacements = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_displacements(index, displacement_type, is_modal)
+        min_value, max_value = self.get_max_min_values_of_displacements(column, displacement_type, is_modal)
 
         return displacements, color_scalars, min_value, max_value, np.imag(displacements).any()

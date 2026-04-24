@@ -41,3 +41,9 @@ class AnalysisID(IntEnum):
 
     def is_coupled(self):
         return self == AnalysisID.COUPLED_HARMONIC
+    
+    def is_harmonic_structural(self):
+        return self in [
+            AnalysisID.STRUCTURAL_HARMONIC,
+            AnalysisID.COUPLED_HARMONIC,
+        ]

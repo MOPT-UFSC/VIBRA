@@ -115,7 +115,6 @@ def load_external_mesh_and_solve():
     ## assign the created fluid
     model = Model()
     model.mesh = mesh
-    model.generated_mesh = True
 
     for _vol_id in [1]:
         model.properties._set_property("fluid", fluid, volume=_vol_id)
@@ -123,31 +122,28 @@ def load_external_mesh_and_solve():
     for _surf_id in [1, 2]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
-    ## normal surface velocity data
-    data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
-
-    ## mass source data
-    data_ms = {
-        "real_values": [1],
-        "imag_values": [0],
-        "volume_id": 1,
-    }
+    # ## normal surface velocity data
+    # data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
 
     # model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
-    ## boundary impedance setup
-    Zo = fluid.impedance
+    # ## boundary impedance setup
+    # Zo = fluid.impedance
 
-    data_Z = {
-        "real_values": [Zo],
-        "imag_values": [0],
-    }
+    # data_Z = {
+    #     "real_values": [Zo],
+    #     "imag_values": [0],
+    # }
 
     # model.properties._set_property("specific_impedance", data_Z, surface=1)
     # model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis setup
-    analysis_setup = ModalAnalysisSetup(100, 0.01)
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.ACOUSTIC_MODAL,
+        modes_number = 100,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
@@ -161,8 +157,8 @@ def load_external_mesh_and_solve():
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    modal_solver.solve()
-    natural_frequencies = modal_solver.natural_frequencies
+    solution = modal_solver.solve()
+    natural_frequencies = solution.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 

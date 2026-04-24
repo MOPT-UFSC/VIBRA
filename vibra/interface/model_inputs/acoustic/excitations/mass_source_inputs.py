@@ -1,10 +1,9 @@
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -19,6 +18,7 @@ from collections import defaultdict
 from enum import IntEnum
 from traceback import print_exception
 
+
 class AssignmentType(IntEnum):
     NODES = 0
     POINTS = 1
@@ -26,13 +26,12 @@ class AssignmentType(IntEnum):
     SURFACES = 3
     VOLUMES = 4
 
+
 class MSTabType(IntEnum):
     CONSTANT_DATA = StandardTabType.CONSTANT_DATA
     TABULAR_DATA = StandardTabType.TABULAR_DATA
     ADVANCED_SEARCH = 2
     LIST = 3
-
-error_title = "Error"
 
 
 class MassSourceInputs(MassSourceInputs_UI):

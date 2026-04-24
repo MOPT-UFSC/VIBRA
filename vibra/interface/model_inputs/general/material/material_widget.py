@@ -391,6 +391,8 @@ class MaterialWidget(MaterialWidget_UI):
         item.setBackground(Color(*picked_color).to_qt())
         item.setForeground(Color(*picked_color).to_qt())
         self.tableWidget_material_data.setItem(row, col, item)
+        self.tableWidget_material_data.clearSelection()
+
 
     def _get_selected_column(self) -> int:
         selected_items = self.tableWidget_material_data.selectedIndexes()

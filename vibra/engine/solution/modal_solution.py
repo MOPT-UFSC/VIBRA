@@ -13,38 +13,39 @@ class ModalSolution(CommonSolution):
         self,
         analysis_id: AnalysisID,
         natural_frequencies: Array1D,
-        modal_shape: Array2D,
+        modal_shapes: Array2D,
         complex_natural_frequencies: Optional[Array1D] = None,
         displacement_dof: Optional[Array2D] = None,
     ):
         self.analysis_id = analysis_id
         self.natural_frequencies = self._immutable_array(natural_frequencies)
-        self.modal_shape = self._immutable_array(modal_shape)
+        self.modal_shapes = self._immutable_array(modal_shapes)
         self.complex_natural_frequencies = self._optional_immutable_array(complex_natural_frequencies)
         self.displacement_dof = self._optional_immutable_array(displacement_dof)
+
         super().__init__()
 
     @cached_property
     def iscomplex(self):
-        return np.iscomplex(self.natural_frequencies) or np.iscomplex(self.modal_shape)
+        return np.iscomplex(self.natural_frequencies) or np.iscomplex(self.modal_shapes)
 
     @cached_property
     def number_of_modes(self):
         return len(self.natural_frequencies)
 
     @cached_property
-    def results_reordered(self) -> Array2D:
-        reordered = self.modal_shape[self.displacement_dof, :]
-        return self._immutable_array(reordered)
+    def nodal_displacements(self) -> Array2D:
+        _nodal_displacements = self.modal_shapes[self.displacement_dof, :]
+        return self._immutable_array(_nodal_displacements)
 
     def get_row(self, row_index: int) -> Array1D:
-        return self.modal_shape[row_index, :]
+        return self.modal_shapes[row_index, :]
 
     def get_column(self, column_index: int) -> Array1D:
-        return self.modal_shape[:, column_index]
+        return self.modal_shapes[:, column_index]
 
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
-        yield from zip(self.natural_frequencies, self.modal_shape)
+        yield from zip(self.natural_frequencies, self.modal_shapes)
 
     def __eq__(self, other: Self) -> bool:
         match self.displacement_dof, other.displacement_dof:
@@ -58,7 +59,7 @@ class ModalSolution(CommonSolution):
         return all(
             [
                 np.allclose(self.natural_frequencies, other.natural_frequencies),
-                np.allclose(self.modal_shape, other.modal_shape),
+                np.allclose(self.modal_shapes, other.modal_shapes),
                 cnf_equal,
             ]
         )

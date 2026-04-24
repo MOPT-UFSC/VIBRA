@@ -1,15 +1,18 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.interface.ui_generated.model.acoustic.dissipation_models.proportional_damping_inputs_ui import ProportionalDampingInputs_UI
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, SetupTabType
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.model_inputs.acoustic.definitions.enums import (
+    AttributionBodiesType,
+    SetupTabType,
+)
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.proportional_damping_inputs_ui import (
+    ProportionalDampingInputs_UI,
+)
 
 
 class ProportionalDampingInput(ProportionalDampingInputs_UI):
@@ -187,7 +190,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
 
         return out

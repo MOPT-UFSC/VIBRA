@@ -1,27 +1,28 @@
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QFileDialog, QLineEdit
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent
-
-from vibra import app
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_window import LoadingWindow
-
-from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-
 import logging
-import numpy as np
-
 from collections import defaultdict
 from pathlib import Path
 from time import sleep
 
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QFileDialog, QLineEdit
 
-error_title = "Error"
+from vibra import app
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+    HarmonicAnalysisSetup,
+)
+from vibra.interface import error_title
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.common.common_interface import mesher_interface_callback
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import (
+    AcousticTransferElementInputs_UI,
+)
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
@@ -30,9 +31,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-
-        self.model = app().project.model
-        self.properties = app().project.model.properties
 
         self._config_window()
         self._configure_validators()
@@ -47,6 +45,22 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def solution(self):
+        return app().project.model.solution
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -60,9 +74,10 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.lineEdit_fstep.setValidator(validator)
 
     def _reset_variables(self):
-
-        self.analysis_setup = None
         self.keep_window_open = True
+        self.analysis_setup = None
+        self.analysis_setup = None
+        self.frequencies = None
 
         self.surface_ids = list()
         self.element_transfer_data = dict()
@@ -138,7 +153,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
-        analysis_setup = app().project.model.analysis_setup
+        analysis_setup = self.analysis_setup
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return
 
@@ -188,11 +203,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.surface_ids.clear()
         for line_edit in line_edits:
 
-            surface_id, error_data = app().project.model.mesh.check_selected_ids(
-                                                                                line_edit.text(), 
-                                                                                selection = "surfaces",
-                                                                                single_id = True,
-                                                                                )
+            surface_id, error_data = self.mesh.check_selected_ids(
+                line_edit.text(),
+                selection = "surfaces",
+                single_id = True,
+                )
 
             if error_data is not None:
                 self.hide()
@@ -232,9 +247,16 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
         
-        self.analysis_setup = HarmonicAnalysisSetupRange(f_min, f_max, f_step=f_step)
+        ## Define the analysis frequency setup
+        self.analysis_setup = self.model.get_harmonic_analysis_setup(
+            analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+            frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+            f_min = f_min,
+            f_max = f_max,
+            f_step = f_step,
+        )
 
-        self.frequencies = self.analysis_setup.frequencies()
+        self.frequencies = self.analysis_setup.get_frequencies()
 
     def configure_analysis(self):
         if self.check_frequency_entries():
@@ -259,12 +281,9 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.configure_analysis():
             return
 
-        if not app().project.model.generated_mesh:
-            obj = MesherSetupInputs(close_after_generate = True)
-            if not obj.complete:
+        if not app().project.model.is_there_a_valid_mesh():
+            if mesher_interface_callback(self, close_after_generate=True):
                 return
-
-            app().main_window.update_plots()
 
         # integrate the areas of the selected surfaces
         self.process_areas()
@@ -378,13 +397,13 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         def function_callback():
             logging.info("Processing area... [60/100]")
-            app().project.model.mesh.process_face_elements_connected_to_nodes(self.surface_ids)
+            self.mesh.process_face_elements_connected_to_nodes(self.surface_ids)
 
         LoadingWindow(function_callback).run()
 
     def get_response(self, excitation_id: int, surface_id: int):
 
-        surface_nodes = app().project.model.mesh.get_nodes_from_surface(surface_id)
+        surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
 
         rho, _ = self.model.get_fluid_properties_from_surface(surface_id)
         if rho is None:
@@ -406,7 +425,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         volume_velocity = -surface_velocity * area
 
         node_ids = np.sort(surface_nodes)
-        pressures = self.solution[node_ids, :]
+        pressures = self.solution.nodal_solution[node_ids, :]
         avg_pressure = np.average(pressures, axis=0)
 
         return avg_pressure / volume_velocity
@@ -423,14 +442,13 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             imag_values = np.array(data["imag_values"])
             surface_velocity = real_values + 1j * imag_values
 
-            area = self.model.mesh.surface_area_from_element_integration[surface_id]
+            area = self.mesh.surface_area_from_element_integration[surface_id]
 
             return area, surface_velocity
 
         return None, None
 
     def join_model_data(self, excitation_id: int):
-        self.solution = app().project.solver.solution
 
         for k, response_id in enumerate(self.surface_ids):
             
@@ -511,7 +529,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
         
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:

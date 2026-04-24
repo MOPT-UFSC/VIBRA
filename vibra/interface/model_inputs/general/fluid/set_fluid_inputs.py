@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
@@ -28,9 +29,6 @@ class TabType(IntEnum):
 class AttributionType(IntEnum):
     ALL_BODIES = 0
     SELECTED_BODIES = 1
-
-
-error_title = "Error"
 
 
 class SetFluidInputs(SetFluidInputs_UI):

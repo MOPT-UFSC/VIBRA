@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
@@ -19,7 +20,6 @@ import numpy as np
 from enum import IntEnum
 from collections import defaultdict
 
-error_title = "Error"
 
 class TabType(IntEnum):
     RECTANGULAR = 0
@@ -27,14 +27,17 @@ class TabType(IntEnum):
     EDIT = 2
     LIST = 3
 
+
 class SectionType(IntEnum):
     RECTANGULAR = 0
     QUADRANGULAR = 1
     NARROW_SLIT = 2
 
+
 class FormulationModelTab(IntEnum):
     STINSON_MODEL = 0
     LRF_MODEL = 1
+
 
 class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -723,7 +726,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -740,11 +743,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
         warnings.filterwarnings('ignore')
 
-        frequencies = None
-        analysis_setup = app().project.model.old_analysis_setup
-        if isinstance(analysis_setup, dict):
-            frequencies = analysis_setup.get("frequencies", None)
-
+        frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5
@@ -756,9 +755,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         else:
             freq = frequencies
 
+        # frequencies vector in radians
         omega = 2 * np.pi * freq
-
-        model = ViscousThermalLossModels(self)
 
         tab_index = self.tabWidget_main.currentIndex()
 
@@ -769,6 +767,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             tv_data = self.get_circular_duct_inputs()
 
         if tv_data:
+            model = ViscousThermalLossModels(self)
+
             if tab_index == TabType.RECTANGULAR:
                 if self.comboBox_section_type.currentIndex() in [AttributionBodiesType.ALL_BODIES, AttributionBodiesType.SELECTED_BODIES]:
                     rho_eff, C_eff = model.get_rectangular_section_effective_properties(omega, fluid, tv_data)

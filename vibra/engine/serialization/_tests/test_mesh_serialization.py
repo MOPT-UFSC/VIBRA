@@ -3,7 +3,11 @@ from pathlib import Path
 import numpy as np
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import AnalysisID, HarmonicAnalysisSetupRange, ModalAnalysisSetup
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+    ModalAnalysisSetup,
+)
 from vibra.engine.project import Project
 
 
@@ -20,18 +24,19 @@ def test_write_and_read_mesh_project(fluid, datadir: Path):
     project_a.configure_analysis(
         AnalysisID.ACOUSTIC_MODAL,
         ModalAnalysisSetup(
-            modes_number=5,
-            sigma_factor=0.01,
+            modes_number = 5,
+            sigma_factor = 0.01,
         ),
     )
-    solution_a = project_a.run_analysis()
+    project_a.run_analysis()
+    solution_a = project_a.model.solution
     project_a.save_project(project_path)
 
     project_b = Project()
     project_b.load_project(project_path)
 
     project_path.unlink()
-    assert np.allclose(solution_a.modal_shape, project_b.solver.solution[:])
+    assert np.allclose(solution_a.modal_shapes, project_b.model.solution.modal_shapes[:])
 
 
 def test_compare_interface_based_mesh_project():
@@ -63,18 +68,22 @@ def test_compare_interface_based_mesh_project():
     project_cli.mesh.cache_mesh_information()
     project_cli.model.process_degrees_of_freedom_decoupling()
 
+    ## Define the analysis frequency setup
+    analysis_setup = project_cli.model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        f_min = 200,
+        f_max = 500,
+        f_step = 100,
+    )
+
     project_cli.configure_analysis(
         AnalysisID.ACOUSTIC_HARMONIC,
-        HarmonicAnalysisSetupRange(
-            f_min=200,
-            f_max=500,
-            f_step=100,
-            analysis_method="direct",
-        ),
+        analysis_setup
     )
     project_cli.run_analysis()
 
     assert np.allclose(
-        project_interface.solver.solution[:],
-        project_cli.solver.solution[:],
+        project_interface.model.solution.nodal_solution[:],
+        project_cli.model.solution.nodal_solution[:],
     )

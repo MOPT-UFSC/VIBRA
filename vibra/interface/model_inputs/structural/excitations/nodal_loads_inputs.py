@@ -1,11 +1,10 @@
 
-from vibra.engine import AnalysisID
-from vibra.engine import HarmonicAnalysisSetup
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -16,10 +15,6 @@ import numpy as np
 from enum import IntEnum
 from os.path import basename
 from collections import defaultdict
-
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class ElementFormulation(IntEnum):
@@ -469,24 +464,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.lineEdit_reset(lineEdit)
 
                 title = "Project frequency setup cannot be modified"
-                message = f"The following imported table of values has a frequency setup\n"
-                message += "different from the others already imported ones. The current\n"
+                message = "The following imported table of values has a frequency setup "
+                message += "different from the others already imported ones. The current "
                 message += "project frequency setup is not going to be modified."
                 message += f"\n\n{imported_filename}"
                 PrintMessageInput([error_title, title, message])
                 return None, None
-
-            # else:
-
-            #     f_min = self.frequencies[0]
-            #     f_max = self.frequencies[-1]
-            #     f_step = self.frequencies[1] - self.frequencies[0] 
-
-            #     frequency_setup = { "f_min" : f_min,
-            #                         "f_max" : f_max,
-            #                         "f_step" : f_step }
-
-            #     app().new_project.model.old_set_analysis_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -545,7 +528,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"

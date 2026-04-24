@@ -13,20 +13,20 @@ class HarmonicSolution(CommonSolution):
         self,
         analysis_id: AnalysisID,
         frequencies: Array1D,
-        results: Array2D,
+        nodal_solution: Array2D,
         status: Optional[np.ndarray[tuple[int], bool]] = None,
         displacement_dof: Optional[Array2D] = None,
     ):
         self.analysis_id = analysis_id
         self.frequencies = self._immutable_array(frequencies)
-        self.results = self._immutable_array(results)
+        self.nodal_solution = self._immutable_array(nodal_solution)
         self.status = self._create_status(status)
         self.displacement_dof: Array2D = self._optional_immutable_array(displacement_dof)
         super().__init__()
 
     @cached_property
     def iscomplex(self):
-        return np.iscomplex(self.frequencies) or np.iscomplex(self.results)
+        return np.iscomplex(self.frequencies) or np.iscomplex(self.nodal_solution)
 
     @cached_property
     def number_of_frequencies(self):
@@ -37,15 +37,15 @@ class HarmonicSolution(CommonSolution):
         return not all(self.status)
 
     @cached_property
-    def results_reordered(self) -> Array2D:
-        reordered = self.modal_shape[self.displacement_dof, :]
-        return self._immutable_array(reordered)
+    def nodal_displacements(self) -> Array2D:
+        _nodal_displacements = self.nodal_solution[self.displacement_dof, :]
+        return self._immutable_array(_nodal_displacements)
 
     def get_row(self, row_index: int) -> Array1D:
-        return self.results[row_index, :]
+        return self.nodal_solution[row_index, :]
 
     def get_column(self, column_index: int) -> Array1D:
-        return self.results[:, column_index]
+        return self.nodal_solution[:, column_index]
 
     def _create_status(self, status: Optional[np.ndarray[tuple[int], bool]]):
         if status is None:
@@ -53,7 +53,7 @@ class HarmonicSolution(CommonSolution):
         return self._immutable_array(status)
 
     def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
-        yield from zip(self.frequencies, self.results)
+        yield from zip(self.frequencies, self.nodal_solution)
 
     def __eq__(self, other: Self) -> bool:
         if not isinstance(other, HarmonicSolution):
@@ -71,7 +71,7 @@ class HarmonicSolution(CommonSolution):
             [
                 dofs_equal,
                 np.allclose(self.frequencies, other.frequencies),
-                np.allclose(self.results, other.results),
+                np.allclose(self.nodal_solution, other.nodal_solution),
                 np.allclose(self.status, other.status),
             ]
         )
