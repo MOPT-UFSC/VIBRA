@@ -358,6 +358,10 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
+        if self.solver.project_paths is None:
+            self.project_writer.write_harmonic_solution(self.model.solution)
+        self.mark_project_as_modified()
+
         dt = perf_counter() - t0
         logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
 
@@ -412,7 +416,8 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
-        self.project_writer.write_harmonic_solution(self.solver)
+        if self.solver.project_paths is None:
+            self.project_writer.write_harmonic_solution(self.model.solution)
         self.mark_project_as_modified()
 
         dt = perf_counter() - t0

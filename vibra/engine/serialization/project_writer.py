@@ -20,7 +20,7 @@ from vibra.engine.properties.libraries.material_library import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_json, update_json, write_image, write_json
-from vibra.engine.solution import ModalSolution
+from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
@@ -271,17 +271,14 @@ class ProjectWriter:
         logging.info("Writing thumbnail")
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
 
-    def write_harmonic_solution(self, solver: HarmonicSolver):
+    def write_harmonic_solution(self, solution: HarmonicSolution):
         # In this case the solution was already saved
-        if isinstance(solver.nodal_solution, LazyHDF5MatrixLoader):
-            return
-
-        if isinstance(solver.solution, LazyHarmonicSolution):
+        if isinstance(solution, LazyHarmonicSolution):
             return
 
         logging.info("Writing harmonic solution")
 
-        current_hash = ProjectHasher.hash_harmonic_solution(solver.solution)
+        current_hash = ProjectHasher.hash_harmonic_solution(solution)
         previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
@@ -298,7 +295,7 @@ class ProjectWriter:
             # Since our example models have about 10k nodes and 100 frequencies,
             # this seems to be a good chunk size, so it fits small models entirelly
             # in memory and allows for fast row and column retrieval.
-            rows, cols = solver.nodal_solution.shape
+            rows, cols = solution.nodal_solution.shape
             chunk_rows = min(rows, 2**13)
             chunk_cols = min(cols, 2**7)
 
@@ -307,15 +304,15 @@ class ProjectWriter:
             # The others can use the default configuration.
             file.create_dataset(
                 "solution",
-                data=solver.nodal_solution,
+                data=solution.nodal_solution,
                 chunks=(chunk_rows, chunk_cols),
             )
 
-            file["frequencies"] = solver.frequencies
-            file["solution_status"] = np.ones_like(solver.frequencies, dtype=bool)
+            file["frequencies"] = solution.frequencies
+            file["solution_status"] = np.ones_like(solution.frequencies, dtype=bool)
 
-            if solver.displacement_dof is not None:
-                file["displacement_dof"] = solver.displacement_dof
+            if solution.displacement_dof is not None:
+                file["displacement_dof"] = solution.displacement_dof
 
         self._write_hash(HashEnum.HARMONIC_SOLUTION, current_hash)
 
