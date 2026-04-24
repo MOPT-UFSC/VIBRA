@@ -5,6 +5,7 @@ from typing import Generator, Optional, Self
 import numpy as np
 
 from vibra.engine import AnalysisID
+from vibra.utils.lazy_array import LazyArray
 
 from .common_solution import Array1D, Array2D, CommonSolution
 
@@ -64,7 +65,7 @@ class HarmonicSolution(CommonSolution):
             return False
 
         match self.displacement_dof, other.displacement_dof:
-            case np.ndarray(), np.ndarray():
+            case np.ndarray() | LazyArray(), np.ndarray() | LazyArray():
                 dofs_equal = np.allclose(self.displacement_dof, other.displacement_dof)
             case None, None:
                 dofs_equal = True
