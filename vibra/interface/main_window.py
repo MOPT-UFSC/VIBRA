@@ -1047,6 +1047,12 @@ class MainWindow(MainWindow_UI):
         self.geometry_widget.update_plot()
         self.mesh_widget.update_plot()
 
+        if app().project.can_resume_solution:
+            window_title = "Acoustic Harmonic results"
+            title = "Missing solution frequency records"
+            message = 'Click on the "Resume the analysis" button to solve remaining frequencies'
+            PrintMessageInput([window_title, title, message])
+
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
         self.analysis_toolbar.update_pushbutton_resume_analysis()
