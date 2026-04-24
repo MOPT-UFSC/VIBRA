@@ -46,10 +46,10 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = self.frequencies
+        self.frequencies = self.model.frequencies
 
     def _reset_variables(self):
 
