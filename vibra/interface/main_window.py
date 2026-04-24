@@ -961,16 +961,17 @@ class MainWindow(MainWindow_UI):
         self.status_bar.update_mesh_information()
 
         self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
-        self.action_model_workspace_callback()
-        self.camera_toolbar.set_front_view()
 
         self.renderer_toolbar.setEnabled(True)
         self.analysis_toolbar.setEnabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()
 
-        self.geometry_widget.update_plot()
-        self.mesh_widget.update_plot()
+        LoadingWindow(self.geometry_widget.update_plot).run()
+        LoadingWindow(self.mesh_widget.update_plot).run()
+
+        self.action_model_workspace_callback()
+        self.camera_toolbar.set_front_view()
 
         if app().project.can_resume_solution:
             window_title = "Acoustic Harmonic results"
@@ -980,6 +981,7 @@ class MainWindow(MainWindow_UI):
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
+        self.model_setup_widget.model_setup_items.update_items_appearance()
         self.analysis_toolbar.update_pushbutton_resume_analysis()
 
     def action_save_as_callback(self):
