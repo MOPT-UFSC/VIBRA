@@ -289,8 +289,28 @@ class ProjectWriter:
                 return
 
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
+            file: h5py.File
+
+            # H5PY recommends chunks of at most 1mb for large files.
+            # https://docs.h5py.org/en/stable/high/dataset.html#chunked-storage
+
+            # Since our example models have about 10k nodes and 100 frequencies,
+            # this seems to be a good chunk size, so it fits small models entirelly
+            # in memory and allows for fast row and column retrieval.
+            rows, cols = solver.nodal_solution.shape
+            chunk_rows = min(rows, 2**13)
+            chunk_cols = min(cols, 2**7)
+
+            # This dataset may be very big, so it is important to carefully
+            # configure its parameters for better performance.
+            # The others can use the default configuration.
+            file.create_dataset(
+                "solution",
+                data=solver.nodal_solution,
+                chunks=(chunk_rows, chunk_cols),
+            )
+
             file["frequencies"] = solver.frequencies
-            file["solution"] = solver.nodal_solution
             file["solution_status"] = np.ones_like(solver.frequencies, dtype=bool)
 
             if solver.displacement_dof is not None:
