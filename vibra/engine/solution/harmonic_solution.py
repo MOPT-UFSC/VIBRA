@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import cached_property
 from typing import Generator, Optional, Self
 
@@ -40,6 +41,9 @@ class HarmonicSolution(CommonSolution):
     def nodal_displacements(self) -> Array2D:
         _nodal_displacements = self.nodal_solution[self.displacement_dof, :]
         return self._immutable_array(_nodal_displacements)
+
+    def copy(self):
+        return deepcopy(self)
 
     def get_row(self, row_index: int) -> Array1D:
         return self.nodal_solution[row_index, :]
