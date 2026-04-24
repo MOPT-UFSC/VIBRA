@@ -1,24 +1,24 @@
-from PySide6.QtWidgets import QHeaderView, QTableWidgetItem, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import warnings
+from collections import defaultdict
+from enum import IntEnum
+
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
 
 from vibra import app
-from vibra.interface import error_title
-from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
-from vibra.engine.properties.fluid import Fluid
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
-from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
-
-import warnings
-import numpy as np
-from enum import IntEnum
-from collections import defaultdict
+from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 
 
 class TabType(IntEnum):
@@ -69,7 +69,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
-        self.models: list[RectangularDuctData|CircularDuctData] = list()
+        self.models: list[RectangularDuctData | CircularDuctData] = list()
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
 
@@ -106,7 +106,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def actions_to_finalize(self):
         app().main_window.update_symbols()
-    
+
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
         self.comboBox_plot_type.setDisabled(state)
@@ -134,7 +134,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         try:
             diameter = float(self.lineEdit_diameter_circular.text())
             area = (np.pi / 4) * (diameter**2)
-            self.lineEdit_radius_circular.setText(f"{round(diameter/2, 6)}")
+            self.lineEdit_radius_circular.setText(f"{round(diameter / 2, 6)}")
             self.lineEdit_area_circular.setText(f"{round(area, 6)}")
         except Exception:
             self.lineEdit_area_circular.setText("--")
@@ -144,8 +144,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         if not selected_items:
             return
-        
-        for item in selected_items:    
+
+        for item in selected_items:
             selection_id = int(item.text(0))
             model_id = int(item.text(1))
             model = self.map_model_id_to_models[model_id]
@@ -175,7 +175,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 volume_ids.append(volume_id)
 
         if volume_ids:
-
             self.hide()
 
             title = "Viscous-thermal dissipation model resetting"
@@ -188,7 +187,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 return
 
             if read._continue:
-
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("viscous_thermal_model", volume_id)
 
@@ -249,13 +247,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-    
+
     def get_selected_volumes_from_tree_widget_viscous_thermal_model(self) -> list:
         selected_items = self.treeWidget_viscous_thermal_model.selectedItems()
 
         if not selected_items:
             return list()
-        
+
         return [int(item.text(0)) for item in selected_items]
 
     def set_selection_text(self, selected_volumes: list | set):
@@ -267,7 +265,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -287,7 +285,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.lineEdit_width_rectangular.setText(height)
 
         else:
-
             self.spinBox_number_of_terms.setEnabled(True)
             self.lineEdit_width_rectangular.setDisabled(False)
 
@@ -306,7 +303,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             self.lineEdit_selection_id.setEnabled(True)
             self.label_12.setDisabled(False)
-    
+
     def cell_changed_callback(self, row: int, column: int, section_type: str):
         item = None
         model_id = None
@@ -314,11 +311,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if section_type == "rectangular":
             item = self.tableWidget_rectangular.item(row, column)
             model_id = int(self.tableWidget_rectangular.item(0, column).text())
-        
+
         else:
             item = self.tableWidget_circular.item(row, column)
             model_id = int(self.tableWidget_circular.item(0, column).text())
-        
+
         new_parameter_value = None
         value_error = False
 
@@ -326,7 +323,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         parameters_positions = model.get_parameters_position()
         parameter_position = row - 1
         parameter = parameters_positions[parameter_position]
-        
+
         try:
             if parameter == "number_of_terms":
                 new_parameter_value = int(float(item.text()))
@@ -349,18 +346,16 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
                 for volume in volumes:
                     self.properties._set_property("viscous_thermal_model", model_data, volume=volume)
-            
+
             app().project.update_model_properties_file()
-    
+
     def map_existing_viscous_thermal_loss_models(self):
-        self.map_model_id_to_models: defaultdict[int, RectangularDuctData|CircularDuctData] = defaultdict()
+        self.map_model_id_to_models: defaultdict[int, RectangularDuctData | CircularDuctData] = defaultdict()
         self.map_model_id_to_volumes: defaultdict[int, list[int]] = defaultdict(list)
 
         for key, data in self.properties.volume_properties.items():
-
             property, volume_id = key
             if property == "viscous_thermal_model":
-                
                 model = None
                 section_type = data["section_type"]
 
@@ -371,23 +366,23 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
                 if model not in self.models:
                     self.models.append(model)
-                
+
                 model_id = self.models.index(model) + 1
                 self.map_model_id_to_models[model_id] = model
                 self.map_model_id_to_volumes[model_id].append(volume_id)
-            
+
     def update_viscous_thermall_loss_tree_widget(self):
         self.treeWidget_viscous_thermal_model.clear()
         self.treeWidget_viscous_thermal_model.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
 
         for model_id, volumes_ids in self.map_model_id_to_volumes.items():
-                for volume_id in volumes_ids:
-                    new = QTreeWidgetItem([str(volume_id), str(model_id)])
-                    for i in range(3):
-                        new.setTextAlignment(i, Qt.AlignCenter)
+            for volume_id in volumes_ids:
+                new = QTreeWidgetItem([str(volume_id), str(model_id)])
+                for i in range(3):
+                    new.setTextAlignment(i, Qt.AlignCenter)
 
-                    self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
-    
+                self.treeWidget_viscous_thermal_model.addTopLevelItem(new)
+
     def configure_tables_and_tabs_widgets(self):
         rectangular_duct_counter = 0
         circular_duct_counter = 0
@@ -397,12 +392,12 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 rectangular_duct_counter += 1
             else:
                 circular_duct_counter += 1
-            
+
         self.tableWidget_rectangular.clearContents()
         self.tableWidget_rectangular.blockSignals(True)
         self.tableWidget_rectangular.setRowCount(6)
         self.tableWidget_rectangular.setColumnCount(rectangular_duct_counter)
-        
+
         self.tableWidget_circular.clearContents()
         self.tableWidget_circular.blockSignals(True)
         self.tableWidget_circular.setRowCount(4)
@@ -413,7 +408,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         self.tabWidget_models.setTabVisible(TabType.RECTANGULAR, False)
         self.tabWidget_models.setTabVisible(TabType.CIRCULAR, False)
-    
+
     def update_tableWidget_rectangular_items(self):
         for i in range(self.tableWidget_rectangular.rowCount()):
             for j in range(self.tableWidget_rectangular.columnCount()):
@@ -425,9 +420,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     item.setFlags(Qt.ItemIsSelectable)
 
                 item.setTextAlignment(Qt.AlignCenter)
-        
+
         self.tableWidget_rectangular.blockSignals(False)
-    
+
     def update_tableWidget_circular_items(self):
         for i in range(self.tableWidget_circular.rowCount()):
             for j in range(self.tableWidget_circular.columnCount()):
@@ -439,9 +434,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     item.setFlags(Qt.ItemIsSelectable)
 
                 item.setTextAlignment(Qt.AlignCenter)
-        
+
         self.tableWidget_circular.blockSignals(False)
-    
+
     def update_edit_tab_widget(self):
         rectangular_counter = 0
         circular_counter = 0
@@ -452,11 +447,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         model_ids = list()
         for model_id in self.map_model_id_to_models:
             model_ids.append(model_id)
-        
+
         model_ids.sort()
 
         for model_id in model_ids:
-
             model_id_item = QTableWidgetItem(str(model_id))
             model_id_item.setFlags(Qt.ItemIsSelectable)
 
@@ -474,11 +468,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     if isinstance(data, str):
                         item.setFlags(Qt.ItemIsSelectable)
 
-                    self.tableWidget_rectangular.setItem(i+1, rectangular_counter, item)
-                
+                    self.tableWidget_rectangular.setItem(i + 1, rectangular_counter, item)
+
                 rectangular_counter += 1
                 is_there_rectangular_model = True
-                
+
             else:
                 self.tableWidget_circular.setItem(0, circular_counter, model_id_item)
 
@@ -487,19 +481,19 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                     if isinstance(data, str):
                         item.setFlags(Qt.ItemIsSelectable)
 
-                    self.tableWidget_circular.setItem(i+1, circular_counter, item)
+                    self.tableWidget_circular.setItem(i + 1, circular_counter, item)
 
                 circular_counter += 1
                 is_there_circular_model = True
-            
+
             if is_there_rectangular_model or is_there_circular_model:
                 self.tabWidget_main.setTabVisible(TabType.EDIT, True)
                 self.tabWidget_main.setTabVisible(TabType.LIST, True)
                 self.tabWidget_main.setCurrentIndex(TabType.EDIT)
-            
+
             if is_there_rectangular_model:
                 self.tabWidget_models.setTabVisible(TabType.RECTANGULAR, True)
-            
+
             if is_there_circular_model:
                 self.tabWidget_models.setTabVisible(TabType.CIRCULAR, True)
 
@@ -538,7 +532,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_selection_id.setText(text)
             if self.comboBox_attribution_type.currentIndex() != AttributionBodiesType.SELECTED_BODIES:
                 self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
-    
+
     def verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model(self):
         if self.tree_item_clicked:
             return
@@ -558,9 +552,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         if not selected_volumes_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_viscous_thermal_model.selectionModel()
 
         for volume_id in selected_volumes_in_tree_widget:
@@ -582,7 +576,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             map_id_to_model_index[volume_id] = index
 
             index = self.treeWidget_viscous_thermal_model.indexBelow(index)
-        
+
         return map_id_to_model_index
 
     def get_rectangular_duct_inputs(self) -> RectangularDuctData:
@@ -605,12 +599,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         section_types = ["Rectangular duct", "Quadrangular duct", "Narrow slit duct"]
 
         if section_type in [SectionType.RECTANGULAR, SectionType.QUADRANGULAR]:
-            model_data = RectangularDuctData(section_types[section_type], "Stinson model",
-                                            height, width, self.spinBox_number_of_terms.value())
+            model_data = RectangularDuctData(section_types[section_type], "Stinson model", height, width, self.spinBox_number_of_terms.value())
 
         else:
-            model_data = RectangularDuctData(section_types[section_type], "Stinson model",
-                                            height, None, None)
+            model_data = RectangularDuctData(section_types[section_type], "Stinson model", height, None, None)
 
         return model_data
 
@@ -621,7 +613,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if stop:
             lineEdit.setFocus()
             return dict()
-        
+
         if self.comboBox_formulation.currentIndex() == FormulationModelTab.STINSON_MODEL:
             formulation = "Stinson model"
         else:
@@ -654,39 +646,38 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             else:
                 input_ids = self.lineEdit_selection_id.text()
                 volume_ids, error_data = self.mesh.check_selected_ids(
-                                                                      input_ids, 
-                                                                      selection = "volumes", 
-                                                                      single_id = False,
-                                                                      )
-                
+                    input_ids,
+                    selection="volumes",
+                    single_id=False,
+                )
 
                 if error_data is not None:
                     self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return
-                
+
                 self.verify_and_remove_model_conflicts_if_it_exists(volume_ids)
 
             if model not in self.models:
                 self.models.append(model)
-            
+
             model_data = model.get_data()
-            
+
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
 
         app().project.update_model_properties_file()
         self.actions_to_finalize()
         self.load_info()
-    
-    def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: list[int]=None):
+
+    def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: list[int] = None):
         for volume_id in volume_ids:
             for model_id, volumes in self.map_model_id_to_volumes.items():
                 if volume_id in volumes and len(volumes) == 1:
                     model = self.map_model_id_to_models[model_id]
                     self.models.remove(model)
-            
+
     def check_inputs(self, lineEdit, label, _float=True):
 
         self.stop = False
@@ -696,7 +687,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         input_str = lineEdit.text()
 
         if input_str != "":
-
             input_str = input_str.replace(",", ".")
 
             try:
@@ -740,15 +730,15 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_speed_of_sound.setText(f"{self.selected_fluid.speed_of_sound}")
 
     def get_effective_properties(self, fluid: Fluid):
-        
-        warnings.filterwarnings('ignore')
+
+        warnings.filterwarnings("ignore")
 
         frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5
             f_max = 1400
-            frequencies = np.arange(f_min, f_max+df, df)
+            frequencies = np.arange(f_min, f_max + df, df)
 
         if frequencies[0] == 0:
             freq = frequencies[1:]
@@ -790,7 +780,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def get_viscous_thermal_loss_model(self):
         tab_index = self.tabWidget_main.currentIndex()
-        
+
         if tab_index == TabType.RECTANGULAR:
             section_index = self.comboBox_section_type.currentIndex()
             if section_index == SectionType.RECTANGULAR:
@@ -877,7 +867,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         Z_s = Z_pm * (1 / np.tanh(k_cr * h))
 
         R_r = (Z_s - Z_0) / (Z_s + Z_0)
-        alpha_n = 1 - np.abs(R_r)**2
+        alpha_n = 1 - np.abs(R_r) ** 2
 
         pm_model = self.get_viscous_thermal_loss_model()
         self.plot_data(freq, alpha_n, "absorption coefficient", pm_model)
@@ -908,18 +898,18 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         key = ("property", (None))
 
-        self.data_to_plot[key] = { 
-                                    "x_data" : x_data,
-                                    "y_data" : y_data,
-                                    "x_label" : "Frequency [Hz]",
-                                    "y_label" : y_label,
-                                    "title" : title,
-                                    "data_type" : f"effective fluid properties for {section_label}",
-                                    "legend" : legend_label,
-                                    "unit" : unit_label,
-                                    "color" : [0,0,1],
-                                    "linestyle" : "-"
-                                   }
+        self.data_to_plot[key] = {
+            "x_data": x_data,
+            "y_data": y_data,
+            "x_label": "Frequency [Hz]",
+            "y_label": y_label,
+            "title": title,
+            "data_type": f"effective fluid properties for {section_label}",
+            "legend": legend_label,
+            "unit": unit_label,
+            "color": [0, 0, 1],
+            "linestyle": "-",
+        }
 
     def plot_data(self, x_data, y_data, label, pm_label):
         self.join_model_data(x_data, y_data, label, pm_label)
@@ -937,11 +927,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.MultiSelection)
         elif event.key() == Qt.Key_Shift:
             self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.ContiguousSelection)
-    
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
             self.treeWidget_viscous_thermal_model.setSelectionMode(QAbstractItemView.SingleSelection)
-        
+
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         app().main_window.selection.volume_selection_mode = False

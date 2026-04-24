@@ -22,6 +22,22 @@ Vibra is an open-source software developed in Python for modeling vibroacoustic 
 - Project file management improvements: structural and acoustic results can now be saved and retrieved.
 - Enhanced animation of results (real and imaginary parts, phase monitoring, etc).
 
+## Instalation
+
+To install the latest stable version of VIBRA, go to the Releases page on GitHub:
+
+https://github.com/MOPT-UFSC/VIBRA/releases
+
+Then:
+
+- Select the most recent release.
+
+- Download the executable file for your operating system.
+
+- Extract the files (if needed) and run the installation setup (.exe).
+
+That’s it! VIBRA is now ready to use.
+
 ## Documentation
 
 - The theoretical background for the acoustic formulation implemented in Vibra is based on classic and new FE books. Example: [Finite Element and Boundary Methods in Structural Acoustics and Vibration, by Noureddine Atalla and Franck Sgard](https://www.taylorfrancis.com/books/mono/10.1201/b18366/finite-element-boundary-methods-structural-acoustics-vibration-noureddine-atalla-franck-sgard).
@@ -46,7 +62,8 @@ The authors are members of [MOPT - Multidisciplinary Modeling and Optimization](
    - [Guilherme Pierri](https://www.linkedin.com/in/guilherme-pierri-4487a4271/) - Computer Scientist;
    - [Gustavo Martins](https://www.linkedin.com/in/gustavo-martins/) - Engineer and Data Scientist;   
    - [Gildean Almeida](https://www.linkedin.com/in/gildean-almeida-708862298/) - Validation;
-   - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements.
+   - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements;
+   - [Taiana Barbosa Farias](https://www.linkedin.com/in/taiana-barbosa-farias-82740339a/) - Front-end.
 
 
 <p align="center">
