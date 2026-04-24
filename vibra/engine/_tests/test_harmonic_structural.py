@@ -1,4 +1,3 @@
-
 import pytest
 
 from vibra import PROJECT_DIR, errors
@@ -24,9 +23,9 @@ def test_harmonic_structural():
         # Incompatible AnalysisID and AnalysisSetup
 
         analysis_setup = ModalAnalysisSetup(
-        analysis_id = AnalysisID.STRUCTURAL_MODAL,
-        modes_number = 10,
-        sigma_factor = 0.01,
+            analysis_id=AnalysisID.STRUCTURAL_MODAL,
+            modes_number=10,
+            sigma_factor=0.01,
         )
 
         project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, analysis_setup)
@@ -34,17 +33,14 @@ def test_harmonic_structural():
 
     # Define the analysis frequency setup
     analysis_setup = project.model.get_harmonic_analysis_setup(
-        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        f_min = 100,
-        f_max = 50000,
-        f_step = 5000,
+        analysis_id=AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min=100,
+        f_max=50000,
+        f_step=5000,
     )
 
-    project.configure_analysis(
-        AnalysisID.STRUCTURAL_HARMONIC,
-        analysis_setup
-        ),
+    (project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, analysis_setup),)
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Material not configured
